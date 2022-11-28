@@ -1,8 +1,8 @@
-# Dagpenger-SERVICENAME
+# dp-behandling
 
 ## Komme i gang
 
-Gradle brukes som byggverktøy og er bundlet inn.
+Backend-applikasjon som lytter på søknadshendelser, validerer vilkår, oppretter sak og sender resultat av behandlingen ut på rapiden.
 
 `./gradlew build`
 

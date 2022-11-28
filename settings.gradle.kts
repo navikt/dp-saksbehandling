@@ -1,1 +1,1 @@
-rootProject.name = "dagpenger-SERVICENAME"
+rootProject.name = "dp-behandling"
