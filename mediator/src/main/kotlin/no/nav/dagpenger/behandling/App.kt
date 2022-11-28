@@ -1,5 +1,5 @@
 package no.nav.dagpenger.behandling
 
-fun main(){
-    println("HELLO")
+fun main() {
+    ApplicationBuilder(Configuration.config).start()
 }

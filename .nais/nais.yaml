@@ -6,7 +6,7 @@ metadata:
   labels:
     team: teamdagpenger
 spec:
-  image: {{ image }}
+  image: { { image } }
   port: 8080
   prometheus:
     enabled: true
@@ -23,3 +23,5 @@ spec:
       memory: 256Mi
   secureLogs:
     enabled: true
+  kafka:
+    pool: { { kafka_pool } }
