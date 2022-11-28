@@ -1,12 +1,12 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  name: dp-service-template
+  name: dp-behandling
   namespace: teamdagpenger
   labels:
     team: teamdagpenger
 spec:
-  image: { { image } }
+  image: {{ image }}
   port: 8080
   prometheus:
     enabled: true
@@ -24,4 +24,4 @@ spec:
   secureLogs:
     enabled: true
   kafka:
-    pool: { { kafka_pool } }
+    pool: {{ kafka_pool }}
