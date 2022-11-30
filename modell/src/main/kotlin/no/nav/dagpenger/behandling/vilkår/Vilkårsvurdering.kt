@@ -14,7 +14,7 @@ abstract class Vilkårsvurdering(var tilstand: Tilstand) {
     }
 
     fun endreTilstand(nyTilstand: Tilstand) {
-        logger.info { "Vurdering ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.tilstandType} til ny tilstand ${nyTilstand.tilstandType}" }
+        loggTilstandsendring(nyTilstand)
         tilstand = nyTilstand
     }
 
@@ -42,5 +42,8 @@ abstract class Vilkårsvurdering(var tilstand: Tilstand) {
             IkkeVurdert,
             AvventerVurdering
         }
+    }
+    private fun loggTilstandsendring(nyTilstand: Tilstand) {
+        logger.info { "Vurdering ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.tilstandType} til ny tilstand ${nyTilstand.tilstandType}" }
     }
 }

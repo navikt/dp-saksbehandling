@@ -23,5 +23,6 @@ class BehandlingTest {
                 oppfylt = true
             )
         )
+
     }
 }

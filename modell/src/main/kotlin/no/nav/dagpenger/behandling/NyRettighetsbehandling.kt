@@ -6,8 +6,7 @@ import no.nav.dagpenger.behandling.vilkår.AldersVilkårvurdering
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 
 class NyRettighetsbehandling : Behandling() {
-    override val vilkårsvurderinger: List<Vilkårsvurdering>
-        get() = listOf(
+    override val vilkårsvurderinger = listOf(
             AldersVilkårvurdering()
         )
 
