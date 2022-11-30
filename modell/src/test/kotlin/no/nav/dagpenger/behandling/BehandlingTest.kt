@@ -9,7 +9,7 @@ import java.util.UUID
 
 class BehandlingTest {
     @Test
-    fun `ny søknad hendelse trigger en behandling`() {
+    fun `Ny søknad hendelse fører til innvilgelsesvedtak`() {
         val ident = "12345678901"
         val person = Person(ident)
         val søknadHendelse = SøknadHendelse(UUID.randomUUID(), ident)
@@ -17,11 +17,24 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
 
-        person.håndter(
-            AldersbehovLøsning(
-                ident,
-                oppfylt = true
-            )
-        )
+        val aldersbehovLøsning = AldersbehovLøsning(ident, oppfylt = true)
+        person.håndter(aldersbehovLøsning)
+        assertEquals(1, aldersbehovLøsning.behov().size)
+        assertTrue(aldersbehovLøsning.behov().first() is VedtakInnvilgetBehov)
+    }
+
+    @Test
+    fun `Ny søknad hendelse fører til avslagsvedtak`() {
+        val ident = "12345678901"
+        val person = Person(ident)
+        val søknadHendelse = SøknadHendelse(UUID.randomUUID(), ident)
+        person.håndter(søknadHendelse)
+        assertEquals(1, søknadHendelse.behov().size)
+        assertTrue(person.harBehandlinger())
+
+        val aldersbehovLøsning = AldersbehovLøsning(ident, oppfylt = false)
+        person.håndter(aldersbehovLøsning)
+        assertEquals(1, aldersbehovLøsning.behov().size)
+        assertTrue(aldersbehovLøsning.behov().first() is VedtakAvslåttBehov)
     }
 }

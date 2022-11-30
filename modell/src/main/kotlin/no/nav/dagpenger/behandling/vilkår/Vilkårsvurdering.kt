@@ -9,17 +9,22 @@ private val logger = KotlinLogging.logger { }
 
 abstract class Vilkårsvurdering(var tilstand: Tilstand) {
 
+    companion object {
+        fun List<Vilkårsvurdering>.erFerdig() =
+            this.none { it.tilstand.tilstandType == Tilstand.Type.AvventerVurdering || it.tilstand.tilstandType == Tilstand.Type.IkkeVurdert }
+    }
+
     fun håndter(søknadHendelse: SøknadHendelse) {
         tilstand.håndter(søknadHendelse, this)
+    }
+
+    fun håndter(aldersbehovLøsning: AldersbehovLøsning) {
+        tilstand.håndter(aldersbehovLøsning, this)
     }
 
     fun endreTilstand(nyTilstand: Tilstand) {
         loggTilstandsendring(nyTilstand)
         tilstand = nyTilstand
-    }
-
-    fun håndter(aldersbehovLøsning: AldersbehovLøsning) {
-        tilstand.håndter(aldersbehovLøsning, this)
     }
 
     interface Tilstand {
@@ -43,6 +48,7 @@ abstract class Vilkårsvurdering(var tilstand: Tilstand) {
             AvventerVurdering
         }
     }
+
     private fun loggTilstandsendring(nyTilstand: Tilstand) {
         logger.info { "Vurdering ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.tilstandType} til ny tilstand ${nyTilstand.tilstandType}" }
     }
