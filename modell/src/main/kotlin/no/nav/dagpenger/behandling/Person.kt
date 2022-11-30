@@ -1,12 +1,13 @@
 package no.nav.dagpenger.behandling
 
 class Person(ident: String) {
-    private val saker = mutableListOf<Sak>()
+    private val behandlinger = mutableListOf<Behandling>()
+
     fun håndter(søknadHendelse: SøknadHendelse) {
-        val sak = Sak()
-        saker.add(sak)
-        sak.håndter(søknadHendelse)
+        val behandling = NyRettighetsbehandling()
+        behandlinger.add(behandling)
+        behandling.håndter(søknadHendelse)
     }
 
-    fun harSaker() = this.saker.isNotEmpty()
+    fun harBehandlinger() = this.behandlinger.isNotEmpty()
 }
