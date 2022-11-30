@@ -1,9 +1,10 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import no.nav.dagpenger.behandling.Aldersbehov
+import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
-class AldersVilkårvurdering(override var tilstand: Tilstand = IkkeVurdert) : Vilkårsvurdering() {
+class AldersVilkårvurdering : Vilkårsvurdering(IkkeVurdert) {
 
     object IkkeVurdert : Tilstand {
         override val tilstandType: Tilstand.Type
@@ -18,6 +19,16 @@ class AldersVilkårvurdering(override var tilstand: Tilstand = IkkeVurdert) : Vi
     object Avventer : Tilstand {
         override val tilstandType: Tilstand.Type
             get() = Tilstand.Type.AvventerVurdering
+
+        override fun håndter(aldersbehovLøsning: AldersbehovLøsning, vilkårsvurdering: Vilkårsvurdering) {
+            if (aldersbehovLøsning.oppfylt) {
+                vilkårsvurdering.endreTilstand(Oppfylt)
+            } else {
+                vilkårsvurdering.endreTilstand(
+                    IkkeOppfylt
+                )
+            }
+        }
     }
 
     object Oppfylt : Tilstand {

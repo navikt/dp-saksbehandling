@@ -1,12 +1,13 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import mu.KotlinLogging
+import no.nav.dagpenger.behandling.Hendelse
+import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
 private val logger = KotlinLogging.logger { }
 
-abstract class Vilkårsvurdering {
-    abstract var tilstand: Tilstand
+abstract class Vilkårsvurdering(var tilstand: Tilstand) {
 
     fun håndter(søknadHendelse: SøknadHendelse) {
         tilstand.håndter(søknadHendelse, this)
@@ -17,10 +18,21 @@ abstract class Vilkårsvurdering {
         tilstand = nyTilstand
     }
 
+    fun håndter(aldersbehovLøsning: AldersbehovLøsning) {
+        tilstand.håndter(aldersbehovLøsning, this)
+    }
+
     interface Tilstand {
         fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Vilkårsvurdering) {
-            TODO("Kan ikke håndtere tilstand")
+            TODO(feilmelding(søknadHendelse))
         }
+
+        fun håndter(aldersbehovLøsning: AldersbehovLøsning, vilkårsvurdering: Vilkårsvurdering) {
+            TODO(feilmelding(aldersbehovLøsning))
+        }
+
+        private fun feilmelding(søknadHendelse: Hendelse) =
+            "Kan ikke håndtere ${søknadHendelse.javaClass.simpleName} i tilstand ${this.tilstandType}"
 
         val tilstandType: Type
 

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -15,5 +16,12 @@ class BehandlingTest {
         person.håndter(søknadHendelse)
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
+
+        person.håndter(
+            AldersbehovLøsning(
+                ident,
+                oppfylt = true
+            )
+        )
     }
 }
