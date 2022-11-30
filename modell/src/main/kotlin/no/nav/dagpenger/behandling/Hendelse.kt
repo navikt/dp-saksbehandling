@@ -10,6 +10,5 @@ abstract class Hendelse(private val ident: String) {
 
 class SøknadHendelse(private val søknadUUID: UUID, ident: String) : Hendelse(ident)
 
-
 sealed class Behov
 object Aldersbehov : Behov()
