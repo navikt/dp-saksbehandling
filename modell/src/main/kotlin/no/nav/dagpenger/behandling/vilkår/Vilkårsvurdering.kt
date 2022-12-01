@@ -1,8 +1,8 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.Hendelse
 import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
+import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
 private val logger = KotlinLogging.logger { }
