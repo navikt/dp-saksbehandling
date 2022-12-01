@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
+import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
@@ -18,8 +18,8 @@ abstract class Vilkårsvurdering(var tilstand: Tilstand) {
         tilstand.håndter(søknadHendelse, this)
     }
 
-    fun håndter(aldersbehovLøsning: AldersbehovLøsning) {
-        tilstand.håndter(aldersbehovLøsning, this)
+    fun håndter(aldersvilkårLøsning: AldersvilkårLøsning) {
+        tilstand.håndter(aldersvilkårLøsning, this)
     }
 
     fun endreTilstand(nyTilstand: Tilstand) {
@@ -32,8 +32,8 @@ abstract class Vilkårsvurdering(var tilstand: Tilstand) {
             TODO(feilmelding(søknadHendelse))
         }
 
-        fun håndter(aldersbehovLøsning: AldersbehovLøsning, vilkårsvurdering: Vilkårsvurdering) {
-            TODO(feilmelding(aldersbehovLøsning))
+        fun håndter(aldersvilkårLøsning: AldersvilkårLøsning, vilkårsvurdering: Vilkårsvurdering) {
+            TODO(feilmelding(aldersvilkårLøsning))
         }
 
         private fun feilmelding(søknadHendelse: Hendelse) =

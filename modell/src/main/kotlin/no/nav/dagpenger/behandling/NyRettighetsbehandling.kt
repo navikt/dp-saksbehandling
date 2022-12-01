@@ -2,7 +2,7 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslåttBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
-import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
+import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.AldersVilkårvurdering
@@ -15,17 +15,19 @@ class NyRettighetsbehandling : Behandling(UUID.randomUUID()) {
         AldersVilkårvurdering(),
     )
 
-    override fun håndter(søknadHendelse: SøknadHendelse) {
+    override fun håndter(hendelse: SøknadHendelse) {
+        kontekst(hendelse, "Opprettet ny rettighetsbehandling basert på søknadhendelse")
         vilkårsvurderinger.forEach { vurdering ->
-            vurdering.håndter(søknadHendelse)
+            vurdering.håndter(hendelse)
         }
     }
 
-    override fun håndter(aldersbehovLøsning: AldersbehovLøsning) {
+    override fun håndter(aldersvilkårLøsning: AldersvilkårLøsning) {
+        kontekst(aldersvilkårLøsning, "Mottok løsning for vilkårsvurdering av alder")
         vilkårsvurderinger.forEach { vurdering ->
-            vurdering.håndter(aldersbehovLøsning)
+            vurdering.håndter(aldersvilkårLøsning)
         }
-        ferdigstillRettighetsbehandling(aldersbehovLøsning)
+        ferdigstillRettighetsbehandling(aldersvilkårLøsning)
     }
 
     private fun ferdigstillRettighetsbehandling(hendelse: Hendelse) {
@@ -35,6 +37,13 @@ class NyRettighetsbehandling : Behandling(UUID.randomUUID()) {
             } else {
                 hendelse.behov(VedtakAvslåttBehov, "Vedtak avslått")
             }
+        }
+    }
+
+    private fun kontekst(hendelse: Hendelse, melding: String? = null) {
+        hendelse.kontekst(this)
+        melding?.let {
+            hendelse.info(it)
         }
     }
 }

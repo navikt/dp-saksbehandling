@@ -2,7 +2,7 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslåttBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
-import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
+import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -19,10 +19,10 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
 
-        val aldersbehovLøsning = AldersbehovLøsning(ident, oppfylt = true)
-        person.håndter(aldersbehovLøsning)
-        assertEquals(1, aldersbehovLøsning.behov().size)
-        assertEquals(VedtakInnvilgetBehov, aldersbehovLøsning.behov().first().type)
+        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = true)
+        person.håndter(aldersvilkårLøsning)
+        assertEquals(1, aldersvilkårLøsning.behov().size)
+        assertEquals(VedtakInnvilgetBehov, aldersvilkårLøsning.behov().first().type)
     }
 
     @Test
@@ -34,9 +34,9 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
 
-        val aldersbehovLøsning = AldersbehovLøsning(ident, oppfylt = false)
-        person.håndter(aldersbehovLøsning)
-        assertEquals(1, aldersbehovLøsning.behov().size)
-        assertEquals(VedtakAvslåttBehov, aldersbehovLøsning.behov().first().type)
+        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = false)
+        person.håndter(aldersvilkårLøsning)
+        assertEquals(1, aldersvilkårLøsning.behov().size)
+        assertEquals(VedtakAvslåttBehov, aldersvilkårLøsning.behov().first().type)
     }
 }

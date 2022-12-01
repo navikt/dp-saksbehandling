@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.vilkår
 
-import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
+import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.AvventerVurdering
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
@@ -14,7 +14,7 @@ internal class AldersVilkårvurderingTest {
         val aldersVilkårvurdering = AldersVilkårvurdering()
         aldersVilkårvurdering.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "12345123456"))
         assertEquals(AvventerVurdering, aldersVilkårvurdering.tilstand.tilstandType)
-        aldersVilkårvurdering.håndter(aldersbehovLøsning = AldersbehovLøsning("12345123456", true))
+        aldersVilkårvurdering.håndter(aldersvilkårLøsning = AldersvilkårLøsning("12345123456", true))
         assertEquals(Oppfylt, aldersVilkårvurdering.tilstand.tilstandType)
     }
 }
