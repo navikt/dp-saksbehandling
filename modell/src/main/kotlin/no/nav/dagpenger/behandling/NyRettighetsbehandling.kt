@@ -11,6 +11,9 @@ import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfy
 import java.util.UUID
 
 class NyRettighetsbehandling : Behandling(UUID.randomUUID()) {
+
+    //todo : Behandling har tilstander ?
+
     override val vilkårsvurderinger = listOf(
         AldersVilkårvurdering(),
     )

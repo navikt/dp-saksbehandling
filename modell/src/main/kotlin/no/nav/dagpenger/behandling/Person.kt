@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.PersonIdentifikator.Companion.tilPersonIdentfikator
 import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
+import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
@@ -10,7 +11,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     constructor(ident: String) : this(ident.tilPersonIdentfikator())
 
     fun håndter(søknadHendelse: SøknadHendelse) {
-        søknadHendelse.kontekst(this)
+        kontekst(søknadHendelse)
         søknadHendelse.info("Har mottatt ny søknadhendelse")
         val behandling = NyRettighetsbehandling()
         behandlinger.add(behandling)
@@ -18,8 +19,13 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     }
 
     fun håndter(aldersvilkårLøsning: AldersvilkårLøsning) {
+        kontekst(aldersvilkårLøsning)
         behandlinger.forEach { it.håndter(aldersvilkårLøsning) }
     }
 
     fun harBehandlinger() = this.behandlinger.isNotEmpty()
+
+    private fun kontekst(hendelse: Hendelse) {
+        hendelse.kontekst(this)
+    }
 }

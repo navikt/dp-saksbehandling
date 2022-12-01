@@ -5,6 +5,7 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Vedt
 import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -22,7 +23,11 @@ class BehandlingTest {
         val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = true)
         person.håndter(aldersvilkårLøsning)
         assertEquals(1, aldersvilkårLøsning.behov().size)
-        assertEquals(VedtakInnvilgetBehov, aldersvilkårLøsning.behov().first().type)
+        val behov = aldersvilkårLøsning.behov().first()
+
+        assertEquals(VedtakInnvilgetBehov, behov.type)
+        assertEquals(ident, behov.kontekst()["ident"])
+        assertNotNull(ident, behov.kontekst()["behandlingId"])
     }
 
     @Test
@@ -37,6 +42,9 @@ class BehandlingTest {
         val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = false)
         person.håndter(aldersvilkårLøsning)
         assertEquals(1, aldersvilkårLøsning.behov().size)
-        assertEquals(VedtakAvslåttBehov, aldersvilkårLøsning.behov().first().type)
+        val behov = aldersvilkårLøsning.behov().first()
+        assertEquals(VedtakAvslåttBehov, behov.type)
+        assertEquals(ident, behov.kontekst()["ident"])
+        assertNotNull(ident, behov.kontekst()["behandlingId"])
     }
 }
