@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.vilkår
 
-import no.nav.dagpenger.behandling.Aldersbehov
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Aldersbehov
 import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
@@ -11,7 +11,7 @@ class AldersVilkårvurdering : Vilkårsvurdering(IkkeVurdert) {
             get() = Tilstand.Type.IkkeVurdert
 
         override fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Vilkårsvurdering) {
-            søknadHendelse.behov(Aldersbehov)
+            søknadHendelse.behov(Aldersbehov, "Trenger svar på aldersbehov")
             vilkårsvurdering.endreTilstand(nyTilstand = Avventer)
         }
     }

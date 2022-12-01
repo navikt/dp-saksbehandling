@@ -1,5 +1,7 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslåttBehov
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
 import no.nav.dagpenger.behandling.hendelser.AldersbehovLøsning
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,7 +22,7 @@ class BehandlingTest {
         val aldersbehovLøsning = AldersbehovLøsning(ident, oppfylt = true)
         person.håndter(aldersbehovLøsning)
         assertEquals(1, aldersbehovLøsning.behov().size)
-        assertTrue(aldersbehovLøsning.behov().first() is VedtakInnvilgetBehov)
+        assertEquals(VedtakInnvilgetBehov, aldersbehovLøsning.behov().first().type)
     }
 
     @Test
@@ -35,6 +37,6 @@ class BehandlingTest {
         val aldersbehovLøsning = AldersbehovLøsning(ident, oppfylt = false)
         person.håndter(aldersbehovLøsning)
         assertEquals(1, aldersbehovLøsning.behov().size)
-        assertTrue(aldersbehovLøsning.behov().first() is VedtakAvslåttBehov)
+        assertEquals(VedtakAvslåttBehov, aldersbehovLøsning.behov().first().type)
     }
 }
