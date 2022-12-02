@@ -11,11 +11,12 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class BehandlingTest {
+    val ident = "12345678901"
+    val person = Person(ident)
+    val søknadHendelse = SøknadHendelse(UUID.randomUUID(), ident)
+
     @Test
     fun `Ny søknad hendelse fører til innvilgelsesvedtak`() {
-        val ident = "12345678901"
-        val person = Person(ident)
-        val søknadHendelse = SøknadHendelse(UUID.randomUUID(), ident)
         person.håndter(søknadHendelse)
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
@@ -32,9 +33,6 @@ class BehandlingTest {
 
     @Test
     fun `Ny søknad hendelse fører til avslagsvedtak`() {
-        val ident = "12345678901"
-        val person = Person(ident)
-        val søknadHendelse = SøknadHendelse(UUID.randomUUID(), ident)
         person.håndter(søknadHendelse)
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
@@ -46,5 +44,13 @@ class BehandlingTest {
         assertEquals(VedtakAvslåttBehov, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
         assertNotNull(ident, behov.kontekst()["behandlingId"])
+    }
+
+    @Test
+    fun `En søknadhendense skal bare behandles en gang`(){
+        person.håndter(søknadHendelse)
+        person.håndter(søknadHendelse)
+
+        assertEquals(1, person.antallBehandlinger())
     }
 }

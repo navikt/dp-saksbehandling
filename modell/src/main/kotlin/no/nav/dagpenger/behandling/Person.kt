@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.Companion.harSøknadUUID
 import no.nav.dagpenger.behandling.PersonIdentifikator.Companion.tilPersonIdentfikator
 import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.Hendelse
@@ -12,8 +13,9 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     fun håndter(søknadHendelse: SøknadHendelse) {
         kontekst(søknadHendelse)
+        if(behandlinger.harSøknadUUID(søknadHendelse.søknadUUID)) return
         søknadHendelse.info("Har mottatt ny søknadhendelse")
-        val behandling = NyRettighetsbehandling()
+        val behandling = NyRettighetsbehandling(søknadHendelse.søknadUUID)
         behandlinger.add(behandling)
         behandling.håndter(søknadHendelse)
     }
@@ -24,6 +26,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     }
 
     fun harBehandlinger() = this.behandlinger.isNotEmpty()
+    fun antallBehandlinger() = this.behandlinger.size
 
     private fun kontekst(hendelse: Hendelse) {
         hendelse.kontekst(this)

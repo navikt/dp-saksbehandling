@@ -2,4 +2,4 @@ package no.nav.dagpenger.behandling.hendelser
 
 import java.util.UUID
 
-class SøknadHendelse(private val søknadUUID: UUID, ident: String) : Hendelse(ident)
+class SøknadHendelse(val søknadUUID: UUID, ident: String) : Hendelse(ident)
