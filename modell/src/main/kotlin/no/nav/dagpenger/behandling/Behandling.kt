@@ -13,5 +13,9 @@ abstract class Behandling(internal val behandlingId: UUID, internal val aktivite
     abstract fun håndter(aldersvilkårLøsning: AldersvilkårLøsning)
 
     override fun toSpesifikkKontekst() =
-        SpesifikkKontekst(this.javaClass.simpleName, mapOf("behandlingId" to behandlingId.toString()))
+        SpesifikkKontekst(kontekstType = Behandling.kontekstType, mapOf("behandlingId" to behandlingId.toString()))
+
+    companion object {
+        const val kontekstType = "Behandling"
+    }
 }

@@ -11,6 +11,10 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     constructor(ident: String) : this(ident.tilPersonIdentfikator())
 
+    companion object {
+        const val kontekstType = "Person"
+    }
+
     fun håndter(søknadHendelse: SøknadHendelse) {
         kontekst(søknadHendelse)
         if (behandlinger.harSøknadUUID(søknadHendelse.søknadUUID())) return
@@ -29,6 +33,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     fun harBehandlinger() = this.behandlinger.isNotEmpty()
     fun antallBehandlinger() = this.behandlinger.size
     fun sisteBehandlingId() = this.behandlinger.first().behandlingId
+    fun ident() = this.ident.identifikator()
 
     private fun kontekst(hendelse: Hendelse) {
         hendelse.kontekst(this)

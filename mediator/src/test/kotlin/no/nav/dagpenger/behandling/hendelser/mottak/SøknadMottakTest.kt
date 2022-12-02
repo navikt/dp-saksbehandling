@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
 import no.nav.dagpenger.behandling.PersonMediator
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -17,7 +18,7 @@ import java.util.UUID
 class SøknadMottakTest {
     @ParameterizedTest
     @ValueSource(strings = ["NySøknad"])
-    fun `Skal behandle innsending_ferdigstilt event for type NySøknad, Gjenopptak, Ettersending og Generell`(type: String) {
+    fun `Skal behandle innsending_ferdigstilt event for type NySøknad`(type: String) {
         TestRapid().let { testRapid ->
             val slot = slot<SøknadHendelse>()
             SøknadMottak(
@@ -45,24 +46,5 @@ class SøknadMottakTest {
                 assertEquals(this.søknadUUID(), søknadId)
             }
         }
-    }
-
-    private fun `innsending ferdigstilt hendelse`(
-        søknadId: UUID,
-        journalpostId: String,
-        type: String,
-        ident: String
-    ): String {
-        return """
-{
-  "journalpostId": "$journalpostId",
-  "type": "$type",
-  "fødselsnummer": "$ident",
-  "søknadsData": {
-    "søknad_uuid": "$søknadId"
-  },
-  "@event_name": "innsending_ferdigstilt"
-} 
-        """.trimIndent()
     }
 }

@@ -18,7 +18,7 @@ class Aktivitetslogg private constructor(
 
     companion object {
 
-        private val MODELL_KONTEKSTER = listOf("person", "behandling")
+        private val MODELL_KONTEKSTER = listOf(Person.kontekstType, Behandling.kontekstType)
         fun rehyder(
             aktiviteter: MutableList<Aktivitet>
         ) = Aktivitetslogg(null, aktiviteter)
