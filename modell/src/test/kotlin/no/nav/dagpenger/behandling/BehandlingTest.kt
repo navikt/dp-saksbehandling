@@ -21,7 +21,7 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
 
-        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = true)
+        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = true, person.sisteBehandlingId())
         person.håndter(aldersvilkårLøsning)
         assertEquals(1, aldersvilkårLøsning.behov().size)
         val behov = aldersvilkårLøsning.behov().first()
@@ -37,7 +37,7 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
 
-        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = false)
+        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = false, person.sisteBehandlingId())
         person.håndter(aldersvilkårLøsning)
         assertEquals(1, aldersvilkårLøsning.behov().size)
         val behov = aldersvilkårLøsning.behov().first()
@@ -52,5 +52,16 @@ class BehandlingTest {
         person.håndter(søknadHendelse)
 
         assertEquals(1, person.antallBehandlinger())
+    }
+
+    @Test
+    fun `Håndtere to unike søknadhendelser`() {
+        val søknadHendelse2 = SøknadHendelse(UUID.randomUUID(), ident)
+
+        person.håndter(søknadHendelse)
+        person.håndter(søknadHendelse2)
+        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = false, person.sisteBehandlingId())
+        person.håndter(aldersvilkårLøsning)
+        assertEquals(1, aldersvilkårLøsning.behov().size)
     }
 }

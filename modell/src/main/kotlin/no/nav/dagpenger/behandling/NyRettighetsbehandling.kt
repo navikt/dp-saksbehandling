@@ -32,6 +32,7 @@ class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, 
     }
 
     override fun håndter(aldersvilkårLøsning: AldersvilkårLøsning) {
+        if(this.behandlingId != aldersvilkårLøsning.behandlingId()) return
         kontekst(aldersvilkårLøsning, "Mottok løsning for vilkårsvurdering av alder")
         vilkårsvurderinger.forEach { vurdering ->
             vurdering.håndter(aldersvilkårLøsning)

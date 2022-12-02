@@ -4,6 +4,7 @@ import no.nav.dagpenger.behandling.Aktivitetskontekst
 import no.nav.dagpenger.behandling.Aktivitetslogg
 import no.nav.dagpenger.behandling.IAktivitetslogg
 import no.nav.dagpenger.behandling.SpesifikkKontekst
+import java.util.UUID
 
 abstract class Hendelse(
     private val ident: String,
@@ -13,4 +14,8 @@ abstract class Hendelse(
     override fun toSpesifikkKontekst(): SpesifikkKontekst {
         return SpesifikkKontekst(this.javaClass.simpleName, mapOf("ident" to ident))
     }
+}
+
+abstract class LøsningHendelse(private val behandlingId: UUID, ident: String): Hendelse(ident){
+    fun behandlingId() = behandlingId
 }

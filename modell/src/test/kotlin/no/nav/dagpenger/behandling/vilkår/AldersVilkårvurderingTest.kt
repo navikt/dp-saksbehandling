@@ -14,7 +14,7 @@ internal class AldersVilkårvurderingTest {
         val aldersVilkårvurdering = AldersVilkårvurdering()
         aldersVilkårvurdering.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "12345123456"))
         assertEquals(AvventerVurdering, aldersVilkårvurdering.tilstand.tilstandType)
-        aldersVilkårvurdering.håndter(aldersvilkårLøsning = AldersvilkårLøsning("12345123456", true))
+        aldersVilkårvurdering.håndter(aldersvilkårLøsning = AldersvilkårLøsning("12345123456", true, UUID.randomUUID()))
         assertEquals(Oppfylt, aldersVilkårvurdering.tilstand.tilstandType)
     }
 }

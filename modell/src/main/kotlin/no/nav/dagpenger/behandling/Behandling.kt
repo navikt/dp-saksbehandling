@@ -5,7 +5,7 @@ import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import java.util.UUID
 
-abstract class Behandling(private val behandlingId: UUID, internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()) : Aktivitetskontekst {
+abstract class Behandling(internal val behandlingId: UUID, internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()) : Aktivitetskontekst {
 
     abstract val vilkårsvurderinger: List<Vilkårsvurdering>
 
