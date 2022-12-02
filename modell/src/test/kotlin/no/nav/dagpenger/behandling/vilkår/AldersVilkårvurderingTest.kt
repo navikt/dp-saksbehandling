@@ -12,7 +12,7 @@ internal class AldersVilkårvurderingTest {
     @Test
     fun `vilkår endrer tilstand fra IkkeVurdert via AvventerVurdering til Oppfylt`() {
         val aldersVilkårvurdering = AldersVilkårvurdering()
-        aldersVilkårvurdering.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "12345123456"))
+        aldersVilkårvurdering.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "123", "12345123456"))
         assertEquals(AvventerVurdering, aldersVilkårvurdering.tilstand.tilstandType)
         aldersVilkårvurdering.håndter(aldersvilkårLøsning = AldersvilkårLøsning("12345123456", true, UUID.randomUUID()))
         assertEquals(Oppfylt, aldersVilkårvurdering.tilstand.tilstandType)

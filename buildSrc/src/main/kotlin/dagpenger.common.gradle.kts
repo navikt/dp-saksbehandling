@@ -16,6 +16,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     testImplementation(Junit5.api)
+    testImplementation(Junit5.params)
     testRuntimeOnly(Junit5.engine)
 }
 

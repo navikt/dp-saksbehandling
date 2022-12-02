@@ -7,6 +7,8 @@ plugins {
 
 dependencies {
     implementation(project(":modell"))
+
+    testImplementation(Mockk.mockk)
 }
 
 application {

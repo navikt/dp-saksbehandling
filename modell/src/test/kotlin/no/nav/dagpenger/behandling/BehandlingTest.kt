@@ -13,7 +13,7 @@ import java.util.UUID
 class BehandlingTest {
     val ident = "12345678901"
     val person = Person(ident)
-    val søknadHendelse = SøknadHendelse(UUID.randomUUID(), ident)
+    val søknadHendelse = SøknadHendelse(søknadUUID = UUID.randomUUID(), journalpostId = "123454", ident = ident)
 
     @Test
     fun `Ny søknad hendelse fører til innvilgelsesvedtak`() {
@@ -47,7 +47,7 @@ class BehandlingTest {
     }
 
     @Test
-    fun `En søknadhendense skal bare behandles en gang`(){
+    fun `En søknadhendelse skal bare behandles en gang`() {
         person.håndter(søknadHendelse)
         person.håndter(søknadHendelse)
 
@@ -56,7 +56,7 @@ class BehandlingTest {
 
     @Test
     fun `Håndtere to unike søknadhendelser`() {
-        val søknadHendelse2 = SøknadHendelse(UUID.randomUUID(), ident)
+        val søknadHendelse2 = SøknadHendelse(UUID.randomUUID(), "1243", ident)
 
         person.håndter(søknadHendelse)
         person.håndter(søknadHendelse2)

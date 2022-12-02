@@ -11,11 +11,12 @@ abstract class Hendelse(
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
 ) : Aktivitetskontekst, IAktivitetslogg by aktivitetslogg {
 
+    fun ident() = ident
     override fun toSpesifikkKontekst(): SpesifikkKontekst {
         return SpesifikkKontekst(this.javaClass.simpleName, mapOf("ident" to ident))
     }
 }
 
-abstract class LøsningHendelse(private val behandlingId: UUID, ident: String): Hendelse(ident){
+abstract class LøsningHendelse(private val behandlingId: UUID, ident: String) : Hendelse(ident) {
     fun behandlingId() = behandlingId
 }

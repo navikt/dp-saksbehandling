@@ -13,9 +13,9 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     fun håndter(søknadHendelse: SøknadHendelse) {
         kontekst(søknadHendelse)
-        if(behandlinger.harSøknadUUID(søknadHendelse.søknadUUID)) return
+        if (behandlinger.harSøknadUUID(søknadHendelse.søknadUUID())) return
         søknadHendelse.info("Har mottatt ny søknadhendelse")
-        val behandling = NyRettighetsbehandling(søknadHendelse.søknadUUID)
+        val behandling = NyRettighetsbehandling(søknadHendelse.søknadUUID())
         behandlinger.add(behandling)
         behandling.håndter(søknadHendelse)
     }
@@ -25,7 +25,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         behandlinger.forEach { it.håndter(aldersvilkårLøsning) }
     }
 
-    //TODO vi må fikse visitor
+    // TODO vi må fikse visitor
     fun harBehandlinger() = this.behandlinger.isNotEmpty()
     fun antallBehandlinger() = this.behandlinger.size
     fun sisteBehandlingId() = this.behandlinger.first().behandlingId
