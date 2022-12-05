@@ -7,6 +7,7 @@ import no.nav.dagpenger.behandling.PersonMediator
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
+import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import java.util.UUID
@@ -44,6 +45,15 @@ internal class SøknadMottak(
             logger.info { "Fått søknadhendelse for $søknadID" }
             mediator.behandle(journalførtHendelse)
         }
+    }
+
+    override fun onError(problems: MessageProblems, context: MessageContext) {
+        logger.warn { "Leste ikke melding, ${problems.toExtendedReport()}" }
+    }
+
+    override fun onSevere(error: MessageProblems.MessageException, context: MessageContext) {
+        logger.error(error) { "Leste ikke melding" }
+
     }
 
     private fun JsonNode.asUUID(): UUID = this.asText().let { UUID.fromString(it) }
