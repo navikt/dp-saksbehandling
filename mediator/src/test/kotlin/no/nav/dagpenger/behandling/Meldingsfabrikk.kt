@@ -22,5 +22,4 @@ object Meldingsfabrikk {
             "@event_name": "innsending_ferdigstilt"
         } 
         """.trimIndent()
-
 }

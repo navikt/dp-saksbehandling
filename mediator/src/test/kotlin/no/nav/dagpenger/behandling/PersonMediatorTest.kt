@@ -2,7 +2,6 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
 import no.nav.dagpenger.behandling.db.PersonRepository
-import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -38,5 +37,6 @@ internal class PersonMediatorTest {
         )
         assertNotNull(inmemoryRepository.hentPerson(testIdent))
         assertEquals(1, testRapid.inspektør.size)
+        println(testRapid.inspektør.message(0))
     }
 }
