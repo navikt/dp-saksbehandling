@@ -7,6 +7,8 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.lang.RuntimeException
 import java.util.UUID
 
 internal class PersonMediatorTest {
@@ -48,5 +50,17 @@ internal class PersonMediatorTest {
         )
         assertEquals(2, testRapid.inspektør.size)
         assertEquals("VedtakInnvilgetBehov", testRapid.inspektør.field(1, "@behov")[0].asText())
+    }
+
+    @Test
+    fun `En må ha mottatt søknadhendelse før en person er opprettet`() {
+        assertThrows<RuntimeException> {
+            testRapid.sendTestMessage(
+                aldersbehovLøsning(
+                    ident = "12312312312",
+                    behandlingId = UUID.randomUUID().toString()
+                )
+            )
+        }
     }
 }
