@@ -13,13 +13,13 @@ object Meldingsfabrikk {
     ): String = //language=JSON
         """
         {
-            "journalpostId": "$journalpostId",
-            "type": "$type",
-            "fødselsnummer": "$ident",
-           "søknadsData": {
+          "journalpostId": "$journalpostId",
+          "type": "$type",
+          "fødselsnummer": "$ident",
+          "søknadsData": {
             "søknad_uuid": "$søknadId"
-        },
-            "@event_name": "innsending_ferdigstilt"
+          },
+          "@event_name": "innsending_ferdigstilt"
         } 
         """.trimIndent()
 }

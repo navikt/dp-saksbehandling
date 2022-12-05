@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -11,6 +12,9 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
 
     init {
         rapidsConnection.register(this)
+        PersonMediator(
+            rapidsConnection, InMemoryPersonRepository()
+        )
     }
     fun start() {
         rapidsConnection.start()
