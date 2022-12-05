@@ -47,13 +47,5 @@ internal class SøknadMottak(
         }
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext) {
-        logger.warn { "Leste ikke melding, ${problems.toExtendedReport()}" }
-    }
-
-    override fun onSevere(error: MessageProblems.MessageException, context: MessageContext) {
-        logger.error(error) { "Leste ikke melding" }
-    }
-
     private fun JsonNode.asUUID(): UUID = this.asText().let { UUID.fromString(it) }
 }
