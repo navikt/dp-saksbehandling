@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
+import no.nav.dagpenger.behandling.Meldingsfabrikk.aldersbehovLøsning
 import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -26,7 +27,7 @@ internal class PersonMediatorTest {
     val personMediator = PersonMediator(testRapid, inmemoryRepository)
 
     @Test
-    fun `Motta søknadhendelse`() {
+    fun `Motta søknadhendelse, få aldersbehovløsning og send ut behov om vedtak`() {
         testRapid.sendTestMessage(
             `innsending ferdigstilt hendelse`(
                 søknadId = UUID.randomUUID(),
@@ -35,8 +36,17 @@ internal class PersonMediatorTest {
                 type = "NySøknad"
             )
         )
-        assertNotNull(inmemoryRepository.hentPerson(testIdent))
+        val person: Person? = inmemoryRepository.hentPerson(testIdent)
+        assertNotNull(person)
         assertEquals(1, testRapid.inspektør.size)
-        println(testRapid.inspektør.message(0))
+
+        testRapid.sendTestMessage(
+            aldersbehovLøsning(
+                ident = testIdent,
+                behandlingId = person!!.sisteBehandlingId().toString()
+            )
+        )
+        assertEquals(2, testRapid.inspektør.size)
+        assertEquals("VedtakInnvilgetBehov", testRapid.inspektør.field(1, "@behov")[0].asText())
     }
 }
