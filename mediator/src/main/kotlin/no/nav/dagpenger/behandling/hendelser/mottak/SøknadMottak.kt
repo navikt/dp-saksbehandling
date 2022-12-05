@@ -7,7 +7,6 @@ import no.nav.dagpenger.behandling.PersonMediator
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
-import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import java.util.UUID

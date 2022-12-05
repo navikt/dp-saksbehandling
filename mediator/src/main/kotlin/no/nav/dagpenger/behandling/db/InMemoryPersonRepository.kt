@@ -10,5 +10,4 @@ class InMemoryPersonRepository : PersonRepository {
     override fun lagrePerson(person: Person) {
         personer[person.ident()] = person
     }
-
 }
