@@ -33,11 +33,11 @@ object Meldingsfabrikk {
           "@event_name": "behov",
           "@behovId": "0c773480-7f92-4d96-8824-9edbcbb91f26",
           "@behov": [
-            "Aldersbehov"
+            "Paragraf_4_23_alder"
           ],
           "ident": "$ident",
           "behandlingId": "$behandlingId",
-          "Aldersbehov": {},
+          "Paragraf_4_23_alder": {},
           "@id": "908cbae7-5d54-4d74-8f31-8f16109ac925",
           "@opprettet": "2022-12-05T14:02:35.564435",
           "system_read_count": 1,
@@ -56,14 +56,14 @@ object Meldingsfabrikk {
             }
           ],
           "@løsning": {
-            "Aldersbehov": true
+            "Paragraf_4_23_alder": "${UUID.randomUUID()}"
           },
           "@forårsaket_av": {
             "id": "6e68f5ac-5654-4455-b413-ccaf72dba065",
             "opprettet": "2022-12-05T12:31:33.4283785",
             "event_name": "behov",
             "behov": [
-              "Aldersbehov"
+              "Paragraf_4_23_alder"
             ]
           }
         }

@@ -2,7 +2,7 @@ package no.nav.dagpenger.behandling
 
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.mockk
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Aldersbehov
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -43,7 +43,7 @@ internal class BehovMediatorTest {
         hendelse.kontekst(Testkontekst("Testkontekst"))
 
         hendelse.behov(
-            Aldersbehov,
+            Paragraf_4_23_alder,
             "Behøver tom søknad for denne søknaden",
             mapOf(
                 "parameter1" to "verdi1",
@@ -59,13 +59,13 @@ internal class BehovMediatorTest {
         assertEquals(testIdent, inspektør.key(0), "Forventer at partisjonsnøkker er ident ($testIdent)")
         inspektør.message(0).also { json ->
             assertStandardBehovFelter(json)
-            assertEquals(listOf("Aldersbehov"), json["@behov"].map(JsonNode::asText))
+            assertEquals(listOf("Paragraf_4_23_alder"), json["@behov"].map(JsonNode::asText))
             assertEquals(testIdent, json["ident"].asText())
             assertEquals("Testkontekst", json["Testkontekst"].asText())
             assertEquals("verdi1", json["parameter1"].asText())
             assertEquals("verdi2", json["parameter2"].asText())
-            assertEquals("verdi1", json["Aldersbehov"]["parameter1"].asText())
-            assertEquals("verdi2", json["Aldersbehov"]["parameter2"].asText())
+            assertEquals("verdi1", json["Paragraf_4_23_alder"]["parameter1"].asText())
+            assertEquals("verdi2", json["Paragraf_4_23_alder"]["parameter2"].asText())
         }
     }
 
@@ -76,7 +76,7 @@ internal class BehovMediatorTest {
         hendelse.kontekst(Testkontekst("Testkontekst"))
 
         hendelse.behov(
-            Aldersbehov,
+            Paragraf_4_23_alder,
             "Trenger søknad på et arkiverbart format",
             mapOf(
                 "parameter1" to "verdi1",
@@ -100,15 +100,15 @@ internal class BehovMediatorTest {
         assertEquals(1, inspektør.size)
         inspektør.message(0).also { json ->
             assertStandardBehovFelter(json)
-            assertEquals(listOf("Aldersbehov", "VedtakInnvilgetBehov"), json["@behov"].map(JsonNode::asText))
+            assertEquals(listOf("Paragraf_4_23_alder", "VedtakInnvilgetBehov"), json["@behov"].map(JsonNode::asText))
             assertEquals(testIdent, json["ident"].asText())
             assertEquals("Testkontekst", json["Testkontekst"].asText())
             assertEquals("verdi1", json["parameter1"].asText())
             assertEquals("verdi2", json["parameter2"].asText())
             assertEquals("verdi3", json["parameter3"].asText())
             assertEquals("verdi4", json["parameter4"].asText())
-            assertEquals("verdi1", json["Aldersbehov"]["parameter1"].asText())
-            assertEquals("verdi2", json["Aldersbehov"]["parameter2"].asText())
+            assertEquals("verdi1", json["Paragraf_4_23_alder"]["parameter1"].asText())
+            assertEquals("verdi2", json["Paragraf_4_23_alder"]["parameter2"].asText())
             assertEquals("verdi3", json["VedtakInnvilgetBehov"]["parameter3"].asText())
             assertEquals("verdi4", json["VedtakInnvilgetBehov"]["parameter4"].asText())
         }
@@ -119,14 +119,14 @@ internal class BehovMediatorTest {
         val hendelse = TestHendelse(aktivitetslogg.barn())
         hendelse.kontekst(testPersonKontekst)
         hendelse.behov(
-            Aldersbehov,
+            Paragraf_4_23_alder,
             "Behøver tom søknad for denne søknaden",
             mapOf(
                 "ident" to testIdent
             )
         )
         hendelse.behov(
-            Aldersbehov,
+            Paragraf_4_23_alder,
             "Behøver tom søknad for denne søknaden",
             mapOf(
                 "ident" to testIdent
@@ -140,8 +140,8 @@ internal class BehovMediatorTest {
     internal fun `kan ikke produsere samme behov`() {
         val hendelse = TestHendelse(aktivitetslogg.barn())
         hendelse.kontekst(testPersonKontekst)
-        hendelse.behov(Aldersbehov, "Behøver tom søknad for denne søknaden")
-        hendelse.behov(Aldersbehov, "Behøver tom søknad for denne søknaden")
+        hendelse.behov(Paragraf_4_23_alder, "Behøver tom søknad for denne søknaden")
+        hendelse.behov(Paragraf_4_23_alder, "Behøver tom søknad for denne søknaden")
 
         assertThrows<IllegalArgumentException> { behovMediator.håndter(hendelse) }
     }

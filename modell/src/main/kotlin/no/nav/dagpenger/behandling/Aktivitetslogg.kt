@@ -196,7 +196,7 @@ class Aktivitetslogg private constructor(
             }
 
             enum class Behovtype {
-                Aldersbehov,
+                Paragraf_4_23_alder,
                 VedtakInnvilgetBehov,
                 VedtakAvslåttBehov
             }

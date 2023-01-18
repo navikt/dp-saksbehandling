@@ -1,13 +1,15 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_løsning
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
-abstract class Vilkårsvurdering(var tilstand: Tilstand) {
+abstract class Vilkårsvurdering(var tilstand: Tilstand, var vilkårsvurderingId: UUID? = null) {
 
     companion object {
         fun List<Vilkårsvurdering>.erFerdig() =
@@ -18,8 +20,12 @@ abstract class Vilkårsvurdering(var tilstand: Tilstand) {
         tilstand.håndter(søknadHendelse, this)
     }
 
-    fun håndter(aldersvilkårLøsning: AldersvilkårLøsning) {
+    fun håndter(aldersvilkårLøsning: Paragraf_4_23_alder_løsning) {
         tilstand.håndter(aldersvilkårLøsning, this)
+    }
+
+    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat) {
+        tilstand.håndter(paragraf423AlderResultat, this)
     }
 
     fun endreTilstand(nyTilstand: Tilstand) {
@@ -32,8 +38,11 @@ abstract class Vilkårsvurdering(var tilstand: Tilstand) {
             TODO(feilmelding(søknadHendelse))
         }
 
-        fun håndter(aldersvilkårLøsning: AldersvilkårLøsning, vilkårsvurdering: Vilkårsvurdering) {
+        fun håndter(aldersvilkårLøsning: Paragraf_4_23_alder_løsning, vilkårsvurdering: Vilkårsvurdering) {
             TODO(feilmelding(aldersvilkårLøsning))
+        }
+        fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat, vilkårsvurdering: Vilkårsvurdering) {
+            TODO(feilmelding(paragraf423AlderResultat))
         }
 
         private fun feilmelding(søknadHendelse: Hendelse) =

@@ -2,8 +2,9 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Companion.harSøknadUUID
 import no.nav.dagpenger.behandling.PersonIdentifikator.Companion.tilPersonIdentfikator
-import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_løsning
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
@@ -24,9 +25,14 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         behandling.håndter(søknadHendelse)
     }
 
-    fun håndter(aldersvilkårLøsning: AldersvilkårLøsning) {
+    fun håndter(aldersvilkårLøsning: Paragraf_4_23_alder_løsning) {
         kontekst(aldersvilkårLøsning)
         behandlinger.forEach { it.håndter(aldersvilkårLøsning) }
+    }
+
+    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat) {
+        kontekst(paragraf423AlderResultat)
+        behandlinger.forEach { it.håndter(paragraf423AlderResultat) }
     }
 
     // TODO vi må fikse visitor

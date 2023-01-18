@@ -2,10 +2,11 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslåttBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
-import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
 import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_løsning
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
-import no.nav.dagpenger.behandling.vilkår.AldersVilkårvurdering
+import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erFerdig
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
 import java.util.UUID
@@ -21,7 +22,7 @@ class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, 
     constructor(søknadUUID: UUID) : this(søknadUUID, UUID.randomUUID())
 
     override val vilkårsvurderinger = listOf(
-        AldersVilkårvurdering(),
+        Paragraf_4_23_alder_vilkår(),
     )
 
     override fun håndter(hendelse: SøknadHendelse) {
@@ -31,13 +32,20 @@ class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, 
         }
     }
 
-    override fun håndter(aldersvilkårLøsning: AldersvilkårLøsning) {
+    override fun håndter(aldersvilkårLøsning: Paragraf_4_23_alder_løsning) {
         if (this.behandlingId != aldersvilkårLøsning.behandlingId()) return
         kontekst(aldersvilkårLøsning, "Mottok løsning for vilkårsvurdering av alder")
         vilkårsvurderinger.forEach { vurdering ->
             vurdering.håndter(aldersvilkårLøsning)
         }
-        ferdigstillRettighetsbehandling(aldersvilkårLøsning)
+    }
+
+    override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat) {
+        if (this.behandlingId != paragraf423AlderResultat.behandlingId()) return
+        vilkårsvurderinger.forEach { vurdering ->
+            vurdering.håndter(paragraf423AlderResultat)
+        }
+        ferdigstillRettighetsbehandling(paragraf423AlderResultat)
     }
 
     private fun ferdigstillRettighetsbehandling(hendelse: Hendelse) {

@@ -2,7 +2,8 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslåttBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
-import no.nav.dagpenger.behandling.hendelser.AldersvilkårLøsning
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_løsning
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -21,10 +22,19 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
 
-        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = true, person.sisteBehandlingId())
-        person.håndter(aldersvilkårLøsning)
-        assertEquals(1, aldersvilkårLøsning.behov().size)
-        val behov = aldersvilkårLøsning.behov().first()
+        val vilkårvurderingId = UUID.randomUUID()
+        val paragraf423AlderLøsning = Paragraf_4_23_alder_løsning(ident, vilkårvurderingId = vilkårvurderingId, person.sisteBehandlingId())
+        person.håndter(paragraf423AlderLøsning)
+
+        val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
+            ident,
+            vilkårvurderingId,
+            person.sisteBehandlingId(),
+            oppfylt = true
+        )
+        person.håndter(paragraf423AlderResultat)
+        assertEquals(1, paragraf423AlderResultat.behov().size)
+        val behov = paragraf423AlderResultat.behov().first()
 
         assertEquals(VedtakInnvilgetBehov, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
@@ -37,10 +47,19 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
 
-        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = false, person.sisteBehandlingId())
-        person.håndter(aldersvilkårLøsning)
-        assertEquals(1, aldersvilkårLøsning.behov().size)
-        val behov = aldersvilkårLøsning.behov().first()
+        val vilkårvurderingId = UUID.randomUUID()
+        val paragraf423AlderLøsning = Paragraf_4_23_alder_løsning(ident, vilkårvurderingId = vilkårvurderingId, person.sisteBehandlingId())
+        person.håndter(paragraf423AlderLøsning)
+
+        val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
+            ident,
+            vilkårvurderingId,
+            person.sisteBehandlingId(),
+            oppfylt = false
+        )
+        person.håndter(paragraf423AlderResultat)
+        assertEquals(1, paragraf423AlderResultat.behov().size)
+        val behov = paragraf423AlderResultat.behov().first()
         assertEquals(VedtakAvslåttBehov, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
         assertNotNull(ident, behov.kontekst()["behandlingId"])
@@ -60,8 +79,16 @@ class BehandlingTest {
 
         person.håndter(søknadHendelse)
         person.håndter(søknadHendelse2)
-        val aldersvilkårLøsning = AldersvilkårLøsning(ident, oppfylt = false, person.sisteBehandlingId())
-        person.håndter(aldersvilkårLøsning)
-        assertEquals(1, aldersvilkårLøsning.behov().size)
+        val vilkårvurderingId = UUID.randomUUID()
+        val paragraf423AlderLøsning = Paragraf_4_23_alder_løsning(ident, vilkårvurderingId = vilkårvurderingId, person.sisteBehandlingId())
+        val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
+            ident,
+            vilkårvurderingId,
+            person.sisteBehandlingId(),
+            oppfylt = false
+        )
+        person.håndter(paragraf423AlderLøsning)
+        person.håndter(paragraf423AlderResultat)
+        assertEquals(1, paragraf423AlderResultat.behov().size)
     }
 }
