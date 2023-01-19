@@ -1,9 +1,9 @@
 package no.nav.dagpenger.behandling.hendelser.mottak
 
+import com.fasterxml.jackson.databind.JsonNode
 import mu.withLoggingContext
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.PersonMediator
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_løsning
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -14,26 +14,32 @@ internal class AldersbehovLøsningMottak(rapidsConnection: RapidsConnection, pri
 
     init {
         River(rapidsConnection).apply {
-            validate { it.demandValue("@event_name", "behov") }
-            validate { it.requireKey("behandlingId", "ident", "@behovId") }
-            validate { it.demandAllOrAny("@behov", listOf(Paragraf_4_23_alder.name)) }
-            validate { it.requireKey("@løsning") }
+            validate { it.demandValue("@event_name", "prosess_resultat") }
+            validate { it.requireKey("søknad_uuid", "prosessnavn") }
+            validate {
+                it.requireArray("identer") {
+                    requireKey("type", "historisk", "id")
+                }
+            }
+            validate { it.requireKey("resultat") }
         }.register(this)
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        val ident = packet["ident"].asText()
-        val behandlingId = packet["behandlingId"].asText().let { UUID.fromString(it) }
-        val vilkårsvurderingId = packet["@løsning"][Paragraf_4_23_alder.name].asText().let { UUID.fromString(it) }
+        val ident = packet["identer"].first(gjeldendeFolkeregisterident)["id"].asText()
+        val vilkårsvurderingId = packet["søknad_uuid"].asText().let { UUID.fromString(it) }
 
-        withLoggingContext("behandlingId" to behandlingId.toString()) {
-            val paragraf423AlderLøsning = Paragraf_4_23_alder_løsning(
+        withLoggingContext("vilkårsvurderingId" to vilkårsvurderingId.toString()) {
+            val paragraf423AlderLøsning = Paragraf_4_23_alder_resultat(
                 ident = ident,
-                behandlingId = behandlingId,
-                vilkårvurderingId = vilkårsvurderingId
+                vilkårsvurderingId = vilkårsvurderingId,
+                oppfylt = packet["resultat"].asBoolean()
             )
 
             mediator.behandle(paragraf423AlderLøsning)
         }
     }
+
+    private val gjeldendeFolkeregisterident: (JsonNode) -> Boolean
+        get() = { it["type"].asText() == "folkeregisterident" && !it["historisk"].asBoolean() }
 }

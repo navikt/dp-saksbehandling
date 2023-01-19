@@ -3,7 +3,6 @@ package no.nav.dagpenger.behandling
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslåttBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_løsning
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
@@ -32,16 +31,8 @@ class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, 
         }
     }
 
-    override fun håndter(aldersvilkårLøsning: Paragraf_4_23_alder_løsning) {
-        if (this.behandlingId != aldersvilkårLøsning.behandlingId()) return
-        kontekst(aldersvilkårLøsning, "Mottok løsning for vilkårsvurdering av alder")
-        vilkårsvurderinger.forEach { vurdering ->
-            vurdering.håndter(aldersvilkårLøsning)
-        }
-    }
-
     override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat) {
-        if (this.behandlingId != paragraf423AlderResultat.behandlingId()) return
+        kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
         vilkårsvurderinger.forEach { vurdering ->
             vurdering.håndter(paragraf423AlderResultat)
         }

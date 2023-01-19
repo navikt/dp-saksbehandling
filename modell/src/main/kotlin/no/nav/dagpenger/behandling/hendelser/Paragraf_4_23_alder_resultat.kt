@@ -4,7 +4,6 @@ import java.util.UUID
 
 class Paragraf_4_23_alder_resultat(
     ident: String,
-    val vilkårvurderingId: UUID,
-    behandlingId: UUID,
+    val vilkårsvurderingId: UUID,
     val oppfylt: Boolean,
-) : LøsningHendelse(behandlingId, ident)
+) : ResultatHendelse(vilkårsvurderingId, ident)

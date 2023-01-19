@@ -2,13 +2,13 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslåttBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_løsning
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import java.util.UUID
 
 class BehandlingTest {
@@ -20,16 +20,19 @@ class BehandlingTest {
     fun `Ny søknad hendelse fører til innvilgelsesvedtak`() {
         person.håndter(søknadHendelse)
         assertEquals(1, søknadHendelse.behov().size)
+        val vilkårsvurderingBehov = søknadHendelse.behov().first()
+        assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
+        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingId"])
+        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
+        assertDoesNotThrow {
+            UUID.fromString(vilkårsvurderingId)
+        }
+        assertNotNull(vilkårsvurderingId)
         assertTrue(person.harBehandlinger())
-
-        val vilkårvurderingId = UUID.randomUUID()
-        val paragraf423AlderLøsning = Paragraf_4_23_alder_løsning(ident, vilkårvurderingId = vilkårvurderingId, person.sisteBehandlingId())
-        person.håndter(paragraf423AlderLøsning)
 
         val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
             ident,
-            vilkårvurderingId,
-            person.sisteBehandlingId(),
+            UUID.fromString(vilkårsvurderingId),
             oppfylt = true
         )
         person.håndter(paragraf423AlderResultat)
@@ -38,7 +41,7 @@ class BehandlingTest {
 
         assertEquals(VedtakInnvilgetBehov, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
-        assertNotNull(ident, behov.kontekst()["behandlingId"])
+        assertNotNull(behov.kontekst()["behandlingId"])
     }
 
     @Test
@@ -47,14 +50,17 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(person.harBehandlinger())
 
-        val vilkårvurderingId = UUID.randomUUID()
-        val paragraf423AlderLøsning = Paragraf_4_23_alder_løsning(ident, vilkårvurderingId = vilkårvurderingId, person.sisteBehandlingId())
-        person.håndter(paragraf423AlderLøsning)
+        val vilkårsvurderingBehov = søknadHendelse.behov().first()
+        assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
+        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingId"])
+        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
+        assertDoesNotThrow {
+            UUID.fromString(vilkårsvurderingId)
+        }
 
         val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
             ident,
-            vilkårvurderingId,
-            person.sisteBehandlingId(),
+            UUID.fromString(vilkårsvurderingId),
             oppfylt = false
         )
         person.håndter(paragraf423AlderResultat)
@@ -79,15 +85,13 @@ class BehandlingTest {
 
         person.håndter(søknadHendelse)
         person.håndter(søknadHendelse2)
-        val vilkårvurderingId = UUID.randomUUID()
-        val paragraf423AlderLøsning = Paragraf_4_23_alder_løsning(ident, vilkårvurderingId = vilkårvurderingId, person.sisteBehandlingId())
+        val vilkårsvurderingBehov = søknadHendelse.behov().first()
+        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
             ident,
-            vilkårvurderingId,
-            person.sisteBehandlingId(),
+            UUID.fromString(vilkårsvurderingId),
             oppfylt = false
         )
-        person.håndter(paragraf423AlderLøsning)
         person.håndter(paragraf423AlderResultat)
         assertEquals(1, paragraf423AlderResultat.behov().size)
     }

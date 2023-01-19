@@ -23,50 +23,68 @@ object Meldingsfabrikk {
         } 
         """.trimIndent()
 
-    internal fun aldersbehovLøsning(
-        behandlingId: String = "a9586759-b71b-4295-a077-89a86453b020",
+    internal fun Paragraf_4_23_alder_resultatjson(
+        vilkårsvurderingId: String = "a9586759-b71b-4295-a077-89a86453b020",
         ident: String = "12345678901"
     ): String =
         //language=JSON
-        """
-        {
-          "@event_name": "behov",
-          "@behovId": "0c773480-7f92-4d96-8824-9edbcbb91f26",
-          "@behov": [
-            "Paragraf_4_23_alder"
-          ],
-          "ident": "$ident",
-          "behandlingId": "$behandlingId",
-          "Paragraf_4_23_alder": {},
-          "@id": "908cbae7-5d54-4d74-8f31-8f16109ac925",
-          "@opprettet": "2022-12-05T14:02:35.564435",
-          "system_read_count": 1,
-          "system_participating_services": [
-            {
-              "id": "6e68f5ac-5654-4455-b413-ccaf72dba065",
-              "time": "2022-12-05T12:31:33.428378500"
-            },
-            {
-              "id": "6e68f5ac-5654-4455-b413-ccaf72dba065",
-              "time": "2022-12-05T14:02:35.532342"
-            },
-            {
-              "id": "908cbae7-5d54-4d74-8f31-8f16109ac925",
-              "time": "2022-12-05T14:02:35.564435"
-            }
-          ],
-          "@løsning": {
-            "Paragraf_4_23_alder": "${UUID.randomUUID()}"
-          },
-          "@forårsaket_av": {
-            "id": "6e68f5ac-5654-4455-b413-ccaf72dba065",
-            "opprettet": "2022-12-05T12:31:33.4283785",
-            "event_name": "behov",
-            "behov": [
-              "Paragraf_4_23_alder"
-            ]
-          }
-        }
-        
+        """{
+  "@event_name" : "prosess_resultat",
+  "@opprettet" : "2023-01-19T09:40:07.191987",
+  "@id" : "50fb6e53-5057-4331-b839-5494f1f8a750",
+  "søknad_uuid" : "$vilkårsvurderingId",
+  "prosessnavn" : "Paragraf_4_23_alder",
+  "resultat" : false,
+  "identer" : [ {
+    "id" : "$ident",
+    "type" : "folkeregisterident",
+    "historisk" : false
+  }, {
+    "id" : "aktørId",
+    "type" : "aktørid",
+    "historisk" : false
+  } ],
+  "fakta" : [ {
+    "navn" : "virkningsdato",
+    "id" : "1",
+    "roller" : [ "nav" ],
+    "type" : "localdate",
+    "godkjenner" : [ ],
+    "svar" : "2023-01-15"
+  }, {
+    "navn" : "fødselsdato",
+    "id" : "2",
+    "roller" : [ "nav" ],
+    "type" : "localdate",
+    "godkjenner" : [ ],
+    "svar" : "1955-01-15"
+  }, {
+    "navn" : "grensedato",
+    "id" : "3",
+    "roller" : [ ],
+    "type" : "localdate",
+    "godkjenner" : [ ],
+    "svar" : "2022-02-01"
+  } ],
+  "subsumsjoner" : [ {
+    "lokalt_resultat" : false,
+    "navn" : "søkeren må være under aldersgrense ved virkningstidspunkt",
+    "type" : "Deltre subsumsjon",
+    "forklaring" : "saksbehandlerforklaring",
+    "subsumsjoner" : [ {
+      "lokalt_resultat" : false,
+      "navn" : "under aldersgrense",
+      "type" : "Deltre subsumsjon",
+      "forklaring" : "saksbehandlerforklaring",
+      "subsumsjoner" : [ {
+        "lokalt_resultat" : false,
+        "navn" : "Sjekk at 'virkningsdato med id 1' er før 'grensedato med id 3'",
+        "forklaring" : "saksbehandlerforklaring",
+        "type" : "Enkel subsumsjon",
+        "fakta" : [ "1", "3" ]
+      } ]
+    } ]
+  } ]
+}
         """.trimIndent()
 }

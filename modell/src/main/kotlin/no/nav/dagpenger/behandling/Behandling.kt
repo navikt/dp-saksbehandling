@@ -1,6 +1,5 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_løsning
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
@@ -11,7 +10,6 @@ abstract class Behandling(internal val behandlingId: UUID, internal val aktivite
     abstract val vilkårsvurderinger: List<Vilkårsvurdering>
 
     abstract fun håndter(hendelse: SøknadHendelse)
-    abstract fun håndter(aldersvilkårLøsning: Paragraf_4_23_alder_løsning)
     abstract fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat)
 
     override fun toSpesifikkKontekst() =
