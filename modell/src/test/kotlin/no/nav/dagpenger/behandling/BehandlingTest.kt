@@ -23,6 +23,7 @@ class BehandlingTest {
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
         assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingId"])
+        assertNotNull(vilkårsvurderingBehov.kontekst()["søknad_uuid"])
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         assertDoesNotThrow {
             UUID.fromString(vilkårsvurderingId)

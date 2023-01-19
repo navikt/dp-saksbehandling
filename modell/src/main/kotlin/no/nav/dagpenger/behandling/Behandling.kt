@@ -12,9 +12,6 @@ abstract class Behandling(internal val behandlingId: UUID, internal val aktivite
     abstract fun håndter(hendelse: SøknadHendelse)
     abstract fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat)
 
-    override fun toSpesifikkKontekst() =
-        SpesifikkKontekst(kontekstType = Behandling.kontekstType, mapOf("behandlingId" to behandlingId.toString()))
-
     companion object {
         const val kontekstType = "Behandling"
     }

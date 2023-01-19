@@ -40,9 +40,9 @@ internal class SøknadMottak(
         withLoggingContext(
             "søknadId" to søknadID.toString(),
         ) {
-            val journalførtHendelse = SøknadHendelse(søknadID, journalpostId, ident)
+            val søknadHendelse = SøknadHendelse(søknadID, journalpostId, ident)
             logger.info { "Fått søknadhendelse for $søknadID" }
-            mediator.behandle(journalførtHendelse)
+            mediator.behandle(søknadHendelse)
         }
     }
 
