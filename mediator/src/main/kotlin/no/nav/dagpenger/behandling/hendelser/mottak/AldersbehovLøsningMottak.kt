@@ -15,13 +15,13 @@ internal class AldersbehovLøsningMottak(rapidsConnection: RapidsConnection, pri
     init {
         River(rapidsConnection).apply {
             validate { it.demandValue("@event_name", "prosess_resultat") }
-            validate { it.requireKey("søknad_uuid", "prosessnavn") }
+            validate { it.requireKey("søknad_uuid", "resultat") }
+            validate { it.requireValue("versjon_navn", "Paragraf_4_23_alder") }
             validate {
                 it.requireArray("identer") {
                     requireKey("type", "historisk", "id")
                 }
             }
-            validate { it.requireKey("resultat") }
         }.register(this)
     }
 

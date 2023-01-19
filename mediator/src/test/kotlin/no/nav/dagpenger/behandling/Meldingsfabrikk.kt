@@ -25,7 +25,8 @@ object Meldingsfabrikk {
 
     internal fun Paragraf_4_23_alder_resultatjson(
         vilkårsvurderingId: String = "a9586759-b71b-4295-a077-89a86453b020",
-        ident: String = "12345678901"
+        ident: String = "12345678901",
+        versjonNavn: String = "Paragraf_4_23_alder"
     ): String =
         //language=JSON
         """{
@@ -33,7 +34,7 @@ object Meldingsfabrikk {
   "@opprettet" : "2023-01-19T09:40:07.191987",
   "@id" : "50fb6e53-5057-4331-b839-5494f1f8a750",
   "søknad_uuid" : "$vilkårsvurderingId",
-  "prosessnavn" : "Paragraf_4_23_alder",
+  "versjon_navn" : "$versjonNavn",
   "resultat" : false,
   "identer" : [ {
     "id" : "$ident",

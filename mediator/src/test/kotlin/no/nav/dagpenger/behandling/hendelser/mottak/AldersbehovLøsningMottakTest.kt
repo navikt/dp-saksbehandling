@@ -10,7 +10,9 @@ import no.nav.dagpenger.behandling.PersonMediator
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class AldersbehovLøsningMottakTest {
@@ -20,6 +22,12 @@ internal class AldersbehovLøsningMottakTest {
     }
     private val testRapid = TestRapid().also {
         AldersbehovLøsningMottak(it, mediatorMock)
+    }
+
+    @BeforeEach
+    fun setUp() {
+        testRapid.reset()
+        slot.clear()
     }
 
     @Test
@@ -33,5 +41,11 @@ internal class AldersbehovLøsningMottakTest {
         assertEquals(
             "12345678901", paragraf423AlderLøsning.ident()
         )
+    }
+
+    @Test
+    fun `plukker ikke opp ukjente vilkårsresultater`() {
+        testRapid.sendTestMessage(Paragraf_4_23_alder_resultatjson(vilkårsvurderingId = "a9586759-b71b-4295-a077-89a86453b020", versjonNavn = "Noe tull"))
+        assertFalse(slot.isCaptured)
     }
 }
