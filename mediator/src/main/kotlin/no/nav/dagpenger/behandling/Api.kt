@@ -73,9 +73,9 @@ internal fun Application.api(
 
 private fun erOppfylt(tilstand: Vilkårsvurdering.Tilstand): String {
     return when(tilstand.tilstandType) {
-        Vilkårsvurdering.Tilstand.Type.Oppfylt -> "✅"
-        Vilkårsvurdering.Tilstand.Type.IkkeOppfylt -> "❌"
-        Vilkårsvurdering.Tilstand.Type.IkkeVurdert -> "❓"
-        Vilkårsvurdering.Tilstand.Type.AvventerVurdering -> "⚒️"
+        Vilkårsvurdering.Tilstand.Type.Oppfylt -> "✅ - Oppfylt "
+        Vilkårsvurdering.Tilstand.Type.IkkeOppfylt -> "❌ - Ikke oppfylt"
+        Vilkårsvurdering.Tilstand.Type.IkkeVurdert -> "❓ - Ikke vurdert "
+        Vilkårsvurdering.Tilstand.Type.AvventerVurdering -> "⚒️ - Under behandling"
     }
 }

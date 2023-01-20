@@ -13,6 +13,7 @@ import java.lang.RuntimeException
 internal class PersonMediator(rapidsConnection: RapidsConnection, private val personRepository: PersonRepository) {
 
     private companion object {
+        val logger = KotlinLogging.logger {}
         val sikkerLogger = KotlinLogging.logger("tjenestekall.PersonMediator")
     }
 
@@ -36,10 +37,14 @@ internal class PersonMediator(rapidsConnection: RapidsConnection, private val pe
     }
 
     private fun behandle(hendelse: Hendelse, håndter: (Person) -> Unit) {
-        val person = hentEllerOpprettPerson(hendelse)
-        håndter(person)
-        personRepository.lagrePerson(person)
-        behovMediator.håndter(hendelse)
+        try {
+            val person = hentEllerOpprettPerson(hendelse)
+            håndter(person)
+            personRepository.lagrePerson(person)
+            behovMediator.håndter(hendelse)
+        } catch (e: Exception) {
+            logger.error(e) { "Kunne ikke behandle hendelse ${hendelse.javaClass.simpleName}" }
+        }
     }
 
     private fun hentEllerOpprettPerson(hendelse: Hendelse): Person {
