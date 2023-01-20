@@ -1,11 +1,11 @@
 package no.nav.dagpenger.behandling
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
-import io.ktor.server.application.call
+import io.ktor.server.application.*
 import io.ktor.server.html.respondHtml
 import io.ktor.server.plugins.MissingRequestParameterException
 import io.ktor.server.plugins.NotFoundException
+import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
@@ -20,8 +20,10 @@ import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 
 internal fun Application.api(
-    personRepository: PersonRepository
+    personRepository: PersonRepository,
 ) {
+
+    install(DefaultHeaders)
 
     routing {
         route("behandlinger") {
@@ -50,7 +52,12 @@ internal fun Application.api(
                                         li {
                                             text(
                                                 """
-                                                ${vilkår.javaClass.simpleName.replace("_", " ")}  ${erOppfylt(vilkår.tilstand)} 
+                                                ${
+                                                    vilkår.javaClass.simpleName.replace(
+                                                        "_",
+                                                        " "
+                                                    )
+                                                }  ${erOppfylt(vilkår.tilstand)} 
                                                 """.trimIndent()
                                             )
                                         }
@@ -65,5 +72,10 @@ internal fun Application.api(
 }
 
 private fun erOppfylt(tilstand: Vilkårsvurdering.Tilstand): String {
-    return if (tilstand.tilstandType == Vilkårsvurdering.Tilstand.Type.Oppfylt) "✅" else "❌"
+    return when(tilstand.tilstandType) {
+        Vilkårsvurdering.Tilstand.Type.Oppfylt -> "✅"
+        Vilkårsvurdering.Tilstand.Type.IkkeOppfylt -> "❌"
+        Vilkårsvurdering.Tilstand.Type.IkkeVurdert -> "❓"
+        Vilkårsvurdering.Tilstand.Type.AvventerVurdering -> "⚒️"
+    }
 }

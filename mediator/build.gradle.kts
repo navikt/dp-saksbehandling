@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
     implementation(project(":modell"))
+    implementation("io.ktor:ktor-server-default-headers-jvm:2.1.3")
 
     testImplementation(Mockk.mockk)
 
