@@ -7,13 +7,17 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
 
+    private val inMemoryPersonRepository = InMemoryPersonRepository()
     private val rapidsConnection =
-        RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration)).build()
+        RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
+            .withKtorModule {
+                api(inMemoryPersonRepository)
+            }.build()
 
     init {
         rapidsConnection.register(this)
         PersonMediator(
-            rapidsConnection, InMemoryPersonRepository()
+            rapidsConnection, inMemoryPersonRepository
         )
     }
     fun start() {

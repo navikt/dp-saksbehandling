@@ -9,6 +9,10 @@ dependencies {
     implementation(project(":modell"))
 
     testImplementation(Mockk.mockk)
+
+    // demo
+    implementation("io.ktor:ktor-server-html-builder:${Ktor2.version}")
+    testImplementation(Ktor2.Server.library("test-host"))
 }
 
 application {

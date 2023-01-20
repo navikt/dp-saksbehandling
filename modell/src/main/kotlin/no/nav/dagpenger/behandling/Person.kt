@@ -32,6 +32,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     // TODO vi må fikse visitor
     fun harBehandlinger() = this.behandlinger.isNotEmpty()
     fun antallBehandlinger() = this.behandlinger.size
+    fun behandlinger() = this.behandlinger.toList()
     fun sisteBehandlingId() = this.behandlinger.first().behandlingId
     fun ident() = this.ident.identifikator()
 
