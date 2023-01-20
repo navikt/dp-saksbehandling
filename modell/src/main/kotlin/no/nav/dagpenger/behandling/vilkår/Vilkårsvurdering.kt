@@ -38,15 +38,15 @@ abstract class Vilkårsvurdering private constructor(var tilstand: Tilstand, val
 
     interface Tilstand {
         fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Vilkårsvurdering) {
-            TODO(feilmelding(søknadHendelse))
+            feilmelding(søknadHendelse)
         }
 
         fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat, vilkårsvurdering: Vilkårsvurdering) {
-            TODO(feilmelding(paragraf423AlderResultat))
+            feilmelding(paragraf423AlderResultat)
         }
 
-        private fun feilmelding(søknadHendelse: Hendelse) =
-            "Kan ikke håndtere ${søknadHendelse.javaClass.simpleName} i tilstand ${this.tilstandType}"
+        private fun feilmelding(hendelse: Hendelse) =
+            hendelse.warn("Kan ikke håndtere ${hendelse.javaClass.simpleName} i tilstand ${this.tilstandType}")
 
         val tilstandType: Type
 
