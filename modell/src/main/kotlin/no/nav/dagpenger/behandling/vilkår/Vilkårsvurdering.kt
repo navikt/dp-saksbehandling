@@ -10,25 +10,22 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
-abstract class Vilkårsvurdering private constructor(var tilstand: Tilstand, val vilkårsvurderingId: UUID) : Aktivitetskontekst {
-    constructor(tilstand: Tilstand) : this(tilstand, UUID.randomUUID())
+abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private constructor(var tilstand: Tilstand<Paragraf>, val vilkårsvurderingId: UUID) : Aktivitetskontekst {
+    constructor(tilstand: Tilstand<Paragraf>) : this(tilstand, UUID.randomUUID())
     companion object {
-        fun List<Vilkårsvurdering>.erFerdig() =
+        fun List<Vilkårsvurdering<*>>.erFerdig() =
             this.none { it.tilstand.tilstandType == Tilstand.Type.AvventerVurdering || it.tilstand.tilstandType == Tilstand.Type.IkkeVurdert }
     }
-
     fun håndter(søknadHendelse: SøknadHendelse) {
         søknadHendelse.kontekst(this)
-        tilstand.håndter(søknadHendelse, this)
+        implementasjon { tilstand.håndter(søknadHendelse, this) }
     }
-
     fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat) {
         if (this.vilkårsvurderingId != paragraf423AlderResultat.vilkårsvurderingId) return
         paragraf423AlderResultat.kontekst(this)
-        tilstand.håndter(paragraf423AlderResultat, this)
+        implementasjon { tilstand.håndter(paragraf423AlderResultat, this) }
     }
-
-    fun endreTilstand(nyTilstand: Tilstand) {
+    fun endreTilstand(nyTilstand: Tilstand<Paragraf>) {
         loggTilstandsendring(nyTilstand)
         tilstand = nyTilstand
     }
@@ -36,29 +33,30 @@ abstract class Vilkårsvurdering private constructor(var tilstand: Tilstand, val
     override fun toSpesifikkKontekst(): SpesifikkKontekst =
         SpesifikkKontekst(this.javaClass.simpleName, mapOf("vilkårsvurderingId" to vilkårsvurderingId.toString()))
 
-    interface Tilstand {
-        fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Vilkårsvurdering) {
-            feilmelding(søknadHendelse)
-        }
+    protected abstract fun <T> implementasjon(block: Paragraf.() -> T): T
 
-        fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat, vilkårsvurdering: Vilkårsvurdering) {
-            feilmelding(paragraf423AlderResultat)
-        }
-
-        private fun feilmelding(hendelse: Hendelse) =
-            hendelse.warn("Kan ikke håndtere ${hendelse.javaClass.simpleName} i tilstand ${this.tilstandType}")
-
-        val tilstandType: Type
-
+    sealed class Tilstand<Paragraf : Vilkårsvurdering<Paragraf>>(val tilstandType: Type) {
         enum class Type {
             Oppfylt,
             IkkeOppfylt,
             IkkeVurdert,
-            AvventerVurdering
+            AvventerVurdering;
         }
+        open fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Paragraf) {
+            feilmelding(søknadHendelse)
+        }
+        open fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat, vilkårsvurdering: Paragraf) {
+            feilmelding(paragraf423AlderResultat)
+        }
+        private fun feilmelding(hendelse: Hendelse) =
+            hendelse.warn("Kan ikke håndtere ${hendelse.javaClass.simpleName} i tilstand ${this.tilstandType}")
+        abstract class IkkeVurdert<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.IkkeVurdert)
+        abstract class Avventer<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.AvventerVurdering)
+        abstract class Oppfylt<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.Oppfylt)
+        abstract class IkkeOppfylt<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.IkkeOppfylt)
     }
 
-    private fun loggTilstandsendring(nyTilstand: Tilstand) {
+    private fun loggTilstandsendring(nyTilstand: Tilstand<Paragraf>) {
         logger.info { "Vurdering ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.tilstandType} til ny tilstand ${nyTilstand.tilstandType}" }
     }
 }

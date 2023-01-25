@@ -73,7 +73,7 @@ internal fun Application.api(
     }
 }
 
-private fun erOppfylt(tilstand: Vilkårsvurdering.Tilstand): String {
+private fun erOppfylt(tilstand: Vilkårsvurdering.Tilstand<*>): String {
     return when (tilstand.tilstandType) {
         Vilkårsvurdering.Tilstand.Type.Oppfylt -> "✅ - Oppfylt "
         Vilkårsvurdering.Tilstand.Type.IkkeOppfylt -> "❌ - Ikke oppfylt"

@@ -7,7 +7,7 @@ import java.util.UUID
 
 abstract class Behandling(internal val behandlingId: UUID, internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()) : Aktivitetskontekst {
 
-    abstract val vilkårsvurderinger: List<Vilkårsvurdering>
+    abstract val vilkårsvurderinger: List<Vilkårsvurdering<*>>
 
     abstract fun håndter(hendelse: SøknadHendelse)
     abstract fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat)

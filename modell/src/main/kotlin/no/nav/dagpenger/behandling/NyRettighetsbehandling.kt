@@ -6,6 +6,7 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
+import no.nav.dagpenger.behandling.vilkår.TestVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erFerdig
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
 import java.util.UUID
@@ -22,9 +23,12 @@ class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, 
 
     constructor(søknadUUID: UUID) : this(søknadUUID, UUID.randomUUID())
 
-    override val vilkårsvurderinger = listOf(
-        Paragraf_4_23_alder_vilkår(),
-    )
+    override val vilkårsvurderinger by lazy {
+        listOf(
+            Paragraf_4_23_alder_vilkår(),
+            TestVilkår(),
+        )
+    }
 
     override fun toSpesifikkKontekst() =
         SpesifikkKontekst(
