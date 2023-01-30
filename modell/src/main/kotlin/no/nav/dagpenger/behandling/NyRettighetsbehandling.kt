@@ -11,17 +11,15 @@ import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erFerdig
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
 import java.util.UUID
 
-class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, behandlingsId: UUID) :
-    Behandling(behandlingsId) {
-
-    // todo : Behandling har tilstander ?
+class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, behandlingsId: UUID, tilstand: Tilstand) :
+    Behandling(behandlingsId, tilstand) {
 
     companion object {
         fun List<Behandling>.harSøknadUUID(søknadUUID: UUID) =
             this.any { it is NyRettighetsbehandling && it.søknadUUID == søknadUUID }
     }
 
-    constructor(søknadUUID: UUID) : this(søknadUUID, UUID.randomUUID())
+    constructor(søknadUUID: UUID) : this(søknadUUID, UUID.randomUUID(), UnderBehandling)
 
     override val vilkårsvurderinger by lazy {
         listOf(
