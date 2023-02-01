@@ -2,8 +2,9 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslått
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilget
+import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
@@ -12,7 +13,7 @@ import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfy
 import java.time.LocalDate
 import java.util.UUID
 
-class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, behandlingsId: UUID, tilstand: Tilstand) :
+class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, behandlingsId: UUID, private val tilstand: Tilstand) :
     Behandling(behandlingsId, tilstand) {
 
     companion object {
@@ -46,12 +47,18 @@ class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, 
         }
     }
 
-    override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat) {
+    override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
         kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
         vilkårsvurderinger.forEach { vurdering ->
             vurdering.håndter(paragraf423AlderResultat)
         }
         ferdigstillRettighetsbehandling(paragraf423AlderResultat)
+    }
+
+    override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
+        if (grunnlagOgSatsResultat.behandlingId != this.behandlingId) return
+        kontekst(grunnlagOgSatsResultat, "Fått resultat på ${grunnlagOgSatsResultat.javaClass.simpleName}")
+        tilstand.håndter(grunnlagOgSatsResultat, this)
     }
 
     private fun ferdigstillRettighetsbehandling(hendelse: Hendelse) {

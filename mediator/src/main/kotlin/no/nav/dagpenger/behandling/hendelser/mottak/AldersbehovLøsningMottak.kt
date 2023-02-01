@@ -3,7 +3,7 @@ package no.nav.dagpenger.behandling.hendelser.mottak
 import com.fasterxml.jackson.databind.JsonNode
 import mu.withLoggingContext
 import no.nav.dagpenger.behandling.PersonMediator
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -30,7 +30,7 @@ internal class AldersbehovLøsningMottak(rapidsConnection: RapidsConnection, pri
         val vilkårsvurderingId = packet["søknad_uuid"].asText().let { UUID.fromString(it) }
 
         withLoggingContext("vilkårsvurderingId" to vilkårsvurderingId.toString()) {
-            val paragraf423AlderLøsning = Paragraf_4_23_alder_resultat(
+            val paragraf423AlderLøsning = Paragraf_4_23_alder_Vilkår_resultat(
                 ident = ident,
                 vilkårsvurderingId = vilkårsvurderingId,
                 oppfylt = packet["resultat"].asBoolean()

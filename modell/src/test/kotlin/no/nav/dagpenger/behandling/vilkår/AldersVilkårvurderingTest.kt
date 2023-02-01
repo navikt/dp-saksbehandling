@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.vilkår
 
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.AvventerVurdering
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -15,7 +15,7 @@ internal class AldersVilkårvurderingTest {
         assertEquals(AvventerVurdering, paragraf423alderVilkår.tilstand.tilstandType)
 
         paragraf423alderVilkår.håndter(
-            Paragraf_4_23_alder_resultat(
+            Paragraf_4_23_alder_Vilkår_resultat(
                 "12345123456",
                 vilkårsvurderingId = paragraf423alderVilkår.vilkårsvurderingId,
                 true

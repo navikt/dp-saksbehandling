@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
 class Paragraf_4_23_alder_vilkår : Vilkårsvurdering<Paragraf_4_23_alder_vilkår>(IkkeVurdert) {
@@ -12,7 +12,7 @@ class Paragraf_4_23_alder_vilkår : Vilkårsvurdering<Paragraf_4_23_alder_vilkå
         }
     }
     object Avventer : Tilstand.Avventer<Paragraf_4_23_alder_vilkår>() {
-        override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat, vilkårsvurdering: Paragraf_4_23_alder_vilkår) {
+        override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat, vilkårsvurdering: Paragraf_4_23_alder_vilkår) {
             if (vilkårsvurdering.vilkårsvurderingId == paragraf423AlderResultat.vilkårsvurderingId) {
                 if (paragraf423AlderResultat.oppfylt) {
                     vilkårsvurdering.endreTilstand(Oppfylt)

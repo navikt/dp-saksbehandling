@@ -4,7 +4,8 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grun
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslått
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilget
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
+import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -26,6 +27,7 @@ class BehandlingTest {
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
         assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingId"])
+        val behandlingId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingId"])
         assertNotNull(vilkårsvurderingBehov.kontekst()["søknad_uuid"])
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         assertDoesNotThrow {
@@ -34,16 +36,17 @@ class BehandlingTest {
         assertNotNull(vilkårsvurderingId)
         assertTrue(person.harBehandlinger())
 
-        val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
+        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
             ident,
             UUID.fromString(vilkårsvurderingId),
             oppfylt = true
         )
         person.håndter(paragraf423AlderResultat)
         assertEquals(3, paragraf423AlderResultat.behov().size)
+
         val grunnlag = paragraf423AlderResultat.behov()[0]
         val sats = paragraf423AlderResultat.behov()[1]
-        val vedtakInnvilget = paragraf423AlderResultat.behov()[2]
+
 
         assertEquals(Grunnlag, grunnlag.type)
         assertEquals(ident, grunnlag.kontekst()["ident"])
@@ -54,6 +57,9 @@ class BehandlingTest {
         assertEquals(ident, sats.kontekst()["ident"])
         assertNotNull(sats.kontekst()["behandlingId"])
 
+        val grunnlagOgSatsResultat = GrunnlagOgSatsResultat(ident, behandlingId, 250000.toBigDecimal(), 700.toBigDecimal() )
+        person.håndter(grunnlagOgSatsResultat)
+        val vedtakInnvilget = grunnlagOgSatsResultat.behov().first()
         assertEquals(VedtakInnvilget, vedtakInnvilget.type)
         assertEquals(ident, vedtakInnvilget.kontekst()["ident"])
         assertNotNull(vedtakInnvilget.kontekst()["behandlingId"])
@@ -73,7 +79,7 @@ class BehandlingTest {
             UUID.fromString(vilkårsvurderingId)
         }
 
-        val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
+        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
             ident,
             UUID.fromString(vilkårsvurderingId),
             oppfylt = false
@@ -102,7 +108,7 @@ class BehandlingTest {
         person.håndter(søknadHendelse2)
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        val paragraf423AlderResultat = Paragraf_4_23_alder_resultat(
+        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
             ident,
             UUID.fromString(vilkårsvurderingId),
             oppfylt = false

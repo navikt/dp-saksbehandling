@@ -17,6 +17,10 @@ abstract class Hendelse(
     }
 }
 
-abstract class ResultatHendelse(private val vilkårsvurderingId: UUID, ident: String) : Hendelse(ident) {
+abstract class VilkårResultatHendelse(private val vilkårsvurderingId: UUID, ident: String) : Hendelse(ident) {
     fun vilkårsvurderingId() = vilkårsvurderingId
+}
+
+abstract class BehandlingResultatHendelse(ident: String, behandlingId: UUID) : Hendelse(ident) {
+
 }

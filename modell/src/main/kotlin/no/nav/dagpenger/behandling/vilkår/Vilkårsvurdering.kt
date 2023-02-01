@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Aktivitetskontekst
 import no.nav.dagpenger.behandling.SpesifikkKontekst
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_resultat
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import java.util.UUID
 
@@ -20,7 +20,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         søknadHendelse.kontekst(this)
         implementasjon { tilstand.håndter(søknadHendelse, this) }
     }
-    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat) {
+    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
         if (this.vilkårsvurderingId != paragraf423AlderResultat.vilkårsvurderingId) return
         paragraf423AlderResultat.kontekst(this)
         implementasjon { tilstand.håndter(paragraf423AlderResultat, this) }
@@ -45,7 +45,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         open fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Paragraf) {
             feilmelding(søknadHendelse)
         }
-        open fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_resultat, vilkårsvurdering: Paragraf) {
+        open fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat, vilkårsvurdering: Paragraf) {
             feilmelding(paragraf423AlderResultat)
         }
         private fun feilmelding(hendelse: Hendelse) =
