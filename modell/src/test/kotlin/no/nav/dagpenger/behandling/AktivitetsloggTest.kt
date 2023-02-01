@@ -149,7 +149,7 @@ internal class AktivitetsloggTest {
         val param1 = "value"
         val param2 = LocalDate.now()
         hendelse1.behov(
-            Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslåttBehov,
+            Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslått,
             "Behov om vedtak",
             mapOf(
                 "param1" to param1,

@@ -197,8 +197,10 @@ class Aktivitetslogg private constructor(
 
             enum class Behovtype {
                 Paragraf_4_23_alder,
-                VedtakInnvilgetBehov,
-                VedtakAvslåttBehov
+                VedtakInnvilget,
+                VedtakAvslått,
+                Grunnlag,
+                Sats
             }
         }
 

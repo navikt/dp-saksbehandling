@@ -3,7 +3,7 @@ package no.nav.dagpenger.behandling
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.mockk
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilgetBehov
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilget
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
@@ -85,7 +85,7 @@ internal class BehovMediatorTest {
         )
 
         hendelse.behov(
-            VedtakInnvilgetBehov,
+            VedtakInnvilget,
             "Behøver tom søknad for denne søknaden",
             mapOf(
                 "parameter3" to "verdi3",
