@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.visitor
 
+import no.nav.dagpenger.behandling.NyRettighetsbehandling
 import no.nav.dagpenger.behandling.PersonIdentifikator
-import no.nav.dagpenger.behandling.Tilstand
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import java.time.LocalDate
 import java.util.UUID
@@ -14,7 +14,7 @@ interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor {
     fun visitNyRettighetsbehandling(
         søknadsId: UUID,
         behandlingsId: UUID,
-        tilstand: Tilstand,
+        tilstand: NyRettighetsbehandling.Tilstand,
         virkningsdato: LocalDate?,
         inntektsId: String?
     )

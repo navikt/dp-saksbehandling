@@ -11,13 +11,9 @@ import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import kotlinx.html.body
-import kotlinx.html.h1
 import kotlinx.html.head
-import kotlinx.html.li
 import kotlinx.html.meta
 import kotlinx.html.title
-import kotlinx.html.ul
 import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 
@@ -42,7 +38,7 @@ internal fun Application.api(
                             charset = "utf-8"
                         }
                     }
-                    body {
+                    /*body {
                         h1 {
                             +"Behandlinger for ${person.ident()}"
                         }
@@ -66,7 +62,7 @@ internal fun Application.api(
                                 }
                             }
                         }
-                    }
+                    }*/
                 }
             }
         }

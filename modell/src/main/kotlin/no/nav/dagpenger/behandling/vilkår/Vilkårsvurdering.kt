@@ -6,19 +6,23 @@ import no.nav.dagpenger.behandling.SpesifikkKontekst
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
 abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private constructor(
-    val vilkårsvurderingId: UUID,
-    var tilstand: Tilstand<Paragraf>
+    protected val vilkårsvurderingId: UUID,
+    private var tilstand: Tilstand<Paragraf>
 ) : Aktivitetskontekst {
     constructor(tilstand: Tilstand<Paragraf>) : this(UUID.randomUUID(), tilstand)
     companion object {
         fun List<Vilkårsvurdering<*>>.erFerdig() =
             this.none { it.tilstand.tilstandType == Tilstand.Type.AvventerVurdering || it.tilstand.tilstandType == Tilstand.Type.IkkeVurdert }
+
+        fun List<Vilkårsvurdering<*>>.erAlleOppfylt() =
+            this.all { it.tilstand.tilstandType == Oppfylt }
     }
 
     fun accept(visitor: VilkårsvurderingVisitor) {
@@ -63,7 +67,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
             hendelse.warn("Kan ikke håndtere ${hendelse.javaClass.simpleName} i tilstand ${this.tilstandType}")
         abstract class IkkeVurdert<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.IkkeVurdert)
         abstract class Avventer<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.AvventerVurdering)
-        abstract class Oppfylt<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.Oppfylt)
+        abstract class Oppfylt<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Oppfylt)
         abstract class IkkeOppfylt<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.IkkeOppfylt)
     }
 
