@@ -1,7 +1,5 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslått
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilget
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
@@ -95,9 +93,7 @@ class NyRettighetsbehandling private constructor(
 
             if (vilkårsvurderinger.erAlleOppfylt()) {
                 this.endreTilstand(UnderBeregning, hendelse)
-                hendelse.behov(VedtakInnvilget, "Vedtak innvilget", mapOf("sats" to 123))
             } else {
-                hendelse.behov(VedtakAvslått, "Vedtak avslått")
             }
         }
     }
@@ -155,7 +151,6 @@ class NyRettighetsbehandling private constructor(
         }
 
         override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
-            grunnlagOgSatsResultat.behov(VedtakInnvilget, "Vedtak innvilget")
         }
     }
 }

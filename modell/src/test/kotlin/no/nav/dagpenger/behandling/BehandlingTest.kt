@@ -2,8 +2,6 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslått
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilget
 import no.nav.dagpenger.behandling.BehandlingTest.Inspektør
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
@@ -46,7 +44,7 @@ class BehandlingTest {
             oppfylt = true
         )
         person.håndter(paragraf423AlderResultat)
-        assertEquals(3, paragraf423AlderResultat.behov().size)
+        assertEquals(2, paragraf423AlderResultat.behov().size)
 
         val grunnlag = paragraf423AlderResultat.behov()[0]
         val sats = paragraf423AlderResultat.behov()[1]
@@ -62,10 +60,6 @@ class BehandlingTest {
 
         val grunnlagOgSatsResultat = GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
         person.håndter(grunnlagOgSatsResultat)
-        val vedtakInnvilget = grunnlagOgSatsResultat.behov().first()
-        assertEquals(VedtakInnvilget, vedtakInnvilget.type)
-        assertEquals(ident, vedtakInnvilget.kontekst()["ident"])
-        assertNotNull(vedtakInnvilget.kontekst()["behandlingsId"])
     }
 
     @Test
@@ -88,11 +82,7 @@ class BehandlingTest {
             oppfylt = false
         )
         person.håndter(paragraf423AlderResultat)
-        assertEquals(1, paragraf423AlderResultat.behov().size)
-        val behov = paragraf423AlderResultat.behov().first()
-        assertEquals(VedtakAvslått, behov.type)
-        assertEquals(ident, behov.kontekst()["ident"])
-        assertNotNull(ident, behov.kontekst()["behandlingsId"])
+        assertEquals(1, inspektør.antallBehandlinger)
     }
 
     @Test
@@ -109,15 +99,7 @@ class BehandlingTest {
 
         person.håndter(søknadHendelse)
         person.håndter(søknadHendelse2)
-        val vilkårsvurderingBehov = søknadHendelse.behov().first()
-        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
-            ident,
-            UUID.fromString(vilkårsvurderingId),
-            oppfylt = false
-        )
-        person.håndter(paragraf423AlderResultat)
-        assertEquals(1, paragraf423AlderResultat.behov().size)
+        assertEquals(2, inspektør.antallBehandlinger)
     }
 
     private class Inspektør(person: Person) : PersonVisitor {

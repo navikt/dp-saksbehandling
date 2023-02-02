@@ -46,7 +46,6 @@ internal class PersonMediatorTest {
                 vilkårsvurderingId = testRapid.inspektør.field(0, "vilkårsvurderingId").asText()
             )
         )
-        assertEquals(2, testRapid.inspektør.size)
-        assertEquals("VedtakAvslått", testRapid.inspektør.field(1, "@behov")[0].asText())
+        assertEquals(1, testRapid.inspektør.size)
     }
 }

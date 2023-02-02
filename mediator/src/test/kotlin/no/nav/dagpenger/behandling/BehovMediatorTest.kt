@@ -3,7 +3,7 @@ package no.nav.dagpenger.behandling
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.mockk
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilget
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
@@ -85,8 +85,8 @@ internal class BehovMediatorTest {
         )
 
         hendelse.behov(
-            VedtakInnvilget,
-            "Behøver tom søknad for denne søknaden",
+            Sats,
+            "Behøver sats",
             mapOf(
                 "parameter3" to "verdi3",
                 "parameter4" to "verdi4"
@@ -100,7 +100,7 @@ internal class BehovMediatorTest {
         assertEquals(1, inspektør.size)
         inspektør.message(0).also { json ->
             assertStandardBehovFelter(json)
-            assertEquals(listOf("Paragraf_4_23_alder", "VedtakInnvilget"), json["@behov"].map(JsonNode::asText))
+            assertEquals(listOf("Paragraf_4_23_alder", "Sats"), json["@behov"].map(JsonNode::asText))
             assertEquals(testIdent, json["ident"].asText())
             assertEquals("Testkontekst", json["Testkontekst"].asText())
             assertEquals("verdi1", json["parameter1"].asText())
@@ -109,8 +109,8 @@ internal class BehovMediatorTest {
             assertEquals("verdi4", json["parameter4"].asText())
             assertEquals("verdi1", json["Paragraf_4_23_alder"]["parameter1"].asText())
             assertEquals("verdi2", json["Paragraf_4_23_alder"]["parameter2"].asText())
-            assertEquals("verdi3", json["VedtakInnvilget"]["parameter3"].asText())
-            assertEquals("verdi4", json["VedtakInnvilget"]["parameter4"].asText())
+            assertEquals("verdi3", json["Sats"]["parameter3"].asText())
+            assertEquals("verdi4", json["Sats"]["parameter4"].asText())
         }
     }
 
