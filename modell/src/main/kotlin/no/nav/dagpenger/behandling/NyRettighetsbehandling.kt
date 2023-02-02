@@ -13,17 +13,25 @@ import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfy
 import java.time.LocalDate
 import java.util.UUID
 
-class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, behandlingsId: UUID, private val tilstand: Tilstand) :
-    Behandling(behandlingsId, tilstand) {
+class NyRettighetsbehandling private constructor(
+    private val søknadUUID: UUID,
+    internal val behandlingsId: UUID,
+    private var tilstand: Tilstand,
+    internal var virkningsdato: LocalDate?,
+    internal var inntektId: String?,
+    internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
+) : Aktivitetskontekst {
+
+    constructor(søknadUUID: UUID) : this(søknadUUID, UUID.randomUUID(), Vilkårsvurdering, null, null)
 
     companion object {
-        fun List<Behandling>.harSøknadUUID(søknadUUID: UUID) =
-            this.any { it is NyRettighetsbehandling && it.søknadUUID == søknadUUID }
+        fun List<NyRettighetsbehandling>.harSøknadUUID(søknadUUID: UUID) =
+            this.any { it.søknadUUID == søknadUUID }
+
+        const val kontekstType = "Behandling"
     }
 
-    constructor(søknadUUID: UUID) : this(søknadUUID, UUID.randomUUID(), Vilkårsvurdering)
-
-    override val vilkårsvurderinger by lazy {
+    val vilkårsvurderinger by lazy {
         listOf(
             Paragraf_4_23_alder_vilkår(),
             TestVilkår(),
@@ -34,20 +42,20 @@ class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, 
         SpesifikkKontekst(
             kontekstType = kontekstType,
             mapOf(
-                "behandlingId" to behandlingId.toString(),
+                "behandlingsId" to behandlingsId.toString(),
                 "type" to this.javaClass.simpleName,
                 "søknad_uuid" to søknadUUID.toString()
             )
         )
 
-    override fun håndter(hendelse: SøknadHendelse) {
+    fun håndter(hendelse: SøknadHendelse) {
         kontekst(hendelse, "Opprettet ny rettighetsbehandling basert på søknadhendelse")
         vilkårsvurderinger.forEach { vurdering ->
             vurdering.håndter(hendelse)
         }
     }
 
-    override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
+    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
         kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
         vilkårsvurderinger.forEach { vurdering ->
             vurdering.håndter(paragraf423AlderResultat)
@@ -55,10 +63,20 @@ class NyRettighetsbehandling private constructor(private val søknadUUID: UUID, 
         ferdigstillRettighetsbehandling(paragraf423AlderResultat)
     }
 
-    override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
-        if (grunnlagOgSatsResultat.behandlingId != this.behandlingId) return
+    fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
+        if (grunnlagOgSatsResultat.behandlingId != this.behandlingsId) return
         kontekst(grunnlagOgSatsResultat, "Fått resultat på ${grunnlagOgSatsResultat.javaClass.simpleName}")
         tilstand.håndter(grunnlagOgSatsResultat, this)
+    }
+
+    private fun endreTilstand(nyTilstand: Tilstand, søknadHendelse: Hendelse) {
+        if (nyTilstand == tilstand) {
+            return // Vi er allerede i tilstanden
+        }
+        val forrigeTilstand = tilstand
+        tilstand = nyTilstand
+        søknadHendelse.kontekst(tilstand)
+        tilstand.entering(søknadHendelse, this)
     }
 
     private fun ferdigstillRettighetsbehandling(hendelse: Hendelse) {

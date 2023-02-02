@@ -26,8 +26,8 @@ class BehandlingTest {
         assertEquals(1, søknadHendelse.behov().size)
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
-        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingId"])
-        val behandlingId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingId"])
+        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingsId"])
+        val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
         assertNotNull(vilkårsvurderingBehov.kontekst()["søknad_uuid"])
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         assertDoesNotThrow {
@@ -47,22 +47,21 @@ class BehandlingTest {
         val grunnlag = paragraf423AlderResultat.behov()[0]
         val sats = paragraf423AlderResultat.behov()[1]
 
-
         assertEquals(Grunnlag, grunnlag.type)
         assertEquals(ident, grunnlag.kontekst()["ident"])
-        assertNotNull(grunnlag.kontekst()["behandlingId"])
+        assertNotNull(grunnlag.kontekst()["behandlingsId"])
         assertNotNull(grunnlag.detaljer()["virkningsdato"].let { LocalDate.parse(it.toString()) })
 
         assertEquals(Sats, sats.type)
         assertEquals(ident, sats.kontekst()["ident"])
-        assertNotNull(sats.kontekst()["behandlingId"])
+        assertNotNull(sats.kontekst()["behandlingsId"])
 
-        val grunnlagOgSatsResultat = GrunnlagOgSatsResultat(ident, behandlingId, 250000.toBigDecimal(), 700.toBigDecimal() )
+        val grunnlagOgSatsResultat = GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
         person.håndter(grunnlagOgSatsResultat)
         val vedtakInnvilget = grunnlagOgSatsResultat.behov().first()
         assertEquals(VedtakInnvilget, vedtakInnvilget.type)
         assertEquals(ident, vedtakInnvilget.kontekst()["ident"])
-        assertNotNull(vedtakInnvilget.kontekst()["behandlingId"])
+        assertNotNull(vedtakInnvilget.kontekst()["behandlingsId"])
     }
 
     @Test
@@ -73,7 +72,7 @@ class BehandlingTest {
 
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
-        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingId"])
+        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingsId"])
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         assertDoesNotThrow {
             UUID.fromString(vilkårsvurderingId)
@@ -89,7 +88,7 @@ class BehandlingTest {
         val behov = paragraf423AlderResultat.behov().first()
         assertEquals(VedtakAvslått, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
-        assertNotNull(ident, behov.kontekst()["behandlingId"])
+        assertNotNull(ident, behov.kontekst()["behandlingsId"])
     }
 
     @Test

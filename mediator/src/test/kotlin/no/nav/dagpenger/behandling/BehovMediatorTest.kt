@@ -100,7 +100,7 @@ internal class BehovMediatorTest {
         assertEquals(1, inspektør.size)
         inspektør.message(0).also { json ->
             assertStandardBehovFelter(json)
-            assertEquals(listOf("Paragraf_4_23_alder", "VedtakInnvilgetBehov"), json["@behov"].map(JsonNode::asText))
+            assertEquals(listOf("Paragraf_4_23_alder", "VedtakInnvilget"), json["@behov"].map(JsonNode::asText))
             assertEquals(testIdent, json["ident"].asText())
             assertEquals("Testkontekst", json["Testkontekst"].asText())
             assertEquals("verdi1", json["parameter1"].asText())
@@ -109,8 +109,8 @@ internal class BehovMediatorTest {
             assertEquals("verdi4", json["parameter4"].asText())
             assertEquals("verdi1", json["Paragraf_4_23_alder"]["parameter1"].asText())
             assertEquals("verdi2", json["Paragraf_4_23_alder"]["parameter2"].asText())
-            assertEquals("verdi3", json["VedtakInnvilgetBehov"]["parameter3"].asText())
-            assertEquals("verdi4", json["VedtakInnvilgetBehov"]["parameter4"].asText())
+            assertEquals("verdi3", json["VedtakInnvilget"]["parameter3"].asText())
+            assertEquals("verdi4", json["VedtakInnvilget"]["parameter4"].asText())
         }
     }
 

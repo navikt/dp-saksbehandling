@@ -18,7 +18,7 @@ class Aktivitetslogg private constructor(
 
     companion object {
 
-        private val MODELL_KONTEKSTER = listOf(Person.kontekstType, Behandling.kontekstType)
+        private val MODELL_KONTEKSTER = listOf(Person.kontekstType, NyRettighetsbehandling.kontekstType)
         fun rehyder(
             aktiviteter: MutableList<Aktivitet>
         ) = Aktivitetslogg(null, aktiviteter)
@@ -77,7 +77,7 @@ class Aktivitetslogg private constructor(
         kontekster.add(kontekst)
     }
 
-    override fun kontekst(behandling: Behandling) {
+    override fun kontekst(behandling: NyRettighetsbehandling) {
         if (this.forelder == null) {
             this.forelder = behandling.aktivitetslogg
         } else {
@@ -256,7 +256,7 @@ interface IAktivitetslogg {
     fun behov(): List<Behov>
     fun barn(): Aktivitetslogg
     fun kontekst(kontekst: Aktivitetskontekst)
-    fun kontekst(behandling: Behandling)
+    fun kontekst(behandling: NyRettighetsbehandling)
     fun kontekster(): List<IAktivitetslogg>
 }
 

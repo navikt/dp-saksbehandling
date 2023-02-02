@@ -8,7 +8,7 @@ import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resulta
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
-    private val behandlinger = mutableListOf<Behandling>()
+    private val behandlinger = mutableListOf<NyRettighetsbehandling>()
 
     constructor(ident: String) : this(ident.tilPersonIdentfikator())
 
@@ -38,12 +38,10 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     fun harBehandlinger() = this.behandlinger.isNotEmpty()
     fun antallBehandlinger() = this.behandlinger.size
     fun behandlinger() = this.behandlinger.toList()
-    fun sisteBehandlingId() = this.behandlinger.first().behandlingId
+    fun sisteBehandlingId() = this.behandlinger.first().behandlingsId
     fun ident() = this.ident.identifikator()
 
     private fun kontekst(hendelse: Hendelse) {
         hendelse.kontekst(this)
     }
-
-
 }

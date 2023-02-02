@@ -47,6 +47,6 @@ internal class PersonMediatorTest {
             )
         )
         assertEquals(2, testRapid.inspektør.size)
-        assertEquals("VedtakAvslåttBehov", testRapid.inspektør.field(1, "@behov")[0].asText())
+        assertEquals("VedtakAvslått", testRapid.inspektør.field(1, "@behov")[0].asText())
     }
 }
