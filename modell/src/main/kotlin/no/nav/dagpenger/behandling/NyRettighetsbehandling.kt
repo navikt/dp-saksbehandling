@@ -10,15 +10,16 @@ import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erFerdig
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
+import no.nav.dagpenger.behandling.visitor.NyRettighetsbehandlingVisitor
 import java.time.LocalDate
 import java.util.UUID
 
 class NyRettighetsbehandling private constructor(
-    private val søknadUUID: UUID,
+    private val søknadsId: UUID,
     internal val behandlingsId: UUID,
     private var tilstand: Tilstand,
     internal var virkningsdato: LocalDate?,
-    internal var inntektId: String?,
+    internal var inntektsId: String?,
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
 ) : Aktivitetskontekst {
 
@@ -26,7 +27,7 @@ class NyRettighetsbehandling private constructor(
 
     companion object {
         fun List<NyRettighetsbehandling>.harSøknadUUID(søknadUUID: UUID) =
-            this.any { it.søknadUUID == søknadUUID }
+            this.any { it.søknadsId == søknadUUID }
 
         const val kontekstType = "Behandling"
     }
@@ -38,13 +39,20 @@ class NyRettighetsbehandling private constructor(
         )
     }
 
+    fun accept(visitor: NyRettighetsbehandlingVisitor) {
+        visitor.visitNyRettighetsbehandling(søknadsId, behandlingsId, tilstand, virkningsdato, inntektsId)
+        vilkårsvurderinger.forEach {
+            it.accept(visitor)
+        }
+    }
+
     override fun toSpesifikkKontekst() =
         SpesifikkKontekst(
             kontekstType = kontekstType,
             mapOf(
                 "behandlingsId" to behandlingsId.toString(),
                 "type" to this.javaClass.simpleName,
-                "søknad_uuid" to søknadUUID.toString()
+                "søknad_uuid" to søknadsId.toString()
             )
         )
 
@@ -83,7 +91,7 @@ class NyRettighetsbehandling private constructor(
         if (vilkårsvurderinger.erFerdig()) {
 
             this.virkningsdato = LocalDate.now()
-            this.inntektId = "en eller annen ULID"
+            this.inntektsId = "en eller annen ULID"
 
             if (vilkårsvurderinger.all { it.tilstand.tilstandType == Oppfylt }) {
                 this.endreTilstand(UnderBeregning, hendelse)

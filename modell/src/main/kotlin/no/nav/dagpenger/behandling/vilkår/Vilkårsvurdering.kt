@@ -6,16 +6,25 @@ import no.nav.dagpenger.behandling.SpesifikkKontekst
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
-abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private constructor(var tilstand: Tilstand<Paragraf>, val vilkårsvurderingId: UUID) : Aktivitetskontekst {
-    constructor(tilstand: Tilstand<Paragraf>) : this(tilstand, UUID.randomUUID())
+abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private constructor(
+    val vilkårsvurderingId: UUID,
+    var tilstand: Tilstand<Paragraf>
+) : Aktivitetskontekst {
+    constructor(tilstand: Tilstand<Paragraf>) : this(UUID.randomUUID(), tilstand)
     companion object {
         fun List<Vilkårsvurdering<*>>.erFerdig() =
             this.none { it.tilstand.tilstandType == Tilstand.Type.AvventerVurdering || it.tilstand.tilstandType == Tilstand.Type.IkkeVurdert }
     }
+
+    fun accept(visitor: VilkårsvurderingVisitor) {
+        visitor.visitVilkårsvurdering(vilkårsvurderingId, tilstand)
+    }
+
     fun håndter(søknadHendelse: SøknadHendelse) {
         søknadHendelse.kontekst(this)
         implementasjon { tilstand.håndter(søknadHendelse, this) }
@@ -25,6 +34,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         paragraf423AlderResultat.kontekst(this)
         implementasjon { tilstand.håndter(paragraf423AlderResultat, this) }
     }
+
     fun endreTilstand(nyTilstand: Tilstand<Paragraf>) {
         loggTilstandsendring(nyTilstand)
         tilstand = nyTilstand
@@ -36,6 +46,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
     protected abstract fun <T> implementasjon(block: Paragraf.() -> T): T
 
     sealed class Tilstand<Paragraf : Vilkårsvurdering<Paragraf>>(val tilstandType: Type) {
+
         enum class Type {
             Oppfylt,
             IkkeOppfylt,

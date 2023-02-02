@@ -6,6 +6,7 @@ import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.visitor.PersonVisitor
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
     private val behandlinger = mutableListOf<NyRettighetsbehandling>()
@@ -14,6 +15,13 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     companion object {
         const val kontekstType = "Person"
+    }
+
+    fun accept(visitor: PersonVisitor) {
+        visitor.visitPerson(ident)
+        behandlinger.forEach {
+            it.accept(visitor)
+        }
     }
 
     fun håndter(søknadHendelse: SøknadHendelse) {

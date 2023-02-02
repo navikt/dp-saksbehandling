@@ -1,0 +1,28 @@
+package no.nav.dagpenger.behandling.visitor
+
+import no.nav.dagpenger.behandling.PersonIdentifikator
+import no.nav.dagpenger.behandling.Tilstand
+import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
+import java.time.LocalDate
+import java.util.UUID
+
+interface PersonVisitor : NyRettighetsbehandlingVisitor {
+    fun visitPerson(ident: PersonIdentifikator)
+}
+
+interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor {
+    fun visitNyRettighetsbehandling(
+        søknadsId: UUID,
+        behandlingsId: UUID,
+        tilstand: Tilstand,
+        virkningsdato: LocalDate?,
+        inntektsId: String?
+    )
+}
+
+interface VilkårsvurderingVisitor {
+    fun <Paragraf : Vilkårsvurdering<Paragraf>> visitVilkårsvurdering(
+        vilkårsvurderingId: UUID,
+        tilstand: Vilkårsvurdering.Tilstand<Paragraf>
+    )
+}

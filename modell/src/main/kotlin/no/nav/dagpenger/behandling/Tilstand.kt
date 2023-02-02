@@ -39,7 +39,7 @@ object UnderBeregning : Tilstand {
         get() = Tilstand.Type.UnderBeregning
 
     override fun entering(søknadHendelse: Hendelse, behandling: NyRettighetsbehandling) {
-        val inntektId = requireNotNull(behandling.inntektId) {
+        val inntektId = requireNotNull(behandling.inntektsId) {
             "Vi forventer at inntektId er satt ved tilstandsendring til ${UnderBeregning.javaClass.simpleName}"
         }.let { mapOf("inntektId" to it) }
         val virkningsdato = requireNotNull(behandling.virkningsdato) {
