@@ -42,10 +42,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         behandlinger.forEach { it.håndter(grunnlagOgSatsResultat) }
     }
 
-    // TODO vi må fikse visitor
-    fun harBehandlinger() = this.behandlinger.isNotEmpty()
-    fun antallBehandlinger() = this.behandlinger.size
-    fun behandlinger() = this.behandlinger.toList()
+
     fun ident() = this.ident.identifikator()
 
     private fun kontekst(hendelse: Hendelse) {

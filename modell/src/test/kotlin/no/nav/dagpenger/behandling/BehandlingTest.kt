@@ -4,9 +4,11 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grun
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakAvslått
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.VedtakInnvilget
+import no.nav.dagpenger.behandling.BehandlingTest.Inspektør
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -19,6 +21,8 @@ class BehandlingTest {
     val ident = "12345678901"
     val person = Person(ident)
     val søknadHendelse = SøknadHendelse(søknadUUID = UUID.randomUUID(), journalpostId = "123454", ident = ident)
+
+    private val inspektør get() = Inspektør(person)
 
     @Test
     fun `Ny søknad hendelse fører til innvilgelsesvedtak`() {
@@ -34,7 +38,7 @@ class BehandlingTest {
             UUID.fromString(vilkårsvurderingId)
         }
         assertNotNull(vilkårsvurderingId)
-        assertTrue(person.harBehandlinger())
+        assertTrue(inspektør.harBehandlinger)
 
         val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
             ident,
@@ -68,7 +72,7 @@ class BehandlingTest {
     fun `Ny søknad hendelse fører til avslagsvedtak`() {
         person.håndter(søknadHendelse)
         assertEquals(1, søknadHendelse.behov().size)
-        assertTrue(person.harBehandlinger())
+        assertTrue(inspektør.harBehandlinger)
 
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
@@ -96,7 +100,7 @@ class BehandlingTest {
         person.håndter(søknadHendelse)
         person.håndter(søknadHendelse)
 
-        assertEquals(1, person.antallBehandlinger())
+        assertEquals(1, inspektør.antallBehandlinger)
     }
 
     @Test
@@ -114,5 +118,26 @@ class BehandlingTest {
         )
         person.håndter(paragraf423AlderResultat)
         assertEquals(1, paragraf423AlderResultat.behov().size)
+    }
+
+    private class Inspektør(person: Person) : PersonVisitor {
+
+        init {
+            person.accept(this)
+        }
+
+        var harBehandlinger: Boolean = false
+        var antallBehandlinger = 0
+
+        override fun visitNyRettighetsbehandling(
+            søknadsId: UUID,
+            behandlingsId: UUID,
+            tilstand: NyRettighetsbehandling.Tilstand,
+            virkningsdato: LocalDate?,
+            inntektsId: String?
+        ) {
+            harBehandlinger = true
+            antallBehandlinger++
+        }
     }
 }

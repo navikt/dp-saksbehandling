@@ -30,12 +30,12 @@ internal class AldersVilkårvurderingTest {
 
     private class Inspektør(vilkårsvurdering: Vilkårsvurdering<Paragraf_4_23_alder_vilkår>) : VilkårsvurderingVisitor {
 
-        lateinit var tilstand: Vilkårsvurdering.Tilstand.Type
-        lateinit var vilkårsvurderingId: UUID
-
         init {
             vilkårsvurdering.accept(this)
         }
+
+        lateinit var tilstand: Vilkårsvurdering.Tilstand.Type
+        lateinit var vilkårsvurderingId: UUID
 
         override fun <Paragraf : Vilkårsvurdering<Paragraf>> visitVilkårsvurdering(
             vilkårsvurderingId: UUID,

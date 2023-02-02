@@ -7,7 +7,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 interface PersonVisitor : NyRettighetsbehandlingVisitor {
-    fun visitPerson(ident: PersonIdentifikator)
+    fun visitPerson(ident: PersonIdentifikator) {}
 }
 
 interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor {
@@ -17,12 +17,12 @@ interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor {
         tilstand: NyRettighetsbehandling.Tilstand,
         virkningsdato: LocalDate?,
         inntektsId: String?
-    )
+    ) {}
 }
 
 interface VilkårsvurderingVisitor {
     fun <Paragraf : Vilkårsvurdering<Paragraf>> visitVilkårsvurdering(
         vilkårsvurderingId: UUID,
         tilstand: Vilkårsvurdering.Tilstand<Paragraf>
-    )
+    ) {}
 }
