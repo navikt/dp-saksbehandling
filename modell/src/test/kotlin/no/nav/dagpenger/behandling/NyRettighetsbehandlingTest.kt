@@ -82,6 +82,7 @@ class NyRettighetsbehandlingTest {
         )
         person.håndter(paragraf423AlderResultat)
         assertEquals(1, inspektør.antallBehandlinger)
+        assertEquals(false, inspektør.vedtakUtfall)
     }
 
     @Test
@@ -109,6 +110,7 @@ class NyRettighetsbehandlingTest {
 
         var harBehandlinger: Boolean = false
         var antallBehandlinger = 0
+        var vedtakUtfall: Boolean? = null
 
         override fun visitNyRettighetsbehandling(
             søknadsId: UUID,
@@ -119,6 +121,10 @@ class NyRettighetsbehandlingTest {
         ) {
             harBehandlinger = true
             antallBehandlinger++
+        }
+
+        override fun visitVedtak(utfall: Boolean) {
+            vedtakUtfall = utfall
         }
     }
 }

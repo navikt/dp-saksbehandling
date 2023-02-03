@@ -10,7 +10,7 @@ import no.nav.dagpenger.behandling.visitor.PersonVisitor
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
     private val behandlinger = mutableListOf<NyRettighetsbehandling>()
-
+    private var vedtak: Vedtak? = null
     constructor(ident: String) : this(ident.tilPersonIdentfikator())
 
     companion object {
@@ -22,13 +22,14 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         behandlinger.forEach {
             it.accept(visitor)
         }
+        vedtak?.accept(visitor)
     }
 
     fun håndter(søknadHendelse: SøknadHendelse) {
         kontekst(søknadHendelse)
         if (behandlinger.harSøknadUUID(søknadHendelse.søknadUUID())) return
         søknadHendelse.info("Har mottatt ny søknadhendelse")
-        val behandling = NyRettighetsbehandling(søknadHendelse.søknadUUID())
+        val behandling = NyRettighetsbehandling(this, søknadHendelse.søknadUUID())
         behandlinger.add(behandling)
         behandling.håndter(søknadHendelse)
     }
@@ -46,5 +47,9 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     private fun kontekst(hendelse: Hendelse) {
         hendelse.kontekst(this)
+    }
+
+    fun leggTilVedtak(vedtak: Vedtak) {
+        this.vedtak = vedtak
     }
 }

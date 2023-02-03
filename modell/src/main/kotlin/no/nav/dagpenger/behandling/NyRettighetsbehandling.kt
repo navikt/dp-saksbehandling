@@ -13,6 +13,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 class NyRettighetsbehandling private constructor(
+    private val person: Person,
     private val søknadsId: UUID,
     private val behandlingsId: UUID,
     private var tilstand: Tilstand,
@@ -21,7 +22,14 @@ class NyRettighetsbehandling private constructor(
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Aktivitetskontekst {
 
-    constructor(søknadUUID: UUID) : this(søknadUUID, UUID.randomUUID(), Vilkårsvurdering, null, null)
+    constructor(person: Person, søknadUUID: UUID) : this(
+        person,
+        søknadUUID,
+        UUID.randomUUID(),
+        Vilkårsvurdering,
+        null,
+        null
+    )
 
     companion object {
         fun List<NyRettighetsbehandling>.harSøknadUUID(søknadUUID: UUID) =
@@ -157,8 +165,9 @@ class NyRettighetsbehandling private constructor(
             require(behandling.vilkårsvurderinger.erFerdig()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
             if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
                 behandling.endreTilstand(UnderBeregning, hendelse)
+            } else {
+                behandling.person.leggTilVedtak(Vedtak(utfall = false))
             }
-            // else opprett vedtak ?
         }
     }
 
