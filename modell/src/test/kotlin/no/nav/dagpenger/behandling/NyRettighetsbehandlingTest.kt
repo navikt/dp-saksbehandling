@@ -2,7 +2,6 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
-import no.nav.dagpenger.behandling.BehandlingTest.Inspektør
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
@@ -15,7 +14,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
 import java.util.UUID
 
-class BehandlingTest {
+class NyRettighetsbehandlingTest {
     val ident = "12345678901"
     val person = Person(ident)
     val søknadHendelse = SøknadHendelse(søknadUUID = UUID.randomUUID(), journalpostId = "123454", ident = ident)
