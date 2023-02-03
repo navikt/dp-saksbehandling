@@ -49,6 +49,8 @@ class NyRettighetsbehandling private constructor(
     }
     private lateinit var grunnlagOgSatsResultat: GrunnlagOgSatsResultat
 
+    private var foreløpigInnstilling: ForeløpigInnstilling? = null
+
     fun håndter(hendelse: SøknadHendelse) {
         kontekst(hendelse, "Opprettet ny rettighetsbehandling basert på søknadhendelse")
         tilstand.håndter(hendelse, this)
@@ -70,6 +72,7 @@ class NyRettighetsbehandling private constructor(
         vilkårsvurderinger.forEach {
             it.accept(visitor)
         }
+        foreløpigInnstilling?.accept(visitor)
     }
 
     override fun toSpesifikkKontekst() =
@@ -107,7 +110,8 @@ class NyRettighetsbehandling private constructor(
             VurdererVilkår,
             VurdererUtfall,
             UtførerBeregning,
-            Behandlet
+            Kvalitetssikrer,
+            FattetVedtak
         }
 
         override fun toSpesifikkKontekst() =
@@ -169,9 +173,11 @@ class NyRettighetsbehandling private constructor(
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             require(behandling.vilkårsvurderinger.erFerdig()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
             if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
+                behandling.foreløpigInnstilling = ForeløpigInnstilling(utfall = true)
                 behandling.endreTilstand(UtførerBeregning, hendelse)
             } else {
-                behandling.person.leggTilVedtak(Vedtak(utfall = false))
+                behandling.foreløpigInnstilling = ForeløpigInnstilling(utfall = false)
+                behandling.endreTilstand(Kvalitetssikrer, hendelse)
             }
         }
     }
@@ -201,23 +207,17 @@ class NyRettighetsbehandling private constructor(
         }
 
         override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
-            behandling.grunnlagOgSatsResultat = grunnlagOgSatsResultat
-            behandling.endreTilstand(Behandlet, grunnlagOgSatsResultat)
+            behandling.foreløpigInnstilling?.grunnlag = grunnlagOgSatsResultat.grunnlag
+            behandling.foreløpigInnstilling?.sats = grunnlagOgSatsResultat.dagsats
+            behandling.endreTilstand(Kvalitetssikrer, grunnlagOgSatsResultat)
         }
     }
 
-    object Behandlet : Tilstand {
+    object Kvalitetssikrer : Tilstand {
         override val type: Tilstand.Type
-            get() = Tilstand.Type.Behandlet
+            get() = Tilstand.Type.Kvalitetssikrer
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
-            behandling.person.leggTilVedtak(
-                Vedtak(
-                    true,
-                    behandling.grunnlagOgSatsResultat.grunnlag,
-                    behandling.grunnlagOgSatsResultat.dagsats
-                )
-            )
         }
     }
 

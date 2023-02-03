@@ -6,15 +6,15 @@ import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import java.time.LocalDate
 import java.util.UUID
 
-interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakVisitor {
+interface PersonVisitor : NyRettighetsbehandlingVisitor {
     fun visitPerson(ident: PersonIdentifikator) {}
 }
 
-interface VedtakVisitor {
-    fun visitVedtak(utfall: Boolean) {}
+interface ForeløpigInnstillingVisitor {
+    fun visitForeløpigInnstilling(utfall: Boolean) {}
 }
 
-interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor {
+interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor, ForeløpigInnstillingVisitor {
     fun visitNyRettighetsbehandling(
         søknadsId: UUID,
         behandlingsId: UUID,

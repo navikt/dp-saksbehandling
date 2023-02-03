@@ -3,7 +3,7 @@ package no.nav.dagpenger.behandling
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
-import no.nav.dagpenger.behandling.NyRettighetsbehandling.Behandlet
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.UtførerBeregning
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.VurdererVilkår
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
@@ -57,8 +57,52 @@ class NyRettighetsbehandlingTest {
         val grunnlagOgSats = GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
         person.håndter(grunnlagOgSats)
 
-        assertTilstand(Behandlet)
+        assertTilstand(Kvalitetssikrer)
         assertEquals(true, inspektør.vedtakUtfall)
+    }
+
+    @Test
+    fun `Ny søknad hendelse fører til avslagsvedtak`() {
+        person.håndter(søknadHendelse)
+        assertTilstand(VurdererVilkår)
+        assertEquals(1, søknadHendelse.behov().size)
+        assertTrue(inspektør.harBehandlinger)
+
+        val vilkårsvurderingBehov = søknadHendelse.behov().first()
+        assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
+        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingsId"])
+        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
+        assertDoesNotThrow {
+            UUID.fromString(vilkårsvurderingId)
+        }
+
+        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
+            ident,
+            UUID.fromString(vilkårsvurderingId),
+            oppfylt = false
+        )
+        person.håndter(paragraf423AlderResultat)
+
+        assertEquals(1, inspektør.antallBehandlinger)
+        assertEquals(false, inspektør.vedtakUtfall)
+        assertTilstand(Kvalitetssikrer)
+    }
+
+    @Test
+    fun `En søknadhendelse skal bare behandles en gang`() {
+        person.håndter(søknadHendelse)
+        person.håndter(søknadHendelse)
+
+        assertEquals(1, inspektør.antallBehandlinger)
+    }
+
+    @Test
+    fun `Håndtere to unike søknadhendelser`() {
+        val søknadHendelse2 = SøknadHendelse(UUID.randomUUID(), "1243", ident)
+
+        person.håndter(søknadHendelse)
+        person.håndter(søknadHendelse2)
+        assertEquals(2, inspektør.antallBehandlinger)
     }
 
     private fun assertBehovInnholdFor(behov: Aktivitetslogg.Aktivitet.Behov) {
@@ -93,47 +137,6 @@ class NyRettighetsbehandlingTest {
         assertNotNull(vilkårsvurderingId)
     }
 
-    @Test
-    fun `Ny søknad hendelse fører til avslagsvedtak`() {
-        person.håndter(søknadHendelse)
-        assertEquals(1, søknadHendelse.behov().size)
-        assertTrue(inspektør.harBehandlinger)
-
-        val vilkårsvurderingBehov = søknadHendelse.behov().first()
-        assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
-        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingsId"])
-        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        assertDoesNotThrow {
-            UUID.fromString(vilkårsvurderingId)
-        }
-
-        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
-            ident,
-            UUID.fromString(vilkårsvurderingId),
-            oppfylt = false
-        )
-        person.håndter(paragraf423AlderResultat)
-        assertEquals(1, inspektør.antallBehandlinger)
-        assertEquals(false, inspektør.vedtakUtfall)
-    }
-
-    @Test
-    fun `En søknadhendelse skal bare behandles en gang`() {
-        person.håndter(søknadHendelse)
-        person.håndter(søknadHendelse)
-
-        assertEquals(1, inspektør.antallBehandlinger)
-    }
-
-    @Test
-    fun `Håndtere to unike søknadhendelser`() {
-        val søknadHendelse2 = SøknadHendelse(UUID.randomUUID(), "1243", ident)
-
-        person.håndter(søknadHendelse)
-        person.håndter(søknadHendelse2)
-        assertEquals(2, inspektør.antallBehandlinger)
-    }
-
     private fun assertTilstand(tilstand: NyRettighetsbehandling.Tilstand) {
         assertEquals(tilstand.type, inspektør.nyRettighetsbehandlingTilstand)
     }
@@ -161,7 +164,7 @@ class NyRettighetsbehandlingTest {
             nyRettighetsbehandlingTilstand = tilstand.type
         }
 
-        override fun visitVedtak(utfall: Boolean) {
+        override fun visitForeløpigInnstilling(utfall: Boolean) {
             vedtakUtfall = utfall
         }
     }
