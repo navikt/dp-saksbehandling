@@ -122,7 +122,7 @@ class NyRettighetsbehandling private constructor(
         }
 
         private fun Hendelse.tilstandfeil() {
-            this.warn("Forventet ${this.javaClass.simpleName} i tilstand ${type.name} ")
+            this.warn("Forventet ikke ${this.javaClass.simpleName} i tilstand ${type.name} ")
         }
     }
 
