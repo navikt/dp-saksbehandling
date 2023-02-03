@@ -18,7 +18,7 @@ class NyRettighetsbehandling private constructor(
     private var tilstand: Tilstand,
     private var virkningsdato: LocalDate?,
     private var inntektsId: String?,
-    internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
+    internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Aktivitetskontekst {
 
     constructor(søknadUUID: UUID) : this(søknadUUID, UUID.randomUUID(), Vilkårsvurdering, null, null)
@@ -35,6 +35,22 @@ class NyRettighetsbehandling private constructor(
             Paragraf_4_23_alder_vilkår(),
             TestVilkår(),
         )
+    }
+
+    fun håndter(hendelse: SøknadHendelse) {
+        kontekst(hendelse, "Opprettet ny rettighetsbehandling basert på søknadhendelse")
+        tilstand.håndter(hendelse, this)
+    }
+
+    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
+        kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
+        tilstand.håndter(paragraf423AlderResultat, this)
+    }
+
+    fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
+        if (grunnlagOgSatsResultat.behandlingId != this.behandlingsId) return
+        kontekst(grunnlagOgSatsResultat, "Fått resultat på ${grunnlagOgSatsResultat.javaClass.simpleName}")
+        tilstand.håndter(grunnlagOgSatsResultat, this)
     }
 
     fun accept(visitor: NyRettighetsbehandlingVisitor) {
@@ -54,48 +70,14 @@ class NyRettighetsbehandling private constructor(
             )
         )
 
-    fun håndter(hendelse: SøknadHendelse) {
-        kontekst(hendelse, "Opprettet ny rettighetsbehandling basert på søknadhendelse")
-        vilkårsvurderinger.forEach { vurdering ->
-            vurdering.håndter(hendelse)
-        }
-    }
-
-    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
-        kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
-        vilkårsvurderinger.forEach { vurdering ->
-            vurdering.håndter(paragraf423AlderResultat)
-        }
-        ferdigstillRettighetsbehandling(paragraf423AlderResultat)
-    }
-
-    fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
-        if (grunnlagOgSatsResultat.behandlingId != this.behandlingsId) return
-        kontekst(grunnlagOgSatsResultat, "Fått resultat på ${grunnlagOgSatsResultat.javaClass.simpleName}")
-        tilstand.håndter(grunnlagOgSatsResultat, this)
-    }
-
     private fun endreTilstand(nyTilstand: Tilstand, søknadHendelse: Hendelse) {
         if (nyTilstand == tilstand) {
             return // Vi er allerede i tilstanden
         }
-        val forrigeTilstand = tilstand
+        // val forrigeTilstand = tilstand
         tilstand = nyTilstand
         søknadHendelse.kontekst(tilstand)
         tilstand.entering(søknadHendelse, this)
-    }
-
-    private fun ferdigstillRettighetsbehandling(hendelse: Hendelse) {
-        if (vilkårsvurderinger.erFerdig()) {
-
-            this.virkningsdato = LocalDate.now()
-            this.inntektsId = "en eller annen ULID"
-
-            if (vilkårsvurderinger.erAlleOppfylt()) {
-                this.endreTilstand(UnderBeregning, hendelse)
-            } else {
-            }
-        }
     }
 
     private fun kontekst(hendelse: Hendelse, melding: String? = null) {
@@ -110,6 +92,7 @@ class NyRettighetsbehandling private constructor(
 
         enum class Type {
             Vilkårsvurdering,
+            VurderUtfall,
             UnderBeregning,
             Behandlet
         }
@@ -122,22 +105,71 @@ class NyRettighetsbehandling private constructor(
                 )
             )
 
-        fun entering(søknadHendelse: Hendelse, behandling: NyRettighetsbehandling) {}
+        fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {}
         fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
-            grunnlagOgSatsResultat.warn("Forventet ikke grunnlag og sats i tilstand ${type.name}.")
+            grunnlagOgSatsResultat.tilstandfeil()
+        }
+
+        fun håndter(søknadHendelse: SøknadHendelse, behandling: NyRettighetsbehandling) {
+            søknadHendelse.tilstandfeil()
+        }
+
+        fun håndter(
+            paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat,
+            behandling: NyRettighetsbehandling,
+        ) {
+            paragraf423AlderResultat.tilstandfeil()
+        }
+
+        private fun Hendelse.tilstandfeil() {
+            this.warn("Forventet ${this.javaClass.simpleName} i tilstand ${type.name} ")
         }
     }
 
     object Vilkårsvurdering : Tilstand {
         override val type: Tilstand.Type
             get() = Tilstand.Type.Vilkårsvurdering
+
+        override fun håndter(søknadHendelse: SøknadHendelse, behandling: NyRettighetsbehandling) {
+            behandling.vilkårsvurderinger.forEach { vurdering ->
+                vurdering.håndter(søknadHendelse)
+            }
+        }
+
+        override fun håndter(
+            paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat,
+            behandling: NyRettighetsbehandling,
+        ) {
+            behandling.vilkårsvurderinger.forEach { vurdering ->
+                vurdering.håndter(paragraf423AlderResultat)
+            }
+            if (behandling.vilkårsvurderinger.erFerdig()) {
+                behandling.endreTilstand(VurderUtfall, paragraf423AlderResultat)
+            }
+        }
+    }
+
+    object VurderUtfall : Tilstand {
+        override val type: Tilstand.Type
+            get() = Tilstand.Type.VurderUtfall
+
+        override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
+            require(behandling.vilkårsvurderinger.erFerdig()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
+            if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
+                behandling.endreTilstand(UnderBeregning, hendelse)
+            }
+            // else opprett vedtak ?
+        }
     }
 
     object UnderBeregning : Tilstand {
         override val type: Tilstand.Type
             get() = Tilstand.Type.UnderBeregning
 
-        override fun entering(søknadHendelse: Hendelse, behandling: NyRettighetsbehandling) {
+        override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
+            behandling.inntektsId = "ULID"
+            behandling.virkningsdato = LocalDate.now()
+
             val inntektId = requireNotNull(behandling.inntektsId) {
                 "Vi forventer at inntektId er satt ved tilstandsendring til ${UnderBeregning.javaClass.simpleName}"
             }.let { mapOf("inntektId" to it) }
@@ -146,8 +178,12 @@ class NyRettighetsbehandling private constructor(
             }.let {
                 mapOf("virkningsdato" to it)
             }
-            søknadHendelse.behov(Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag, "Trenger grunnlag", virkningsdato + inntektId)
-            søknadHendelse.behov(Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats, "Trenger sats")
+            hendelse.behov(
+                Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag,
+                "Trenger grunnlag",
+                virkningsdato + inntektId
+            )
+            hendelse.behov(Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats, "Trenger sats")
         }
 
         override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
