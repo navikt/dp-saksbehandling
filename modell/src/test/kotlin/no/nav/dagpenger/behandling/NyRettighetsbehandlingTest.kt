@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Behandlet
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.UtførerBeregning
@@ -29,19 +30,14 @@ class NyRettighetsbehandlingTest {
         person.håndter(søknadHendelse)
         assertTilstand(VurdererVilkår)
 
-        assertEquals(1, søknadHendelse.behov().size)
+        assertEquals(1, søknadHendelse.behov().size, "Forventer kun vilkårsvurderingsbehov")
+
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
-        assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
-        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingsId"])
-        val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
-        assertNotNull(vilkårsvurderingBehov.kontekst()["søknad_uuid"])
-        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        assertDoesNotThrow {
-            UUID.fromString(vilkårsvurderingId)
-        }
-        assertNotNull(vilkårsvurderingId)
+        assertBehovInnholdFor(vilkårsvurderingBehov)
+
         assertTrue(inspektør.harBehandlinger)
 
+        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
             ident,
             UUID.fromString(vilkårsvurderingId),
@@ -51,24 +47,50 @@ class NyRettighetsbehandlingTest {
         assertTilstand(UtførerBeregning)
         assertEquals(2, paragraf423AlderResultat.behov().size)
 
-        val grunnlag = paragraf423AlderResultat.behov()[0]
-        val sats = paragraf423AlderResultat.behov()[1]
+        val grunnlagBehov = paragraf423AlderResultat.behov()[0]
+        assertBehovInnholdFor(grunnlagBehov)
 
-        assertEquals(Grunnlag, grunnlag.type)
-        assertEquals(ident, grunnlag.kontekst()["ident"])
-        assertNotNull(grunnlag.kontekst()["behandlingsId"])
-        assertNotNull(grunnlag.detaljer()["virkningsdato"].let { LocalDate.parse(it.toString()) })
+        val satsBehov = paragraf423AlderResultat.behov()[1]
+        assertBehovInnholdFor(satsBehov)
 
-        assertEquals(Sats, sats.type)
-        assertEquals(ident, sats.kontekst()["ident"])
-        assertNotNull(sats.kontekst()["behandlingsId"])
-
-        val grunnlagOgSatsResultat =
-            GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
-        person.håndter(grunnlagOgSatsResultat)
+        val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
+        val grunnlagOgSats = GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
+        person.håndter(grunnlagOgSats)
 
         assertTilstand(Behandlet)
         assertEquals(true, inspektør.vedtakUtfall)
+    }
+
+    private fun assertBehovInnholdFor(behov: Aktivitetslogg.Aktivitet.Behov) {
+        when (behov.type) {
+            Paragraf_4_23_alder -> assertAldersbehovInnhold(behov)
+            Grunnlag -> assertGrunnlagbehovInnhold(behov)
+            Sats -> assertSatsbehovInnhold(behov)
+        }
+    }
+
+    private fun assertGrunnlagbehovInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
+        assertEquals(Grunnlag, behov.type)
+        assertEquals(ident, behov.kontekst()["ident"])
+        assertNotNull(behov.kontekst()["behandlingsId"])
+        assertNotNull(behov.detaljer()["virkningsdato"].let { LocalDate.parse(it.toString()) })
+    }
+
+    private fun assertSatsbehovInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
+        assertEquals(Sats, behov.type)
+        assertEquals(ident, behov.kontekst()["ident"])
+        assertNotNull(behov.kontekst()["behandlingsId"])
+    }
+
+    private fun assertAldersbehovInnhold(vilkårsvurderingBehov: Aktivitetslogg.Aktivitet.Behov) {
+        assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
+        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingsId"])
+        assertNotNull(vilkårsvurderingBehov.kontekst()["søknad_uuid"])
+        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
+        assertDoesNotThrow {
+            UUID.fromString(vilkårsvurderingId)
+        }
+        assertNotNull(vilkårsvurderingId)
     }
 
     @Test
