@@ -2,6 +2,9 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.Behandlet
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.UtførerBeregning
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.VurdererVilkår
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
@@ -24,7 +27,7 @@ class NyRettighetsbehandlingTest {
     @Test
     fun `Ny søknad hendelse fører til innvilgelsesvedtak`() {
         person.håndter(søknadHendelse)
-        assertTilstand(NyRettighetsbehandling.VurdererVilkår)
+        assertTilstand(VurdererVilkår)
 
         assertEquals(1, søknadHendelse.behov().size)
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
@@ -45,7 +48,7 @@ class NyRettighetsbehandlingTest {
             oppfylt = true
         )
         person.håndter(paragraf423AlderResultat)
-        assertTilstand(NyRettighetsbehandling.UtførerBeregning)
+        assertTilstand(UtførerBeregning)
         assertEquals(2, paragraf423AlderResultat.behov().size)
 
         val grunnlag = paragraf423AlderResultat.behov()[0]
@@ -60,8 +63,12 @@ class NyRettighetsbehandlingTest {
         assertEquals(ident, sats.kontekst()["ident"])
         assertNotNull(sats.kontekst()["behandlingsId"])
 
-        val grunnlagOgSatsResultat = GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
+        val grunnlagOgSatsResultat =
+            GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
         person.håndter(grunnlagOgSatsResultat)
+
+        assertTilstand(Behandlet)
+        assertEquals(true, inspektør.vedtakUtfall)
     }
 
     @Test

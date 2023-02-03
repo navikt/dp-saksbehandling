@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import mu.KotlinLogging
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
@@ -11,6 +12,8 @@ import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erFerdig
 import no.nav.dagpenger.behandling.visitor.NyRettighetsbehandlingVisitor
 import java.time.LocalDate
 import java.util.UUID
+
+private val logger = KotlinLogging.logger { }
 
 class NyRettighetsbehandling private constructor(
     private val person: Person,
@@ -44,6 +47,7 @@ class NyRettighetsbehandling private constructor(
             TestVilkår(),
         )
     }
+    private lateinit var grunnlagOgSatsResultat: GrunnlagOgSatsResultat
 
     fun håndter(hendelse: SøknadHendelse) {
         kontekst(hendelse, "Opprettet ny rettighetsbehandling basert på søknadhendelse")
@@ -83,6 +87,7 @@ class NyRettighetsbehandling private constructor(
             return // Vi er allerede i tilstanden
         }
         // val forrigeTilstand = tilstand
+        loggTilstandsendring(nyTilstand)
         tilstand = nyTilstand
         søknadHendelse.kontekst(tilstand)
         tilstand.entering(søknadHendelse, this)
@@ -196,6 +201,27 @@ class NyRettighetsbehandling private constructor(
         }
 
         override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
+            behandling.grunnlagOgSatsResultat = grunnlagOgSatsResultat
+            behandling.endreTilstand(Behandlet, grunnlagOgSatsResultat)
         }
+    }
+
+    object Behandlet : Tilstand {
+        override val type: Tilstand.Type
+            get() = Tilstand.Type.Behandlet
+
+        override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
+            behandling.person.leggTilVedtak(
+                Vedtak(
+                    true,
+                    behandling.grunnlagOgSatsResultat.grunnlag,
+                    behandling.grunnlagOgSatsResultat.dagsats
+                )
+            )
+        }
+    }
+
+    private fun loggTilstandsendring(nyTilstand: Tilstand) {
+        logger.info { "Behandling av ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.type} til ny tilstand ${nyTilstand.type}" }
     }
 }
