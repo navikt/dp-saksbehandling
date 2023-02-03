@@ -26,7 +26,7 @@ class NyRettighetsbehandling private constructor(
         person,
         søknadUUID,
         UUID.randomUUID(),
-        Vilkårsvurdering,
+        VurdererVilkår,
         null,
         null
     )
@@ -99,9 +99,9 @@ class NyRettighetsbehandling private constructor(
         val type: Type
 
         enum class Type {
-            Vilkårsvurdering,
-            VurderUtfall,
-            UnderBeregning,
+            VurdererVilkår,
+            VurdererUtfall,
+            UtførerBeregning,
             Behandlet
         }
 
@@ -134,9 +134,9 @@ class NyRettighetsbehandling private constructor(
         }
     }
 
-    object Vilkårsvurdering : Tilstand {
+    object VurdererVilkår : Tilstand {
         override val type: Tilstand.Type
-            get() = Tilstand.Type.Vilkårsvurdering
+            get() = Tilstand.Type.VurdererVilkår
 
         override fun håndter(søknadHendelse: SøknadHendelse, behandling: NyRettighetsbehandling) {
             behandling.vilkårsvurderinger.forEach { vurdering ->
@@ -152,38 +152,38 @@ class NyRettighetsbehandling private constructor(
                 vurdering.håndter(paragraf423AlderResultat)
             }
             if (behandling.vilkårsvurderinger.erFerdig()) {
-                behandling.endreTilstand(VurderUtfall, paragraf423AlderResultat)
+                behandling.endreTilstand(VurdererUtfall, paragraf423AlderResultat)
             }
         }
     }
 
-    object VurderUtfall : Tilstand {
+    object VurdererUtfall : Tilstand {
         override val type: Tilstand.Type
-            get() = Tilstand.Type.VurderUtfall
+            get() = Tilstand.Type.VurdererUtfall
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             require(behandling.vilkårsvurderinger.erFerdig()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
             if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
-                behandling.endreTilstand(UnderBeregning, hendelse)
+                behandling.endreTilstand(UtførerBeregning, hendelse)
             } else {
                 behandling.person.leggTilVedtak(Vedtak(utfall = false))
             }
         }
     }
 
-    object UnderBeregning : Tilstand {
+    object UtførerBeregning : Tilstand {
         override val type: Tilstand.Type
-            get() = Tilstand.Type.UnderBeregning
+            get() = Tilstand.Type.UtførerBeregning
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             behandling.inntektsId = "ULID"
             behandling.virkningsdato = LocalDate.now()
 
             val inntektId = requireNotNull(behandling.inntektsId) {
-                "Vi forventer at inntektId er satt ved tilstandsendring til ${UnderBeregning.javaClass.simpleName}"
+                "Vi forventer at inntektId er satt ved tilstandsendring til ${UtførerBeregning.javaClass.simpleName}"
             }.let { mapOf("inntektId" to it) }
             val virkningsdato = requireNotNull(behandling.virkningsdato) {
-                "Vi forventer at virkningsdato er satt ved tilstandsendring til ${UnderBeregning.javaClass.simpleName}"
+                "Vi forventer at virkningsdato er satt ved tilstandsendring til ${UtførerBeregning.javaClass.simpleName}"
             }.let {
                 mapOf("virkningsdato" to it)
             }

@@ -24,6 +24,8 @@ class NyRettighetsbehandlingTest {
     @Test
     fun `Ny søknad hendelse fører til innvilgelsesvedtak`() {
         person.håndter(søknadHendelse)
+        assertTilstand(NyRettighetsbehandling.VurdererVilkår)
+
         assertEquals(1, søknadHendelse.behov().size)
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
@@ -43,6 +45,7 @@ class NyRettighetsbehandlingTest {
             oppfylt = true
         )
         person.håndter(paragraf423AlderResultat)
+        assertTilstand(NyRettighetsbehandling.UtførerBeregning)
         assertEquals(2, paragraf423AlderResultat.behov().size)
 
         val grunnlag = paragraf423AlderResultat.behov()[0]
@@ -102,6 +105,10 @@ class NyRettighetsbehandlingTest {
         assertEquals(2, inspektør.antallBehandlinger)
     }
 
+    private fun assertTilstand(tilstand: NyRettighetsbehandling.Tilstand) {
+        assertEquals(tilstand.type, inspektør.nyRettighetsbehandlingTilstand)
+    }
+
     private class Inspektør(person: Person) : PersonVisitor {
 
         init {
@@ -111,6 +118,7 @@ class NyRettighetsbehandlingTest {
         var harBehandlinger: Boolean = false
         var antallBehandlinger = 0
         var vedtakUtfall: Boolean? = null
+        lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
 
         override fun visitNyRettighetsbehandling(
             søknadsId: UUID,
@@ -121,6 +129,7 @@ class NyRettighetsbehandlingTest {
         ) {
             harBehandlinger = true
             antallBehandlinger++
+            nyRettighetsbehandlingTilstand = tilstand.type
         }
 
         override fun visitVedtak(utfall: Boolean) {
