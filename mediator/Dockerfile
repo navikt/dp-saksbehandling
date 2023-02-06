@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17 as jre-build
+FROM eclipse-temurin:19 as jre-build
 
 # Create a custom Java runtime
 RUN $JAVA_HOME/bin/jlink \
@@ -12,7 +12,7 @@ RUN $JAVA_HOME/bin/jlink \
 # Runtime
 FROM debian:buster-slim
 
-ENV TZ="Europe/Oslo"
+ENV LANG='nb_NO.UTF-8' LANGUAGE='nb_NO:nb' LC_ALL='nb:NO.UTF-8' TZ="Europe/Oslo"
 ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
 
