@@ -246,6 +246,7 @@ class NyRettighetsbehandling private constructor(
             get() = Tilstand.Type.FattetVedtak
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
+            behandling.person.leggTilVedtak(behandling.foreløpigInnstilling!!)
         }
     }
 

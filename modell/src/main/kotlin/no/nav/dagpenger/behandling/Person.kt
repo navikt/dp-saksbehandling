@@ -8,9 +8,12 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
+import java.time.LocalDate
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
     private val behandlinger = mutableListOf<NyRettighetsbehandling>()
+
+    private val vedtakHistorikk = mutableListOf<Vedtak>()
 
     constructor(ident: String) : this(ident.tilPersonIdentfikator())
 
@@ -21,6 +24,9 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     fun accept(visitor: PersonVisitor) {
         visitor.visitPerson(ident)
         behandlinger.forEach {
+            it.accept(visitor)
+        }
+        vedtakHistorikk.forEach {
             it.accept(visitor)
         }
     }
@@ -52,5 +58,10 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     private fun kontekst(hendelse: Hendelse) {
         hendelse.kontekst(this)
+    }
+
+    fun leggTilVedtak(foreløpigInnstilling: ForeløpigInnstilling) {
+        // TODO fiks virkningsdato. Skal flyttes til foreløpigInnstilling
+        vedtakHistorikk.add(Vedtak(foreløpigInnstilling.utfall, LocalDate.now().plusDays(1)))
     }
 }

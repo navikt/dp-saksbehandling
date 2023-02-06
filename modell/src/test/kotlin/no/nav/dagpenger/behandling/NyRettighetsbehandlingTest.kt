@@ -60,7 +60,7 @@ class NyRettighetsbehandlingTest {
         person.håndter(grunnlagOgSats)
 
         assertTilstand(Kvalitetssikrer)
-        assertEquals(true, inspektør.vedtakUtfall)
+        assertEquals(true, inspektør.foreløpigInnstillingUtfall)
     }
 
     @Test
@@ -82,7 +82,7 @@ class NyRettighetsbehandlingTest {
         person.håndter(paragraf423AlderResultat)
 
         assertEquals(1, inspektør.antallBehandlinger)
-        assertEquals(false, inspektør.vedtakUtfall)
+        assertEquals(false, inspektør.foreløpigInnstillingUtfall)
         assertTilstand(Kvalitetssikrer)
 
         val kvalitetssikring = paragraf423AlderResultat.behov()[0]
@@ -91,6 +91,9 @@ class NyRettighetsbehandlingTest {
         val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
         person.håndter(BeslutterHendelse(beslutterIdent = "12345123451", ident, behandlingsId))
         assertTilstand(FattetVedtak)
+
+        assertEquals(false, inspektør.foreløpigInnstillingUtfall)
+        assertEquals(false, inspektør.vedtakUtfall)
     }
 
     @Test
@@ -158,6 +161,7 @@ class NyRettighetsbehandlingTest {
         }
 
         var antallBehandlinger = 0
+        var foreløpigInnstillingUtfall: Boolean? = null
         var vedtakUtfall: Boolean? = null
         lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
 
@@ -173,6 +177,10 @@ class NyRettighetsbehandlingTest {
         }
 
         override fun visitForeløpigInnstilling(utfall: Boolean) {
+            foreløpigInnstillingUtfall = utfall
+        }
+
+        override fun visitVedtak(utfall: Boolean) {
             vedtakUtfall = utfall
         }
     }
