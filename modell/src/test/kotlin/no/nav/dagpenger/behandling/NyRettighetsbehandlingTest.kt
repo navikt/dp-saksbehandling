@@ -15,7 +15,6 @@ import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.time.LocalDate
@@ -38,7 +37,7 @@ class NyRettighetsbehandlingTest {
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertBehovInnholdFor(vilkårsvurderingBehov)
 
-        assertTrue(inspektør.harBehandlinger)
+        assertEquals(1, inspektør.antallBehandlinger)
 
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
@@ -69,10 +68,10 @@ class NyRettighetsbehandlingTest {
         person.håndter(søknadHendelse)
         assertTilstand(VurdererVilkår)
         assertEquals(1, søknadHendelse.behov().size)
-        assertTrue(inspektør.harBehandlinger)
-
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertBehovInnholdFor(vilkårsvurderingBehov)
+
+        assertEquals(1, inspektør.antallBehandlinger)
 
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
@@ -158,7 +157,6 @@ class NyRettighetsbehandlingTest {
             person.accept(this)
         }
 
-        var harBehandlinger: Boolean = false
         var antallBehandlinger = 0
         var vedtakUtfall: Boolean? = null
         lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
@@ -170,7 +168,6 @@ class NyRettighetsbehandlingTest {
             virkningsdato: LocalDate?,
             inntektsId: String?
         ) {
-            harBehandlinger = true
             antallBehandlinger++
             nyRettighetsbehandlingTilstand = tilstand.type
         }
