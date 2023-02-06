@@ -62,24 +62,20 @@ class NyRettighetsbehandlingTest {
     }
 
     @Test
-    fun `Ny søknad hendelse fører til avslagsvedtak`() {
+    fun `Ny søknad hendelse blir manuelt behandlet og fører til avslagsvedtak`() {
         person.håndter(søknadHendelse)
         assertTilstand(VurdererVilkår)
         assertEquals(1, søknadHendelse.behov().size)
         assertTrue(inspektør.harBehandlinger)
 
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
-        assertEquals(ident, vilkårsvurderingBehov.kontekst()["ident"])
-        assertNotNull(vilkårsvurderingBehov.kontekst()["behandlingsId"])
-        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        assertDoesNotThrow {
-            UUID.fromString(vilkårsvurderingId)
-        }
+        assertBehovInnholdFor(vilkårsvurderingBehov)
 
+        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
         val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
             ident,
             UUID.fromString(vilkårsvurderingId),
-            oppfylt = false
+            oppfylt = false,
         )
         person.håndter(paragraf423AlderResultat)
 
@@ -99,19 +95,17 @@ class NyRettighetsbehandlingTest {
     @Test
     fun `Håndtere to unike søknadhendelser`() {
         val søknadHendelse2 = SøknadHendelse(UUID.randomUUID(), "1243", ident)
-
         person.håndter(søknadHendelse)
         person.håndter(søknadHendelse2)
         assertEquals(2, inspektør.antallBehandlinger)
     }
 
-    private fun assertBehovInnholdFor(behov: Aktivitetslogg.Aktivitet.Behov) {
+    private fun assertBehovInnholdFor(behov: Aktivitetslogg.Aktivitet.Behov) =
         when (behov.type) {
             Paragraf_4_23_alder -> assertAldersbehovInnhold(behov)
             Grunnlag -> assertGrunnlagbehovInnhold(behov)
             Sats -> assertSatsbehovInnhold(behov)
         }
-    }
 
     private fun assertGrunnlagbehovInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
         assertEquals(Grunnlag, behov.type)
