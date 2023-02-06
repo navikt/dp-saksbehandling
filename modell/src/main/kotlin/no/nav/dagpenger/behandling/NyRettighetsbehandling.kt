@@ -1,9 +1,9 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
+import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
+import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_12_Størrelse_1_Ledd
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
@@ -62,6 +62,19 @@ class NyRettighetsbehandling private constructor(
         listOf(
             Paragraf_4_23_alder_vilkår(),
             TestVilkår(),
+        )
+    }
+
+    private val fastsettelser by lazy {
+        listOf(
+            Paragraf_4_11_Grunnlag(
+                requireNotNull(this.inntektsId),
+                requireNotNull(this.virkningsdato)
+            ),
+            Paragraf_4_12_Størrelse_1_Ledd(
+                requireNotNull(this.inntektsId),
+                requireNotNull(this.virkningsdato)
+            )
         )
     }
 
@@ -214,25 +227,11 @@ class NyRettighetsbehandling private constructor(
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             behandling.inntektsId = "ULID"
-            val inntektId = requireNotNull(behandling.inntektsId) {
-                "Vi forventer at inntektId er satt ved tilstandsendring til ${UtførerBeregning.javaClass.simpleName}"
-            }.let { mapOf("inntektId" to it) }
-            val virkningsdato = requireNotNull(behandling.virkningsdato) {
-                "Vi forventer at virkningsdato er satt ved tilstandsendring til ${UtførerBeregning.javaClass.simpleName}"
-            }.let {
-                mapOf("virkningsdato" to it)
-            }
-            hendelse.behov(
-                Grunnlag,
-                "Trenger grunnlag",
-                virkningsdato + inntektId
-            )
-            hendelse.behov(Sats, "Trenger sats")
+            behandling.fastsettelser.forEach { it.håndter(hendelse) }
         }
 
         override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
-            behandling.foreløpigInnstilling?.grunnlag = grunnlagOgSatsResultat.grunnlag
-            behandling.foreløpigInnstilling?.sats = grunnlagOgSatsResultat.dagsats
+            behandling.fastsettelser.forEach { it.håndter(grunnlagOgSatsResultat) }
             behandling.endreTilstand(Kvalitetssikrer, grunnlagOgSatsResultat)
         }
     }
