@@ -1,6 +1,10 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
+import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
@@ -67,6 +71,12 @@ class NyRettighetsbehandling private constructor(
         tilstand.håndter(grunnlagOgSatsResultat, this)
     }
 
+    fun håndter(beslutterHendelse: BeslutterHendelse) {
+        if (beslutterHendelse.behandlingId != this.behandlingsId) return
+        kontekst(beslutterHendelse, "Beslutter har fattet et vedtak")
+        tilstand.håndter(beslutterHendelse, this)
+    }
+
     fun accept(visitor: NyRettighetsbehandlingVisitor) {
         visitor.visitNyRettighetsbehandling(søknadsId, behandlingsId, tilstand, virkningsdato, inntektsId)
         vilkårsvurderinger.forEach {
@@ -123,6 +133,7 @@ class NyRettighetsbehandling private constructor(
             )
 
         fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {}
+
         fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
             grunnlagOgSatsResultat.tilstandfeil()
         }
@@ -136,6 +147,10 @@ class NyRettighetsbehandling private constructor(
             behandling: NyRettighetsbehandling,
         ) {
             paragraf423AlderResultat.tilstandfeil()
+        }
+
+        fun håndter(beslutterHendelse: BeslutterHendelse, behandling: NyRettighetsbehandling) {
+            beslutterHendelse.tilstandfeil()
         }
 
         private fun Hendelse.tilstandfeil() {
@@ -199,11 +214,11 @@ class NyRettighetsbehandling private constructor(
                 mapOf("virkningsdato" to it)
             }
             hendelse.behov(
-                Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag,
+                Grunnlag,
                 "Trenger grunnlag",
                 virkningsdato + inntektId
             )
-            hendelse.behov(Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats, "Trenger sats")
+            hendelse.behov(Sats, "Trenger sats")
         }
 
         override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
@@ -216,6 +231,19 @@ class NyRettighetsbehandling private constructor(
     object Kvalitetssikrer : Tilstand {
         override val type: Tilstand.Type
             get() = Tilstand.Type.Kvalitetssikrer
+
+        override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
+            hendelse.behov(Kvalitetssikring, "Behøver kvalitetssikring i form av totrinnskontroll fra en beslutter")
+        }
+
+        override fun håndter(beslutterHendelse: BeslutterHendelse, behandling: NyRettighetsbehandling) {
+            behandling.endreTilstand(FattetVedtak, beslutterHendelse)
+        }
+    }
+
+    object FattetVedtak : Tilstand {
+        override val type: Tilstand.Type
+            get() = Tilstand.Type.FattetVedtak
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
         }

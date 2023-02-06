@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Companion.harSøknadUUID
 import no.nav.dagpenger.behandling.PersonIdentifikator.Companion.tilPersonIdentfikator
+import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
@@ -40,6 +41,11 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
         kontekst(grunnlagOgSatsResultat)
         behandlinger.forEach { it.håndter(grunnlagOgSatsResultat) }
+    }
+
+    fun håndter(beslutterHendelse: BeslutterHendelse) {
+        kontekst(beslutterHendelse)
+        behandlinger.forEach { it.håndter(beslutterHendelse) }
     }
 
     fun ident() = this.ident.identifikator()

@@ -1,11 +1,14 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.FattetVedtak
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.UtførerBeregning
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.VurdererVilkår
+import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
@@ -82,6 +85,13 @@ class NyRettighetsbehandlingTest {
         assertEquals(1, inspektør.antallBehandlinger)
         assertEquals(false, inspektør.vedtakUtfall)
         assertTilstand(Kvalitetssikrer)
+
+        val kvalitetssikring = paragraf423AlderResultat.behov()[0]
+        assertBehovInnholdFor(kvalitetssikring)
+
+        val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
+        person.håndter(BeslutterHendelse(beslutterIdent = "12345123451", ident, behandlingsId))
+        assertTilstand(FattetVedtak)
     }
 
     @Test
@@ -105,7 +115,14 @@ class NyRettighetsbehandlingTest {
             Paragraf_4_23_alder -> assertAldersbehovInnhold(behov)
             Grunnlag -> assertGrunnlagbehovInnhold(behov)
             Sats -> assertSatsbehovInnhold(behov)
+            Kvalitetssikring -> assertKvalitetssikringInnhold(behov)
         }
+
+    private fun assertKvalitetssikringInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
+        assertEquals(Kvalitetssikring, behov.type)
+        assertEquals(ident, behov.kontekst()["ident"])
+        assertNotNull(behov.kontekst()["behandlingsId"])
+    }
 
     private fun assertGrunnlagbehovInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
         assertEquals(Grunnlag, behov.type)

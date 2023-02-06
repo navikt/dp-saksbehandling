@@ -198,7 +198,8 @@ class Aktivitetslogg private constructor(
             enum class Behovtype {
                 Paragraf_4_23_alder,
                 Grunnlag,
-                Sats
+                Sats,
+                Kvalitetssikring
             }
         }
 

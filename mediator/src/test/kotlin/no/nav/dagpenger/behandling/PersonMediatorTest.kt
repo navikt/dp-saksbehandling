@@ -27,7 +27,7 @@ internal class PersonMediatorTest {
     val personMediator = PersonMediator(testRapid, inmemoryRepository)
 
     @Test
-    fun `Motta søknadhendelse, få aldersbehovløsning og send ut behov om vedtak`() {
+    fun `Motta søknadhendelse, få aldersbehovløsning, gå til kvalitetssikring`() {
         testRapid.sendTestMessage(
             `innsending ferdigstilt hendelse`(
                 søknadId = UUID.randomUUID(),
@@ -46,6 +46,10 @@ internal class PersonMediatorTest {
                 vilkårsvurderingId = testRapid.inspektør.field(0, "vilkårsvurderingId").asText()
             )
         )
-        assertEquals(1, testRapid.inspektør.size)
+
+        // TODO: Rydde
+        assertEquals("[\"Paragraf_4_23_alder\"]", testRapid.inspektør.message(0)["@behov"].toString())
+        assertEquals("[\"Kvalitetssikring\"]", testRapid.inspektør.message(1)["@behov"].toString())
+        assertEquals(2, testRapid.inspektør.size)
     }
 }
