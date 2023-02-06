@@ -13,11 +13,22 @@ import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erFerdig
+import no.nav.dagpenger.behandling.visitor.ForeløpigInnstillingVisitor
 import no.nav.dagpenger.behandling.visitor.NyRettighetsbehandlingVisitor
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
+
+private data class ForeløpigInnstilling(val utfall: Boolean) {
+
+    var grunnlag: BigDecimal? = null
+    var sats: BigDecimal? = null
+    fun accept(visitor: ForeløpigInnstillingVisitor) {
+        visitor.visitForeløpigInnstilling(utfall)
+    }
+}
 
 class NyRettighetsbehandling private constructor(
     private val person: Person,
@@ -26,16 +37,18 @@ class NyRettighetsbehandling private constructor(
     private var tilstand: Tilstand,
     private var virkningsdato: LocalDate?,
     private var inntektsId: String?,
+    private var foreløpigInnstilling: ForeløpigInnstilling?,
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Aktivitetskontekst {
 
     constructor(person: Person, søknadUUID: UUID) : this(
-        person,
-        søknadUUID,
-        UUID.randomUUID(),
-        VurdererVilkår,
-        null,
-        null
+        person = person,
+        søknadsId = søknadUUID,
+        behandlingsId = UUID.randomUUID(),
+        tilstand = VurdererVilkår,
+        virkningsdato = null,
+        inntektsId = null,
+        foreløpigInnstilling = null
     )
 
     companion object {
@@ -51,9 +64,6 @@ class NyRettighetsbehandling private constructor(
             TestVilkår(),
         )
     }
-    private lateinit var grunnlagOgSatsResultat: GrunnlagOgSatsResultat
-
-    private var foreløpigInnstilling: ForeløpigInnstilling? = null
 
     fun håndter(hendelse: SøknadHendelse) {
         kontekst(hendelse, "Opprettet ny rettighetsbehandling basert på søknadhendelse")
@@ -186,6 +196,7 @@ class NyRettighetsbehandling private constructor(
             get() = Tilstand.Type.VurdererUtfall
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
+            behandling.virkningsdato = LocalDate.now() // Må være satt i vilkårsvurderinger
             require(behandling.vilkårsvurderinger.erFerdig()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
             if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
                 behandling.foreløpigInnstilling = ForeløpigInnstilling(utfall = true)
@@ -203,8 +214,6 @@ class NyRettighetsbehandling private constructor(
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             behandling.inntektsId = "ULID"
-            behandling.virkningsdato = LocalDate.now()
-
             val inntektId = requireNotNull(behandling.inntektsId) {
                 "Vi forventer at inntektId er satt ved tilstandsendring til ${UtførerBeregning.javaClass.simpleName}"
             }.let { mapOf("inntektId" to it) }
@@ -246,8 +255,16 @@ class NyRettighetsbehandling private constructor(
             get() = Tilstand.Type.FattetVedtak
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
-            behandling.person.leggTilVedtak(behandling.foreløpigInnstilling!!)
+            behandling.opprettVedtak()
         }
+    }
+
+    private fun opprettVedtak() {
+        val vedtak = Vedtak(
+            utfall = requireNotNull(this.foreløpigInnstilling).utfall,
+            virkningsdato = requireNotNull(this.virkningsdato)
+        )
+        this.person.leggTilVedtak(vedtak)
     }
 
     private fun loggTilstandsendring(nyTilstand: Tilstand) {

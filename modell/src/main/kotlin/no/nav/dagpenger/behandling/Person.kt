@@ -8,7 +8,6 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
-import java.time.LocalDate
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
     private val behandlinger = mutableListOf<NyRettighetsbehandling>()
@@ -60,8 +59,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         hendelse.kontekst(this)
     }
 
-    fun leggTilVedtak(foreløpigInnstilling: ForeløpigInnstilling) {
-        // TODO fiks virkningsdato. Skal flyttes til foreløpigInnstilling
-        vedtakHistorikk.add(Vedtak(foreløpigInnstilling.utfall, LocalDate.now().plusDays(1)))
+    fun leggTilVedtak(vedtak: Vedtak) {
+        vedtakHistorikk.add(vedtak)
     }
 }
