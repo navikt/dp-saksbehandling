@@ -11,7 +11,7 @@ interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakVisitor {
     fun visitPerson(ident: PersonIdentifikator) {}
 }
 interface VedtakVisitor {
-    fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?) {}
+    fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?, stønadsperiode: BigDecimal?) {}
 }
 
 interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor, FastsettelseVisitor {
@@ -35,4 +35,5 @@ interface FastsettelseVisitor {
 
     fun visitGrunnlag(grunnlag: BigDecimal) {}
     fun visitDagsats(dagsats: BigDecimal) {}
+    fun visitStønadsperiode(stønadsperiode: BigDecimal) {}
 }

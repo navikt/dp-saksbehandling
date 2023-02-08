@@ -4,6 +4,7 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grun
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Stønadsperiode
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.FattetVedtak
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.UtførerBeregning
@@ -11,6 +12,7 @@ import no.nav.dagpenger.behandling.NyRettighetsbehandling.VurdererVilkår
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -48,7 +50,7 @@ class NyRettighetsbehandlingTest {
         )
         person.håndter(paragraf423AlderResultat)
         assertTilstand(UtførerBeregning)
-        assertEquals(2, paragraf423AlderResultat.behov().size)
+        assertEquals(3, paragraf423AlderResultat.behov().size)
 
         val grunnlagBehov = paragraf423AlderResultat.behov()[0]
         assertBehovInnholdFor(grunnlagBehov)
@@ -59,6 +61,8 @@ class NyRettighetsbehandlingTest {
         val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
         val grunnlagOgSats = GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
         person.håndter(grunnlagOgSats)
+        val stønadsperiode = StønadsperiodeResultat(ident, behandlingsId, 52.toBigDecimal())
+        person.håndter(stønadsperiode)
 
         assertTilstand(Kvalitetssikrer)
 
@@ -75,6 +79,7 @@ class NyRettighetsbehandlingTest {
         assertEquals(true, inspektør.vedtakUtfall)
         assertEquals(250000.toBigDecimal(), inspektør.grunnlag)
         assertEquals(700.toBigDecimal(), inspektør.dagsats)
+        assertEquals(52.toBigDecimal(), inspektør.stønadsperiode)
     }
 
     @Test
@@ -130,6 +135,7 @@ class NyRettighetsbehandlingTest {
             Grunnlag -> assertGrunnlagbehovInnhold(behov)
             Sats -> assertSatsbehovInnhold(behov)
             Kvalitetssikring -> assertKvalitetssikringInnhold(behov)
+            Stønadsperiode -> TODO()
         }
 
     private fun assertKvalitetssikringInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
@@ -174,6 +180,7 @@ class NyRettighetsbehandlingTest {
 
         var grunnlag: BigDecimal? = null
         var dagsats: BigDecimal? = null
+        var stønadsperiode: BigDecimal? = null
         var antallBehandlinger = 0
         var vedtakUtfall: Boolean? = null
         lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
@@ -189,10 +196,11 @@ class NyRettighetsbehandlingTest {
             nyRettighetsbehandlingTilstand = tilstand.type
         }
 
-        override fun visitVedtak(utfall: Boolean, dagsats: BigDecimal?, grunnlag: BigDecimal?) {
+        override fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?, stønadsperiode: BigDecimal?) {
             this.vedtakUtfall = utfall
             this.dagsats = dagsats
             this.grunnlag = grunnlag
+            this.stønadsperiode = stønadsperiode
         }
     }
 }

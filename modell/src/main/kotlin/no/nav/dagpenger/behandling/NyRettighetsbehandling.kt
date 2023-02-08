@@ -3,12 +3,15 @@ package no.nav.dagpenger.behandling
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
+import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_12_Sats
+import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_15_Stønadsperiode
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
@@ -64,6 +67,10 @@ class NyRettighetsbehandling private constructor(
             Paragraf_4_12_Sats(
                 requireNotNull(this.inntektsId),
                 requireNotNull(this.virkningsdato)
+            ),
+            Paragraf_4_15_Stønadsperiode(
+                requireNotNull(this.inntektsId),
+                requireNotNull(this.virkningsdato)
             )
         )
     }
@@ -82,6 +89,12 @@ class NyRettighetsbehandling private constructor(
         if (grunnlagOgSatsResultat.behandlingId != this.behandlingsId) return
         kontekst(grunnlagOgSatsResultat, "Fått resultat på ${grunnlagOgSatsResultat.javaClass.simpleName}")
         tilstand.håndter(grunnlagOgSatsResultat, this)
+    }
+
+    fun håndter(stønadsperiode: StønadsperiodeResultat) {
+        if (stønadsperiode.behandlingId != this.behandlingsId) return
+        kontekst(stønadsperiode, "Fått resultat på ${stønadsperiode.javaClass.simpleName}")
+        tilstand.håndter(stønadsperiode, this)
     }
 
     fun håndter(beslutterHendelse: BeslutterHendelse) {
@@ -148,6 +161,10 @@ class NyRettighetsbehandling private constructor(
 
         fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
             grunnlagOgSatsResultat.tilstandfeil()
+        }
+
+        fun håndter(stønadsperiode: StønadsperiodeResultat, nyRettighetsbehandling: NyRettighetsbehandling) {
+            stønadsperiode.tilstandfeil()
         }
 
         fun håndter(søknadHendelse: SøknadHendelse, behandling: NyRettighetsbehandling) {
@@ -219,7 +236,16 @@ class NyRettighetsbehandling private constructor(
 
         override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
             behandling.fastsettelser.forEach { it.håndter(grunnlagOgSatsResultat) }
-            behandling.endreTilstand(Kvalitetssikrer, grunnlagOgSatsResultat)
+            if (behandling.fastsettelser.vurdert()) {
+                behandling.endreTilstand(Kvalitetssikrer, grunnlagOgSatsResultat)
+            }
+        }
+
+        override fun håndter(stønadsperiode: StønadsperiodeResultat, behandling: NyRettighetsbehandling) {
+            behandling.fastsettelser.forEach { it.håndter(stønadsperiode) }
+            if (behandling.fastsettelser.vurdert()) {
+                behandling.endreTilstand(Kvalitetssikrer, stønadsperiode)
+            }
         }
     }
 
@@ -249,9 +275,15 @@ class NyRettighetsbehandling private constructor(
         require(vilkårsvurderinger.vurdert()) { " Alle vilkår må være vurdert når en skal opprette vedtak" }
         val vedtak = when (vilkårsvurderinger.erAlleOppfylt()) {
             true -> {
-                val visitor = GrunnlagOgDagsatsVisitor(fastsettelser)
-                Vedtak.innvilgelse(requireNotNull(virkningsdato), grunnlag = visitor.grunnlag, dagsats = visitor.dagsats)
+                val visitor = VedtakFastsettelseVisitor(fastsettelser)
+                Vedtak.innvilgelse(
+                    requireNotNull(virkningsdato),
+                    grunnlag = visitor.grunnlag,
+                    dagsats = visitor.dagsats,
+                    stønadsperiode = visitor.stønadsperiode
+                )
             }
+
             false -> Vedtak.avslag(requireNotNull(virkningsdato))
         }
         this.person.leggTilVedtak(vedtak)
@@ -261,19 +293,25 @@ class NyRettighetsbehandling private constructor(
         logger.info { "Behandling av ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.type} til ny tilstand ${nyTilstand.type}" }
     }
 
-    private class GrunnlagOgDagsatsVisitor(fastsettelser: List<Fastsettelse<*>>) : FastsettelseVisitor {
+    private class VedtakFastsettelseVisitor(fastsettelser: List<Fastsettelse<*>>) : FastsettelseVisitor {
         lateinit var grunnlag: BigDecimal
         lateinit var dagsats: BigDecimal
+        lateinit var stønadsperiode: BigDecimal
 
         init {
             fastsettelser.forEach { it.accept(this) }
         }
+
         override fun visitGrunnlag(grunnlag: BigDecimal) {
             this.grunnlag = grunnlag
         }
 
         override fun visitDagsats(dagsats: BigDecimal) {
             this.dagsats = dagsats
+        }
+
+        override fun visitStønadsperiode(stønadsperiode: BigDecimal) {
+            this.stønadsperiode = stønadsperiode
         }
     }
 }

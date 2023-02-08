@@ -199,6 +199,7 @@ class Aktivitetslogg private constructor(
                 Paragraf_4_23_alder,
                 Grunnlag,
                 Sats,
+                Stønadsperiode,
                 Kvalitetssikring
             }
         }

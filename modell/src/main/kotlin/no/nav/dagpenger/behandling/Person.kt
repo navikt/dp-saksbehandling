@@ -6,6 +6,7 @@ import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 
@@ -46,6 +47,10 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
         kontekst(grunnlagOgSatsResultat)
         behandlinger.forEach { it.håndter(grunnlagOgSatsResultat) }
+    }
+    fun håndter(stønadsperiode: StønadsperiodeResultat) {
+        kontekst(stønadsperiode)
+        behandlinger.forEach { it.håndter(stønadsperiode) }
     }
 
     fun håndter(beslutterHendelse: BeslutterHendelse) {

@@ -13,6 +13,7 @@ class Vedtak private constructor(
     private val vedtakstidspunkt: LocalDateTime,
     private val grunnlag: BigDecimal?,
     private val dagsats: BigDecimal?,
+    private val stønadsperiode: BigDecimal?
 ) {
 
     private constructor(
@@ -20,22 +21,24 @@ class Vedtak private constructor(
         virkningsdato: LocalDate,
         grunnlag: BigDecimal? = null,
         dagsats: BigDecimal? = null,
+        stønadsperiode: BigDecimal? = null
     ) : this(
         vedtakId = UUID.randomUUID(),
         utfall = utfall,
         virkningsdato = virkningsdato,
         vedtakstidspunkt = LocalDateTime.now(),
-        grunnlag = null,
-        dagsats = null
+        grunnlag = grunnlag,
+        dagsats = dagsats,
+        stønadsperiode = stønadsperiode
     )
 
     companion object {
         fun avslag(virkningsdato: LocalDate) = Vedtak(utfall = false, virkningsdato = virkningsdato)
-        fun innvilgelse(virkningsdato: LocalDate, grunnlag: BigDecimal, dagsats: BigDecimal) =
-            Vedtak(utfall = true, virkningsdato = virkningsdato, grunnlag = grunnlag, dagsats = dagsats)
+        fun innvilgelse(virkningsdato: LocalDate, grunnlag: BigDecimal, dagsats: BigDecimal, stønadsperiode: BigDecimal) =
+            Vedtak(utfall = true, virkningsdato = virkningsdato, grunnlag = grunnlag, dagsats = dagsats, stønadsperiode = stønadsperiode)
     }
 
     fun accept(visitor: PersonVisitor) {
-        visitor.visitVedtak(utfall = utfall, grunnlag = grunnlag, dagsats = dagsats)
+        visitor.visitVedtak(utfall = utfall, grunnlag = grunnlag, dagsats = dagsats, stønadsperiode = stønadsperiode)
     }
 }
