@@ -17,7 +17,7 @@ import java.math.BigDecimal
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
     private val behandlinger = mutableListOf<NyRettighetsbehandling>()
 
-    private val vedtakHistorikk = mutableListOf<Vedtak>()
+    private val vedtakHistorikk = VedtakHistorikk()
 
     private val observere = mutableListOf<PersonObserver>()
 
@@ -32,9 +32,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         behandlinger.forEach {
             it.accept(visitor)
         }
-        vedtakHistorikk.forEach {
-            it.accept(visitor)
-        }
+        vedtakHistorikk.accept(visitor)
     }
 
     fun addObserver(observer: PersonObserver) {
@@ -75,7 +73,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     }
 
     internal fun leggTilVedtak(vedtak: Vedtak) {
-        vedtakHistorikk.add(vedtak)
+        vedtakHistorikk.leggTilVedtak(vedtak)
         observere.forEach { it.vedtakFattet(VedtakFattetVisitor(this.ident(), vedtak).vedtakFattet) }
     }
 

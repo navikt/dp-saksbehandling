@@ -49,7 +49,7 @@ internal class PersonMediatorTest {
 
         // TODO: Rydde
         assertEquals("[\"Paragraf_4_23_alder\"]", testRapid.inspektør.message(0)["@behov"].toString())
-        assertEquals("[\"Kvalitetssikring\"]", testRapid.inspektør.message(1)["@behov"].toString())
+        assertEquals("[\"KvalitetssikringsBehov\"]", testRapid.inspektør.message(1)["@behov"].toString())
         assertEquals(2, testRapid.inspektør.size)
     }
 }
