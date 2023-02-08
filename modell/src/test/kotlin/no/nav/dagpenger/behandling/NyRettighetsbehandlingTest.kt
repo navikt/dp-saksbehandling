@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
@@ -72,6 +73,8 @@ class NyRettighetsbehandlingTest {
         assertTilstand(FattetVedtak)
 
         assertEquals(true, inspektør.vedtakUtfall)
+        assertEquals(250000.toBigDecimal(), inspektør.grunnlag)
+        assertEquals(700.toBigDecimal(), inspektør.dagsats)
     }
 
     @Test
@@ -169,6 +172,8 @@ class NyRettighetsbehandlingTest {
             person.accept(this)
         }
 
+        var grunnlag: BigDecimal? = null
+        var dagsats: BigDecimal? = null
         var antallBehandlinger = 0
         var vedtakUtfall: Boolean? = null
         lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
@@ -184,8 +189,10 @@ class NyRettighetsbehandlingTest {
             nyRettighetsbehandlingTilstand = tilstand.type
         }
 
-        override fun visitVedtak(utfall: Boolean) {
-            vedtakUtfall = utfall
+        override fun visitVedtak(utfall: Boolean, dagsats: BigDecimal?, grunnlag: BigDecimal?) {
+            this.vedtakUtfall = utfall
+            this.dagsats = dagsats
+            this.grunnlag = grunnlag
         }
     }
 }

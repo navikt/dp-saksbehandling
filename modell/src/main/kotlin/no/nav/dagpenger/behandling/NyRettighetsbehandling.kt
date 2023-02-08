@@ -2,8 +2,9 @@ package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
+import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
-import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_12_Størrelse
+import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_12_Sats
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
@@ -13,7 +14,9 @@ import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.vurdert
+import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
 import no.nav.dagpenger.behandling.visitor.NyRettighetsbehandlingVisitor
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
@@ -58,7 +61,7 @@ class NyRettighetsbehandling private constructor(
                 requireNotNull(this.inntektsId),
                 requireNotNull(this.virkningsdato)
             ),
-            Paragraf_4_12_Størrelse(
+            Paragraf_4_12_Sats(
                 requireNotNull(this.inntektsId),
                 requireNotNull(this.virkningsdato)
             )
@@ -244,9 +247,11 @@ class NyRettighetsbehandling private constructor(
 
     private fun opprettVedtak() {
         require(vilkårsvurderinger.vurdert()) { " Alle vilkår må være vurdert når en skal opprette vedtak" }
-
         val vedtak = when (vilkårsvurderinger.erAlleOppfylt()) {
-            true -> Vedtak.innvilgelse(requireNotNull(virkningsdato))
+            true -> {
+                val visitor = GrunnlagOgDagsatsVisitor(fastsettelser)
+                Vedtak.innvilgelse(requireNotNull(virkningsdato), grunnlag = visitor.grunnlag, dagsats = visitor.dagsats)
+            }
             false -> Vedtak.avslag(requireNotNull(virkningsdato))
         }
         this.person.leggTilVedtak(vedtak)
@@ -254,5 +259,21 @@ class NyRettighetsbehandling private constructor(
 
     private fun loggTilstandsendring(nyTilstand: Tilstand) {
         logger.info { "Behandling av ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.type} til ny tilstand ${nyTilstand.type}" }
+    }
+
+    private class GrunnlagOgDagsatsVisitor(fastsettelser: List<Fastsettelse<*>>) : FastsettelseVisitor {
+        lateinit var grunnlag: BigDecimal
+        lateinit var dagsats: BigDecimal
+
+        init {
+            fastsettelser.forEach { it.accept(this) }
+        }
+        override fun visitGrunnlag(grunnlag: BigDecimal) {
+            this.grunnlag = grunnlag
+        }
+
+        override fun visitDagsats(dagsats: BigDecimal) {
+            this.dagsats = dagsats
+        }
     }
 }
