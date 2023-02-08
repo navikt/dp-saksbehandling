@@ -8,7 +8,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 internal class Paragraf_4_15_Stønadsperiode(
-    private val inntektId: String,
+    private val inntektsId: String,
     private val virkningsdato: LocalDate
 ) : Fastsettelse<Paragraf_4_15_Stønadsperiode>(IkkeVurdert) {
 
@@ -32,7 +32,7 @@ internal class Paragraf_4_15_Stønadsperiode(
             "Trenger stønadsperiode",
             mapOf(
                 "virkningsdato" to virkningsdato,
-                "inntektId" to inntektId
+                "inntektsId" to inntektsId
             )
         )
     }

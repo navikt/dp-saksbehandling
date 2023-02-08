@@ -8,7 +8,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 internal class Paragraf_4_12_Sats(
-    private val inntektId: String,
+    private val inntektsId: String,
     private val virkningsdato: LocalDate,
 ) : Fastsettelse<Paragraf_4_12_Sats>(IkkeVurdert) {
     private lateinit var sats: BigDecimal
@@ -30,7 +30,7 @@ internal class Paragraf_4_12_Sats(
             "Trenger sats",
             mapOf(
                 "virkningsdato" to virkningsdato,
-                "inntektId" to inntektId
+                "inntektsId" to inntektsId
             )
         )
         endreTilstand(AvventerVurdering)

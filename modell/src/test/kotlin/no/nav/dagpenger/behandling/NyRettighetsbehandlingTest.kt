@@ -58,11 +58,16 @@ class NyRettighetsbehandlingTest {
         val satsBehov = paragraf423AlderResultat.behov()[1]
         assertBehovInnholdFor(satsBehov)
 
+        val stønadsperiodeBehov = paragraf423AlderResultat.behov()[2]
+        assertBehovInnholdFor(stønadsperiodeBehov)
+
         val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
         val grunnlagOgSats = GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
         person.håndter(grunnlagOgSats)
+
         val stønadsperiode = StønadsperiodeResultat(ident, behandlingsId, 52.toBigDecimal())
         person.håndter(stønadsperiode)
+        assertBehovInnholdFor(stønadsperiode.behov()[0])
 
         assertTilstand(Kvalitetssikrer)
 
@@ -135,8 +140,16 @@ class NyRettighetsbehandlingTest {
             Grunnlag -> assertGrunnlagbehovInnhold(behov)
             Sats -> assertSatsbehovInnhold(behov)
             Kvalitetssikring -> assertKvalitetssikringInnhold(behov)
-            Stønadsperiode -> TODO()
+            Stønadsperiode -> assertStønadsperiodeInnhold(behov)
         }
+
+    private fun assertStønadsperiodeInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
+        assertEquals(Stønadsperiode, behov.type)
+        assertEquals(ident, behov.kontekst()["ident"])
+        assertNotNull(behov.kontekst()["behandlingsId"])
+        assertNotNull(behov.detaljer()["virkningsdato"].let { LocalDate.parse(it.toString()) })
+        assertNotNull(behov.detaljer()["inntektsId"])
+    }
 
     private fun assertKvalitetssikringInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
         assertEquals(Kvalitetssikring, behov.type)

@@ -8,7 +8,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 internal class Paragraf_4_11_Grunnlag(
-    private val inntektId: String,
+    private val inntektsId: String,
     private val virkningsdato: LocalDate
 ) : Fastsettelse<Paragraf_4_11_Grunnlag>(IkkeVurdert) {
 
@@ -34,7 +34,7 @@ internal class Paragraf_4_11_Grunnlag(
             "Trenger grunnlag",
             mapOf(
                 "virkningsdato" to virkningsdato,
-                "inntektId" to inntektId
+                "inntektsId" to inntektsId
             )
         )
         endreTilstand(AvventerVurdering)

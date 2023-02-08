@@ -86,19 +86,19 @@ class NyRettighetsbehandling private constructor(
     }
 
     fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
-        if (grunnlagOgSatsResultat.behandlingId != this.behandlingsId) return
+        if (grunnlagOgSatsResultat.behandlingsId != this.behandlingsId) return
         kontekst(grunnlagOgSatsResultat, "Fått resultat på ${grunnlagOgSatsResultat.javaClass.simpleName}")
         tilstand.håndter(grunnlagOgSatsResultat, this)
     }
 
     fun håndter(stønadsperiode: StønadsperiodeResultat) {
-        if (stønadsperiode.behandlingId != this.behandlingsId) return
+        if (stønadsperiode.behandlingsId != this.behandlingsId) return
         kontekst(stønadsperiode, "Fått resultat på ${stønadsperiode.javaClass.simpleName}")
         tilstand.håndter(stønadsperiode, this)
     }
 
     fun håndter(beslutterHendelse: BeslutterHendelse) {
-        if (beslutterHendelse.behandlingId != this.behandlingsId) return
+        if (beslutterHendelse.behandlingsId != this.behandlingsId) return
         kontekst(beslutterHendelse, "Beslutter har fattet et vedtak")
         tilstand.håndter(beslutterHendelse, this)
     }

@@ -21,4 +21,4 @@ abstract class VilkårResultatHendelse(private val vilkårsvurderingId: UUID, id
     fun vilkårsvurderingId() = vilkårsvurderingId
 }
 
-abstract class BehandlingResultatHendelse(ident: String, val behandlingId: UUID) : Hendelse(ident)
+abstract class BehandlingResultatHendelse(ident: String, val behandlingsId: UUID) : Hendelse(ident)
