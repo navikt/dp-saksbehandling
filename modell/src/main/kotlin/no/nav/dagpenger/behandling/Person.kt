@@ -9,6 +9,7 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import no.nav.dagpenger.behandling.visitor.VedtakVisitor
 import java.math.BigDecimal
@@ -88,7 +89,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
             utfall: Boolean,
             grunnlag: BigDecimal?,
             dagsats: BigDecimal?,
-            stønadsperiode: BigDecimal?
+            stønadsperiode: Stønadsperiode?
         ) {
             this.vedtakFattet = VedtakFattet(ident, utfall)
         }

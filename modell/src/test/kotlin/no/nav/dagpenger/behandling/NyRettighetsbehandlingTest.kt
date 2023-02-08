@@ -1,10 +1,9 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Stønadsperiode
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.FattetVedtak
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.UtførerBeregning
@@ -14,6 +13,8 @@ import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
+import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -66,7 +67,7 @@ class NyRettighetsbehandlingTest {
         val grunnlagOgSats = GrunnlagOgSatsResultat(ident, behandlingsId, 250000.toBigDecimal(), 700.toBigDecimal())
         person.håndter(grunnlagOgSats)
 
-        val stønadsperiode = StønadsperiodeResultat(ident, behandlingsId, 52.toBigDecimal())
+        val stønadsperiode = StønadsperiodeResultat(ident, behandlingsId, 52.arbeidsuker)
         person.håndter(stønadsperiode)
         assertBehovInnholdFor(stønadsperiode.behov()[0])
 
@@ -85,7 +86,7 @@ class NyRettighetsbehandlingTest {
         assertEquals(true, inspektør.vedtakUtfall)
         assertEquals(250000.toBigDecimal(), inspektør.grunnlag)
         assertEquals(700.toBigDecimal(), inspektør.dagsats)
-        assertEquals(52.toBigDecimal(), inspektør.stønadsperiode)
+        assertEquals(52.arbeidsuker, inspektør.stønadsperiode)
         assertEquals(1, testObserver.vedtakFattet.size)
     }
 
@@ -140,14 +141,14 @@ class NyRettighetsbehandlingTest {
     private fun assertBehovInnholdFor(behov: Aktivitetslogg.Aktivitet.Behov) =
         when (behov.type) {
             Paragraf_4_23_alder -> assertAldersbehovInnhold(behov)
-            Grunnlag -> assertGrunnlagbehovInnhold(behov)
-            Sats -> assertSatsbehovInnhold(behov)
-            Kvalitetssikring -> assertKvalitetssikringInnhold(behov)
-            Stønadsperiode -> assertStønadsperiodeInnhold(behov)
+            GrunnlagsBehov -> assertGrunnlagbehovInnhold(behov)
+            SatsBehov -> assertSatsbehovInnhold(behov)
+            KvalitetssikringsBehov -> assertKvalitetssikringInnhold(behov)
+            Aktivitetslogg.Aktivitet.Behov.Behovtype.StønadsperiodeBehov -> assertStønadsperiodeInnhold(behov)
         }
 
     private fun assertStønadsperiodeInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
-        assertEquals(Stønadsperiode, behov.type)
+        assertEquals(Aktivitetslogg.Aktivitet.Behov.Behovtype.StønadsperiodeBehov, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
         assertNotNull(behov.kontekst()["behandlingsId"])
         assertNotNull(behov.detaljer()["virkningsdato"].let { LocalDate.parse(it.toString()) })
@@ -155,20 +156,20 @@ class NyRettighetsbehandlingTest {
     }
 
     private fun assertKvalitetssikringInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
-        assertEquals(Kvalitetssikring, behov.type)
+        assertEquals(KvalitetssikringsBehov, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
         assertNotNull(behov.kontekst()["behandlingsId"])
     }
 
     private fun assertGrunnlagbehovInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
-        assertEquals(Grunnlag, behov.type)
+        assertEquals(GrunnlagsBehov, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
         assertNotNull(behov.kontekst()["behandlingsId"])
         assertNotNull(behov.detaljer()["virkningsdato"].let { LocalDate.parse(it.toString()) })
     }
 
     private fun assertSatsbehovInnhold(behov: Aktivitetslogg.Aktivitet.Behov) {
-        assertEquals(Sats, behov.type)
+        assertEquals(SatsBehov, behov.type)
         assertEquals(ident, behov.kontekst()["ident"])
         assertNotNull(behov.kontekst()["behandlingsId"])
     }
@@ -196,7 +197,7 @@ class NyRettighetsbehandlingTest {
 
         var grunnlag: BigDecimal? = null
         var dagsats: BigDecimal? = null
-        var stønadsperiode: BigDecimal? = null
+        var stønadsperiode: no.nav.dagpenger.behandling.mengde.Stønadsperiode? = null
         var antallBehandlinger = 0
         var vedtakUtfall: Boolean? = null
         lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
@@ -212,7 +213,7 @@ class NyRettighetsbehandlingTest {
             nyRettighetsbehandlingTilstand = tilstand.type
         }
 
-        override fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?, stønadsperiode: BigDecimal?) {
+        override fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?, stønadsperiode: Stønadsperiode?) {
             this.vedtakUtfall = utfall
             this.dagsats = dagsats
             this.grunnlag = grunnlag

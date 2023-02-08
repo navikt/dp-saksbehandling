@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -149,7 +150,7 @@ internal class AktivitetsloggTest {
         val param1 = "value"
         val param2 = LocalDate.now()
         hendelse1.behov(
-            Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag,
+            GrunnlagsBehov,
             "Behov om grunnlag",
             mapOf(
                 "param1" to param1,

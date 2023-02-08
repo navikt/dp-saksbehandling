@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
@@ -13,6 +13,7 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
@@ -91,10 +92,10 @@ class NyRettighetsbehandling private constructor(
         tilstand.håndter(grunnlagOgSatsResultat, this)
     }
 
-    fun håndter(stønadsperiode: StønadsperiodeResultat) {
-        if (stønadsperiode.behandlingsId != this.behandlingsId) return
-        kontekst(stønadsperiode, "Fått resultat på ${stønadsperiode.javaClass.simpleName}")
-        tilstand.håndter(stønadsperiode, this)
+    fun håndter(dagpengeperiode: StønadsperiodeResultat) {
+        if (dagpengeperiode.behandlingsId != this.behandlingsId) return
+        kontekst(dagpengeperiode, "Fått resultat på ${dagpengeperiode.javaClass.simpleName}")
+        tilstand.håndter(dagpengeperiode, this)
     }
 
     fun håndter(beslutterHendelse: BeslutterHendelse) {
@@ -163,8 +164,8 @@ class NyRettighetsbehandling private constructor(
             grunnlagOgSatsResultat.tilstandfeil()
         }
 
-        fun håndter(stønadsperiode: StønadsperiodeResultat, nyRettighetsbehandling: NyRettighetsbehandling) {
-            stønadsperiode.tilstandfeil()
+        fun håndter(dagpengeperiode: StønadsperiodeResultat, nyRettighetsbehandling: NyRettighetsbehandling) {
+            dagpengeperiode.tilstandfeil()
         }
 
         fun håndter(søknadHendelse: SøknadHendelse, behandling: NyRettighetsbehandling) {
@@ -241,10 +242,10 @@ class NyRettighetsbehandling private constructor(
             }
         }
 
-        override fun håndter(stønadsperiode: StønadsperiodeResultat, behandling: NyRettighetsbehandling) {
-            behandling.fastsettelser.forEach { it.håndter(stønadsperiode) }
+        override fun håndter(dagpengeperiode: StønadsperiodeResultat, behandling: NyRettighetsbehandling) {
+            behandling.fastsettelser.forEach { it.håndter(dagpengeperiode) }
             if (behandling.fastsettelser.vurdert()) {
-                behandling.endreTilstand(Kvalitetssikrer, stønadsperiode)
+                behandling.endreTilstand(Kvalitetssikrer, dagpengeperiode)
             }
         }
     }
@@ -254,7 +255,7 @@ class NyRettighetsbehandling private constructor(
             get() = Tilstand.Type.Kvalitetssikrer
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
-            hendelse.behov(Kvalitetssikring, "Behøver kvalitetssikring i form av totrinnskontroll fra en beslutter")
+            hendelse.behov(KvalitetssikringsBehov, "Behøver kvalitetssikring i form av totrinnskontroll fra en beslutter")
         }
 
         override fun håndter(beslutterHendelse: BeslutterHendelse, behandling: NyRettighetsbehandling) {
@@ -296,7 +297,7 @@ class NyRettighetsbehandling private constructor(
     private class VedtakFastsettelseVisitor(fastsettelser: List<Fastsettelse<*>>) : FastsettelseVisitor {
         lateinit var grunnlag: BigDecimal
         lateinit var dagsats: BigDecimal
-        lateinit var stønadsperiode: BigDecimal
+        lateinit var stønadsperiode: Stønadsperiode
 
         init {
             fastsettelser.forEach { it.accept(this) }
@@ -310,7 +311,7 @@ class NyRettighetsbehandling private constructor(
             this.dagsats = dagsats
         }
 
-        override fun visitStønadsperiode(stønadsperiode: BigDecimal) {
+        override fun visitStønadsperiode(stønadsperiode: Stønadsperiode) {
             this.stønadsperiode = stønadsperiode
         }
     }

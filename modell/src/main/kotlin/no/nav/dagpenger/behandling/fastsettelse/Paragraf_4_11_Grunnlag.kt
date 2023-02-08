@@ -30,7 +30,7 @@ internal class Paragraf_4_11_Grunnlag(
 
     override fun håndter(hendelse: Hendelse) {
         hendelse.behov(
-            Aktivitetslogg.Aktivitet.Behov.Behovtype.Grunnlag,
+            Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov,
             "Trenger grunnlag",
             mapOf(
                 "virkningsdato" to virkningsdato,

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling.mengde
 
 typealias Tid = RatioMengde
+typealias Stønadsperiode = RatioMengde
 
 class Enhet {
     companion object {

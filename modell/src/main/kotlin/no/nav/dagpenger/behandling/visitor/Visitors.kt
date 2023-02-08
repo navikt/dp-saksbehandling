@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling.visitor
 
 import no.nav.dagpenger.behandling.NyRettighetsbehandling
 import no.nav.dagpenger.behandling.PersonIdentifikator
+import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -11,7 +12,7 @@ interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakVisitor {
     fun visitPerson(ident: PersonIdentifikator) {}
 }
 interface VedtakVisitor {
-    fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?, stønadsperiode: BigDecimal?) {}
+    fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?, stønadsperiode: Stønadsperiode?) {}
 }
 
 interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor, FastsettelseVisitor {
@@ -35,5 +36,5 @@ interface FastsettelseVisitor {
 
     fun visitGrunnlag(grunnlag: BigDecimal) {}
     fun visitDagsats(dagsats: BigDecimal) {}
-    fun visitStønadsperiode(stønadsperiode: BigDecimal) {}
+    fun visitStønadsperiode(stønadsperiode: Stønadsperiode) {}
 }

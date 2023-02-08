@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.fastsettelse
 
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Sats
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
@@ -26,7 +26,7 @@ internal class Paragraf_4_12_Sats(
 
     override fun håndter(hendelse: Hendelse) {
         hendelse.behov(
-            Sats,
+            SatsBehov,
             "Trenger sats",
             mapOf(
                 "virkningsdato" to virkningsdato,

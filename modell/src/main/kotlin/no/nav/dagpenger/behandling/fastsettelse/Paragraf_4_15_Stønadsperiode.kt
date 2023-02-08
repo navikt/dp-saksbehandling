@@ -1,10 +1,10 @@
 package no.nav.dagpenger.behandling.fastsettelse
 
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Stønadsperiode
+import no.nav.dagpenger.behandling.Aktivitetslogg
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
+import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
-import java.math.BigDecimal
 import java.time.LocalDate
 
 internal class Paragraf_4_15_Stønadsperiode(
@@ -12,7 +12,7 @@ internal class Paragraf_4_15_Stønadsperiode(
     private val virkningsdato: LocalDate
 ) : Fastsettelse<Paragraf_4_15_Stønadsperiode>(IkkeVurdert) {
 
-    private lateinit var stønadsperiode: BigDecimal
+    private lateinit var stønadsperiode: Stønadsperiode
 
     object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_15_Stønadsperiode>()
     object AvventerVurdering : Tilstand.Avventer<Paragraf_4_15_Stønadsperiode>()
@@ -28,8 +28,8 @@ internal class Paragraf_4_15_Stønadsperiode(
 
     override fun håndter(hendelse: Hendelse) {
         hendelse.behov(
-            Stønadsperiode,
-            "Trenger stønadsperiode",
+            Aktivitetslogg.Aktivitet.Behov.Behovtype.StønadsperiodeBehov,
+            "Trenger dagpengeperiode",
             mapOf(
                 "virkningsdato" to virkningsdato,
                 "inntektsId" to inntektsId

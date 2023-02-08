@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.hendelser
 
-import java.math.BigDecimal
+import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import java.util.UUID
 
-class StønadsperiodeResultat(ident: String, behandlingsId: UUID, val stønadsperiode: BigDecimal) :
+class StønadsperiodeResultat(ident: String, behandlingsId: UUID, val stønadsperiode: Stønadsperiode) :
     BehandlingResultatHendelse(ident = ident, behandlingsId = behandlingsId)
