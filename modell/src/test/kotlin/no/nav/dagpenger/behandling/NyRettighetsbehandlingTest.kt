@@ -25,7 +25,8 @@ import java.util.UUID
 
 class NyRettighetsbehandlingTest {
     val ident = "12345678901"
-    val person = Person(ident)
+    private val testObserver = TestObserver()
+    val person = Person(ident).also { it.addObserver(testObserver) }
     val søknadHendelse = SøknadHendelse(søknadUUID = UUID.randomUUID(), journalpostId = "123454", ident = ident)
 
     private val inspektør get() = Inspektør(person)
@@ -85,6 +86,7 @@ class NyRettighetsbehandlingTest {
         assertEquals(250000.toBigDecimal(), inspektør.grunnlag)
         assertEquals(700.toBigDecimal(), inspektør.dagsats)
         assertEquals(52.toBigDecimal(), inspektør.stønadsperiode)
+        assertEquals(1, testObserver.vedtakFattet.size)
     }
 
     @Test
@@ -116,6 +118,7 @@ class NyRettighetsbehandlingTest {
         assertTilstand(FattetVedtak)
 
         assertEquals(false, inspektør.vedtakUtfall)
+        assertEquals(1, testObserver.vedtakFattet.size)
     }
 
     @Test
@@ -214,6 +217,13 @@ class NyRettighetsbehandlingTest {
             this.dagsats = dagsats
             this.grunnlag = grunnlag
             this.stønadsperiode = stønadsperiode
+        }
+    }
+
+    private class TestObserver() : PersonObserver {
+        val vedtakFattet = mutableListOf<PersonObserver.VedtakFattet>()
+        override fun vedtakFattet(vedtakFattet: PersonObserver.VedtakFattet) {
+            this.vedtakFattet.add(vedtakFattet)
         }
     }
 }

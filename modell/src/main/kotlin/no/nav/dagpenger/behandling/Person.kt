@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Companion.harSøknadUUID
 import no.nav.dagpenger.behandling.PersonIdentifikator.Companion.tilPersonIdentfikator
+import no.nav.dagpenger.behandling.PersonObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
@@ -9,11 +10,15 @@ import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resulta
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
+import no.nav.dagpenger.behandling.visitor.VedtakVisitor
+import java.math.BigDecimal
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
     private val behandlinger = mutableListOf<NyRettighetsbehandling>()
 
     private val vedtakHistorikk = mutableListOf<Vedtak>()
+
+    private val observere = mutableListOf<PersonObserver>()
 
     constructor(ident: String) : this(ident.tilPersonIdentfikator())
 
@@ -29,6 +34,10 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         vedtakHistorikk.forEach {
             it.accept(visitor)
         }
+    }
+
+    fun addObserver(observer: PersonObserver) {
+        observere.add(observer)
     }
 
     fun håndter(søknadHendelse: SøknadHendelse) {
@@ -66,5 +75,22 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     internal fun leggTilVedtak(vedtak: Vedtak) {
         vedtakHistorikk.add(vedtak)
+        observere.forEach { it.vedtakFattet(VedtakFattetVisitor(this.ident(), vedtak).vedtakFattet) }
+    }
+
+    private class VedtakFattetVisitor(val ident: String, val vedtak: Vedtak) : VedtakVisitor {
+        lateinit var vedtakFattet: VedtakFattet
+        init {
+            vedtak.accept(this)
+        }
+
+        override fun visitVedtak(
+            utfall: Boolean,
+            grunnlag: BigDecimal?,
+            dagsats: BigDecimal?,
+            stønadsperiode: BigDecimal?
+        ) {
+            this.vedtakFattet = VedtakFattet(ident, utfall)
+        }
     }
 }

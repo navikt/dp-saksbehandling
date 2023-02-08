@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.visitor.PersonVisitor
+import no.nav.dagpenger.behandling.visitor.VedtakVisitor
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -22,7 +22,7 @@ class Vedtak private constructor(
             Vedtak(utfall = true, virkningsdato = virkningsdato, grunnlag = grunnlag, dagsats = dagsats, stønadsperiode = stønadsperiode)
     }
 
-    fun accept(visitor: PersonVisitor) {
+    fun accept(visitor: VedtakVisitor) {
         visitor.visitVedtak(utfall = utfall, grunnlag = grunnlag, dagsats = dagsats, stønadsperiode = stønadsperiode)
     }
 }
