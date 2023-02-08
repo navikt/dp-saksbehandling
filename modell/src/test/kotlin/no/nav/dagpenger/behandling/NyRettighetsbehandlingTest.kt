@@ -60,7 +60,6 @@ class NyRettighetsbehandlingTest {
         person.håndter(grunnlagOgSats)
 
         assertTilstand(Kvalitetssikrer)
-        assertEquals(true, inspektør.foreløpigInnstillingUtfall)
 
         person.håndter(
             BeslutterHendelse(
@@ -94,7 +93,6 @@ class NyRettighetsbehandlingTest {
         person.håndter(paragraf423AlderResultat)
 
         assertEquals(1, inspektør.antallBehandlinger)
-        assertEquals(false, inspektør.foreløpigInnstillingUtfall)
         assertTilstand(Kvalitetssikrer)
 
         val kvalitetssikring = paragraf423AlderResultat.behov()[0]
@@ -104,7 +102,6 @@ class NyRettighetsbehandlingTest {
         person.håndter(BeslutterHendelse(beslutterIdent = "12345123451", ident, behandlingsId))
         assertTilstand(FattetVedtak)
 
-        assertEquals(false, inspektør.foreløpigInnstillingUtfall)
         assertEquals(false, inspektør.vedtakUtfall)
     }
 
@@ -173,7 +170,6 @@ class NyRettighetsbehandlingTest {
         }
 
         var antallBehandlinger = 0
-        var foreløpigInnstillingUtfall: Boolean? = null
         var vedtakUtfall: Boolean? = null
         lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
 
@@ -186,10 +182,6 @@ class NyRettighetsbehandlingTest {
         ) {
             antallBehandlinger++
             nyRettighetsbehandlingTilstand = tilstand.type
-        }
-
-        override fun visitForeløpigInnstilling(utfall: Boolean) {
-            foreløpigInnstillingUtfall = utfall
         }
 
         override fun visitVedtak(utfall: Boolean) {

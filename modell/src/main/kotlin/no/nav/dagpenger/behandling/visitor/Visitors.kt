@@ -9,16 +9,11 @@ import java.util.UUID
 interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakVisitor {
     fun visitPerson(ident: PersonIdentifikator) {}
 }
-
-interface ForeløpigInnstillingVisitor {
-    fun visitForeløpigInnstilling(utfall: Boolean) {}
-}
-
 interface VedtakVisitor {
     fun visitVedtak(utfall: Boolean) {}
 }
 
-interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor, ForeløpigInnstillingVisitor {
+interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor {
     fun visitNyRettighetsbehandling(
         søknadsId: UUID,
         behandlingsId: UUID,

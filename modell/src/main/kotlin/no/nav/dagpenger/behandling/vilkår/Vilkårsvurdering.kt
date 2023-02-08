@@ -18,7 +18,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
 ) : Aktivitetskontekst {
     constructor(tilstand: Tilstand<Paragraf>) : this(UUID.randomUUID(), tilstand)
     companion object {
-        fun List<Vilkårsvurdering<*>>.erFerdig() =
+        fun List<Vilkårsvurdering<*>>.vurdert() =
             this.none { it.tilstand.tilstandType == Tilstand.Type.AvventerVurdering || it.tilstand.tilstandType == Tilstand.Type.IkkeVurdert }
 
         fun List<Vilkårsvurdering<*>>.erAlleOppfylt() =
