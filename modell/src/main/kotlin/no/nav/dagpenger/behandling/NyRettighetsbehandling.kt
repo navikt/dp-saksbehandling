@@ -3,7 +3,7 @@ package no.nav.dagpenger.behandling
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kvalitetssikring
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
-import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_12_Størrelse_1_Ledd
+import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_12_Størrelse
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
@@ -71,7 +71,7 @@ class NyRettighetsbehandling private constructor(
                 requireNotNull(this.inntektsId),
                 requireNotNull(this.virkningsdato)
             ),
-            Paragraf_4_12_Størrelse_1_Ledd(
+            Paragraf_4_12_Størrelse(
                 requireNotNull(this.inntektsId),
                 requireNotNull(this.virkningsdato)
             )

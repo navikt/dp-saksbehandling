@@ -6,7 +6,7 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import java.math.BigDecimal
 import java.time.LocalDate
 
-class Paragraf_4_11_Grunnlag(
+internal class Paragraf_4_11_Grunnlag(
     private val inntektId: String,
     private val virkningsdato: LocalDate,
     private var grunnlag: BigDecimal?,

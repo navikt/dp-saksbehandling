@@ -61,6 +61,18 @@ class NyRettighetsbehandlingTest {
 
         assertTilstand(Kvalitetssikrer)
         assertEquals(true, inspektør.foreløpigInnstillingUtfall)
+
+        person.håndter(
+            BeslutterHendelse(
+                beslutterIdent = "L11111",
+                ident = ident,
+                behandlingsId = behandlingsId
+            )
+        )
+
+        assertTilstand(FattetVedtak)
+
+        assertEquals(true, inspektør.vedtakUtfall)
     }
 
     @Test

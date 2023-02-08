@@ -6,11 +6,11 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import java.math.BigDecimal
 import java.time.LocalDate
 
-class Paragraf_4_12_Størrelse_1_Ledd(
+internal class Paragraf_4_12_Størrelse(
     private val inntektId: String,
     private val virkningsdato: LocalDate,
     private var sats: BigDecimal?,
-) : Fastsettelse<Paragraf_4_12_Størrelse_1_Ledd>(IkkeVurdert) {
+) : Fastsettelse<Paragraf_4_12_Størrelse>(IkkeVurdert) {
 
     constructor(inntektId: String, virkningsdato: LocalDate) :
         this(
@@ -19,9 +19,9 @@ class Paragraf_4_12_Størrelse_1_Ledd(
             sats = null
         )
 
-    object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_12_Størrelse_1_Ledd>()
-    object AvventerVurdering : Tilstand.Avventer<Paragraf_4_12_Størrelse_1_Ledd>()
-    object Vurdert : Tilstand.Vurdert<Paragraf_4_12_Størrelse_1_Ledd>()
+    object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_12_Størrelse>()
+    object AvventerVurdering : Tilstand.Avventer<Paragraf_4_12_Størrelse>()
+    object Vurdert : Tilstand.Vurdert<Paragraf_4_12_Størrelse>()
 
     override fun håndter(hendelse: Hendelse) {
         hendelse.behov(

@@ -4,7 +4,7 @@ import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import java.util.UUID
 
-abstract class Fastsettelse<Paragraf : Fastsettelse<Paragraf>>(
+internal abstract class Fastsettelse<Paragraf : Fastsettelse<Paragraf>>(
     protected val fastsettelseId: UUID,
     private var tilstand: Tilstand<Paragraf>
 ) {

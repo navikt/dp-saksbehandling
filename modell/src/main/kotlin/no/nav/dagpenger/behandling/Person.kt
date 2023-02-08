@@ -59,7 +59,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         hendelse.kontekst(this)
     }
 
-    fun leggTilVedtak(vedtak: Vedtak) {
+    internal fun leggTilVedtak(vedtak: Vedtak) {
         vedtakHistorikk.add(vedtak)
     }
 }
