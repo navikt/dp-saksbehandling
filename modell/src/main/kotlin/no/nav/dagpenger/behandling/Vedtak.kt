@@ -7,30 +7,14 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class Vedtak private constructor(
-    private val vedtakId: UUID,
+    private val vedtakId: UUID = UUID.randomUUID(),
+    private val vedtakstidspunkt: LocalDateTime = LocalDateTime.now(),
     private val utfall: Boolean,
     private val virkningsdato: LocalDate,
-    private val vedtakstidspunkt: LocalDateTime,
-    private val grunnlag: BigDecimal?,
-    private val dagsats: BigDecimal?,
-    private val stønadsperiode: BigDecimal?
+    private val grunnlag: BigDecimal? = null,
+    private val dagsats: BigDecimal? = null,
+    private val stønadsperiode: BigDecimal? = null
 ) {
-
-    private constructor(
-        utfall: Boolean,
-        virkningsdato: LocalDate,
-        grunnlag: BigDecimal? = null,
-        dagsats: BigDecimal? = null,
-        stønadsperiode: BigDecimal? = null
-    ) : this(
-        vedtakId = UUID.randomUUID(),
-        utfall = utfall,
-        virkningsdato = virkningsdato,
-        vedtakstidspunkt = LocalDateTime.now(),
-        grunnlag = grunnlag,
-        dagsats = dagsats,
-        stønadsperiode = stønadsperiode
-    )
 
     companion object {
         fun avslag(virkningsdato: LocalDate) = Vedtak(utfall = false, virkningsdato = virkningsdato)
