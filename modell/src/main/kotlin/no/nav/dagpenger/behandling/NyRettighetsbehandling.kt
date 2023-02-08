@@ -244,10 +244,11 @@ class NyRettighetsbehandling private constructor(
 
     private fun opprettVedtak() {
         require(vilkårsvurderinger.vurdert()) { " Alle vilkår må være vurdert når en skal opprette vedtak" }
-        val vedtak = Vedtak(
-            utfall = vilkårsvurderinger.erAlleOppfylt(),
-            virkningsdato = requireNotNull(this.virkningsdato)
-        )
+
+        val vedtak = when (vilkårsvurderinger.erAlleOppfylt()) {
+            true -> Vedtak.innvilgelse(requireNotNull(virkningsdato))
+            false -> Vedtak.avslag(requireNotNull(virkningsdato))
+        }
         this.person.leggTilVedtak(vedtak)
     }
 
