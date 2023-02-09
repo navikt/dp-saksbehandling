@@ -6,16 +6,21 @@ import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakVisitor {
     fun visitPerson(ident: PersonIdentifikator) {}
 }
 interface VedtakVisitor {
-    fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?, stønadsperiode: Stønadsperiode?) {}
+    fun preVisitVedtak(vedtakId: UUID, virkningsdato: LocalDate, vedtakstidspunkt: LocalDateTime, utfall: Boolean) {}
+    fun visitVedtakGrunnlag(grunnlag: BigDecimal) {}
+    fun visitVedtakDagsats(dagsats: BigDecimal) {}
+    fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {}
+    fun postVisitVedtak(vedtakId: UUID, virkningsdato: LocalDate, vedtakstidspunkt: LocalDateTime, utfall: Boolean) {}
 }
 
-interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor, FastsettelseVisitor {
+interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor {
     fun visitNyRettighetsbehandling(
         søknadsId: UUID,
         behandlingsId: UUID,
@@ -32,7 +37,7 @@ interface VilkårsvurderingVisitor {
     ) {}
 }
 
-interface FastsettelseVisitor {
+internal interface FastsettelseVisitor {
 
     fun visitGrunnlag(grunnlag: BigDecimal) {}
     fun visitDagsats(dagsats: BigDecimal) {}

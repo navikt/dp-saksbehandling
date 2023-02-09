@@ -24,6 +24,10 @@ class Vedtak private constructor(
     }
 
     fun accept(visitor: VedtakVisitor) {
-        visitor.visitVedtak(utfall = utfall, grunnlag = grunnlag, dagsats = dagsats, stønadsperiode = stønadsperiode)
+        visitor.preVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
+        grunnlag?.let { visitor.visitVedtakGrunnlag(it) }
+        dagsats?.let { visitor.visitVedtakDagsats(it) }
+        stønadsperiode?.let { visitor.visitVedtakStønadsperiode(it) }
+        visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
     }
 }

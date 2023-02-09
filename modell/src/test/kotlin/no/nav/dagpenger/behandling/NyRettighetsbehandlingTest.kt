@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class NyRettighetsbehandlingTest {
@@ -197,7 +198,7 @@ class NyRettighetsbehandlingTest {
 
         var grunnlag: BigDecimal? = null
         var dagsats: BigDecimal? = null
-        var stønadsperiode: no.nav.dagpenger.behandling.mengde.Stønadsperiode? = null
+        var stønadsperiode: Stønadsperiode? = null
         var antallBehandlinger = 0
         var vedtakUtfall: Boolean? = null
         lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
@@ -213,10 +214,23 @@ class NyRettighetsbehandlingTest {
             nyRettighetsbehandlingTilstand = tilstand.type
         }
 
-        override fun visitVedtak(utfall: Boolean, grunnlag: BigDecimal?, dagsats: BigDecimal?, stønadsperiode: Stønadsperiode?) {
+        override fun preVisitVedtak(
+            vedtakId: UUID,
+            virkningsdato: LocalDate,
+            vedtakstidspunkt: LocalDateTime,
+            utfall: Boolean
+        ) {
             this.vedtakUtfall = utfall
-            this.dagsats = dagsats
+        }
+
+        override fun visitVedtakGrunnlag(grunnlag: BigDecimal) {
             this.grunnlag = grunnlag
+        }
+        override fun visitVedtakDagsats(dagsats: BigDecimal) {
+            this.dagsats = dagsats
+        }
+
+        override fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {
             this.stønadsperiode = stønadsperiode
         }
     }

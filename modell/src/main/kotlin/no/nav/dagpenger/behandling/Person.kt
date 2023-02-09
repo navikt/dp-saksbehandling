@@ -9,10 +9,11 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
-import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import no.nav.dagpenger.behandling.visitor.VedtakVisitor
-import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.UUID
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
     private val behandlinger = mutableListOf<NyRettighetsbehandling>()
@@ -83,11 +84,11 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
             vedtak.accept(this)
         }
 
-        override fun visitVedtak(
-            utfall: Boolean,
-            grunnlag: BigDecimal?,
-            dagsats: BigDecimal?,
-            stønadsperiode: Stønadsperiode?
+        override fun preVisitVedtak(
+            vedtakId: UUID,
+            virkningsdato: LocalDate,
+            vedtakstidspunkt: LocalDateTime,
+            utfall: Boolean
         ) {
             this.vedtakFattet = VedtakFattet(ident, utfall)
         }
