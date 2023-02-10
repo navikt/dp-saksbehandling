@@ -33,8 +33,13 @@ class NyRettighetsbehandling private constructor(
     private var tilstand: Tilstand,
     private var virkningsdato: LocalDate?,
     private var inntektsId: String?,
-    internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
-) : Aktivitetskontekst {
+    aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
+) : Behandling(
+    person = person,
+    behandlingsId = behandlingsId,
+    hendelseId = søknadsId,
+    aktivitetslogg
+) {
 
     constructor(person: Person, søknadUUID: UUID) : this(
         person = person,
@@ -44,13 +49,6 @@ class NyRettighetsbehandling private constructor(
         virkningsdato = null,
         inntektsId = null
     )
-
-    companion object {
-        fun List<NyRettighetsbehandling>.harSøknadUUID(søknadUUID: UUID) =
-            this.any { it.søknadsId == søknadUUID }
-
-        const val kontekstType = "Behandling"
-    }
 
     private val vilkårsvurderinger by lazy {
         listOf(
@@ -81,30 +79,31 @@ class NyRettighetsbehandling private constructor(
         tilstand.håndter(hendelse, this)
     }
 
-    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
+    override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
         kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
         tilstand.håndter(paragraf423AlderResultat, this)
     }
 
-    fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
+    override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
         if (grunnlagOgSatsResultat.behandlingsId != this.behandlingsId) return
         kontekst(grunnlagOgSatsResultat, "Fått resultat på ${grunnlagOgSatsResultat.javaClass.simpleName}")
         tilstand.håndter(grunnlagOgSatsResultat, this)
     }
 
-    fun håndter(dagpengeperiode: StønadsperiodeResultat) {
+    override fun håndter(dagpengeperiode: StønadsperiodeResultat) {
         if (dagpengeperiode.behandlingsId != this.behandlingsId) return
         kontekst(dagpengeperiode, "Fått resultat på ${dagpengeperiode.javaClass.simpleName}")
         tilstand.håndter(dagpengeperiode, this)
     }
 
-    fun håndter(beslutterHendelse: BeslutterHendelse) {
+    override fun håndter(beslutterHendelse: BeslutterHendelse) {
         if (beslutterHendelse.behandlingsId != this.behandlingsId) return
         kontekst(beslutterHendelse, "Beslutter har fattet et vedtak")
         tilstand.håndter(beslutterHendelse, this)
     }
 
     fun accept(visitor: NyRettighetsbehandlingVisitor) {
+
         visitor.visitNyRettighetsbehandling(søknadsId, behandlingsId, tilstand, virkningsdato, inntektsId)
         vilkårsvurderinger.forEach {
             it.accept(visitor)
@@ -164,7 +163,7 @@ class NyRettighetsbehandling private constructor(
             grunnlagOgSatsResultat.tilstandfeil()
         }
 
-        fun håndter(dagpengeperiode: StønadsperiodeResultat, nyRettighetsbehandling: NyRettighetsbehandling) {
+        fun håndter(dagpengeperiode: StønadsperiodeResultat, behandling: NyRettighetsbehandling) {
             dagpengeperiode.tilstandfeil()
         }
 

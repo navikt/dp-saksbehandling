@@ -11,6 +11,8 @@ import no.nav.dagpenger.behandling.NyRettighetsbehandling.VurdererVilkår
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringsdag
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
@@ -89,6 +91,20 @@ class NyRettighetsbehandlingTest {
         assertEquals(700.toBigDecimal(), inspektør.dagsats)
         assertEquals(52.arbeidsuker, inspektør.stønadsperiode)
         assertEquals(1, testObserver.vedtakFattet.size)
+
+        person.håndter(
+            RapporteringsHendelse(
+                ident,
+                UUID.randomUUID(),
+                listOf(
+                    Rapporteringsdag(LocalDate.now().plusDays(1), false),
+                    Rapporteringsdag(LocalDate.now().plusDays(2), false)
+                )
+            )
+        )
+
+        assertEquals(2, inspektør.antallBehandlinger)
+        assertEquals(2, testObserver.vedtakFattet.size)
     }
 
     @Test
@@ -226,6 +242,7 @@ class NyRettighetsbehandlingTest {
         override fun visitVedtakGrunnlag(grunnlag: BigDecimal) {
             this.grunnlag = grunnlag
         }
+
         override fun visitVedtakDagsats(dagsats: BigDecimal) {
             this.dagsats = dagsats
         }

@@ -1,12 +1,13 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.NyRettighetsbehandling.Companion.harSøknadUUID
+import no.nav.dagpenger.behandling.Behandling.Companion.harHendelseId
 import no.nav.dagpenger.behandling.PersonIdentifikator.Companion.tilPersonIdentfikator
 import no.nav.dagpenger.behandling.PersonObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
@@ -16,7 +17,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
-    private val behandlinger = mutableListOf<NyRettighetsbehandling>()
+    private val behandlinger = mutableListOf<Behandling>()
 
     private val vedtakHistorikk = VedtakHistorikk()
 
@@ -42,7 +43,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     fun håndter(søknadHendelse: SøknadHendelse) {
         kontekst(søknadHendelse)
-        if (behandlinger.harSøknadUUID(søknadHendelse.søknadUUID())) return
+        if (behandlinger.harHendelseId(søknadHendelse.søknadUUID())) return
         søknadHendelse.info("Har mottatt ny søknadhendelse")
         val behandling = NyRettighetsbehandling(this, søknadHendelse.søknadUUID())
         behandlinger.add(behandling)
@@ -65,6 +66,12 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     fun håndter(beslutterHendelse: BeslutterHendelse) {
         kontekst(beslutterHendelse)
         behandlinger.forEach { it.håndter(beslutterHendelse) }
+    }
+
+    fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
+        kontekst(rapporteringsHendelse)
+        val behandling = Rapporteringsbehandling(this, rapporteringsHendelse.rapporteringsId)
+        behandlinger.add(behandling)
     }
 
     fun ident() = this.ident.identifikator()

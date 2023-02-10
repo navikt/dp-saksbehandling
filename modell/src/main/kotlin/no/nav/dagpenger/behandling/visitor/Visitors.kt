@@ -20,7 +20,9 @@ interface VedtakVisitor {
     fun postVisitVedtak(vedtakId: UUID, virkningsdato: LocalDate, vedtakstidspunkt: LocalDateTime, utfall: Boolean) {}
 }
 
-interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor {
+interface BehandlingVisitor
+
+interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor, BehandlingVisitor {
     fun visitNyRettighetsbehandling(
         søknadsId: UUID,
         behandlingsId: UUID,
