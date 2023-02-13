@@ -1,7 +1,10 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
+import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
+import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.vurdert
 import java.util.UUID
 
 class Rapporteringsbehandling(
@@ -22,6 +25,30 @@ class Rapporteringsbehandling(
     object VurdererVilkår : Tilstand.VurdererVilkår<Rapporteringsbehandling> () {
         override fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandling: Rapporteringsbehandling) {
             behandling.vilkårsvurderinger.forEach { it.håndter(rapporteringsHendelse) }
+            if (behandling.vilkårsvurderinger.vurdert()) {
+                behandling.endreTilstand(VurderUtfall, rapporteringsHendelse)
+            }
+        }
+    }
+
+    object VurderUtfall : Tilstand.VurderUtfall<Rapporteringsbehandling>() {
+        override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
+            require(behandling.vilkårsvurderinger.vurdert()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
+            if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
+                behandling.endreTilstand(Fastsetter, hendelse)
+            }
+        }
+    }
+
+    object Fastsetter : Tilstand.Fastsetter<Rapporteringsbehandling>() {
+        override fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandlingstype: Rapporteringsbehandling) {
+            super.håndter(rapporteringsHendelse, behandlingstype)
+        }
+    }
+
+    object Behandlet : Tilstand.Fastsetter<Rapporteringsbehandling>() {
+        override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
+            // behandling.opprettVedtak()
         }
     }
 

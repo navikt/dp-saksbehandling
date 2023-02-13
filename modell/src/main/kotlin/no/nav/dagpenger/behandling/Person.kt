@@ -10,6 +10,7 @@ import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resulta
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.rapportering.Rapporteringsperioder
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import no.nav.dagpenger.behandling.visitor.VedtakVisitor
 import java.time.LocalDate
@@ -20,6 +21,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     private val behandlinger = mutableListOf<Behandling<*>>()
 
     private val vedtakHistorikk = VedtakHistorikk()
+    private val rapporteringsperioder = Rapporteringsperioder()
 
     private val observere = mutableListOf<PersonObserver>()
 
@@ -69,6 +71,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     }
 
     fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
+        rapporteringsperioder.håndter(rapporteringsHendelse)
         kontekst(rapporteringsHendelse)
         val behandling = Rapporteringsbehandling(this, rapporteringsHendelse.rapporteringsId)
         behandlinger.add(behandling)

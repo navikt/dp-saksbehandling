@@ -180,11 +180,11 @@ class NyRettighetsbehandling private constructor(
         }
 
         override fun håndter(beslutterHendelse: BeslutterHendelse, behandling: NyRettighetsbehandling) {
-            behandling.endreTilstand(FattetVedtak, beslutterHendelse)
+            behandling.endreTilstand(Behandlet, beslutterHendelse)
         }
     }
 
-    object FattetVedtak : Tilstand.Behandlet<NyRettighetsbehandling>() {
+    object Behandlet : Tilstand.Behandlet<NyRettighetsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             behandling.opprettVedtak()
