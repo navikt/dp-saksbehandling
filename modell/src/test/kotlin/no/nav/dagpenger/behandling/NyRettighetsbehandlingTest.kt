@@ -4,9 +4,8 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grun
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
-import no.nav.dagpenger.behandling.NyRettighetsbehandling.FattetVedtak
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.Fastsetter
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
-import no.nav.dagpenger.behandling.NyRettighetsbehandling.UtførerBeregning
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.VurdererVilkår
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
@@ -38,7 +37,7 @@ class NyRettighetsbehandlingTest {
     @Test
     fun `Ny søknad hendelse fører til innvilgelsesvedtak`() {
         person.håndter(søknadHendelse)
-        assertTilstand(VurdererVilkår)
+        assertTilstand(Behandling.Tilstand.Type.VurdererVilkår)
 
         assertEquals(1, søknadHendelse.behov().size, "Forventer kun vilkårsvurderingsbehov")
 
@@ -54,7 +53,7 @@ class NyRettighetsbehandlingTest {
             oppfylt = true
         )
         person.håndter(paragraf423AlderResultat)
-        assertTilstand(UtførerBeregning)
+        assertTilstand(Behandling.Tilstand.Type.Fastsetter)
         assertEquals(3, paragraf423AlderResultat.behov().size)
 
         val grunnlagBehov = paragraf423AlderResultat.behov()[0]
@@ -74,7 +73,7 @@ class NyRettighetsbehandlingTest {
         person.håndter(stønadsperiode)
         assertBehovInnholdFor(stønadsperiode.behov()[0])
 
-        assertTilstand(Kvalitetssikrer)
+        assertTilstand(Behandling.Tilstand.Type.Kvalitetssikrer)
 
         person.håndter(
             BeslutterHendelse(
@@ -84,7 +83,7 @@ class NyRettighetsbehandlingTest {
             )
         )
 
-        assertTilstand(FattetVedtak)
+        assertTilstand(Behandling.Tilstand.Type.Behandlet)
 
         assertEquals(true, inspektør.vedtakUtfall)
         assertEquals(250000.toBigDecimal(), inspektør.grunnlag)
@@ -110,7 +109,7 @@ class NyRettighetsbehandlingTest {
     @Test
     fun `Ny søknad hendelse blir manuelt behandlet og fører til avslagsvedtak`() {
         person.håndter(søknadHendelse)
-        assertTilstand(VurdererVilkår)
+        assertTilstand(Behandling.Tilstand.Type.VurdererVilkår)
         assertEquals(1, søknadHendelse.behov().size)
         val vilkårsvurderingBehov = søknadHendelse.behov().first()
         assertBehovInnholdFor(vilkårsvurderingBehov)
@@ -126,14 +125,14 @@ class NyRettighetsbehandlingTest {
         person.håndter(paragraf423AlderResultat)
 
         assertEquals(1, inspektør.antallBehandlinger)
-        assertTilstand(Kvalitetssikrer)
+        assertTilstand(Behandling.Tilstand.Type.Kvalitetssikrer)
 
         val kvalitetssikring = paragraf423AlderResultat.behov()[0]
         assertBehovInnholdFor(kvalitetssikring)
 
         val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
         person.håndter(BeslutterHendelse(beslutterIdent = "12345123451", ident, behandlingsId))
-        assertTilstand(FattetVedtak)
+        assertTilstand(Behandling.Tilstand.Type.Behandlet)
 
         assertEquals(false, inspektør.vedtakUtfall)
         assertEquals(1, testObserver.vedtakFattet.size)
@@ -202,8 +201,8 @@ class NyRettighetsbehandlingTest {
         assertNotNull(vilkårsvurderingId)
     }
 
-    private fun assertTilstand(tilstand: NyRettighetsbehandling.Tilstand) {
-        assertEquals(tilstand.type, inspektør.nyRettighetsbehandlingTilstand)
+    private fun assertTilstand(tilstand: Behandling.Tilstand.Type) {
+        assertEquals(tilstand, inspektør.behandlingsTilstand)
     }
 
     private class Inspektør(person: Person) : PersonVisitor {
@@ -217,17 +216,14 @@ class NyRettighetsbehandlingTest {
         var stønadsperiode: Stønadsperiode? = null
         var antallBehandlinger = 0
         var vedtakUtfall: Boolean? = null
-        lateinit var nyRettighetsbehandlingTilstand: NyRettighetsbehandling.Tilstand.Type
+        lateinit var behandlingsTilstand: Behandling.Tilstand.Type
 
-        override fun visitNyRettighetsbehandling(
-            søknadsId: UUID,
-            behandlingsId: UUID,
-            tilstand: NyRettighetsbehandling.Tilstand,
-            virkningsdato: LocalDate?,
-            inntektsId: String?
-        ) {
+        override fun preVisit(behandlingsId: UUID, hendelseId: UUID) {
             antallBehandlinger++
-            nyRettighetsbehandlingTilstand = tilstand.type
+        }
+
+        override fun visitTilstand(tilstand: Behandling.Tilstand.Type) {
+            this.behandlingsTilstand = tilstand
         }
 
         override fun preVisitVedtak(

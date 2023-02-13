@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.visitor
 
-import no.nav.dagpenger.behandling.NyRettighetsbehandling
+import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.PersonIdentifikator
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
@@ -20,13 +20,16 @@ interface VedtakVisitor {
     fun postVisitVedtak(vedtakId: UUID, virkningsdato: LocalDate, vedtakstidspunkt: LocalDateTime, utfall: Boolean) {}
 }
 
-interface BehandlingVisitor
+interface BehandlingVisitor {
+    fun preVisit(behandlingsId: UUID, hendelseId: UUID) {}
+    fun visitTilstand(tilstand: Behandling.Tilstand.Type) {}
+    fun postVisit(behandlingsId: UUID, hendelseId: UUID) {}
+}
 
 interface NyRettighetsbehandlingVisitor : VilkårsvurderingVisitor, BehandlingVisitor {
     fun visitNyRettighetsbehandling(
         søknadsId: UUID,
         behandlingsId: UUID,
-        tilstand: NyRettighetsbehandling.Tilstand,
         virkningsdato: LocalDate?,
         inntektsId: String?
     ) {}

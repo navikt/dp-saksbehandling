@@ -1,6 +1,5 @@
 package no.nav.dagpenger.behandling
 
-import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
@@ -24,20 +23,19 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
 
-private val logger = KotlinLogging.logger { }
-
 class NyRettighetsbehandling private constructor(
     private val person: Person,
     private val søknadsId: UUID,
     private val behandlingsId: UUID,
-    private var tilstand: Tilstand,
     private var virkningsdato: LocalDate?,
+    tilstand: Tilstand<NyRettighetsbehandling>,
     private var inntektsId: String?,
     aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
-) : Behandling(
+) : Behandling<NyRettighetsbehandling>(
     person = person,
     behandlingsId = behandlingsId,
     hendelseId = søknadsId,
+    tilstand = tilstand,
     aktivitetslogg
 ) {
 
@@ -102,9 +100,11 @@ class NyRettighetsbehandling private constructor(
         tilstand.håndter(beslutterHendelse, this)
     }
 
+    override fun <T> implementasjon(block: NyRettighetsbehandling.() -> T): T = this.block()
+
     fun accept(visitor: NyRettighetsbehandlingVisitor) {
 
-        visitor.visitNyRettighetsbehandling(søknadsId, behandlingsId, tilstand, virkningsdato, inntektsId)
+        visitor.visitNyRettighetsbehandling(søknadsId, behandlingsId, virkningsdato, inntektsId)
         vilkårsvurderinger.forEach {
             it.accept(visitor)
         }
@@ -120,17 +120,6 @@ class NyRettighetsbehandling private constructor(
             )
         )
 
-    private fun endreTilstand(nyTilstand: Tilstand, søknadHendelse: Hendelse) {
-        if (nyTilstand == tilstand) {
-            return // Vi er allerede i tilstanden
-        }
-        // val forrigeTilstand = tilstand
-        loggTilstandsendring(nyTilstand)
-        tilstand = nyTilstand
-        søknadHendelse.kontekst(tilstand)
-        tilstand.entering(søknadHendelse, this)
-    }
-
     private fun kontekst(hendelse: Hendelse, melding: String? = null) {
         hendelse.kontekst(this)
         melding?.let {
@@ -138,58 +127,7 @@ class NyRettighetsbehandling private constructor(
         }
     }
 
-    interface Tilstand : Aktivitetskontekst {
-        val type: Type
-
-        enum class Type {
-            VurdererVilkår,
-            VurdererUtfall,
-            UtførerBeregning,
-            Kvalitetssikrer,
-            FattetVedtak
-        }
-
-        override fun toSpesifikkKontekst() =
-            SpesifikkKontekst(
-                kontekstType = "Tilstand",
-                mapOf(
-                    "type" to type.name
-                )
-            )
-
-        fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {}
-
-        fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: NyRettighetsbehandling) {
-            grunnlagOgSatsResultat.tilstandfeil()
-        }
-
-        fun håndter(dagpengeperiode: StønadsperiodeResultat, behandling: NyRettighetsbehandling) {
-            dagpengeperiode.tilstandfeil()
-        }
-
-        fun håndter(søknadHendelse: SøknadHendelse, behandling: NyRettighetsbehandling) {
-            søknadHendelse.tilstandfeil()
-        }
-
-        fun håndter(
-            paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat,
-            behandling: NyRettighetsbehandling,
-        ) {
-            paragraf423AlderResultat.tilstandfeil()
-        }
-
-        fun håndter(beslutterHendelse: BeslutterHendelse, behandling: NyRettighetsbehandling) {
-            beslutterHendelse.tilstandfeil()
-        }
-
-        private fun Hendelse.tilstandfeil() {
-            this.warn("Forventet ikke ${this.javaClass.simpleName} i tilstand ${type.name} ")
-        }
-    }
-
-    object VurdererVilkår : Tilstand {
-        override val type: Tilstand.Type
-            get() = Tilstand.Type.VurdererVilkår
+    object VurdererVilkår : Tilstand.VurdererVilkår<NyRettighetsbehandling>() {
 
         override fun håndter(søknadHendelse: SøknadHendelse, behandling: NyRettighetsbehandling) {
             behandling.vilkårsvurderinger.forEach { vurdering ->
@@ -210,24 +148,20 @@ class NyRettighetsbehandling private constructor(
         }
     }
 
-    object VurdererUtfall : Tilstand {
-        override val type: Tilstand.Type
-            get() = Tilstand.Type.VurdererUtfall
+    object VurdererUtfall : Tilstand.VurderUtfall<NyRettighetsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             behandling.virkningsdato = LocalDate.now() // Må være satt i vilkårsvurderinger
             require(behandling.vilkårsvurderinger.vurdert()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
             if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
-                behandling.endreTilstand(UtførerBeregning, hendelse)
+                behandling.endreTilstand(Fastsetter, hendelse)
             } else {
                 behandling.endreTilstand(Kvalitetssikrer, hendelse)
             }
         }
     }
 
-    object UtførerBeregning : Tilstand {
-        override val type: Tilstand.Type
-            get() = Tilstand.Type.UtførerBeregning
+    object Fastsetter : Tilstand.Fastsetter<NyRettighetsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             behandling.inntektsId = "ULID"
@@ -249,9 +183,7 @@ class NyRettighetsbehandling private constructor(
         }
     }
 
-    object Kvalitetssikrer : Tilstand {
-        override val type: Tilstand.Type
-            get() = Tilstand.Type.Kvalitetssikrer
+    object Kvalitetssikrer : Tilstand.Kvalitetssikrer<NyRettighetsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             hendelse.behov(KvalitetssikringsBehov, "Behøver kvalitetssikring i form av totrinnskontroll fra en beslutter")
@@ -262,9 +194,7 @@ class NyRettighetsbehandling private constructor(
         }
     }
 
-    object FattetVedtak : Tilstand {
-        override val type: Tilstand.Type
-            get() = Tilstand.Type.FattetVedtak
+    object FattetVedtak : Tilstand.Behandlet<NyRettighetsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             behandling.opprettVedtak()
@@ -287,10 +217,6 @@ class NyRettighetsbehandling private constructor(
             false -> Vedtak.avslag(requireNotNull(virkningsdato))
         }
         this.person.leggTilVedtak(vedtak)
-    }
-
-    private fun loggTilstandsendring(nyTilstand: Tilstand) {
-        logger.info { "Behandling av ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.type} til ny tilstand ${nyTilstand.type}" }
     }
 
     private class VedtakFastsettelseVisitor(fastsettelser: List<Fastsettelse<*>>) : FastsettelseVisitor {

@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
-    private val behandlinger = mutableListOf<Behandling>()
+    private val behandlinger = mutableListOf<Behandling<*>>()
 
     private val vedtakHistorikk = VedtakHistorikk()
 

@@ -1,17 +1,22 @@
 package no.nav.dagpenger.behandling
 
+import mu.KotlinLogging
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
+import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.BehandlingVisitor
 import java.util.UUID
 
-abstract class Behandling(
+private val logger = KotlinLogging.logger { }
+
+abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     private val person: Person,
     private val behandlingsId: UUID,
     protected val hendelseId: UUID,
+    protected var tilstand: Tilstand<Behandlingstype>,
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
 ) : Aktivitetskontekst {
 
@@ -32,7 +37,9 @@ abstract class Behandling(
     }
 
     fun accept(visitor: BehandlingVisitor) {
-
+        visitor.preVisit(behandlingsId, hendelseId)
+        visitor.visitTilstand(tilstand.type)
+        visitor.postVisit(behandlingsId, hendelseId)
     }
 
     private fun kanIkkeHåndtere(hendelse: Hendelse) {
@@ -40,9 +47,79 @@ abstract class Behandling(
     }
 
     companion object {
-        fun List<Behandling>.harHendelseId(hendelseId: UUID) =
+        fun List<Behandling<*>>.harHendelseId(hendelseId: UUID) =
             this.any { it.hendelseId == hendelseId }
 
         const val kontekstType = "Behandling"
+    }
+
+    protected abstract fun <T> implementasjon(block: Behandlingstype.() -> T): T
+    protected fun endreTilstand(nyTilstand: Tilstand<Behandlingstype>, søknadHendelse: Hendelse) {
+        if (nyTilstand == tilstand) {
+            return // Vi er allerede i tilstanden
+        }
+        // val forrigeTilstand = tilstand
+        loggTilstandsendring(nyTilstand)
+        tilstand = nyTilstand
+        søknadHendelse.kontekst(tilstand)
+        implementasjon { tilstand.entering(søknadHendelse, this) }
+    }
+
+    private fun loggTilstandsendring(nyTilstand: Tilstand<Behandlingstype>) {
+        logger.info { "Behandling av ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.type} til ny tilstand ${nyTilstand.type}" }
+    }
+
+    sealed class Tilstand<Behandlingstype : Behandling<Behandlingstype>>(val type: Type) : Aktivitetskontekst {
+
+        enum class Type {
+            VurdererVilkår,
+            VurdererUtfall,
+            Fastsetter,
+            Kvalitetssikrer,
+            Behandlet
+        }
+
+        override fun toSpesifikkKontekst() =
+            SpesifikkKontekst(
+                kontekstType = "Tilstand",
+                mapOf(
+                    "type" to type.name
+                )
+            )
+
+        open fun entering(hendelse: Hendelse, behandling: Behandlingstype) {}
+
+        open fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, behandling: Behandlingstype) {
+            grunnlagOgSatsResultat.tilstandfeil()
+        }
+
+        open fun håndter(dagpengeperiode: StønadsperiodeResultat, behandling: Behandlingstype) {
+            dagpengeperiode.tilstandfeil()
+        }
+
+        open fun håndter(søknadHendelse: SøknadHendelse, behandling: Behandlingstype) {
+            søknadHendelse.tilstandfeil()
+        }
+
+        open fun håndter(
+            paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat,
+            behandling: Behandlingstype,
+        ) {
+            paragraf423AlderResultat.tilstandfeil()
+        }
+
+        open fun håndter(beslutterHendelse: BeslutterHendelse, behandling: Behandlingstype) {
+            beslutterHendelse.tilstandfeil()
+        }
+
+        abstract class VurdererVilkår<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.VurdererVilkår)
+        abstract class VurderUtfall<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.VurdererUtfall)
+        abstract class Fastsetter<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.Fastsetter)
+        abstract class Kvalitetssikrer<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.Kvalitetssikrer)
+        abstract class Behandlet<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.Behandlet)
+
+        private fun Hendelse.tilstandfeil() {
+            this.warn("Forventet ikke ${this.javaClass.simpleName} i tilstand ${type.name} ")
+        }
     }
 }
