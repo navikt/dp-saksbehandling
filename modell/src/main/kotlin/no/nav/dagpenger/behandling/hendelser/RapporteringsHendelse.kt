@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling.hendelser
 
 import no.nav.dagpenger.behandling.rapportering.Dag
+import no.nav.dagpenger.behandling.rapportering.Periode
 import no.nav.dagpenger.behandling.rapportering.Rapporteringsperiode
 import java.util.UUID
 
@@ -19,4 +20,6 @@ class RapporteringsHendelse(
             rapporteringsperiode.leggTilDag(dag)
         }
     }
+
+    internal fun tilPeriode() = Periode(rapporteringsdager.first().dato, rapporteringsdager.last().dato)
 }

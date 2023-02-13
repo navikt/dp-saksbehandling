@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_15_Forbruk
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
@@ -21,6 +22,9 @@ class Rapporteringsbehandling(
     vilkårsvurderinger = listOf(TestVilkår()),
     aktivitetslogg = aktivitetslogg
 ) {
+    private val fastsettelser by lazy {
+        listOf(Paragraf_4_15_Forbruk(person = person))
+    }
 
     object VurdererVilkår : Tilstand.VurdererVilkår<Rapporteringsbehandling> () {
         override fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandling: Rapporteringsbehandling) {
@@ -41,8 +45,8 @@ class Rapporteringsbehandling(
     }
 
     object Fastsetter : Tilstand.Fastsetter<Rapporteringsbehandling>() {
-        override fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandlingstype: Rapporteringsbehandling) {
-            super.håndter(rapporteringsHendelse, behandlingstype)
+        override fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandling: Rapporteringsbehandling) {
+            behandling.fastsettelser.forEach { it.håndter(rapporteringsHendelse) }
         }
     }
 
