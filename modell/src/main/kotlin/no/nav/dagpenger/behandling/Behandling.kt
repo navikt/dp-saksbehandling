@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
@@ -20,9 +21,11 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     protected val hendelseId: UUID,
     protected var tilstand: Tilstand<Behandlingstype>,
     protected val vilkårsvurderinger: List<Vilkårsvurdering<*>>,
+
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
 ) : Aktivitetskontekst {
 
+    internal abstract val fastsettelser: List<Fastsettelse<*>>
     open fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
         kanIkkeHåndtere(paragraf423AlderResultat)
     }
@@ -42,6 +45,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     fun accept(visitor: BehandlingVisitor) {
         visitor.preVisit(behandlingsId, hendelseId)
         visitor.visitTilstand(tilstand.type)
+        vilkårsvurderinger.forEach { it.accept(visitor) }
         visitor.postVisit(behandlingsId, hendelseId)
     }
 

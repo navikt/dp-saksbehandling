@@ -14,8 +14,11 @@ import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.Rapporteringsdag
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.hjelpere.februar
+import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsdager
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
+import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -96,15 +99,15 @@ class NyRettighetsbehandlingTest {
                 ident,
                 UUID.randomUUID(),
                 listOf(
-                    Rapporteringsdag(LocalDate.now().plusDays(1), false),
-                    Rapporteringsdag(LocalDate.now().plusDays(2), false)
+                    Rapporteringsdag(13.februar(2023), false),
+                    Rapporteringsdag(14.februar(2023), false)
                 )
             )
         )
 
         assertEquals(2, inspektør.antallBehandlinger)
-        assertEquals(1, testObserver.vedtakFattet.size)
-
+        assertEquals(2, testObserver.vedtakFattet.size)
+        assertEquals(2.arbeidsdager, inspektør.fastsattforbruk)
         // assertEquals(2, testObserver.vedtakFattet.size)
     }
 
@@ -213,6 +216,7 @@ class NyRettighetsbehandlingTest {
             person.accept(this)
         }
 
+        lateinit var fastsattforbruk: Tid
         var grunnlag: BigDecimal? = null
         var dagsats: BigDecimal? = null
         var stønadsperiode: Stønadsperiode? = null
@@ -247,6 +251,10 @@ class NyRettighetsbehandlingTest {
 
         override fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {
             this.stønadsperiode = stønadsperiode
+        }
+
+        override fun visitForbruk(forbruk: Tid) {
+            this.fastsattforbruk = forbruk
         }
     }
 

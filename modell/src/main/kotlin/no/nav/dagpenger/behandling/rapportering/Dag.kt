@@ -1,9 +1,14 @@
 package no.nav.dagpenger.behandling.rapportering
 
+import no.nav.dagpenger.behandling.visitor.DagVisitor
 import java.time.DayOfWeek
 import java.time.LocalDate
 
-internal sealed class Dag(dato: LocalDate) {
+sealed class Dag(private val dato: LocalDate) {
+    abstract fun accept(visitor: DagVisitor)
+
+    internal fun erIPeriode(periode: Periode) = dato in periode
+
     companion object {
         fun fraværsdag(dato: LocalDate) = Fraværsdag(dato)
 
@@ -17,6 +22,19 @@ internal sealed class Dag(dato: LocalDate) {
     }
 }
 
-internal class Fraværsdag(dato: LocalDate) : Dag(dato)
-internal class Arbeidsdag(dato: LocalDate) : Dag(dato)
-internal class Helgedag(dato: LocalDate) : Dag(dato)
+class Fraværsdag(dato: LocalDate) : Dag(dato) {
+    override fun accept(visitor: DagVisitor) {
+        visitor.visitFraværsdag(this)
+    }
+}
+
+class Arbeidsdag(dato: LocalDate) : Dag(dato) {
+    override fun accept(visitor: DagVisitor) {
+        visitor.visitArbeidsdag(this)
+    }
+}
+class Helgedag(dato: LocalDate) : Dag(dato) {
+    override fun accept(visitor: DagVisitor) {
+        visitor.visitHelgedag(this)
+    }
+}

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
+import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.visitor.VedtakVisitor
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -14,13 +15,20 @@ class Vedtak private constructor(
     private val virkningsdato: LocalDate,
     private val grunnlag: BigDecimal? = null,
     private val dagsats: BigDecimal? = null,
-    private val stønadsperiode: Stønadsperiode? = null
+    private val stønadsperiode: Stønadsperiode? = null,
+    private val forbruk: Tid? = null
 ) {
 
     companion object {
         fun avslag(virkningsdato: LocalDate) = Vedtak(utfall = false, virkningsdato = virkningsdato)
         fun innvilgelse(virkningsdato: LocalDate, grunnlag: BigDecimal, dagsats: BigDecimal, stønadsperiode: Stønadsperiode) =
             Vedtak(utfall = true, virkningsdato = virkningsdato, grunnlag = grunnlag, dagsats = dagsats, stønadsperiode = stønadsperiode)
+
+        fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid) = Vedtak(
+            utfall = true,
+            virkningsdato = virkningsdato,
+            forbruk = forbruk
+        )
     }
 
     fun accept(visitor: VedtakVisitor) {
@@ -28,6 +36,7 @@ class Vedtak private constructor(
         grunnlag?.let { visitor.visitVedtakGrunnlag(it) }
         dagsats?.let { visitor.visitVedtakDagsats(it) }
         stønadsperiode?.let { visitor.visitVedtakStønadsperiode(it) }
+        forbruk?.let { visitor.visitForbruk(it) }
         visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
     }
 }

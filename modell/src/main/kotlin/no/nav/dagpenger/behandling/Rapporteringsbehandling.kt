@@ -1,18 +1,23 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
+import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_15_Forbruk
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.vurdert
+import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
+import java.time.LocalDate
 import java.util.UUID
 
 class Rapporteringsbehandling(
     private val person: Person,
     private val rapporteringsId: UUID,
     private val behandlingsId: UUID = UUID.randomUUID(),
-    tilstand: Behandling.Tilstand<Rapporteringsbehandling> = VurdererVilkår,
+    tilstand: Tilstand<Rapporteringsbehandling> = VurdererVilkår,
     aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Behandling<Rapporteringsbehandling>(
     person = person,
@@ -22,7 +27,7 @@ class Rapporteringsbehandling(
     vilkårsvurderinger = listOf(TestVilkår()),
     aktivitetslogg = aktivitetslogg
 ) {
-    private val fastsettelser by lazy {
+    override val fastsettelser by lazy {
         listOf(Paragraf_4_15_Forbruk(person = person))
     }
 
@@ -45,15 +50,25 @@ class Rapporteringsbehandling(
     }
 
     object Fastsetter : Tilstand.Fastsetter<Rapporteringsbehandling>() {
-        override fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandling: Rapporteringsbehandling) {
-            behandling.fastsettelser.forEach { it.håndter(rapporteringsHendelse) }
+
+        override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
+            if (hendelse is RapporteringsHendelse) {
+                behandling.fastsettelser.forEach { it.håndter(hendelse) }
+                if (behandling.fastsettelser.vurdert()) {
+                    behandling.endreTilstand(Behandlet, hendelse)
+                }
+            }
         }
     }
 
     object Behandlet : Tilstand.Fastsetter<Rapporteringsbehandling>() {
         override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
-            // behandling.opprettVedtak()
+            behandling.opprettVedtak()
         }
+    }
+
+    private fun opprettVedtak() {
+        person.leggTilVedtak(Vedtak.løpendeVedtak(virkningsdato = LocalDate.now(), forbruk = FastsattForbruk(fastsettelser).forbruk))
     }
 
     override fun <T> implementasjon(block: Rapporteringsbehandling.() -> T): T = this.block()
@@ -70,5 +85,17 @@ class Rapporteringsbehandling(
     fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
         kontekst(rapporteringsHendelse, "Opprettet ny rapporteringsbehandling basert på rapporteringshendelse")
         tilstand.håndter(rapporteringsHendelse, this)
+    }
+
+    private class FastsattForbruk(fastsettelser: List<Fastsettelse<*>>) : FastsettelseVisitor {
+
+        lateinit var forbruk: Tid
+        init {
+            fastsettelser.forEach { it.accept(this) }
+        }
+
+        override fun visitForbruk(forbruk: Tid) {
+            this.forbruk = forbruk
+        }
     }
 }

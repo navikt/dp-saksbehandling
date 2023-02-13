@@ -37,6 +37,9 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
             it.accept(visitor)
         }
         vedtakHistorikk.accept(visitor)
+        visitor.preVisitRapporteringsperioder(rapporteringsperioder)
+        rapporteringsperioder.accept(visitor)
+        visitor.postVisitRapporteringsperioder(rapporteringsperioder)
     }
 
     fun addObserver(observer: PersonObserver) {
@@ -71,8 +74,8 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     }
 
     fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
-        rapporteringsperioder.håndter(rapporteringsHendelse)
         kontekst(rapporteringsHendelse)
+        rapporteringsperioder.håndter(rapporteringsHendelse)
         val behandling = Rapporteringsbehandling(this, rapporteringsHendelse.rapporteringsId)
         behandlinger.add(behandling)
         behandling.håndter(rapporteringsHendelse)

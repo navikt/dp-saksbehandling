@@ -52,7 +52,7 @@ class NyRettighetsbehandling private constructor(
         inntektsId = null
     )
 
-    private val fastsettelser by lazy {
+    override val fastsettelser by lazy {
         listOf(
             Paragraf_4_11_Grunnlag(
                 requireNotNull(this.inntektsId),
@@ -102,9 +102,6 @@ class NyRettighetsbehandling private constructor(
     fun accept(visitor: NyRettighetsbehandlingVisitor) {
 
         visitor.visitNyRettighetsbehandling(søknadsId, behandlingsId, virkningsdato, inntektsId)
-        vilkårsvurderinger.forEach {
-            it.accept(visitor)
-        }
     }
 
     override fun toSpesifikkKontekst() =
