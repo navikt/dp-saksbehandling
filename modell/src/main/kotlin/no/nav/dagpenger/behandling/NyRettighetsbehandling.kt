@@ -36,6 +36,10 @@ class NyRettighetsbehandling private constructor(
     behandlingsId = behandlingsId,
     hendelseId = søknadsId,
     tilstand = tilstand,
+    vilkårsvurderinger = listOf(
+        Paragraf_4_23_alder_vilkår(),
+        TestVilkår()
+    ),
     aktivitetslogg
 ) {
 
@@ -47,13 +51,6 @@ class NyRettighetsbehandling private constructor(
         virkningsdato = null,
         inntektsId = null
     )
-
-    private val vilkårsvurderinger by lazy {
-        listOf(
-            Paragraf_4_23_alder_vilkår(),
-            TestVilkår(),
-        )
-    }
 
     private val fastsettelser by lazy {
         listOf(
@@ -119,13 +116,6 @@ class NyRettighetsbehandling private constructor(
                 "søknad_uuid" to søknadsId.toString()
             )
         )
-
-    private fun kontekst(hendelse: Hendelse, melding: String? = null) {
-        hendelse.kontekst(this)
-        melding?.let {
-            hendelse.info(it)
-        }
-    }
 
     object VurdererVilkår : Tilstand.VurdererVilkår<NyRettighetsbehandling>() {
 

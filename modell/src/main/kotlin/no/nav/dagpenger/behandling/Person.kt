@@ -72,6 +72,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         kontekst(rapporteringsHendelse)
         val behandling = Rapporteringsbehandling(this, rapporteringsHendelse.rapporteringsId)
         behandlinger.add(behandling)
+        behandling.håndter(rapporteringsHendelse)
     }
 
     fun ident() = this.ident.identifikator()

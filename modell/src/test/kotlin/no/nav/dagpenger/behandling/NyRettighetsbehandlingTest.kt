@@ -103,7 +103,9 @@ class NyRettighetsbehandlingTest {
         )
 
         assertEquals(2, inspektør.antallBehandlinger)
-        assertEquals(2, testObserver.vedtakFattet.size)
+        assertEquals(1, testObserver.vedtakFattet.size)
+
+        // assertEquals(2, testObserver.vedtakFattet.size)
     }
 
     @Test

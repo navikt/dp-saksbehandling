@@ -5,8 +5,10 @@ import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import no.nav.dagpenger.behandling.visitor.BehandlingVisitor
 import java.util.UUID
 
@@ -17,6 +19,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     private val behandlingsId: UUID,
     protected val hendelseId: UUID,
     protected var tilstand: Tilstand<Behandlingstype>,
+    protected val vilkårsvurderinger: List<Vilkårsvurdering<*>>,
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
 ) : Aktivitetskontekst {
 
@@ -40,6 +43,13 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
         visitor.preVisit(behandlingsId, hendelseId)
         visitor.visitTilstand(tilstand.type)
         visitor.postVisit(behandlingsId, hendelseId)
+    }
+
+    protected fun kontekst(hendelse: Hendelse, melding: String? = null) {
+        hendelse.kontekst(this)
+        melding?.let {
+            hendelse.info(it)
+        }
     }
 
     private fun kanIkkeHåndtere(hendelse: Hendelse) {
@@ -99,6 +109,10 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
 
         open fun håndter(søknadHendelse: SøknadHendelse, behandling: Behandlingstype) {
             søknadHendelse.tilstandfeil()
+        }
+
+        open fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandlingstype: Behandlingstype) {
+            rapporteringsHendelse.tilstandfeil()
         }
 
         open fun håndter(

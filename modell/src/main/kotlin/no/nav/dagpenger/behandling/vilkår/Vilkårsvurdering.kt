@@ -5,6 +5,7 @@ import no.nav.dagpenger.behandling.Aktivitetskontekst
 import no.nav.dagpenger.behandling.SpesifikkKontekst
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
@@ -39,6 +40,11 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         implementasjon { tilstand.håndter(paragraf423AlderResultat, this) }
     }
 
+    fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
+        rapporteringsHendelse.kontekst(this)
+        implementasjon { tilstand.håndter(rapporteringsHendelse, this) }
+    }
+
     fun endreTilstand(nyTilstand: Tilstand<Paragraf>) {
         loggTilstandsendring(nyTilstand)
         tilstand = nyTilstand
@@ -63,8 +69,14 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         open fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat, vilkårsvurdering: Paragraf) {
             feilmelding(paragraf423AlderResultat)
         }
+
+        open fun håndter(rapporteringsHendelse: RapporteringsHendelse, vilkårsvurdering: Paragraf) {
+            feilmelding(rapporteringsHendelse)
+        }
+
         private fun feilmelding(hendelse: Hendelse) =
             hendelse.warn("Kan ikke håndtere ${hendelse.javaClass.simpleName} i tilstand ${this.tilstandType}")
+
         abstract class IkkeVurdert<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.IkkeVurdert)
         abstract class Avventer<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.AvventerVurdering)
         abstract class Oppfylt<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Oppfylt)
