@@ -14,7 +14,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakVisitor, DagVisitor {
+interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakHistorikkVisitor, DagVisitor {
     fun visitPerson(ident: PersonIdentifikator) {}
     fun preVisitRapporteringsperioder(rapporteringsperioder: Rapporteringsperioder) {}
     fun postVisitRapporteringsperioder(rapporteringsperioder: Rapporteringsperioder) {}
@@ -26,6 +26,12 @@ interface VedtakVisitor {
     fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {}
     fun visitForbruk(forbruk: Tid) {}
     fun postVisitVedtak(vedtakId: UUID, virkningsdato: LocalDate, vedtakstidspunkt: LocalDateTime, utfall: Boolean) {}
+}
+
+interface VedtakHistorikkVisitor : VedtakVisitor {
+    fun visitGjenståendeStønadsperiode(gjenståendePeriode: Stønadsperiode) {}
+    fun preVisitVedtak() {}
+    fun postVisitVedtak() {}
 }
 
 interface BehandlingVisitor : VilkårsvurderingVisitor {

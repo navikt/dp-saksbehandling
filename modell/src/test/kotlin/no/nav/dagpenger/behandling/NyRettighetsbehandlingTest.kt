@@ -4,9 +4,6 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grun
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
-import no.nav.dagpenger.behandling.NyRettighetsbehandling.Fastsetter
-import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
-import no.nav.dagpenger.behandling.NyRettighetsbehandling.VurdererVilkår
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
@@ -108,7 +105,8 @@ class NyRettighetsbehandlingTest {
         assertEquals(2, inspektør.antallBehandlinger)
         assertEquals(2, testObserver.vedtakFattet.size)
         assertEquals(2.arbeidsdager, inspektør.fastsattforbruk)
-        // assertEquals(2, testObserver.vedtakFattet.size)
+
+        assertEquals(52.arbeidsuker - 2.arbeidsdager, inspektør.gjenståendeStønadsperiode)
     }
 
     @Test
@@ -222,6 +220,7 @@ class NyRettighetsbehandlingTest {
         var stønadsperiode: Stønadsperiode? = null
         var antallBehandlinger = 0
         var vedtakUtfall: Boolean? = null
+        var gjenståendeStønadsperiode: Stønadsperiode? = null
         lateinit var behandlingsTilstand: Behandling.Tilstand.Type
 
         override fun preVisit(behandlingsId: UUID, hendelseId: UUID) {
@@ -255,6 +254,10 @@ class NyRettighetsbehandlingTest {
 
         override fun visitForbruk(forbruk: Tid) {
             this.fastsattforbruk = forbruk
+        }
+
+        override fun visitGjenståendeStønadsperiode(gjenståendeStønadsperiode: Stønadsperiode) {
+            this.gjenståendeStønadsperiode = gjenståendeStønadsperiode
         }
     }
 
