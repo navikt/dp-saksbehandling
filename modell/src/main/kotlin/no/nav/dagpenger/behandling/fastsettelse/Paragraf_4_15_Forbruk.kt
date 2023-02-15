@@ -39,7 +39,7 @@ internal class Paragraf_4_15_Forbruk(private val person: Person) : Fastsettelse<
         }
 
         override fun visitArbeidsdag(arbeidsdag: Arbeidsdag) {
-            if (arbeidsdag.erIPeriode(periode)) {
+            if (arbeidsdag.innenfor(periode)) {
                 forbruk += 1.arbeidsdager
             }
         }

@@ -7,7 +7,7 @@ import java.time.LocalDate
 sealed class Dag(private val dato: LocalDate) {
     abstract fun accept(visitor: DagVisitor)
 
-    internal fun erIPeriode(periode: Periode) = dato in periode
+    internal fun innenfor(periode: Periode) = dato in periode
 
     companion object {
         fun fraværsdag(dato: LocalDate) = Fraværsdag(dato)
