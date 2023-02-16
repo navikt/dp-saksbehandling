@@ -11,9 +11,9 @@ Egenskap: ny rettighet
     Så skal bruker ha 1 vedtak
     Når rapporteringshendelse mottas
       | dato       | fravær |
+      | 14.12.2022 | false  |
       | 15.12.2022 | true   |
       | 16.12.2022 | false  |
       | 17.12.2022 | false  |
-      | 18.12.2022 | false  |
-    Så skal forbruket være 3
+    Så skal forbruket være 2
     Så skal bruker ha 2 vedtak

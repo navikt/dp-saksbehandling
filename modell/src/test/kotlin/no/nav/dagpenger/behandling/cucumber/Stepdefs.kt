@@ -10,9 +10,13 @@ import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringsdag
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsdager
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
+import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -56,10 +60,18 @@ class Stepdefs : No {
             assertEquals(antallVedtak, inspektør.antallVedtak)
         }
         Når("^rapporteringshendelse mottas$") { rapporteringsHendelse: DataTable ->
-
+            val rapporteringsdager = rapporteringsHendelse.rows(1).asMap().entries.map {
+                Rapporteringsdag(dato = LocalDate.parse(it.key, datoformatterer), fravær = it.value.toBoolean())
+            }
+            håndterRapporteringsHendelse(rapporteringsdager)
         }
+        Så("^skal forbruket være (\\d+)$") { forbruk: Int ->
+            assertEquals(forbruk.arbeidsdager, inspektør.forbruk)
+        }
+    }
 
-        Så("^skal forbruket være (\\d+)$") { arg0: Int? -> }
+    private fun håndterRapporteringsHendelse(rapporteringsdager: List<Rapporteringsdag>) {
+        person.håndter(RapporteringsHendelse(ident, UUID.randomUUID(), rapporteringsdager))
     }
 
     private fun håndterBeslutterHendelse() {
@@ -77,7 +89,14 @@ class Stepdefs : No {
     }
 
     private fun håndterSatsogGrunnlag(sats: Int, grunnlag: Int) {
-        person.håndter(GrunnlagOgSatsResultat(ident, inspektør.behandlingsId, sats.toBigDecimal(), grunnlag.toBigDecimal()))
+        person.håndter(
+            GrunnlagOgSatsResultat(
+                ident,
+                inspektør.behandlingsId,
+                sats.toBigDecimal(),
+                grunnlag.toBigDecimal()
+            )
+        )
     }
 
     private class Inspektør(person: Person) : PersonVisitor {
@@ -88,6 +107,7 @@ class Stepdefs : No {
         lateinit var vilkårsvurderingId: UUID
         lateinit var behandlingsId: UUID
         var antallVedtak = 0
+        lateinit var forbruk: Tid
 
         override fun <Paragraf : Vilkårsvurdering<Paragraf>> visitVilkårsvurdering(
             vilkårsvurderingId: UUID,
@@ -107,6 +127,10 @@ class Stepdefs : No {
             utfall: Boolean
         ) {
             antallVedtak++
+        }
+
+        override fun visitForbruk(forbruk: Tid) {
+            this.forbruk = forbruk
         }
     }
 
