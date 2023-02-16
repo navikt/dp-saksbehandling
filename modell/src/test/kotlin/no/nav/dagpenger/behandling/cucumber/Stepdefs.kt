@@ -46,8 +46,8 @@ class Stepdefs : No {
             person = Person(ident)
             person.håndter(SøknadHendelse(UUID.randomUUID(), "journalpostId", ident))
         }
-        Og("^alle inngangsvilkår er oppfylt$") {
-            håndterInngangsvilkår(true)
+        Og("alle inngangsvilkår er {string}") { oppfylt: String ->
+            håndterInngangsvilkår(oppfylt == "oppfylt")
         }
         Og("^sats er (\\d+), grunnlag er (\\d+) og stønadsperiode er (\\d+)$") { sats: Int, grunnlag: Int, stønadsperiode: Int ->
             håndterSatsogGrunnlag(sats, grunnlag)

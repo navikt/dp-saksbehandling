@@ -5,7 +5,7 @@ Egenskap: ny rettighet
     Gitt en ny søknad
       | fødselsnummer | behandlingId |
       | 12345678901   | 1            |
-    Og alle inngangsvilkår er oppfylt
+    Og alle inngangsvilkår er "oppfylt"
     Og sats er 488, grunnlag er 100000 og stønadsperiode er 52
     Og beslutter kvalitetssikrer
     Så skal bruker ha 1 vedtak
@@ -17,3 +17,12 @@ Egenskap: ny rettighet
       | 17.12.2022 | false  |
     Så skal forbruket være 2
     Så skal bruker ha 2 vedtak
+
+
+    Scenario: mottaker har ikke rett til dagpenger
+      Gitt en ny søknad
+        | fødselsnummer | behandlingId |
+        | 12345678901   | 1            |
+      Og alle inngangsvilkår er "ikke oppfylt"
+      Og beslutter kvalitetssikrer
+      Så skal bruker ha 1 vedtak
