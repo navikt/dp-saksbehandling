@@ -6,8 +6,14 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.No
+import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
+import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import java.lang.reflect.Type
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 class Stepdefs : No {
 
@@ -19,9 +25,20 @@ class Stepdefs : No {
         val datoformatterer = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     }
 
+    private lateinit var person: Person
+    private lateinit var ident: String
+    private val inspektør get() = Inspektør(person)
+
     init {
-        Gitt("^en ny søknad$") { søknadHendelse: SøknadHendelseCucumber -> }
-        Og("^alle inngangsvilkår er oppfylt$") {}
+        Gitt("^en ny søknad$") { søknadHendelse: SøknadHendelseCucumber ->
+            ident = søknadHendelse.fødselsnummer
+            person = Person(ident)
+            person.håndter(SøknadHendelse(UUID.randomUUID(), "journalpostId", ident))
+        }
+        Og("^alle inngangsvilkår er oppfylt$") {
+            val paragraf423AlderVilkårResultat = Paragraf_4_23_alder_Vilkår_resultat(ident, inspektør.vilkårsvurderingId, true)
+            person.håndter(paragraf423AlderVilkårResultat)
+        }
         Og("^sats er (\\d+), grunnlag er (\\d+) og stønadsperiode er (\\d+)$") { arg0: Int?, arg1: Int?, arg2: Int? -> }
         Så("^skal bruker ha (\\d+) vedtak$") { arg0: Int? -> }
         Når("^rapporteringshendelse mottas$") { rapporteringsHendelse: DataTable ->
@@ -50,6 +67,21 @@ class Stepdefs : No {
                 fromValue,
                 objectMapper.constructType(toValueType)
             )
+        }
+    }
+
+    private class Inspektør(person: Person) : PersonVisitor {
+        init {
+            person.accept(this)
+        }
+
+        lateinit var vilkårsvurderingId: UUID
+
+        override fun <Paragraf : Vilkårsvurdering<Paragraf>> visitVilkårsvurdering(
+            vilkårsvurderingId: UUID,
+            tilstand: Vilkårsvurdering.Tilstand<Paragraf>
+        ) {
+            this.vilkårsvurderingId = vilkårsvurderingId
         }
     }
 }
