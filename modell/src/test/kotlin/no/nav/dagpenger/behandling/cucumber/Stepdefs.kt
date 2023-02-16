@@ -21,6 +21,7 @@ import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.lang.reflect.Type
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -41,7 +42,7 @@ class Stepdefs : No {
     private val inspektør get() = Inspektør(person)
 
     init {
-        Gitt("^en ny søknad$") { søknadHendelse: SøknadHendelseCucumber ->
+        Gitt("en ny søknad") { søknadHendelse: SøknadHendelseCucumber ->
             ident = søknadHendelse.fødselsnummer
             person = Person(ident)
             person.håndter(SøknadHendelse(UUID.randomUUID(), "journalpostId", ident))
@@ -49,23 +50,23 @@ class Stepdefs : No {
         Og("alle inngangsvilkår er {string}") { oppfylt: String ->
             håndterInngangsvilkår(oppfylt == "oppfylt")
         }
-        Og("^sats er (\\d+), grunnlag er (\\d+) og stønadsperiode er (\\d+)$") { sats: Int, grunnlag: Int, stønadsperiode: Int ->
+        Og("sats er {bigdecimal}, grunnlag er {bigdecimal} og stønadsperiode er {int}") { sats: BigDecimal, grunnlag: BigDecimal, stønadsperiode: Int ->
             håndterSatsogGrunnlag(sats, grunnlag)
             håndterStønadsperiode(stønadsperiode)
         }
-        Og("^beslutter kvalitetssikrer$") {
+        Og("beslutter kvalitetssikrer") {
             håndterBeslutterHendelse()
         }
-        Så("^skal bruker ha (\\d+) vedtak$") { antallVedtak: Int ->
+        Så("skal bruker ha {int} vedtak") { antallVedtak: Int ->
             assertEquals(antallVedtak, inspektør.antallVedtak)
         }
-        Når("^rapporteringshendelse mottas$") { rapporteringsHendelse: DataTable ->
+        Når("rapporteringshendelse mottas") { rapporteringsHendelse: DataTable ->
             val rapporteringsdager = rapporteringsHendelse.rows(1).asMap().entries.map {
                 Rapporteringsdag(dato = LocalDate.parse(it.key, datoformatterer), fravær = it.value.toBoolean())
             }
             håndterRapporteringsHendelse(rapporteringsdager)
         }
-        Så("^skal forbruket være (\\d+)$") { forbruk: Int ->
+        Så("skal forbruket være {int}") { forbruk: Int ->
             assertEquals(forbruk.arbeidsdager, inspektør.forbruk)
         }
     }
@@ -88,13 +89,13 @@ class Stepdefs : No {
         person.håndter(StønadsperiodeResultat(ident, inspektør.behandlingsId, stønadsperiode.arbeidsuker))
     }
 
-    private fun håndterSatsogGrunnlag(sats: Int, grunnlag: Int) {
+    private fun håndterSatsogGrunnlag(sats: BigDecimal, grunnlag: BigDecimal) {
         person.håndter(
             GrunnlagOgSatsResultat(
                 ident,
                 inspektør.behandlingsId,
-                sats.toBigDecimal(),
-                grunnlag.toBigDecimal()
+                sats,
+                grunnlag
             )
         )
     }
