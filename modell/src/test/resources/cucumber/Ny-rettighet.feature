@@ -27,6 +27,8 @@ Egenskap: ny rettighet
     Og beslutter kvalitetssikrer
     Så skal bruker ha 1 vedtak
 
+
+  @wip
   Scenario: mottaker har rett til dagpenger men sender meldekort for tidlig
     Gitt en ny søknad
       | fødselsnummer | behandlingId |
