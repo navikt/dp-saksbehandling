@@ -2,8 +2,8 @@ package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.db.PersonRepository
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.hendelser.mottak.AldersbehovLøsningMottak
 import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak
@@ -30,7 +30,7 @@ internal class PersonMediator(rapidsConnection: RapidsConnection, private val pe
         }
     }
 
-    fun behandle(hendelse: Paragraf_4_23_alder_Vilkår_resultat) {
+    fun behandle(hendelse: AlderVilkårResultat) {
         behandle(hendelse) { person ->
             person.håndter(hendelse)
         }

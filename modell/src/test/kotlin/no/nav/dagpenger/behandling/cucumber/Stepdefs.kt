@@ -7,9 +7,9 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.No
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.Rapporteringsdag
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
@@ -47,8 +47,13 @@ class Stepdefs : No {
             person = Person(ident)
             person.håndter(SøknadHendelse(UUID.randomUUID(), "journalpostId", ident))
         }
+
+        Og("alle inngangsvilkår er {string} med virkningstidpunkt {string}") { oppfylt: String, virkningsdato: String ->
+            val virkningsdato = LocalDate.parse(virkningsdato, datoformatterer)
+            håndterInngangsvilkår(oppfylt == "oppfylt", virkningsdato)
+        }
+
         Og("alle inngangsvilkår er {string}") { oppfylt: String ->
-            håndterInngangsvilkår(oppfylt == "oppfylt")
         }
         Og("sats er {bigdecimal}, grunnlag er {bigdecimal} og stønadsperiode er {int}") { sats: BigDecimal, grunnlag: BigDecimal, stønadsperiode: Int ->
             håndterSatsogGrunnlag(sats, grunnlag)
@@ -81,8 +86,8 @@ class Stepdefs : No {
 
     private data class SøknadHendelseCucumber(val fødselsnummer: String, val behandlingId: String)
 
-    private fun håndterInngangsvilkår(oppfylt: Boolean) {
-        person.håndter(Paragraf_4_23_alder_Vilkår_resultat(ident, inspektør.vilkårsvurderingId, oppfylt))
+    private fun håndterInngangsvilkår(oppfylt: Boolean, virkningsdato: LocalDate) {
+        person.håndter(AlderVilkårResultat(ident, inspektør.vilkårsvurderingId, oppfylt, virkningsdato))
     }
 
     private fun håndterStønadsperiode(stønadsperiode: Int) {
@@ -112,7 +117,7 @@ class Stepdefs : No {
 
         override fun <Paragraf : Vilkårsvurdering<Paragraf>> visitVilkårsvurdering(
             vilkårsvurderingId: UUID,
-            tilstand: Vilkårsvurdering.Tilstand<Paragraf>
+            tilstand: Vilkårsvurdering.Tilstand<Paragraf>,
         ) {
             this.vilkårsvurderingId = vilkårsvurderingId
         }
@@ -125,7 +130,7 @@ class Stepdefs : No {
             vedtakId: UUID,
             virkningsdato: LocalDate,
             vedtakstidspunkt: LocalDateTime,
-            utfall: Boolean
+            utfall: Boolean,
         ) {
             antallVedtak++
         }

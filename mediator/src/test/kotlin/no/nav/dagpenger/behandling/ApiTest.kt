@@ -7,10 +7,11 @@ import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.db.PersonRepository
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.util.UUID
 
 class ApiTest {
@@ -23,10 +24,11 @@ class ApiTest {
         val person = Person(ident)
         val søknadHendelse = SøknadHendelse(søknadUUID = UUID.randomUUID(), journalpostId = "123454", ident = ident)
         person.håndter(søknadHendelse)
-        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
+        val paragraf423AlderResultat = AlderVilkårResultat(
             ident,
             søknadHendelse.behov().first().kontekst()["vilkårsvurderingId"].let { UUID.fromString(it) },
-            oppfylt = true
+            oppfylt = true,
+            LocalDate.now()
         )
         person.håndter(paragraf423AlderResultat)
         inMemoryPersonRepository.lagrePerson(person)

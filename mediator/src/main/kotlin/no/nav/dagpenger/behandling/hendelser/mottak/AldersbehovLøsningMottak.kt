@@ -3,11 +3,12 @@ package no.nav.dagpenger.behandling.hendelser.mottak
 import com.fasterxml.jackson.databind.JsonNode
 import mu.withLoggingContext
 import no.nav.dagpenger.behandling.PersonMediator
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import java.time.LocalDate
 import java.util.UUID
 
 internal class AldersbehovLøsningMottak(rapidsConnection: RapidsConnection, private val mediator: PersonMediator) : River.PacketListener {
@@ -30,10 +31,11 @@ internal class AldersbehovLøsningMottak(rapidsConnection: RapidsConnection, pri
         val vilkårsvurderingId = packet["søknad_uuid"].asText().let { UUID.fromString(it) }
 
         withLoggingContext("vilkårsvurderingId" to vilkårsvurderingId.toString()) {
-            val paragraf423AlderLøsning = Paragraf_4_23_alder_Vilkår_resultat(
+            val paragraf423AlderLøsning = AlderVilkårResultat(
                 ident = ident,
                 vilkårsvurderingId = vilkårsvurderingId,
-                oppfylt = packet["resultat"].asBoolean()
+                oppfylt = packet["resultat"].asBoolean(),
+                virkningsdato = LocalDate.now()
             )
 
             mediator.behandle(paragraf423AlderLøsning)

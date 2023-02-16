@@ -3,8 +3,8 @@ package no.nav.dagpenger.behandling.vilkår
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Aktivitetskontekst
 import no.nav.dagpenger.behandling.SpesifikkKontekst
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
@@ -15,7 +15,7 @@ private val logger = KotlinLogging.logger { }
 
 abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private constructor(
     protected val vilkårsvurderingId: UUID,
-    private var tilstand: Tilstand<Paragraf>
+    protected var tilstand: Tilstand<Paragraf>
 ) : Aktivitetskontekst {
     constructor(tilstand: Tilstand<Paragraf>) : this(UUID.randomUUID(), tilstand)
     companion object {
@@ -26,7 +26,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
             this.all { it.tilstand.tilstandType == Oppfylt }
     }
 
-    fun accept(visitor: VilkårsvurderingVisitor) {
+    open fun accept(visitor: VilkårsvurderingVisitor) {
         visitor.visitVilkårsvurdering(vilkårsvurderingId, tilstand)
     }
 
@@ -34,7 +34,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         søknadHendelse.kontekst(this)
         implementasjon { tilstand.håndter(søknadHendelse, this) }
     }
-    fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
+    fun håndter(paragraf423AlderResultat: AlderVilkårResultat) {
         if (this.vilkårsvurderingId != paragraf423AlderResultat.vilkårsvurderingId) return
         paragraf423AlderResultat.kontekst(this)
         implementasjon { tilstand.håndter(paragraf423AlderResultat, this) }
@@ -66,8 +66,8 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         open fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Paragraf) {
             feilmelding(søknadHendelse)
         }
-        open fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat, vilkårsvurdering: Paragraf) {
-            feilmelding(paragraf423AlderResultat)
+        open fun håndter(alderVilkårResultat: AlderVilkårResultat, vilkårsvurdering: Paragraf) {
+            feilmelding(alderVilkårResultat)
         }
 
         open fun håndter(rapporteringsHendelse: RapporteringsHendelse, vilkårsvurdering: Paragraf) {
@@ -76,6 +76,8 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
 
         private fun feilmelding(hendelse: Hendelse) =
             hendelse.warn("Kan ikke håndtere ${hendelse.javaClass.simpleName} i tilstand ${this.tilstandType}")
+
+        open fun accept(paragraf: Paragraf, visitor: VilkårsvurderingVisitor) {}
 
         abstract class IkkeVurdert<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.IkkeVurdert)
         abstract class Avventer<Paragraf : Vilkårsvurdering<Paragraf>> : Tilstand<Paragraf>(Type.AvventerVurdering)

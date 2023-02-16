@@ -60,6 +60,9 @@ interface VilkårsvurderingVisitor {
         vilkårsvurderingId: UUID,
         tilstand: Vilkårsvurdering.Tilstand<Paragraf>
     ) {}
+
+    fun visitAlderOppfylt(virkningsdato: LocalDate) {}
+    fun visitAlderIkkeOppfylt(virkningsdato: LocalDate) {}
 }
 
 internal interface FastsettelseVisitor {

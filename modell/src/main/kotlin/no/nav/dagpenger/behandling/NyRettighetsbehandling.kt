@@ -6,18 +6,20 @@ import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_12_Sats
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_15_Stønadsperiode
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
-import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
+import no.nav.dagpenger.behandling.vilkår.AlderVilkår
+import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.vurdert
 import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
 import no.nav.dagpenger.behandling.visitor.NyRettighetsbehandlingVisitor
+import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
@@ -36,7 +38,7 @@ class NyRettighetsbehandling private constructor(
     hendelseId = søknadsId,
     tilstand = tilstand,
     vilkårsvurderinger = listOf(
-        Paragraf_4_23_alder_vilkår()
+        AlderVilkår()
     ),
     aktivitetslogg
 ) {
@@ -72,7 +74,7 @@ class NyRettighetsbehandling private constructor(
         tilstand.håndter(hendelse, this)
     }
 
-    override fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
+    override fun håndter(paragraf423AlderResultat: AlderVilkårResultat) {
         kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
         tilstand.håndter(paragraf423AlderResultat, this)
     }
@@ -121,7 +123,7 @@ class NyRettighetsbehandling private constructor(
         }
 
         override fun håndter(
-            paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat,
+            paragraf423AlderResultat: AlderVilkårResultat,
             behandling: NyRettighetsbehandling,
         ) {
             behandling.vilkårsvurderinger.forEach { vurdering ->
@@ -136,7 +138,7 @@ class NyRettighetsbehandling private constructor(
     object VurdererUtfall : Tilstand.VurderUtfall<NyRettighetsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
-            behandling.virkningsdato = LocalDate.now() // Må være satt i vilkårsvurderinger
+            behandling.virkningsdato = VirkningsdatoVistor(behandling.vilkårsvurderinger).virkningsdato
             require(behandling.vilkårsvurderinger.vurdert()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
             if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
                 behandling.endreTilstand(Fastsetter, hendelse)
@@ -224,5 +226,22 @@ class NyRettighetsbehandling private constructor(
         override fun visitStønadsperiode(stønadsperiode: Stønadsperiode) {
             this.stønadsperiode = stønadsperiode
         }
+    }
+}
+
+private class VirkningsdatoVistor(vilkårsvurderinger: List<Vilkårsvurdering<*>>) : VilkårsvurderingVisitor {
+
+    lateinit var virkningsdato: LocalDate
+
+    init {
+        vilkårsvurderinger.forEach { it.accept(this) }
+    }
+
+    override fun visitAlderIkkeOppfylt(virkningsdato: LocalDate) {
+        this.virkningsdato = virkningsdato
+    }
+
+    override fun visitAlderOppfylt(virkningsdato: LocalDate) {
+        this.virkningsdato = virkningsdato
     }
 }

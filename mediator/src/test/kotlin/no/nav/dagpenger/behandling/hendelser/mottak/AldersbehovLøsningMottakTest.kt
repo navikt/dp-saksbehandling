@@ -7,7 +7,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import no.nav.dagpenger.behandling.Meldingsfabrikk.Paragraf_4_23_alder_resultatjson
 import no.nav.dagpenger.behandling.PersonMediator
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class AldersbehovLøsningMottakTest {
-    private val slot = slot<Paragraf_4_23_alder_Vilkår_resultat>()
+    private val slot = slot<AlderVilkårResultat>()
     private val mediatorMock = mockk<PersonMediator>().also {
         every { it.behandle(capture(slot)) } just Runs
     }

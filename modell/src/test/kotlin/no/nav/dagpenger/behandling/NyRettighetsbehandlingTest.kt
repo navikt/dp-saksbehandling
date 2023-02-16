@@ -4,15 +4,11 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grun
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
-import no.nav.dagpenger.behandling.hendelser.Rapporteringsdag
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
-import no.nav.dagpenger.behandling.hjelpere.februar
-import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsdager
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
@@ -47,10 +43,11 @@ class NyRettighetsbehandlingTest {
         assertEquals(1, inspektør.antallBehandlinger)
 
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
+        val paragraf423AlderResultat = AlderVilkårResultat(
             ident,
             UUID.fromString(vilkårsvurderingId),
-            oppfylt = true
+            oppfylt = true,
+            LocalDate.now()
         )
         person.håndter(paragraf423AlderResultat)
         assertTilstand(Behandling.Tilstand.Type.Fastsetter)

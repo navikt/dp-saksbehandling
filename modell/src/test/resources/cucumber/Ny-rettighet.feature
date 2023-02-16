@@ -5,7 +5,7 @@ Egenskap: ny rettighet
     Gitt en ny søknad
       | fødselsnummer | behandlingId |
       | 12345678901   | 1            |
-    Og alle inngangsvilkår er "oppfylt"
+    Og alle inngangsvilkår er "oppfylt" med virkningstidpunkt "14.12.2022"
     Og sats er 488, grunnlag er 100000 og stønadsperiode er 52
     Og beslutter kvalitetssikrer
     Så skal bruker ha 1 vedtak
@@ -23,6 +23,6 @@ Egenskap: ny rettighet
       Gitt en ny søknad
         | fødselsnummer | behandlingId |
         | 12345678901   | 1            |
-      Og alle inngangsvilkår er "ikke oppfylt"
+      Og alle inngangsvilkår er "ikke oppfylt" med virkningstidpunkt "14.02.2023"
       Og beslutter kvalitetssikrer
       Så skal bruker ha 1 vedtak

@@ -2,10 +2,10 @@ package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
+import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.Paragraf_4_23_alder_Vilkår_resultat
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
@@ -26,7 +26,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
 ) : Aktivitetskontekst {
 
     internal abstract val fastsettelser: List<Fastsettelse<*>>
-    open fun håndter(paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat) {
+    open fun håndter(paragraf423AlderResultat: AlderVilkårResultat) {
         kanIkkeHåndtere(paragraf423AlderResultat)
     }
 
@@ -120,7 +120,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
         }
 
         open fun håndter(
-            paragraf423AlderResultat: Paragraf_4_23_alder_Vilkår_resultat,
+            paragraf423AlderResultat: AlderVilkårResultat,
             behandling: Behandlingstype,
         ) {
             paragraf423AlderResultat.tilstandfeil()

@@ -1,9 +1,11 @@
 package no.nav.dagpenger.behandling.hendelser
 
+import java.time.LocalDate
 import java.util.UUID
 
-class Paragraf_4_23_alder_Vilkår_resultat(
+class AlderVilkårResultat(
     ident: String,
     val vilkårsvurderingId: UUID,
     val oppfylt: Boolean,
+    val virkningsdato: LocalDate,
 ) : VilkårResultatHendelse(vilkårsvurderingId, ident)
