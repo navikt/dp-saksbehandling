@@ -27,10 +27,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class NyRettighetsbehandlingTest {
-    val ident = "12345678901"
+    private val ident = "12345678901"
     private val testObserver = TestObserver()
-    val person = Person(ident).also { it.addObserver(testObserver) }
-    val søknadHendelse = SøknadHendelse(søknadUUID = UUID.randomUUID(), journalpostId = "123454", ident = ident)
+    private val person = Person(ident).also { it.addObserver(testObserver) }
+    private val søknadHendelse = SøknadHendelse(søknadUUID = UUID.randomUUID(), journalpostId = "123454", ident = ident)
 
     private val inspektør get() = Inspektør(person)
 
