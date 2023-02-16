@@ -96,8 +96,8 @@ class NyRettighetsbehandlingTest {
                 ident,
                 UUID.randomUUID(),
                 listOf(
-                    Rapporteringsdag(13.februar(2023), false),
-                    Rapporteringsdag(14.februar(2023), false)
+                    Rapporteringsdag(14.februar(2023), false),
+                    Rapporteringsdag(13.februar(2023), false)
                 )
             )
         )

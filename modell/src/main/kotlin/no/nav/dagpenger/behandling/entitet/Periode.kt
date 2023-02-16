@@ -1,4 +1,4 @@
-package no.nav.dagpenger.behandling.rapportering
+package no.nav.dagpenger.behandling.entitet
 
 import java.time.LocalDate
 

@@ -77,7 +77,7 @@ class Aktivitetslogg private constructor(
         kontekster.add(kontekst)
     }
 
-    override fun kontekst(behandling: NyRettighetsbehandling) {
+    override fun kontekst(behandling: Behandling<*>) {
         if (this.forelder == null) {
             this.forelder = behandling.aktivitetslogg
         } else {
@@ -256,7 +256,7 @@ interface IAktivitetslogg {
     fun behov(): List<Behov>
     fun barn(): Aktivitetslogg
     fun kontekst(kontekst: Aktivitetskontekst)
-    fun kontekst(behandling: NyRettighetsbehandling)
+    fun kontekst(behandling: Behandling<*>)
     fun kontekster(): List<IAktivitetslogg>
 }
 

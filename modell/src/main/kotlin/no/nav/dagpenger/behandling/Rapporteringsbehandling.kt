@@ -61,7 +61,7 @@ class Rapporteringsbehandling(
         }
     }
 
-    object Behandlet : Tilstand.Fastsetter<Rapporteringsbehandling>() {
+    object Behandlet : Tilstand.Behandlet<Rapporteringsbehandling>() {
         override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
             behandling.opprettVedtak()
         }

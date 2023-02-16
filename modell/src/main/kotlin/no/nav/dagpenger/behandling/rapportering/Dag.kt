@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.rapportering
 
+import no.nav.dagpenger.behandling.entitet.Periode
 import no.nav.dagpenger.behandling.visitor.DagVisitor
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -13,12 +14,14 @@ sealed class Dag(private val dato: LocalDate) {
         fun fraværsdag(dato: LocalDate) = Fraværsdag(dato)
 
         fun arbeidsdag(dato: LocalDate): Dag {
-            return if (dato.dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)) {
+            return if (dato.erHelg()) {
                 Helgedag(dato)
             } else {
                 Arbeidsdag(dato)
             }
         }
+
+        private fun LocalDate.erHelg() = dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
     }
 }
 

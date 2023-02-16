@@ -1,4 +1,4 @@
-package no.nav.dagpenger.behandling.rapportering
+package no.nav.dagpenger.behandling.entitet
 
 import no.nav.dagpenger.behandling.hjelpere.februar
 import org.junit.jupiter.api.Assertions.assertFalse

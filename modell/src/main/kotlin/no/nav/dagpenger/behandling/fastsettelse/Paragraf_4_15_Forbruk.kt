@@ -1,11 +1,11 @@
 package no.nav.dagpenger.behandling.fastsettelse
 
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.entitet.Periode
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsdager
 import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.rapportering.Arbeidsdag
-import no.nav.dagpenger.behandling.rapportering.Periode
 import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 
