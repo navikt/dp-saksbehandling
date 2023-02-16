@@ -7,6 +7,7 @@ Egenskap: ny rettighet
       | 12345678901   | 1            |
     Og alle inngangsvilkår er oppfylt
     Og sats er 488, grunnlag er 100000 og stønadsperiode er 52
+    Og beslutter kvalitetssikrer
     Så skal bruker ha 1 vedtak
     Når rapporteringshendelse mottas
       | dato       | fravær |

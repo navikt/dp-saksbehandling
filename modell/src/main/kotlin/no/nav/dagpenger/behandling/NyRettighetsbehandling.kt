@@ -14,7 +14,6 @@ import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.vilkår.Paragraf_4_23_alder_vilkår
-import no.nav.dagpenger.behandling.vilkår.TestVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.vurdert
 import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
@@ -37,8 +36,7 @@ class NyRettighetsbehandling private constructor(
     hendelseId = søknadsId,
     tilstand = tilstand,
     vilkårsvurderinger = listOf(
-        Paragraf_4_23_alder_vilkår(),
-        TestVilkår()
+        Paragraf_4_23_alder_vilkår()
     ),
     aktivitetslogg
 ) {
