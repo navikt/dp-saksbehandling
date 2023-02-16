@@ -15,9 +15,19 @@ sealed class Vedtak(
     protected val virkningsdato: LocalDate,
 ) {
     companion object {
-        fun avslag(virkningsdato: LocalDate) = Rammevedtak(utfall = false, virkningsdato = virkningsdato)
-        fun innvilgelse(virkningsdato: LocalDate, grunnlag: BigDecimal, dagsats: BigDecimal, stønadsperiode: Stønadsperiode) =
-            Rammevedtak(utfall = true, virkningsdato = virkningsdato, grunnlag = grunnlag, dagsats = dagsats, stønadsperiode = stønadsperiode)
+        fun avslag(virkningsdato: LocalDate) = Avslag(virkningsdato = virkningsdato)
+        fun innvilgelse(
+            virkningsdato: LocalDate,
+            grunnlag: BigDecimal,
+            dagsats: BigDecimal,
+            stønadsperiode: Stønadsperiode,
+        ) =
+            Rammevedtak(
+                virkningsdato = virkningsdato,
+                grunnlag = grunnlag,
+                dagsats = dagsats,
+                stønadsperiode = stønadsperiode
+            )
 
         fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid) = LøpendeVedtak(
             utfall = true,
@@ -29,21 +39,31 @@ sealed class Vedtak(
     abstract fun accept(visitor: VedtakVisitor)
 }
 
+class Avslag(
+    vedtakId: UUID = UUID.randomUUID(),
+    vedtakstidspunkt: LocalDateTime = LocalDateTime.now(),
+    virkningsdato: LocalDate,
+) : Vedtak(vedtakId, vedtakstidspunkt, utfall = false, virkningsdato) {
+    override fun accept(visitor: VedtakVisitor) {
+        visitor.preVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
+        visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
+    }
+}
+
 class Rammevedtak(
     vedtakId: UUID = UUID.randomUUID(),
     vedtakstidspunkt: LocalDateTime = LocalDateTime.now(),
-    utfall: Boolean,
     virkningsdato: LocalDate,
-    private val grunnlag: BigDecimal? = null,
-    private val dagsats: BigDecimal? = null,
-    private val stønadsperiode: Stønadsperiode? = null,
-) : Vedtak(vedtakId, vedtakstidspunkt, utfall, virkningsdato) {
+    private val grunnlag: BigDecimal,
+    private val dagsats: BigDecimal,
+    private val stønadsperiode: Stønadsperiode,
+) : Vedtak(vedtakId, vedtakstidspunkt, utfall = true, virkningsdato) {
 
     override fun accept(visitor: VedtakVisitor) {
         visitor.preVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
-        grunnlag?.let { visitor.visitVedtakGrunnlag(it) }
-        dagsats?.let { visitor.visitVedtakDagsats(it) }
-        stønadsperiode?.let { visitor.visitVedtakStønadsperiode(it) }
+        grunnlag.let { visitor.visitVedtakGrunnlag(it) }
+        dagsats.let { visitor.visitVedtakDagsats(it) }
+        stønadsperiode.let { visitor.visitVedtakStønadsperiode(it) }
         visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
     }
 }
@@ -53,7 +73,7 @@ class LøpendeVedtak(
     vedtakstidspunkt: LocalDateTime = LocalDateTime.now(),
     utfall: Boolean,
     virkningsdato: LocalDate,
-    private val forbruk: Tid
+    private val forbruk: Tid,
 ) : Vedtak(vedtakId, vedtakstidspunkt, utfall, virkningsdato) {
     override fun accept(visitor: VedtakVisitor) {
         visitor.preVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
