@@ -19,10 +19,27 @@ Egenskap: ny rettighet
     Så skal bruker ha 2 vedtak
 
 
-    Scenario: mottaker har ikke rett til dagpenger
-      Gitt en ny søknad
-        | fødselsnummer | behandlingId |
-        | 12345678901   | 1            |
-      Og alle inngangsvilkår er "ikke oppfylt" med virkningstidpunkt "14.02.2023"
-      Og beslutter kvalitetssikrer
-      Så skal bruker ha 1 vedtak
+  Scenario: mottaker har ikke rett til dagpenger
+    Gitt en ny søknad
+      | fødselsnummer | behandlingId |
+      | 12345678901   | 1            |
+    Og alle inngangsvilkår er "ikke oppfylt" med virkningstidpunkt "14.02.2023"
+    Og beslutter kvalitetssikrer
+    Så skal bruker ha 1 vedtak
+
+  Scenario: mottaker har rett til dagpenger men sender meldekort for tidlig
+    Gitt en ny søknad
+      | fødselsnummer | behandlingId |
+      | 12345678901   | 1            |
+    Og alle inngangsvilkår er "oppfylt" med virkningstidpunkt "14.02.2023"
+    Og sats er 488, grunnlag er 100000 og stønadsperiode er 52
+    Og beslutter kvalitetssikrer
+    Så skal bruker ha 1 vedtak
+    Når rapporteringshendelse mottas
+      | dato       | fravær |
+      | 01.02.2023 | false  |
+      | 02.02.2023 | true   |
+      | 03.02.2023 | false  |
+      | 04.02.2023 | false  |
+    Så skal forbruket være 0
+    Så skal bruker ha 1 vedtak
