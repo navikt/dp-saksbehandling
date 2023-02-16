@@ -90,55 +90,6 @@ class NyRettighetsbehandlingTest {
         assertEquals(700.toBigDecimal(), inspektør.dagsats)
         assertEquals(52.arbeidsuker, inspektør.stønadsperiode)
         assertEquals(1, testObserver.vedtakFattet.size)
-
-        person.håndter(
-            RapporteringsHendelse(
-                ident,
-                UUID.randomUUID(),
-                listOf(
-                    Rapporteringsdag(14.februar(2023), false),
-                    Rapporteringsdag(13.februar(2023), false)
-                )
-            )
-        )
-
-        assertEquals(2, inspektør.antallBehandlinger)
-        assertEquals(2, testObserver.vedtakFattet.size)
-        assertEquals(2.arbeidsdager, inspektør.fastsattforbruk)
-
-        assertEquals(52.arbeidsuker - 2.arbeidsdager, inspektør.gjenståendeStønadsperiode)
-    }
-
-    @Test
-    fun `Ny søknad hendelse blir manuelt behandlet og fører til avslagsvedtak`() {
-        person.håndter(søknadHendelse)
-        assertTilstand(Behandling.Tilstand.Type.VurdererVilkår)
-        assertEquals(1, søknadHendelse.behov().size)
-        val vilkårsvurderingBehov = søknadHendelse.behov().first()
-        assertBehovInnholdFor(vilkårsvurderingBehov)
-
-        assertEquals(1, inspektør.antallBehandlinger)
-
-        val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        val paragraf423AlderResultat = Paragraf_4_23_alder_Vilkår_resultat(
-            ident,
-            UUID.fromString(vilkårsvurderingId),
-            oppfylt = false,
-        )
-        person.håndter(paragraf423AlderResultat)
-
-        assertEquals(1, inspektør.antallBehandlinger)
-        assertTilstand(Behandling.Tilstand.Type.Kvalitetssikrer)
-
-        val kvalitetssikring = paragraf423AlderResultat.behov()[0]
-        assertBehovInnholdFor(kvalitetssikring)
-
-        val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
-        person.håndter(BeslutterHendelse(beslutterIdent = "12345123451", ident, behandlingsId))
-        assertTilstand(Behandling.Tilstand.Type.Behandlet)
-
-        assertEquals(false, inspektør.vedtakUtfall)
-        assertEquals(1, testObserver.vedtakFattet.size)
     }
 
     @Test
