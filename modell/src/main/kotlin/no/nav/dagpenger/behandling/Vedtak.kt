@@ -29,8 +29,8 @@ sealed class Vedtak(
                 stønadsperiode = stønadsperiode
             )
 
-        fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid) = LøpendeVedtak(
-            utfall = true,
+        fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid, utfall: Boolean) = LøpendeVedtak(
+            utfall = utfall,
             virkningsdato = virkningsdato,
             forbruk = forbruk
         )

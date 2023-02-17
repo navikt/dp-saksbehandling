@@ -5,7 +5,9 @@ import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_15_Forbruk
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsdager
 import no.nav.dagpenger.behandling.mengde.Tid
+import no.nav.dagpenger.behandling.vilkår.LøpendeStønadsperiodeVilkår
 import no.nav.dagpenger.behandling.vilkår.TestVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.vurdert
@@ -24,7 +26,7 @@ class Rapporteringsbehandling(
     behandlingsId = behandlingsId,
     hendelseId = rapporteringsId,
     tilstand = tilstand,
-    vilkårsvurderinger = listOf(TestVilkår()),
+    vilkårsvurderinger = listOf(TestVilkår(), LøpendeStønadsperiodeVilkår(person)),
     aktivitetslogg = aktivitetslogg
 ) {
     override val fastsettelser by lazy {
@@ -45,6 +47,8 @@ class Rapporteringsbehandling(
             require(behandling.vilkårsvurderinger.vurdert()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
             if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
                 behandling.endreTilstand(Fastsetter, hendelse)
+            } else {
+                behandling.endreTilstand(Behandlet, hendelse)
             }
         }
     }
@@ -68,7 +72,7 @@ class Rapporteringsbehandling(
     }
 
     private fun opprettVedtak() {
-        person.leggTilVedtak(Vedtak.løpendeVedtak(virkningsdato = LocalDate.now(), forbruk = FastsattForbruk(fastsettelser).forbruk))
+        person.leggTilVedtak(Vedtak.løpendeVedtak(virkningsdato = LocalDate.now(), forbruk = FastsattForbruk(fastsettelser).forbruk, vilkårsvurderinger.erAlleOppfylt()))
     }
 
     override fun <T> implementasjon(block: Rapporteringsbehandling.() -> T): T = this.block()
@@ -89,13 +93,13 @@ class Rapporteringsbehandling(
 
     private class FastsattForbruk(fastsettelser: List<Fastsettelse<*>>) : FastsettelseVisitor {
 
-        lateinit var forbruk: Tid
+        var forbruk: Tid = 0.arbeidsdager
         init {
             fastsettelser.forEach { it.accept(this) }
         }
 
         override fun visitForbruk(forbruk: Tid) {
-            this.forbruk = forbruk
+            this.forbruk += forbruk
         }
     }
 }

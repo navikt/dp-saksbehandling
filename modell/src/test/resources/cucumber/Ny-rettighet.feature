@@ -28,7 +28,6 @@ Egenskap: ny rettighet
     Så skal bruker ha 1 vedtak
 
 
-  @wip
   Scenario: mottaker har rett til dagpenger men sender meldekort for tidlig
     Gitt en ny søknad
       | fødselsnummer | behandlingId |
@@ -44,4 +43,4 @@ Egenskap: ny rettighet
       | 03.02.2023 | false  |
       | 04.02.2023 | false  |
     Så skal forbruket være 0
-    Så skal bruker ha 1 vedtak
+    Så skal bruker ha 2 vedtak
