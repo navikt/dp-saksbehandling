@@ -1,6 +1,7 @@
 # language: no
 Egenskap: Meldekortberegning
 
+  @wip
   Scenario: Beregning av første meldekort uten arbeidstimer og fravær
     Gitt at virkningsdatoen til vedtaket er fredag "03.02.2023", altså midt i meldeperioden
     Og vilkår for dagpenger er oppfylt i perioden

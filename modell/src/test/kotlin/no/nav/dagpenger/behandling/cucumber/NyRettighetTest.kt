@@ -35,7 +35,7 @@ class NyRettighetTest : No {
             person.håndter(SøknadHendelse(UUID.randomUUID(), "journalpostId", ident))
         }
 
-        Og("alle inngangsvilkår er {string} med virkningstidpunkt {string}") { oppfylt: String, virkningsdato: String ->
+        Og("alle inngangsvilkår er {string} med virkningsdato {string}") { oppfylt: String, virkningsdato: String ->
             håndterInngangsvilkår(oppfylt == "oppfylt", virkningsdato = LocalDate.parse(virkningsdato, datoformatterer))
         }
 
