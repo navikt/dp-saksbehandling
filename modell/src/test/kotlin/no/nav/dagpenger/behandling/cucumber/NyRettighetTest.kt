@@ -1,9 +1,5 @@
 package no.nav.dagpenger.behandling.cucumber
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.No
 import no.nav.dagpenger.behandling.Person
@@ -20,23 +16,14 @@ import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import org.junit.jupiter.api.Assertions.assertEquals
-import java.lang.reflect.Type
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class Stepdefs : No {
-
-    companion object {
-        private val objectMapper = jacksonObjectMapper()
-            .registerModule(JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        val datoformatterer = DateTimeFormatter.ofPattern("dd.MM.yyyy")
-    }
-
+class NyRettighetTest : No {
+    private val datoformatterer = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     private lateinit var person: Person
     private lateinit var ident: String
     private val inspektør get() = Inspektør(person)
@@ -137,27 +124,6 @@ class Stepdefs : No {
 
         override fun visitForbruk(forbruk: Tid) {
             this.forbruk = forbruk
-        }
-    }
-
-    init {
-        DefaultParameterTransformer { fromValue: String?, toValueType: Type? ->
-            objectMapper.convertValue(
-                fromValue,
-                objectMapper.constructType(toValueType)
-            )
-        }
-        DefaultDataTableCellTransformer { fromValue: String?, toValueType: Type? ->
-            objectMapper.convertValue(
-                fromValue,
-                objectMapper.constructType(toValueType)
-            )
-        }
-        DefaultDataTableEntryTransformer { fromValue: Map<String?, String?>?, toValueType: Type? ->
-            objectMapper.convertValue(
-                fromValue,
-                objectMapper.constructType(toValueType)
-            )
         }
     }
 }
