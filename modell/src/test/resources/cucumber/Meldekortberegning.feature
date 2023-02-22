@@ -51,8 +51,8 @@ Egenskap: Meldekortberegning
       | 12.02.2023 | false  | 0     |
     Så gjenstående ventedager være 0
     Så vil ventedager være avspasert på datoene "03.02.2023", "08.02.2023", "09.02.2023"
-    Så vil gjenstående dagpengepengeperiode være redusert med 3 dager
-    Så vil 3 dagsatser gå til utbetaling
+    Så vil gjenstående dagpengepengeperiode være redusert med 0 dager
+    Så vil 0 kr gå til utbetaling
 
   @wip
   Scenario: Ventedager avspaseres prosentvis pga deltidsarbeid under terskel
