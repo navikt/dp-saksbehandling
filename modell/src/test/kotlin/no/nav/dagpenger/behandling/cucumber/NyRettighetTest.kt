@@ -36,12 +36,11 @@ class NyRettighetTest : No {
         }
 
         Og("alle inngangsvilkår er {string} med virkningstidpunkt {string}") { oppfylt: String, virkningsdato: String ->
-            val virkningsdato = LocalDate.parse(virkningsdato, datoformatterer)
-            håndterInngangsvilkår(oppfylt == "oppfylt", virkningsdato)
+            håndterInngangsvilkår(oppfylt == "oppfylt", virkningsdato = LocalDate.parse(virkningsdato, datoformatterer))
         }
 
-        Og("alle inngangsvilkår er {string}") { oppfylt: String ->
-        }
+        Og("alle inngangsvilkår er {string}") { oppfylt: String -> }
+
         Og("sats er {bigdecimal}, grunnlag er {bigdecimal} og stønadsperiode er {int}") { sats: BigDecimal, grunnlag: BigDecimal, stønadsperiode: Int ->
             håndterSatsogGrunnlag(sats, grunnlag)
             håndterStønadsperiode(stønadsperiode)
