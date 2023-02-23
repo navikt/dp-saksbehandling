@@ -1,5 +1,5 @@
 # language: no
-Egenskap: ny rettighet avslått
+Egenskap: Ny rettighet avslått
 
   Bakgrunn:
     Gitt en ny søknad
@@ -8,5 +8,5 @@ Egenskap: ny rettighet avslått
     Og alle inngangsvilkår er "ikke oppfylt" med virkningsdato "14.12.2022"
     Og beslutter kvalitetssikrer
 
-  Scenario: mottaker har ikke rett til dagpenger
+  Scenario: Bruker har ikke rett til dagpenger
     Så skal bruker ha 1 vedtak
