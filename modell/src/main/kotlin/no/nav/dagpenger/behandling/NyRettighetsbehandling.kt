@@ -1,6 +1,8 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
+import no.nav.dagpenger.behandling.entitet.Rettighet
+import no.nav.dagpenger.behandling.entitet.Rettighetstype
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
@@ -197,7 +199,8 @@ class NyRettighetsbehandling private constructor(
                     requireNotNull(virkningsdato),
                     grunnlag = visitor.grunnlag,
                     dagsats = visitor.dagsats,
-                    stønadsperiode = visitor.stønadsperiode
+                    stønadsperiode = visitor.stønadsperiode,
+                    rettigheter = mutableListOf(Rettighet(Rettighetstype.OrdinæreDagpenger, true, LocalDate.now()))
                 )
             }
 

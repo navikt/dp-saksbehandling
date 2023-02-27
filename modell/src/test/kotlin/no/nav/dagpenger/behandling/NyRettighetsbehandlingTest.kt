@@ -4,6 +4,7 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Grun
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
+import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
@@ -87,6 +88,7 @@ class NyRettighetsbehandlingTest {
         assertEquals(700.toBigDecimal(), inspektør.dagsats)
         assertEquals(52.arbeidsuker, inspektør.stønadsperiode)
         assertEquals(1, testObserver.vedtakFattet.size)
+        assertEquals(1, inspektør.rettigheter.size)
     }
 
     @Test
@@ -158,10 +160,7 @@ class NyRettighetsbehandlingTest {
 
     private class Inspektør(person: Person) : PersonVisitor {
 
-        init {
-            person.accept(this)
-        }
-
+        val rettigheter: MutableList<Rettighet> = mutableListOf()
         lateinit var fastsattforbruk: Tid
         var grunnlag: BigDecimal? = null
         var dagsats: BigDecimal? = null
@@ -170,6 +169,10 @@ class NyRettighetsbehandlingTest {
         var vedtakUtfall: Boolean? = null
         var gjenståendeStønadsperiode: Stønadsperiode? = null
         lateinit var behandlingsTilstand: Behandling.Tilstand.Type
+
+        init {
+            person.accept(this)
+        }
 
         override fun preVisit(behandlingsId: UUID, hendelseId: UUID) {
             antallBehandlinger++
@@ -198,6 +201,10 @@ class NyRettighetsbehandlingTest {
 
         override fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {
             this.stønadsperiode = stønadsperiode
+        }
+
+        override fun visitVedtakRettigheter(rettigheter: List<Rettighet>) {
+            this.rettigheter.addAll(rettigheter)
         }
 
         override fun visitForbruk(forbruk: Tid) {

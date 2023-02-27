@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.visitor.VedtakVisitor
@@ -16,17 +17,20 @@ sealed class Vedtak(
 ) {
     companion object {
         fun avslag(virkningsdato: LocalDate) = Avslag(virkningsdato = virkningsdato)
+
         fun innvilgelse(
             virkningsdato: LocalDate,
             grunnlag: BigDecimal,
             dagsats: BigDecimal,
             stønadsperiode: Stønadsperiode,
+            rettigheter: MutableList<Rettighet>
         ) =
             Rammevedtak(
                 virkningsdato = virkningsdato,
                 grunnlag = grunnlag,
                 dagsats = dagsats,
-                stønadsperiode = stønadsperiode
+                stønadsperiode = stønadsperiode,
+                rettigheter = rettigheter // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
             )
 
         fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid, utfall: Boolean) = LøpendeVedtak(
@@ -57,6 +61,7 @@ class Rammevedtak(
     private val grunnlag: BigDecimal,
     private val dagsats: BigDecimal,
     private val stønadsperiode: Stønadsperiode,
+    private val rettigheter: List<Rettighet>
 ) : Vedtak(vedtakId, vedtakstidspunkt, utfall = true, virkningsdato) {
 
     override fun accept(visitor: VedtakVisitor) {
@@ -64,6 +69,7 @@ class Rammevedtak(
         grunnlag.let { visitor.visitVedtakGrunnlag(it) }
         dagsats.let { visitor.visitVedtakDagsats(it) }
         stønadsperiode.let { visitor.visitVedtakStønadsperiode(it) }
+        visitor.visitVedtakRettigheter(rettigheter.toList())
         visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
     }
 }
