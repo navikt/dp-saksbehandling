@@ -13,4 +13,8 @@ internal class Periode(private val fomDato: LocalDate, private val tomDato: Loca
             "fomDato $start kan ikke være etter tomDato $endInclusive"
         }
     }
+
+    companion object {
+        internal infix fun LocalDate.til(fom: LocalDate) = Periode(this, fom)
+    }
 }
