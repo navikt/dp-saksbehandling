@@ -34,6 +34,6 @@ internal class Periode(private val fomDato: LocalDate, private val tomDato: Loca
 
     companion object {
         private val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
-        internal infix fun LocalDate.til(fom: LocalDate) = Periode(this, fom)
+        internal infix fun LocalDate.til(tom: LocalDate) = Periode(this, tom)
     }
 }
