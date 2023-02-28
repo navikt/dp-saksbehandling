@@ -3,7 +3,7 @@ package no.nav.dagpenger.behandling.hendelser
 import java.time.LocalDate
 import java.util.UUID
 
-class AlderVilkårResultat(
+class InngangsvilkårResultat(
     ident: String,
     val vilkårsvurderingId: UUID,
     val oppfylt: Boolean,

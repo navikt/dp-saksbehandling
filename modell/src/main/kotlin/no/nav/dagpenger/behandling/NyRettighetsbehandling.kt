@@ -11,10 +11,10 @@ import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_12_Sats
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_15_Stønadsperiode
-import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
@@ -77,7 +77,7 @@ class NyRettighetsbehandling private constructor(
         tilstand.håndter(hendelse, this)
     }
 
-    override fun håndter(paragraf423AlderResultat: AlderVilkårResultat) {
+    override fun håndter(paragraf423AlderResultat: InngangsvilkårResultat) {
         kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
         tilstand.håndter(paragraf423AlderResultat, this)
     }
@@ -124,7 +124,7 @@ class NyRettighetsbehandling private constructor(
         }
 
         override fun håndter(
-            paragraf423AlderResultat: AlderVilkårResultat,
+            paragraf423AlderResultat: InngangsvilkårResultat,
             behandling: NyRettighetsbehandling,
         ) {
             behandling.vilkårsvurdering.håndter(paragraf423AlderResultat)

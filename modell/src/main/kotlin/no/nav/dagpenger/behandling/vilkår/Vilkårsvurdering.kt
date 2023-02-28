@@ -3,8 +3,8 @@ package no.nav.dagpenger.behandling.vilkår
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Aktivitetskontekst
 import no.nav.dagpenger.behandling.SpesifikkKontekst
-import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
@@ -35,7 +35,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         implementasjon { tilstand.håndter(søknadHendelse, this) }
     }
 
-    fun håndter(paragraf423AlderResultat: AlderVilkårResultat) {
+    fun håndter(paragraf423AlderResultat: InngangsvilkårResultat) {
         if (this.vilkårsvurderingId != paragraf423AlderResultat.vilkårsvurderingId) return
         paragraf423AlderResultat.kontekst(this)
         implementasjon { tilstand.håndter(paragraf423AlderResultat, this) }
@@ -69,8 +69,8 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
             feilmelding(søknadHendelse)
         }
 
-        open fun håndter(alderVilkårResultat: AlderVilkårResultat, vilkårsvurdering: Paragraf) {
-            feilmelding(alderVilkårResultat)
+        open fun håndter(inngangsvilkårResultat: InngangsvilkårResultat, vilkårsvurdering: Paragraf) {
+            feilmelding(inngangsvilkårResultat)
         }
 
         open fun håndter(rapporteringsHendelse: RapporteringsHendelse, vilkårsvurdering: Paragraf) {

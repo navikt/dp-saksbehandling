@@ -3,9 +3,9 @@ package no.nav.dagpenger.behandling.cucumber
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.No
 import no.nav.dagpenger.behandling.Person
-import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
+import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.Rapporteringsdag
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
@@ -73,7 +73,7 @@ class NyRettighetTest : No {
     private data class SøknadHendelseCucumber(val fødselsnummer: String, val behandlingId: String)
 
     private fun håndterInngangsvilkår(oppfylt: Boolean, virkningsdato: LocalDate) {
-        person.håndter(AlderVilkårResultat(ident, inspektør.vilkårsvurderingId, oppfylt, virkningsdato))
+        person.håndter(InngangsvilkårResultat(ident, inspektør.vilkårsvurderingId, oppfylt, virkningsdato))
     }
 
     private fun håndterStønadsperiode(stønadsperiode: Int) {

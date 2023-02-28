@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.vilkår
 
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
-import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.DagpengerettighetBehov
+import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
 import java.time.LocalDate
@@ -16,15 +16,15 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
     }
     object IkkeVurdert : Tilstand.IkkeVurdert<Inngangsvilkår>() {
         override fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Inngangsvilkår) {
-            søknadHendelse.behov(Paragraf_4_23_alder, "Trenger svar på aldersbehov")
+            søknadHendelse.behov(DagpengerettighetBehov, "Trenger svar på retten til dagpenger")
             vilkårsvurdering.endreTilstand(nyTilstand = Avventer)
         }
     }
     object Avventer : Tilstand.Avventer<Inngangsvilkår>() {
-        override fun håndter(alderVilkårResultat: AlderVilkårResultat, vilkårsvurdering: Inngangsvilkår) {
-            vilkårsvurdering.virkningsdato = alderVilkårResultat.virkningsdato
-            if (vilkårsvurdering.vilkårsvurderingId == alderVilkårResultat.vilkårsvurderingId) {
-                if (alderVilkårResultat.oppfylt) {
+        override fun håndter(inngangsvilkårResultat: InngangsvilkårResultat, vilkårsvurdering: Inngangsvilkår) {
+            vilkårsvurdering.virkningsdato = inngangsvilkårResultat.virkningsdato
+            if (vilkårsvurdering.vilkårsvurderingId == inngangsvilkårResultat.vilkårsvurderingId) {
+                if (inngangsvilkårResultat.oppfylt) {
                     vilkårsvurdering.endreTilstand(Oppfylt)
                 } else {
                     vilkårsvurdering.endreTilstand(IkkeOppfylt)

@@ -23,7 +23,7 @@ object Meldingsfabrikk {
         } 
         """.trimIndent()
 
-    internal fun Paragraf_4_23_alder_resultatjson(
+    internal fun dagpengerrettighetResultat(
         vilkårsvurderingId: String = "a9586759-b71b-4295-a077-89a86453b020",
         ident: String = "12345678901",
         versjonNavn: String = "Paragraf_4_23_alder"

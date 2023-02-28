@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.Meldingsfabrikk.Paragraf_4_23_alder_resultatjson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
+import no.nav.dagpenger.behandling.Meldingsfabrikk.dagpengerrettighetResultat
 import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -41,14 +41,14 @@ internal class PersonMediatorTest {
         assertEquals(1, testRapid.inspektør.size)
 
         testRapid.sendTestMessage(
-            Paragraf_4_23_alder_resultatjson(
+            dagpengerrettighetResultat(
                 ident = testIdent,
                 vilkårsvurderingId = testRapid.inspektør.field(0, "vilkårsvurderingId").asText()
             )
         )
 
         // TODO: Rydde
-        assertEquals("[\"Paragraf_4_23_alder\"]", testRapid.inspektør.message(0)["@behov"].toString())
+        assertEquals("[\"DagpengerettighetBehov\"]", testRapid.inspektør.message(0)["@behov"].toString())
         assertEquals("[\"KvalitetssikringsBehov\"]", testRapid.inspektør.message(1)["@behov"].toString())
         assertEquals(2, testRapid.inspektør.size)
     }

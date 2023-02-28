@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.vilkår
 
-import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
+import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.AvventerVurdering
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
@@ -9,25 +9,25 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
 
-internal class AldersVilkårvurderingTest {
+internal class InngangsvilkårvurderingTest {
 
     @Test
     fun `vilkår endrer tilstand fra IkkeVurdert via AvventerVurdering til Oppfylt`() {
 
-        val paragraf423Inngangsvilkår = Inngangsvilkår()
-        paragraf423Inngangsvilkår.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "123", "12345123456"))
-        val inspektør = Inspektør(paragraf423Inngangsvilkår)
+        val inngangsvilkår = Inngangsvilkår()
+        inngangsvilkår.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "123", "12345123456"))
+        val inspektør = Inspektør(inngangsvilkår)
         assertEquals(AvventerVurdering, inspektør.tilstand)
 
-        paragraf423Inngangsvilkår.håndter(
-            AlderVilkårResultat(
+        inngangsvilkår.håndter(
+            InngangsvilkårResultat(
                 "12345123456",
                 vilkårsvurderingId = inspektør.vilkårsvurderingId,
                 true,
                 LocalDate.now()
             )
         )
-        assertEquals(Vilkårsvurdering.Tilstand.Type.Oppfylt, Inspektør(paragraf423Inngangsvilkår).tilstand)
+        assertEquals(Vilkårsvurdering.Tilstand.Type.Oppfylt, Inspektør(inngangsvilkår).tilstand)
     }
 
     private class Inspektør(vilkårsvurdering: Vilkårsvurdering<Inngangsvilkår>) : VilkårsvurderingVisitor {

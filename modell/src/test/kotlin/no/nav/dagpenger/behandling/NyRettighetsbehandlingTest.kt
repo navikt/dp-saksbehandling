@@ -1,13 +1,13 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.DagpengerettighetBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
-import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Paragraf_4_23_alder
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
 import no.nav.dagpenger.behandling.entitet.Rettighet
-import no.nav.dagpenger.behandling.hendelser.AlderVilkårResultat
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
+import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
@@ -44,7 +44,7 @@ class NyRettighetsbehandlingTest {
         assertEquals(1, inspektør.antallBehandlinger)
 
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        val paragraf423AlderResultat = AlderVilkårResultat(
+        val paragraf423AlderResultat = InngangsvilkårResultat(
             ident,
             UUID.fromString(vilkårsvurderingId),
             oppfylt = true,
@@ -109,7 +109,7 @@ class NyRettighetsbehandlingTest {
 
     private fun assertBehovInnholdFor(behov: Aktivitetslogg.Aktivitet.Behov) =
         when (behov.type) {
-            Paragraf_4_23_alder -> assertAldersbehovInnhold(behov)
+            DagpengerettighetBehov -> assertAldersbehovInnhold(behov)
             GrunnlagsBehov -> assertGrunnlagbehovInnhold(behov)
             SatsBehov -> assertSatsbehovInnhold(behov)
             KvalitetssikringsBehov -> assertKvalitetssikringInnhold(behov)
