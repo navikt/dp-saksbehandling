@@ -14,12 +14,12 @@ internal class AldersVilkårvurderingTest {
     @Test
     fun `vilkår endrer tilstand fra IkkeVurdert via AvventerVurdering til Oppfylt`() {
 
-        val paragraf423alderVilkår = AlderVilkår()
-        paragraf423alderVilkår.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "123", "12345123456"))
-        val inspektør = Inspektør(paragraf423alderVilkår)
+        val paragraf423Inngangsvilkår = Inngangsvilkår()
+        paragraf423Inngangsvilkår.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "123", "12345123456"))
+        val inspektør = Inspektør(paragraf423Inngangsvilkår)
         assertEquals(AvventerVurdering, inspektør.tilstand)
 
-        paragraf423alderVilkår.håndter(
+        paragraf423Inngangsvilkår.håndter(
             AlderVilkårResultat(
                 "12345123456",
                 vilkårsvurderingId = inspektør.vilkårsvurderingId,
@@ -27,10 +27,10 @@ internal class AldersVilkårvurderingTest {
                 LocalDate.now()
             )
         )
-        assertEquals(Vilkårsvurdering.Tilstand.Type.Oppfylt, Inspektør(paragraf423alderVilkår).tilstand)
+        assertEquals(Vilkårsvurdering.Tilstand.Type.Oppfylt, Inspektør(paragraf423Inngangsvilkår).tilstand)
     }
 
-    private class Inspektør(vilkårsvurdering: Vilkårsvurdering<AlderVilkår>) : VilkårsvurderingVisitor {
+    private class Inspektør(vilkårsvurdering: Vilkårsvurdering<Inngangsvilkår>) : VilkårsvurderingVisitor {
 
         init {
             vilkårsvurdering.accept(this)

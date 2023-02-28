@@ -18,12 +18,12 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
     protected var tilstand: Tilstand<Paragraf>
 ) : Aktivitetskontekst {
     constructor(tilstand: Tilstand<Paragraf>) : this(UUID.randomUUID(), tilstand)
-    companion object {
-        fun List<Vilkårsvurdering<*>>.vurdert() =
-            this.none { it.tilstand.tilstandType == Tilstand.Type.AvventerVurdering || it.tilstand.tilstandType == Tilstand.Type.IkkeVurdert }
 
-        fun List<Vilkårsvurdering<*>>.erAlleOppfylt() =
-            this.all { it.tilstand.tilstandType == Oppfylt }
+    companion object {
+        fun Vilkårsvurdering<*>.vurdert() =
+            this.tilstand.tilstandType != Tilstand.Type.AvventerVurdering || this.tilstand.tilstandType != Tilstand.Type.IkkeVurdert
+
+        fun Vilkårsvurdering<*>.oppfylt() = this.tilstand.tilstandType == Tilstand.Type.Oppfylt
     }
 
     open fun accept(visitor: VilkårsvurderingVisitor) {
@@ -34,6 +34,7 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
         søknadHendelse.kontekst(this)
         implementasjon { tilstand.håndter(søknadHendelse, this) }
     }
+
     fun håndter(paragraf423AlderResultat: AlderVilkårResultat) {
         if (this.vilkårsvurderingId != paragraf423AlderResultat.vilkårsvurderingId) return
         paragraf423AlderResultat.kontekst(this)
@@ -63,9 +64,11 @@ abstract class Vilkårsvurdering<Paragraf : Vilkårsvurdering<Paragraf>> private
             IkkeVurdert,
             AvventerVurdering;
         }
+
         open fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Paragraf) {
             feilmelding(søknadHendelse)
         }
+
         open fun håndter(alderVilkårResultat: AlderVilkårResultat, vilkårsvurdering: Paragraf) {
             feilmelding(alderVilkårResultat)
         }

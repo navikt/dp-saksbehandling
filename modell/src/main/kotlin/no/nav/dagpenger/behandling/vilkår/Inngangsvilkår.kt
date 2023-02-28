@@ -6,7 +6,7 @@ import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
 import java.time.LocalDate
 
-class AlderVilkår : Vilkårsvurdering<AlderVilkår>(IkkeVurdert) {
+class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
 
     private lateinit var virkningsdato: LocalDate
 
@@ -14,14 +14,14 @@ class AlderVilkår : Vilkårsvurdering<AlderVilkår>(IkkeVurdert) {
         super.accept(visitor)
         tilstand.accept(this, visitor)
     }
-    object IkkeVurdert : Tilstand.IkkeVurdert<AlderVilkår>() {
-        override fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: AlderVilkår) {
+    object IkkeVurdert : Tilstand.IkkeVurdert<Inngangsvilkår>() {
+        override fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Inngangsvilkår) {
             søknadHendelse.behov(Paragraf_4_23_alder, "Trenger svar på aldersbehov")
             vilkårsvurdering.endreTilstand(nyTilstand = Avventer)
         }
     }
-    object Avventer : Tilstand.Avventer<AlderVilkår>() {
-        override fun håndter(alderVilkårResultat: AlderVilkårResultat, vilkårsvurdering: AlderVilkår) {
+    object Avventer : Tilstand.Avventer<Inngangsvilkår>() {
+        override fun håndter(alderVilkårResultat: AlderVilkårResultat, vilkårsvurdering: Inngangsvilkår) {
             vilkårsvurdering.virkningsdato = alderVilkårResultat.virkningsdato
             if (vilkårsvurdering.vilkårsvurderingId == alderVilkårResultat.vilkårsvurderingId) {
                 if (alderVilkårResultat.oppfylt) {
@@ -32,15 +32,15 @@ class AlderVilkår : Vilkårsvurdering<AlderVilkår>(IkkeVurdert) {
             }
         }
     }
-    object Oppfylt : Tilstand.Oppfylt<AlderVilkår>() {
-        override fun accept(paragraf: AlderVilkår, visitor: VilkårsvurderingVisitor) {
+    object Oppfylt : Tilstand.Oppfylt<Inngangsvilkår>() {
+        override fun accept(paragraf: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
             visitor.visitAlderOppfylt(virkningsdato = paragraf.virkningsdato)
         }
     }
-    object IkkeOppfylt : Tilstand.IkkeOppfylt<AlderVilkår>() {
-        override fun accept(paragraf: AlderVilkår, visitor: VilkårsvurderingVisitor) {
+    object IkkeOppfylt : Tilstand.IkkeOppfylt<Inngangsvilkår>() {
+        override fun accept(paragraf: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
             visitor.visitAlderIkkeOppfylt(virkningsdato = paragraf.virkningsdato)
         }
     }
-    override fun <T> implementasjon(block: AlderVilkår.() -> T): T = this.block()
+    override fun <T> implementasjon(block: Inngangsvilkår.() -> T): T = this.block()
 }

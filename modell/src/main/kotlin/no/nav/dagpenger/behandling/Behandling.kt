@@ -20,7 +20,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     private val behandlingsId: UUID,
     protected val hendelseId: UUID,
     protected var tilstand: Tilstand<Behandlingstype>,
-    protected val vilkårsvurderinger: List<Vilkårsvurdering<*>>,
+    protected val vilkårsvurdering: Vilkårsvurdering<*>,
 
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
 ) : Aktivitetskontekst {
@@ -45,7 +45,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     fun accept(visitor: BehandlingVisitor) {
         visitor.preVisit(behandlingsId, hendelseId)
         visitor.visitTilstand(tilstand.type)
-        vilkårsvurderinger.forEach { it.accept(visitor) }
+        vilkårsvurdering.accept(visitor)
         visitor.postVisit(behandlingsId, hendelseId)
     }
 

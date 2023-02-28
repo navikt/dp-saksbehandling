@@ -1,6 +1,9 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.Behandlet
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.Fastsetter
+import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
 import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.entitet.Rettighetstype
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
@@ -15,9 +18,9 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
-import no.nav.dagpenger.behandling.vilkår.AlderVilkår
+import no.nav.dagpenger.behandling.vilkår.Inngangsvilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
-import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.erAlleOppfylt
+import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.oppfylt
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.vurdert
 import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
 import no.nav.dagpenger.behandling.visitor.NyRettighetsbehandlingVisitor
@@ -39,9 +42,7 @@ class NyRettighetsbehandling private constructor(
     behandlingsId = behandlingsId,
     hendelseId = søknadsId,
     tilstand = tilstand,
-    vilkårsvurderinger = listOf(
-        AlderVilkår()
-    ),
+    vilkårsvurdering = Inngangsvilkår(),
     aktivitetslogg
 ) {
 
@@ -119,19 +120,15 @@ class NyRettighetsbehandling private constructor(
     object VurdererVilkår : Tilstand.VurdererVilkår<NyRettighetsbehandling>() {
 
         override fun håndter(søknadHendelse: SøknadHendelse, behandling: NyRettighetsbehandling) {
-            behandling.vilkårsvurderinger.forEach { vurdering ->
-                vurdering.håndter(søknadHendelse)
-            }
+            behandling.vilkårsvurdering.håndter(søknadHendelse)
         }
 
         override fun håndter(
             paragraf423AlderResultat: AlderVilkårResultat,
             behandling: NyRettighetsbehandling,
         ) {
-            behandling.vilkårsvurderinger.forEach { vurdering ->
-                vurdering.håndter(paragraf423AlderResultat)
-            }
-            if (behandling.vilkårsvurderinger.vurdert()) {
+            behandling.vilkårsvurdering.håndter(paragraf423AlderResultat)
+            if (behandling.vilkårsvurdering.vurdert()) {
                 behandling.endreTilstand(VurdererUtfall, paragraf423AlderResultat)
             }
         }
@@ -140,9 +137,9 @@ class NyRettighetsbehandling private constructor(
     object VurdererUtfall : Tilstand.VurderUtfall<NyRettighetsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
-            behandling.virkningsdato = VirkningsdatoVistor(behandling.vilkårsvurderinger).virkningsdato
-            require(behandling.vilkårsvurderinger.vurdert()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
-            if (behandling.vilkårsvurderinger.erAlleOppfylt()) {
+            behandling.virkningsdato = VirkningsdatoVisitor(behandling.vilkårsvurdering).virkningsdato
+            require(behandling.vilkårsvurdering.vurdert()) { "Vilkårsvurderinger må være ferdig vurdert på dette tidspunktet" }
+            if (behandling.vilkårsvurdering.oppfylt()) {
                 behandling.endreTilstand(Fastsetter, hendelse)
             } else {
                 behandling.endreTilstand(Kvalitetssikrer, hendelse)
@@ -175,7 +172,10 @@ class NyRettighetsbehandling private constructor(
     object Kvalitetssikrer : Tilstand.Kvalitetssikrer<NyRettighetsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
-            hendelse.behov(KvalitetssikringsBehov, "Behøver kvalitetssikring i form av totrinnskontroll fra en beslutter")
+            hendelse.behov(
+                KvalitetssikringsBehov,
+                "Behøver kvalitetssikring i form av totrinnskontroll fra en beslutter"
+            )
         }
 
         override fun håndter(beslutterHendelse: BeslutterHendelse, behandling: NyRettighetsbehandling) {
@@ -191,8 +191,8 @@ class NyRettighetsbehandling private constructor(
     }
 
     private fun opprettVedtak() {
-        require(vilkårsvurderinger.vurdert()) { " Alle vilkår må være vurdert når en skal opprette vedtak" }
-        val vedtak = when (vilkårsvurderinger.erAlleOppfylt()) {
+        require(vilkårsvurdering.vurdert()) { " Alle vilkår må være vurdert når en skal opprette vedtak" }
+        val vedtak = when (vilkårsvurdering.oppfylt()) {
             true -> {
                 val visitor = VedtakFastsettelseVisitor(fastsettelser)
                 Vedtak.innvilgelse(
@@ -232,12 +232,12 @@ class NyRettighetsbehandling private constructor(
     }
 }
 
-private class VirkningsdatoVistor(vilkårsvurderinger: List<Vilkårsvurdering<*>>) : VilkårsvurderingVisitor {
+private class VirkningsdatoVisitor(vilkårsvurderinger: Vilkårsvurdering<*>) : VilkårsvurderingVisitor {
 
     lateinit var virkningsdato: LocalDate
 
     init {
-        vilkårsvurderinger.forEach { it.accept(this) }
+        vilkårsvurderinger.accept(this)
     }
 
     override fun visitAlderIkkeOppfylt(virkningsdato: LocalDate) {
