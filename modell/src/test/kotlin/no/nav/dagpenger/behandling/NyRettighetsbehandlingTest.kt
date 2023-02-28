@@ -211,8 +211,8 @@ class NyRettighetsbehandlingTest {
             this.fastsattforbruk = forbruk
         }
 
-        override fun visitGjenståendeStønadsperiode(gjenståendeStønadsperiode: Stønadsperiode) {
-            this.gjenståendeStønadsperiode = gjenståendeStønadsperiode
+        override fun visitGjenståendeStønadsperiode(gjenståendePeriode: Stønadsperiode) {
+            this.gjenståendeStønadsperiode = gjenståendePeriode
         }
     }
 

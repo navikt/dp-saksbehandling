@@ -77,9 +77,9 @@ class NyRettighetsbehandling private constructor(
         tilstand.håndter(hendelse, this)
     }
 
-    override fun håndter(paragraf423AlderResultat: InngangsvilkårResultat) {
-        kontekst(paragraf423AlderResultat, "Fått resultat på ${paragraf423AlderResultat.javaClass.simpleName}")
-        tilstand.håndter(paragraf423AlderResultat, this)
+    override fun håndter(inngangsvilkårResultat: InngangsvilkårResultat) {
+        kontekst(inngangsvilkårResultat, "Fått resultat på ${inngangsvilkårResultat.javaClass.simpleName}")
+        tilstand.håndter(inngangsvilkårResultat, this)
     }
 
     override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
@@ -88,10 +88,10 @@ class NyRettighetsbehandling private constructor(
         tilstand.håndter(grunnlagOgSatsResultat, this)
     }
 
-    override fun håndter(dagpengeperiode: StønadsperiodeResultat) {
-        if (dagpengeperiode.behandlingsId != this.behandlingsId) return
-        kontekst(dagpengeperiode, "Fått resultat på ${dagpengeperiode.javaClass.simpleName}")
-        tilstand.håndter(dagpengeperiode, this)
+    override fun håndter(stønadsperiode: StønadsperiodeResultat) {
+        if (stønadsperiode.behandlingsId != this.behandlingsId) return
+        kontekst(stønadsperiode, "Fått resultat på ${stønadsperiode.javaClass.simpleName}")
+        tilstand.håndter(stønadsperiode, this)
     }
 
     override fun håndter(beslutterHendelse: BeslutterHendelse) {
@@ -240,11 +240,11 @@ private class VirkningsdatoVisitor(vilkårsvurderinger: Vilkårsvurdering<*>) : 
         vilkårsvurderinger.accept(this)
     }
 
-    override fun visitAlderIkkeOppfylt(virkningsdato: LocalDate) {
+    override fun visitInngangvilkårIkkeOppfylt(virkningsdato: LocalDate) {
         this.virkningsdato = virkningsdato
     }
 
-    override fun visitAlderOppfylt(virkningsdato: LocalDate) {
+    override fun visitInngangsvilkårOppfylt(virkningsdato: LocalDate) {
         this.virkningsdato = virkningsdato
     }
 }

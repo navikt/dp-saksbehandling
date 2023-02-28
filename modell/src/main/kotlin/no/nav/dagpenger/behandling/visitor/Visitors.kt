@@ -58,13 +58,13 @@ interface NyRettighetsbehandlingVisitor : BehandlingVisitor {
 }
 
 interface VilkårsvurderingVisitor {
-    fun <Paragraf : Vilkårsvurdering<Paragraf>> visitVilkårsvurdering(
+    fun <Vilkår : Vilkårsvurdering<Vilkår>> visitVilkårsvurdering(
         vilkårsvurderingId: UUID,
-        tilstand: Vilkårsvurdering.Tilstand<Paragraf>
+        tilstand: Vilkårsvurdering.Tilstand<Vilkår>
     ) {}
 
-    fun visitAlderOppfylt(virkningsdato: LocalDate) {}
-    fun visitAlderIkkeOppfylt(virkningsdato: LocalDate) {}
+    fun visitInngangsvilkårOppfylt(virkningsdato: LocalDate) {}
+    fun visitInngangvilkårIkkeOppfylt(virkningsdato: LocalDate) {}
 }
 
 internal interface FastsettelseVisitor {

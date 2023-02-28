@@ -100,7 +100,7 @@ class Aktivitetslogg private constructor(
 
     private fun info() = Aktivitet.Info.filter(aktiviteter)
     private fun warn() = Aktivitet.Warn.filter(aktiviteter)
-    override fun behov() = Aktivitet.Behov.filter(aktiviteter)
+    override fun behov() = Behov.filter(aktiviteter)
     private fun error() = Aktivitet.Error.filter(aktiviteter)
     private fun severe() = Aktivitet.Severe.filter(aktiviteter)
 

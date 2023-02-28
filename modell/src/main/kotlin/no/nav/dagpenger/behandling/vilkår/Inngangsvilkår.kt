@@ -34,12 +34,12 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
     }
     object Oppfylt : Tilstand.Oppfylt<Inngangsvilkår>() {
         override fun accept(paragraf: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
-            visitor.visitAlderOppfylt(virkningsdato = paragraf.virkningsdato)
+            visitor.visitInngangsvilkårOppfylt(virkningsdato = paragraf.virkningsdato)
         }
     }
     object IkkeOppfylt : Tilstand.IkkeOppfylt<Inngangsvilkår>() {
         override fun accept(paragraf: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
-            visitor.visitAlderIkkeOppfylt(virkningsdato = paragraf.virkningsdato)
+            visitor.visitInngangvilkårIkkeOppfylt(virkningsdato = paragraf.virkningsdato)
         }
     }
     override fun <T> implementasjon(block: Inngangsvilkår.() -> T): T = this.block()

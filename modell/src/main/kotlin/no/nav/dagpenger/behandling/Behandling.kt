@@ -26,8 +26,9 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
 ) : Aktivitetskontekst {
 
     internal abstract val fastsettelser: List<Fastsettelse<*>>
-    open fun håndter(paragraf423AlderResultat: InngangsvilkårResultat) {
-        kanIkkeHåndtere(paragraf423AlderResultat)
+
+    open fun håndter(inngangsvilkårResultat: InngangsvilkårResultat) {
+        kanIkkeHåndtere(inngangsvilkårResultat)
     }
 
     open fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
