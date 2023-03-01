@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.hendelser
 
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Periode
 import no.nav.dagpenger.behandling.rapportering.Dag
 import no.nav.dagpenger.behandling.rapportering.Rapporteringsperiode
@@ -15,7 +16,7 @@ class RapporteringsHendelse(
         rapporteringsdager.forEach {
             val dag = when (it.fravær) {
                 true -> Dag.fraværsdag(it.dato)
-                false -> Dag.arbeidsdag(it.dato)
+                false -> Dag.arbeidsdag(it.dato, it.timer.arbeidstimer)
             }
             rapporteringsperiode.leggTilDag(dag)
         }
