@@ -116,7 +116,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
             søknadHendelse.tilstandfeil()
         }
 
-        open fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandlingstype: Behandlingstype) {
+        open fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandling: Behandlingstype) {
             rapporteringsHendelse.tilstandfeil()
         }
 
