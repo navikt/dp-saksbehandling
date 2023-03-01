@@ -5,7 +5,7 @@ import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
-import no.nav.dagpenger.behandling.hendelser.mottak.AldersbehovLøsningMottak
+import no.nav.dagpenger.behandling.hendelser.mottak.InngangsvilkårBehovLøsningMottak
 import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.lang.RuntimeException
@@ -22,7 +22,7 @@ internal class PersonMediator(rapidsConnection: RapidsConnection, private val pe
     )
     init {
         SøknadMottak(rapidsConnection, this)
-        AldersbehovLøsningMottak(rapidsConnection, this)
+        InngangsvilkårBehovLøsningMottak(rapidsConnection, this)
     }
     fun behandle(søknadHendelse: SøknadHendelse) {
         behandle(søknadHendelse) { person ->

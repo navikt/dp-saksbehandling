@@ -15,13 +15,13 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class AldersbehovLøsningMottakTest {
+internal class InngangsvilkårBehovLøsningMottakTest {
     private val slot = slot<InngangsvilkårResultat>()
     private val mediatorMock = mockk<PersonMediator>().also {
         every { it.behandle(capture(slot)) } just Runs
     }
     private val testRapid = TestRapid().also {
-        AldersbehovLøsningMottak(it, mediatorMock)
+        InngangsvilkårBehovLøsningMottak(it, mediatorMock)
     }
 
     @BeforeEach

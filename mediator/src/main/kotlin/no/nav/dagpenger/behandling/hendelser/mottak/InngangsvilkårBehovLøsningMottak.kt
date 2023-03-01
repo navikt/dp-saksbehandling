@@ -11,7 +11,7 @@ import no.nav.helse.rapids_rivers.River
 import java.time.LocalDate
 import java.util.UUID
 
-internal class AldersbehovLøsningMottak(rapidsConnection: RapidsConnection, private val mediator: PersonMediator) : River.PacketListener {
+internal class InngangsvilkårBehovLøsningMottak(rapidsConnection: RapidsConnection, private val mediator: PersonMediator) : River.PacketListener {
 
     init {
         River(rapidsConnection).apply {
