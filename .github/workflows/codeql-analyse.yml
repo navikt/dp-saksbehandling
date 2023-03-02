@@ -53,9 +53,9 @@ jobs:
     - name: build
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: --configuration-cache clean build
+        arguments: --configuration-cache --rerun build
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
       with:
-        category: "/language:${{ matrix.language }}"
+        category: "/language:${{matrix.language}}"
