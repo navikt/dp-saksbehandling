@@ -17,7 +17,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident {
+class Person private constructor(private val ident: PersonIdentifikator) : Aktivitetskontekst by ident, BehandlingObserver {
     private val behandlinger = mutableListOf<Behandling<*>>()
 
     private val vedtakHistorikk = VedtakHistorikk()
@@ -50,7 +50,9 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         kontekst(søknadHendelse)
         if (behandlinger.harHendelseId(søknadHendelse.søknadUUID())) return
         søknadHendelse.info("Har mottatt ny søknadhendelse")
-        val behandling = NyRettighetsbehandling(this, søknadHendelse.søknadUUID())
+        val behandling = NyRettighetsbehandling(this, søknadHendelse.søknadUUID()).also {
+            it.addObserver(this)
+        }
         behandlinger.add(behandling)
         behandling.håndter(søknadHendelse)
     }
@@ -76,7 +78,9 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
         kontekst(rapporteringsHendelse)
         rapporteringsperioder.håndter(rapporteringsHendelse)
-        val behandling = Rapporteringsbehandling(this, rapporteringsHendelse.rapporteringsId)
+        val behandling = Rapporteringsbehandling(this, rapporteringsHendelse.rapporteringsId).also {
+            it.addObserver(this)
+        }
         behandlinger.add(behandling)
         behandling.håndter(rapporteringsHendelse)
     }
@@ -90,6 +94,12 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
     internal fun leggTilVedtak(vedtak: Vedtak) {
         vedtakHistorikk.leggTilVedtak(vedtak)
         observere.forEach { it.vedtakFattet(VedtakFattetVisitor(this.ident(), vedtak).vedtakFattet) }
+    }
+
+    override fun behandlingTilstandEndret(event: BehandlingObserver.BehandlingEndretTilstandEvent) {
+        observere.forEach {
+            it.behandlingTilstandEndret(event)
+        }
     }
 
     private class VedtakFattetVisitor(val ident: String, val vedtak: Vedtak) : VedtakVisitor {

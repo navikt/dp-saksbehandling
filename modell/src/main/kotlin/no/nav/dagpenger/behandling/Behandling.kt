@@ -21,11 +21,15 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     protected val hendelseId: UUID,
     protected var tilstand: Tilstand<Behandlingstype>,
     protected val vilkårsvurdering: Vilkårsvurdering<*>,
-
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
 ) : Aktivitetskontekst {
 
+    private val observers = mutableListOf<BehandlingObserver>()
     internal abstract val fastsettelser: List<Fastsettelse<*>>
+
+    fun addObserver(observer: BehandlingObserver) {
+        observers.add(observer)
+    }
 
     open fun håndter(inngangsvilkårResultat: InngangsvilkårResultat) {
         kanIkkeHåndtere(inngangsvilkårResultat)
@@ -73,15 +77,24 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
         if (nyTilstand == tilstand) {
             return // Vi er allerede i tilstanden
         }
-        // val forrigeTilstand = tilstand
-        loggTilstandsendring(nyTilstand)
+        val forrigeTilstand = tilstand
         tilstand = nyTilstand
         søknadHendelse.kontekst(tilstand)
         implementasjon { tilstand.entering(søknadHendelse, this) }
+        emitTilstandEndret(forrigeTilstand, nyTilstand)
     }
 
-    private fun loggTilstandsendring(nyTilstand: Tilstand<Behandlingstype>) {
-        logger.info { "Behandling av ${this.javaClass.simpleName} endrer tilstand fra ${tilstand.type} til ny tilstand ${nyTilstand.type}" }
+    private fun emitTilstandEndret(forrigeTilstand: Tilstand<Behandlingstype>, nyTilstand: Tilstand<Behandlingstype>) {
+        observers.forEach { observer ->
+            observer.behandlingTilstandEndret(
+                BehandlingObserver.BehandlingEndretTilstandEvent(
+                    behandlingsId = this.behandlingsId,
+                    ident = person.ident(),
+                    gjeldendeTilstand = nyTilstand.type,
+                    forrigeTilstand = forrigeTilstand.type,
+                )
+            )
+        }
     }
 
     sealed class Tilstand<Behandlingstype : Behandling<Behandlingstype>>(val type: Type) : Aktivitetskontekst {

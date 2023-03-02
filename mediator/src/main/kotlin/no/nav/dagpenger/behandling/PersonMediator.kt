@@ -7,6 +7,7 @@ import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.hendelser.mottak.InngangsvilkårBehovLøsningMottak
 import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak
+import no.nav.dagpenger.behandling.observers.PersonLogger
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.lang.RuntimeException
 
@@ -39,6 +40,7 @@ internal class PersonMediator(rapidsConnection: RapidsConnection, private val pe
     private fun behandle(hendelse: Hendelse, håndter: (Person) -> Unit) {
         try {
             val person = hentEllerOpprettPerson(hendelse)
+            person.addObserver(PersonLogger)
             håndter(person)
             personRepository.lagrePerson(person)
             behovMediator.håndter(hendelse)
