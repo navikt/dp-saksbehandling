@@ -29,7 +29,7 @@ class PeriodeTest {
         val datoer = periode.map { it }
         assertEquals(
             listOf(12.februar, 13.februar, 14.februar, 15.februar, 16.februar, 17.februar),
-            datoer
+            datoer,
         )
     }
 

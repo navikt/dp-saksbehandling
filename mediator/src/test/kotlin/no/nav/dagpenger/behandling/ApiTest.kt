@@ -19,6 +19,7 @@ class ApiTest {
     val ident = "12345678901"
 
     private val inMemoryPersonRepository = InMemoryPersonRepository()
+
     @BeforeEach
     fun data() {
         val person = Person(ident)
@@ -28,7 +29,7 @@ class ApiTest {
             ident,
             søknadHendelse.behov().first().kontekst()["vilkårsvurderingId"].let { UUID.fromString(it) },
             oppfylt = true,
-            LocalDate.now()
+            LocalDate.now(),
         )
         person.håndter(paragraf423AlderResultat)
         inMemoryPersonRepository.lagrePerson(person)
@@ -49,7 +50,7 @@ class ApiTest {
     ): Application.() -> Unit {
         return fun Application.() {
             api(
-                personRepository
+                personRepository,
             )
         }
     }

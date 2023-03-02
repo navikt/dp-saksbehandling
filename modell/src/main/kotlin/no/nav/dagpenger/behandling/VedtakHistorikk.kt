@@ -41,7 +41,7 @@ class VedtakHistorikk(private val vedtak: MutableList<Vedtak> = mutableListOf())
             vedtakId: UUID,
             virkningsdato: LocalDate,
             vedtakstidspunkt: LocalDateTime,
-            utfall: Boolean
+            utfall: Boolean,
         ) {
             this.virkningsdato = virkningsdato
         }

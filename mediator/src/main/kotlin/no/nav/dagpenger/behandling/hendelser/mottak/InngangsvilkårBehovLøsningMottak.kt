@@ -35,7 +35,7 @@ internal class InngangsvilkårBehovLøsningMottak(rapidsConnection: RapidsConnec
                 ident = ident,
                 vilkårsvurderingId = vilkårsvurderingId,
                 oppfylt = packet["resultat"].asBoolean(),
-                virkningsdato = LocalDate.now()
+                virkningsdato = LocalDate.now(),
             )
 
             mediator.behandle(paragraf423AlderLøsning)

@@ -36,10 +36,12 @@ internal class InngangsvilkårBehovLøsningMottakTest {
         assertTrue(slot.isCaptured)
         val paragraf423AlderLøsning = slot.captured
         assertEquals(
-            "a9586759-b71b-4295-a077-89a86453b020", paragraf423AlderLøsning.vilkårsvurderingId().toString(),
+            "a9586759-b71b-4295-a077-89a86453b020",
+            paragraf423AlderLøsning.vilkårsvurderingId().toString(),
         )
         assertEquals(
-            "12345678901", paragraf423AlderLøsning.ident()
+            "12345678901",
+            paragraf423AlderLøsning.ident(),
         )
     }
 

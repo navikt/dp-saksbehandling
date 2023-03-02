@@ -86,8 +86,8 @@ class NyRettighetTest : No {
                 ident,
                 inspektør.behandlingsId,
                 sats,
-                grunnlag
-            )
+                grunnlag,
+            ),
         )
     }
 

@@ -9,6 +9,6 @@ interface BehandlingObserver {
         val behandlingsId: UUID,
         val ident: String,
         val gjeldendeTilstand: Behandling.Tilstand.Type,
-        val forrigeTilstand: Behandling.Tilstand.Type
+        val forrigeTilstand: Behandling.Tilstand.Type,
     )
 }

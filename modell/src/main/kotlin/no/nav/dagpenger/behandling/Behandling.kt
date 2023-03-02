@@ -21,7 +21,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     protected val hendelseId: UUID,
     protected var tilstand: Tilstand<Behandlingstype>,
     protected val vilkårsvurdering: Vilkårsvurdering<*>,
-    internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
+    internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Aktivitetskontekst {
 
     private val observers = mutableListOf<BehandlingObserver>()
@@ -92,7 +92,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
                     ident = person.ident(),
                     gjeldendeTilstand = nyTilstand.type,
                     forrigeTilstand = forrigeTilstand.type,
-                )
+                ),
             )
         }
     }
@@ -104,15 +104,15 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
             VurdererUtfall,
             Fastsetter,
             Kvalitetssikrer,
-            Behandlet
+            Behandlet,
         }
 
         override fun toSpesifikkKontekst() =
             SpesifikkKontekst(
                 kontekstType = "Tilstand",
                 mapOf(
-                    "type" to type.name
-                )
+                    "type" to type.name,
+                ),
             )
 
         open fun entering(hendelse: Hendelse, behandling: Behandlingstype) {}

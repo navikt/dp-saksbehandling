@@ -30,8 +30,8 @@ internal class Paragraf_4_12_Sats(
             "Trenger sats",
             mapOf(
                 "virkningsdato" to virkningsdato,
-                "inntektsId" to inntektsId
-            )
+                "inntektsId" to inntektsId,
+            ),
         )
         endreTilstand(AvventerVurdering)
     }

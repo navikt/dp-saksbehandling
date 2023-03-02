@@ -8,7 +8,7 @@ import java.util.UUID
 
 abstract class Hendelse(
     private val ident: String,
-    internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg()
+    internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Aktivitetskontekst, IAktivitetslogg by aktivitetslogg {
 
     fun ident() = ident

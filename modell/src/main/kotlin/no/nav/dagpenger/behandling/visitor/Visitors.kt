@@ -53,14 +53,14 @@ interface NyRettighetsbehandlingVisitor : BehandlingVisitor {
         søknadsId: UUID,
         behandlingsId: UUID,
         virkningsdato: LocalDate?,
-        inntektsId: String?
+        inntektsId: String?,
     ) {}
 }
 
 interface VilkårsvurderingVisitor {
     fun <Vilkår : Vilkårsvurdering<Vilkår>> visitVilkårsvurdering(
         vilkårsvurderingId: UUID,
-        tilstand: Vilkårsvurdering.Tilstand<Vilkår>
+        tilstand: Vilkårsvurdering.Tilstand<Vilkår>,
     ) {}
 
     fun visitInngangsvilkårOppfylt(virkningsdato: LocalDate) {}

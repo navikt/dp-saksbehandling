@@ -14,5 +14,5 @@ enum class Rettighetstype {
     EksportAvDagpengerTilEUEllerEØSLand,
     LokalArbeidssøking,
     DeltidArbeidssøking,
-    RedusertArbeidssøkingVedUtdanning
+    RedusertArbeidssøkingVedUtdanning,
 }

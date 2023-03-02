@@ -25,7 +25,7 @@ class SøknadMottakTest {
                 testRapid,
                 mockk<PersonMediator>().also {
                     every { it.behandle(capture(slot)) } just Runs
-                }
+                },
             )
             val søknadId = UUID.randomUUID()
             val journalpostId = "jp1"
@@ -36,8 +36,8 @@ class SøknadMottakTest {
                     søknadId = søknadId,
                     journalpostId = journalpostId,
                     type = type,
-                    ident = ident
-                )
+                    ident = ident,
+                ),
             )
             assertTrue(slot.isCaptured)
             with(slot.captured) {

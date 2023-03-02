@@ -112,7 +112,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
             vedtakId: UUID,
             virkningsdato: LocalDate,
             vedtakstidspunkt: LocalDateTime,
-            utfall: Boolean
+            utfall: Boolean,
         ) {
             this.vedtakFattet = VedtakFattet(ident, utfall)
         }

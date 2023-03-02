@@ -48,7 +48,7 @@ class NyRettighetsbehandlingTest {
             ident,
             UUID.fromString(vilkårsvurderingId),
             oppfylt = true,
-            LocalDate.now()
+            LocalDate.now(),
         )
         person.håndter(paragraf423AlderResultat)
         assertTilstand(Behandling.Tilstand.Type.Fastsetter)
@@ -77,8 +77,8 @@ class NyRettighetsbehandlingTest {
             BeslutterHendelse(
                 beslutterIdent = "L11111",
                 ident = ident,
-                behandlingsId = behandlingsId
-            )
+                behandlingsId = behandlingsId,
+            ),
         )
 
         assertTilstand(Behandling.Tilstand.Type.Behandlet)
@@ -186,7 +186,7 @@ class NyRettighetsbehandlingTest {
             vedtakId: UUID,
             virkningsdato: LocalDate,
             vedtakstidspunkt: LocalDateTime,
-            utfall: Boolean
+            utfall: Boolean,
         ) {
             this.vedtakUtfall = utfall
         }

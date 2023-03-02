@@ -29,7 +29,7 @@ class Rapporteringsbehandling(
     hendelseId = rapporteringsId,
     tilstand = tilstand,
     vilkårsvurdering = LøpendeStønadsperiodeVilkår(person),
-    aktivitetslogg = aktivitetslogg
+    aktivitetslogg = aktivitetslogg,
 ) {
     override val fastsettelser by lazy {
         listOf(Paragraf_4_15_Forbruk(person = person))
@@ -78,8 +78,8 @@ class Rapporteringsbehandling(
             Vedtak.løpendeVedtak(
                 virkningsdato = LocalDate.now(),
                 forbruk = FastsattForbruk(fastsettelser).forbruk,
-                vilkårsvurdering.oppfylt()
-            )
+                vilkårsvurdering.oppfylt(),
+            ),
         )
     }
 
@@ -90,8 +90,8 @@ class Rapporteringsbehandling(
         mapOf(
             "behandlingsId" to behandlingsId.toString(),
             "type" to this.javaClass.simpleName,
-            "hendelse_uuid" to hendelseId.toString()
-        )
+            "hendelse_uuid" to hendelseId.toString(),
+        ),
     )
 
     fun håndter(rapporteringsHendelse: RapporteringsHendelse) {

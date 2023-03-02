@@ -13,7 +13,6 @@ internal class InngangsvilkårvurderingTest {
 
     @Test
     fun `vilkår endrer tilstand fra IkkeVurdert via AvventerVurdering til Oppfylt`() {
-
         val inngangsvilkår = Inngangsvilkår()
         inngangsvilkår.håndter(søknadHendelse = SøknadHendelse(UUID.randomUUID(), "123", "12345123456"))
         val inspektør = Inspektør(inngangsvilkår)
@@ -24,8 +23,8 @@ internal class InngangsvilkårvurderingTest {
                 "12345123456",
                 vilkårsvurderingId = inspektør.vilkårsvurderingId,
                 true,
-                LocalDate.now()
-            )
+                LocalDate.now(),
+            ),
         )
         assertEquals(Vilkårsvurdering.Tilstand.Type.Oppfylt, Inspektør(inngangsvilkår).tilstand)
     }
@@ -41,7 +40,7 @@ internal class InngangsvilkårvurderingTest {
 
         override fun <Paragraf : Vilkårsvurdering<Paragraf>> visitVilkårsvurdering(
             vilkårsvurderingId: UUID,
-            tilstand: Vilkårsvurdering.Tilstand<Paragraf>
+            tilstand: Vilkårsvurdering.Tilstand<Paragraf>,
         ) {
             this.tilstand = tilstand.tilstandType
             this.vilkårsvurderingId = vilkårsvurderingId

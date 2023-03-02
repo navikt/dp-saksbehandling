@@ -9,7 +9,7 @@ import java.time.LocalDate
 
 internal class Paragraf_4_15_Stønadsperiode(
     private val inntektsId: String,
-    private val virkningsdato: LocalDate
+    private val virkningsdato: LocalDate,
 ) : Fastsettelse<Paragraf_4_15_Stønadsperiode>(IkkeVurdert) {
 
     private lateinit var stønadsperiode: Stønadsperiode
@@ -32,8 +32,8 @@ internal class Paragraf_4_15_Stønadsperiode(
             "Trenger dagpengeperiode",
             mapOf(
                 "virkningsdato" to virkningsdato,
-                "inntektsId" to inntektsId
-            )
+                "inntektsId" to inntektsId,
+            ),
         )
     }
 

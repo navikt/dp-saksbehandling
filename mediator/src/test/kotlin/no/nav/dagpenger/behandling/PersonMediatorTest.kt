@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
 import no.nav.dagpenger.behandling.Meldingsfabrikk.dagpengerrettighetResultat
+import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
 import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -33,8 +33,8 @@ internal class PersonMediatorTest {
                 søknadId = UUID.randomUUID(),
                 journalpostId = "12345",
                 ident = testIdent,
-                type = "NySøknad"
-            )
+                type = "NySøknad",
+            ),
         )
         val person: Person? = inmemoryRepository.hentPerson(testIdent)
         assertNotNull(person)
@@ -43,8 +43,8 @@ internal class PersonMediatorTest {
         testRapid.sendTestMessage(
             dagpengerrettighetResultat(
                 ident = testIdent,
-                vilkårsvurderingId = testRapid.inspektør.field(0, "vilkårsvurderingId").asText()
-            )
+                vilkårsvurderingId = testRapid.inspektør.field(0, "vilkårsvurderingId").asText(),
+            ),
         )
 
         // TODO: Rydde

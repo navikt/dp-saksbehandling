@@ -13,7 +13,7 @@ import java.util.UUID
 
 internal class SøknadMottak(
     rapidsConnection: RapidsConnection,
-    private val mediator: PersonMediator
+    private val mediator: PersonMediator,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}

@@ -15,7 +15,7 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
     object IkkeVurdert : Tilstand.IkkeVurdert<LøpendeStønadsperiodeVilkår>() {
         override fun håndter(
             rapporteringsHendelse: RapporteringsHendelse,
-            vilkårsvurdering: LøpendeStønadsperiodeVilkår
+            vilkårsvurdering: LøpendeStønadsperiodeVilkår,
         ) {
             if (HarLøpendeVedtakVisitor(vilkårsvurdering.person, rapporteringsHendelse.tilPeriode()).harGjenstående()) {
                 vilkårsvurdering.endreTilstand(nyTilstand = Oppfylt)
@@ -51,7 +51,7 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
             vedtakId: UUID,
             virkningsdato: LocalDate,
             vedtakstidspunkt: LocalDateTime,
-            utfall: Boolean
+            utfall: Boolean,
         ) {
             if (virkningsdato <= periode.endInclusive) {
                 harVedtak = true

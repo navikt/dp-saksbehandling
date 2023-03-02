@@ -20,7 +20,6 @@ import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 internal fun Application.api(
     personRepository: PersonRepository,
 ) {
-
     install(DefaultHeaders)
 
     routing {
@@ -55,7 +54,7 @@ internal fun Application.api(
                                                     "_",
                                                     " "
                                                 )
-                                                }  ${erOppfylt(vilkår.tilstand)} 
+                                                }  ${erOppfylt(vilkår.tilstand)}
                                                 """.trimIndent()
                                             )
                                         }

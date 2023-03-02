@@ -10,7 +10,7 @@ import java.util.UUID
 
 internal abstract class Fastsettelse<Paragraf : Fastsettelse<Paragraf>>(
     protected val fastsettelseId: UUID,
-    protected var tilstand: Tilstand<Paragraf>
+    protected var tilstand: Tilstand<Paragraf>,
 ) {
 
     constructor(tilstand: Tilstand<Paragraf>) : this(UUID.randomUUID(), tilstand)
@@ -32,7 +32,7 @@ internal abstract class Fastsettelse<Paragraf : Fastsettelse<Paragraf>>(
         enum class Type {
             IkkeVurdert,
             AvventerVurdering,
-            Vurdert
+            Vurdert,
         }
 
         abstract class IkkeVurdert<Paragraf : Fastsettelse<Paragraf>> : Tilstand<Paragraf>(Type.IkkeVurdert)

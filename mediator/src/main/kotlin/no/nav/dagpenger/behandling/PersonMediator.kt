@@ -19,7 +19,8 @@ internal class PersonMediator(rapidsConnection: RapidsConnection, private val pe
     }
 
     private val behovMediator = BehovMediator(
-        rapidsConnection, sikkerLogger
+        rapidsConnection,
+        sikkerLogger,
     )
     init {
         SøknadMottak(rapidsConnection, this)

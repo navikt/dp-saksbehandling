@@ -23,20 +23,20 @@ sealed class Vedtak(
             grunnlag: BigDecimal,
             dagsats: BigDecimal,
             stønadsperiode: Stønadsperiode,
-            rettigheter: MutableList<Rettighet>
+            rettigheter: MutableList<Rettighet>,
         ) =
             Rammevedtak(
                 virkningsdato = virkningsdato,
                 grunnlag = grunnlag,
                 dagsats = dagsats,
                 stønadsperiode = stønadsperiode,
-                rettigheter = rettigheter // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
+                rettigheter = rettigheter, // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
             )
 
         fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid, utfall: Boolean) = LøpendeVedtak(
             utfall = utfall,
             virkningsdato = virkningsdato,
-            forbruk = forbruk
+            forbruk = forbruk,
         )
     }
 
@@ -61,7 +61,7 @@ class Rammevedtak(
     private val grunnlag: BigDecimal,
     private val dagsats: BigDecimal,
     private val stønadsperiode: Stønadsperiode,
-    private val rettigheter: List<Rettighet>
+    private val rettigheter: List<Rettighet>,
 ) : Vedtak(vedtakId, vedtakstidspunkt, utfall = true, virkningsdato) {
 
     override fun accept(visitor: VedtakVisitor) {

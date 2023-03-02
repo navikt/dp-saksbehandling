@@ -15,7 +15,7 @@ private val logger = KotlinLogging.logger { }
 
 abstract class Vilkårsvurdering<Vilkår : Vilkårsvurdering<Vilkår>> private constructor(
     protected val vilkårsvurderingId: UUID,
-    protected var tilstand: Tilstand<Vilkår>
+    protected var tilstand: Tilstand<Vilkår>,
 ) : Aktivitetskontekst {
     constructor(tilstand: Tilstand<Vilkår>) : this(UUID.randomUUID(), tilstand)
 
@@ -62,7 +62,7 @@ abstract class Vilkårsvurdering<Vilkår : Vilkårsvurdering<Vilkår>> private c
             Oppfylt,
             IkkeOppfylt,
             IkkeVurdert,
-            AvventerVurdering;
+            AvventerVurdering,
         }
 
         open fun håndter(søknadHendelse: SøknadHendelse, vilkårsvurdering: Vilkår) {

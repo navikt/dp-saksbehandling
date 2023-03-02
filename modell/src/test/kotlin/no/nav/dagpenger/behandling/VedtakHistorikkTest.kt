@@ -10,9 +10,9 @@ import java.time.LocalDate
 class VedtakHistorikkTest {
 
     private val vedtakHistorikk = VedtakHistorikk()
+
     @Test
     fun `Skal ta vare på alle vedtaksfakta gitt virkningsdato`() {
-
         val rettigheter = mutableListOf<Rettighet>()
         rettigheter.add(Rettighet(rettighetstype = Rettighetstype.OrdinæreDagpenger, utfall = true, fomDato = LocalDate.now(), tomDato = null))
 

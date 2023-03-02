@@ -43,7 +43,7 @@ class NyRettighetsbehandling private constructor(
     hendelseId = søknadsId,
     tilstand = tilstand,
     vilkårsvurdering = Inngangsvilkår(),
-    aktivitetslogg
+    aktivitetslogg,
 ) {
 
     constructor(person: Person, søknadUUID: UUID) : this(
@@ -52,23 +52,23 @@ class NyRettighetsbehandling private constructor(
         behandlingsId = UUID.randomUUID(),
         tilstand = VurdererVilkår,
         virkningsdato = null,
-        inntektsId = null
+        inntektsId = null,
     )
 
     override val fastsettelser by lazy {
         listOf(
             Paragraf_4_11_Grunnlag(
                 requireNotNull(this.inntektsId),
-                requireNotNull(this.virkningsdato)
+                requireNotNull(this.virkningsdato),
             ),
             Paragraf_4_12_Sats(
                 requireNotNull(this.inntektsId),
-                requireNotNull(this.virkningsdato)
+                requireNotNull(this.virkningsdato),
             ),
             Paragraf_4_15_Stønadsperiode(
                 requireNotNull(this.inntektsId),
-                requireNotNull(this.virkningsdato)
-            )
+                requireNotNull(this.virkningsdato),
+            ),
         )
     }
 
@@ -103,7 +103,6 @@ class NyRettighetsbehandling private constructor(
     override fun <T> implementasjon(block: NyRettighetsbehandling.() -> T): T = this.block()
 
     fun accept(visitor: NyRettighetsbehandlingVisitor) {
-
         visitor.visitNyRettighetsbehandling(søknadsId, behandlingsId, virkningsdato, inntektsId)
     }
 
@@ -113,8 +112,8 @@ class NyRettighetsbehandling private constructor(
             mapOf(
                 "behandlingsId" to behandlingsId.toString(),
                 "type" to this.javaClass.simpleName,
-                "søknad_uuid" to søknadsId.toString()
-            )
+                "søknad_uuid" to søknadsId.toString(),
+            ),
         )
 
     object VurdererVilkår : Tilstand.VurdererVilkår<NyRettighetsbehandling>() {
@@ -174,7 +173,7 @@ class NyRettighetsbehandling private constructor(
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             hendelse.behov(
                 KvalitetssikringsBehov,
-                "Behøver kvalitetssikring i form av totrinnskontroll fra en beslutter"
+                "Behøver kvalitetssikring i form av totrinnskontroll fra en beslutter",
             )
         }
 
@@ -200,7 +199,7 @@ class NyRettighetsbehandling private constructor(
                     grunnlag = visitor.grunnlag,
                     dagsats = visitor.dagsats,
                     stønadsperiode = visitor.stønadsperiode,
-                    rettigheter = mutableListOf(Rettighet(Rettighetstype.OrdinæreDagpenger, true, LocalDate.now()))
+                    rettigheter = mutableListOf(Rettighet(Rettighetstype.OrdinæreDagpenger, true, LocalDate.now())),
                 )
             }
 

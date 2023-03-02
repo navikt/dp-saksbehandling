@@ -17,7 +17,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     init {
         rapidsConnection.register(this)
         PersonMediator(
-            rapidsConnection, inMemoryPersonRepository
+            rapidsConnection,
+            inMemoryPersonRepository,
         )
     }
     fun start() {
