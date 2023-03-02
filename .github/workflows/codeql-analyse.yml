@@ -53,7 +53,7 @@ jobs:
     - name: build
       uses: gradle/gradle-build-action@v2
       with:
-        arguments: --configuration-cache compileKotlin
+        arguments: --configuration-cache build
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
