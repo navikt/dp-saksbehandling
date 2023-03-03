@@ -11,11 +11,19 @@ import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.html.body
+import kotlinx.html.h1
 import kotlinx.html.head
+import kotlinx.html.li
 import kotlinx.html.meta
 import kotlinx.html.title
+import kotlinx.html.ul
+import no.nav.dagpenger.behandling.HtmlBygger.Vilkår
 import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
+import no.nav.dagpenger.behandling.visitor.PersonVisitor
+import java.lang.reflect.ParameterizedType
+import java.util.UUID
 
 internal fun Application.api(
     personRepository: PersonRepository,
@@ -27,7 +35,7 @@ internal fun Application.api(
             get("{ident}") {
                 val ident = call.parameters["ident"] ?: throw MissingRequestParameterException("ident")
                 val person = personRepository.hentPerson(ident) ?: throw NotFoundException("Kan ikke finne person")
-
+                val bygger = HtmlBygger(person)
                 call.respondHtml(HttpStatusCode.OK) {
                     head {
                         title {
@@ -37,39 +45,72 @@ internal fun Application.api(
                             charset = "utf-8"
                         }
                     }
-                    /*body {
+                    body {
                         h1 {
                             +"Behandlinger for ${person.ident()}"
                         }
                         ul {
-                            for (behandling in person.behandlinger()) {
-                                li { +behandling.javaClass.simpleName }
+                            for (behandling in bygger.behandlinger) {
+                                li { +behandling.key.navn }
                                 ul {
-                                    for (vilkår in behandling.vilkårsvurderinger)
+                                    for (vilkår in behandling.value)
                                         li {
                                             text(
                                                 """
                                                 ${
-                                                vilkår.javaClass.simpleName.replace(
-                                                    "_",
-                                                    " "
-                                                )
-                                                }  ${erOppfylt(vilkår.tilstand)}
-                                                """.trimIndent()
+                                                    vilkår.value.navn
+                                                }  ${erOppfylt(vilkår.value.tilstand)}
+                                                """.trimIndent(),
                                             )
                                         }
                                 }
                             }
                         }
-                    }*/
+                    }
                 }
             }
         }
     }
 }
 
-private fun erOppfylt(tilstand: Vilkårsvurdering.Tilstand<*>): String {
-    return when (tilstand.tilstandType) {
+private class HtmlBygger(person: Person) : PersonVisitor {
+
+    val behandlinger = mutableMapOf<Behandling, MutableMap<UUID, Vilkår>>()
+
+    var behandlingsId: Behandling? = null
+
+    init {
+        person.accept(this)
+    }
+
+    override fun preVisit(behandlingsId: UUID, hendelseId: UUID) {
+        this.behandlingsId = Behandling("Ny rettighetsbehandling", uuid = behandlingsId)
+    }
+
+    override fun <Vilkår : Vilkårsvurdering<Vilkår>> visitVilkårsvurdering(
+        vilkårsvurderingId: UUID,
+        tilstand: Vilkårsvurdering.Tilstand<Vilkår>,
+    ) {
+        this.behandlingsId?.let {
+            val vilkår = behandlinger.getOrPut(it) { mutableMapOf() }
+            vilkår[vilkårsvurderingId] = Vilkår(
+                navn = (tilstand.javaClass.genericSuperclass as ParameterizedType)
+                    .actualTypeArguments[0].typeName.substringAfterLast("."),
+                tilstand = tilstand.tilstandType,
+            )
+        }
+    }
+
+    override fun postVisit(behandlingsId: UUID, hendelseId: UUID) {
+        this.behandlingsId = null
+    }
+
+    data class Behandling(val navn: String, val uuid: UUID)
+    data class Vilkår(val navn: String, val tilstand: Vilkårsvurdering.Tilstand.Type)
+}
+
+private fun erOppfylt(tilstand: Vilkårsvurdering.Tilstand.Type): String {
+    return when (tilstand) {
         Vilkårsvurdering.Tilstand.Type.Oppfylt -> "✅ - Oppfylt "
         Vilkårsvurdering.Tilstand.Type.IkkeOppfylt -> "❌ - Ikke oppfylt"
         Vilkårsvurdering.Tilstand.Type.IkkeVurdert -> "❓ - Ikke vurdert "
