@@ -20,7 +20,7 @@ class Arbeidstimer(arbeidstimer: Number) : Comparable<Arbeidstimer> {
 
     override fun toString() = "Arbeidstimer(arbeidstimer=$arbeidstimer)"
 
-    internal companion object {
+    companion object {
         val Number.arbeidstimer get() = Arbeidstimer(this)
     }
 }

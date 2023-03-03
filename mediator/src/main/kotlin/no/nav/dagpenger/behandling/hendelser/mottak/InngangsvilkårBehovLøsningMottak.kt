@@ -3,6 +3,7 @@ package no.nav.dagpenger.behandling.hendelser.mottak
 import com.fasterxml.jackson.databind.JsonNode
 import mu.withLoggingContext
 import no.nav.dagpenger.behandling.PersonMediator
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
@@ -36,6 +37,7 @@ internal class InngangsvilkårBehovLøsningMottak(rapidsConnection: RapidsConnec
                 vilkårsvurderingId = vilkårsvurderingId,
                 oppfylt = packet["resultat"].asBoolean(),
                 virkningsdato = LocalDate.now(),
+                fastsattArbeidstidPerDag = 8.arbeidstimer,
             )
 
             mediator.behandle(paragraf423AlderLøsning)

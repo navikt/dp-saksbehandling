@@ -67,7 +67,7 @@ interface VilkårsvurderingVisitor {
 
     fun visitInngangsvilkårOppfylt(virkningsdato: LocalDate) {}
     fun visitInngangvilkårIkkeOppfylt(virkningsdato: LocalDate) {}
-    fun visitInngangsvilkårOppfylt(fastsattArbeidstimer: Arbeidstimer) {}
+    fun visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag: Arbeidstimer) {}
 }
 
 internal interface FastsettelseVisitor {

@@ -7,6 +7,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.db.PersonRepository
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.BeforeEach
@@ -30,6 +31,7 @@ class ApiTest {
             søknadHendelse.behov().first().kontekst()["vilkårsvurderingId"].let { UUID.fromString(it) },
             oppfylt = true,
             LocalDate.now(),
+            8.arbeidstimer,
         )
         person.håndter(paragraf423AlderResultat)
         inMemoryPersonRepository.lagrePerson(person)

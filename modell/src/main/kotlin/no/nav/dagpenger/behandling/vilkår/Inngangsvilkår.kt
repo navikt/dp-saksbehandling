@@ -38,7 +38,7 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
     object Oppfylt : Tilstand.Oppfylt<Inngangsvilkår>() {
         override fun accept(vilkår: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
             visitor.visitInngangsvilkårOppfylt(virkningsdato = vilkår.virkningsdato)
-            visitor.visitInngangsvilkårOppfylt(fastsattArbeidstimer = vilkår.fastsattArbeidstimer)
+            visitor.visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag = vilkår.fastsattArbeidstimer)
         }
     }
     object IkkeOppfylt : Tilstand.IkkeOppfylt<Inngangsvilkår>() {
