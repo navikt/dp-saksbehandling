@@ -5,6 +5,7 @@ metadata:
   namespace: teamdagpenger
   labels:
     team: teamdagpenger
+    domene: behandling
 spec:
   image: {{ image }}
   port: 8080
