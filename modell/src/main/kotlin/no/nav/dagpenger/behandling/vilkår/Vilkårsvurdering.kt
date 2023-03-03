@@ -80,7 +80,7 @@ abstract class Vilkårsvurdering<Vilkår : Vilkårsvurdering<Vilkår>> private c
         private fun feilmelding(hendelse: Hendelse) =
             hendelse.warn("Kan ikke håndtere ${hendelse.javaClass.simpleName} i tilstand ${this.tilstandType}")
 
-        open fun accept(paragraf: Vilkår, visitor: VilkårsvurderingVisitor) {}
+        open fun accept(vilkår: Vilkår, visitor: VilkårsvurderingVisitor) {}
 
         abstract class IkkeVurdert<Vilkår : Vilkårsvurdering<Vilkår>> : Tilstand<Vilkår>(Type.IkkeVurdert)
         abstract class Avventer<Vilkår : Vilkårsvurdering<Vilkår>> : Tilstand<Vilkår>(Type.AvventerVurdering)

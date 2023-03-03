@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.entitet.Rettighetstype
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
@@ -22,6 +23,7 @@ class VedtakHistorikkTest {
             dagsats = 700.toBigDecimal(),
             stønadsperiode = 52.arbeidsuker,
             rettigheter = rettigheter,
+            fastsattArbeidstidPerDag = 8.arbeidstimer,
         )
 
         val vedtak2 = Vedtak.innvilgelse(
@@ -30,6 +32,7 @@ class VedtakHistorikkTest {
             dagsats = 755.toBigDecimal(),
             stønadsperiode = 104.arbeidsuker,
             rettigheter = rettigheter,
+            fastsattArbeidstidPerDag = 8.arbeidstimer,
         )
 
         vedtakHistorikk.leggTilVedtak(vedtak1)

@@ -3,6 +3,7 @@ package no.nav.dagpenger.behandling.cucumber
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.No
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
@@ -71,7 +72,7 @@ class NyRettighetTest : No {
     private data class SøknadHendelseCucumber(val fødselsnummer: String, val behandlingId: String)
 
     private fun håndterInngangsvilkår(oppfylt: Boolean, virkningsdato: LocalDate) {
-        person.håndter(InngangsvilkårResultat(ident, inspektør.vilkårsvurderingId, oppfylt, virkningsdato))
+        person.håndter(InngangsvilkårResultat(ident, inspektør.vilkårsvurderingId, oppfylt, virkningsdato, 8.arbeidstimer))
     }
 
     private fun håndterStønadsperiode(stønadsperiode: Int) {

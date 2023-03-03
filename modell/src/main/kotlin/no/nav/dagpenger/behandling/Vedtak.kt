@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
@@ -24,6 +25,7 @@ sealed class Vedtak(
             dagsats: BigDecimal,
             stønadsperiode: Stønadsperiode,
             rettigheter: MutableList<Rettighet>,
+            fastsattArbeidstidPerDag: Arbeidstimer,
         ) =
             Rammevedtak(
                 virkningsdato = virkningsdato,
@@ -31,6 +33,7 @@ sealed class Vedtak(
                 dagsats = dagsats,
                 stønadsperiode = stønadsperiode,
                 rettigheter = rettigheter, // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
+                fastsattArbeidstidPerDag = fastsattArbeidstidPerDag,
             )
 
         fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid, utfall: Boolean) = LøpendeVedtak(
@@ -58,6 +61,7 @@ class Rammevedtak(
     vedtakId: UUID = UUID.randomUUID(),
     vedtakstidspunkt: LocalDateTime = LocalDateTime.now(),
     virkningsdato: LocalDate,
+    private val fastsattArbeidstidPerDag: Arbeidstimer,
     private val grunnlag: BigDecimal,
     private val dagsats: BigDecimal,
     private val stønadsperiode: Stønadsperiode,
@@ -69,6 +73,7 @@ class Rammevedtak(
         grunnlag.let { visitor.visitVedtakGrunnlag(it) }
         dagsats.let { visitor.visitVedtakDagsats(it) }
         stønadsperiode.let { visitor.visitVedtakStønadsperiode(it) }
+        visitor.visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag)
         visitor.visitVedtakRettigheter(rettigheter.toList())
         visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
     }

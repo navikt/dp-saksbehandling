@@ -4,6 +4,8 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Dagp
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
@@ -44,23 +46,24 @@ class NyRettighetsbehandlingTest {
         assertEquals(1, inspektør.antallBehandlinger)
 
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        val paragraf423AlderResultat = InngangsvilkårResultat(
+        val inngangsvilkårResultat = InngangsvilkårResultat(
             ident,
             UUID.fromString(vilkårsvurderingId),
             oppfylt = true,
             LocalDate.now(),
+            8.arbeidstimer,
         )
-        person.håndter(paragraf423AlderResultat)
+        person.håndter(inngangsvilkårResultat)
         assertTilstand(Behandling.Tilstand.Type.Fastsetter)
-        assertEquals(3, paragraf423AlderResultat.behov().size)
+        assertEquals(3, inngangsvilkårResultat.behov().size)
 
-        val grunnlagBehov = paragraf423AlderResultat.behov()[0]
+        val grunnlagBehov = inngangsvilkårResultat.behov()[0]
         assertBehovInnholdFor(grunnlagBehov)
 
-        val satsBehov = paragraf423AlderResultat.behov()[1]
+        val satsBehov = inngangsvilkårResultat.behov()[1]
         assertBehovInnholdFor(satsBehov)
 
-        val stønadsperiodeBehov = paragraf423AlderResultat.behov()[2]
+        val stønadsperiodeBehov = inngangsvilkårResultat.behov()[2]
         assertBehovInnholdFor(stønadsperiodeBehov)
 
         val behandlingsId = UUID.fromString(vilkårsvurderingBehov.kontekst()["behandlingsId"])
@@ -89,6 +92,7 @@ class NyRettighetsbehandlingTest {
         assertEquals(52.arbeidsuker, inspektør.stønadsperiode)
         assertEquals(1, testObserver.vedtakFattet.size)
         assertEquals(1, inspektør.rettigheter.size)
+        assertEquals(8.arbeidstimer, inspektør.fastsattArbeidstidPerDag)
     }
 
     @Test
@@ -169,6 +173,7 @@ class NyRettighetsbehandlingTest {
         var vedtakUtfall: Boolean? = null
         var gjenståendeStønadsperiode: Stønadsperiode? = null
         lateinit var behandlingsTilstand: Behandling.Tilstand.Type
+        var fastsattArbeidstidPerDag: Arbeidstimer = 0.arbeidstimer
 
         init {
             person.accept(this)
@@ -213,6 +218,10 @@ class NyRettighetsbehandlingTest {
 
         override fun visitGjenståendeStønadsperiode(gjenståendePeriode: Stønadsperiode) {
             this.gjenståendeStønadsperiode = gjenståendePeriode
+        }
+
+        override fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Arbeidstimer) {
+            this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
         }
     }
 

@@ -4,6 +4,7 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kval
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Behandlet
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Fastsetter
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.entitet.Rettighetstype
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
@@ -34,6 +35,7 @@ class NyRettighetsbehandling private constructor(
     private val søknadsId: UUID,
     private val behandlingsId: UUID,
     private var virkningsdato: LocalDate?,
+    private var fastsattArbeidstidPerDag: Arbeidstimer?,
     tilstand: Tilstand<NyRettighetsbehandling>,
     private var inntektsId: String?,
     aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
@@ -52,6 +54,7 @@ class NyRettighetsbehandling private constructor(
         behandlingsId = UUID.randomUUID(),
         tilstand = VurdererVilkår,
         virkningsdato = null,
+        fastsattArbeidstidPerDag = null,
         inntektsId = null,
     )
 
@@ -150,6 +153,7 @@ class NyRettighetsbehandling private constructor(
 
         override fun entering(hendelse: Hendelse, behandling: NyRettighetsbehandling) {
             behandling.inntektsId = "ULID"
+            behandling.fastsattArbeidstidPerDag = InngangsvilkårOppfyltVisitor(behandling.vilkårsvurdering).fastsattArbeidstidPerDag
             behandling.fastsettelser.forEach { it.håndter(hendelse) }
         }
 
@@ -200,6 +204,7 @@ class NyRettighetsbehandling private constructor(
                     dagsats = visitor.dagsats,
                     stønadsperiode = visitor.stønadsperiode,
                     rettigheter = mutableListOf(Rettighet(Rettighetstype.OrdinæreDagpenger, true, LocalDate.now())),
+                    fastsattArbeidstidPerDag = requireNotNull(fastsattArbeidstidPerDag),
                 )
             }
 
@@ -245,5 +250,18 @@ private class VirkningsdatoVisitor(vilkårsvurderinger: Vilkårsvurdering<*>) : 
 
     override fun visitInngangsvilkårOppfylt(virkningsdato: LocalDate) {
         this.virkningsdato = virkningsdato
+    }
+}
+
+private class InngangsvilkårOppfyltVisitor(vilkårsvurderinger: Vilkårsvurdering<*>) : VilkårsvurderingVisitor {
+
+    lateinit var fastsattArbeidstidPerDag: Arbeidstimer
+
+    init {
+        vilkårsvurderinger.accept(this)
+    }
+
+    override fun visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag: Arbeidstimer) {
+        this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
     }
 }

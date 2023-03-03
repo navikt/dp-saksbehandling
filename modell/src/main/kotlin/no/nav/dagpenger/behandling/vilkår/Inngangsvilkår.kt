@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.DagpengerettighetBehov
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
@@ -9,6 +10,7 @@ import java.time.LocalDate
 class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
 
     private lateinit var virkningsdato: LocalDate
+    private lateinit var fastsattArbeidstimer: Arbeidstimer
 
     override fun accept(visitor: VilkårsvurderingVisitor) {
         super.accept(visitor)
@@ -25,6 +27,7 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
             vilkårsvurdering.virkningsdato = inngangsvilkårResultat.virkningsdato
             if (vilkårsvurdering.vilkårsvurderingId == inngangsvilkårResultat.vilkårsvurderingId) {
                 if (inngangsvilkårResultat.oppfylt) {
+                    vilkårsvurdering.fastsattArbeidstimer = inngangsvilkårResultat.fastsattArbeidstidPerDag
                     vilkårsvurdering.endreTilstand(Oppfylt)
                 } else {
                     vilkårsvurdering.endreTilstand(IkkeOppfylt)
@@ -33,13 +36,14 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
         }
     }
     object Oppfylt : Tilstand.Oppfylt<Inngangsvilkår>() {
-        override fun accept(paragraf: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
-            visitor.visitInngangsvilkårOppfylt(virkningsdato = paragraf.virkningsdato)
+        override fun accept(vilkår: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
+            visitor.visitInngangsvilkårOppfylt(virkningsdato = vilkår.virkningsdato)
+            visitor.visitInngangsvilkårOppfylt(fastsattArbeidstimer = vilkår.fastsattArbeidstimer)
         }
     }
     object IkkeOppfylt : Tilstand.IkkeOppfylt<Inngangsvilkår>() {
-        override fun accept(paragraf: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
-            visitor.visitInngangvilkårIkkeOppfylt(virkningsdato = paragraf.virkningsdato)
+        override fun accept(vilkår: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
+            visitor.visitInngangvilkårIkkeOppfylt(virkningsdato = vilkår.virkningsdato)
         }
     }
     override fun <T> implementasjon(block: Inngangsvilkår.() -> T): T = this.block()
