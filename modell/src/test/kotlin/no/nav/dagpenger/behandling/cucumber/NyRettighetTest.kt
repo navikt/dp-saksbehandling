@@ -39,8 +39,6 @@ class NyRettighetTest : No {
             håndterInngangsvilkår(oppfylt == "oppfylt", virkningsdato = LocalDate.parse(virkningsdato, datoformatterer))
         }
 
-        Og("alle inngangsvilkår er {string}") { oppfylt: String -> }
-
         Og("sats er {bigdecimal}, grunnlag er {bigdecimal} og stønadsperiode er {int}") { sats: BigDecimal, grunnlag: BigDecimal, stønadsperiode: Int ->
             håndterSatsogGrunnlag(sats, grunnlag)
             håndterStønadsperiode(stønadsperiode)
@@ -52,8 +50,8 @@ class NyRettighetTest : No {
             assertEquals(antallVedtak, inspektør.antallVedtak)
         }
         Når("rapporteringshendelse mottas") { rapporteringsHendelse: DataTable ->
-            val rapporteringsdager = rapporteringsHendelse.rows(1).asMap().entries.map {
-                Rapporteringsdag(dato = LocalDate.parse(it.key, datoformatterer), fravær = it.value.toBoolean())
+            val rapporteringsdager = rapporteringsHendelse.rows(1).asLists(String::class.java).map {
+                Rapporteringsdag(dato = LocalDate.parse(it[0], datoformatterer), fravær = it[1].toBooleanStrict(), timer = it[2].toDouble())
             }
             håndterRapporteringsHendelse(rapporteringsdager)
         }
