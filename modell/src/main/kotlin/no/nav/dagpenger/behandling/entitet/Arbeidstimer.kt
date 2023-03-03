@@ -9,7 +9,7 @@ class Arbeidstimer(arbeidstimer: Number) : Comparable<Arbeidstimer> {
 
     internal operator fun div(nevner: Arbeidstimer): Arbeidsprosent {
         if (nevner.arbeidstimer == 0.0) return Arbeidsprosent(0)
-        return Arbeidsprosent(this.arbeidstimer / nevner.arbeidstimer)
+        return Arbeidsprosent(this.arbeidstimer / nevner.arbeidstimer * 100)
     }
 
     override fun compareTo(other: Arbeidstimer): Int = this.arbeidstimer.compareTo(other.arbeidstimer)

@@ -27,6 +27,6 @@ class ArbeidstimerTest {
     @Test
     fun `kan finne arbeidsprosent`() {
         val fastsatt = 8.arbeidstimer
-        assertEquals(Arbeidsprosent(0.5), 4.arbeidstimer.div(fastsatt))
+        assertEquals(Arbeidsprosent(50.0), 4.arbeidstimer.div(fastsatt))
     }
 }
