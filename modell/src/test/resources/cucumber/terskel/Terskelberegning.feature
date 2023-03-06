@@ -30,8 +30,6 @@
           | 27.12.2022 | false  | 0     |
         Så skal forbruket være 10
         Så skal bruker ha 2 vedtak
-
-      Scenario: Rapporterer arbeidstimer
         Når rapporteringshendelse mottas
           | dato       | fravær | timer |
           | 28.12.2022 | false  | 8     |
