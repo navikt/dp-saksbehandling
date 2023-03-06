@@ -11,40 +11,62 @@
       Og beslutter kvalitetssikrer
       Så skal bruker ha 1 vedtak
 
-      Scenario: Rapporterer arbeidstimer
+      Scenario: Rapporterer arbeidstimer eksakt lik terskel
         Når rapporteringshendelse mottas
           | dato       | fravær | timer |
+          | 12.12.2022 | false  | 4     |
+          | 13.12.2022 | false  | 4     |
           | 14.12.2022 | false  | 4     |
           | 15.12.2022 | false  | 4     |
           | 16.12.2022 | false  | 4     |
-          | 17.12.2022 | false  | 4     |
-          | 18.12.2022 | false  | 4     |
-          | 19.12.2022 | false  | 0     |
-          | 20.12.2022 | false  | 0     |
+          | 17.12.2022 | false  | 0     |
+          | 18.12.2022 | false  | 0     |
+          | 19.12.2022 | false  | 4     |
+          | 20.12.2022 | false  | 4     |
           | 21.12.2022 | false  | 4     |
           | 22.12.2022 | false  | 4     |
           | 23.12.2022 | false  | 4     |
-          | 24.12.2022 | false  | 4     |
-          | 25.12.2022 | false  | 4     |
-          | 26.12.2022 | false  | 0     |
-          | 27.12.2022 | false  | 0     |
-        Så skal forbruket være 10
+          | 24.12.2022 | false  | 0     |
+          | 25.12.2022 | false  | 0     |
+        Så skal forbruket være 10 dager
         Så skal bruker ha 2 vedtak
+
+      Scenario: Rapporterer arbeidstimer over terskel
         Når rapporteringshendelse mottas
           | dato       | fravær | timer |
-          | 28.12.2022 | false  | 8     |
-          | 29.12.2022 | false  | 8     |
-          | 30.12.2022 | false  | 8     |
-          | 31.12.2022 | false  | 8     |
-          | 01.01.2023 | false  | 8     |
-          | 02.01.2023 | false  | 0     |
-          | 03.01.2023 | false  | 0     |
-          | 04.01.2023 | false  | 4     |
-          | 05.01.2023 | false  | 4     |
-          | 06.01.2023 | false  | 4     |
-          | 07.01.2023 | false  | 4     |
-          | 08.01.2023 | false  | 4     |
-          | 09.01.2023 | false  | 0     |
-          | 10.01.2023 | false  | 0     |
-        Så skal forbruket være 0
-        Så skal bruker ha 3 vedtak
+          | 12.12.2022 | false  | 4     |
+          | 13.12.2022 | false  | 4     |
+          | 14.12.2022 | false  | 4     |
+          | 15.12.2022 | false  | 4     |
+          | 16.12.2022 | false  | 4     |
+          | 17.12.2022 | false  | 0     |
+          | 18.12.2022 | false  | 0     |
+          | 19.12.2022 | false  | 4     |
+          | 20.12.2022 | false  | 4     |
+          | 21.12.2022 | false  | 4     |
+          | 22.12.2022 | false  | 4     |
+          | 23.12.2022 | false  | 4.5   |
+          | 24.12.2022 | false  | 0     |
+          | 25.12.2022 | false  | 0     |
+          Så skal forbruket være 0 dager
+          Så skal bruker ha 2 vedtak
+
+      Scenario: Rapporterer fravær og arbeidstimer under terskel
+        Når rapporteringshendelse mottas
+          | dato       | fravær | timer |
+          | 12.12.2022 | false  | 4     |
+          | 13.12.2022 | false  | 4     |
+          | 14.12.2022 | false  | 4     |
+          | 15.12.2022 | false  | 4     |
+          | 16.12.2022 | false  | 4     |
+          | 17.12.2022 | false  | 0     |
+          | 18.12.2022 | false  | 0     |
+          | 19.12.2022 | false  | 4     |
+          | 20.12.2022 | false  | 4     |
+          | 21.12.2022 | false  | 4     |
+          | 22.12.2022 | false  | 4     |
+          | 23.12.2022 | true   | 0     |
+          | 24.12.2022 | false  | 0     |
+          | 25.12.2022 | false  | 0     |
+        Så skal forbruket være 9 dager
+        Så skal bruker ha 2 vedtak

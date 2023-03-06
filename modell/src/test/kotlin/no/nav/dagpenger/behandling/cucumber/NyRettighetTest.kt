@@ -60,7 +60,7 @@ class NyRettighetTest : No {
             }
             håndterRapporteringsHendelse(rapporteringsdager)
         }
-        Så("skal forbruket være {int}") { forbruk: Int ->
+        Så("skal forbruket være {int} dager") { forbruk: Int ->
             assertEquals(forbruk.arbeidsdager, inspektør.forbruk)
         }
     }
