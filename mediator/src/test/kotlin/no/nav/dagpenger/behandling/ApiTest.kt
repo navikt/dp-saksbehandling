@@ -2,6 +2,9 @@ package no.nav.dagpenger.behandling
 
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.withCharset
 import io.ktor.server.application.Application
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
@@ -10,8 +13,10 @@ import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.nio.charset.Charset
 import java.time.LocalDate
 import java.util.UUID
 
@@ -43,6 +48,11 @@ class ApiTest {
             application(mockedApi(inMemoryPersonRepository))
 
             val response = client.get("behandlinger/$ident")
+
+            assertEquals(
+                ContentType.Text.Html.withCharset(Charset.forName("UTF-8")),
+                response.contentType(),
+            )
             println(response.bodyAsText())
         }
     }
