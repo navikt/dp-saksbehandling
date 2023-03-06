@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.entitet
 
+import no.nav.dagpenger.behandling.rapportering.Dag
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -23,6 +24,8 @@ internal class Periode(private val fomDato: LocalDate, private val tomDato: Loca
         override fun next() =
             currentDate.also { currentDate = it.plusDays(1) }
     }
+
+    public operator fun contains(dag: Dag): Boolean = dag.innenfor(this)
 
     infix operator fun plus(annen: Periode): Periode {
         return Periode(minOf(this.start, annen.start), maxOf(this.endInclusive, annen.endInclusive))

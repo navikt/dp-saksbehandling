@@ -50,7 +50,7 @@ class NyRettighetsbehandlingTest {
             ident,
             UUID.fromString(vilkårsvurderingId),
             LocalDate.now(),
-            8.arbeidstimer,
+            8,
         )
         person.håndter(inngangsvilkårResultat)
         assertTilstand(Behandling.Tilstand.Type.Fastsetter)

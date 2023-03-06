@@ -10,8 +10,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.db.PersonRepository
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
-import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
+import no.nav.dagpenger.behandling.hendelser.Innvilget
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -31,14 +30,13 @@ class ApiTest {
         val person = Person(ident)
         val søknadHendelse = SøknadHendelse(søknadUUID = UUID.randomUUID(), journalpostId = "123454", ident = ident)
         person.håndter(søknadHendelse)
-        val paragraf423AlderResultat = InngangsvilkårResultat(
+        val innvilgetInngangsvilkår = Innvilget(
             ident,
             søknadHendelse.behov().first().kontekst()["vilkårsvurderingId"].let { UUID.fromString(it) },
-            oppfylt = true,
             LocalDate.now(),
-            8.arbeidstimer,
+            8,
         )
-        person.håndter(paragraf423AlderResultat)
+        person.håndter(innvilgetInngangsvilkår)
         inMemoryPersonRepository.lagrePerson(person)
     }
 

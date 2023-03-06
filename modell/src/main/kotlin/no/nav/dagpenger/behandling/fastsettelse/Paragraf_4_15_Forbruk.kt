@@ -20,7 +20,7 @@ internal class Paragraf_4_15_Forbruk(private val person: Person) : Fastsettelse<
     }
 
     override fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
-        val periode = rapporteringsHendelse.tilPeriode()
+        val periode = rapporteringsHendelse.somPeriode()
         this.forbruk = ForbrukTeller(person, periode).forbruk
         endreTilstand(Vurdert)
     }

@@ -3,8 +3,6 @@ package no.nav.dagpenger.behandling.cucumber
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.No
 import no.nav.dagpenger.behandling.Person
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.hendelser.Avslått
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
@@ -39,11 +37,11 @@ class NyRettighetTest : No {
         }
 
         Og("alle inngangsvilkår er ikke oppfylt med virkningsdato {string}") { virkningsdato: String ->
-            håndterInngangsvilkår(oppfylt = false, virkningsdato = LocalDate.parse(virkningsdato, datoformatterer))
+            håndterAvslåttInngangsvilkår(virkningsdato = LocalDate.parse(virkningsdato, datoformatterer))
         }
 
         Og("alle inngangsvilkår er oppfylt med virkningsdato {string} og fastsatt abreidstid er {int} timer") { virkningsdato: String, fastsattArbeidstidTimer: Int ->
-            håndterInngangsvilkår(oppfylt = true, virkningsdato = LocalDate.parse(virkningsdato, datoformatterer), fastsattArbeidstidTimer.arbeidstimer)
+            håndterInnvilgetInngangsvilkår(virkningsdato = LocalDate.parse(virkningsdato, datoformatterer), fastsattArbeidstidTimer)
         }
 
         Og("sats er {bigdecimal}, grunnlag er {bigdecimal} og stønadsperiode er {int}") { sats: BigDecimal, grunnlag: BigDecimal, stønadsperiode: Int ->
@@ -77,11 +75,11 @@ class NyRettighetTest : No {
 
     private data class SøknadHendelseCucumber(val fødselsnummer: String, val behandlingId: String)
 
-    private fun håndterInngangsvilkår(oppfylt: Boolean, virkningsdato: LocalDate) {
+    private fun håndterAvslåttInngangsvilkår(virkningsdato: LocalDate) {
         person.håndter(Avslått(ident, inspektør.vilkårsvurderingId, virkningsdato))
     }
 
-    private fun håndterInngangsvilkår(oppfylt: Boolean, virkningsdato: LocalDate, fastsattArbeidstimer: Arbeidstimer) {
+    private fun håndterInnvilgetInngangsvilkår(virkningsdato: LocalDate, fastsattArbeidstimer: Number) {
         person.håndter(Innvilget(ident, inspektør.vilkårsvurderingId, virkningsdato, fastsattArbeidstimer))
     }
 

@@ -22,5 +22,5 @@ class RapporteringsHendelse(
         }
     }
 
-    internal fun tilPeriode() = Periode(rapporteringsdager.first().dato, rapporteringsdager.last().dato)
+    internal fun somPeriode() = Periode(rapporteringsdager.first().dato, rapporteringsdager.last().dato)
 }

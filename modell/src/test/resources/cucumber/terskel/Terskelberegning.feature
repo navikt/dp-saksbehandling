@@ -49,4 +49,4 @@
           | 09.01.2023 | false  | 0     |
           | 10.01.2023 | false  | 0     |
         Så skal forbruket være 0
-        Så skal bruker ha 2 vedtak
+        Så skal bruker ha 3 vedtak

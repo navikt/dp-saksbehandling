@@ -1,10 +1,10 @@
 package no.nav.dagpenger.behandling.hendelser
 
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import java.time.LocalDate
 import java.util.UUID
 
-abstract sealed class InngangsvilkårResultat(
+sealed class InngangsvilkårResultat(
     ident: String,
     val vilkårsvurderingId: UUID,
     val virkningsdato: LocalDate,
@@ -14,8 +14,11 @@ class Innvilget(
     ident: String,
     vilkårsvurderingId: UUID,
     virkningsdato: LocalDate,
-    val fastsattArbeidstidPerDag: Arbeidstimer,
-) : InngangsvilkårResultat(ident, vilkårsvurderingId, virkningsdato)
+    val fastsattArbeidstidPerDag: Number,
+) : InngangsvilkårResultat(ident, vilkårsvurderingId, virkningsdato) {
+
+    internal fun fastsattArbeidstidPerDag() = fastsattArbeidstidPerDag.arbeidstimer
+}
 
 class Avslått(
     ident: String,

@@ -3,8 +3,8 @@ package no.nav.dagpenger.behandling.hendelser.mottak
 import com.fasterxml.jackson.databind.JsonNode
 import mu.withLoggingContext
 import no.nav.dagpenger.behandling.PersonMediator
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
-import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
+import no.nav.dagpenger.behandling.hendelser.Avslått
+import no.nav.dagpenger.behandling.hendelser.Innvilget
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -32,15 +32,21 @@ internal class InngangsvilkårBehovLøsningMottak(rapidsConnection: RapidsConnec
         val vilkårsvurderingId = packet["søknad_uuid"].asText().let { UUID.fromString(it) }
 
         withLoggingContext("vilkårsvurderingId" to vilkårsvurderingId.toString()) {
-            val paragraf423AlderLøsning = InngangsvilkårResultat(
-                ident = ident,
-                vilkårsvurderingId = vilkårsvurderingId,
-                oppfylt = packet["resultat"].asBoolean(),
-                virkningsdato = LocalDate.now(),
-                fastsattArbeidstidPerDag = 8.arbeidstimer,
-            )
+            val løsning = when (packet["resultat"].asBoolean()) {
+                true -> Innvilget(
+                    ident = ident,
+                    vilkårsvurderingId = vilkårsvurderingId,
+                    virkningsdato = LocalDate.now(),
+                    fastsattArbeidstidPerDag = 8,
+                )
+                false -> Avslått(
+                    ident = ident,
+                    vilkårsvurderingId = vilkårsvurderingId,
+                    virkningsdato = LocalDate.now(),
+                )
+            }
 
-            mediator.behandle(paragraf423AlderLøsning)
+            mediator.behandle(løsning)
         }
     }
 

@@ -19,8 +19,10 @@ class Arbeidstimer(arbeidstimer: Number) : Comparable<Arbeidstimer> {
     override fun hashCode(): Int = arbeidstimer.hashCode()
 
     override fun toString() = "Arbeidstimer(arbeidstimer=$arbeidstimer)"
+    operator fun times(antallArbeidsdager: Int): Arbeidstimer = Arbeidstimer(this.arbeidstimer * antallArbeidsdager)
 
     companion object {
         val Number.arbeidstimer get() = Arbeidstimer(this)
+        fun List<Arbeidstimer>.summer() = this.sumOf { it.arbeidstimer }.arbeidstimer
     }
 }

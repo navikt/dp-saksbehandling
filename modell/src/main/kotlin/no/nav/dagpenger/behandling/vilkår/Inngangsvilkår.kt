@@ -30,7 +30,7 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
             if (vilkårsvurdering.vilkårsvurderingId == inngangsvilkårResultat.vilkårsvurderingId) {
                 when (inngangsvilkårResultat) {
                     is Innvilget -> {
-                        vilkårsvurdering.fastsattArbeidstimer = inngangsvilkårResultat.fastsattArbeidstidPerDag
+                        vilkårsvurdering.fastsattArbeidstimer = inngangsvilkårResultat.fastsattArbeidstidPerDag()
                         vilkårsvurdering.endreTilstand(Oppfylt)
                     }
                     is Avslått -> vilkårsvurdering.endreTilstand(IkkeOppfylt)

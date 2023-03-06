@@ -1,9 +1,14 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.entitet.Arbeidsprosent
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.summer
 import no.nav.dagpenger.behandling.entitet.Periode
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
+import no.nav.dagpenger.behandling.rapportering.Arbeidsdag
+import no.nav.dagpenger.behandling.rapportering.Helgedag
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -17,7 +22,9 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
             rapporteringsHendelse: RapporteringsHendelse,
             vilkårsvurdering: LøpendeStønadsperiodeVilkår,
         ) {
-            if (HarLøpendeVedtakVisitor(vilkårsvurdering.person, rapporteringsHendelse.tilPeriode()).harGjenstående()) {
+            val harGjenstående = HarGjenstående(vilkårsvurdering.person, rapporteringsHendelse.somPeriode()).harGjenstående()
+            val underTerskel = HarArbeidetUnderTerskel(vilkårsvurdering.person, rapporteringsHendelse.somPeriode()).underTerskel()
+            if (harGjenstående && underTerskel) {
                 vilkårsvurdering.endreTilstand(nyTilstand = Oppfylt)
             } else {
                 vilkårsvurdering.endreTilstand(nyTilstand = IkkeOppfylt)
@@ -33,7 +40,7 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
         return this.block()
     }
 
-    private class HarLøpendeVedtakVisitor(person: Person, private val periode: Periode) : PersonVisitor {
+    private class HarGjenstående(person: Person, private val periode: Periode) : PersonVisitor {
         init {
             person.accept(this)
         }
@@ -55,6 +62,43 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
         ) {
             if (virkningsdato <= periode.endInclusive) {
                 harVedtak = true
+            }
+        }
+    }
+
+    private class HarArbeidetUnderTerskel(person: Person, val periode: Periode) : PersonVisitor {
+        private val arbeidedeTimer = mutableListOf<Arbeidstimer>()
+        private var arbeidsdagTeller = 0
+        init {
+            person.accept(this)
+        }
+
+        fun underTerskel(): Boolean {
+            val arbeidstimer = arbeidedeTimer.summer()
+            val fastsattarbeidstidForPeriode = (fastsattArbeidstidPerDag * arbeidsdagTeller)
+
+            if (arbeidstimer.div(fastsattarbeidstidForPeriode) <= Arbeidsprosent(50.0)) {
+                return true
+            }
+
+            return false
+        }
+
+        lateinit var fastsattArbeidstidPerDag: Arbeidstimer
+        override fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Arbeidstimer) {
+            this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
+        }
+
+        override fun visitArbeidsdag(arbeidsdag: Arbeidsdag) {
+            if (arbeidsdag in periode) {
+                arbeidedeTimer.add(arbeidsdag.arbeidstimer())
+                arbeidsdagTeller++
+            }
+        }
+
+        override fun visitHelgedag(helgedag: Helgedag) {
+            if (helgedag in periode) {
+                arbeidedeTimer.add(helgedag.arbeidstimer())
             }
         }
     }
