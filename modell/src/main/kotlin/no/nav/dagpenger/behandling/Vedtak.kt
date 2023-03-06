@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
+import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.visitor.VedtakVisitor
@@ -25,7 +25,7 @@ sealed class Vedtak(
             dagsats: BigDecimal,
             stønadsperiode: Stønadsperiode,
             rettigheter: MutableList<Rettighet>,
-            fastsattArbeidstidPerDag: Arbeidstimer,
+            fastsattArbeidstidPerDag: Timer,
         ) =
             Rammevedtak(
                 virkningsdato = virkningsdato,
@@ -61,7 +61,7 @@ class Rammevedtak(
     vedtakId: UUID = UUID.randomUUID(),
     vedtakstidspunkt: LocalDateTime = LocalDateTime.now(),
     virkningsdato: LocalDate,
-    private val fastsattArbeidstidPerDag: Arbeidstimer,
+    private val fastsattArbeidstidPerDag: Timer,
     private val grunnlag: BigDecimal,
     private val dagsats: BigDecimal,
     private val stønadsperiode: Stønadsperiode,

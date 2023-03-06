@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.hendelser
 
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
+import no.nav.dagpenger.behandling.entitet.Timer.Companion.timer
 import java.time.LocalDate
 import java.util.UUID
 
@@ -17,7 +17,7 @@ class Innvilget(
     val fastsattArbeidstidPerDag: Number,
 ) : InngangsvilkårResultat(ident, vilkårsvurderingId, virkningsdato) {
 
-    internal fun fastsattArbeidstidPerDag() = fastsattArbeidstidPerDag.arbeidstimer
+    internal fun fastsattArbeidstidPerDag() = fastsattArbeidstidPerDag.timer
 }
 
 class Avslått(

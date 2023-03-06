@@ -4,9 +4,9 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kval
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Behandlet
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Fastsetter
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.entitet.Rettighetstype
+import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_11_Grunnlag
@@ -35,7 +35,7 @@ class NyRettighetsbehandling private constructor(
     private val søknadsId: UUID,
     private val behandlingsId: UUID,
     private var virkningsdato: LocalDate?,
-    private var fastsattArbeidstidPerDag: Arbeidstimer?,
+    private var fastsattArbeidstidPerDag: Timer?,
     tilstand: Tilstand<NyRettighetsbehandling>,
     private var inntektsId: String?,
     aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
@@ -255,13 +255,13 @@ private class VirkningsdatoVisitor(vilkårsvurderinger: Vilkårsvurdering<*>) : 
 
 private class InngangsvilkårOppfyltVisitor(vilkårsvurderinger: Vilkårsvurdering<*>) : VilkårsvurderingVisitor {
 
-    lateinit var fastsattArbeidstidPerDag: Arbeidstimer
+    lateinit var fastsattArbeidstidPerDag: Timer
 
     init {
         vilkårsvurderinger.accept(this)
     }
 
-    override fun visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag: Arbeidstimer) {
+    override fun visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag: Timer) {
         this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
     }
 }

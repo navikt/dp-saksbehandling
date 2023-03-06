@@ -1,10 +1,10 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import no.nav.dagpenger.behandling.Person
-import no.nav.dagpenger.behandling.entitet.Arbeidsprosent
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.summer
 import no.nav.dagpenger.behandling.entitet.Periode
+import no.nav.dagpenger.behandling.entitet.Prosent
+import no.nav.dagpenger.behandling.entitet.Timer
+import no.nav.dagpenger.behandling.entitet.Timer.Companion.summer
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.rapportering.Arbeidsdag
@@ -67,7 +67,7 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
     }
 
     private class HarArbeidetUnderTerskel(person: Person, val periode: Periode) : PersonVisitor {
-        private val arbeidedeTimer = mutableListOf<Arbeidstimer>()
+        private val arbeidedeTimer = mutableListOf<Timer>()
         private var arbeidsdagTeller = 0
         init {
             person.accept(this)
@@ -77,15 +77,15 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
             val arbeidstimer = arbeidedeTimer.summer()
             val fastsattarbeidstidForPeriode = (fastsattArbeidstidPerDag * arbeidsdagTeller)
 
-            if (arbeidstimer.div(fastsattarbeidstidForPeriode) <= Arbeidsprosent(50.0)) {
+            if (arbeidstimer.div(fastsattarbeidstidForPeriode) <= Prosent(50.0)) {
                 return true
             }
 
             return false
         }
 
-        lateinit var fastsattArbeidstidPerDag: Arbeidstimer
-        override fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Arbeidstimer) {
+        lateinit var fastsattArbeidstidPerDag: Timer
+        override fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Timer) {
             this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
         }
 

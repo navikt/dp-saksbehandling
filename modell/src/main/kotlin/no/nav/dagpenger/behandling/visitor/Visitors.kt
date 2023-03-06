@@ -2,8 +2,8 @@ package no.nav.dagpenger.behandling.visitor
 
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.PersonIdentifikator
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
+import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.rapportering.Arbeidsdag
@@ -29,7 +29,7 @@ interface VedtakVisitor {
     fun visitVedtakRettigheter(rettigheter: List<Rettighet>) {}
     fun visitForbruk(forbruk: Tid) {}
     fun postVisitVedtak(vedtakId: UUID, virkningsdato: LocalDate, vedtakstidspunkt: LocalDateTime, utfall: Boolean) {}
-    fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Arbeidstimer) {}
+    fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Timer) {}
 }
 
 interface VedtakHistorikkVisitor : VedtakVisitor {
@@ -67,7 +67,7 @@ interface VilkårsvurderingVisitor {
 
     fun visitInngangsvilkårOppfylt(virkningsdato: LocalDate) {}
     fun visitInngangvilkårIkkeOppfylt(virkningsdato: LocalDate) {}
-    fun visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag: Arbeidstimer) {}
+    fun visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag: Timer) {}
 }
 
 internal interface FastsettelseVisitor {

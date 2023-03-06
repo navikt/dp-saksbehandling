@@ -4,9 +4,9 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Dagp
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
+import no.nav.dagpenger.behandling.entitet.Timer
+import no.nav.dagpenger.behandling.entitet.Timer.Companion.timer
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Innvilget
@@ -91,7 +91,7 @@ class NyRettighetsbehandlingTest {
         assertEquals(52.arbeidsuker, inspektør.stønadsperiode)
         assertEquals(1, testObserver.vedtakFattet.size)
         assertEquals(1, inspektør.rettigheter.size)
-        assertEquals(8.arbeidstimer, inspektør.fastsattArbeidstidPerDag)
+        assertEquals(8.timer, inspektør.fastsattArbeidstidPerDag)
     }
 
     @Test
@@ -172,7 +172,7 @@ class NyRettighetsbehandlingTest {
         var vedtakUtfall: Boolean? = null
         var gjenståendeStønadsperiode: Stønadsperiode? = null
         lateinit var behandlingsTilstand: Behandling.Tilstand.Type
-        var fastsattArbeidstidPerDag: Arbeidstimer = 0.arbeidstimer
+        var fastsattArbeidstidPerDag: Timer = 0.timer
 
         init {
             person.accept(this)
@@ -219,7 +219,7 @@ class NyRettighetsbehandlingTest {
             this.gjenståendeStønadsperiode = gjenståendePeriode
         }
 
-        override fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Arbeidstimer) {
+        override fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Timer) {
             this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
         }
     }

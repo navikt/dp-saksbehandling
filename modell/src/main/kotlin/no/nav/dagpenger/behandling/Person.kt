@@ -57,9 +57,9 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         behandling.håndter(søknadHendelse)
     }
 
-    fun håndter(paragraf423AlderResultat: InngangsvilkårResultat) {
-        kontekst(paragraf423AlderResultat)
-        behandlinger.forEach { it.håndter(paragraf423AlderResultat) }
+    fun håndter(inngangsvilkårResultat: InngangsvilkårResultat) {
+        kontekst(inngangsvilkårResultat)
+        behandlinger.forEach { it.håndter(inngangsvilkårResultat) }
     }
     fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
         kontekst(grunnlagOgSatsResultat)

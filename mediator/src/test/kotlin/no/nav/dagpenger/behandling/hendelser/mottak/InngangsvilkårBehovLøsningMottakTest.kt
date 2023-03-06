@@ -7,7 +7,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import no.nav.dagpenger.behandling.Meldingsfabrikk.dagpengerrettighetResultat
 import no.nav.dagpenger.behandling.PersonMediator
-import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
+import no.nav.dagpenger.behandling.hendelser.Avslått
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class InngangsvilkårBehovLøsningMottakTest {
-    private val slot = slot<InngangsvilkårResultat>()
+    private val slot = slot<Avslått>()
     private val mediatorMock = mockk<PersonMediator>().also {
         every { it.behandle(capture(slot)) } just Runs
     }
@@ -34,14 +34,14 @@ internal class InngangsvilkårBehovLøsningMottakTest {
     fun `skal lese løsning på aldersbehov `() {
         testRapid.sendTestMessage(dagpengerrettighetResultat(vilkårsvurderingId = "a9586759-b71b-4295-a077-89a86453b020"))
         assertTrue(slot.isCaptured)
-        val paragraf423AlderLøsning = slot.captured
+        val inngangsvilkår = slot.captured
         assertEquals(
             "a9586759-b71b-4295-a077-89a86453b020",
-            paragraf423AlderLøsning.vilkårsvurderingId().toString(),
+            inngangsvilkår.vilkårsvurderingId().toString(),
         )
         assertEquals(
             "12345678901",
-            paragraf423AlderLøsning.ident(),
+            inngangsvilkår.ident(),
         )
     }
 

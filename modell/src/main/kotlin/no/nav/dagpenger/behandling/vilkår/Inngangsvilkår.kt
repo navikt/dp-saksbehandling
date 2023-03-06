@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.vilkår
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.DagpengerettighetBehov
-import no.nav.dagpenger.behandling.entitet.Arbeidstimer
+import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.hendelser.Avslått
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.Innvilget
@@ -12,7 +12,7 @@ import java.time.LocalDate
 class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
 
     private lateinit var virkningsdato: LocalDate
-    private lateinit var fastsattArbeidstimer: Arbeidstimer
+    private lateinit var fastsattTimer: Timer
 
     override fun accept(visitor: VilkårsvurderingVisitor) {
         super.accept(visitor)
@@ -30,7 +30,7 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
             if (vilkårsvurdering.vilkårsvurderingId == inngangsvilkårResultat.vilkårsvurderingId) {
                 when (inngangsvilkårResultat) {
                     is Innvilget -> {
-                        vilkårsvurdering.fastsattArbeidstimer = inngangsvilkårResultat.fastsattArbeidstidPerDag()
+                        vilkårsvurdering.fastsattTimer = inngangsvilkårResultat.fastsattArbeidstidPerDag()
                         vilkårsvurdering.endreTilstand(Oppfylt)
                     }
                     is Avslått -> vilkårsvurdering.endreTilstand(IkkeOppfylt)
@@ -41,7 +41,7 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
     object Oppfylt : Tilstand.Oppfylt<Inngangsvilkår>() {
         override fun accept(vilkår: Inngangsvilkår, visitor: VilkårsvurderingVisitor) {
             visitor.visitInngangsvilkårOppfylt(virkningsdato = vilkår.virkningsdato)
-            visitor.visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag = vilkår.fastsattArbeidstimer)
+            visitor.visitInngangsvilkårOppfylt(fastsattArbeidstidPerDag = vilkår.fastsattTimer)
         }
     }
     object IkkeOppfylt : Tilstand.IkkeOppfylt<Inngangsvilkår>() {
