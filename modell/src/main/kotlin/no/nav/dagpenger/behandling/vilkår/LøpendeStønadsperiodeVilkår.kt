@@ -83,11 +83,11 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
         }
 
         fun underTerskel(): Boolean {
-            val tellendeArbeidsdager = arbeidsdager.filter { it.etterEllerLik(virkningsdato) }
+            val tellendeArbeidsdager = arbeidsdager.filter { it >= virkningsdato }
 
             val arbeidstimer = tellendeArbeidsdager.summer()
             val fastsattarbeidstidForPeriode =
-                (fastsattArbeidstidPerDag * tellendeArbeidsdager.filter { it is Arbeidsdag }.size)
+                (fastsattArbeidstidPerDag * tellendeArbeidsdager.filterIsInstance<Arbeidsdag>().size)
 
             if (arbeidstimer.div(fastsattarbeidstidForPeriode) <= Prosent(50.0)) {
                 return true
