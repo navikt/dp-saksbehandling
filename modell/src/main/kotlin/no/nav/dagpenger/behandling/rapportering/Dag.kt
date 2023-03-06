@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling.rapportering
 
 import no.nav.dagpenger.behandling.entitet.Periode
 import no.nav.dagpenger.behandling.entitet.Timer
+import no.nav.dagpenger.behandling.entitet.Timer.Companion.summer
 import no.nav.dagpenger.behandling.entitet.Timer.Companion.timer
 import no.nav.dagpenger.behandling.visitor.DagVisitor
 import java.time.DayOfWeek
@@ -23,9 +24,12 @@ sealed class Dag(private val dato: LocalDate) {
                 Arbeidsdag(dato, timer)
             }
         }
+        internal fun List<Dag>.summer() = this.map { it.arbeidstimer() }.summer()
 
         private fun LocalDate.erHelg() = dayOfWeek in setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)
     }
+
+    fun etterEllerLik(dato: LocalDate) = this.dato >= dato
 }
 
 class Fraværsdag(dato: LocalDate) : Dag(dato) {
