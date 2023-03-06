@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.entitet.Rettighet
+import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
@@ -24,7 +24,7 @@ sealed class Vedtak(
             grunnlag: BigDecimal,
             dagsats: BigDecimal,
             stønadsperiode: Stønadsperiode,
-            rettigheter: MutableList<Rettighet>,
+            dagpengerettighet: Dagpengerettighet,
             fastsattArbeidstidPerDag: Timer,
         ) =
             Rammevedtak(
@@ -32,7 +32,7 @@ sealed class Vedtak(
                 grunnlag = grunnlag,
                 dagsats = dagsats,
                 stønadsperiode = stønadsperiode,
-                rettigheter = rettigheter, // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
+                dagpengerettighet = dagpengerettighet, // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
                 fastsattArbeidstidPerDag = fastsattArbeidstidPerDag,
             )
 
@@ -65,7 +65,7 @@ class Rammevedtak(
     private val grunnlag: BigDecimal,
     private val dagsats: BigDecimal,
     private val stønadsperiode: Stønadsperiode,
-    private val rettigheter: List<Rettighet>,
+    private val dagpengerettighet: Dagpengerettighet,
 ) : Vedtak(vedtakId, vedtakstidspunkt, utfall = true, virkningsdato) {
 
     override fun accept(visitor: VedtakVisitor) {
@@ -74,7 +74,7 @@ class Rammevedtak(
         dagsats.let { visitor.visitVedtakDagsats(it) }
         stønadsperiode.let { visitor.visitVedtakStønadsperiode(it) }
         visitor.visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag)
-        visitor.visitVedtakRettigheter(rettigheter.toList())
+        visitor.visitVedtakDagpengerettighet(dagpengerettighet)
         visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
     }
 }

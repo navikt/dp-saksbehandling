@@ -4,8 +4,7 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kval
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Behandlet
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Fastsetter
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
-import no.nav.dagpenger.behandling.entitet.Rettighet
-import no.nav.dagpenger.behandling.entitet.Rettighetstype
+import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
@@ -203,7 +202,7 @@ class NyRettighetsbehandling private constructor(
                     grunnlag = visitor.grunnlag,
                     dagsats = visitor.dagsats,
                     stønadsperiode = visitor.stønadsperiode,
-                    rettigheter = mutableListOf(Rettighet(Rettighetstype.OrdinæreDagpenger, true, LocalDate.now())),
+                    dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
                     fastsattArbeidstidPerDag = requireNotNull(fastsattArbeidstidPerDag),
                 )
             }

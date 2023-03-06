@@ -4,7 +4,7 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Dagp
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.KvalitetssikringsBehov
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.SatsBehov
-import no.nav.dagpenger.behandling.entitet.Rettighet
+import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.entitet.Timer.Companion.timer
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
@@ -90,7 +90,7 @@ class NyRettighetsbehandlingTest {
         assertEquals(700.toBigDecimal(), inspektør.dagsats)
         assertEquals(52.arbeidsuker, inspektør.stønadsperiode)
         assertEquals(1, testObserver.vedtakFattet.size)
-        assertEquals(1, inspektør.rettigheter.size)
+        assertEquals(Dagpengerettighet.OrdinæreDagpenger, inspektør.dagpengerettighet)
         assertEquals(8.timer, inspektør.fastsattArbeidstidPerDag)
     }
 
@@ -163,7 +163,7 @@ class NyRettighetsbehandlingTest {
 
     private class Inspektør(person: Person) : PersonVisitor {
 
-        val rettigheter: MutableList<Rettighet> = mutableListOf()
+        lateinit var dagpengerettighet: Dagpengerettighet
         lateinit var fastsattforbruk: Tid
         var grunnlag: BigDecimal? = null
         var dagsats: BigDecimal? = null
@@ -207,8 +207,8 @@ class NyRettighetsbehandlingTest {
             this.stønadsperiode = stønadsperiode
         }
 
-        override fun visitVedtakRettigheter(rettigheter: List<Rettighet>) {
-            this.rettigheter.addAll(rettigheter)
+        override fun visitVedtakDagpengerettighet(dagpengerettighet: Dagpengerettighet) {
+            this.dagpengerettighet = dagpengerettighet
         }
 
         override fun visitForbruk(forbruk: Tid) {

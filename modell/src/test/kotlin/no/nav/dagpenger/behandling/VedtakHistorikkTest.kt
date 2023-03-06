@@ -1,7 +1,6 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.entitet.Rettighet
-import no.nav.dagpenger.behandling.entitet.Rettighetstype
+import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Timer.Companion.timer
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -14,15 +13,12 @@ class VedtakHistorikkTest {
 
     @Test
     fun `Skal ta vare på alle vedtaksfakta gitt virkningsdato`() {
-        val rettigheter = mutableListOf<Rettighet>()
-        rettigheter.add(Rettighet(rettighetstype = Rettighetstype.OrdinæreDagpenger, utfall = true, fomDato = LocalDate.now(), tomDato = null))
-
         val vedtak1 = Vedtak.innvilgelse(
             virkningsdato = LocalDate.now().minusDays(1),
             grunnlag = 450000.toBigDecimal(),
             dagsats = 700.toBigDecimal(),
             stønadsperiode = 52.arbeidsuker,
-            rettigheter = rettigheter,
+            dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
             fastsattArbeidstidPerDag = 8.timer,
         )
 
@@ -31,7 +27,7 @@ class VedtakHistorikkTest {
             grunnlag = 450000.toBigDecimal(),
             dagsats = 755.toBigDecimal(),
             stønadsperiode = 104.arbeidsuker,
-            rettigheter = rettigheter,
+            dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
             fastsattArbeidstidPerDag = 8.timer,
         )
 
