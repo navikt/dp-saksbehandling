@@ -9,7 +9,7 @@ import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Rettighet
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
-import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
+import no.nav.dagpenger.behandling.hendelser.Innvilget
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
@@ -46,10 +46,9 @@ class NyRettighetsbehandlingTest {
         assertEquals(1, inspektør.antallBehandlinger)
 
         val vilkårsvurderingId = vilkårsvurderingBehov.kontekst()["vilkårsvurderingId"]
-        val inngangsvilkårResultat = InngangsvilkårResultat(
+        val inngangsvilkårResultat = Innvilget(
             ident,
             UUID.fromString(vilkårsvurderingId),
-            oppfylt = true,
             LocalDate.now(),
             8.arbeidstimer,
         )

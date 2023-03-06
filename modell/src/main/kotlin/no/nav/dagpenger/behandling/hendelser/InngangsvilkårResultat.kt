@@ -4,10 +4,21 @@ import no.nav.dagpenger.behandling.entitet.Arbeidstimer
 import java.time.LocalDate
 import java.util.UUID
 
-class InngangsvilkårResultat(
+abstract sealed class InngangsvilkårResultat(
     ident: String,
     val vilkårsvurderingId: UUID,
-    val oppfylt: Boolean,
     val virkningsdato: LocalDate,
-    val fastsattArbeidstidPerDag: Arbeidstimer,
 ) : VilkårResultatHendelse(vilkårsvurderingId, ident)
+
+class Innvilget(
+    ident: String,
+    vilkårsvurderingId: UUID,
+    virkningsdato: LocalDate,
+    val fastsattArbeidstidPerDag: Arbeidstimer,
+) : InngangsvilkårResultat(ident, vilkårsvurderingId, virkningsdato)
+
+class Avslått(
+    ident: String,
+    vilkårsvurderingId: UUID,
+    virkningsdato: LocalDate,
+) : InngangsvilkårResultat(ident, vilkårsvurderingId, virkningsdato)

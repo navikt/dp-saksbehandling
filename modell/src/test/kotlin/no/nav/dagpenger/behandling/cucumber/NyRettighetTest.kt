@@ -3,10 +3,12 @@ package no.nav.dagpenger.behandling.cucumber
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.No
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.entitet.Arbeidstimer
 import no.nav.dagpenger.behandling.entitet.Arbeidstimer.Companion.arbeidstimer
+import no.nav.dagpenger.behandling.hendelser.Avslått
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
-import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
+import no.nav.dagpenger.behandling.hendelser.Innvilget
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.Rapporteringsdag
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
@@ -36,8 +38,12 @@ class NyRettighetTest : No {
             person.håndter(SøknadHendelse(UUID.randomUUID(), "journalpostId", ident))
         }
 
-        Og("alle inngangsvilkår er {string} med virkningsdato {string}") { oppfylt: String, virkningsdato: String ->
-            håndterInngangsvilkår(oppfylt == "oppfylt", virkningsdato = LocalDate.parse(virkningsdato, datoformatterer))
+        Og("alle inngangsvilkår er ikke oppfylt med virkningsdato {string}") { virkningsdato: String ->
+            håndterInngangsvilkår(oppfylt = false, virkningsdato = LocalDate.parse(virkningsdato, datoformatterer))
+        }
+
+        Og("alle inngangsvilkår er oppfylt med virkningsdato {string} og fastsatt abreidstid er {int} timer") { virkningsdato: String, fastsattArbeidstidTimer: Int ->
+            håndterInngangsvilkår(oppfylt = true, virkningsdato = LocalDate.parse(virkningsdato, datoformatterer), fastsattArbeidstidTimer.arbeidstimer)
         }
 
         Og("sats er {bigdecimal}, grunnlag er {bigdecimal} og stønadsperiode er {int}") { sats: BigDecimal, grunnlag: BigDecimal, stønadsperiode: Int ->
@@ -72,7 +78,11 @@ class NyRettighetTest : No {
     private data class SøknadHendelseCucumber(val fødselsnummer: String, val behandlingId: String)
 
     private fun håndterInngangsvilkår(oppfylt: Boolean, virkningsdato: LocalDate) {
-        person.håndter(InngangsvilkårResultat(ident, inspektør.vilkårsvurderingId, oppfylt, virkningsdato, 8.arbeidstimer))
+        person.håndter(Avslått(ident, inspektør.vilkårsvurderingId, virkningsdato))
+    }
+
+    private fun håndterInngangsvilkår(oppfylt: Boolean, virkningsdato: LocalDate, fastsattArbeidstimer: Arbeidstimer) {
+        person.håndter(Innvilget(ident, inspektør.vilkårsvurderingId, virkningsdato, fastsattArbeidstimer))
     }
 
     private fun håndterStønadsperiode(stønadsperiode: Int) {

@@ -2,7 +2,9 @@ package no.nav.dagpenger.behandling.vilkår
 
 import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.DagpengerettighetBehov
 import no.nav.dagpenger.behandling.entitet.Arbeidstimer
+import no.nav.dagpenger.behandling.hendelser.Avslått
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
+import no.nav.dagpenger.behandling.hendelser.Innvilget
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
 import java.time.LocalDate
@@ -26,11 +28,12 @@ class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
         override fun håndter(inngangsvilkårResultat: InngangsvilkårResultat, vilkårsvurdering: Inngangsvilkår) {
             vilkårsvurdering.virkningsdato = inngangsvilkårResultat.virkningsdato
             if (vilkårsvurdering.vilkårsvurderingId == inngangsvilkårResultat.vilkårsvurderingId) {
-                if (inngangsvilkårResultat.oppfylt) {
-                    vilkårsvurdering.fastsattArbeidstimer = inngangsvilkårResultat.fastsattArbeidstidPerDag
-                    vilkårsvurdering.endreTilstand(Oppfylt)
-                } else {
-                    vilkårsvurdering.endreTilstand(IkkeOppfylt)
+                when (inngangsvilkårResultat) {
+                    is Innvilget -> {
+                        vilkårsvurdering.fastsattArbeidstimer = inngangsvilkårResultat.fastsattArbeidstidPerDag
+                        vilkårsvurdering.endreTilstand(Oppfylt)
+                    }
+                    is Avslått -> vilkårsvurdering.endreTilstand(IkkeOppfylt)
                 }
             }
         }
