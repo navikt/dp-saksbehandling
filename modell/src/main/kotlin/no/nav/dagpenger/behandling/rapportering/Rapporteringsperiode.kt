@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.rapportering
 
-import no.nav.dagpenger.behandling.visitor.DagVisitor
+import no.nav.dagpenger.behandling.visitor.RapporteringsperiodeVisitor
 
 class Rapporteringsperiode(dager: List<Dag> = emptyList()) {
 
@@ -10,7 +10,9 @@ class Rapporteringsperiode(dager: List<Dag> = emptyList()) {
         dager.add(dag)
     }
 
-    fun accept(visitor: DagVisitor) {
+    fun accept(visitor: RapporteringsperiodeVisitor) {
+        visitor.preVisitRapporteringPeriode(this)
         dager.forEach { it.accept(visitor) }
+        visitor.postVisitRapporteringPeriode(this)
     }
 }

@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling.cucumber
 
 import io.cucumber.datatable.DataTable
 import io.cucumber.java8.No
+import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.hendelser.Avslått
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
@@ -115,7 +116,7 @@ class NyRettighetTest : No {
             this.vilkårsvurderingId = vilkårsvurderingId
         }
 
-        override fun preVisit(behandlingsId: UUID, hendelseId: UUID) {
+        override fun preVisit(behandling: Behandling<*>, behandlingsId: UUID, hendelseId: UUID) {
             this.behandlingsId = behandlingsId
         }
 

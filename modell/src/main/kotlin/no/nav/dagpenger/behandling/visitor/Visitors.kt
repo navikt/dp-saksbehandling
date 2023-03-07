@@ -9,6 +9,7 @@ import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.rapportering.Arbeidsdag
 import no.nav.dagpenger.behandling.rapportering.Fraværsdag
 import no.nav.dagpenger.behandling.rapportering.Helgedag
+import no.nav.dagpenger.behandling.rapportering.Rapporteringsperiode
 import no.nav.dagpenger.behandling.rapportering.Rapporteringsperioder
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
 import java.math.BigDecimal
@@ -16,7 +17,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakHistorikkVisitor, DagVisitor {
+interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakHistorikkVisitor, RapporteringsperiodeVisitor {
     fun visitPerson(ident: PersonIdentifikator) {}
     fun preVisitRapporteringsperioder(rapporteringsperioder: Rapporteringsperioder) {}
     fun postVisitRapporteringsperioder(rapporteringsperioder: Rapporteringsperioder) {}
@@ -39,15 +40,17 @@ interface VedtakHistorikkVisitor : VedtakVisitor {
 }
 
 interface BehandlingVisitor : VilkårsvurderingVisitor {
-    fun preVisit(behandlingsId: UUID, hendelseId: UUID) {}
+    fun preVisit(behandling: Behandling<*>, behandlingsId: UUID, hendelseId: UUID) {}
     fun visitTilstand(tilstand: Behandling.Tilstand.Type) {}
-    fun postVisit(behandlingsId: UUID, hendelseId: UUID) {}
+    fun postVisit(behandling: Behandling<*>, behandlingsId: UUID, hendelseId: UUID) {}
 }
 
-interface DagVisitor {
+interface RapporteringsperiodeVisitor {
+    fun preVisitRapporteringPeriode(rapporteringsperiode: Rapporteringsperiode) {}
     fun visitArbeidsdag(arbeidsdag: Arbeidsdag) {}
     fun visitHelgedag(helgedag: Helgedag) {}
     fun visitFraværsdag(fraværsdag: Fraværsdag) {}
+    fun postVisitRapporteringPeriode(rapporteringsperiode: Rapporteringsperiode) {}
 }
 
 interface NyRettighetsbehandlingVisitor : BehandlingVisitor {

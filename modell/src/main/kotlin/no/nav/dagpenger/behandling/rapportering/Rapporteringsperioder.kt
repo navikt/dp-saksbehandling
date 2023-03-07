@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.rapportering
 
 import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
-import no.nav.dagpenger.behandling.visitor.DagVisitor
+import no.nav.dagpenger.behandling.visitor.PersonVisitor
 
 class Rapporteringsperioder(val perioder: MutableList<Rapporteringsperiode> = mutableListOf()) {
     fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
@@ -10,7 +10,9 @@ class Rapporteringsperioder(val perioder: MutableList<Rapporteringsperiode> = mu
         perioder.add(rapporteringsperiode)
     }
 
-    fun accept(visitor: DagVisitor) {
+    fun accept(visitor: PersonVisitor) {
+        visitor.preVisitRapporteringsperioder(this)
         perioder.forEach { it.accept(visitor) }
+        visitor.postVisitRapporteringsperioder(this)
     }
 }

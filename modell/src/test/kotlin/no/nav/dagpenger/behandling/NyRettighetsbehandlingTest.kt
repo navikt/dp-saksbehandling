@@ -178,7 +178,7 @@ class NyRettighetsbehandlingTest {
             person.accept(this)
         }
 
-        override fun preVisit(behandlingsId: UUID, hendelseId: UUID) {
+        override fun preVisit(behandling: Behandling<*>, behandlingsId: UUID, hendelseId: UUID) {
             antallBehandlinger++
         }
 

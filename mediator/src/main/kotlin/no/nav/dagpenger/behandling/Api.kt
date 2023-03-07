@@ -106,7 +106,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         person.accept(this)
     }
 
-    override fun preVisit(behandlingsId: UUID, hendelseId: UUID) {
+    override fun preVisit(behandling: no.nav.dagpenger.behandling.Behandling<*>, behandlingsId: UUID, hendelseId: UUID) {
         this.behandlingBygger = Behandling.Builder().navn(
             "Ny rettighetsbehandling",
         ).uuid(behandlingsId).hendelseId(hendelseId)
@@ -130,7 +130,11 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         )
     }
 
-    override fun postVisit(behandlingsId: UUID, hendelseId: UUID) {
+    override fun postVisit(
+        behandling: no.nav.dagpenger.behandling.Behandling<*>,
+        behandlingsId: UUID,
+        hendelseId: UUID,
+    ) {
         this.behandlinger.add(behandlingBygger!!.build())
         this.behandlingBygger = null
     }

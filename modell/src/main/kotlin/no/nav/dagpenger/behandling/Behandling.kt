@@ -48,10 +48,10 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     }
 
     fun accept(visitor: BehandlingVisitor) {
-        visitor.preVisit(behandlingsId, hendelseId)
+        visitor.preVisit(this, behandlingsId, hendelseId)
         visitor.visitTilstand(tilstand.type)
         vilkårsvurdering.accept(visitor)
-        visitor.postVisit(behandlingsId, hendelseId)
+        visitor.postVisit(this, behandlingsId, hendelseId)
     }
 
     protected fun kontekst(hendelse: Hendelse, melding: String? = null) {

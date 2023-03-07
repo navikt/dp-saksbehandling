@@ -37,13 +37,7 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
             it.accept(visitor)
         }
         vedtakHistorikk.accept(visitor)
-        visitor.preVisitRapporteringsperioder(rapporteringsperioder)
         rapporteringsperioder.accept(visitor)
-        visitor.postVisitRapporteringsperioder(rapporteringsperioder)
-    }
-
-    fun addObserver(observer: PersonObserver) {
-        observere.add(observer)
     }
 
     fun håndter(søknadHendelse: SøknadHendelse) {
@@ -87,13 +81,17 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
 
     fun ident() = this.ident.identifikator()
 
+    fun addObserver(observer: PersonObserver) {
+        observere.add(observer)
+    }
     private fun kontekst(hendelse: Hendelse) {
         hendelse.kontekst(this)
     }
 
     internal fun leggTilVedtak(vedtak: Vedtak) {
-        vedtakHistorikk.leggTilVedtak(vedtak)
-        observere.forEach { it.vedtakFattet(VedtakFattetVisitor(this.ident(), vedtak).vedtakFattet) }
+        vedtakHistorikk.leggTilVedtak(vedtak).also {
+            observere.forEach { it.vedtakFattet(VedtakFattetVisitor(this.ident(), vedtak).vedtakFattet) }
+        }
     }
 
     override fun behandlingTilstandEndret(event: BehandlingObserver.BehandlingEndretTilstandEvent) {

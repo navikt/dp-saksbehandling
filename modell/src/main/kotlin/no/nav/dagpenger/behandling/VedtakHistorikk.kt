@@ -15,7 +15,6 @@ class VedtakHistorikk(private val vedtak: MutableList<Vedtak> = mutableListOf())
     internal val grunnlaghistorikk = TemporalCollection<BigDecimal>()
     internal val stønadsperiodehistorikk = TemporalCollection<Stønadsperiode>()
     internal val gjensteåndeStønadsperiode = TemporalCollection<Stønadsperiode>()
-    internal val rettigheter = TemporalCollection<Stønadsperiode>()
 
     fun leggTilVedtak(vedtak: Vedtak) {
         this.vedtak.add(vedtak)
