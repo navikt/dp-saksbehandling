@@ -7,6 +7,7 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
 import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.rapportering.Dag
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
 import java.util.UUID
@@ -41,9 +42,9 @@ abstract class Vilkårsvurdering<Vilkår : Vilkårsvurdering<Vilkår>> private c
         implementasjon { tilstand.håndter(inngangsvilkårResultat, this) }
     }
 
-    fun håndter(rapporteringsHendelse: Rapporteringshendelse) {
+    fun håndter(rapporteringsHendelse: Rapporteringshendelse, tellendeDager: List<Dag>) {
         rapporteringsHendelse.kontekst(this)
-        implementasjon { tilstand.håndter(rapporteringsHendelse, this) }
+        implementasjon { tilstand.håndter(rapporteringsHendelse, tellendeDager, this) }
     }
 
     fun endreTilstand(nyTilstand: Tilstand<Vilkår>) {
@@ -73,7 +74,7 @@ abstract class Vilkårsvurdering<Vilkår : Vilkårsvurdering<Vilkår>> private c
             feilmelding(inngangsvilkårResultat)
         }
 
-        open fun håndter(rapporteringsHendelse: Rapporteringshendelse, vilkårsvurdering: Vilkår) {
+        open fun håndter(rapporteringsHendelse: Rapporteringshendelse, tellendeDager: List<Dag>, vilkårsvurdering: Vilkår) {
             feilmelding(rapporteringsHendelse)
         }
 

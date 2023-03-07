@@ -24,12 +24,13 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
     object IkkeVurdert : Tilstand.IkkeVurdert<LøpendeStønadsperiodeVilkår>() {
         override fun håndter(
             rapporteringsHendelse: Rapporteringshendelse,
+            tellendeDager: List<Dag>,
             vilkårsvurdering: LøpendeStønadsperiodeVilkår,
         ) {
             val harGjenstående =
                 HarGjenstående(vilkårsvurdering.person, rapporteringsHendelse.somPeriode()).harGjenstående()
             val underTerskel =
-                HarArbeidetUnderTerskel(vilkårsvurdering.person, rapporteringsHendelse.somPeriode()).underTerskel()
+                HarArbeidetUnderTerskel(vilkårsvurdering.person, rapporteringsHendelse.somPeriode(), tellendeDager).underTerskel()
             if (harGjenstående && underTerskel) {
                 vilkårsvurdering.endreTilstand(nyTilstand = Oppfylt)
             } else {
@@ -72,7 +73,7 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
         }
     }
 
-    private class HarArbeidetUnderTerskel(person: Person, val periode: Periode) : PersonVisitor {
+    private class HarArbeidetUnderTerskel(person: Person, val periode: Periode, val tellendeDager: List<Dag>) : PersonVisitor {
 
         private val arbeidsdager = mutableListOf<Dag>()
         lateinit var virkningsdato: LocalDate
@@ -83,11 +84,9 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
         }
 
         fun underTerskel(): Boolean {
-            val tellendeArbeidsdager = arbeidsdager.filter { it >= virkningsdato }
-
-            val arbeidstimer = tellendeArbeidsdager.summer()
+            val arbeidstimer = tellendeDager.summer()
             val fastsattarbeidstidForPeriode =
-                (fastsattArbeidstidPerDag * tellendeArbeidsdager.filterIsInstance<Arbeidsdag>().size)
+                (fastsattArbeidstidPerDag * tellendeDager.filterIsInstance<Arbeidsdag>().size)
 
             if (arbeidstimer.div(fastsattarbeidstidForPeriode) <= Prosent(50.0)) {
                 return true

@@ -54,7 +54,7 @@ class Rapporteringsbehandling(
     object VurdererVilkår : Tilstand.VurdererVilkår<Rapporteringsbehandling>() {
         override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
             require(hendelse is Rapporteringshendelse) { "Hendelse er ikke rapporteringshendelse. Hendelsetype: ${hendelse.javaClass.simpleName}. Tilstand: $type" }
-            behandling.vilkårsvurdering.håndter(hendelse)
+            behandling.vilkårsvurdering.håndter(hendelse, behandling.tellendeDager)
             if (behandling.vilkårsvurdering.vurdert()) {
                 behandling.endreTilstand(VurderUtfall, hendelse)
             }
@@ -76,7 +76,7 @@ class Rapporteringsbehandling(
 
         override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
             if (hendelse is Rapporteringshendelse) {
-                behandling.fastsettelser.forEach { it.håndter(hendelse) }
+                behandling.fastsettelser.forEach { it.håndter(hendelse, behandling.tellendeDager) }
                 if (behandling.fastsettelser.vurdert()) {
                     behandling.endreTilstand(Behandlet, hendelse)
                 }
