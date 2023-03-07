@@ -51,6 +51,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
         visitor.preVisit(this, behandlingsId, hendelseId)
         visitor.visitTilstand(tilstand.type)
         vilkårsvurdering.accept(visitor)
+        aktivitetslogg.accept(visitor)
         visitor.postVisit(this, behandlingsId, hendelseId)
     }
 

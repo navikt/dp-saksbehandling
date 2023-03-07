@@ -9,7 +9,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-class VedtakHistorikk(private val vedtak: MutableList<Vedtak> = mutableListOf()) {
+internal class VedtakHistorikk(private val vedtak: MutableList<Vedtak> = mutableListOf()) {
 
     internal val dagsatshistorikk = TemporalCollection<BigDecimal>()
     internal val grunnlaghistorikk = TemporalCollection<BigDecimal>()

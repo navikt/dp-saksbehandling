@@ -12,13 +12,18 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.html.body
+import kotlinx.html.br
 import kotlinx.html.h1
 import kotlinx.html.h2
 import kotlinx.html.head
 import kotlinx.html.li
 import kotlinx.html.meta
 import kotlinx.html.section
+import kotlinx.html.table
+import kotlinx.html.td
+import kotlinx.html.th
 import kotlinx.html.title
+import kotlinx.html.tr
 import kotlinx.html.ul
 import no.nav.dagpenger.behandling.Behandling.Tilstand.Type
 import no.nav.dagpenger.behandling.db.PersonRepository
@@ -57,26 +62,45 @@ internal fun Application.api(
                             }
                             ul {
                                 for (behandling in bygger.behandlinger) {
-                                    li {
-                                        text(
-                                            """
+                                    text(
+                                        """
                                         ${behandling.navn} - Tilstand: '${behandling.tilstand.name}' (opprettet fra hendelse med id '${behandling.hendelseId}')
-                                            """.trimIndent(),
-                                        )
-                                    }
-
-                                    ul {
-                                        for (vilkår in behandling.vilkår)
-                                            li {
-                                                text(
-                                                    """
-                                                ${
-                                                        vilkår.navn
-                                                    }  ${erOppfylt(vilkår.tilstand)}
-                                                    """.trimIndent(),
-                                                )
+                                        """.trimIndent(),
+                                    )
+                                    br { }
+                                    text("Aktivitetslogg")
+                                    br { }
+                                    table {
+                                        tr {
+                                            th {
+                                                text("Type")
+                                            }
+                                            th {
+                                                text("melding")
+                                            }
+                                        }
+                                        for (aktivitet in behandling.aktivitetslogg)
+                                            tr {
+                                                td {
+                                                    text(aktivitet.type)
+                                                }
+                                                td {
+                                                    text(aktivitet.melding)
+                                                }
                                             }
                                     }
+                                    br { }
+
+                                    for (vilkår in behandling.vilkår)
+                                        li {
+                                            text(
+                                                """
+                                                ${
+                                                    vilkår.navn
+                                                }  ${erOppfylt(vilkår.tilstand)}
+                                                """.trimIndent(),
+                                            )
+                                        }
                                 }
                             }
                         }
@@ -106,10 +130,61 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         person.accept(this)
     }
 
-    override fun preVisit(behandling: no.nav.dagpenger.behandling.Behandling<*>, behandlingsId: UUID, hendelseId: UUID) {
+    override fun preVisit(
+        behandling: no.nav.dagpenger.behandling.Behandling<*>,
+        behandlingsId: UUID,
+        hendelseId: UUID,
+    ) {
         this.behandlingBygger = Behandling.Builder().navn(
             "Ny rettighetsbehandling",
         ).uuid(behandlingsId).hendelseId(hendelseId)
+    }
+
+    override fun visitSevere(
+        kontekster: List<SpesifikkKontekst>,
+        aktivitet: Aktivitetslogg.Aktivitet.Severe,
+        melding: String,
+        tidsstempel: String,
+    ) {
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+    }
+
+    override fun visitError(
+        kontekster: List<SpesifikkKontekst>,
+        aktivitet: Aktivitetslogg.Aktivitet.Error,
+        melding: String,
+        tidsstempel: String,
+    ) {
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+    }
+
+    override fun visitWarn(
+        kontekster: List<SpesifikkKontekst>,
+        aktivitet: Aktivitetslogg.Aktivitet.Warn,
+        melding: String,
+        tidsstempel: String,
+    ) {
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+    }
+
+    override fun visitBehov(
+        kontekster: List<SpesifikkKontekst>,
+        aktivitet: Aktivitetslogg.Aktivitet.Behov,
+        type: Aktivitetslogg.Aktivitet.Behov.Behovtype,
+        melding: String,
+        detaljer: Map<String, Any>,
+        tidsstempel: String,
+    ) {
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+    }
+
+    override fun visitInfo(
+        kontekster: List<SpesifikkKontekst>,
+        aktivitet: Aktivitetslogg.Aktivitet.Info,
+        melding: String,
+        tidsstempel: String,
+    ) {
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
     }
 
     override fun visitTilstand(tilstand: Type) {
@@ -145,6 +220,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         val hendelseId: UUID,
         val tilstand: Type,
         val vilkår: List<Vilkår>,
+        val aktivitetslogg: List<Aktivitet>,
     ) {
 
         constructor(builder: Builder) : this(
@@ -153,8 +229,11 @@ private class HtmlBygger(person: Person) : PersonVisitor {
             hendelseId = requireNotNull(builder.hendelseId),
             tilstand = requireNotNull(builder.tilstand),
             vilkår = builder.vilkår.toList(),
+            aktivitetslogg = builder.aktivitetslogg.toList(),
         )
+
         data class Vilkår(val uuid: UUID, val navn: String, val tilstand: Vilkårsvurdering.Tilstand.Type)
+        data class Aktivitet(val type: String, val melding: String)
         class Builder {
             var navn: String? = null
                 private set
@@ -164,6 +243,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
                 private set
             var tilstand: Type? = null
                 private set
+            val aktivitetslogg = mutableListOf<Aktivitet>()
 
             val vilkår = mutableListOf<Vilkår>()
             fun navn(navn: String) = apply { this.navn = navn }
@@ -171,6 +251,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
             fun hendelseId(hendelseId: UUID) = apply { this.hendelseId = hendelseId }
             fun tilstand(tilstand: Type) = apply { this.tilstand = tilstand }
             fun vilkår(vilkår: Vilkår) = apply { this.vilkår.add(vilkår) }
+            fun aktivitet(aktivitet: Aktivitet) = apply { this.aktivitetslogg.add(aktivitet) }
             fun build() = Behandling(this)
         }
     }

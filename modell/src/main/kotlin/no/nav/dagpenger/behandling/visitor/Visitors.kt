@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.visitor
 
+import no.nav.dagpenger.behandling.AktivitetsloggVisitor
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.PersonIdentifikator
 import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
@@ -39,7 +40,7 @@ interface VedtakHistorikkVisitor : VedtakVisitor {
     fun postVisitVedtak() {}
 }
 
-interface BehandlingVisitor : VilkårsvurderingVisitor {
+interface BehandlingVisitor : VilkårsvurderingVisitor, AktivitetsloggVisitor {
     fun preVisit(behandling: Behandling<*>, behandlingsId: UUID, hendelseId: UUID) {}
     fun visitTilstand(tilstand: Behandling.Tilstand.Type) {}
     fun postVisit(behandling: Behandling<*>, behandlingsId: UUID, hendelseId: UUID) {}
