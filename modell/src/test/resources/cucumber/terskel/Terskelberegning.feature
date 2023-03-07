@@ -110,3 +110,25 @@
         | 25.12.2022 | false  | 0     |
       Så skal forbruket være 0 dager
       Så skal bruker ha 2 vedtak
+
+
+
+    Scenario: Har ikke vedtak hele perioden fordi dagpengeperioden utløper. Rapporterer arbeidstimer under terskel.
+      Når rapporteringshendelse mottas
+        | dato       | fravær | timer |
+        | 09.01.2023 | false  | 4     |
+        | 10.01.2023 | false  | 4     |
+        | 11.01.2023 | false  | 4     |
+        | 12.01.2023 | false  | 4     |
+        | 13.01.2023 | false  | 4     |
+        | 14.01.2023 | false  | 0     |
+        | 15.01.2023 | false  | 0     |
+        | 16.01.2023 | false  | 8     |
+        | 17.01.2023 | false  | 8     |
+        | 18.01.2023 | false  | 8     |
+        | 19.01.2023 | false  | 8     |
+        | 20.01.2023 | false  | 8     |
+        | 21.01.2023 | false  | 0     |
+        | 22.01.2023 | false  | 0     |
+      Så skal forbruket være 5 dager
+      Så skal bruker ha 2 vedtak

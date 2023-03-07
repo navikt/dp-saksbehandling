@@ -26,15 +26,16 @@ sealed class Vedtak(
             stønadsperiode: Stønadsperiode,
             dagpengerettighet: Dagpengerettighet,
             fastsattArbeidstidPerDag: Timer,
-        ) =
-            Rammevedtak(
-                virkningsdato = virkningsdato,
-                grunnlag = grunnlag,
-                dagsats = dagsats,
-                stønadsperiode = stønadsperiode,
-                dagpengerettighet = dagpengerettighet, // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
-                fastsattArbeidstidPerDag = fastsattArbeidstidPerDag,
-            )
+            tom: LocalDate?,
+        ) = Rammevedtak(
+            virkningsdato = virkningsdato,
+            grunnlag = grunnlag,
+            dagsats = dagsats,
+            stønadsperiode = stønadsperiode,
+            dagpengerettighet = dagpengerettighet, // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
+            fastsattArbeidstidPerDag = fastsattArbeidstidPerDag,
+            tom = tom, // TODO: Noe mer fornuftig
+        )
 
         fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid, utfall: Boolean) = LøpendeVedtak(
             utfall = utfall,
@@ -66,6 +67,7 @@ class Rammevedtak(
     private val dagsats: BigDecimal,
     private val stønadsperiode: Stønadsperiode,
     private val dagpengerettighet: Dagpengerettighet,
+    private val tom: LocalDate?,
 ) : Vedtak(vedtakId, vedtakstidspunkt, utfall = true, virkningsdato) {
 
     override fun accept(visitor: VedtakVisitor) {

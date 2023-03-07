@@ -20,6 +20,7 @@ class VedtakHistorikkTest {
             stønadsperiode = 52.arbeidsuker,
             dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
             fastsattArbeidstidPerDag = 8.timer,
+            tom = LocalDate.now(),
         )
 
         val vedtak2 = Vedtak.innvilgelse(
@@ -29,6 +30,7 @@ class VedtakHistorikkTest {
             stønadsperiode = 104.arbeidsuker,
             dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
             fastsattArbeidstidPerDag = 8.timer,
+            tom = LocalDate.now(),
         )
 
         vedtakHistorikk.leggTilVedtak(vedtak1)

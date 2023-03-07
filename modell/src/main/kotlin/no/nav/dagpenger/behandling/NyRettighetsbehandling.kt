@@ -198,12 +198,13 @@ class NyRettighetsbehandling private constructor(
             true -> {
                 val visitor = VedtakFastsettelseVisitor(fastsettelser)
                 Vedtak.innvilgelse(
-                    requireNotNull(virkningsdato),
+                    virkningsdato = requireNotNull(virkningsdato),
                     grunnlag = visitor.grunnlag,
                     dagsats = visitor.dagsats,
                     stønadsperiode = visitor.stønadsperiode,
                     dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
                     fastsattArbeidstidPerDag = requireNotNull(fastsattArbeidstidPerDag),
+                    tom = virkningsdato!!.plusWeeks(5), // TODO: Noe mer fornuftig setting av tom dato
                 )
             }
 
