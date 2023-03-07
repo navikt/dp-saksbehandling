@@ -71,7 +71,6 @@
       Så skal forbruket være 9 dager
       Så skal bruker ha 2 vedtak
 
-      @wip
       Scenario: Har ikke vedtak hele periode. Rapporterer arbeidstimer under terskel etter vedtakstidspunkt.
         Når rapporteringshendelse mottas
           | dato       | fravær | timer |
