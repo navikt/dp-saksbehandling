@@ -5,7 +5,7 @@ import no.nav.dagpenger.behandling.Aktivitetskontekst
 import no.nav.dagpenger.behandling.SpesifikkKontekst
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Tilstand.Type.Oppfylt
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
@@ -41,7 +41,7 @@ abstract class Vilkårsvurdering<Vilkår : Vilkårsvurdering<Vilkår>> private c
         implementasjon { tilstand.håndter(inngangsvilkårResultat, this) }
     }
 
-    fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
+    fun håndter(rapporteringsHendelse: Rapporteringshendelse) {
         rapporteringsHendelse.kontekst(this)
         implementasjon { tilstand.håndter(rapporteringsHendelse, this) }
     }
@@ -73,7 +73,7 @@ abstract class Vilkårsvurdering<Vilkår : Vilkårsvurdering<Vilkår>> private c
             feilmelding(inngangsvilkårResultat)
         }
 
-        open fun håndter(rapporteringsHendelse: RapporteringsHendelse, vilkårsvurdering: Vilkår) {
+        open fun håndter(rapporteringsHendelse: Rapporteringshendelse, vilkårsvurdering: Vilkår) {
             feilmelding(rapporteringsHendelse)
         }
 

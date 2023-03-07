@@ -3,7 +3,7 @@ package no.nav.dagpenger.behandling.fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Tilstand.Type.Vurdert
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
 import java.util.UUID
@@ -24,7 +24,7 @@ internal abstract class Fastsettelse<Paragraf : Fastsettelse<Paragraf>>(
     open fun håndter(hendelse: Hendelse) {}
     open fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {}
     open fun håndter(stønadsperiodeResultat: StønadsperiodeResultat) {}
-    open fun håndter(rapporteringsHendelse: RapporteringsHendelse) {}
+    open fun håndter(rapporteringsHendelse: Rapporteringshendelse) {}
 
     sealed class Tilstand<Paragraf : Fastsettelse<Paragraf>>(val tilstandType: Type) {
         open fun accept(paragraf: Paragraf, visitor: FastsettelseVisitor) {}

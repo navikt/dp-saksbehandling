@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.visitor.VedtakHistorikkVisitor
@@ -29,6 +30,8 @@ internal class VedtakHistorikk(private val vedtak: MutableList<Vedtak> = mutable
         vedtak.forEach { it.accept(visitor) }
         visitor.postVisitVedtak()
     }
+
+    fun harVedtak(rapporteringsHendelse: Rapporteringshendelse) = vedtak.isNotEmpty()
 
     private class OppdaterVedtakFakta(vedtak: Vedtak, private val vedtakHistorikk: VedtakHistorikk) : VedtakVisitor {
         init {

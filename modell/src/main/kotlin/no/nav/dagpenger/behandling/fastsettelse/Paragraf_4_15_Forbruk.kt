@@ -2,7 +2,7 @@ package no.nav.dagpenger.behandling.fastsettelse
 
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.entitet.Periode
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsdager
 import no.nav.dagpenger.behandling.mengde.Tid
 import no.nav.dagpenger.behandling.rapportering.Arbeidsdag
@@ -19,7 +19,7 @@ internal class Paragraf_4_15_Forbruk(private val person: Person) : Fastsettelse<
         tilstand.accept(this, visitor)
     }
 
-    override fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
+    override fun håndter(rapporteringsHendelse: Rapporteringshendelse) {
         val periode = rapporteringsHendelse.somPeriode()
         this.forbruk = ForbrukTeller(person, periode).forbruk
         endreTilstand(Vurdert)

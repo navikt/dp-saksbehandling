@@ -6,7 +6,7 @@ import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering
@@ -101,6 +101,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
     sealed class Tilstand<Behandlingstype : Behandling<Behandlingstype>>(val type: Type) : Aktivitetskontekst {
 
         enum class Type {
+            ForberedBehandling,
             VurdererVilkår,
             VurdererUtfall,
             Fastsetter,
@@ -130,7 +131,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
             søknadHendelse.tilstandfeil()
         }
 
-        open fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandling: Behandlingstype) {
+        open fun håndter(rapporteringsHendelse: Rapporteringshendelse, behandling: Behandlingstype) {
             rapporteringsHendelse.tilstandfeil()
         }
 
@@ -145,6 +146,7 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
             beslutterHendelse.tilstandfeil()
         }
 
+        abstract class ForberedBehandling<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.ForberedBehandling)
         abstract class VurdererVilkår<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.VurdererVilkår)
         abstract class VurderUtfall<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.VurdererUtfall)
         abstract class Fastsetter<Behandlingstype : Behandling<Behandlingstype>> : Tilstand<Behandlingstype>(Type.Fastsetter)

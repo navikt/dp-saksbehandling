@@ -1,15 +1,21 @@
-package no.nav.dagpenger.behandling
+package no.nav.dagpenger.behandling.rapportering
 
-import no.nav.dagpenger.behandling.Rapporteringsbehandling.Behandlet
-import no.nav.dagpenger.behandling.Rapporteringsbehandling.Fastsetter
-import no.nav.dagpenger.behandling.Rapporteringsbehandling.VurderUtfall
+import no.nav.dagpenger.behandling.Aktivitetslogg
+import no.nav.dagpenger.behandling.Behandling
+import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.SpesifikkKontekst
+import no.nav.dagpenger.behandling.Vedtak
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
 import no.nav.dagpenger.behandling.fastsettelse.Paragraf_4_15_Forbruk
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsdager
 import no.nav.dagpenger.behandling.mengde.Tid
+import no.nav.dagpenger.behandling.rapportering.Rapporteringsbehandling.Behandlet
+import no.nav.dagpenger.behandling.rapportering.Rapporteringsbehandling.Fastsetter
+import no.nav.dagpenger.behandling.rapportering.Rapporteringsbehandling.VurderUtfall
+import no.nav.dagpenger.behandling.rapportering.Rapporteringsbehandling.VurdererVilkår
 import no.nav.dagpenger.behandling.vilkår.LøpendeStønadsperiodeVilkår
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.oppfylt
 import no.nav.dagpenger.behandling.vilkår.Vilkårsvurdering.Companion.vurdert
@@ -21,7 +27,8 @@ class Rapporteringsbehandling(
     private val person: Person,
     private val rapporteringsId: UUID,
     private val behandlingsId: UUID = UUID.randomUUID(),
-    tilstand: Tilstand<Rapporteringsbehandling> = VurdererVilkår,
+    private val tellendeDager: MutableList<Dag> = mutableListOf(),
+    tilstand: Tilstand<Rapporteringsbehandling> = ForberedendeFakta,
     aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Behandling<Rapporteringsbehandling>(
     person = person,
@@ -35,11 +42,21 @@ class Rapporteringsbehandling(
         listOf(Paragraf_4_15_Forbruk(person = person))
     }
 
+    object ForberedendeFakta : Tilstand.ForberedBehandling<Rapporteringsbehandling>() {
+        override fun håndter(rapporteringsHendelse: Rapporteringshendelse, behandling: Rapporteringsbehandling) {
+            behandling.tellendeDager.addAll(
+                TellendeDager(behandling.person, rapporteringsHendelse.somPeriode()).tellendeDager(),
+            )
+            behandling.endreTilstand(VurdererVilkår, rapporteringsHendelse)
+        }
+    }
+
     object VurdererVilkår : Tilstand.VurdererVilkår<Rapporteringsbehandling>() {
-        override fun håndter(rapporteringsHendelse: RapporteringsHendelse, behandling: Rapporteringsbehandling) {
-            behandling.vilkårsvurdering.håndter(rapporteringsHendelse)
+        override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
+            require(hendelse is Rapporteringshendelse) { "Hendelse er ikke rapporteringshendelse. Hendelsetype: ${hendelse.javaClass.simpleName}. Tilstand: $type" }
+            behandling.vilkårsvurdering.håndter(hendelse)
             if (behandling.vilkårsvurdering.vurdert()) {
-                behandling.endreTilstand(VurderUtfall, rapporteringsHendelse)
+                behandling.endreTilstand(VurderUtfall, hendelse)
             }
         }
     }
@@ -58,7 +75,7 @@ class Rapporteringsbehandling(
     object Fastsetter : Tilstand.Fastsetter<Rapporteringsbehandling>() {
 
         override fun entering(hendelse: Hendelse, behandling: Rapporteringsbehandling) {
-            if (hendelse is RapporteringsHendelse) {
+            if (hendelse is Rapporteringshendelse) {
                 behandling.fastsettelser.forEach { it.håndter(hendelse) }
                 if (behandling.fastsettelser.vurdert()) {
                     behandling.endreTilstand(Behandlet, hendelse)
@@ -94,7 +111,7 @@ class Rapporteringsbehandling(
         ),
     )
 
-    fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
+    fun håndter(rapporteringsHendelse: Rapporteringshendelse) {
         kontekst(rapporteringsHendelse, "Opprettet ny rapporteringsbehandling basert på rapporteringshendelse")
         tilstand.håndter(rapporteringsHendelse, this)
     }

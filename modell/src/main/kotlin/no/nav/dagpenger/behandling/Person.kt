@@ -7,9 +7,10 @@ import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.InngangsvilkårResultat
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.rapportering.Rapporteringsbehandling
 import no.nav.dagpenger.behandling.rapportering.Rapporteringsperioder
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import no.nav.dagpenger.behandling.visitor.VedtakVisitor
@@ -69,14 +70,19 @@ class Person private constructor(private val ident: PersonIdentifikator) : Aktiv
         behandlinger.forEach { it.håndter(beslutterHendelse) }
     }
 
-    fun håndter(rapporteringsHendelse: RapporteringsHendelse) {
+    fun håndter(rapporteringsHendelse: Rapporteringshendelse) {
         kontekst(rapporteringsHendelse)
         rapporteringsperioder.håndter(rapporteringsHendelse)
-        val behandling = Rapporteringsbehandling(this, rapporteringsHendelse.rapporteringsId).also {
-            it.addObserver(this)
+
+        if (vedtakHistorikk.harVedtak(rapporteringsHendelse)) {
+            val behandling = Rapporteringsbehandling(this, rapporteringsHendelse.rapporteringsId).also {
+                it.addObserver(this)
+            }
+            behandlinger.add(behandling)
+            behandling.håndter(rapporteringsHendelse)
+        } else {
+            rapporteringsHendelse.warn("Person har ikke vedtak")
         }
-        behandlinger.add(behandling)
-        behandling.håndter(rapporteringsHendelse)
     }
 
     fun ident() = this.ident.identifikator()

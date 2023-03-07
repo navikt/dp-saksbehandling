@@ -5,7 +5,7 @@ import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Periode
 import no.nav.dagpenger.behandling.entitet.Prosent
 import no.nav.dagpenger.behandling.entitet.Timer
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.rapportering.Arbeidsdag
 import no.nav.dagpenger.behandling.rapportering.Dag
@@ -23,7 +23,7 @@ class LøpendeStønadsperiodeVilkår(private val person: Person) :
 
     object IkkeVurdert : Tilstand.IkkeVurdert<LøpendeStønadsperiodeVilkår>() {
         override fun håndter(
-            rapporteringsHendelse: RapporteringsHendelse,
+            rapporteringsHendelse: Rapporteringshendelse,
             vilkårsvurdering: LøpendeStønadsperiodeVilkår,
         ) {
             val harGjenstående =

@@ -6,7 +6,7 @@ import no.nav.dagpenger.behandling.rapportering.Dag
 import no.nav.dagpenger.behandling.rapportering.Rapporteringsperiode
 import java.util.UUID
 
-class RapporteringsHendelse(
+class Rapporteringshendelse(
     ident: String,
     internal val rapporteringsId: UUID,
     rapporteringsdager: List<Rapporteringsdag>,

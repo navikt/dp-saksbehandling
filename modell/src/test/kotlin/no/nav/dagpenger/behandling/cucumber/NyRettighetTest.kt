@@ -8,8 +8,8 @@ import no.nav.dagpenger.behandling.hendelser.Avslått
 import no.nav.dagpenger.behandling.hendelser.BeslutterHendelse
 import no.nav.dagpenger.behandling.hendelser.GrunnlagOgSatsResultat
 import no.nav.dagpenger.behandling.hendelser.Innvilget
-import no.nav.dagpenger.behandling.hendelser.RapporteringsHendelse
 import no.nav.dagpenger.behandling.hendelser.Rapporteringsdag
+import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.hendelser.StønadsperiodeResultat
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsdager
@@ -67,7 +67,7 @@ class NyRettighetTest : No {
     }
 
     private fun håndterRapporteringsHendelse(rapporteringsdager: List<Rapporteringsdag>) {
-        person.håndter(RapporteringsHendelse(ident, UUID.randomUUID(), rapporteringsdager))
+        person.håndter(Rapporteringshendelse(ident, UUID.randomUUID(), rapporteringsdager))
     }
 
     private fun håndterBeslutterHendelse() {
