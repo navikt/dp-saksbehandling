@@ -125,12 +125,12 @@ class NyRettighetsbehandling private constructor(
         }
 
         override fun håndter(
-            paragraf423AlderResultat: InngangsvilkårResultat,
+            inngangsvilkårResultat: InngangsvilkårResultat,
             behandling: NyRettighetsbehandling,
         ) {
-            behandling.vilkårsvurdering.håndter(paragraf423AlderResultat)
+            behandling.vilkårsvurdering.håndter(inngangsvilkårResultat)
             if (behandling.vilkårsvurdering.vurdert()) {
-                behandling.endreTilstand(VurdererUtfall, paragraf423AlderResultat)
+                behandling.endreTilstand(VurdererUtfall, inngangsvilkårResultat)
             }
         }
     }

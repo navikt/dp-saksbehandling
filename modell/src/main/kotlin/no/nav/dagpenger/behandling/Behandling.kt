@@ -135,10 +135,10 @@ abstract class Behandling<Behandlingstype : Behandling<Behandlingstype>>(
         }
 
         open fun håndter(
-            paragraf423AlderResultat: InngangsvilkårResultat,
+            inngangsvilkårResultat: InngangsvilkårResultat,
             behandling: Behandlingstype,
         ) {
-            paragraf423AlderResultat.tilstandfeil()
+            inngangsvilkårResultat.tilstandfeil()
         }
 
         open fun håndter(beslutterHendelse: BeslutterHendelse, behandling: Behandlingstype) {
