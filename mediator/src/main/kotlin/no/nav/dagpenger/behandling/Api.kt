@@ -76,7 +76,13 @@ internal fun Application.api(
                                                 text("Type")
                                             }
                                             th {
+                                                text("tidspunkt")
+                                            }
+                                            th {
                                                 text("melding")
+                                            }
+                                            th {
+                                                text("kontekst")
                                             }
                                         }
                                         for (aktivitet in behandling.aktivitetslogg)
@@ -85,7 +91,13 @@ internal fun Application.api(
                                                     text(aktivitet.type)
                                                 }
                                                 td {
+                                                    text(aktivitet.tidsstempel)
+                                                }
+                                                td {
                                                     text(aktivitet.melding)
+                                                }
+                                                td {
+                                                    text(aktivitet.kontekster.joinToString { it.melding() })
                                                 }
                                             }
                                     }
@@ -146,7 +158,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         melding: String,
         tidsstempel: String,
     ) {
-        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, melding, tidsstempel, kontekster))
     }
 
     override fun visitError(
@@ -155,7 +167,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         melding: String,
         tidsstempel: String,
     ) {
-        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, melding, tidsstempel, kontekster))
     }
 
     override fun visitWarn(
@@ -164,7 +176,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         melding: String,
         tidsstempel: String,
     ) {
-        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, melding, tidsstempel, kontekster))
     }
 
     override fun visitBehov(
@@ -175,7 +187,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         detaljer: Map<String, Any>,
         tidsstempel: String,
     ) {
-        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, melding, tidsstempel, kontekster))
     }
 
     override fun visitInfo(
@@ -184,7 +196,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         melding: String,
         tidsstempel: String,
     ) {
-        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, aktivitet.toString()))
+        this.behandlingBygger?.aktivitet(Behandling.Aktivitet(aktivitet.javaClass.simpleName, melding, tidsstempel, kontekster))
     }
 
     override fun visitTilstand(tilstand: Type) {
@@ -233,7 +245,7 @@ private class HtmlBygger(person: Person) : PersonVisitor {
         )
 
         data class Vilkår(val uuid: UUID, val navn: String, val tilstand: Vilkårsvurdering.Tilstand.Type)
-        data class Aktivitet(val type: String, val melding: String)
+        data class Aktivitet(val type: String, val melding: String, val tidsstempel: String, val kontekster: List<SpesifikkKontekst>)
         class Builder {
             var navn: String? = null
                 private set
