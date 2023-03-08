@@ -14,9 +14,26 @@ internal class Paragraf_4_11_Grunnlag(
 
     private lateinit var grunnlag: BigDecimal
 
-    object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_11_Grunnlag>()
+    object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_11_Grunnlag>() {
+        override fun håndter(hendelse: Hendelse, fastsettelse: Paragraf_4_11_Grunnlag) {
+            hendelse.behov(
+                Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov,
+                "Trenger grunnlag",
+                mapOf(
+                    "virkningsdato" to fastsettelse.virkningsdato,
+                    "inntektsId" to fastsettelse.inntektsId,
+                ),
+            )
+            fastsettelse.endreTilstand(AvventerVurdering)
+        }
+    }
 
-    object AvventerVurdering : Tilstand.Avventer<Paragraf_4_11_Grunnlag>()
+    object AvventerVurdering : Tilstand.Avventer<Paragraf_4_11_Grunnlag>() {
+        override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, fastsettelse: Paragraf_4_11_Grunnlag) {
+            fastsettelse.grunnlag = grunnlagOgSatsResultat.grunnlag
+            fastsettelse.endreTilstand(Vurdert)
+        }
+    }
 
     object Vurdert : Tilstand.Vurdert<Paragraf_4_11_Grunnlag>() {
         override fun accept(paragraf: Paragraf_4_11_Grunnlag, visitor: FastsettelseVisitor) {
@@ -24,24 +41,9 @@ internal class Paragraf_4_11_Grunnlag(
         }
     }
 
+    override fun <T> implementasjon(block: Paragraf_4_11_Grunnlag.() -> T) = this.block()
+
     override fun accept(visitor: FastsettelseVisitor) {
         tilstand.accept(this, visitor)
-    }
-
-    override fun håndter(hendelse: Hendelse) {
-        hendelse.behov(
-            Aktivitetslogg.Aktivitet.Behov.Behovtype.GrunnlagsBehov,
-            "Trenger grunnlag",
-            mapOf(
-                "virkningsdato" to virkningsdato,
-                "inntektsId" to inntektsId,
-            ),
-        )
-        endreTilstand(AvventerVurdering)
-    }
-
-    override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
-        this.grunnlag = grunnlagOgSatsResultat.grunnlag
-        endreTilstand(Vurdert)
     }
 }

@@ -23,7 +23,7 @@ import no.nav.dagpenger.behandling.visitor.FastsettelseVisitor
 import java.time.LocalDate
 import java.util.UUID
 
-class Rapporteringsbehandling(
+internal class Rapporteringsbehandling(
     private val person: Person,
     private val rapporteringsId: UUID,
     private val behandlingsId: UUID = UUID.randomUUID(),
@@ -39,7 +39,7 @@ class Rapporteringsbehandling(
     aktivitetslogg = aktivitetslogg,
 ) {
     override val fastsettelser by lazy {
-        listOf(Paragraf_4_15_Forbruk(person = person))
+        listOf(Paragraf_4_15_Forbruk())
     }
 
     object ForberedendeFakta : Tilstand.ForberedBehandling<Rapporteringsbehandling>() {

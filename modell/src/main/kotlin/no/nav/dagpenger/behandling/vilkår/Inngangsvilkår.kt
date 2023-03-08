@@ -9,7 +9,7 @@ import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.visitor.VilkårsvurderingVisitor
 import java.time.LocalDate
 
-class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
+internal class Inngangsvilkår : Vilkårsvurdering<Inngangsvilkår>(IkkeVurdert) {
 
     private lateinit var virkningsdato: LocalDate
     private lateinit var fastsattTimer: Timer

@@ -12,8 +12,25 @@ internal class Paragraf_4_12_Sats(
     private val virkningsdato: LocalDate,
 ) : Fastsettelse<Paragraf_4_12_Sats>(IkkeVurdert) {
     private lateinit var sats: BigDecimal
-    object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_12_Sats>()
-    object AvventerVurdering : Tilstand.Avventer<Paragraf_4_12_Sats>()
+    object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_12_Sats>() {
+        override fun håndter(hendelse: Hendelse, fastsettelse: Paragraf_4_12_Sats) {
+            hendelse.behov(
+                SatsBehov,
+                "Trenger sats",
+                mapOf(
+                    "virkningsdato" to fastsettelse.virkningsdato,
+                    "inntektsId" to fastsettelse.inntektsId,
+                ),
+            )
+            fastsettelse.endreTilstand(AvventerVurdering)
+        }
+    }
+    object AvventerVurdering : Tilstand.Avventer<Paragraf_4_12_Sats>() {
+        override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat, fastsettelse: Paragraf_4_12_Sats) {
+            fastsettelse.sats = grunnlagOgSatsResultat.dagsats
+            fastsettelse.endreTilstand(Vurdert)
+        }
+    }
     object Vurdert : Tilstand.Vurdert<Paragraf_4_12_Sats>() {
         override fun accept(paragraf: Paragraf_4_12_Sats, visitor: FastsettelseVisitor) {
             visitor.visitDagsats(paragraf.sats)
@@ -24,20 +41,5 @@ internal class Paragraf_4_12_Sats(
         tilstand.accept(this, visitor)
     }
 
-    override fun håndter(hendelse: Hendelse) {
-        hendelse.behov(
-            SatsBehov,
-            "Trenger sats",
-            mapOf(
-                "virkningsdato" to virkningsdato,
-                "inntektsId" to inntektsId,
-            ),
-        )
-        endreTilstand(AvventerVurdering)
-    }
-
-    override fun håndter(grunnlagOgSatsResultat: GrunnlagOgSatsResultat) {
-        this.sats = grunnlagOgSatsResultat.dagsats
-        endreTilstand(Vurdert)
-    }
+    override fun <T> implementasjon(block: Paragraf_4_12_Sats.() -> T) = this.block()
 }

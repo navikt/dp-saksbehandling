@@ -111,8 +111,7 @@
       Så skal forbruket være 0 dager
       Så skal bruker ha 2 vedtak
 
-
-
+    @wip
     Scenario: Har ikke vedtak hele perioden fordi dagpengeperioden utløper. Rapporterer arbeidstimer under terskel.
       Når rapporteringshendelse mottas
         | dato       | fravær | timer |

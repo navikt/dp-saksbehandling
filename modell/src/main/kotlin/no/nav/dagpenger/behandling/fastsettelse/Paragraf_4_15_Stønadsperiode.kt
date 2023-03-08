@@ -14,8 +14,28 @@ internal class Paragraf_4_15_Stønadsperiode(
 
     private lateinit var stønadsperiode: Stønadsperiode
 
-    object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_15_Stønadsperiode>()
-    object AvventerVurdering : Tilstand.Avventer<Paragraf_4_15_Stønadsperiode>()
+    object IkkeVurdert : Tilstand.IkkeVurdert<Paragraf_4_15_Stønadsperiode>() {
+        override fun håndter(hendelse: Hendelse, fastsettelse: Paragraf_4_15_Stønadsperiode) {
+            hendelse.behov(
+                Aktivitetslogg.Aktivitet.Behov.Behovtype.StønadsperiodeBehov,
+                "Trenger dagpengeperiode",
+                mapOf(
+                    "virkningsdato" to fastsettelse.virkningsdato,
+                    "inntektsId" to fastsettelse.inntektsId,
+                ),
+            )
+            fastsettelse.endreTilstand(AvventerVurdering)
+        }
+    }
+    object AvventerVurdering : Tilstand.Avventer<Paragraf_4_15_Stønadsperiode>() {
+        override fun håndter(
+            stønadsperiodeResultat: StønadsperiodeResultat,
+            fastsettelse: Paragraf_4_15_Stønadsperiode,
+        ) {
+            fastsettelse.stønadsperiode = stønadsperiodeResultat.stønadsperiode
+            fastsettelse.endreTilstand(Vurdert)
+        }
+    }
     object Vurdert : Tilstand.Vurdert<Paragraf_4_15_Stønadsperiode>() {
         override fun accept(paragraf: Paragraf_4_15_Stønadsperiode, visitor: FastsettelseVisitor) {
             visitor.visitStønadsperiode(paragraf.stønadsperiode)
@@ -26,19 +46,5 @@ internal class Paragraf_4_15_Stønadsperiode(
         tilstand.accept(this, visitor)
     }
 
-    override fun håndter(hendelse: Hendelse) {
-        hendelse.behov(
-            Aktivitetslogg.Aktivitet.Behov.Behovtype.StønadsperiodeBehov,
-            "Trenger dagpengeperiode",
-            mapOf(
-                "virkningsdato" to virkningsdato,
-                "inntektsId" to inntektsId,
-            ),
-        )
-    }
-
-    override fun håndter(stønadsperiodeResultat: StønadsperiodeResultat) {
-        this.stønadsperiode = stønadsperiodeResultat.stønadsperiode
-        endreTilstand(Vurdert)
-    }
+    override fun <T> implementasjon(block: Paragraf_4_15_Stønadsperiode.() -> T) = this.block()
 }

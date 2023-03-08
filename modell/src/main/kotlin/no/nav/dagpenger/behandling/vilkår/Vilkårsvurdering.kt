@@ -47,7 +47,7 @@ abstract class Vilkårsvurdering<Vilkår : Vilkårsvurdering<Vilkår>> private c
         implementasjon { tilstand.håndter(rapporteringsHendelse, tellendeDager, this) }
     }
 
-    fun endreTilstand(nyTilstand: Tilstand<Vilkår>) {
+    internal fun endreTilstand(nyTilstand: Tilstand<Vilkår>) {
         loggTilstandsendring(nyTilstand)
         tilstand = nyTilstand
     }

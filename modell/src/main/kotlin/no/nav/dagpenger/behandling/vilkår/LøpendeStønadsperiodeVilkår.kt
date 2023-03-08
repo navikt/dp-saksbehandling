@@ -18,7 +18,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-class LøpendeStønadsperiodeVilkår(private val person: Person) :
+internal class LøpendeStønadsperiodeVilkår(private val person: Person) :
     Vilkårsvurdering<LøpendeStønadsperiodeVilkår>(IkkeVurdert) {
 
     object IkkeVurdert : Tilstand.IkkeVurdert<LøpendeStønadsperiodeVilkår>() {
