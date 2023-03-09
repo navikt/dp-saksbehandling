@@ -3,7 +3,10 @@ package no.nav.dagpenger.behandling.rapportering
 import no.nav.dagpenger.behandling.Dagpengerettighet
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.entitet.Periode
+import no.nav.dagpenger.behandling.entitet.Timer
+import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -27,7 +30,14 @@ internal class TellendeDager(person: Person, val periode: Periode) : PersonVisit
         }
     }
 
-    override fun visitVedtakDagpengerettighet(dagpengerettighet: Dagpengerettighet) {
+    override fun visitRammeVedtak(
+        grunnlag: BigDecimal,
+        dagsats: BigDecimal,
+        stønadsperiode: Stønadsperiode,
+        fastsattArbeidstidPerDag: Timer,
+        dagpengerettighet: Dagpengerettighet,
+        gyldigTom: LocalDate?,
+    ) {
         harDagpengevedtak = true
     }
 

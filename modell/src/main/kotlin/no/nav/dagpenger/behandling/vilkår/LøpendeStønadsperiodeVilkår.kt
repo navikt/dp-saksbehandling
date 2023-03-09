@@ -14,6 +14,7 @@ import no.nav.dagpenger.behandling.rapportering.Helgedag
 import no.nav.dagpenger.behandling.vilkår.LøpendeStønadsperiodeVilkår.IkkeOppfylt
 import no.nav.dagpenger.behandling.vilkår.LøpendeStønadsperiodeVilkår.Oppfylt
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -96,18 +97,23 @@ internal class LøpendeStønadsperiodeVilkår(private val person: Person) :
         }
 
         lateinit var fastsattArbeidstidPerDag: Timer
-        override fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Timer) {
+
+        override fun visitRammeVedtak(
+            grunnlag: BigDecimal,
+            dagsats: BigDecimal,
+            stønadsperiode: Stønadsperiode,
+            fastsattArbeidstidPerDag: Timer,
+            dagpengerettighet: Dagpengerettighet,
+            gyldigTom: LocalDate?,
+        ) {
             this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
+            harDagpengevedtak = true // TODO: Burde se om Dagpengerettighet = OrdinæreDagpenger?
         }
 
         override fun visitArbeidsdag(arbeidsdag: Arbeidsdag) {
             if (arbeidsdag in periode) {
                 arbeidsdager.add(arbeidsdag)
             }
-        }
-
-        override fun visitVedtakDagpengerettighet(dagpengerettighet: Dagpengerettighet) {
-            harDagpengevedtak = true
         }
 
         override fun postVisitVedtak(

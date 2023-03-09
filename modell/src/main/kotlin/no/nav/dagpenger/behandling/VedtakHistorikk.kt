@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.hendelser.Rapporteringshendelse
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
@@ -48,16 +49,17 @@ internal class VedtakHistorikk(private val vedtak: MutableList<Vedtak> = mutable
             this.virkningsdato = virkningsdato
         }
 
-        override fun visitVedtakDagsats(dagsats: BigDecimal) {
+        override fun visitRammeVedtak(
+            grunnlag: BigDecimal,
+            dagsats: BigDecimal,
+            stønadsperiode: Stønadsperiode,
+            fastsattArbeidstidPerDag: Timer,
+            dagpengerettighet: Dagpengerettighet,
+            gyldigTom: LocalDate?,
+        ) {
             vedtakHistorikk.dagsatshistorikk.put(virkningsdato, dagsats)
-        }
-
-        override fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {
             vedtakHistorikk.stønadsperiodehistorikk.put(virkningsdato, stønadsperiode)
             vedtakHistorikk.gjensteåndeStønadsperiode.put(virkningsdato, stønadsperiode)
-        }
-
-        override fun visitVedtakGrunnlag(grunnlag: BigDecimal) {
             vedtakHistorikk.grunnlaghistorikk.put(virkningsdato, grunnlag)
         }
 
