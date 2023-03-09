@@ -34,21 +34,6 @@ interface VedtakVisitor {
         gyldigTom: LocalDate?,
     ) {}
 
-    @Deprecated("Bruk visitRammeVedtak")
-    fun visitVedtakGrunnlag(grunnlag: BigDecimal) {}
-
-    @Deprecated("Bruk visitRammeVedtak")
-    fun visitVedtakDagsats(dagsats: BigDecimal) {}
-
-    @Deprecated("Bruk visitRammeVedtak")
-    fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {}
-
-    @Deprecated("Bruk visitRammeVedtak")
-    fun visitVedtakDagpengerettighet(dagpengerettighet: Dagpengerettighet) {}
-
-    @Deprecated("Bruk visitRammeVedtak")
-    fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Timer) {}
-
     fun visitForbruk(forbruk: Tid) {}
 
     fun postVisitVedtak(
