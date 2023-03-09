@@ -25,11 +25,32 @@ interface PersonVisitor : NyRettighetsbehandlingVisitor, VedtakHistorikkVisitor,
 }
 interface VedtakVisitor {
     fun preVisitVedtak(vedtakId: UUID, virkningsdato: LocalDate, vedtakstidspunkt: LocalDateTime, utfall: Boolean) {}
+    fun visitRammeVedtak(
+        grunnlag: BigDecimal,
+        dagsats: BigDecimal,
+        stønadsperiode: Stønadsperiode,
+        fastsattArbeidstidPerDag: Timer,
+        dagpengerettighet: Dagpengerettighet,
+        gyldigTom: LocalDate?,
+    ) {}
+
+    @Deprecated("Bruk visitRammeVedtak")
     fun visitVedtakGrunnlag(grunnlag: BigDecimal) {}
+
+    @Deprecated("Bruk visitRammeVedtak")
     fun visitVedtakDagsats(dagsats: BigDecimal) {}
+
+    @Deprecated("Bruk visitRammeVedtak")
     fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {}
+
+    @Deprecated("Bruk visitRammeVedtak")
     fun visitVedtakDagpengerettighet(dagpengerettighet: Dagpengerettighet) {}
+
+    @Deprecated("Bruk visitRammeVedtak")
+    fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Timer) {}
+
     fun visitForbruk(forbruk: Tid) {}
+
     fun postVisitVedtak(
         vedtakId: UUID,
         virkningsdato: LocalDate,
@@ -37,7 +58,6 @@ interface VedtakVisitor {
         utfall: Boolean,
         gyldigTom: LocalDate?,
     ) {}
-    fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Timer) {}
 }
 
 interface VedtakHistorikkVisitor : VedtakVisitor {

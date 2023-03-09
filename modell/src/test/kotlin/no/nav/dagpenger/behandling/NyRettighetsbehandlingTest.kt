@@ -194,20 +194,19 @@ class NyRettighetsbehandlingTest {
             this.vedtakUtfall = utfall
         }
 
-        override fun visitVedtakGrunnlag(grunnlag: BigDecimal) {
+        override fun visitRammeVedtak(
+            grunnlag: BigDecimal,
+            dagsats: BigDecimal,
+            stønadsperiode: Stønadsperiode,
+            fastsattArbeidstidPerDag: Timer,
+            dagpengerettighet: Dagpengerettighet,
+            gyldigTom: LocalDate?,
+        ) {
             this.grunnlag = grunnlag
-        }
-
-        override fun visitVedtakDagsats(dagsats: BigDecimal) {
             this.dagsats = dagsats
-        }
-
-        override fun visitVedtakStønadsperiode(stønadsperiode: Stønadsperiode) {
             this.stønadsperiode = stønadsperiode
-        }
-
-        override fun visitVedtakDagpengerettighet(dagpengerettighet: Dagpengerettighet) {
             this.dagpengerettighet = dagpengerettighet
+            this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
         }
 
         override fun visitForbruk(forbruk: Tid) {
@@ -217,13 +216,9 @@ class NyRettighetsbehandlingTest {
         override fun visitGjenståendeStønadsperiode(gjenståendePeriode: Stønadsperiode) {
             this.gjenståendeStønadsperiode = gjenståendePeriode
         }
-
-        override fun visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag: Timer) {
-            this.fastsattArbeidstidPerDag = fastsattArbeidstidPerDag
-        }
     }
 
-    private class TestObserver() : PersonObserver {
+    private class TestObserver : PersonObserver {
         val vedtakFattet = mutableListOf<PersonObserver.VedtakFattet>()
         override fun vedtakFattet(vedtakFattet: PersonObserver.VedtakFattet) {
             this.vedtakFattet.add(vedtakFattet)

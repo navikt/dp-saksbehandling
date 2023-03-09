@@ -76,6 +76,15 @@ class Rammevedtak(
         stønadsperiode.let { visitor.visitVedtakStønadsperiode(it) }
         visitor.visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag)
         visitor.visitVedtakDagpengerettighet(dagpengerettighet)
+
+        visitor.visitRammeVedtak(
+            fastsattArbeidstidPerDag = fastsattArbeidstidPerDag,
+            grunnlag = grunnlag,
+            dagsats = dagsats,
+            stønadsperiode = stønadsperiode,
+            dagpengerettighet = dagpengerettighet,
+            gyldigTom = gyldigTom,
+        )
         visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall, gyldigTom)
     }
 }
