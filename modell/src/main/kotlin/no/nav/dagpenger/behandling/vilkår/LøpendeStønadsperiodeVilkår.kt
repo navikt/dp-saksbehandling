@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.vilkår
 
+import no.nav.dagpenger.behandling.Dagpengerettighet
 import no.nav.dagpenger.behandling.Person
-import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Periode
 import no.nav.dagpenger.behandling.entitet.Prosent
 import no.nav.dagpenger.behandling.entitet.Timer
@@ -115,6 +115,7 @@ internal class LøpendeStønadsperiodeVilkår(private val person: Person) :
             virkningsdato: LocalDate,
             vedtakstidspunkt: LocalDateTime,
             utfall: Boolean,
+            gyldigTom: LocalDate?,
         ) {
             if (harDagpengevedtak) {
                 this.virkningsdato = virkningsdato

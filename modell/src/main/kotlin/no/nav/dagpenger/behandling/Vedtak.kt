@@ -1,6 +1,5 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.mengde.Stønadsperiode
 import no.nav.dagpenger.behandling.mengde.Tid
@@ -26,7 +25,7 @@ sealed class Vedtak(
             stønadsperiode: Stønadsperiode,
             dagpengerettighet: Dagpengerettighet,
             fastsattArbeidstidPerDag: Timer,
-            tom: LocalDate?,
+            gyldigTom: LocalDate?,
         ) = Rammevedtak(
             virkningsdato = virkningsdato,
             grunnlag = grunnlag,
@@ -34,7 +33,7 @@ sealed class Vedtak(
             stønadsperiode = stønadsperiode,
             dagpengerettighet = dagpengerettighet, // TODO: Skal rettighetslista bare inneholde innvilgede rettigheter? Hva med avslag på utdanning f.eks.?
             fastsattArbeidstidPerDag = fastsattArbeidstidPerDag,
-            tom = tom, // TODO: Noe mer fornuftig
+            gyldigTom = gyldigTom, // TODO: Noe mer fornuftig
         )
 
         fun løpendeVedtak(virkningsdato: LocalDate, forbruk: Tid, utfall: Boolean) = LøpendeVedtak(
@@ -54,7 +53,7 @@ class Avslag(
 ) : Vedtak(vedtakId, vedtakstidspunkt, utfall = false, virkningsdato) {
     override fun accept(visitor: VedtakVisitor) {
         visitor.preVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
-        visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
+        visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall, null) // TODO: Refaktorer visitorer
     }
 }
 
@@ -67,7 +66,7 @@ class Rammevedtak(
     private val dagsats: BigDecimal,
     private val stønadsperiode: Stønadsperiode,
     private val dagpengerettighet: Dagpengerettighet,
-    private val tom: LocalDate?,
+    private val gyldigTom: LocalDate?,
 ) : Vedtak(vedtakId, vedtakstidspunkt, utfall = true, virkningsdato) {
 
     override fun accept(visitor: VedtakVisitor) {
@@ -77,7 +76,7 @@ class Rammevedtak(
         stønadsperiode.let { visitor.visitVedtakStønadsperiode(it) }
         visitor.visitFastsattArbeidstidPerDag(fastsattArbeidstidPerDag)
         visitor.visitVedtakDagpengerettighet(dagpengerettighet)
-        visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
+        visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall, gyldigTom)
     }
 }
 
@@ -91,6 +90,6 @@ class LøpendeVedtak(
     override fun accept(visitor: VedtakVisitor) {
         visitor.preVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
         visitor.visitForbruk(forbruk)
-        visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall)
+        visitor.postVisitVedtak(vedtakId, virkningsdato, vedtakstidspunkt, utfall, null)
     }
 }

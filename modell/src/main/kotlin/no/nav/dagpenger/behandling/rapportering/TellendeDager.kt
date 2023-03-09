@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.rapportering
 
+import no.nav.dagpenger.behandling.Dagpengerettighet
 import no.nav.dagpenger.behandling.Person
-import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Periode
 import no.nav.dagpenger.behandling.visitor.PersonVisitor
 import java.time.LocalDate
@@ -10,19 +10,20 @@ import java.util.UUID
 
 internal class TellendeDager(person: Person, val periode: Periode) : PersonVisitor {
 
-    private val arbeidsdager = mutableListOf<Dag>()
+    private val dager = mutableListOf<Dag>()
     lateinit var virkningsdato: LocalDate
+    private var gyldigTom: LocalDate? = null
     var harDagpengevedtak = false
 
     init {
         person.accept(this)
     }
 
-    fun tellendeDager() = arbeidsdager.filter { it >= virkningsdato }
+    fun tellendeDager() = dager.filter { dato -> dato >= virkningsdato && (gyldigTom == null || dato <= gyldigTom!!) }
 
     override fun visitArbeidsdag(arbeidsdag: Arbeidsdag) {
         if (arbeidsdag in periode) {
-            arbeidsdager.add(arbeidsdag)
+            dager.add(arbeidsdag)
         }
     }
 
@@ -35,16 +36,20 @@ internal class TellendeDager(person: Person, val periode: Periode) : PersonVisit
         virkningsdato: LocalDate,
         vedtakstidspunkt: LocalDateTime,
         utfall: Boolean,
+        gyldigTom: LocalDate?,
     ) {
         if (harDagpengevedtak) {
             this.virkningsdato = virkningsdato
+            if (gyldigTom != null) {
+                this.gyldigTom = gyldigTom
+            }
         }
         harDagpengevedtak = false
     }
 
     override fun visitHelgedag(helgedag: Helgedag) {
         if (helgedag in periode) {
-            arbeidsdager.add(helgedag)
+            dager.add(helgedag)
         }
     }
 }

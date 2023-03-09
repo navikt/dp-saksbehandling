@@ -4,7 +4,6 @@ import no.nav.dagpenger.behandling.Aktivitetslogg.Aktivitet.Behov.Behovtype.Kval
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Behandlet
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Fastsetter
 import no.nav.dagpenger.behandling.NyRettighetsbehandling.Kvalitetssikrer
-import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Timer
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse
 import no.nav.dagpenger.behandling.fastsettelse.Fastsettelse.Companion.vurdert
@@ -204,7 +203,7 @@ class NyRettighetsbehandling private constructor(
                     stønadsperiode = visitor.stønadsperiode,
                     dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
                     fastsattArbeidstidPerDag = requireNotNull(fastsattArbeidstidPerDag),
-                    tom = virkningsdato!!.plusWeeks(5), // TODO: Noe mer fornuftig setting av tom dato
+                    gyldigTom = virkningsdato!!.plusWeeks(5), // TODO: Noe mer fornuftig setting av tom dato
                 )
             }
 

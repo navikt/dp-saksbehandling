@@ -1,6 +1,5 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.entitet.Dagpengerettighet
 import no.nav.dagpenger.behandling.entitet.Timer.Companion.timer
 import no.nav.dagpenger.behandling.mengde.Enhet.Companion.arbeidsuker
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -20,7 +19,7 @@ class VedtakHistorikkTest {
             stønadsperiode = 52.arbeidsuker,
             dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
             fastsattArbeidstidPerDag = 8.timer,
-            tom = LocalDate.now(),
+            gyldigTom = LocalDate.now(),
         )
 
         val vedtak2 = Vedtak.innvilgelse(
@@ -30,7 +29,7 @@ class VedtakHistorikkTest {
             stønadsperiode = 104.arbeidsuker,
             dagpengerettighet = Dagpengerettighet.OrdinæreDagpenger,
             fastsattArbeidstidPerDag = 8.timer,
-            tom = LocalDate.now(),
+            gyldigTom = LocalDate.now(),
         )
 
         vedtakHistorikk.leggTilVedtak(vedtak1)

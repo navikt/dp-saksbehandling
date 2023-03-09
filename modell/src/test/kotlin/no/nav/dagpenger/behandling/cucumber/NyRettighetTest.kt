@@ -125,6 +125,7 @@ class NyRettighetTest : No {
             virkningsdato: LocalDate,
             vedtakstidspunkt: LocalDateTime,
             utfall: Boolean,
+            gyldigTom: LocalDate?,
         ) {
             antallVedtak++
         }

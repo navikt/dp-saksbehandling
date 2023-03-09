@@ -112,7 +112,7 @@
       Så skal bruker ha 2 vedtak
 
     @wip
-    Scenario: Har ikke vedtak hele perioden fordi dagpengeperioden utløper. Rapporterer arbeidstimer under terskel.
+    Scenario: Har ikke vedtak hele perioden fordi dagpengevedtaket opphører. Rapporterer arbeidstimer under terskel.
       Når rapporteringshendelse mottas
         | dato       | fravær | timer |
         | 09.01.2023 | false  | 4     |
