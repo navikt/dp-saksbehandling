@@ -1,4 +1,4 @@
-package no.nav.dagpenger.behandling.entitet
+package no.nav.dagpenger.behandling
 
 enum class Dagpengerettighet {
     OrdinæreDagpenger,
