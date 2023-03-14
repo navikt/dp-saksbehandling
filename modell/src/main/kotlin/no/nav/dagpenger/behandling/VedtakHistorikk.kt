@@ -24,7 +24,7 @@ internal class VedtakHistorikk(private val vedtak: MutableList<Vedtak> = mutable
     }
 
     fun accept(visitor: VedtakHistorikkVisitor) {
-        if (gjensteåndeStønadsperiode.historikk().isNotEmpty()) {
+        if (gjensteåndeStønadsperiode.harHistorikk()) {
             visitor.visitGjenståendeStønadsperiode(gjensteåndeStønadsperiode.get(LocalDate.now()))
         }
         visitor.preVisitVedtak()

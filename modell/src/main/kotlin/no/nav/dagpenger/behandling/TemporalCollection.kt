@@ -23,5 +23,5 @@ internal class TemporalCollection<R> {
         put(at.atStartOfDay(), item)
     }
 
-    fun historikk() = contents.toMap()
+    fun harHistorikk() = contents.isNotEmpty()
 }
