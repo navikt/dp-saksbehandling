@@ -1,4 +1,4 @@
 kafka_pool: nav-dev
 ingresses: |
   ingresses:
-    - https://dp-behandling.dev.intern.nav.no
+    - https://dp-behandling.intern.dev.nav.no
