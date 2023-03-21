@@ -20,6 +20,7 @@ fun Application.api2() {
     install(ContentNegotiation) {
         jackson {
             this.registerModule(JavaTimeModule())
+            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
         }
     }
 
