@@ -13,7 +13,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             .withKtorModule {
                 api(inMemoryPersonRepository)
                 api2()
-
             }.build()
 
     init {

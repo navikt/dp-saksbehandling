@@ -1,6 +1,7 @@
+
 openapi: 3.0.3
 info:
-  title: sak
+  title: Saksbehandling
   description: This is a sample description about this spec.
   termsOfService: ''
   contact:
@@ -19,12 +20,12 @@ tags:
 paths:
   /oppgaver/:
     get:
-      summary: Gir en liste med oppgaver
+      summary: Gir en liste med planer
       description: ''
       operationId: ''
-      tags: []
-      parameters: &ref_1 []
-      requestBody: {}
+      tags: [ ]
+      parameters: &ref_0 [ ]
+      requestBody: { }
       responses:
         '200':
           content:
@@ -33,24 +34,40 @@ paths:
                 type: array
                 items:
                   type: $ref
-                  $ref: '#/components/schemas/Oppgave'
-  /oppgaver/{oppgaveId}/steg/{stegId}:
+                  $ref: '#/components/schemas/Behandlingsplan'
+  /oppgaver/{hubbaId}:
+    get:
+      summary: Gir en konkret hubba tilbake
+      description: ''
+      operationId: ''
+      tags: [ ]
+      parameters: *ref_0
+      requestBody:
+        content: { }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: $ref
+                $ref: '#/components/schemas/Hubba'
+  /oppgaver/{hubbaId}/steg/{stegId}:
     put:
       summary: Løs et hubbasteg
       description: ''
       operationId: ''
-      tags: []
+      tags: [ ]
       parameters:
         - in: path
           name: planId
           description: ''
-          schema: &ref_0
+          schema: &ref_1
             type: string
           required: true
         - in: path
           name: stegId
           description: ''
-          schema: *ref_0
+          schema: *ref_1
           required: true
       requestBody:
         content:
@@ -73,64 +90,39 @@ paths:
               schema:
                 type: $ref
                 $ref: '#/components/schemas/Behandlingssteg'
-  /oppgaver/{oppgaveId}:
-    get:
-      summary: Gir en konkret oppgave tilbake
-      description: ''
-      operationId: ''
-      tags: []
-      parameters: *ref_1
-      requestBody:
-        content: {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: $ref
-                $ref: '#/components/schemas/Oppgave'
 components:
   schemas:
-    Oppgave:
+    Hubba:
       type: object
       properties:
-        person:
+        gjelder:
           type: string
-          description: FNR
+          description: Hvilken entitet gjelder denne planen
         steg:
           type: array
           items:
             type: $ref
-            $ref: '#/components/schemas/Steg'
-          description: stegene i planen
+            $ref: '#/components/schemas/Hubbasteg'
+          description: Stegene i planen
+        status:
+          type: string
+          description: Ferdig/Ikke ferdig
         saksbehandler:
+          type: string
+          description: Saksbehandler
+        datoOpprettet:
           type: string
         hendelse:
           type: $ref
           $ref: '#/components/schemas/Hendelse'
-        datoOpprettet:
-          type: string
-      description: Oppgave
+      description: En behandling
       required:
-        - person
+        - gjelder
         - steg
         - saksbehandler
         - datoOpprettet
         - hendelse
-    Hendelse:
-      type: object
-      properties:
-        id:
-          type: string
-        type:
-          type: string
-        tilstand:
-          type: string
-      required:
-        - id
-        - type
-        - tilstand
-    Steg:
+    Hubbasteg:
       type: object
       properties:
         id:
@@ -146,4 +138,14 @@ components:
         - id
         - type
         - tilstand
+    Hendelse:
+      type: object
+      properties:
+        id:
+          type: string
+        masse greier:
+          type: string
+      required:
+        - id
+        - masse greier
   securitySchemes: {}
