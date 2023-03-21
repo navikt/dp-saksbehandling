@@ -1,0 +1,149 @@
+openapi: 3.0.3
+info:
+  title: sak
+  description: This is a sample description about this spec.
+  termsOfService: ''
+  contact:
+    email: ''
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+externalDocs:
+  description: Find out more about spec
+  url: ''
+servers: []
+tags:
+  - name: Default
+    description: ''
+paths:
+  /oppgaver/:
+    get:
+      summary: Gir en liste med oppgaver
+      description: ''
+      operationId: ''
+      tags: []
+      parameters: &ref_1 []
+      requestBody: {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: $ref
+                  $ref: '#/components/schemas/Oppgave'
+  /oppgaver/{oppgaveId}/steg/{stegId}:
+    put:
+      summary: Løs et hubbasteg
+      description: ''
+      operationId: ''
+      tags: []
+      parameters:
+        - in: path
+          name: planId
+          description: ''
+          schema: &ref_0
+            type: string
+          required: true
+        - in: path
+          name: stegId
+          description: ''
+          schema: *ref_0
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                svar:
+                  type: string
+                  description: Svar/løsning på steget
+                begrunnelse:
+                  type: string
+                  description: Begrunnelse for svaret
+              required:
+                - svar
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: $ref
+                $ref: '#/components/schemas/Behandlingssteg'
+  /oppgaver/{oppgaveId}:
+    get:
+      summary: Gir en konkret oppgave tilbake
+      description: ''
+      operationId: ''
+      tags: []
+      parameters: *ref_1
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: $ref
+                $ref: '#/components/schemas/Oppgave'
+components:
+  schemas:
+    Oppgave:
+      type: object
+      properties:
+        person:
+          type: string
+          description: FNR
+        steg:
+          type: array
+          items:
+            type: $ref
+            $ref: '#/components/schemas/Steg'
+          description: stegene i planen
+        saksbehandler:
+          type: string
+        hendelse:
+          type: $ref
+          $ref: '#/components/schemas/Hendelse'
+        datoOpprettet:
+          type: string
+      description: Oppgave
+      required:
+        - person
+        - steg
+        - saksbehandler
+        - datoOpprettet
+        - hendelse
+    Hendelse:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        tilstand:
+          type: string
+      required:
+        - id
+        - type
+        - tilstand
+    Steg:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID til trinnet
+        type:
+          type: string
+          description: Hva slags type trinn det er (vilkår/fastsett)
+        tilstand:
+          type: string
+          description: IkkeUtført/Utført
+      required:
+        - id
+        - type
+        - tilstand
+  securitySchemes: {}
