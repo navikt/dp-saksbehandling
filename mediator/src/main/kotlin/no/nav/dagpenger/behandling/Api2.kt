@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
@@ -19,8 +20,9 @@ import java.util.UUID
 fun Application.api2() {
     install(ContentNegotiation) {
         jackson {
-            this.registerModule(JavaTimeModule())
-            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            registerModule(JavaTimeModule())
+            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            enable(SerializationFeature.INDENT_OUTPUT)
         }
     }
 
@@ -43,7 +45,6 @@ fun Application.api2() {
                                 Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
                                 Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
                                 Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-
                             ),
                         ),
                         Oppgave(
@@ -86,7 +87,6 @@ fun Application.api2() {
                         val oppgaveId = this.call.parameters["oppgaveId"]
                         val stegId = this.call.parameters["stegId"]
                         require(oppgaveId != null && stegId != null)
-
                         val svar: Svar = this.call.receive()
                         call.respond(status = HttpStatusCode.OK, message = "")
                     }
