@@ -8,7 +8,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 
-fun Application.api() {
+fun Application.api2() {
 
     routing {
         get("oppgaver") {

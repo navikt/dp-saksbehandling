@@ -8,6 +8,10 @@ metadata:
     domene: behandling
 spec:
   image: {{ image }}
+  accessPolicy:
+    inbound:
+      rules:
+        - application: dp-saksbehandling-frontend
   port: 8080
   prometheus:
     enabled: true
