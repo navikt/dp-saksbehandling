@@ -9,13 +9,12 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.ktor.server.application.Application
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.assertEquals
 
-class Api2Test {
+class OppgaveApiTest {
     private val jacksonObjectMapper = jacksonObjectMapper().also {
         it.registerModule(JavaTimeModule())
     }
@@ -24,7 +23,7 @@ class Api2Test {
     fun `Skal kunne hente ut oppgaver`() {
         testApplication {
             application {
-                api2()
+                oppgaveApi()
             }
             client.get("/oppgaver").apply {
                 val oppgaver: List<Oppgave> = this.bodyAsText().let {
@@ -39,7 +38,7 @@ class Api2Test {
     fun `skal kunne svare på et steg`() {
         testApplication {
             application {
-                api2()
+                oppgaveApi()
             }
             client.put("/oppgaver/oppgaveId/steg/stegId") {
                 contentType(ContentType.Application.Json)
@@ -58,7 +57,7 @@ class Api2Test {
     fun `Skal kunne hente ut spesifikk oppgave`() {
         testApplication {
             application {
-                api2()
+                oppgaveApi()
             }
             client.get("/oppgaver/123").apply {
                 assertEquals(200, this.status.value)

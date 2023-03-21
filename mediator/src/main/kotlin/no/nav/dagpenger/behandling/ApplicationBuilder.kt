@@ -12,7 +12,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
                 api(inMemoryPersonRepository)
-                api2()
+                oppgaveApi()
             }.build()
 
     init {
