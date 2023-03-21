@@ -4,16 +4,16 @@ plugins {
     id("com.diffplug.spotless")
 }
 
-spotless {
+configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     kotlin {
+        ktfmt()
         ktlint("0.48.2")
     }
     kotlinGradle {
-        target("*.gradle.kts")
-        ktlint("0.48.2")
+        this.target("*.gradle.kts")
+        ktlint("0.48.2") // or ktfmt() or prettier()
     }
 }
-
 tasks.withType<KotlinCompile>().configureEach {
     dependsOn("spotlessApply")
 }
