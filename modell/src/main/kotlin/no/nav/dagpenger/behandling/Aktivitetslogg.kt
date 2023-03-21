@@ -18,7 +18,6 @@ class Aktivitetslogg private constructor(
 
     companion object {
 
-        private val MODELL_KONTEKSTER = listOf(Person.kontekstType, Behandling.kontekstType)
         fun rehyder(
             aktiviteter: MutableList<Aktivitet>,
         ) = Aktivitetslogg(null, aktiviteter)
@@ -77,25 +76,10 @@ class Aktivitetslogg private constructor(
         kontekster.add(kontekst)
     }
 
-    override fun kontekst(behandling: Behandling<*>) {
-        if (this.forelder == null) {
-            this.forelder = behandling.aktivitetslogg
-        } else {
-            this.forelder?.forelder = behandling.aktivitetslogg
-        }
-        kontekst(behandling as Aktivitetskontekst)
-    }
-
     internal fun logg(kontekst: Aktivitetskontekst): Aktivitetslogg {
         return Aktivitetslogg(this).also {
             it.aktiviteter.addAll(this.aktiviteter.filter { aktivitet -> kontekst in aktivitet })
         }
-    }
-
-    override fun kontekster(): List<Aktivitetslogg> {
-        return aktiviteter
-            .groupBy { it.kontekst(MODELL_KONTEKSTER) }
-            .map { Aktivitetslogg(this).apply { aktiviteter.addAll(it.value) } }
     }
 
     private fun info() = Aktivitet.Info.filter(aktiviteter)
@@ -256,8 +240,6 @@ interface IAktivitetslogg {
     fun behov(): List<Behov>
     fun barn(): Aktivitetslogg
     fun kontekst(kontekst: Aktivitetskontekst)
-    fun kontekst(behandling: Behandling<*>)
-    fun kontekster(): List<IAktivitetslogg>
 }
 
 interface AktivitetsloggVisitor {

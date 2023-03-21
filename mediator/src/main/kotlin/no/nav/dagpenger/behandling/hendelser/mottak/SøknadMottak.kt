@@ -3,7 +3,6 @@ package no.nav.dagpenger.behandling.hendelser.mottak
 import com.fasterxml.jackson.databind.JsonNode
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.behandling.PersonMediator
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
@@ -14,7 +13,6 @@ import java.util.UUID
 
 internal class SøknadMottak(
     rapidsConnection: RapidsConnection,
-    private val mediator: PersonMediator,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -43,7 +41,6 @@ internal class SøknadMottak(
         ) {
             val søknadHendelse = SøknadHendelse(søknadID, journalpostId, ident)
             logger.info { "Fått søknadhendelse for $søknadID" }
-            mediator.behandle(søknadHendelse)
         }
     }
 

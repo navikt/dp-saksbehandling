@@ -17,8 +17,6 @@ import io.ktor.server.routing.routing
 import java.time.LocalDate
 import java.util.UUID
 
-
-
 fun Application.oppgaveApi() {
     install(ContentNegotiation) {
         jackson {

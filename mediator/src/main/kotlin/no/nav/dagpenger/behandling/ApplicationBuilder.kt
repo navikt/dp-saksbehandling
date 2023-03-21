@@ -1,27 +1,25 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
+import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
 
-    private val inMemoryPersonRepository = InMemoryPersonRepository()
     private val rapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
-                api(inMemoryPersonRepository)
                 oppgaveApi()
             }.build()
 
     init {
         rapidsConnection.register(this)
-        PersonMediator(
-            rapidsConnection,
-            inMemoryPersonRepository,
+        SøknadMottak(
+            rapidsConnection = rapidsConnection,
         )
     }
+
     fun start() {
         rapidsConnection.start()
     }
