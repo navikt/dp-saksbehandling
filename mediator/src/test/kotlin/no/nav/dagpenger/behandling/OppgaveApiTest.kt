@@ -9,6 +9,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -19,12 +20,16 @@ class OppgaveApiTest {
         it.registerModule(JavaTimeModule())
     }
 
+    private fun withOppgaveApi(test: suspend ApplicationTestBuilder.() -> Unit) {
+        testApplication {
+            application { oppgaveApi() }
+            test()
+        }
+    }
+
     @Test
     fun `Skal kunne hente ut oppgaver`() {
-        testApplication {
-            application {
-                oppgaveApi()
-            }
+        withOppgaveApi {
             client.get("/oppgaver").apply {
                 val oppgaver: List<Oppgave> = this.bodyAsText().let {
                     jacksonObjectMapper.readValue(it, object : TypeReference<List<Oppgave>>() {})
@@ -36,10 +41,7 @@ class OppgaveApiTest {
 
     @Test
     fun `skal kunne svare på et steg`() {
-        testApplication {
-            application {
-                oppgaveApi()
-            }
+        withOppgaveApi {
             client.put("/oppgaver/oppgaveId/steg/stegId") {
                 contentType(ContentType.Application.Json)
                 this.setBody(
@@ -47,7 +49,6 @@ class OppgaveApiTest {
                     """.trimIndent(),
                 )
             }.let { httpResponse ->
-
                 assertEquals(200, httpResponse.status.value)
             }
         }
@@ -55,10 +56,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut spesifikk oppgave`() {
-        testApplication {
-            application {
-                oppgaveApi()
-            }
+        withOppgaveApi {
             client.get("/oppgaver/123").apply {
                 assertEquals(200, this.status.value)
 
