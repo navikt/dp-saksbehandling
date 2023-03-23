@@ -9,7 +9,7 @@ class TreeNode<T>(val value: T) {
         child.parent = this
     }
 
-    fun getAllNodes(traversalOrder: TraversalOrder = TraversalOrder.PRE_ORDER): Set<TreeNode<T>> {
+    fun getAllNodes(traversalOrder: TraversalOrder = TraversalOrder.PRE_ORDER): List<TreeNode<T>> {
         return when (traversalOrder) {
             TraversalOrder.PRE_ORDER -> preOrderTraversal()
             TraversalOrder.POST_ORDER -> postOrderTraversal()
@@ -26,8 +26,8 @@ class TreeNode<T>(val value: T) {
         return parents
     }
 
-    fun getAllNodesWithCriteria(criteria: (T) -> Boolean): Set<TreeNode<T>> {
-        val result = mutableSetOf<TreeNode<T>>()
+    fun getAllNodesWithCriteria(criteria: (T) -> Boolean): List<TreeNode<T>> {
+        val result = mutableListOf<TreeNode<T>>()
         if (criteria(value)) {
             result.add(this)
             children.forEach { result.addAll(it.getAllNodesWithCriteria(criteria)) }
@@ -35,15 +35,15 @@ class TreeNode<T>(val value: T) {
         return result
     }
 
-    private fun preOrderTraversal(): Set<TreeNode<T>> {
-        val result = mutableSetOf<TreeNode<T>>()
+    private fun preOrderTraversal(): List<TreeNode<T>> {
+        val result = mutableListOf<TreeNode<T>>()
         result.add(this)
         children.forEach { result.addAll(it.preOrderTraversal()) }
         return result
     }
 
-    private fun postOrderTraversal(): Set<TreeNode<T>> {
-        val result = mutableSetOf<TreeNode<T>>()
+    private fun postOrderTraversal(): List<TreeNode<T>> {
+        val result = mutableListOf<TreeNode<T>>()
         children.forEach { result.addAll(it.postOrderTraversal()) }
         result.add(this)
         return result
