@@ -28,13 +28,13 @@ class Steg(
     override fun toString() = id
 
     fun nesteSteg(): Set<Steg> =
-        node.getAllNodesWithCriteria { it.svar == Ubesvart }
+        node.findNodes { it.svar == Ubesvart }
             .map { it.value }
             .toSet()
 
     fun besvar(svar: Svar<*>) {
         this.svar = svar
-        node.getAllParents().forEach {
+        node.getAncestors().forEach {
             it.value.nullstill()
         }
     }
