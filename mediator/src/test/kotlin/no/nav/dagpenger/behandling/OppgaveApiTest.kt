@@ -34,7 +34,7 @@ class OppgaveApiTest {
                 val oppgaver: List<Oppgave> = this.bodyAsText().let {
                     jacksonObjectMapper.readValue(it, object : TypeReference<List<Oppgave>>() {})
                 }
-                assertEquals(2, oppgaver.size)
+                assertEquals(1, oppgaver.size)
             }
         }
     }
@@ -44,8 +44,16 @@ class OppgaveApiTest {
         withOppgaveApi {
             client.put("/oppgaver/oppgaveId/steg/stegId") {
                 contentType(ContentType.Application.Json)
-                this.setBody(
-                    """ {"svar": "123", "begrunnelse": "begrunnelse"}
+                this.setBody( //language=JSON
+                    """
+                    {
+                      "svar": "123",
+                      "type": "Int",
+                      "begrunnelse": {
+                        "kilde": "meg",
+                        "tekst": "begrunnelse"
+                      }
+                    }
                     """.trimIndent(),
                 )
             }.let { httpResponse ->

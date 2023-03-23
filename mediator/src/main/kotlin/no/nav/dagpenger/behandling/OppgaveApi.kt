@@ -14,6 +14,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import java.lang.Exception
 import java.time.LocalDate
 import java.util.UUID
 
@@ -53,11 +54,15 @@ fun Application.oppgaveApi() {
                 }
                 route("steg") {
                     put("{stegId}") {
-                        val oppgaveId = this.call.parameters["oppgaveId"]
-                        val stegId = this.call.parameters["stegId"]
-                        require(oppgaveId != null && stegId != null)
-                        val svar: Svar = this.call.receive()
-                        call.respond(status = HttpStatusCode.OK, message = "")
+                        try {
+                            val oppgaveId = this.call.parameters["oppgaveId"]
+                            val stegId = this.call.parameters["stegId"]
+                            require(oppgaveId != null && stegId != null)
+                            val svar: Svar = this.call.receive()
+                            call.respond(status = HttpStatusCode.OK, message = "")
+                        } catch (e: Exception) {
+                            println(e)
+                        }
                     }
                 }
             }
