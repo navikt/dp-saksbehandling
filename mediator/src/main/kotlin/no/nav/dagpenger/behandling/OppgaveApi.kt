@@ -31,38 +31,7 @@ fun Application.oppgaveApi() {
             get {
                 this.call.respond(
                     listOf(
-                        Oppgave(
-                            person = "123",
-                            saksBehandler = "saksbehandler",
-                            opprettet = LocalDate.now(),
-                            hendelse = Hendelse(
-                                id = UUID.randomUUID().toString(),
-                                type = "type",
-                                tilstand = "vet ikke",
-                            ),
-                            steg = listOf(
-                                Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-                                Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-                                Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-                                Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-                            ),
-                        ),
-                        Oppgave(
-                            person = "123",
-                            saksBehandler = "saksbehandler",
-                            opprettet = LocalDate.now(),
-                            hendelse = Hendelse(
-                                id = UUID.randomUUID().toString(),
-                                type = "type",
-                                tilstand = "vet ikke",
-                            ),
-                            steg = listOf(
-                                Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-                                Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-                                Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-                                Steg(id = UUID.randomUUID().toString(), type = "string", tilstand = "vet ikke"),
-                            ),
-                        ),
+                        oppgave(),
                     ),
                 )
             }
@@ -75,7 +44,7 @@ fun Application.oppgaveApi() {
                         status = HttpStatusCode.OK,
                         message = Oppgave(
                             person = "123",
-                            saksBehandler = "saksbehandler",
+                            saksbehandler = "saksbehandler",
                             opprettet = LocalDate.now(),
                             hendelse = Hendelse(id = "", type = "", tilstand = ""),
                             steg = listOf(),
@@ -96,24 +65,133 @@ fun Application.oppgaveApi() {
     }
 }
 
+private fun oppgave() = Oppgave(
+    person = "123",
+    saksbehandler = "saksbehandler",
+    opprettet = LocalDate.now(),
+    hendelse = Hendelse(
+        id = UUID.randomUUID().toString(),
+        type = "type",
+        tilstand = "vet ikke",
+    ),
+    steg = listOf(
+        Steg(
+            uuid = UUID.randomUUID(),
+            id = "Fødselsdato",
+            type = Stegtype.Fastsetting,
+            tilstand = Tilstand.Utført,
+            svartype = Svartype.Localdate,
+            svar = Svar(
+                LocalDate.now().minusYears(44).toString(),
+                Svartype.Localdate,
+                Begrunnelse("pdl", "Henta fra PDL"),
+            ),
+        ),
+        Steg(
+            uuid = UUID.randomUUID(),
+            id = "Alder",
+            type = Stegtype.Fastsetting,
+            tilstand = Tilstand.IkkeUtført,
+            svartype = Svartype.Int,
+        ),
+        Steg(
+            uuid = UUID.randomUUID(),
+            id = "Vilkår67",
+            type = Stegtype.Vilkår,
+            tilstand = Tilstand.IkkeUtført,
+            svartype = Svartype.Boolean,
+        ),
+        Steg(
+            uuid = UUID.randomUUID(),
+            id = "Virkningstidspunkt",
+            type = Stegtype.Fastsetting,
+            tilstand = Tilstand.IkkeUtført,
+            svartype = Svartype.Localdate,
+        ),
+        Steg(
+            uuid = UUID.randomUUID(),
+            id = "Verneplikt",
+            type = Stegtype.Fastsetting,
+            tilstand = Tilstand.IkkeUtført,
+            svartype = Svartype.Boolean,
+        ),
+        Steg(
+            uuid = UUID.randomUUID(),
+            id = "KravTilMinsteinntekt",
+            type = Stegtype.Vilkår,
+            tilstand = Tilstand.Utført,
+            svartype = Svartype.Boolean,
+            svar = Svar(
+                "true",
+                type = Svartype.Boolean,
+                begrunnelse = Begrunnelse(
+                    "saksbehandler",
+                    "Jeg bestemmer!",
+                ),
+            ),
+        ),
+        Steg(
+            uuid = UUID.randomUUID(),
+            id = "FastsattVanligArbeidstid",
+            type = Stegtype.Fastsetting,
+            tilstand = Tilstand.IkkeUtført,
+            svartype = Svartype.Int,
+        ),
+        Steg(
+            uuid = UUID.randomUUID(),
+            id = "OppfyllerKravTilTaptArbeidstid",
+            type = Stegtype.Vilkår,
+            tilstand = Tilstand.IkkeUtført,
+            svartype = Svartype.Boolean,
+        ),
+    ),
+)
+
 internal data class Svar(
     val svar: String,
-    val begrunnelse: String?,
+    val type: Svartype,
+    val begrunnelse: Begrunnelse,
 )
+
+internal data class Begrunnelse(
+    val kilde: String, // quiz, saksbehandler, dingsebomsA
+    val tekst: String,
+)
+
+internal enum class Svartype {
+    String,
+    Localdate,
+    Int,
+    Boolean,
+}
 
 internal data class Oppgave(
     val person: String,
-    val saksBehandler: String,
+    val saksbehandler: String,
     val opprettet: LocalDate,
     val hendelse: Hendelse,
     val steg: List<Steg>,
 )
 
 internal data class Steg(
-    val id: String,
-    val type: String,
-    val tilstand: String,
+    val uuid: UUID,
+    val id: String, // reell arbeidssøker, vurder minsteinntekt, fastsett virkningstidspunkt, fastsett vanlig arbeidstid
+    val type: Stegtype,
+    val svartype: Svartype,
+    val tilstand: Tilstand,
+    val svar: Svar? = null,
 )
+
+internal enum class Stegtype {
+    Fastsetting,
+    Vilkår,
+}
+
+internal enum class Tilstand {
+    Utført,
+    MåGodkjennes,
+    IkkeUtført,
+}
 
 internal data class Hendelse(
     val id: String,
