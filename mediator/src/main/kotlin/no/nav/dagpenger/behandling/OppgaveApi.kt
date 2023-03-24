@@ -14,7 +14,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import java.lang.Exception
 import java.time.LocalDate
 import java.util.UUID
 
@@ -43,13 +42,7 @@ fun Application.oppgaveApi() {
 
                     call.respond(
                         status = HttpStatusCode.OK,
-                        message = Oppgave(
-                            person = "123",
-                            saksbehandler = "saksbehandler",
-                            opprettet = LocalDate.now(),
-                            hendelse = Hendelse(id = "", type = "", tilstand = ""),
-                            steg = listOf(),
-                        ),
+                        message = oppgave(),
                     )
                 }
                 route("steg") {
