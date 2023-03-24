@@ -1,8 +1,5 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.Svar.Companion.Ubesvart
-import no.nav.dagpenger.behandling.graph.TreeNode
-
 class Behandling(
     val steg: Set<Steg> = emptySet(),
 ) {
@@ -13,35 +10,10 @@ class Behandling(
     }
 }
 
-class Steg(
-    val id: String,
-    var svar: Svar<*> = Ubesvart,
-    avhengerAv: Set<Steg> = emptySet(),
-) {
-
-    private val node: TreeNode<Steg> = TreeNode(this).also { root ->
-        avhengerAv.forEach { steg ->
-            root.addChild(steg.node)
-        }
-    }
-
-    override fun toString() = id
-
-    fun nesteSteg(): Set<Steg> =
-        node.findNodes { it.svar == Ubesvart }
-            .map { it.value }
-            .toSet()
-
-    fun besvar(svar: Svar<*>) {
-        this.svar = svar
-        node.getAncestors().forEach {
-            it.value.nullstill()
-        }
-    }
-
-    fun nullstill() {
-        svar = Ubesvart
-    }
+fun behandling(block: StegBuilder.() -> Unit): Behandling {
+    val builder = StegBuilder()
+    builder.block()
+    return Behandling(builder.getSteg())
 }
 
 class Svar<T>(val verdi: T) {
