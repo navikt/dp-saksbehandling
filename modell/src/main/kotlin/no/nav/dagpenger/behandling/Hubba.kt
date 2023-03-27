@@ -1,8 +1,8 @@
 package no.nav.dagpenger.behandling
 
 object Hubba {
-    fun bubba(): Behandling =
-        behandling {
+    fun bubba(person: Person): Behandling =
+        behandling(person) {
             val virkingstidspunkt = steg {
                 fastsettelse("Virkningstidspunkt")
             }

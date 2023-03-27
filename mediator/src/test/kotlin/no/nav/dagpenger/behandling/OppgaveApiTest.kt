@@ -68,7 +68,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne hente ut spesifikk oppgave`() {
         val mediatorMock = mockk<Mediator>().also {
-            every { it.hentBehandling("123") } returns Hubba.bubba()
+            every { it.hentBehandling("123") } returns Hubba.bubba(Person("123"))
         }
         withOppgaveApi(mediatorMock) {
             client.get("/oppgaver/123").apply {

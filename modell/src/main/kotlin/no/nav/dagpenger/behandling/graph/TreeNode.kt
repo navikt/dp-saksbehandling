@@ -33,8 +33,12 @@ class TreeNode<T>(val value: T) {
     fun findNodes(criteria: (T) -> Boolean): List<TreeNode<T>> {
         val result = mutableListOf<TreeNode<T>>()
         if (criteria(value)) {
-            result.add(this)
-            children.forEach { result.addAll(it.findNodes(criteria)) }
+            val x: List<TreeNode<T>> = children.flatMap { it.findNodes(criteria) }
+            if (x.isEmpty()) {
+                result.add(this)
+            } else {
+                result.addAll(x)
+            }
         }
         return result
     }

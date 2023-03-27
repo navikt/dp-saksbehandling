@@ -64,15 +64,11 @@ fun Application.oppgaveApi(mediator: Mediator) {
 
 internal fun Behandling.toOppgaveDTO(): OppgaveDTO {
     return OppgaveDTO(
-        person = "",
-        saksbehandler = "",
-        opprettet = LocalDate.now(),
-        hendelse = HendelseDTO(
-            id = "",
-            type = "",
-            tilstand = "",
-        ),
-        steg = this.nesteSteg().toStegDTO(),
+        person = this.person.ident,
+        saksbehandler = null,
+        opprettet = this.opprettet.toLocalDate(),
+        hendelse = emptyList(),
+        steg = this.alleSteg().toStegDTO(),
     )
 }
 
@@ -104,10 +100,12 @@ private fun oppgave() = OppgaveDTO(
     person = "123",
     saksbehandler = "saksbehandler",
     opprettet = LocalDate.now(),
-    hendelse = HendelseDTO(
-        id = UUID.randomUUID().toString(),
-        type = "type",
-        tilstand = "vet ikke",
+    hendelse = listOf(
+        HendelseDTO(
+            id = UUID.randomUUID().toString(),
+            type = "type",
+            tilstand = "vet ikke",
+        ),
     ),
     steg = listOf(
         StegDTO(
@@ -202,9 +200,9 @@ internal enum class SvartypeDTO {
 
 internal data class OppgaveDTO(
     val person: String,
-    val saksbehandler: String,
+    val saksbehandler: String?,
     val opprettet: LocalDate,
-    val hendelse: HendelseDTO,
+    val hendelse: List<HendelseDTO>,
     val steg: List<StegDTO>,
 )
 

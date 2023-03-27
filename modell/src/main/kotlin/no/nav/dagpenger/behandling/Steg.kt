@@ -46,6 +46,8 @@ sealed class Steg(
             .map { it.value }
             .toSet()
 
+    fun alleSteg(): Set<Steg> = node.traverse().map { it.value }.toSet()
+
     fun besvar(svar: Svar<*>) {
         this.svar = svar
         node.getAncestors().forEach {

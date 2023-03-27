@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 class BehandlingTest {
+
+    private val testPerson = Person("123")
+
     @Test
     fun `Skal kunne lage en behandling`() {
         val steg1 = FastSettelse("1")
@@ -13,7 +16,7 @@ class BehandlingTest {
 
         assertEquals(
             setOf(steg1, steg2),
-            behandling {
+            behandling(testPerson) {
                 steg(steg1)
                 steg(steg2)
             }.nesteSteg(),
@@ -27,7 +30,7 @@ class BehandlingTest {
         val steg3 = Vilkår("3")
         val steg4 = Vilkår("4")
 
-        val behandling = behandling {
+        val behandling = behandling(testPerson) {
             steg(steg1) {
                 avhengerAv(steg2)
             }
@@ -36,7 +39,8 @@ class BehandlingTest {
             }
         }
 
-        assertEquals(setOf(steg1, steg2, steg3, steg4), behandling.nesteSteg())
+        assertEquals(setOf(steg1, steg2, steg3, steg4), behandling.alleSteg())
+        assertEquals(setOf(steg2, steg4), behandling.nesteSteg())
     }
 
     @Test
@@ -50,7 +54,10 @@ class BehandlingTest {
             it.avhengerAv(steg4)
         }
 
-        assertEquals(setOf(steg1, steg2, steg3, steg4, steg5), Behandling(setOf(steg2, steg4, steg5)).nesteSteg())
+        assertEquals(
+            setOf(steg1, steg2, steg3, steg4, steg5),
+            Behandling(testPerson, setOf(steg2, steg4, steg5)).alleSteg(),
+        )
     }
 
     @Test
@@ -66,7 +73,7 @@ class BehandlingTest {
             it.avhengerAv(steg1)
         }
 
-        assertEquals(setOf(steg3, steg4), Behandling(steg = setOf(steg2, steg4, steg5)).nesteSteg())
+        assertEquals(setOf(steg3, steg4), Behandling(testPerson, steg = setOf(steg2, steg4, steg5)).nesteSteg())
     }
 
     @Test
@@ -74,7 +81,7 @@ class BehandlingTest {
         val steg1 = FastSettelse("1")
         val steg2 = Vilkår(id = "2", svar = Svar(true)).also { it.avhengerAv(steg1) }
         val steg3 = Vilkår("3")
-        val behandling = Behandling(setOf(steg2, steg3))
+        val behandling = Behandling(testPerson, setOf(steg2, steg3))
         assertEquals(setOf(steg3), behandling.nesteSteg())
 
         steg1.besvar(Svar(true))

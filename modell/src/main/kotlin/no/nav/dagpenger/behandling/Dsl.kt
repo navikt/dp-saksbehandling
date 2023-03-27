@@ -29,11 +29,12 @@ class BehandlingBuilder {
     fun getSteg(): Set<Steg> = steg
 }
 
-fun behandling(block: BehandlingBuilder.() -> Unit): Behandling {
+fun behandling(person: Person, block: BehandlingBuilder.() -> Unit): Behandling {
     val builder = BehandlingBuilder()
     builder.block()
-    return Behandling(builder.getSteg())
+    return Behandling(steg = builder.getSteg(), person = person)
 }
+
 object StegBuilder {
     @Suppress("FunctionName")
     fun vilkår(id: String, svar: Svar<*> = Svar.Ubesvart, avhengerAv: AvhengerAv? = null): Steg.Vilkår {
