@@ -14,6 +14,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.nav.dagpenger.behandling.Svar.Companion.Ubesvart
 import java.time.LocalDate
 import java.util.UUID
 
@@ -77,14 +78,23 @@ internal fun Collection<Behandling>.toOppgaverDTO() = this.map { it.toOppgaveDTO
 internal fun Collection<Steg>.toStegDTO(): List<StegDTO> = this.map { it.toStegDTO() }
 
 internal fun Steg.toStegDTO(): StegDTO {
+    val stegtypeDTO = when (this) {
+        is Steg.FastSettelse -> StegtypeDTO.Fastsetting
+        is Steg.Vilkår -> StegtypeDTO.Vilkår
+    }
+
+    val tilstandDTO = when (this.svar == Ubesvart) {
+        true -> TilstandDTO.IkkeUtført
+        false -> TilstandDTO.Utført
+    }
+
     return StegDTO(
         uuid = UUID.randomUUID(),
         id = this.id,
-        type = StegtypeDTO.Fastsetting,
+        type = stegtypeDTO,
         svartype = SvartypeDTO.Boolean,
-        tilstand = TilstandDTO.IkkeUtført,
+        tilstand = tilstandDTO,
         svar = this.svar.toSvarDTO(),
-
     )
 }
 

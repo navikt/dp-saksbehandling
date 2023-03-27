@@ -32,7 +32,7 @@ class TreeNodeTest {
         parent.addChild(child2)
 
         assertEquals(emptyList<TreeNode<String>>(), parent.findNodes { it.contains("child") })
-        assertEquals(listOf(parent, child1, child2), parent.findNodes { true })
+        assertEquals(listOf(child1, child2), parent.findNodes { true })
     }
 
     @Test

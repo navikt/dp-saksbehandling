@@ -1,6 +1,10 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.behandling.StegtypeDTO.Fastsetting
+import no.nav.dagpenger.behandling.StegtypeDTO.Vilkår
+import no.nav.dagpenger.behandling.TilstandDTO.IkkeUtført
+import no.nav.dagpenger.behandling.TilstandDTO.Utført
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -12,7 +16,9 @@ class OppgaveApiMappingTest {
 
         val testBehandling = behandling(person) {
             val fellessteg = steg {
-                fastsettelse("felles steg")
+                fastsettelse("felles steg").also {
+                    it.besvar(Svar(4))
+                }
             }
             steg {
                 fastsettelse("fastsettelse 1 avhenger av vilkår") {
@@ -38,6 +44,10 @@ class OppgaveApiMappingTest {
             dto.hendelse shouldBe emptyList()
 
             dto.steg.size shouldBe 5
+            dto.steg.count { it.type == Fastsetting } shouldBe 3
+            dto.steg.count { it.type == Vilkår } shouldBe 2
+            dto.steg.count { it.tilstand == IkkeUtført } shouldBe 4
+            dto.steg.count { it.tilstand == Utført } shouldBe 1
         }
     }
 }

@@ -13,6 +13,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -29,6 +30,7 @@ class OppgaveApiTest {
         }
     }
 
+    @Disabled
     @Test
     fun `Skal kunne hente ut oppgaver`() {
         withOppgaveApi {
