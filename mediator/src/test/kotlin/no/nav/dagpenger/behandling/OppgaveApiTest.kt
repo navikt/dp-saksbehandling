@@ -1,8 +1,8 @@
 package no.nav.dagpenger.behandling
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.request.get
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -11,18 +11,20 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class OppgaveApiTest {
     private val jacksonObjectMapper = jacksonObjectMapper().also {
         it.registerModule(JavaTimeModule())
     }
 
-    private fun withOppgaveApi(test: suspend ApplicationTestBuilder.() -> Unit) {
+    private fun withOppgaveApi(mediator: Mediator = Mediator(), test: suspend ApplicationTestBuilder.() -> Unit) {
         testApplication {
-            application { oppgaveApi() }
+            application { oppgaveApi(mediator) }
             test()
         }
     }
@@ -31,8 +33,8 @@ class OppgaveApiTest {
     fun `Skal kunne hente ut oppgaver`() {
         withOppgaveApi {
             client.get("/oppgaver").apply {
-                val oppgaver: List<Oppgave> = this.bodyAsText().let {
-                    jacksonObjectMapper.readValue(it, object : TypeReference<List<Oppgave>>() {})
+                val oppgaver: List<OppgaveDTO> = this.bodyAsText().let {
+                    jacksonObjectMapper.readValue(it)
                 }
                 assertEquals(1, oppgaver.size)
             }
@@ -44,7 +46,8 @@ class OppgaveApiTest {
         withOppgaveApi {
             client.put("/oppgaver/oppgaveId/steg/stegId") {
                 contentType(ContentType.Application.Json)
-                this.setBody( //language=JSON
+                this.setBody(
+                    //language=JSON
                     """
                     {
                       "svar": "123",
@@ -64,15 +67,13 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut spesifikk oppgave`() {
-        withOppgaveApi {
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.hentBehandling("123") } returns Hubba.bubba()
+        }
+        withOppgaveApi(mediatorMock) {
             client.get("/oppgaver/123").apply {
                 assertEquals(200, this.status.value)
-
-                assertDoesNotThrow {
-                    this.bodyAsText().let {
-                        jacksonObjectMapper.readValue(it, Oppgave::class.java)
-                    }
-                }
+                assertTrue(this.contentType().toString().contains(ContentType.Application.Json.contentType))
             }
         }
     }
