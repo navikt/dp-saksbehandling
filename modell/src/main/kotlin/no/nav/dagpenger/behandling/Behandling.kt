@@ -10,12 +10,6 @@ class Behandling(
     }
 }
 
-fun behandling(block: StegBuilder.() -> Unit): Behandling {
-    val builder = StegBuilder()
-    builder.block()
-    return Behandling(builder.getSteg())
-}
-
 class Svar<T>(val verdi: T) {
     companion object {
         val Ubesvart = Svar(Unit)
