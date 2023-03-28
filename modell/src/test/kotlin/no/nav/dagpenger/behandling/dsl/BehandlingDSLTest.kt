@@ -32,9 +32,12 @@ class BehandlingDSLTest {
             }
         }
 
+        behandling.steg.map { it.id } shouldBe setOf("felles", "første", "blurp")
+
         behandling.alleSteg().size shouldBe 7
         behandling.nesteSteg().map { it.id } shouldBe setOf("felles", "blarp", "blarpburp", "foobar")
         behandling.nesteSteg().size shouldBe 4
+
         // Besvare
         val felles = behandling.nesteSteg().single { it.id == "felles" }
         behandling.besvar(felles.uuid, LocalDate.now())

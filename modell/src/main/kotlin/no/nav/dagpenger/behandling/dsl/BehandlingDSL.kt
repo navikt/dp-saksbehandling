@@ -20,19 +20,19 @@ class BehandlingDSL() {
     }
 
     fun steg(block: StegDSL.() -> Steg<*>): Steg<*> {
-        return block(StegDSL())
+        return block(StegDSL()).also {
+            steg.add(it)
+        }
     }
 
     inner class StegDSL {
         inline fun <reified B> fastsettelse(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
             Steg.fastsettelse<B>(id).also {
-                steg.add(it)
                 avhengigheter(Avhengigheter(it))
             }
 
         fun vilkår(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
             Vilkår(id).also {
-                steg.add(it)
                 avhengigheter(Avhengigheter(it))
             }
 
