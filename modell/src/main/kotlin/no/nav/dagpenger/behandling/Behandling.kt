@@ -25,9 +25,7 @@ class Behandling private constructor(
     }
 
     inline fun <reified T> besvar(uuid: UUID, verdi: T) {
-        val stegSomSkalBesvares = steg.single {
-            it.uuid == uuid
-        }
+        val stegSomSkalBesvares = steg.single { it.uuid == uuid }
 
         require(stegSomSkalBesvares.svar.clazz == T::class.java) {
             "Fikk ${T::class.java}, forventet ${stegSomSkalBesvares.svar.clazz} ved besvaring av steg med uuid: $uuid"

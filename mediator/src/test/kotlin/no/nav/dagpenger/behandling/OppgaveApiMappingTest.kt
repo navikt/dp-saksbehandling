@@ -5,6 +5,7 @@ import no.nav.dagpenger.behandling.StegtypeDTO.Fastsetting
 import no.nav.dagpenger.behandling.StegtypeDTO.Vilkår
 import no.nav.dagpenger.behandling.TilstandDTO.IkkeUtført
 import no.nav.dagpenger.behandling.TilstandDTO.Utført
+import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 

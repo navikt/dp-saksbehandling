@@ -1,18 +1,24 @@
 @file:Suppress("SpellCheckingInspection")
 
-package no.nav.dagpenger.behandling
+package no.nav.dagpenger.behandling.dsl
 
+import no.nav.dagpenger.behandling.Behandling
+import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Steg.Fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
-
-fun behandling(person: Person, block: BehandlingDSL.() -> Unit): Behandling {
-    val dsl = BehandlingDSL()
-    block(dsl)
-    return Behandling(person, dsl.steg)
-}
+import no.nav.dagpenger.behandling.Svar
 
 class BehandlingDSL() {
     val steg = mutableSetOf<Steg<*>>()
+
+    companion object {
+        fun behandling(person: Person, block: BehandlingDSL.() -> Unit): Behandling {
+            val dsl = BehandlingDSL()
+            block(dsl)
+            return Behandling(person, dsl.steg)
+        }
+    }
 
     fun steg(block: StegDSL.() -> Steg<*>): Steg<*> {
         return block(StegDSL())

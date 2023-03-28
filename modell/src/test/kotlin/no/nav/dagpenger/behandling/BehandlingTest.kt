@@ -1,14 +1,11 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
-import no.nav.dagpenger.behandling.Steg.Fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
+import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.util.NoSuchElementException
 import java.util.UUID
 
 class BehandlingTest {
@@ -96,40 +93,6 @@ class BehandlingTest {
 
         steg1.besvar(2)
         assertEquals(setOf(steg3, steg2), behandling.nesteSteg())
-    }
-
-    @Test
-    fun `dsl test`() {
-        val behandling = behandling(Person("123")) {
-            val felles = steg {
-                fastsettelse<LocalDate>("felles")
-            }
-
-            steg {
-                vilkår("første") {
-                    avhengerAv(felles)
-                }
-            }
-
-            steg {
-                fastsettelse<Boolean>("blurp") {
-                    avhengerAvFastsettelse<Int>("blarp")
-                    avhengerAvFastsettelse<String>("burp") {
-                        avhengerAvFastsettelse<String>("blarpburp")
-                        avhengerAvVilkår("foobar")
-                        avhengerAv(felles)
-                    }
-                }
-            }
-        }
-
-        behandling.alleSteg().size shouldBe 7
-        behandling.nesteSteg().map { it.id } shouldBe setOf("felles", "blarp", "blarpburp", "foobar")
-        behandling.nesteSteg().size shouldBe 4
-        // Besvare
-        val felles = behandling.nesteSteg().single { it.id == "felles" } as Fastsettelse<LocalDate>
-        felles.besvar(LocalDate.now())
-        behandling.nesteSteg().map { it.id } shouldBe setOf("første", "blarp", "blarpburp", "foobar")
     }
 
     @Test

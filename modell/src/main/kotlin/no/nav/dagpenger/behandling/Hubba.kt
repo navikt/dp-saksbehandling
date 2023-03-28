@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import java.time.LocalDate
 
 object Hubba {
