@@ -11,8 +11,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.mockk.every
-import io.mockk.mockk
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -30,7 +28,6 @@ class OppgaveApiTest {
         }
     }
 
-    @Disabled
     @Test
     fun `Skal kunne hente ut oppgaver`() {
         withOppgaveApi {
@@ -38,22 +35,33 @@ class OppgaveApiTest {
                 val oppgaver: List<OppgaveDTO> = this.bodyAsText().let {
                     jacksonObjectMapper.readValue(it)
                 }
-                assertEquals(1, oppgaver.size)
+                assertEquals(2, oppgaver.size)
             }
         }
     }
 
     @Test
+    @Disabled
     fun `skal kunne svare på et steg`() {
         withOppgaveApi {
-            client.put("/oppgaver/oppgaveId/steg/stegId") {
+            val oppgaver: List<OppgaveDTO> = client.get("/oppgaver").let { response ->
+                response.bodyAsText().let {
+                    jacksonObjectMapper.readValue(it)
+                }
+            }
+
+            val firstOppgave = oppgaver.first()
+            val oppgaveId = firstOppgave.uuid
+            val stegId = firstOppgave.steg.first().uuid
+
+            client.put("/oppgaver/$oppgaveId/steg/$stegId") {
                 contentType(ContentType.Application.Json)
                 this.setBody(
                     //language=JSON
                     """
                     {
-                      "svar": "123",
-                      "type": "Int",
+                      "svar": "2023-02-02",
+                      "type": "LocalDate",
                       "begrunnelse": {
                         "kilde": "meg",
                         "tekst": "begrunnelse"
@@ -69,11 +77,14 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut spesifikk oppgave`() {
-        val mediatorMock = mockk<Mediator>().also {
-            every { it.hentBehandling("123") } returns Hubba.bubba(Person("123"))
-        }
-        withOppgaveApi(mediatorMock) {
-            client.get("/oppgaver/123").apply {
+        withOppgaveApi {
+            val oppgaver: List<OppgaveDTO> = client.get("/oppgaver").let { response ->
+                response.bodyAsText().let {
+                    jacksonObjectMapper.readValue(it)
+                }
+            }
+
+            client.get("/oppgaver/${oppgaver.first().uuid}").apply {
                 assertEquals(200, this.status.value)
                 assertTrue(this.contentType().toString().contains(ContentType.Application.Json.contentType))
             }

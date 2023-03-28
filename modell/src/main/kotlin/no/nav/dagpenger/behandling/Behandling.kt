@@ -9,6 +9,7 @@ class Behandling private constructor(
     val person: Person,
     val steg: Set<Steg<*>> = emptySet(),
     val opprettet: LocalDateTime,
+    val uuid: UUID = UUID.randomUUID(),
 ) {
     constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now())
 

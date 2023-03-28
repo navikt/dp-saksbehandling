@@ -1,12 +1,18 @@
 package no.nav.dagpenger.behandling
 
-class Mediator {
+import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
+import no.nav.dagpenger.behandling.persistence.BehandlingRepository
+import no.nav.dagpenger.behandling.persistence.Inmemory
 
-    fun hentBehandlinger(): List<Behandling> {
-        TODO()
-    }
+class Mediator(
+    private val behandlingRepository: BehandlingRepository = Inmemory,
 
-    fun hentBehandling(oppgaveId: String): Behandling {
-        TODO()
+) : BehandlingRepository by behandlingRepository {
+    fun behandle(hendelse: BehandlingSvar) {
+        val behandling = hentBehandling(hendelse.behandlinUUID)
+        behandling.besvar(
+            hendelse.stegUUID,
+            hendelse.svar.verdi,
+        )
     }
 }

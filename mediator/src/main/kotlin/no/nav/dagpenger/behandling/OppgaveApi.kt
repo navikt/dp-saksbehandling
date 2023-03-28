@@ -14,6 +14,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
 import java.time.LocalDate
 import java.util.UUID
 
@@ -36,7 +37,7 @@ fun Application.oppgaveApi(mediator: Mediator) {
                 get() {
                     val oppgaveId = this.call.parameters["oppgaveId"]
                     require(oppgaveId != null)
-                    val oppgave: OppgaveDTO = mediator.hentBehandling(oppgaveId).toOppgaveDTO()
+                    val oppgave: OppgaveDTO = mediator.hentBehandling(UUID.fromString(oppgaveId)).toOppgaveDTO()
 
                     call.respond(
                         status = HttpStatusCode.OK,
@@ -50,6 +51,13 @@ fun Application.oppgaveApi(mediator: Mediator) {
                             val stegId = this.call.parameters["stegId"]
                             require(oppgaveId != null && stegId != null)
                             val svar: SvarDTO = this.call.receive()
+                            val hendelse = BehandlingSvar(
+                                ident = "123", // todo hente fra token,
+                                behandlinUUID = UUID.fromString(oppgaveId),
+                                stegUUID = UUID.fromString(stegId),
+                                svar = svar.toSvar(),
+                            )
+                            mediator.behandle(hendelse)
                             call.respond(status = HttpStatusCode.OK, message = "")
                         } catch (e: Exception) {
                             println(e)
@@ -63,6 +71,7 @@ fun Application.oppgaveApi(mediator: Mediator) {
 
 internal fun Behandling.toOppgaveDTO(): OppgaveDTO {
     return OppgaveDTO(
+        uuid = this.uuid,
         person = this.person.ident,
         saksbehandler = null,
         opprettet = this.opprettet.toLocalDate(),
@@ -107,95 +116,105 @@ internal fun Svar<*>.toSvarDTO(): SvarDTO {
     )
 }
 
-private fun oppgave() = OppgaveDTO(
-    person = "123",
-    saksbehandler = "saksbehandler",
-    opprettet = LocalDate.now(),
-    hendelse = listOf(
-        HendelseDTO(
-            id = UUID.randomUUID().toString(),
-            type = "type",
-            tilstand = "vet ikke",
-        ),
-    ),
-    steg = listOf(
-        StegDTO(
-            uuid = UUID.randomUUID(),
-            id = "Fødselsdato",
-            type = StegtypeDTO.Fastsetting,
-            tilstand = TilstandDTO.Utført,
-            svartype = SvartypeDTO.LocalDate,
-            svar = SvarDTO(
-                LocalDate.now().minusYears(44).toString(),
-                SvartypeDTO.LocalDate,
-                BegrunnelseDTO("pdl", "Henta fra PDL"),
-            ),
-        ),
-        StegDTO(
-            uuid = UUID.randomUUID(),
-            id = "Alder",
-            type = StegtypeDTO.Fastsetting,
-            tilstand = TilstandDTO.IkkeUtført,
-            svartype = SvartypeDTO.Int,
-        ),
-        StegDTO(
-            uuid = UUID.randomUUID(),
-            id = "Vilkår67",
-            type = StegtypeDTO.Vilkår,
-            tilstand = TilstandDTO.IkkeUtført,
-            svartype = SvartypeDTO.Boolean,
-        ),
-        StegDTO(
-            uuid = UUID.randomUUID(),
-            id = "Virkningstidspunkt",
-            type = StegtypeDTO.Fastsetting,
-            tilstand = TilstandDTO.IkkeUtført,
-            svartype = SvartypeDTO.LocalDate,
-        ),
-        StegDTO(
-            uuid = UUID.randomUUID(),
-            id = "Verneplikt",
-            type = StegtypeDTO.Fastsetting,
-            tilstand = TilstandDTO.IkkeUtført,
-            svartype = SvartypeDTO.Boolean,
-        ),
-        StegDTO(
-            uuid = UUID.randomUUID(),
-            id = "KravTilMinsteinntekt",
-            type = StegtypeDTO.Vilkår,
-            tilstand = TilstandDTO.Utført,
-            svartype = SvartypeDTO.Boolean,
-            svar = SvarDTO(
-                "true",
-                type = SvartypeDTO.Boolean,
-                begrunnelse = BegrunnelseDTO(
-                    "saksbehandler",
-                    "Jeg bestemmer!",
-                ),
-            ),
-        ),
-        StegDTO(
-            uuid = UUID.randomUUID(),
-            id = "FastsattVanligArbeidstid",
-            type = StegtypeDTO.Fastsetting,
-            tilstand = TilstandDTO.IkkeUtført,
-            svartype = SvartypeDTO.Int,
-        ),
-        StegDTO(
-            uuid = UUID.randomUUID(),
-            id = "OppfyllerKravTilTaptArbeidstid",
-            type = StegtypeDTO.Vilkår,
-            tilstand = TilstandDTO.IkkeUtført,
-            svartype = SvartypeDTO.Boolean,
-        ),
-    ),
-)
+// private fun oppgave() = OppgaveDTO(
+//    person = "123",
+//    saksbehandler = "saksbehandler",
+//    opprettet = LocalDate.now(),
+//    hendelse = listOf(
+//        HendelseDTO(
+//            id = UUID.randomUUID().toString(),
+//            type = "type",
+//            tilstand = "vet ikke",
+//        ),
+//    ),
+//    steg = listOf(
+//        StegDTO(
+//            uuid = UUID.randomUUID(),
+//            id = "Fødselsdato",
+//            type = StegtypeDTO.Fastsetting,
+//            tilstand = TilstandDTO.Utført,
+//            svartype = SvartypeDTO.LocalDate,
+//            svar = SvarDTO(
+//                LocalDate.now().minusYears(44).toString(),
+//                SvartypeDTO.LocalDate,
+//                BegrunnelseDTO("pdl", "Henta fra PDL"),
+//            ),
+//        ),
+//        StegDTO(
+//            uuid = UUID.randomUUID(),
+//            id = "Alder",
+//            type = StegtypeDTO.Fastsetting,
+//            tilstand = TilstandDTO.IkkeUtført,
+//            svartype = SvartypeDTO.Int,
+//        ),
+//        StegDTO(
+//            uuid = UUID.randomUUID(),
+//            id = "Vilkår67",
+//            type = StegtypeDTO.Vilkår,
+//            tilstand = TilstandDTO.IkkeUtført,
+//            svartype = SvartypeDTO.Boolean,
+//        ),
+//        StegDTO(
+//            uuid = UUID.randomUUID(),
+//            id = "Virkningstidspunkt",
+//            type = StegtypeDTO.Fastsetting,
+//            tilstand = TilstandDTO.IkkeUtført,
+//            svartype = SvartypeDTO.LocalDate,
+//        ),
+//        StegDTO(
+//            uuid = UUID.randomUUID(),
+//            id = "Verneplikt",
+//            type = StegtypeDTO.Fastsetting,
+//            tilstand = TilstandDTO.IkkeUtført,
+//            svartype = SvartypeDTO.Boolean,
+//        ),
+//        StegDTO(
+//            uuid = UUID.randomUUID(),
+//            id = "KravTilMinsteinntekt",
+//            type = StegtypeDTO.Vilkår,
+//            tilstand = TilstandDTO.Utført,
+//            svartype = SvartypeDTO.Boolean,
+//            svar = SvarDTO(
+//                "true",
+//                type = SvartypeDTO.Boolean,
+//                begrunnelse = BegrunnelseDTO(
+//                    "saksbehandler",
+//                    "Jeg bestemmer!",
+//                ),
+//            ),
+//        ),
+//        StegDTO(
+//            uuid = UUID.randomUUID(),
+//            id = "FastsattVanligArbeidstid",
+//            type = StegtypeDTO.Fastsetting,
+//            tilstand = TilstandDTO.IkkeUtført,
+//            svartype = SvartypeDTO.Int,
+//        ),
+//        StegDTO(
+//            uuid = UUID.randomUUID(),
+//            id = "OppfyllerKravTilTaptArbeidstid",
+//            type = StegtypeDTO.Vilkår,
+//            tilstand = TilstandDTO.IkkeUtført,
+//            svartype = SvartypeDTO.Boolean,
+//        ),
+//    ),
+// )
 
 internal data class SvarDTO(
     val svar: String,
     val type: SvartypeDTO,
     val begrunnelse: BegrunnelseDTO,
-)
+) {
+
+    fun toSvar(): Svar<*> {
+        return when (this.type) {
+            SvartypeDTO.String -> Svar(verdi = svar, String::class.java)
+            SvartypeDTO.LocalDate -> Svar(verdi = LocalDate.parse(svar), LocalDate::class.java)
+            SvartypeDTO.Int -> Svar<Int>(verdi = svar.toInt(), Int::class.java)
+            SvartypeDTO.Boolean -> Svar<Boolean>(verdi = svar.toBoolean(), Boolean::class.java)
+        }
+    }
+}
 
 internal data class BegrunnelseDTO(
     val kilde: String, // quiz, saksbehandler, dingsebomsA
@@ -210,6 +229,7 @@ internal enum class SvartypeDTO {
 }
 
 internal data class OppgaveDTO(
+    val uuid: UUID,
     val person: String,
     val saksbehandler: String?,
     val opprettet: LocalDate,
