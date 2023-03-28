@@ -3,7 +3,7 @@ package no.nav.dagpenger.behandling
 import no.nav.dagpenger.behandling.graph.TreeNode
 import java.util.UUID
 
-sealed class Steg<T>(
+sealed class Steg<T> private constructor(
     val uuid: UUID = UUID.randomUUID(),
     val id: String,
     var svar: Svar<T>,
@@ -27,7 +27,7 @@ sealed class Steg<T>(
 
     protected abstract val node: TreeNode<Steg<*>>
 
-    fun avhengerAv(steg: Steg<*>): Steg<*> {
+    internal fun avhengerAv(steg: Steg<*>): Steg<*> {
         node.addChild(steg.node)
         return steg
     }

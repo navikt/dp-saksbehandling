@@ -5,9 +5,8 @@ package no.nav.dagpenger.behandling.dsl
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Steg
-import no.nav.dagpenger.behandling.Steg.Fastsettelse
+import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
-import no.nav.dagpenger.behandling.Svar
 
 class BehandlingDSL() {
     val steg = mutableSetOf<Steg<*>>()
@@ -26,7 +25,7 @@ class BehandlingDSL() {
 
     inner class StegDSL {
         inline fun <reified B> fastsettelse(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
-            Fastsettelse(id, Svar(null, B::class.java)).also {
+            Steg.fastsettelse<B>(id).also {
                 steg.add(it)
                 avhengigheter(Avhengigheter(it))
             }
