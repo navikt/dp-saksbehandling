@@ -9,19 +9,17 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class OppgaveApiMappingTest {
-
     @Test
     fun `mapping til dtoer`() {
         val person = Person("123")
-
         val testBehandling = behandling(person) {
             val fellessteg = steg {
-                fastsettelse("felles steg").also {
-                    it.besvar(Svar(4))
+                fastsettelse<Boolean>("felles steg").also {
+                    it.besvar(false)
                 }
             }
             steg {
-                fastsettelse("fastsettelse 1 avhenger av vilkår") {
+                fastsettelse<String>("fastsettelse 1 avhenger av vilkår") {
                     avhengerAvVilkår("vilkår1") {
                         avhengerAv(fellessteg)
                     }
@@ -30,7 +28,7 @@ class OppgaveApiMappingTest {
 
             steg {
                 vilkår("vilkår 2 avhenger av fastsettelse 2") {
-                    avhengerAvFastsettelse("fastsettelse 2") {
+                    avhengerAvFastsettelse<Int>("fastsettelse 2") {
                         avhengerAv(fellessteg)
                     }
                 }
@@ -48,6 +46,7 @@ class OppgaveApiMappingTest {
             dto.steg.count { it.type == Vilkår } shouldBe 2
             dto.steg.count { it.tilstand == IkkeUtført } shouldBe 4
             dto.steg.count { it.tilstand == Utført } shouldBe 1
+            dto.steg.count { it.svartype == SvartypeDTO.Int } shouldBe 1
         }
     }
 }

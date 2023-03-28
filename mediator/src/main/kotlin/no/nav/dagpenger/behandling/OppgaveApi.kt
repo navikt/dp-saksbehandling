@@ -14,7 +14,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.nav.dagpenger.behandling.Svar.Companion.Ubesvart
 import java.time.LocalDate
 import java.util.UUID
 
@@ -37,7 +36,6 @@ fun Application.oppgaveApi(mediator: Mediator) {
                 get() {
                     val oppgaveId = this.call.parameters["oppgaveId"]
                     require(oppgaveId != null)
-
                     val oppgave: OppgaveDTO = mediator.hentBehandling(oppgaveId).toOppgaveDTO()
 
                     call.respond(
@@ -75,33 +73,36 @@ internal fun Behandling.toOppgaveDTO(): OppgaveDTO {
 
 internal fun Collection<Behandling>.toOppgaverDTO() = this.map { it.toOppgaveDTO() }
 
-internal fun Collection<Steg>.toStegDTO(): List<StegDTO> = this.map { it.toStegDTO() }
+internal fun Collection<Steg<*>>.toStegDTO(): List<StegDTO> = this.map { it.toStegDTO() }
 
-internal fun Steg.toStegDTO(): StegDTO {
+internal fun Steg<*>.toStegDTO(): StegDTO {
     val stegtypeDTO = when (this) {
-        is Steg.FastSettelse -> StegtypeDTO.Fastsetting
+        is Steg.Fastsettelse<*> -> StegtypeDTO.Fastsetting
         is Steg.Vilkår -> StegtypeDTO.Vilkår
     }
-
-    val tilstandDTO = when (this.svar == Ubesvart) {
+    val tilstandDTO = when (this.svar.ubesvart) {
         true -> TilstandDTO.IkkeUtført
         false -> TilstandDTO.Utført
     }
-
+    val svarDTO = this.svar.toSvarDTO()
     return StegDTO(
         uuid = UUID.randomUUID(),
         id = this.id,
         type = stegtypeDTO,
-        svartype = SvartypeDTO.Boolean,
+        svartype = svarDTO.type,
         tilstand = tilstandDTO,
-        svar = this.svar.toSvarDTO(),
+        svar = svarDTO,
     )
 }
 
 internal fun Svar<*>.toSvarDTO(): SvarDTO {
+    val type = when (clazz.simpleName) {
+        "Integer" -> SvartypeDTO.Int
+        else -> SvartypeDTO.valueOf(clazz.simpleName.replaceFirstChar { it.uppercase() })
+    }
     return SvarDTO(
         svar = this.verdi.toString(),
-        type = SvartypeDTO.String,
+        type = type,
         begrunnelse = BegrunnelseDTO(kilde = "", tekst = ""),
     )
 }
@@ -123,10 +124,10 @@ private fun oppgave() = OppgaveDTO(
             id = "Fødselsdato",
             type = StegtypeDTO.Fastsetting,
             tilstand = TilstandDTO.Utført,
-            svartype = SvartypeDTO.Localdate,
+            svartype = SvartypeDTO.LocalDate,
             svar = SvarDTO(
                 LocalDate.now().minusYears(44).toString(),
-                SvartypeDTO.Localdate,
+                SvartypeDTO.LocalDate,
                 BegrunnelseDTO("pdl", "Henta fra PDL"),
             ),
         ),
@@ -149,7 +150,7 @@ private fun oppgave() = OppgaveDTO(
             id = "Virkningstidspunkt",
             type = StegtypeDTO.Fastsetting,
             tilstand = TilstandDTO.IkkeUtført,
-            svartype = SvartypeDTO.Localdate,
+            svartype = SvartypeDTO.LocalDate,
         ),
         StegDTO(
             uuid = UUID.randomUUID(),
@@ -203,7 +204,7 @@ internal data class BegrunnelseDTO(
 
 internal enum class SvartypeDTO {
     String,
-    Localdate,
+    LocalDate,
     Int,
     Boolean,
 }

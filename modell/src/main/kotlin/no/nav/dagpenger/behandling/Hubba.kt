@@ -1,10 +1,12 @@
 package no.nav.dagpenger.behandling
 
+import java.time.LocalDate
+
 object Hubba {
     fun bubba(person: Person): Behandling =
         behandling(person) {
             val virkingstidspunkt = steg {
-                fastsettelse("Virkningstidspunkt")
+                fastsettelse<LocalDate>("Virkningstidspunkt")
             }
 
             steg {
@@ -17,7 +19,7 @@ object Hubba {
 
             steg {
                 vilkår("Vilkår for oppholder seg i Norge") {
-                    avhengerAvFastsettelse("Bostedsadresse")
+                    avhengerAvFastsettelse<String>("Bostedsadresse")
                 }
             }
 
@@ -30,7 +32,7 @@ object Hubba {
             steg {
                 vilkår("Vilkår for krav til minsteinntekt") {
                     avhengerAv(virkingstidspunkt)
-                    avhengerAvFastsettelse("Verneplikt")
+                    avhengerAvFastsettelse<Boolean>("Verneplikt")
                 }
             }
 
@@ -45,8 +47,8 @@ object Hubba {
 
             steg {
                 vilkår("Vilkår for alder") {
-                    avhengerAvFastsettelse("alder") {
-                        avhengerAvFastsettelse("fødselsdato")
+                    avhengerAvFastsettelse<Int>("alder") {
+                        avhengerAvFastsettelse<LocalDate>("fødselsdato")
                     }
                 }
             }
@@ -57,7 +59,7 @@ object Hubba {
 
             steg {
                 vilkår("Har du barn eller noe") {
-                    avhengerAvFastsettelse("Alle barna som er viktig for at du skal få penger av oss")
+                    avhengerAvFastsettelse<Int>("Alle barna som er viktig for at du skal få penger av oss")
                 }
             }
         }

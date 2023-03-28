@@ -2,53 +2,53 @@
 
 package no.nav.dagpenger.behandling
 
-interface StegDeklerasjon {
-    fun avhengerAvFastsettelse(id: String, svar: Svar<*> = Svar.Ubesvart, avhengerAv: AvhengerAv? = null): Steg
-
-    @Suppress("FunctionName")
-    fun avhengerAvVilkår(id: String, svar: Svar<*> = Svar.Ubesvart, avhengerAv: AvhengerAv? = null): Steg
-    fun avhengerAv(steg: Steg, avhengerAv: AvhengerAv? = null): Steg
+fun behandling(person: Person, block: BehandlingDSL.() -> Unit): Behandling {
+    val dsl = BehandlingDSL()
+    block(dsl)
+    return Behandling(person, dsl.steg)
 }
 
-typealias AvhengerAv = StegDeklerasjon.() -> Unit
+class BehandlingDSL() {
+    val steg = mutableSetOf<Steg<*>>()
 
-class BehandlingBuilder {
-    private val steg = mutableSetOf<Steg>()
-    fun steg(block: StegBuilder.() -> Steg): Steg {
-        return StegBuilder.block().also {
-            this.steg.add(it)
-        }
+    /*companion object {
+        inline fun <reified B> fastsettelse(id: String) = Steg.Fastsettelse(id, Svar(null, B::class.java))
+    }*/
+    fun steg(block: StegDSL.() -> Steg<*>): Steg<*> {
+        return block(StegDSL())
     }
 
-    fun steg(steg: Steg, avhengerAv: AvhengerAv? = null): Steg {
-        avhengerAv?.invoke(steg)
-        this.steg.add(steg)
-        return steg
-    }
+    inner class StegDSL {
+        inline fun <reified B> fastsettelse(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
+            Steg.Fastsettelse(id, Svar(null, B::class.java)).also {
+                steg.add(it)
+            }.apply {
+                avhengigheter(Avhengigheter(this))
+            }
 
-    fun getSteg(): Set<Steg> = steg
-}
+        fun vilkår(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
+            Steg.Vilkår(id).also {
+                steg.add(it)
+            }.apply {
+                avhengigheter(Avhengigheter(this))
+            }
 
-fun behandling(person: Person, block: BehandlingBuilder.() -> Unit): Behandling {
-    val builder = BehandlingBuilder()
-    builder.block()
-    return Behandling(steg = builder.getSteg(), person = person)
-}
+        inner class Avhengigheter(val avhengigSteg: Steg<*>) {
+            inline fun <reified T> avhengerAvFastsettelse(id: String, block: Avhengigheter.() -> Unit = {}) {
+                val fastsettelse = fastsettelse<T>(id)
+                block(Avhengigheter(fastsettelse))
+                avhengigSteg.avhengerAv(fastsettelse)
+            }
 
-object StegBuilder {
-    @Suppress("FunctionName")
-    fun vilkår(id: String, svar: Svar<*> = Svar.Ubesvart, avhengerAv: AvhengerAv? = null): Steg.Vilkår {
-        val steg = Steg.Vilkår(id, svar).also {
-            avhengerAv?.invoke(it)
+            fun avhengerAv(steg: Steg<*>) {
+                avhengigSteg.avhengerAv(steg)
+            }
+
+            fun avhengerAvVilkår(id: String, block: Avhengigheter.() -> Unit = {}) {
+                val vilkår = Steg.Vilkår(id)
+                block(Avhengigheter(vilkår))
+                avhengigSteg.avhengerAv(vilkår)
+            }
         }
-        return steg
-    }
-
-    @Suppress("FunctionName")
-    fun fastsettelse(id: String, svar: Svar<*> = Svar.Ubesvart, avhengerAv: AvhengerAv? = null): Steg.FastSettelse {
-        val steg = Steg.FastSettelse(id, svar).also {
-            avhengerAv?.invoke(it)
-        }
-        return steg
     }
 }

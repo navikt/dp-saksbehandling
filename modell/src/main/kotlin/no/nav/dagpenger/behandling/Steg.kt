@@ -2,60 +2,60 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.graph.TreeNode
 
-sealed class Steg(
+sealed class Steg<T>(
     val id: String,
-    var svar: Svar<*> = Svar.Ubesvart,
-) : StegDeklerasjon {
-
-    class FastSettelse(
+    var svar: Svar<T>,
+) {
+    class Fastsettelse<T>(
         id: String,
-        svar: Svar<*> = Svar.Ubesvart,
-    ) : Steg(id, svar) {
-        override val node: TreeNode<Steg> = TreeNode(this)
+        svar: Svar<T>,
+    ) : Steg<T>(id, svar) {
+        override val node: TreeNode<Steg<*>> = TreeNode(this)
+    }
+
+    companion object {
+        inline fun <reified B> fastsettelse(id: String) = Fastsettelse(id, Svar(null, B::class.java))
     }
 
     class Vilkår(
         id: String,
-        svar: Svar<*> = Svar.Ubesvart,
-    ) : Steg(id, svar) {
-        override val node: TreeNode<Steg> = TreeNode(this)
+    ) : Steg<Boolean>(id, Svar(null, Boolean::class.java)) {
+        override val node: TreeNode<Steg<*>> = TreeNode(this)
     }
 
-    protected abstract val node: TreeNode<Steg>
+    protected abstract val node: TreeNode<Steg<*>>
 
-    override fun avhengerAvFastsettelse(id: String, svar: Svar<*>, avhengerAv: AvhengerAv?): Steg {
+    /*override fun <T> avhengerAvFastsettelse(id: String, svar: Svar<T>, avhengerAv: AvhengerAv?): Steg<T> {
         return FastSettelse(id, svar).also { nyttSteg ->
             avhengerAv(nyttSteg, avhengerAv)
         }
     }
 
-    override fun avhengerAvVilkår(id: String, svar: Svar<*>, avhengerAv: AvhengerAv?): Steg {
+    override fun avhengerAvVilkår(id: String, svar: Svar<Boolean>, avhengerAv: AvhengerAv?): Steg<Boolean> {
         return Vilkår(id, svar).also { avhengerAv(it, avhengerAv) }
-    }
-
-    override fun avhengerAv(steg: Steg, avhengerAv: AvhengerAv?): Steg {
+    }*/
+    fun avhengerAv(steg: Steg<*>): Steg<*> {
         node.addChild(steg.node)
-        avhengerAv?.invoke(steg)
         return steg
     }
 
     override fun toString() = id
 
-    fun nesteSteg(): Set<Steg> =
-        node.findNodes { it.svar == Svar.Ubesvart }
+    fun nesteSteg(): Set<Steg<*>> =
+        node.findNodes { it.svar.ubesvart }
             .map { it.value }
             .toSet()
 
-    fun alleSteg(): Set<Steg> = node.traverse().map { it.value }.toSet()
+    fun alleSteg(): Set<Steg<*>> = node.traverse().map { it.value }.toSet()
 
-    fun besvar(svar: Svar<*>) {
-        this.svar = svar
+    fun besvar(svar: T) {
+        this.svar = this.svar.besvar(svar)
         node.getAncestors().forEach {
             it.value.nullstill()
         }
     }
 
     fun nullstill() {
-        svar = Svar.Ubesvart
+        svar = this.svar.nullstill()
     }
 }
