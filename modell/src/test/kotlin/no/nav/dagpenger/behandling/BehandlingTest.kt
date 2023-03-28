@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
 import no.nav.dagpenger.behandling.Steg.Fastsettelse
@@ -7,6 +8,8 @@ import no.nav.dagpenger.behandling.Steg.Vilkår
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.util.NoSuchElementException
+import java.util.UUID
 
 class BehandlingTest {
     private val testPerson = Person("123")
@@ -127,5 +130,21 @@ class BehandlingTest {
         val felles = behandling.nesteSteg().single { it.id == "felles" } as Fastsettelse<LocalDate>
         felles.besvar(LocalDate.now())
         behandling.nesteSteg().map { it.id } shouldBe setOf("første", "blarp", "blarpburp", "foobar")
+    }
+
+    @Test
+    fun `Skal kunne besvare behandling`() {
+        lateinit var testUuid: UUID
+        val behandling = behandling(testPerson) {
+            steg {
+                fastsettelse<Int>("noe").also {
+                    testUuid = it.uuid
+                }
+            }
+        }
+
+        behandling.besvar(testUuid, 5)
+        shouldThrow<NoSuchElementException> { behandling.besvar(UUID.randomUUID(), 5) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(testUuid, "String svar") }
     }
 }

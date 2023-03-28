@@ -1,21 +1,23 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.graph.TreeNode
+import java.util.UUID
 
 sealed class Steg<T>(
+    val uuid: UUID = UUID.randomUUID(),
     val id: String,
     var svar: Svar<T>,
 ) {
     class Fastsettelse<T>(
         id: String,
         svar: Svar<T>,
-    ) : Steg<T>(id, svar) {
+    ) : Steg<T>(id = id, svar = svar) {
         override val node: TreeNode<Steg<*>> = TreeNode(this)
     }
 
     class Vilkår(
         id: String,
-    ) : Steg<Boolean>(id, Svar(null, Boolean::class.java)) {
+    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.java)) {
         override val node: TreeNode<Steg<*>> = TreeNode(this)
     }
 

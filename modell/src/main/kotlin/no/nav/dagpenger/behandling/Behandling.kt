@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import java.time.LocalDateTime
+import java.util.UUID
 
 data class Person(val ident: String)
 
@@ -21,6 +22,18 @@ class Behandling private constructor(
         return steg.flatMap {
             it.alleSteg()
         }.toSet()
+    }
+
+    inline fun <reified T> besvar(uuid: UUID, verdi: T) {
+        val stegSomSkalBesvares = steg.single {
+            it.uuid == uuid
+        }
+
+        require(stegSomSkalBesvares.svar.clazz == T::class.java) {
+            "Fikk ${T::class.java}, forventet ${stegSomSkalBesvares.svar.clazz} ved besvaring av steg med uuid: $uuid"
+        }
+
+        (stegSomSkalBesvares as Steg<T>).besvar(verdi)
     }
 }
 
