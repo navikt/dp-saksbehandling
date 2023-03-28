@@ -33,21 +33,21 @@ class BehandlingDSL() {
                 avhengigheter(Avhengigheter(this))
             }
 
-        inner class Avhengigheter(val avhengigSteg: Steg<*>) {
+        inner class Avhengigheter(private val avhengigSteg: Steg<*>) {
             inline fun <reified T> avhengerAvFastsettelse(id: String, block: Avhengigheter.() -> Unit = {}) {
                 val fastsettelse = fastsettelse<T>(id)
                 block(Avhengigheter(fastsettelse))
-                avhengigSteg.avhengerAv(fastsettelse)
-            }
-
-            fun avhengerAv(steg: Steg<*>) {
-                avhengigSteg.avhengerAv(steg)
+                avhengerAv(fastsettelse)
             }
 
             fun avhengerAvVilkår(id: String, block: Avhengigheter.() -> Unit = {}) {
                 val vilkår = Steg.Vilkår(id)
                 block(Avhengigheter(vilkår))
-                avhengigSteg.avhengerAv(vilkår)
+                avhengerAv(vilkår)
+            }
+
+            fun avhengerAv(steg: Steg<*>) {
+                avhengigSteg.avhengerAv(steg)
             }
         }
     }
