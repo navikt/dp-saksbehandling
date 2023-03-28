@@ -4,7 +4,6 @@ import no.nav.dagpenger.behandling.Aktivitetskontekst
 import no.nav.dagpenger.behandling.Aktivitetslogg
 import no.nav.dagpenger.behandling.IAktivitetslogg
 import no.nav.dagpenger.behandling.SpesifikkKontekst
-import no.nav.dagpenger.behandling.Svar
 import java.util.UUID
 
 abstract class Hendelse(
@@ -18,4 +17,10 @@ abstract class Hendelse(
     }
 }
 
-class BehandlingSvar(ident: String, val behandlinUUID: UUID, val stegUUID: UUID, val svar: Svar<*>) : Hendelse(ident)
+class BehandlingSvar(
+    ident: String,
+    val behandlinUUID: UUID,
+    val stegUUID: UUID,
+    val verdi: String,
+    val type: String, // todo
+) : Hendelse(ident)

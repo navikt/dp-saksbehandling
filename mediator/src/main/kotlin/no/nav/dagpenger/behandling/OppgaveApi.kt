@@ -55,7 +55,8 @@ fun Application.oppgaveApi(mediator: Mediator) {
                                 ident = "123", // todo hente fra token,
                                 behandlinUUID = UUID.fromString(oppgaveId),
                                 stegUUID = UUID.fromString(stegId),
-                                svar = svar.toSvar(),
+                                verdi = svar.svar, // todo
+                                type = svar.type.name, // todo
                             )
                             mediator.behandle(hendelse)
                             call.respond(status = HttpStatusCode.OK, message = "")
@@ -95,7 +96,7 @@ internal fun Steg<*>.toStegDTO(): StegDTO {
     }
     val svarDTO = this.svar.toSvarDTO()
     return StegDTO(
-        uuid = UUID.randomUUID(),
+        uuid = this.uuid,
         id = this.id,
         type = stegtypeDTO,
         svartype = svarDTO.type,

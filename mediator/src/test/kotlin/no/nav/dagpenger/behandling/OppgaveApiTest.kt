@@ -11,7 +11,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -40,8 +39,8 @@ class OppgaveApiTest {
         }
     }
 
+    //    @Disabled
     @Test
-    @Disabled
     fun `skal kunne svare på et steg`() {
         withOppgaveApi {
             val oppgaver: List<OppgaveDTO> = client.get("/oppgaver").let { response ->
