@@ -2,6 +2,9 @@
 
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.Steg.Fastsettelse
+import no.nav.dagpenger.behandling.Steg.Vilkår
+
 fun behandling(person: Person, block: BehandlingDSL.() -> Unit): Behandling {
     val dsl = BehandlingDSL()
     block(dsl)
@@ -11,26 +14,21 @@ fun behandling(person: Person, block: BehandlingDSL.() -> Unit): Behandling {
 class BehandlingDSL() {
     val steg = mutableSetOf<Steg<*>>()
 
-    /*companion object {
-        inline fun <reified B> fastsettelse(id: String) = Steg.Fastsettelse(id, Svar(null, B::class.java))
-    }*/
     fun steg(block: StegDSL.() -> Steg<*>): Steg<*> {
         return block(StegDSL())
     }
 
     inner class StegDSL {
         inline fun <reified B> fastsettelse(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
-            Steg.Fastsettelse(id, Svar(null, B::class.java)).also {
+            Fastsettelse(id, Svar(null, B::class.java)).also {
                 steg.add(it)
-            }.apply {
-                avhengigheter(Avhengigheter(this))
+                avhengigheter(Avhengigheter(it))
             }
 
         fun vilkår(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
-            Steg.Vilkår(id).also {
+            Vilkår(id).also {
                 steg.add(it)
-            }.apply {
-                avhengigheter(Avhengigheter(this))
+                avhengigheter(Avhengigheter(it))
             }
 
         inner class Avhengigheter(private val avhengigSteg: Steg<*>) {
@@ -41,7 +39,7 @@ class BehandlingDSL() {
             }
 
             fun avhengerAvVilkår(id: String, block: Avhengigheter.() -> Unit = {}) {
-                val vilkår = Steg.Vilkår(id)
+                val vilkår = Vilkår(id)
                 block(Avhengigheter(vilkår))
                 avhengerAv(vilkår)
             }

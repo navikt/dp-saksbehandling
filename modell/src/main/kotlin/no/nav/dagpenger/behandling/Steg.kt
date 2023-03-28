@@ -13,27 +13,18 @@ sealed class Steg<T>(
         override val node: TreeNode<Steg<*>> = TreeNode(this)
     }
 
-    companion object {
-        inline fun <reified B> fastsettelse(id: String) = Fastsettelse(id, Svar(null, B::class.java))
-    }
-
     class Vilkår(
         id: String,
     ) : Steg<Boolean>(id, Svar(null, Boolean::class.java)) {
         override val node: TreeNode<Steg<*>> = TreeNode(this)
     }
 
-    protected abstract val node: TreeNode<Steg<*>>
-
-    /*override fun <T> avhengerAvFastsettelse(id: String, svar: Svar<T>, avhengerAv: AvhengerAv?): Steg<T> {
-        return FastSettelse(id, svar).also { nyttSteg ->
-            avhengerAv(nyttSteg, avhengerAv)
-        }
+    companion object {
+        inline fun <reified B> fastsettelse(id: String) = Fastsettelse(id, Svar(null, B::class.java))
     }
 
-    override fun avhengerAvVilkår(id: String, svar: Svar<Boolean>, avhengerAv: AvhengerAv?): Steg<Boolean> {
-        return Vilkår(id, svar).also { avhengerAv(it, avhengerAv) }
-    }*/
+    protected abstract val node: TreeNode<Steg<*>>
+
     fun avhengerAv(steg: Steg<*>): Steg<*> {
         node.addChild(steg.node)
         return steg
@@ -55,7 +46,7 @@ sealed class Steg<T>(
         }
     }
 
-    fun nullstill() {
+    private fun nullstill() {
         svar = this.svar.nullstill()
     }
 }
