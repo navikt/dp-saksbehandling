@@ -18,7 +18,7 @@ tags:
   - name: Default
     description: ''
 paths:
-  /oppgaver/:
+  /behandlinger/:
     get:
       summary: Gir en liste med planer
       description: ''
@@ -35,7 +35,7 @@ paths:
                 items:
                   type: $ref
                   $ref: '#/components/schemas/Behandlingsplan'
-  /oppgaver/{hubbaId}:
+  /behandlinger/{hubbaId}:
     get:
       summary: Gir en konkret hubba tilbake
       description: ''
@@ -51,7 +51,7 @@ paths:
               schema:
                 type: $ref
                 $ref: '#/components/schemas/Hubba'
-  /oppgaver/{hubbaId}/steg/{stegId}:
+  /behandlinger/{hubbaId}/steg/{stegId}:
     put:
       summary: Løs et hubbasteg
       description: ''

@@ -9,7 +9,7 @@ import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class OppgaveApiMappingTest {
+class BehandlingApiMappingTest {
     @Test
     fun `mapping til dtoer`() {
         val person = Person("123")
@@ -36,7 +36,7 @@ class OppgaveApiMappingTest {
             }
         }
 
-        testBehandling.toOppgaveDTO().let { dto ->
+        testBehandling.toBehandlingDTO().let { dto ->
             dto.person shouldBe "123"
             dto.saksbehandler shouldBe null
             dto.opprettet shouldBe LocalDate.now()

@@ -20,22 +20,22 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
 
-class OppgaveApiTest {
+class BehandlingApiTest {
 
-    private fun withOppgaveApi(
+    private fun withBehandlingApi(
         mediator: Mediator = Mediator(mockPersistence),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
-            application { oppgaveApi(mediator) }
+            application { behandlingApi(mediator) }
             test()
         }
     }
 
     @Test
-    fun `Skal kunne hente ut oppgaver`() {
-        withOppgaveApi {
-            client.get("/oppgaver").let { response ->
+    fun `Skal kunne hente ut behandlinger`() {
+        withBehandlingApi {
+            client.get("/behandlinger").let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 response.bodyAsText() shouldEqualSpecifiedJson """[$testBehandlingJson]"""
@@ -51,12 +51,12 @@ class OppgaveApiTest {
 
     @Test
     fun `skal kunne svare på et steg`() {
-        withOppgaveApi {
-            val oppgaverJson: String = client.get("/oppgaver/${mockPersistence.behandlingId}").bodyAsText()
+        withBehandlingApi {
+            val behandlingerJson: String = client.get("/behandlinger/${mockPersistence.behandlingId}").bodyAsText()
 
-            val stegId = oppgaverJson.findStegUUID("vilkår1")
+            val stegId = behandlingerJson.findStegUUID("vilkår1")
 
-            client.put("/oppgaver/${mockPersistence.behandlingId}/steg/$stegId") {
+            client.put("/behandlinger/${mockPersistence.behandlingId}/steg/$stegId") {
                 contentType(ContentType.Application.Json)
                 this.setBody(
                     //language=JSON
@@ -67,9 +67,9 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne hente ut spesifikk oppgave`() {
-        withOppgaveApi {
-            client.get("/oppgaver/${mockPersistence.behandlingId}").let { response ->
+    fun `Skal kunne hente ut spesifikk behandling`() {
+        withBehandlingApi {
+            client.get("/behandlinger/${mockPersistence.behandlingId}").let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 response.bodyAsText() shouldEqualSpecifiedJson testBehandlingJson
