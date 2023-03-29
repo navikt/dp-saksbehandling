@@ -9,7 +9,9 @@ dependencies {
     implementation(project(":modell"))
     implementation("io.ktor:ktor-server-content-negotiation:${Ktor2.version}")
     implementation("io.ktor:ktor-serialization-jackson:${Ktor2.version}")
+    implementation("io.ktor:ktor-server-call-logging:${Ktor2.version}")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2")
+    implementation("io.ktor:ktor-server-call-logging-jvm:2.1.3")
 
     testImplementation(Mockk.mockk)
 

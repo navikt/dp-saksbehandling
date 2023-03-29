@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.HttpStatusCode
@@ -7,6 +8,7 @@ import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.install
+import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -19,11 +21,13 @@ import java.time.LocalDate
 import java.util.UUID
 
 fun Application.oppgaveApi(mediator: Mediator) {
+    install(CallLogging) { }
     install(ContentNegotiation) {
         jackson {
             registerModule(JavaTimeModule())
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             enable(SerializationFeature.INDENT_OUTPUT)
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
     }
 

@@ -60,16 +60,7 @@ class OppgaveApiTest {
                 contentType(ContentType.Application.Json)
                 this.setBody(
                     //language=JSON
-                    """
-                {
-                    "svar": "false",
-                    "type": "Boolean",
-                    "begrunnelse": {
-                    "kilde": "meg",
-                    "tekst": "begrunnelse"
-                }
-                }
-                    """.trimIndent(),
+                    """{"type":"Boolean","svar":true,"begrunnelse":{"tekst":"Har itte","kilde":"Høggern"}}""".trimIndent(),
                 )
             }.status shouldBe HttpStatusCode.OK
         }
