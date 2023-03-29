@@ -8,13 +8,15 @@ import java.util.UUID
 interface BehandlingRepository {
     fun hentBehandlinger(): List<Behandling>
     fun hentBehandling(behandlingUUID: UUID): Behandling
+
+    fun lagreBehandling(behandling: Behandling): Unit = TODO()
 }
 
 object Inmemory : BehandlingRepository {
     val testPersonOla = Person("123")
     val testPersonKari = Person("456")
 
-    val behandlinger = listOf<Behandling>(
+    val behandlinger = mutableListOf(
         Hubba.bubba(testPersonOla),
         Hubba.bubba(testPersonKari),
 
@@ -28,5 +30,9 @@ object Inmemory : BehandlingRepository {
         return behandlinger.single {
             it.uuid == behandlingUUID
         }
+    }
+
+    override fun lagreBehandling(behandling: Behandling) {
+        behandlinger.add(behandling)
     }
 }

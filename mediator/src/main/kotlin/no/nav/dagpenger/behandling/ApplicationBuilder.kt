@@ -6,17 +6,19 @@ import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
+    private val mediator = Mediator()
 
     private val rapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
-                behandlingApi(mediator = Mediator())
+                behandlingApi(mediator = mediator)
             }.build()
 
     init {
         rapidsConnection.register(this)
         SøknadMottak(
             rapidsConnection = rapidsConnection,
+            mediator,
         )
     }
 
