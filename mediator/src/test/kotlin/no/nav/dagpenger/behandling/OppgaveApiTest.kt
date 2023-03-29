@@ -62,8 +62,8 @@ class OppgaveApiTest {
                     //language=JSON
                     """
                 {
-                    "svar": "-02-02",
-                    "type": "LocalDate",
+                    "svar": "false",
+                    "type": "Boolean",
                     "begrunnelse": {
                     "kilde": "meg",
                     "tekst": "begrunnelse"

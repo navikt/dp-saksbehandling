@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
@@ -109,5 +110,23 @@ class BehandlingTest {
         behandling.besvar(testUuid, 5)
         shouldThrow<NoSuchElementException> { behandling.besvar(UUID.randomUUID(), 5) }
         shouldThrow<IllegalArgumentException> { behandling.besvar(testUuid, "String svar") }
+    }
+
+    @Test
+    fun `Skal kunne besvare vilkår og fastsettelse av type boolean`() {
+        lateinit var vilkår: UUID
+        lateinit var fastsettelse: UUID
+        val behandling = behandling(testPerson) {
+            steg {
+                vilkår("noe").also { vilkår = it.uuid }
+            }
+
+            steg {
+                fastsettelse<Boolean>("boolean").also { fastsettelse = it.uuid }
+            }
+        }
+
+        shouldNotThrow<IllegalArgumentException> { behandling.besvar(vilkår, true) }
+        shouldNotThrow<IllegalArgumentException> { behandling.besvar(fastsettelse, false) }
     }
 }

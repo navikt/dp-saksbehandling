@@ -17,7 +17,7 @@ sealed class Steg<T> private constructor(
 
     class Vilkår(
         id: String,
-    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.java)) {
+    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType)) {
         override val node: TreeNode<Steg<*>> = TreeNode(this)
     }
 
