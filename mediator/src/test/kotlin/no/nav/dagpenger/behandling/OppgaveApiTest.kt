@@ -54,9 +54,7 @@ class OppgaveApiTest {
         withOppgaveApi {
             val oppgaverJson: String = client.get("/oppgaver/${mockPersistence.behandlingId}").bodyAsText()
 
-            oppgaverJson.shouldContain("vilkår")
-
-            val stegId = oppgaverJson.findStegUUID("vilkår 1 dato")
+            val stegId = oppgaverJson.findStegUUID("vilkår1")
 
             client.put("/oppgaver/${mockPersistence.behandlingId}/steg/$stegId") {
                 contentType(ContentType.Application.Json)
@@ -64,7 +62,7 @@ class OppgaveApiTest {
                     //language=JSON
                     """
                 {
-                    "svar": "2022-02-02",
+                    "svar": "-02-02",
                     "type": "LocalDate",
                     "begrunnelse": {
                     "kilde": "meg",
