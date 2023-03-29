@@ -17,10 +17,9 @@ abstract class Hendelse(
     }
 }
 
-class BehandlingSvar(
+class BehandlingSvar<T>(
     ident: String,
-    val behandlinUUID: UUID,
+    val behandlingUUID: UUID,
     val stegUUID: UUID,
-    val verdi: String,
-    val type: String, // todo
+    val verdi: T,
 ) : Hendelse(ident)

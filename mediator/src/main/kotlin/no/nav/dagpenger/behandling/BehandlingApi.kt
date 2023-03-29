@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.plugins.callloging.CallLogging
@@ -51,18 +52,48 @@ fun Application.behandlingApi(mediator: Mediator) {
                 }
                 route("steg") {
                     put("{stegId}") {
-                        val behandlingId = this.call.parameters["behandlingId"]
-                        val stegId = this.call.parameters["stegId"]
-                        require(behandlingId != null && stegId != null)
+                        val behandlingId = this.call.finnUUID("behandlingId")
+                        val stegId = this.call.finnUUID("stegId")
                         val svar: SvarDTO = this.call.receive()
-                        val hendelse = BehandlingSvar(
-                            ident = "123", // todo hente fra token,
-                            behandlinUUID = UUID.fromString(behandlingId),
-                            stegUUID = UUID.fromString(stegId),
-                            verdi = svar.svar, // todo
-                            type = svar.type.name, // todo
-                        )
-                        mediator.behandle(hendelse)
+
+                        when (svar.type) {
+                            SvartypeDTO.String -> mediator.behandle(
+                                BehandlingSvar(
+                                    "123",
+                                    behandlingId,
+                                    stegId,
+                                    svar.svar,
+                                ),
+                            )
+
+                            SvartypeDTO.LocalDate -> mediator.behandle(
+                                BehandlingSvar(
+                                    "123",
+                                    behandlingId,
+                                    stegId,
+                                    LocalDate.parse(svar.svar),
+                                ),
+                            )
+
+                            SvartypeDTO.Int -> mediator.behandle(
+                                BehandlingSvar(
+                                    "123",
+                                    behandlingId,
+                                    stegId,
+                                    svar.svar.toInt(),
+                                ),
+                            )
+
+                            SvartypeDTO.Boolean -> mediator.behandle(
+                                BehandlingSvar(
+                                    "123",
+                                    behandlingId,
+                                    stegId,
+                                    svar.svar.toBoolean(),
+                                ),
+                            )
+                        }
+
                         call.respond(status = HttpStatusCode.OK, message = "")
                     }
                 }
@@ -70,6 +101,10 @@ fun Application.behandlingApi(mediator: Mediator) {
         }
     }
 }
+
+internal fun ApplicationCall.finnUUID(pathParam: String): UUID = parameters[pathParam]?.let {
+    UUID.fromString(it)
+} ?: throw IllegalArgumentException("Kunne ikke finne behandlingId i path")
 
 internal fun Behandling.toBehandlingDTO(): BehandlingDTO {
     return BehandlingDTO(
