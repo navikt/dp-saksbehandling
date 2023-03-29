@@ -12,10 +12,6 @@ class Mediator(
 ) : BehandlingRepository by behandlingRepository {
     fun behandle(hendelse: BehandlingSvar) {
         val behandling = hentBehandling(hendelse.behandlinUUID)
-//        String,
-//        LocalDate,
-//        Int,
-//        Boolean,
         when (hendelse.type) {
             "String" -> {
                 behandling.besvar(hendelse.stegUUID, hendelse.verdi)

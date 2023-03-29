@@ -18,6 +18,7 @@ dependencies {
     testImplementation(Junit5.params)
     testRuntimeOnly(Junit5.engine)
     testImplementation(KoTest.assertions)
+    testImplementation("io.kotest:kotest-assertions-json:${KoTest.version}")
 }
 
 tasks.test {
