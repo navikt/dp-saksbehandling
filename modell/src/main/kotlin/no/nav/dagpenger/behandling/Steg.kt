@@ -36,7 +36,7 @@ sealed class Steg<T> private constructor(
     override fun toString() = id
 
     fun nesteSteg(): Set<Steg<*>> =
-        node.findNodes { it.svar.ubesvart }
+        node.findNodes { it.tilstand != Tilstand.Utført }
             .map { it.value }
             .toSet()
 

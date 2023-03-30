@@ -65,7 +65,7 @@ class BehandlingTest {
     }
 
     @Test
-    fun `ferdig steg blir ikke med i neste steg`() {
+    fun `Utførte steg blir ikke med i neste steg`() {
         val steg1 = fastsettelse<Int>("1")
         val steg2 = Vilkår("2").also {
             it.avhengerAv(steg1)

@@ -2,11 +2,11 @@ package no.nav.dagpenger.behandling.graph
 
 class TreeNode<T>(val value: T) {
     private val children = mutableListOf<TreeNode<T>>()
-    private var parent: TreeNode<T>? = null
+    private val parents = mutableListOf<TreeNode<T>>()
 
     fun addChild(child: TreeNode<T>) {
         children.add(child)
-        child.parent = this
+        child.parents.add(this)
     }
 
     fun traverse(traversalOrder: TraversalOrder = TraversalOrder.PRE_ORDER): List<TreeNode<T>> {
@@ -21,13 +21,12 @@ class TreeNode<T>(val value: T) {
     }
 
     fun getAncestors(): List<TreeNode<T>> {
-        val parents = mutableListOf<TreeNode<T>>()
-        var currentNode = this.parent
-        while (currentNode != null) {
-            parents.add(currentNode)
-            currentNode = currentNode.parent
+        val ancestors = mutableListOf<TreeNode<T>>()
+        for (parent in parents) {
+            ancestors.addAll(parent.getAncestors())
         }
-        return parents
+        ancestors.addAll(parents)
+        return ancestors
     }
 
     fun findNodes(criteria: (T) -> Boolean): List<TreeNode<T>> {
