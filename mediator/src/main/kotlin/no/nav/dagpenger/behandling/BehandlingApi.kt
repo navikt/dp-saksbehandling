@@ -19,7 +19,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 fun Application.behandlingApi(mediator: Mediator) {
     install(CallLogging) { }
@@ -126,9 +126,9 @@ internal fun Steg<*>.toStegDTO(): StegDTO {
         is Steg.Fastsettelse<*> -> StegtypeDTO.Fastsetting
         is Steg.Vilkår -> StegtypeDTO.Vilkår
     }
-    val tilstandDTO = when (this.svar.ubesvart) {
-        true -> TilstandDTO.IkkeUtført
-        false -> TilstandDTO.Utført
+    val tilstand = when (this.svar.ubesvart) {
+        true -> Tilstand.IkkeUtført
+        false -> Tilstand.Utført
     }
     val svarDTO = this.svar.toSvarDTO()
     return StegDTO(
@@ -136,7 +136,7 @@ internal fun Steg<*>.toStegDTO(): StegDTO {
         id = this.id,
         type = stegtypeDTO,
         svartype = svarDTO.type,
-        tilstand = tilstandDTO,
+        tilstand = tilstand,
         svar = svarDTO,
     )
 }
@@ -195,19 +195,13 @@ internal data class StegDTO(
     val id: String, // reell arbeidssøker, vurder minsteinntekt, fastsett virkningstidspunkt, fastsett vanlig arbeidstid
     val type: StegtypeDTO,
     val svartype: SvartypeDTO,
-    val tilstand: TilstandDTO,
+    val tilstand: Tilstand,
     val svar: SvarDTO? = null,
 )
 
 internal enum class StegtypeDTO {
     Fastsetting,
     Vilkår,
-}
-
-internal enum class TilstandDTO {
-    Utført,
-    MåGodkjennes,
-    IkkeUtført,
 }
 
 internal data class HendelseDTO(

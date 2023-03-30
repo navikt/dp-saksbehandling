@@ -7,6 +7,7 @@ sealed class Steg<T> private constructor(
     val uuid: UUID = UUID.randomUUID(),
     val id: String,
     var svar: Svar<T>,
+    var tilstand: Tilstand = Tilstand.IkkeUtført,
 ) {
     class Fastsettelse<T>(
         id: String,
@@ -43,12 +44,15 @@ sealed class Steg<T> private constructor(
 
     fun besvar(svar: T) {
         this.svar = this.svar.besvar(svar)
+        this.tilstand = Tilstand.Utført
         node.getAncestors().forEach {
-            it.value.nullstill()
+            it.value.måGodkjennes()
         }
     }
 
-    private fun nullstill() {
-        svar = this.svar.nullstill()
+    private fun måGodkjennes() {
+        if (tilstand == Tilstand.Utført) {
+            this.tilstand = Tilstand.MåGodkjennes
+        }
     }
 }
