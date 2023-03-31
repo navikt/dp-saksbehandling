@@ -14,9 +14,10 @@ class Behandling private constructor(
     constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now())
 
     fun nesteSteg(): Set<Steg<*>> {
-        return steg.flatMap {
+        val map = steg.flatMap {
             it.nesteSteg()
-        }.toSet()
+        }
+        return map.toSet()
     }
 
     fun alleSteg(): Set<Steg<*>> {

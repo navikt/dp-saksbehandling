@@ -36,6 +36,7 @@ class StegTest {
 
     @Test
     fun `nesteSteg skal hente ut avhengigheter som ikke er utførte`() {
+        bestefar.alleSteg() shouldBe setOf(bestefar, mor, far, barn1, barn2, barn3)
         far.nesteSteg() shouldBe setOf(barn1, barn2, barn3)
         mor.nesteSteg() shouldBe setOf(barn1, barn2, barn3)
 
@@ -54,7 +55,7 @@ class StegTest {
     @Test
     fun `nesteSteg skal fjerne duplikater`() {
         barn3.besvar(true)
-        bestefar.nesteSteg() shouldBe setOf(barn1, barn2)
+        bestefar.nesteSteg() shouldBe setOf(mor, far, barn1, barn2)
     }
 
     @Test
@@ -77,6 +78,6 @@ class StegTest {
         barn1.besvar(2)
         far.nesteSteg() shouldBe setOf(barn2, barn3)
         mor.nesteSteg() shouldBe setOf(barn2, barn3)
-        bestefar.nesteSteg() shouldBe setOf(barn2, barn3)
+        bestefar.nesteSteg() shouldBe setOf(far, mor, barn2, barn3)
     }
 }

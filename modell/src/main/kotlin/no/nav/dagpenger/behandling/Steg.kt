@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.graph.TreeNode
+import no.nav.dagpenger.behandling.graph.DAGNode
 import java.util.UUID
 
 sealed class Steg<T> private constructor(
@@ -13,20 +13,20 @@ sealed class Steg<T> private constructor(
         id: String,
         svar: Svar<T>,
     ) : Steg<T>(id = id, svar = svar) {
-        override val node: TreeNode<Steg<*>> = TreeNode(this)
+        override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
     class Vilkår(
         id: String,
     ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType)) {
-        override val node: TreeNode<Steg<*>> = TreeNode(this)
+        override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
     companion object {
         inline fun <reified B> fastsettelse(id: String) = Fastsettelse(id, Svar(null, B::class.java))
     }
 
-    protected abstract val node: TreeNode<Steg<*>>
+    protected abstract val node: DAGNode<Steg<*>>
 
     internal fun avhengerAv(steg: Steg<*>): Steg<*> {
         node.addChild(steg.node)
@@ -35,12 +35,21 @@ sealed class Steg<T> private constructor(
 
     override fun toString() = id
 
-    fun nesteSteg(): Set<Steg<*>> =
-        node.findNodes { it.tilstand != Tilstand.Utført }
-            .map { it.value }
-            .toSet()
+    fun nesteSteg(): Set<Steg<*>> {
+        val criteria: (steg: Steg<*>) -> Boolean = { it.tilstand != Tilstand.Utført }
+        val result = mutableSetOf<Steg<*>>()
+        if (criteria(this)) {
+            val x = node.getDescendants(false, criteria).map { it.value }
+            if (x.isEmpty()) {
+                result.add(this)
+            } else {
+                result.addAll(x)
+            }
+        }
+        return result
+    }
 
-    fun alleSteg(): Set<Steg<*>> = node.traverse().map { it.value }.toSet()
+    fun alleSteg(): Set<Steg<*>> = setOf(this) + node.getDescendants().map { it.value }
 
     fun besvar(svar: T) {
         this.svar = this.svar.besvar(svar)
