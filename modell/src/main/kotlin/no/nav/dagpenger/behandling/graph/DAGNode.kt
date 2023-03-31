@@ -1,18 +1,24 @@
 package no.nav.dagpenger.behandling.graph
 
 class DAGNode<T>(val value: T) {
-    private val parents = mutableListOf<DAGNode<T>>()
-    private val children = mutableListOf<DAGNode<T>>()
+    private val parents = mutableSetOf<DAGNode<T>>()
+    private val children = mutableSetOf<DAGNode<T>>()
 
     fun addChild(child: DAGNode<T>) {
-        children.add(child)
-        child.parents.add(this)
+        if (this == child || this in child.getDescendants()) {
+            throw IllegalStateException("Adding this child would create a cycle")
+        } else {
+            children.add(child)
+            child.parents.add(this)
+        }
     }
 
-    fun getDescendants(): List<DAGNode<T>> = getDescendants { true }
+    fun addChildren(vararg children: DAGNode<T>) = children.forEach { child -> addChild(child) }
 
-    fun getAncestors(): List<DAGNode<T>> {
-        val allAncestors = mutableListOf<DAGNode<T>>()
+    fun getDescendants(): Set<DAGNode<T>> = getDescendants { true }
+
+    fun getAncestors(): Set<DAGNode<T>> {
+        val allAncestors = mutableSetOf<DAGNode<T>>()
         for (parent in parents) {
             allAncestors.add(parent)
             allAncestors.addAll(parent.getAncestors())
@@ -20,10 +26,12 @@ class DAGNode<T>(val value: T) {
         return allAncestors
     }
 
-    fun getDescendants(criteria: (T) -> Boolean): List<DAGNode<T>> = getDescendants(true, criteria)
+    fun getDescendantsAndRoot(): Set<DAGNode<T>> = setOf(this) + getDescendants()
 
-    fun getDescendants(recursive: Boolean, criteria: (T) -> Boolean): List<DAGNode<T>> {
-        val allDescendants = mutableListOf<DAGNode<T>>()
+    fun getDescendants(criteria: (T) -> Boolean): Set<DAGNode<T>> = getDescendants(true, criteria)
+
+    fun getDescendants(recursive: Boolean, criteria: (T) -> Boolean): Set<DAGNode<T>> {
+        val allDescendants = mutableSetOf<DAGNode<T>>()
         for (child in children) {
             when {
                 criteria(child.value) -> {
@@ -38,4 +46,6 @@ class DAGNode<T>(val value: T) {
         }
         return allDescendants
     }
+
+    override fun toString(): String = value.toString()
 }
