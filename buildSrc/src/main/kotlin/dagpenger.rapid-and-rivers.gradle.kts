@@ -27,6 +27,6 @@ tasks.withType<Jar>().configureEach {
             } else {
                 zipTree(it)
             }
-        }
+        },
     )
 }
