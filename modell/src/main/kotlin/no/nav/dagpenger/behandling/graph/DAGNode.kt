@@ -48,4 +48,11 @@ class DAGNode<T>(val value: T) {
     }
 
     override fun toString(): String = value.toString()
+
+    fun accept(visitor: DAGNodeVisitor) {
+        visitor.visit(value, children, parents)
+        children.forEach { child ->
+            child.accept(visitor)
+        }
+    }
 }

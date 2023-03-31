@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.graph.DAGNode
+import no.nav.dagpenger.behandling.graph.DAGNodeVisitor
 import java.util.UUID
 
 sealed class Steg<T> private constructor(
@@ -63,5 +64,9 @@ sealed class Steg<T> private constructor(
         if (tilstand == Tilstand.Utført) {
             this.tilstand = Tilstand.MåGodkjennes
         }
+    }
+
+    fun accept(visitor: DAGNodeVisitor) {
+        node.accept(visitor)
     }
 }

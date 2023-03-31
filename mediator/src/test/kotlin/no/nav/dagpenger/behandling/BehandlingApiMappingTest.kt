@@ -49,7 +49,5 @@ class BehandlingApiMappingTest {
             dto.steg.count { it.tilstand == Utført } shouldBe 1
             dto.steg.count { it.svartype == SvartypeDTO.Int } shouldBe 1
         }
-
     }
-
 }
