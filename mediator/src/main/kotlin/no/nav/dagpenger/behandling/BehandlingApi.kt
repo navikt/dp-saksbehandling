@@ -126,10 +126,7 @@ internal fun Steg<*>.toStegDTO(): StegDTO {
         is Steg.Fastsettelse<*> -> StegtypeDTO.Fastsetting
         is Steg.Vilkår -> StegtypeDTO.Vilkår
     }
-    val tilstand = when (this.svar.ubesvart) {
-        true -> Tilstand.IkkeUtført
-        false -> Tilstand.Utført
-    }
+    val tilstand = this.tilstand
     val svarDTO = this.svar.toSvarDTO()
     return StegDTO(
         uuid = this.uuid,

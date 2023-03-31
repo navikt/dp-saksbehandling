@@ -6,7 +6,7 @@ class DAGNode<T>(val value: T) {
 
     fun addChild(child: DAGNode<T>) {
         if (this == child || this in child.getDescendants()) {
-            throw IllegalStateException("Adding this child would create a cycle")
+            throw IllegalStateException("Adding this child would create a cycle: $child")
         } else {
             children.add(child)
             child.parents.add(this)
