@@ -14,12 +14,14 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
 import java.time.LocalDate
 import java.util.*
+import kotlin.NoSuchElementException
 
 fun Application.behandlingApi(mediator: Mediator) {
     install(CallLogging) { }
@@ -36,25 +38,50 @@ fun Application.behandlingApi(mediator: Mediator) {
         route("behandlinger") {
             get {
                 val behandlinger = mediator.hentBehandlinger().toBehandlingerDTO()
-                this.call.respond(behandlinger)
+                call.respond(behandlinger)
             }
+
+            route("sok") {
+                post {
+                    val fnrDTO = call.receive<FnrDTO>()
+
+                    try {
+                        val behandling = mediator.hentBehandlingerFor(fnrDTO.fnr).toBehandlingerDTO()
+                        call.respond(HttpStatusCode.OK, behandling)
+                    } catch (e: NoSuchElementException) {
+                        call.respond(
+                            status = HttpStatusCode.NotFound,
+                            message = "Fant ingen behandlinger for gitt fnr.",
+                        )
+                    }
+                }
+            }
+
             route("{behandlingId}") {
                 get() {
-                    val behandlingId = this.call.parameters["behandlingId"]
+                    val behandlingId = call.parameters["behandlingId"]
                     require(behandlingId != null)
-                    val behandling: BehandlingDTO =
-                        mediator.hentBehandling(UUID.fromString(behandlingId)).toBehandlingDTO()
 
-                    call.respond(
-                        status = HttpStatusCode.OK,
-                        message = behandling,
-                    )
+                    try {
+                        val behandling: BehandlingDTO =
+                            mediator.hentBehandling(UUID.fromString(behandlingId)).toBehandlingDTO()
+
+                        call.respond(
+                            HttpStatusCode.OK,
+                            behandling,
+                        )
+                    } catch (e: NoSuchElementException) {
+                        call.respond(
+                            status = HttpStatusCode.NotFound,
+                            message = "Fant ingen behandling med UUID $behandlingId",
+                        )
+                    }
                 }
                 route("steg") {
                     put("{stegId}") {
-                        val behandlingId = this.call.finnUUID("behandlingId")
-                        val stegId = this.call.finnUUID("stegId")
-                        val svar: SvarDTO = this.call.receive()
+                        val behandlingId = call.finnUUID("behandlingId")
+                        val stegId = call.finnUUID("stegId")
+                        val svar: SvarDTO = call.receive()
 
                         when (svar.type) {
                             SvartypeDTO.String -> mediator.behandle(
@@ -149,6 +176,8 @@ internal fun Svar<*>.toSvarDTO(): SvarDTO {
         begrunnelse = BegrunnelseDTO(kilde = "", tekst = ""),
     )
 }
+
+internal data class FnrDTO(val fnr: String)
 
 internal data class SvarDTO(
     val svar: String,

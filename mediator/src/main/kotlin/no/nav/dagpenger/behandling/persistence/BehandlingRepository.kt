@@ -8,7 +8,7 @@ import java.util.UUID
 interface BehandlingRepository {
     fun hentBehandlinger(): List<Behandling>
     fun hentBehandling(behandlingUUID: UUID): Behandling
-
+    fun hentBehandlingerFor(fnr: String): List<Behandling>
     fun lagreBehandling(behandling: Behandling): Unit = TODO()
 }
 
@@ -27,7 +27,17 @@ object Inmemory : BehandlingRepository {
     override fun hentBehandling(behandlingUUID: UUID): Behandling {
         return behandlinger.firstOrNull { behandling ->
             behandling.uuid == behandlingUUID
-        } ?: throw NoSuchElementException("Fant ingen behandling med uuid: $behandlingUUID")
+        } ?: throw NoSuchElementException()
+    }
+
+    override fun hentBehandlingerFor(fnr: String): List<Behandling> {
+        val behandlingerForFnr = behandlinger.filter { behandling ->
+            behandling.person.ident == fnr
+        }.takeIf {
+            it.isNotEmpty()
+        }
+
+        return behandlingerForFnr ?: throw NoSuchElementException()
     }
 
     override fun lagreBehandling(behandling: Behandling) {

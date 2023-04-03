@@ -58,6 +58,9 @@ class MediatorTest {
 
         override fun hentBehandlinger() = behandlinger
         override fun hentBehandling(behandlingUUID: UUID) = behandlinger.single { it.uuid == behandlingUUID }
+        override fun hentBehandlingerFor(fnr: String): List<Behandling> {
+            TODO("Not yet implemented")
+        }
 
         fun finnStegId(id: String): UUID {
             return behandlinger.single().alleSteg().single { it.id == id }.uuid

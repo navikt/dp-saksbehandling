@@ -1,10 +1,10 @@
 package no.nav.dagpenger.behandling
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
+import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -82,10 +82,44 @@ class BehandlingApiTest {
     }
 
     @Test
-    fun `Får feilmelding ved forsøk på å hente behandling som ikke finnes`() {
+    fun `Får 404 Not Found ved forsøk på å hente behandling som ikke finnes`() {
         withBehandlingApi {
-            shouldThrow<NoSuchElementException> {
-                client.get("/behandlinger/${UUID.randomUUID()}")
+            client.get("/behandlinger/${UUID.randomUUID()}").also { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente ut alle behandlinger for en gitt person`() {
+        withBehandlingApi {
+            client.post("/behandlinger/sok") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"fnr": ${mockPersistence.testPerson1.ident}}""",
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+
+                val behandlinger = jacksonObjectMapper().readTree(response.bodyAsText())
+                behandlinger.size() shouldBe 2
+            }
+        }
+    }
+
+    @Test
+    fun `Får 404 Not Found dersom det ikke finnes behandlinger for et gitt fnr`() {
+        withBehandlingApi {
+            client.post("/behandlinger/sok") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"fnr": "789"}""",
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.NotFound
             }
         }
     }
@@ -127,7 +161,17 @@ class BehandlingApiTest {
         override fun hentBehandling(behandlingUUID: UUID): Behandling {
             return behandlinger.firstOrNull { behandling ->
                 behandling.uuid == behandlingUUID
-            } ?: throw NoSuchElementException("Fant ingen behandling med uuid: $behandlingUUID")
+            } ?: throw NoSuchElementException()
+        }
+
+        override fun hentBehandlingerFor(fnr: String): List<Behandling> {
+            val behandlingerForFnr = behandlinger.filter { behandling ->
+                behandling.person.ident == fnr
+            }.takeIf {
+                it.isNotEmpty()
+            }
+
+            return behandlingerForFnr ?: throw NoSuchElementException()
         }
     }
 }
