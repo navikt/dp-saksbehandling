@@ -22,14 +22,12 @@ object Inmemory : BehandlingRepository {
 
     )
 
-    override fun hentBehandlinger(): List<Behandling> {
-        return behandlinger
-    }
+    override fun hentBehandlinger() = behandlinger
 
     override fun hentBehandling(behandlingUUID: UUID): Behandling {
-        return behandlinger.single {
-            it.uuid == behandlingUUID
-        }
+        return behandlinger.firstOrNull { behandling ->
+            behandling.uuid == behandlingUUID
+        } ?: throw NoSuchElementException("Fant ingen behandling med uuid: $behandlingUUID")
     }
 
     override fun lagreBehandling(behandling: Behandling) {

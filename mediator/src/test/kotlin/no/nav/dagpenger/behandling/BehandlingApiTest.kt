@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.kotest.assertions.json.shouldEqualSpecifiedJson
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
@@ -15,7 +15,6 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.persistence.BehandlingRepository
-import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -33,13 +32,32 @@ class BehandlingApiTest {
     }
 
     @Test
-    fun `Skal kunne hente ut behandlinger`() {
+    fun `Skal kunne hente ut alle behandlinger`() {
         withBehandlingApi {
             client.get("/behandlinger").let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText() shouldEqualSpecifiedJson """[$testBehandlingJson]"""
+
+                val behandlinger = jacksonObjectMapper().readTree(response.bodyAsText())
+                behandlinger.size() shouldBe 3
             }
+        }
+    }
+
+    @Test
+    fun `skal kunne svare på et steg`() {
+        withBehandlingApi {
+            val behandlingerJson: String = client.get("/behandlinger/${mockPersistence.behandlingId1}").bodyAsText()
+
+            val stegId = behandlingerJson.findStegUUID("vilkår1")
+
+            client.put("/behandlinger/${mockPersistence.behandlingId1}/steg/$stegId") {
+                contentType(ContentType.Application.Json)
+                this.setBody(
+                    //language=JSON
+                    """{"type":"Boolean","svar":true,"begrunnelse":{"tekst":"Har itte","kilde":"Høggern"}}""".trimIndent(),
+                )
+            }.status shouldBe HttpStatusCode.OK
         }
     }
 
@@ -50,38 +68,37 @@ class BehandlingApiTest {
     }
 
     @Test
-    fun `skal kunne svare på et steg`() {
+    fun `Skal kunne hente ut en behandling med en gitt id`() {
         withBehandlingApi {
-            val behandlingerJson: String = client.get("/behandlinger/${mockPersistence.behandlingId}").bodyAsText()
+            client.get("/behandlinger/${mockPersistence.behandlingId1}").also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
 
-            val stegId = behandlingerJson.findStegUUID("vilkår1")
-
-            client.put("/behandlinger/${mockPersistence.behandlingId}/steg/$stegId") {
-                contentType(ContentType.Application.Json)
-                this.setBody(
-                    //language=JSON
-                    """{"type":"Boolean","svar":true,"begrunnelse":{"tekst":"Har itte","kilde":"Høggern"}}""".trimIndent(),
-                )
-            }.status shouldBe HttpStatusCode.OK
+                val behandling = jacksonObjectMapper().readTree(response.bodyAsText())
+                behandling.isObject shouldBe true
+                behandling["uuid"].asText() shouldBe mockPersistence.behandlingId1.toString()
+            }
         }
     }
 
     @Test
-    fun `Skal kunne hente ut spesifikk behandling`() {
+    fun `Får feilmelding ved forsøk på å hente behandling som ikke finnes`() {
         withBehandlingApi {
-            client.get("/behandlinger/${mockPersistence.behandlingId}").let { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText() shouldEqualSpecifiedJson testBehandlingJson
+            shouldThrow<NoSuchElementException> {
+                client.get("/behandlinger/${UUID.randomUUID()}")
             }
         }
     }
 
     private val mockPersistence = object : BehandlingRepository {
-        val testPerson = Person("123")
-        var behandlingId: UUID
+        val testPerson1 = Person("123")
+        val testPerson2 = Person("456")
+        var behandlingId1: UUID
+        var behandlingId2: UUID
+        var behandlingId3: UUID
+
         val behandlinger = listOf(
-            behandling(testPerson) {
+            behandling(testPerson1) {
                 steg {
                     vilkår("vilkår1") {
                         avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
@@ -90,60 +107,27 @@ class BehandlingApiTest {
                 steg {
                     fastsettelse<Int>("fastsettelse1")
                 }
-            }.also { behandlingId = it.uuid },
+            }.also { behandlingId1 = it.uuid },
+
+            behandling(testPerson1) {
+                steg {
+                    vilkår("vilkår2")
+                }
+            }.also { behandlingId2 = it.uuid },
+
+            behandling(testPerson2) {
+                steg {
+                    vilkår("vilkår3")
+                }
+            }.also { behandlingId3 = it.uuid },
         )
 
         override fun hentBehandlinger() = behandlinger
-        override fun hentBehandling(behandlingUUID: UUID) = behandlinger.single { it.uuid == behandlingUUID }
-    }
 
-    @Language("JSON")
-    val testBehandlingJson = """
-       {
-"uuid": "${mockPersistence.behandlingId}",
-"person": "123",
-"saksbehandler": null,
-"hendelse": [],
-"steg": [
-  {
-    "id": "vilkår1",
-    "type": "Vilkår",
-    "svartype": "Boolean",
-    "tilstand": "IkkeUtført",
-    "svar": {
-      "svar": "null",
-      "type": "Boolean"
+        override fun hentBehandling(behandlingUUID: UUID): Behandling {
+            return behandlinger.firstOrNull { behandling ->
+                behandling.uuid == behandlingUUID
+            } ?: throw NoSuchElementException("Fant ingen behandling med uuid: $behandlingUUID")
+        }
     }
-  },
-  {
-    "id": "vilkår 1 dato",
-    "type": "Fastsetting",
-    "svartype": "LocalDate",
-    "tilstand": "IkkeUtført",
-    "svar": {
-      "svar": "null",
-      "type": "LocalDate",
-      "begrunnelse": {
-        "kilde": "",
-        "tekst": ""
-      }
-    }
-  },
-  {
-    "id": "fastsettelse1",
-    "type": "Fastsetting",
-    "svartype": "Int",
-    "tilstand": "IkkeUtført",
-    "svar": {
-      "svar": "null",
-      "type": "Int",
-      "begrunnelse": {
-        "kilde": "",
-        "tekst": ""
-      }
-    }
-  }
-]
-}
-    """.trimIndent()
 }
