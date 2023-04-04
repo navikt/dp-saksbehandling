@@ -44,7 +44,7 @@ fun Application.behandlingApi(mediator: Mediator) {
         route("behandlinger") {
             get {
                 val behandlinger = mediator.hentBehandlinger().toBehandlingerDTO()
-                call.respond(behandlinger)
+                call.respond(HttpStatusCode.OK, behandlinger)
             }
 
             route("sok") {
@@ -65,12 +65,11 @@ fun Application.behandlingApi(mediator: Mediator) {
 
             route("{behandlingId}") {
                 get() {
-                    val behandlingId = call.parameters["behandlingId"]
-                    require(behandlingId != null)
+                    val behandlingId = call.finnUUID("behandlingId")
 
                     try {
                         val behandling: BehandlingDTO =
-                            mediator.hentBehandling(UUID.fromString(behandlingId)).toBehandlingDTO()
+                            mediator.hentBehandling(behandlingId).toBehandlingDTO()
 
                         call.respond(
                             HttpStatusCode.OK,

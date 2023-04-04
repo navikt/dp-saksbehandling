@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
@@ -82,10 +83,22 @@ class BehandlingApiTest {
     }
 
     @Test
-    fun `Får 404 Not Found ved forsøk på å hente behandling som ikke finnes`() {
+    fun `Får feil ved ugyldig behandlingId`() {
+        val ugyldigBehandligId = "noeSomIkkeKanParsesTilUUID"
         withBehandlingApi {
-            client.get("/behandlinger/${UUID.randomUUID()}").also { response ->
+            shouldThrow<IllegalArgumentException> {
+                client.get("/behandlinger/$ugyldigBehandligId")
+            }
+        }
+    }
+
+    @Test
+    fun `Får 404 Not Found ved forsøk på å hente behandling som ikke finnes`() {
+        val randomUUID = UUID.randomUUID()
+        withBehandlingApi {
+            client.get("/behandlinger/$randomUUID").also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
+                response.bodyAsText() shouldBe "Fant ingen behandling med UUID $randomUUID"
             }
         }
     }
@@ -120,6 +133,7 @@ class BehandlingApiTest {
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
+                response.bodyAsText() shouldBe "Fant ingen behandlinger for gitt fnr."
             }
         }
     }
