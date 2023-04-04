@@ -1,11 +1,13 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.behandling.StegtypeDTO.Fastsetting
-import no.nav.dagpenger.behandling.StegtypeDTO.Vilkår
 import no.nav.dagpenger.behandling.Tilstand.IkkeUtført
 import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
+import no.nav.dagpenger.behandling.dto.StegtypeDTO.Fastsetting
+import no.nav.dagpenger.behandling.dto.StegtypeDTO.Vilkår
+import no.nav.dagpenger.behandling.dto.SvartypeDTO
+import no.nav.dagpenger.behandling.dto.toBehandlingDTO
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 

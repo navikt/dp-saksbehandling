@@ -5,7 +5,6 @@ package no.nav.dagpenger.behandling.dsl
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Steg
-import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
 
 class BehandlingDSL() {
