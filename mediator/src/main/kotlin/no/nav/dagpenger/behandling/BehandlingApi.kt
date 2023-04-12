@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -37,6 +38,7 @@ fun Application.behandlingApi(mediator: Mediator) {
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             enable(SerializationFeature.INDENT_OUTPUT)
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            setSerializationInclusion(JsonInclude.Include.NON_NULL)
         }
     }
 
@@ -88,6 +90,8 @@ fun Application.behandlingApi(mediator: Mediator) {
                         val behandlingId = call.finnUUID("behandlingId")
                         val stegId = call.finnUUID("stegId")
                         val svar: SvarDTO = call.receive()
+
+                        require(svar.svar != null)
 
                         when (svar.type) {
                             SvartypeDTO.String -> mediator.behandle(

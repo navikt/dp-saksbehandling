@@ -1,6 +1,8 @@
 package no.nav.dagpenger.behandling
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.kotest.assertions.json.shouldContainJsonKey
+import io.kotest.assertions.json.shouldNotContainJsonKey
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -29,6 +31,20 @@ class BehandlingApiTest {
         testApplication {
             application { behandlingApi(mediator) }
             test()
+        }
+    }
+
+    @Test
+    fun `skal ikke json serialisere null verdier`() {
+        withBehandlingApi {
+            client.get("/behandlinger/${mockPersistence.behandlingId1}").also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText().let { json ->
+                    json shouldContainJsonKey "$.steg[0].svar.type"
+                    json shouldNotContainJsonKey "$.steg[0].svar.svar"
+                }
+            }
         }
     }
 
