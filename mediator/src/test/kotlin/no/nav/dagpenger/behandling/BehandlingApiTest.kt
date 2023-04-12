@@ -16,6 +16,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.persistence.BehandlingRepository
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -134,6 +135,25 @@ class BehandlingApiTest {
             }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
                 response.bodyAsText() shouldBe "Fant ingen behandlinger for gitt fnr."
+            }
+        }
+    }
+
+    @Disabled
+    @Test
+    fun `Skal kunne ferdigstille en behandling`() {
+        withBehandlingApi {
+            client.post("/behandlinger/${mockPersistence.behandlingId1}/ferdigstill") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"innvilget": true}""",
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+
+                val behandling = mockPersistence.hentBehandling(mockPersistence.behandlingId1)
+                // behandling.innvilget shouldBe true
             }
         }
     }

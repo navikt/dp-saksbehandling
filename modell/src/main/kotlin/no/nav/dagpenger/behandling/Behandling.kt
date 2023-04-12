@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -11,6 +12,8 @@ class Behandling private constructor(
     val opprettet: LocalDateTime,
     val uuid: UUID = UUID.randomUUID(),
 ) {
+    private var innvilget: Boolean = false
+
     constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now())
 
     fun nesteSteg(): Set<Steg<*>> {
@@ -24,6 +27,10 @@ class Behandling private constructor(
         return steg.flatMap {
             it.alleSteg()
         }.toSet()
+    }
+
+    fun håndter(hendelse: SøknadBehandletHendelse) {
+        this.innvilget = hendelse.innvilget
     }
 
     inline fun <reified T> besvar(uuid: UUID, verdi: T) {

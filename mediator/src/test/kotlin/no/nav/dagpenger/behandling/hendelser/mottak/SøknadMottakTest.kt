@@ -42,7 +42,7 @@ class SøknadMottakTest {
                 ),
             )
 
-            verify(exactly = 1) { mockMediator.behandle(any()) }
+            verify(exactly = 1) { mockMediator.behandle(any<SøknadHendelse>()) }
 
             slot.captured.let { hendelse ->
                 hendelse.journalpostId() shouldBe journalpostId
