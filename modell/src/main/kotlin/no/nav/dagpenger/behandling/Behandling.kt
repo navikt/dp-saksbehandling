@@ -13,6 +13,7 @@ class Behandling private constructor(
     val uuid: UUID = UUID.randomUUID(),
 ) {
     private var innvilget: Boolean = false
+    private var behandlet: Boolean = false
 
     constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now())
 
@@ -29,8 +30,11 @@ class Behandling private constructor(
         }.toSet()
     }
 
+    fun erBehandlet() = behandlet
+
     fun håndter(hendelse: SøknadBehandletHendelse) {
         this.innvilget = hendelse.innvilget
+        behandlet = true
     }
 
     inline fun <reified T> besvar(uuid: UUID, verdi: T) {

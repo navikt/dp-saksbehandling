@@ -20,16 +20,15 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.dto.BehandlingDTO
+import no.nav.dagpenger.behandling.dto.FerdigstillDTO
 import no.nav.dagpenger.behandling.dto.FnrDTO
 import no.nav.dagpenger.behandling.dto.SvarDTO
 import no.nav.dagpenger.behandling.dto.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.toBehandlingDTO
 import no.nav.dagpenger.behandling.dto.toBehandlingerDTO
 import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
-import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
 import java.time.LocalDate
-import java.util.*
-import kotlin.NoSuchElementException
+import java.util.UUID
 
 fun Application.behandlingApi(mediator: Mediator) {
     install(CallLogging) { }
@@ -135,16 +134,23 @@ fun Application.behandlingApi(mediator: Mediator) {
                 route("ferdigstill") {
                     post {
                         val behandlingId = call.finnUUID("behandlingId")
-                        val innvilget = call.receive<Boolean>()
+                        val ferdigStillDTO = call.receive<FerdigstillDTO>()
 
-                        mediator.behandle(
-                            SøknadBehandletHendelse(
-                                ident = "",
-                                behandlingId = behandlingId,
-                                innvilget = innvilget,
-                            ),
-                        )
-                        call.respond(HttpStatusCode.OK, "")
+                        try {
+                            mediator.behandle(
+                                SøknadBehandlet(
+                                    behandlingId = behandlingId,
+                                    ident = "",
+                                    innvilget = ferdigStillDTO.innvilget,
+                                ),
+                            )
+                            call.respond(HttpStatusCode.OK, "")
+                        } catch (e: NoSuchElementException) {
+                            call.respond(
+                                status = HttpStatusCode.NotFound,
+                                message = "Fant ingen behandling med UUID $behandlingId",
+                            )
+                        }
                     }
                 }
             }

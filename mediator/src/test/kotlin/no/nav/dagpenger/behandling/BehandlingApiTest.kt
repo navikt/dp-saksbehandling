@@ -16,7 +16,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.persistence.BehandlingRepository
-import org.junit.jupiter.api.Disabled
+import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -24,7 +24,10 @@ import java.util.UUID
 class BehandlingApiTest {
 
     private fun withBehandlingApi(
-        mediator: Mediator = Mediator(mockPersistence),
+        mediator: Mediator = Mediator(
+            rapidsConnection = TestRapid(),
+            behandlingRepository = mockPersistence,
+        ),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -139,10 +142,12 @@ class BehandlingApiTest {
         }
     }
 
-    @Disabled
     @Test
     fun `Skal kunne ferdigstille en behandling`() {
         withBehandlingApi {
+            val behandling = mockPersistence.hentBehandling(mockPersistence.behandlingId1)
+            behandling.erBehandlet() shouldBe false
+
             client.post("/behandlinger/${mockPersistence.behandlingId1}/ferdigstill") {
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -151,9 +156,7 @@ class BehandlingApiTest {
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
-
-                val behandling = mockPersistence.hentBehandling(mockPersistence.behandlingId1)
-                // behandling.innvilget shouldBe true
+                behandling.erBehandlet() shouldBe true
             }
         }
     }

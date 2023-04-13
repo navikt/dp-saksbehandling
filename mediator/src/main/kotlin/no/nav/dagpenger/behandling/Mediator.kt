@@ -5,8 +5,10 @@ import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.persistence.BehandlingRepository
 import no.nav.dagpenger.behandling.persistence.Inmemory
+import no.nav.helse.rapids_rivers.RapidsConnection
 
 class Mediator(
+    private val rapidsConnection: RapidsConnection,
     private val behandlingRepository: BehandlingRepository = Inmemory,
 ) : BehandlingRepository by behandlingRepository {
 
@@ -19,11 +21,15 @@ class Mediator(
         behandlingRepository.lagreBehandling(hendelse.lagBehandling())
     }
 
-    fun behandle(hendelse: SøknadBehandletHendelse) {
-        val behandling = hentBehandling(hendelse.behandlingId)
-        behandling.håndter(hendelse)
+    fun behandle(søknadBehandlet: SøknadBehandlet) {
+        val behandling = hentBehandling(søknadBehandlet.behandlingId())
+        val søknadBehandletHendelse = SøknadBehandletHendelse(
+            ident = søknadBehandlet.ident(),
+            behandlingId = søknadBehandlet.behandlingId(),
+            innvilget = søknadBehandlet.innvilget(),
+        )
 
-        TODO()
-        // puplisere melding på kafka
+        behandling.håndter(søknadBehandletHendelse)
+        rapidsConnection.publish(søknadBehandlet.toJson())
     }
 }
