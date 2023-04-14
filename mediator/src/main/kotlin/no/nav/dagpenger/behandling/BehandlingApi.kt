@@ -13,6 +13,7 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -20,6 +21,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.dto.BehandlingDTO
+import no.nav.dagpenger.behandling.dto.FerdigstillDTO
 import no.nav.dagpenger.behandling.dto.FnrDTO
 import no.nav.dagpenger.behandling.dto.SvarDTO
 import no.nav.dagpenger.behandling.dto.SvartypeDTO
@@ -27,8 +29,7 @@ import no.nav.dagpenger.behandling.dto.toBehandlingDTO
 import no.nav.dagpenger.behandling.dto.toBehandlingerDTO
 import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
 import java.time.LocalDate
-import java.util.*
-import kotlin.NoSuchElementException
+import java.util.UUID
 
 fun Application.behandlingApi(mediator: Mediator) {
     install(CallLogging) { }
@@ -132,6 +133,67 @@ fun Application.behandlingApi(mediator: Mediator) {
                         }
                         call.respond(status = HttpStatusCode.OK, message = "")
                     }
+                }
+
+                route("ferdigstill") {
+                    post {
+                        val behandlingId = call.finnUUID("behandlingId")
+                        val ferdigStillDTO = call.receive<FerdigstillDTO>()
+
+                        try {
+                            mediator.behandle(
+                                SøknadBehandlet(
+                                    behandlingId = behandlingId,
+                                    innvilget = ferdigStillDTO.innvilget,
+                                ),
+                            )
+                            call.respond(HttpStatusCode.OK, "")
+                        } catch (e: NoSuchElementException) {
+                            call.respond(
+                                status = HttpStatusCode.NotFound,
+                                message = "Fant ingen behandling med UUID $behandlingId",
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Forslag dersom vi vil samle ting under en POST.
+        // Man kan enten
+        // 1. Sende med 'fnr' i body og få ut alle behandlinger for gitt fnr
+        // 2. Sende med 'behandlingId' i body og få ut en behandling
+        // 3. Ikke spesifisere noe i body, får da ut alle behandlinger.
+        route("behandlinger2") {
+            post {
+                val parametere = call.receiveParameters()
+                val fnr = parametere["fnr"]
+                val behandlingId = parametere["behandlingId"]
+
+                if (fnr != null) {
+                    val fnrDTO = FnrDTO(fnr)
+                    try {
+                        val behandling = mediator.hentBehandlingerFor(fnrDTO.fnr).toBehandlingerDTO()
+                        call.respond(HttpStatusCode.OK, behandling)
+                    } catch (e: NoSuchElementException) {
+                        call.respond(
+                            status = HttpStatusCode.NotFound,
+                            message = "Fant ingen behandlinger for gitt fnr.",
+                        )
+                    }
+                } else if (behandlingId != null) {
+                    try {
+                        val behandling = mediator.hentBehandling(UUID.fromString(behandlingId)).toBehandlingDTO()
+                        call.respond(HttpStatusCode.OK, behandling)
+                    } catch (e: NoSuchElementException) {
+                        call.respond(
+                            status = HttpStatusCode.NotFound,
+                            message = "Fant ingen behandling med UUID $behandlingId.",
+                        )
+                    }
+                } else {
+                    val behandlinger = mediator.hentBehandlinger().toBehandlingerDTO()
+                    call.respond(HttpStatusCode.OK, behandlinger)
                 }
             }
         }

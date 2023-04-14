@@ -7,7 +7,7 @@ object Hubba {
     fun bubba(person: Person): Behandling =
         behandling(person) {
             val virkingstidspunkt = steg {
-                fastsettelse<LocalDate>("Virkningstidspunkt")
+                fastsettelse<LocalDate>("Virkningsdato")
             }
 
             steg {

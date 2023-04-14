@@ -6,13 +6,13 @@ import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
-    private val mediator = Mediator()
-
-    private val rapidsConnection =
+    private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
                 behandlingApi(mediator = mediator)
             }.build()
+
+    private val mediator = Mediator(rapidsConnection = rapidsConnection)
 
     init {
         rapidsConnection.register(this)
