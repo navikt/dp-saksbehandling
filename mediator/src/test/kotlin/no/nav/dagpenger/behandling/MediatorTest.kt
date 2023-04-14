@@ -57,7 +57,6 @@ class MediatorTest {
         mediator.behandle(
             SøknadBehandlet(
                 behandlingId = mockPersistence.behandlingId,
-                ident = mockPersistence.testPerson.ident,
                 innvilget = true,
             ),
         )

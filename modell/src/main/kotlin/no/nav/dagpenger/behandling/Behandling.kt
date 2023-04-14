@@ -12,8 +12,7 @@ class Behandling private constructor(
     val opprettet: LocalDateTime,
     val uuid: UUID = UUID.randomUUID(),
 ) {
-    private var innvilget: Boolean = false
-    private var behandlet: Boolean = false
+    private var innvilget: Boolean? = null
 
     constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now())
 
@@ -30,11 +29,13 @@ class Behandling private constructor(
         }.toSet()
     }
 
-    fun erBehandlet() = behandlet
+    fun erBehandlet() = innvilget != null
+
+    fun fastsettelser(): Map<String, String> =
+        alleSteg().filterIsInstance<Steg.Fastsettelse<*>>().associate { it.id to it.svar.toString() }
 
     fun håndter(hendelse: SøknadBehandletHendelse) {
         this.innvilget = hendelse.innvilget
-        behandlet = true
     }
 
     inline fun <reified T> besvar(uuid: UUID, verdi: T) {
@@ -52,4 +53,6 @@ class Svar<T>(val verdi: T?, val clazz: Class<T>) {
     fun besvar(verdi: T) = Svar(verdi, this.clazz)
     fun nullstill() = Svar(null, this.clazz)
     val ubesvart get() = verdi == null
+
+    override fun toString() = verdi.toString()
 }

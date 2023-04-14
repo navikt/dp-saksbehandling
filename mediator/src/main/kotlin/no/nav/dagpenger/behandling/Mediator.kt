@@ -22,14 +22,13 @@ class Mediator(
     }
 
     fun behandle(søknadBehandlet: SøknadBehandlet) {
-        val behandling = hentBehandling(søknadBehandlet.behandlingId())
+        val behandling = hentBehandling(søknadBehandlet.behandlingId)
         val søknadBehandletHendelse = SøknadBehandletHendelse(
-            ident = søknadBehandlet.ident(),
-            behandlingId = søknadBehandlet.behandlingId(),
-            innvilget = søknadBehandlet.innvilget(),
+            behandling = behandling,
+            innvilget = søknadBehandlet.innvilget,
         )
 
         behandling.håndter(søknadBehandletHendelse)
-        rapidsConnection.publish(søknadBehandlet.toJson())
+        rapidsConnection.publish(søknadBehandletHendelse.toJson())
     }
 }

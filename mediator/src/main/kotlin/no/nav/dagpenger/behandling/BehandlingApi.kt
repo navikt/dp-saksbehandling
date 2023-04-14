@@ -140,7 +140,6 @@ fun Application.behandlingApi(mediator: Mediator) {
                             mediator.behandle(
                                 SøknadBehandlet(
                                     behandlingId = behandlingId,
-                                    ident = "",
                                     innvilget = ferdigStillDTO.innvilget,
                                 ),
                             )
