@@ -10,6 +10,7 @@ internal data class BehandlingDTO(
     val saksbehandler: String?,
     val opprettet: LocalDate,
     val hendelse: List<HendelseDTO>,
+    val tilstand: String,
     val steg: List<StegDTO>,
 )
 
@@ -22,6 +23,11 @@ internal fun Behandling.toBehandlingDTO(): BehandlingDTO {
         saksbehandler = null,
         opprettet = this.opprettet.toLocalDate(),
         hendelse = emptyList(),
+        tilstand = if (this.erBehandlet()) {
+            "FerdigBehandlet"
+        } else {
+            "TilBehandling"
+        },
         steg = this.alleSteg().toStegDTO(),
     )
 }
