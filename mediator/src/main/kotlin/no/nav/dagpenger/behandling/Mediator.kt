@@ -5,6 +5,7 @@ import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
 import no.nav.dagpenger.behandling.persistence.BehandlingRepository
 import no.nav.dagpenger.behandling.persistence.Inmemory
+import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 class Mediator(
@@ -29,6 +30,10 @@ class Mediator(
         )
 
         behandling.håndter(søknadBehandletHendelse)
-        rapidsConnection.publish(søknadBehandletHendelse.toJson())
+        val søknadBehandletMessage = JsonMessage.newMessage(
+            eventName = "søknad_behandlet_hendelse",
+            map = søknadBehandletHendelse.toJsonMessageMap(),
+        )
+        rapidsConnection.publish(behandling.person.ident, søknadBehandletMessage.toJson())
     }
 }

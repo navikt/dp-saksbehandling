@@ -13,6 +13,7 @@ import java.util.UUID
 class MediatorTest {
     private val testRapid = TestRapid()
     private lateinit var mediator: Mediator
+    private val ident = "123"
 
     @BeforeEach
     fun setup() {
@@ -26,7 +27,7 @@ class MediatorTest {
     fun `Behandle BehandlingSvar hendelse`() {
         mediator.behandle(
             BehandlingSvar(
-                ident = "123",
+                ident = ident,
                 behandlingUUID = mockPersistence.behandlingId,
                 stegUUID = mockPersistence.finnStegId("vilkår1"),
                 verdi = false,
@@ -35,7 +36,7 @@ class MediatorTest {
 
         mediator.behandle(
             BehandlingSvar(
-                ident = "123",
+                ident = ident,
                 behandlingUUID = mockPersistence.behandlingId,
                 stegUUID = mockPersistence.finnStegId("vilkår 1 dato"),
                 verdi = LocalDate.now(),
@@ -44,7 +45,7 @@ class MediatorTest {
 
         mediator.behandle(
             BehandlingSvar(
-                ident = "123",
+                ident = ident,
                 behandlingUUID = mockPersistence.behandlingId,
                 stegUUID = mockPersistence.finnStegId("fastsettelse1"),
                 verdi = 3,
@@ -64,7 +65,9 @@ class MediatorTest {
         testRapid.inspektør.size shouldBe 1
 
         val event = testRapid.inspektør.message(0)
+        val partitionKey = testRapid.inspektør.key(0)
 
+        partitionKey shouldBe ident
         event["@event_name"].asText() shouldBe "søknad_behandlet_hendelse"
     }
 

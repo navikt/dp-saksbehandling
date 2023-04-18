@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.hendelser
 
-import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.matchers.maps.shouldContainAll
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Steg
@@ -25,16 +25,13 @@ class SøknadBehandletHendelseTest {
             innvilget = true,
         )
 
-        //language=JSON
-        val expectedJson = """{
-        "@event_name": "søknad_behandlet_hendelse",
-        "behandlingId": "${behandling.uuid}",
-        "virkningsdato": "2023-02-01",
-        "innvilget": true,
-        "ident" : "${behandling.person.ident}"
-    }
-        """.trimIndent()
+        val expectedJsonMessageMap = mapOf(
+            "behandlingId" to behandling.uuid,
+            "virkningsdato" to "2023-02-01",
+            "innvilget" to true,
+            "ident" to behandling.person.ident,
+        )
 
-        søknadBehandletHendelse.toJson() shouldEqualJson expectedJson
+        søknadBehandletHendelse.toJsonMessageMap() shouldContainAll expectedJsonMessageMap
     }
 }
