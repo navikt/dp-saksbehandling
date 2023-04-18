@@ -1,8 +1,7 @@
 package no.nav.dagpenger.behandling.persistence
 
 import no.nav.dagpenger.behandling.Behandling
-import no.nav.dagpenger.behandling.Hubba
-import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import java.util.UUID
 
 interface BehandlingRepository {
@@ -13,13 +12,9 @@ interface BehandlingRepository {
 }
 
 object Inmemory : BehandlingRepository {
-    val testPersonOla = Person("123")
-    val testPersonKari = Person("456")
-
-    val behandlinger = mutableListOf(
-        Hubba.bubba(testPersonOla),
-        Hubba.bubba(testPersonKari),
-
+    private val behandlinger = mutableListOf(
+        SøknadInnsendtHendelse(UUID.randomUUID(), "", "123").lagBehandling(),
+        SøknadInnsendtHendelse(UUID.randomUUID(), "", "456").lagBehandling(),
     )
 
     override fun hentBehandlinger() = behandlinger

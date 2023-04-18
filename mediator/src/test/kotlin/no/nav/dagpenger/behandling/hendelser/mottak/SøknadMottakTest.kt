@@ -9,7 +9,7 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.behandling.Mediator
 import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
-import no.nav.dagpenger.behandling.hendelser.SøknadHendelse
+import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -19,7 +19,7 @@ class SøknadMottakTest {
     @ParameterizedTest
     @ValueSource(strings = ["NySøknad"])
     fun `Skal behandle innsending_ferdigstilt event for type NySøknad`(type: String) {
-        val slot = slot<SøknadHendelse>()
+        val slot = slot<SøknadInnsendtHendelse>()
         val mockMediator = mockk<Mediator>().also {
             every { it.behandle(capture(slot)) } just Runs
         }
@@ -42,7 +42,7 @@ class SøknadMottakTest {
                 ),
             )
 
-            verify(exactly = 1) { mockMediator.behandle(any<SøknadHendelse>()) }
+            verify(exactly = 1) { mockMediator.behandle(any<SøknadInnsendtHendelse>()) }
 
             slot.captured.let { hendelse ->
                 hendelse.journalpostId() shouldBe journalpostId
