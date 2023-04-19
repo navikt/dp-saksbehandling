@@ -10,7 +10,7 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
     Hendelse(ident) {
     fun søknadId() = søknadId
     fun journalpostId() = journalpostId
-    fun lagBehandling(): Behandling {
+    fun behandling(): Behandling {
         return behandling(Person(ident())) {
             val virkningsdato = steg {
                 fastsettelse<LocalDate>("Virkningsdato")

@@ -18,7 +18,7 @@ class Mediator(
     }
 
     fun behandle(hendelse: SøknadInnsendtHendelse) {
-        behandlingRepository.lagreBehandling(hendelse.lagBehandling())
+        behandlingRepository.lagreBehandling(hendelse.behandling())
     }
 
     fun behandle(søknadBehandlet: SøknadBehandlet) {

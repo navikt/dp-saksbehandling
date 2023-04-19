@@ -13,8 +13,8 @@ interface BehandlingRepository {
 
 object Inmemory : BehandlingRepository {
     private val behandlinger = mutableListOf(
-        SøknadInnsendtHendelse(UUID.randomUUID(), "", "123").lagBehandling(),
-        SøknadInnsendtHendelse(UUID.randomUUID(), "", "456").lagBehandling(),
+        SøknadInnsendtHendelse(UUID.randomUUID(), "", "123").behandling(),
+        SøknadInnsendtHendelse(UUID.randomUUID(), "", "456").behandling(),
     )
 
     override fun hentBehandlinger() = behandlinger
