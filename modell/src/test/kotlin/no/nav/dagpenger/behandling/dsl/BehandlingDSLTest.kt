@@ -9,7 +9,7 @@ import java.time.LocalDate
 class BehandlingDSLTest {
     @Test
     fun `dsl test`() {
-        val behandling = behandling(Person("123")) {
+        val behandling = behandling(Person("12345678910")) {
             val grandparentFelles = steg {
                 fastsettelse<LocalDate>("GrandparentFelles")
             }

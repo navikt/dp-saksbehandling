@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class BehandlingTest {
-    private val testPerson = Person("123")
+    private val testPerson = Person("12345678910")
 
     @Test
     fun `Skal kunne lage en behandling`() {

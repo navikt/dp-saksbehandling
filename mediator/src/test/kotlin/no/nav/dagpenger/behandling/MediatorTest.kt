@@ -13,7 +13,7 @@ import java.util.UUID
 class MediatorTest {
     private val testRapid = TestRapid()
     private lateinit var mediator: Mediator
-    private val ident = "123"
+    private val ident = "12345678910"
 
     @BeforeEach
     fun setup() {
@@ -67,12 +67,14 @@ class MediatorTest {
         val event = testRapid.inspektør.message(0)
         val partitionKey = testRapid.inspektør.key(0)
 
+        println(event)
+
         partitionKey shouldBe ident
         event["@event_name"].asText() shouldBe "søknad_behandlet_hendelse"
     }
 
     private val mockPersistence = object : BehandlingRepository {
-        val testPerson = Person("123")
+        val testPerson = Person("12345678910")
         var behandlingId: UUID
         val behandlinger = listOf(
             BehandlingDSL.behandling(testPerson) {

@@ -4,7 +4,11 @@ import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class Person(val ident: String)
+data class Person(val ident: String) {
+    init {
+        require(ident.matches(Regex("\\d{11}"))) { "personident må ha 11 siffer" }
+    }
+}
 
 class Behandling private constructor(
     val person: Person,

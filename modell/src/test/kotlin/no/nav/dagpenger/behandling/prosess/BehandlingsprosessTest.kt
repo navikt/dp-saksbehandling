@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class BehandlingsprosessTest {
-    private val testPerson = Person("123")
+    private val testPerson = Person("12345678910")
 
     @Test
     fun `Enkel prosess`() {

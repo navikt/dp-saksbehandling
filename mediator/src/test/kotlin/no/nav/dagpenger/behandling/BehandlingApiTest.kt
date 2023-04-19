@@ -178,8 +178,8 @@ class BehandlingApiTest {
     }
 
     private val mockPersistence = object : BehandlingRepository {
-        val testPerson1 = Person("123")
-        val testPerson2 = Person("456")
+        val testPerson1 = Person("12345678910")
+        val testPerson2 = Person("45678910112")
         var behandlingId1: UUID
         var behandlingId2: UUID
         var behandlingId3: UUID

@@ -14,7 +14,7 @@ import java.time.LocalDate
 class BehandlingApiMappingTest {
     @Test
     fun `mapping til dtoer`() {
-        val person = Person("123")
+        val person = Person("12345678910")
         val testBehandling = behandling(person) {
             val fellessteg = steg {
                 fastsettelse<Boolean>("felles steg").also {
@@ -39,7 +39,7 @@ class BehandlingApiMappingTest {
         }
 
         testBehandling.toBehandlingDTO().let { dto ->
-            dto.person shouldBe "123"
+            dto.person shouldBe "12345678910"
             dto.saksbehandler shouldBe null
             dto.opprettet shouldBe LocalDate.now()
             dto.hendelse shouldBe emptyList()
