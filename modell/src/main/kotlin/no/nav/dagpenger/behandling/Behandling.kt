@@ -47,6 +47,9 @@ class Behandling private constructor(
 
         (stegSomSkalBesvares as Steg<T>).besvar(verdi)
     }
+
+    var utfall: Boolean? = null
+    fun harUtfall(): Boolean? = utfall
 }
 
 class Svar<T>(val verdi: T?, val clazz: Class<T>) {
