@@ -47,7 +47,7 @@ class Totrinnsprosess(
         override val neste = Innstilt
 
         override fun kanGåNeste(behandling: Behandling) =
-            behandling.harUtfall() != null
+            behandling.erFerdig()
     }
 
     private object Innstilt : Prosesstilstand {

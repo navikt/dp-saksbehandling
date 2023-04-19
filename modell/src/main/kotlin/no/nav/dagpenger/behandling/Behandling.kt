@@ -48,8 +48,12 @@ class Behandling private constructor(
         (stegSomSkalBesvares as Steg<T>).besvar(verdi)
     }
 
-    var utfall: Boolean? = null
-    fun harUtfall(): Boolean? = utfall
+    fun utfall(): Boolean = steg.filterIsInstance<Steg.Vilkår>().all {
+        it.svar.verdi == true
+    }
+
+    fun erFerdig(): Boolean =
+        steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
 }
 
 class Svar<T>(val verdi: T?, val clazz: Class<T>) {
