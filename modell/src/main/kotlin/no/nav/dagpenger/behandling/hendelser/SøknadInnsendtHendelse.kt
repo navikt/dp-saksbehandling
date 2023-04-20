@@ -14,7 +14,7 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
     fun journalpostId() = journalpostId
     fun oppgave() = Oppgave(
         behandling,
-        Arbeidsprosesser.totrinnsprosess(behandling),
+        Arbeidsprosesser.totrinnsprosess(behandling).apply { start("TilBehandling") },
     )
 
     val behandling: Behandling = behandling(Person(ident())) {
