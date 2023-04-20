@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class SøknadInnsendtHendelseTest {
-    private val behandling = SøknadInnsendtHendelse(UUID.randomUUID(), "123", "12345678910").behandling()
+    private val behandling = SøknadInnsendtHendelse(UUID.randomUUID(), "123", "12345678910").behandling
 
     @Test
     fun `Ikke ferdig`() {

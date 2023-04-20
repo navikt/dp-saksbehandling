@@ -7,4 +7,6 @@ class BehandlingSvar<T>(
     val behandlingUUID: UUID,
     val stegUUID: UUID,
     val verdi: T,
-) : Hendelse(ident)
+) : Hendelse(ident) {
+    val oppgaveUUID: UUID = UUID.randomUUID()
+}

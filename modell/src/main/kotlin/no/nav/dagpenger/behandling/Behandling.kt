@@ -1,13 +1,23 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
 data class Person(val ident: String) {
     init {
-        require(ident.matches(Regex("\\d{11}"))) { "personident må ha 11 siffer" }
+        require(ident.matches(Regex("\\d{11}"))) { "personident må ha 11 siffer, fikk ${ident.length}" }
     }
+}
+
+interface IBehandling {
+    fun utfall(): Boolean
+    fun erFerdig(): Boolean
+    fun besvar(uuid: UUID, verdi: String)
+    fun besvar(uuid: UUID, verdi: Int)
+    fun besvar(uuid: UUID, verdi: LocalDate)
+    fun besvar(uuid: UUID, verdi: Boolean)
 }
 
 class Behandling private constructor(
@@ -15,7 +25,7 @@ class Behandling private constructor(
     val steg: Set<Steg<*>> = emptySet(),
     val opprettet: LocalDateTime,
     val uuid: UUID = UUID.randomUUID(),
-) {
+) : IBehandling {
     private var innvilget: Boolean? = null
 
     constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now())
@@ -42,7 +52,7 @@ class Behandling private constructor(
         this.innvilget = hendelse.innvilget
     }
 
-    inline fun <reified T> besvar(uuid: UUID, verdi: T) {
+    inline fun <reified T> besvar1(uuid: UUID, verdi: T) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
 
         require(stegSomSkalBesvares.svar.clazz == T::class.java) {
@@ -52,12 +62,20 @@ class Behandling private constructor(
         (stegSomSkalBesvares as Steg<T>).besvar(verdi)
     }
 
-    fun utfall(): Boolean = steg.filterIsInstance<Steg.Vilkår>().all {
+    override fun utfall(): Boolean = steg.filterIsInstance<Steg.Vilkår>().all {
         it.svar.verdi == true
     }
 
-    fun erFerdig(): Boolean =
+    override fun erFerdig(): Boolean =
         steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
+
+    override fun besvar(uuid: UUID, verdi: String) = besvar1(uuid, verdi)
+
+    override fun besvar(uuid: UUID, verdi: Int) = besvar1(uuid, verdi)
+
+    override fun besvar(uuid: UUID, verdi: LocalDate) = besvar1(uuid, verdi)
+
+    override fun besvar(uuid: UUID, verdi: Boolean) = besvar1(uuid, verdi)
 }
 
 class Svar<T>(val verdi: T?, val clazz: Class<T>) {

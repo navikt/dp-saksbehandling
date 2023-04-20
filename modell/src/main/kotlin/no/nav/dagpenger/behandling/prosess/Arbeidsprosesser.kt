@@ -2,7 +2,7 @@ package no.nav.dagpenger.behandling.prosess
 
 import no.nav.dagpenger.behandling.Behandling
 
-class Arbeidsprosesser {
+object Arbeidsprosesser {
     fun totrinnsprosess(behandling: Behandling) = Arbeidsprosess().apply {
         leggTilTilstand(
             "TilBehandling",

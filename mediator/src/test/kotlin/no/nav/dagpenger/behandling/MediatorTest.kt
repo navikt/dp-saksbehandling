@@ -19,7 +19,7 @@ class MediatorTest {
     fun setup() {
         mediator = Mediator(
             rapidsConnection = testRapid,
-            behandlingRepository = mockPersistence,
+            behandlingRepository = mockPersistence,,
         )
     }
 

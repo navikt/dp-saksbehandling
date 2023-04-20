@@ -13,30 +13,30 @@ class ArbeidsprosesserTest {
     fun `Kan kjøre totrinnsprosess på behandling`() {
         val steg = Steg.Vilkår("foo")
         val behandling = Behandling(Person("123"), setOf(steg))
-        val totrinnsprosess = Arbeidsprosesser().totrinnsprosess(behandling)
+        val totrinnsprosess = Arbeidsprosesser.totrinnsprosess(behandling)
 
         totrinnsprosess.start("TilBehandling")
         // Kan ikke gå videre før behandlingen er ferdig
         totrinnsprosess.validTransitions() shouldBe listOf("VentPåMangelbrev")
         shouldThrow<IllegalStateException> {
-            totrinnsprosess.transitionTo("Innstilt")
+            totrinnsprosess.gåTil("Innstilt")
         }
 
         steg.besvar(true)
         totrinnsprosess.validTransitions() shouldBe listOf("Innstilt", "VentPåMangelbrev")
-        totrinnsprosess.transitionTo("Innstilt")
+        totrinnsprosess.gåTil("Innstilt")
         // Kan sendes tilbake til saksbehandler
-        totrinnsprosess.transitionTo("TilBehandling")
+        totrinnsprosess.gåTil("TilBehandling")
         // Kan ikke hoppe fra TilBehandling direkte til vedtak  uten å gå via innstilt/beslutter
         shouldThrow<IllegalStateException> {
-            totrinnsprosess.transitionTo("Vedtak")
+            totrinnsprosess.gåTil("Vedtak")
         }
 
         shouldNotThrow<IllegalStateException> {
-            totrinnsprosess.transitionTo("VentPåMangelbrev")
-            totrinnsprosess.transitionTo("TilBehandling")
-            totrinnsprosess.transitionTo("Innstilt")
-            totrinnsprosess.transitionTo("Vedtak")
+            totrinnsprosess.gåTil("VentPåMangelbrev")
+            totrinnsprosess.gåTil("TilBehandling")
+            totrinnsprosess.gåTil("Innstilt")
+            totrinnsprosess.gåTil("Vedtak")
         }
     }
 }

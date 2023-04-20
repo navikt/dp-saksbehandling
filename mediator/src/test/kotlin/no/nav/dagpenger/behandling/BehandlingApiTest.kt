@@ -28,7 +28,7 @@ class BehandlingApiTest {
     private fun withBehandlingApi(
         mediator: Mediator = Mediator(
             rapidsConnection = TestRapid(),
-            behandlingRepository = mockPersistence,
+            behandlingRepository = mockPersistence,,
         ),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {

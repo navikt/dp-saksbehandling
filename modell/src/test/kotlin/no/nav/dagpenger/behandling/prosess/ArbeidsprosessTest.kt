@@ -10,14 +10,14 @@ class ArbeidsprosessTest {
     fun testStart() {
         val wp = Arbeidsprosess()
         wp.start("A")
-        assertEquals("A", wp.currentState())
+        assertEquals("A", wp.tilstand())
     }
 
     @Test()
     fun testTransitionUnstarted() {
         val wp = Arbeidsprosess()
         shouldThrow<java.lang.IllegalStateException> {
-            wp.transitionTo("B")
+            wp.gåTil("B")
         }
     }
 
@@ -27,7 +27,7 @@ class ArbeidsprosessTest {
         wp.leggTilTilstand("A", listOf(Arbeidsprosess.Overgang("B")))
         wp.start("A")
         shouldThrow<java.lang.IllegalStateException> {
-            wp.transitionTo("C")
+            wp.gåTil("C")
         }
     }
 
@@ -38,7 +38,7 @@ class ArbeidsprosessTest {
         wp.leggTilTilstand("B", listOf(Arbeidsprosess.Overgang("C")))
         wp.start("A")
         shouldThrow<java.lang.IllegalStateException> {
-            wp.transitionTo("C")
+            wp.gåTil("C")
         }
     }
 
@@ -60,7 +60,7 @@ class ArbeidsprosessTest {
         )
         wp.start("A")
         assertEquals(listOf("B"), wp.validTransitions())
-        wp.transitionTo("B")
+        wp.gåTil("B")
         assertEquals(listOf("C"), wp.validTransitions())
     }
 }
