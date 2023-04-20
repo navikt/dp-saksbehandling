@@ -24,7 +24,7 @@ internal fun Oppgave.toOppgaveDTO(): OppgaveDTO {
         saksbehandler = null,
         opprettet = this.opprettet.toLocalDate(),
         hendelse = emptyList(),
-        tilstand = this.tilstand()!!.javaClass.simpleName,
+        tilstand = this.tilstand()!!,
         muligeTilstander = this.muligeTilstander(),
         steg = this.alleSteg().toStegDTO(),
     )
