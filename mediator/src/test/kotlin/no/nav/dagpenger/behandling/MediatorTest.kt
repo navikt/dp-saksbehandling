@@ -1,8 +1,11 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL
 import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
+import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.persistence.BehandlingRepository
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
@@ -13,13 +16,14 @@ import java.util.UUID
 class MediatorTest {
     private val testRapid = TestRapid()
     private lateinit var mediator: Mediator
-    private val ident = "12345678910"
+    private val ident = testIdent
 
     @BeforeEach
     fun setup() {
         mediator = Mediator(
             rapidsConnection = testRapid,
-            behandlingRepository = mockPersistence,,
+            behandlingRepository = mockPersistence,
+            oppgaveRepository = mockOppgaveRepository,
         )
     }
 
@@ -63,7 +67,6 @@ class MediatorTest {
         )
 
         testRapid.inspektør.size shouldBe 1
-
         val event = testRapid.inspektør.message(0)
         val partitionKey = testRapid.inspektør.key(0)
 
@@ -73,8 +76,8 @@ class MediatorTest {
         event["@event_name"].asText() shouldBe "søknad_behandlet_hendelse"
     }
 
+    private val mockOppgaveRepository = InMemoryOppgaveRepository()
     private val mockPersistence = object : BehandlingRepository {
-        val testPerson = Person("12345678910")
         var behandlingId: UUID
         val behandlinger = listOf(
             BehandlingDSL.behandling(testPerson) {

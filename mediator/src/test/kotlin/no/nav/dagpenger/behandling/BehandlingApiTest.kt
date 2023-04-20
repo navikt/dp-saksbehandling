@@ -17,6 +17,7 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
+import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.persistence.BehandlingRepository
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -24,11 +25,11 @@ import java.time.LocalDate
 import java.util.UUID
 
 class BehandlingApiTest {
-
     private fun withBehandlingApi(
         mediator: Mediator = Mediator(
             rapidsConnection = TestRapid(),
-            behandlingRepository = mockPersistence,,
+            behandlingRepository = mockPersistence,
+            oppgaveRepository = InMemoryOppgaveRepository(),
         ),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
@@ -58,7 +59,6 @@ class BehandlingApiTest {
             client.get("/behandlinger").let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-
                 val behandlinger = jacksonObjectMapper().readTree(response.bodyAsText())
                 behandlinger.size() shouldBe 3
             }
@@ -69,7 +69,6 @@ class BehandlingApiTest {
     fun `skal kunne svare på et steg`() {
         withBehandlingApi {
             val behandlingerJson: String = client.get("/behandlinger/${mockPersistence.behandlingId1}").bodyAsText()
-
             val stegId = behandlingerJson.findStegUUID("vilkår1")
 
             client.put("/behandlinger/${mockPersistence.behandlingId1}/steg/$stegId") {
@@ -94,7 +93,6 @@ class BehandlingApiTest {
             client.get("/behandlinger/${mockPersistence.behandlingId1}").also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-
                 val behandling = jacksonObjectMapper().readTree(response.bodyAsText())
                 behandling.isObject shouldBe true
                 behandling["uuid"].asText() shouldBe mockPersistence.behandlingId1.toString()
@@ -135,7 +133,6 @@ class BehandlingApiTest {
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-
                 val behandlinger = jacksonObjectMapper().readTree(response.bodyAsText())
                 behandlinger.size() shouldBe 2
             }
@@ -183,7 +180,6 @@ class BehandlingApiTest {
         var behandlingId1: UUID
         var behandlingId2: UUID
         var behandlingId3: UUID
-
         val behandlinger = listOf(
             behandling(testPerson1) {
                 steg {
@@ -195,13 +191,11 @@ class BehandlingApiTest {
                     fastsettelse<Int>("fastsettelse1")
                 }
             }.also { behandlingId1 = it.uuid },
-
             behandling(testPerson1) {
                 steg {
                     vilkår("vilkår2")
                 }
             }.also { behandlingId2 = it.uuid },
-
             behandling(testPerson2) {
                 steg {
                     vilkår("vilkår3")

@@ -52,7 +52,22 @@ class Behandling private constructor(
         this.innvilget = hendelse.innvilget
     }
 
-    inline fun <reified T> besvar1(uuid: UUID, verdi: T) {
+    override fun utfall(): Boolean = steg.filterIsInstance<Steg.Vilkår>().all {
+        it.svar.verdi == true
+    }
+
+    override fun erFerdig(): Boolean =
+        steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
+
+    override fun besvar(uuid: UUID, verdi: String) = _besvar(uuid, verdi)
+
+    override fun besvar(uuid: UUID, verdi: Int) = _besvar(uuid, verdi)
+
+    override fun besvar(uuid: UUID, verdi: LocalDate) = _besvar(uuid, verdi)
+
+    override fun besvar(uuid: UUID, verdi: Boolean) = _besvar(uuid, verdi)
+
+    private inline fun <reified T> _besvar(uuid: UUID, verdi: T) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
 
         require(stegSomSkalBesvares.svar.clazz == T::class.java) {
@@ -61,21 +76,6 @@ class Behandling private constructor(
 
         (stegSomSkalBesvares as Steg<T>).besvar(verdi)
     }
-
-    override fun utfall(): Boolean = steg.filterIsInstance<Steg.Vilkår>().all {
-        it.svar.verdi == true
-    }
-
-    override fun erFerdig(): Boolean =
-        steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
-
-    override fun besvar(uuid: UUID, verdi: String) = besvar1(uuid, verdi)
-
-    override fun besvar(uuid: UUID, verdi: Int) = besvar1(uuid, verdi)
-
-    override fun besvar(uuid: UUID, verdi: LocalDate) = besvar1(uuid, verdi)
-
-    override fun besvar(uuid: UUID, verdi: Boolean) = besvar1(uuid, verdi)
 }
 
 class Svar<T>(val verdi: T?, val clazz: Class<T>) {

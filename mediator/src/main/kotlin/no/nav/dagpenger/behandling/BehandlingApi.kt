@@ -23,11 +23,16 @@ import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.dto.BehandlingDTO
 import no.nav.dagpenger.behandling.dto.FerdigstillDTO
 import no.nav.dagpenger.behandling.dto.FnrDTO
+import no.nav.dagpenger.behandling.dto.NyTilstandDTO
+import no.nav.dagpenger.behandling.dto.OppgaveDTO
 import no.nav.dagpenger.behandling.dto.SvarDTO
 import no.nav.dagpenger.behandling.dto.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.toBehandlingDTO
 import no.nav.dagpenger.behandling.dto.toBehandlingerDTO
+import no.nav.dagpenger.behandling.dto.toOppgaveDTO
+import no.nav.dagpenger.behandling.dto.toOppgaverDTO
 import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
+import no.nav.dagpenger.behandling.hendelser.StegUtført
 import java.time.LocalDate
 import java.util.UUID
 
@@ -159,6 +164,86 @@ fun Application.behandlingApi(mediator: Mediator) {
             }
         }
 
+        route("oppgave") {
+            get {
+                val behandlinger = mediator.hentOppgaver().toOppgaverDTO()
+                call.respond(HttpStatusCode.OK, behandlinger)
+            }
+
+            route("sok") {
+                post {
+                    val fnrDTO = call.receive<FnrDTO>()
+
+                    try {
+                        val behandling = mediator.hentOppgaverFor(fnrDTO.fnr).toOppgaverDTO()
+                        call.respond(HttpStatusCode.OK, behandling)
+                    } catch (e: NoSuchElementException) {
+                        call.respond(
+                            status = HttpStatusCode.NotFound,
+                            message = "Fant ingen oppgaver for gitt fnr.",
+                        )
+                    }
+                }
+            }
+
+            route("{oppgaveId}") {
+                get() {
+                    val oppgaveId = call.finnUUID("oppgaveId")
+
+                    try {
+                        val oppgave: OppgaveDTO =
+                            mediator.hentOppgave(oppgaveId).toOppgaveDTO()
+
+                        call.respond(
+                            HttpStatusCode.OK,
+                            oppgave,
+                        )
+                    } catch (e: NoSuchElementException) {
+                        call.respond(
+                            status = HttpStatusCode.NotFound,
+                            message = "Fant ingen behandling med UUID $oppgaveId",
+                        )
+                    }
+                }
+
+                route("steg") {
+                    put("{stegId}") {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        val stegId = call.finnUUID("stegId")
+                        val svar: SvarDTO = call.receive()
+
+                        require(svar.svar != null)
+
+                        mediator.behandle(StegUtført("123", oppgaveId, stegId)) {
+                            when (svar.type) {
+                                SvartypeDTO.String -> besvar(stegId, svar.svar)
+                                SvartypeDTO.LocalDate -> besvar(stegId, LocalDate.parse(svar.svar))
+                                SvartypeDTO.Int -> besvar(stegId, svar.svar.toInt())
+                                SvartypeDTO.Boolean -> besvar(stegId, svar.svar.toBoolean())
+                            }
+                        }
+                        call.respond(status = HttpStatusCode.OK, message = "")
+                    }
+                }
+
+                route("tilstand") {
+                    post {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        val nyTilstandDTO = call.receive<NyTilstandDTO>()
+
+                        try {
+                            mediator.hentOppgave(oppgaveId).gåTil(nyTilstandDTO.nyTilstand)
+                            call.respond(HttpStatusCode.OK, "")
+                        } catch (e: NoSuchElementException) {
+                            call.respond(
+                                status = HttpStatusCode.NotFound,
+                                message = "Fant ingen oppgave med UUID $oppgaveId",
+                            )
+                        }
+                    }
+                }
+            }
+        }
         // Forslag dersom vi vil samle ting under en POST.
         // Man kan enten
         // 1. Sende med 'fnr' i body og få ut alle behandlinger for gitt fnr

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
+import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
@@ -17,14 +18,12 @@ class Mediator(
 ) : BehandlingRepository by behandlingRepository, OppgaveRepository by oppgaveRepository {
     inline fun <reified T> behandle(hendelse: BehandlingSvar<T>) {
         val behandling = hentBehandling(hendelse.behandlingUUID)
-        val oppgave = hentOppgave(hendelse.oppgaveUUID)
-        oppgave.besvar(hendelse.stegUUID, hendelse.verdi)
-        behandling.besvar(hendelse.stegUUID, hendelse.verdi)
+        // behandling.besvar(hendelse.stegUUID, hendelse.verdi)
     }
 
     fun behandle(hendelse: SøknadInnsendtHendelse) {
         behandlingRepository.lagreBehandling(hendelse.behandling)
-        oppgaveRepository.lagre(hendelse.oppgave())
+        lagreOppgave(hendelse.oppgave())
     }
 
     fun behandle(søknadBehandlet: SøknadBehandlet) {
@@ -40,5 +39,11 @@ class Mediator(
             map = søknadBehandletHendelse.toJsonMessageMap(),
         )
         rapidsConnection.publish(behandling.person.ident, søknadBehandletMessage.toJson())
+    }
+
+    fun behandle(hendelse: StegUtført, block: IBehandling.() -> Unit) {
+        val oppgave = hentOppgave(hendelse.oppgaveUUID)
+        block(oppgave)
+        lagreOppgave(oppgave)
     }
 }

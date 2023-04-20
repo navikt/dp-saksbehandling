@@ -37,7 +37,7 @@ class Arbeidsprosess : IArbeidsprosess {
         println("Transitioning from state ${transition.tilTilstand} to state $gjeldendeTilstand at ${System.currentTimeMillis()}")
     }
 
-    fun validTransitions(): List<Prosesstrinn> {
+    fun muligeTilstander(): List<Prosesstrinn> {
         if (gjeldendeTilstand == null) {
             throw IllegalStateException("Work process has not been started")
         }

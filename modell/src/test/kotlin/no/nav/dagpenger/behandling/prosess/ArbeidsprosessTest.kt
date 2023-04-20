@@ -59,8 +59,8 @@ class ArbeidsprosessTest {
             ),
         )
         wp.start("A")
-        assertEquals(listOf("B"), wp.validTransitions())
+        assertEquals(listOf("B"), wp.muligeTilstander())
         wp.gåTil("B")
-        assertEquals(listOf("C"), wp.validTransitions())
+        assertEquals(listOf("C"), wp.muligeTilstander())
     }
 }

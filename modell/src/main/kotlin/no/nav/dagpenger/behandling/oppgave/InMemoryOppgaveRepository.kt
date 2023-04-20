@@ -11,11 +11,17 @@ class InMemoryOppgaveRepository : OppgaveRepository {
         oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "", "10987654321").oppgave())
     }
 
-    override fun lagre(oppgave: Oppgave) {
+    override fun lagreOppgave(oppgave: Oppgave) {
         oppgaver.add(oppgave)
     }
 
     override fun hentOppgave(uuid: UUID): Oppgave {
         return oppgaver.single { it.uuid == uuid }
+    }
+
+    override fun hentOppgaver() = oppgaver
+
+    override fun hentOppgaverFor(fnr: String): List<Oppgave> {
+        TODO("Not yet implemented")
     }
 }

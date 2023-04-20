@@ -9,6 +9,7 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.behandling.Mediator
 import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.params.ParameterizedTest
@@ -31,7 +32,7 @@ class SøknadMottakTest {
             )
             val søknadId = UUID.randomUUID()
             val journalpostId = "jp1"
-            val ident = "ident1"
+            val ident = testIdent
 
             testRapid.sendTestMessage(
                 `innsending ferdigstilt hendelse`(

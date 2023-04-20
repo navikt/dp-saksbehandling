@@ -3,6 +3,8 @@ package no.nav.dagpenger.behandling
 import java.util.UUID
 
 object Meldingsfabrikk {
+    val testIdent = "12312312311"
+    val testPerson = Person(testIdent)
 
     //language=json
     internal fun `innsending ferdigstilt hendelse`(
