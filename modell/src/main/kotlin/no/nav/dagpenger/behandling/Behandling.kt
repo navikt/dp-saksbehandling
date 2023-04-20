@@ -67,7 +67,12 @@ class Behandling private constructor(
 
     override fun besvar(uuid: UUID, verdi: Boolean) = _besvar(uuid, verdi)
 
-    private inline fun <reified T> _besvar(uuid: UUID, verdi: T) {
+    inline fun <reified T> besvar(uuid: UUID, verdi: T) {
+        this._besvar(uuid, verdi)
+    }
+
+    // TODO: Skal bli privat etter vi fjerner behandling API
+    inline fun <reified T> _besvar(uuid: UUID, verdi: T) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
 
         require(stegSomSkalBesvares.svar.clazz == T::class.java) {

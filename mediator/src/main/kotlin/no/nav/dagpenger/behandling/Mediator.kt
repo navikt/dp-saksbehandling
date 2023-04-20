@@ -18,7 +18,7 @@ class Mediator(
 ) : BehandlingRepository by behandlingRepository, OppgaveRepository by oppgaveRepository {
     inline fun <reified T> behandle(hendelse: BehandlingSvar<T>) {
         val behandling = hentBehandling(hendelse.behandlingUUID)
-        // behandling.besvar(hendelse.stegUUID, hendelse.verdi)
+        behandling.besvar(hendelse.stegUUID, hendelse.verdi)
     }
 
     fun behandle(hendelse: SøknadInnsendtHendelse) {
