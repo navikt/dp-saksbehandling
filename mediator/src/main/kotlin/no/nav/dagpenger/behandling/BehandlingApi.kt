@@ -23,7 +23,6 @@ import no.nav.dagpenger.behandling.dto.BehandlingDTO
 import no.nav.dagpenger.behandling.dto.FerdigstillDTO
 import no.nav.dagpenger.behandling.dto.FnrDTO
 import no.nav.dagpenger.behandling.dto.NyTilstandDTO
-import no.nav.dagpenger.behandling.dto.OppgaveDTO
 import no.nav.dagpenger.behandling.dto.SvarDTO
 import no.nav.dagpenger.behandling.dto.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.toBehandlingDTO
@@ -186,17 +185,13 @@ fun Application.behandlingApi(mediator: Mediator) {
             }
 
             route("{oppgaveId}") {
-                get() {
+                get {
                     val oppgaveId = call.finnUUID("oppgaveId")
 
                     try {
-                        val oppgave: OppgaveDTO =
-                            mediator.hentOppgave(oppgaveId).toOppgaveDTO()
+                        val oppgave = mediator.hentOppgave(oppgaveId).toOppgaveDTO()
 
-                        call.respond(
-                            HttpStatusCode.OK,
-                            oppgave,
-                        )
+                        call.respond(HttpStatusCode.OK, oppgave)
                     } catch (e: NoSuchElementException) {
                         call.respond(
                             status = HttpStatusCode.NotFound,

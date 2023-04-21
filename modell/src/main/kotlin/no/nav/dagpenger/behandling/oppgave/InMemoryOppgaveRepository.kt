@@ -12,12 +12,11 @@ class InMemoryOppgaveRepository : OppgaveRepository {
     }
 
     override fun lagreOppgave(oppgave: Oppgave) {
+        if (oppgaver.contains(oppgave)) return
         oppgaver.add(oppgave)
     }
 
-    override fun hentOppgave(uuid: UUID): Oppgave {
-        return oppgaver.single { it.uuid == uuid }
-    }
+    override fun hentOppgave(uuid: UUID) = oppgaver.single { it.uuid == uuid }
 
     override fun hentOppgaver() = oppgaver
 
