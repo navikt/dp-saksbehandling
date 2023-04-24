@@ -15,6 +15,8 @@ class Arbeidsprosess : IArbeidsprosess {
 
     data class Overgang(val tilTilstand: Prosesstrinn, val guard: (() -> Boolean) = { true })
 
+    fun leggTilTilstand(tilstand: Prosesstrinn) = leggTilTilstand(tilstand, emptyList())
+
     fun leggTilTilstand(tilstand: Prosesstrinn, overgangs: List<Overgang>) {
         this.overganger[tilstand] = overgangs.toMutableList()
     }

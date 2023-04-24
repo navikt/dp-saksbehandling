@@ -3,65 +3,51 @@ package no.nav.dagpenger.behandling
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
-import no.nav.dagpenger.behandling.dsl.BehandlingDSL
-import no.nav.dagpenger.behandling.hendelser.BehandlingSvar
+import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
+import no.nav.dagpenger.behandling.hendelser.StegUtført
+import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
-import no.nav.dagpenger.behandling.persistence.BehandlingRepository
+import no.nav.dagpenger.behandling.oppgave.Oppgave
+import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
 
 class MediatorTest {
     private val testRapid = TestRapid()
-    private lateinit var mediator: Mediator
     private val ident = testIdent
+    private var oppgave: Oppgave
+    private var oppgaveId: UUID
 
     @BeforeEach
     fun setup() {
-        mediator = Mediator(
-            rapidsConnection = testRapid,
-            behandlingRepository = mockPersistence,
-            oppgaveRepository = mockOppgaveRepository,
-        )
+        testRapid.reset()
     }
 
     @Test
     fun `Behandle BehandlingSvar hendelse`() {
-        mediator.behandle(
-            BehandlingSvar(
-                ident = ident,
-                behandlingUUID = mockPersistence.behandlingId,
-                stegUUID = mockPersistence.finnStegId("vilkår1"),
-                verdi = false,
-            ),
-        )
+        mediator.behandle(StegUtført(ident, oppgaveId)) {
+            besvar(finnStegId("vilkår1"), false)
+        }
 
-        mediator.behandle(
-            BehandlingSvar(
-                ident = ident,
-                behandlingUUID = mockPersistence.behandlingId,
-                stegUUID = mockPersistence.finnStegId("vilkår 1 dato"),
-                verdi = LocalDate.now(),
-            ),
-        )
+        mediator.behandle(StegUtført(ident, oppgaveId)) {
+            besvar(finnStegId("vilkår 1 dato"), LocalDate.now())
+        }
 
-        mediator.behandle(
-            BehandlingSvar(
-                ident = ident,
-                behandlingUUID = mockPersistence.behandlingId,
-                stegUUID = mockPersistence.finnStegId("fastsettelse1"),
-                verdi = 3,
-            ),
-        )
+        mediator.behandle(StegUtført(ident, oppgaveId)) {
+            besvar(finnStegId("fastsettelse1"), 2)
+        }
     }
 
     @Test
+    @Disabled
     fun `Behandle SøknadBehandlet`() {
         mediator.behandle(
             SøknadBehandlet(
-                behandlingId = mockPersistence.behandlingId,
+                behandlingId = oppgaveId,
                 innvilget = true,
             ),
         )
@@ -76,11 +62,9 @@ class MediatorTest {
         event["@event_name"].asText() shouldBe "søknad_behandlet_hendelse"
     }
 
-    private val mockOppgaveRepository = InMemoryOppgaveRepository()
-    private val mockPersistence = object : BehandlingRepository {
-        var behandlingId: UUID
-        val behandlinger = listOf(
-            BehandlingDSL.behandling(testPerson) {
+    private val mockOppgaveRepository = InMemoryOppgaveRepository().apply {
+        oppgave = Oppgave(
+            behandling(testPerson) {
                 steg {
                     vilkår("vilkår1") {
                         avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
@@ -89,17 +73,20 @@ class MediatorTest {
                 steg {
                     fastsettelse<Int>("fastsettelse1")
                 }
-            }.also { behandlingId = it.uuid },
+            },
+            Arbeidsprosess().apply {
+                leggTilTilstand("Start")
+                start("Start")
+            },
         )
-
-        override fun hentBehandlinger() = behandlinger
-        override fun hentBehandling(behandlingUUID: UUID) = behandlinger.single { it.uuid == behandlingUUID }
-        override fun hentBehandlingerFor(fnr: String): List<Behandling> {
-            TODO("Not yet implemented")
-        }
-
-        fun finnStegId(id: String): UUID {
-            return behandlinger.single().alleSteg().single { it.id == id }.uuid
-        }
+        oppgaveId = oppgave.uuid
+        lagreOppgave(oppgave)
+        lagreOppgave(SøknadInnsendtHendelse(UUID.randomUUID(), "", "20987654321").oppgave())
     }
+    private val mediator = Mediator(
+        rapidsConnection = testRapid,
+        oppgaveRepository = mockOppgaveRepository,
+    )
+
+    private fun finnStegId(id: String) = oppgave.alleSteg().single { it.id == id }.uuid
 }

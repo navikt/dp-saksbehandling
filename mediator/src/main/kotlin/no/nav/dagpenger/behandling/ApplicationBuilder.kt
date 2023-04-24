@@ -9,7 +9,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
-                behandlingApi(mediator = mediator)
+                oppgaveApi(mediator = mediator)
             }.build()
 
     private val mediator = Mediator(rapidsConnection = rapidsConnection)
