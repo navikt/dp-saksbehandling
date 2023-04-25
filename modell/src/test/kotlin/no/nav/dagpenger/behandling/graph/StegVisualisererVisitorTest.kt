@@ -42,7 +42,6 @@ class StegVisualisererVisitorTest {
         val visitor = StegVisualisererVisitor()
         oldemor.accept(visitor)
         assertEquals(expectedFileContents, visitor.toMarkdownFile(writeToFile = false))
-        visitor.toMarkdownFile()
     }
 
     private val expectedDiagram = """
