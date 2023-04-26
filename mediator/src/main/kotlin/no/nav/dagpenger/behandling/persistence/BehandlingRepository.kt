@@ -15,6 +15,7 @@ object Inmemory : BehandlingRepository {
     private val behandlinger = mutableListOf(
         SøknadInnsendtHendelse(UUID.randomUUID(), "", "12345678910").behandling,
         SøknadInnsendtHendelse(UUID.randomUUID(), "", "10987654321").behandling,
+        SøknadInnsendtHendelse(UUID.randomUUID(), "", "12837798289").behandling,
     )
 
     override fun hentBehandlinger() = behandlinger
