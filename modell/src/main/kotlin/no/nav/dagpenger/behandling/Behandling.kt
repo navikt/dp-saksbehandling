@@ -33,7 +33,7 @@ class Behandling private constructor(
     val uuid: UUID,
     var tilstand: Tilstand,
 ) : Behandlingsstatus, Svarbart {
-    private val observers = mutableListOf<BehandlingObserver>()
+    private val observers = mutableSetOf<BehandlingObserver>()
 
     constructor(person: Person, steg: Set<Steg<*>>) : this(
         person,
