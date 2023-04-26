@@ -52,7 +52,7 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val oppgaver = jacksonObjectMapper().readTree(response.bodyAsText())
-                oppgaver.size() shouldBe 3
+                oppgaver.size() shouldBe 6
             }
         }
     }
@@ -120,7 +120,7 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val oppgaver = jacksonObjectMapper().readTree(response.bodyAsText())
-                oppgaver.size() shouldBe 2
+                oppgaver.size() shouldBe 3
             }
         }
     }
