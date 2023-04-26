@@ -11,7 +11,8 @@ import java.util.UUID
 // Ansvar for hvem som skal utføre behandling
 data class Oppgave private constructor(
     val uuid: UUID,
-    private val behandling: Behandling,
+    // TODO: Gjør den private igjen
+    val behandling: Behandling,
     private val prosess: Arbeidsprosess,
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
@@ -30,8 +31,3 @@ data class Oppgave private constructor(
     fun muligeTilstander() = prosess.muligeTilstander()
     fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
 }
-/*
-POST /oppgave/123/behandling/svar/UUID
-GET /oppgave/123/ -> { gyldigeTilstander: ["VentPåMangelbrev", "Innstilt"]  }
-POST /oppgave/123/ { gåTilTilstand: "VentPåMangelbrev" }
- */

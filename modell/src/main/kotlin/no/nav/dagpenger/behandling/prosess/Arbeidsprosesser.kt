@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.prosess
 
 import no.nav.dagpenger.behandling.Behandling
-import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.InnstillingGodkjentHendelse
 import no.nav.dagpenger.behandling.prosess.Arbeidsprosess.Overgang
 
 object Arbeidsprosesser {
@@ -25,5 +25,3 @@ object Arbeidsprosesser {
         leggTilTilstand("Vedtak")
     }
 }
-
-class InnstillingGodkjentHendelse(ident: String) : Hendelse(ident)

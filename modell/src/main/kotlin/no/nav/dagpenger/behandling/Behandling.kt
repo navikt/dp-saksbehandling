@@ -1,6 +1,9 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.prosess.InnstillingGodkjentHendelse
+import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
+import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
+import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.InnstillingGodkjentHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -30,7 +33,15 @@ class Behandling private constructor(
     val uuid: UUID,
     var tilstand: Tilstand,
 ) : Behandlingsstatus, Svarbart {
-    constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now(), UUID.randomUUID(), TilBehandling)
+    private val observers = mutableListOf<BehandlingObserver>()
+
+    constructor(person: Person, steg: Set<Steg<*>>) : this(
+        person,
+        steg,
+        LocalDateTime.now(),
+        UUID.randomUUID(),
+        TilBehandling,
+    )
 
     fun nesteSteg(): Set<Steg<*>> {
         val map = steg.flatMap {
@@ -63,7 +74,7 @@ class Behandling private constructor(
 
     override fun besvar(uuid: UUID, verdi: String) = _besvar(uuid, verdi)
 
-    override fun besvar(uuid: UUID, verdi: Int) = _besvar(uuid, verdi)
+    override fun besvar(uuid: UUID, verdi: Int) = _besvar(uuid, verdi as Integer)
 
     override fun besvar(uuid: UUID, verdi: LocalDate) = _besvar(uuid, verdi)
 
@@ -79,22 +90,67 @@ class Behandling private constructor(
         (stegSomSkalBesvares as Steg<T>).besvar(verdi)
     }
 
-    interface Tilstand {
+    fun addObserver(søknadObserver: BehandlingObserver) {
+        observers.add(søknadObserver)
+    }
+
+    interface Tilstand : Aktivitetskontekst {
+        fun entering(søknadHendelse: Hendelse, behandling: Behandling) {}
+
         fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
             throw IllegalStateException("Ikke gyldig i denne tilstanden")
         }
-    }
 
-    private fun tilstand(tilstand: Tilstand) {
-        this.tilstand = tilstand
+        override fun toSpesifikkKontekst(): SpesifikkKontekst = this.javaClass.canonicalName.split(".").last().let {
+            SpesifikkKontekst(it, emptyMap())
+        }
     }
 
     private object TilBehandling : Tilstand {
-        override fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) =
-            behandling.tilstand(FerdigBehandlet)
+        override fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
+            behandling.varsleOmVedtak(hendelse, behandling)
+            behandling.endreTilstand(FerdigBehandlet, hendelse)
+        }
     }
 
     private object FerdigBehandlet : Tilstand
+
+    private fun endreTilstand(nyTilstand: Tilstand, hendelse: Hendelse) {
+        if (nyTilstand == tilstand) {
+            return // Vi er allerede i tilstanden
+        }
+        val forrigeTilstand = tilstand
+        tilstand = nyTilstand
+        hendelse.kontekst(tilstand)
+        tilstand.entering(hendelse, this)
+        varsleOmEndretTilstand(forrigeTilstand)
+    }
+
+    private fun varsleOmEndretTilstand(forrigeTilstand: Tilstand) {
+        observers.forEach {
+            it.behandlingEndretTilstand(
+                BehandlingEndretTilstand(
+                    behandlingId = uuid,
+                    ident = person.ident,
+                    gjeldendeTilstand = tilstand.javaClass.simpleName,
+                    forrigeTilstand = forrigeTilstand.javaClass.simpleName,
+                ),
+            )
+        }
+    }
+
+    private fun varsleOmVedtak(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
+        observers.forEach {
+            it.vedtakFattet(
+                VedtakFattet(
+                    behandlingId = uuid,
+                    ident = person.ident,
+                    utfall = behandling.utfall(),
+                    fastsettelser = behandling.fastsettelser(),
+                ),
+            )
+        }
+    }
 }
 
 class Svar<T>(val verdi: T?, val clazz: Class<T>) {

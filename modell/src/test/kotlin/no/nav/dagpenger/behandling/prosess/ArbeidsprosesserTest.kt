@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Behandling
+import no.nav.dagpenger.behandling.BehandlingObserver
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Steg
 import org.junit.jupiter.api.Test
@@ -12,7 +13,10 @@ class ArbeidsprosesserTest {
     @Test
     fun `Kan kjøre totrinnsprosess på behandling`() {
         val steg = Steg.Vilkår("foo")
-        val behandling = Behandling(testPerson, setOf(steg))
+        val testObserver = TestObserver()
+        val behandling = Behandling(testPerson, setOf(steg)).also {
+            it.addObserver(testObserver)
+        }
         val totrinnsprosess = Arbeidsprosesser.totrinnsprosess(behandling)
 
         totrinnsprosess.start("TilBehandling")
@@ -37,6 +41,15 @@ class ArbeidsprosesserTest {
             totrinnsprosess.gåTil("TilBehandling")
             totrinnsprosess.gåTil("Innstilt")
             totrinnsprosess.gåTil("Vedtak")
+        }
+
+        testObserver.fattet shouldBe true
+    }
+
+    private class TestObserver : BehandlingObserver {
+        var fattet = false
+        override fun vedtakFattet(vedtakFattetEvent: BehandlingObserver.VedtakFattet) {
+            fattet = true
         }
     }
 }
