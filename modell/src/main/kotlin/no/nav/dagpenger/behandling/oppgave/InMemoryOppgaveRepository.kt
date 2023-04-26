@@ -21,7 +21,5 @@ class InMemoryOppgaveRepository : OppgaveRepository {
 
     override fun hentOppgaver() = oppgaver
 
-    override fun hentOppgaverFor(fnr: String): List<Oppgave> {
-        TODO("Not yet implemented")
-    }
+    override fun hentOppgaverFor(fnr: String) = oppgaver.filter { it.person.ident == fnr }
 }

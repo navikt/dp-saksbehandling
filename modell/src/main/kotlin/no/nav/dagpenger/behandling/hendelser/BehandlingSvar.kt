@@ -12,5 +12,4 @@ class BehandlingSvar<T>(
 class StegUtført(
     ident: String,
     val oppgaveUUID: UUID,
-    val stegUUID: UUID,
 )

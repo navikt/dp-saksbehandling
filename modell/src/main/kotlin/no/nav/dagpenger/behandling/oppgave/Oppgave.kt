@@ -1,7 +1,9 @@
 package no.nav.dagpenger.behandling.oppgave
 
 import no.nav.dagpenger.behandling.Behandling
-import no.nav.dagpenger.behandling.IBehandling
+import no.nav.dagpenger.behandling.BehandlingObserver
+import no.nav.dagpenger.behandling.Behandlingsstatus
+import no.nav.dagpenger.behandling.Svarbart
 import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
 import no.nav.dagpenger.behandling.prosess.IArbeidsprosess
 import java.time.LocalDateTime
@@ -14,7 +16,7 @@ data class Oppgave private constructor(
     private val prosess: Arbeidsprosess,
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
-) : IArbeidsprosess by prosess, IBehandling by behandling {
+) : IArbeidsprosess by prosess, Svarbart by behandling, Behandlingsstatus by behandling {
     constructor(behandling: Behandling, prosess: Arbeidsprosess) : this(
         UUID.randomUUID(),
         behandling,
@@ -27,9 +29,6 @@ data class Oppgave private constructor(
 
     fun alleSteg() = behandling.alleSteg()
     fun muligeTilstander() = prosess.muligeTilstander()
+    fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
+    fun addObserver(observer: BehandlingObserver) = behandling.addObserver(observer)
 }
-/*
-POST /oppgave/123/behandling/svar/UUID
-GET /oppgave/123/ -> { gyldigeTilstander: ["VentPåMangelbrev", "Innstilt"]  }
-POST /oppgave/123/ { gåTilTilstand: "VentPåMangelbrev" }
- */

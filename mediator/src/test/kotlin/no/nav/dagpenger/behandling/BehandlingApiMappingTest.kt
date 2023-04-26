@@ -28,7 +28,6 @@ class BehandlingApiMappingTest {
                     }
                 }
             }
-
             steg {
                 vilkår("vilkår 2 avhenger av fastsettelse 2") {
                     avhengerAvFastsettelse<Int>("fastsettelse 2") {
