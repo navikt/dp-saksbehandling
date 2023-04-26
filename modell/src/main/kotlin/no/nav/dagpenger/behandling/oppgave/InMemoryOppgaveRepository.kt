@@ -9,6 +9,7 @@ class InMemoryOppgaveRepository : OppgaveRepository {
     init {
         oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "", "12345678910").oppgave())
         oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "", "10987654321").oppgave())
+        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "", "12837798289").oppgave())
     }
 
     override fun lagreOppgave(oppgave: Oppgave) {
