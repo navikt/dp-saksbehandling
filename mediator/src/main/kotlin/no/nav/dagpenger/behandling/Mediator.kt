@@ -25,7 +25,7 @@ class Mediator(
     }
 
     override fun hentOppgave(uuid: UUID) = oppgaveRepository.hentOppgave(uuid).also {
-        it.behandling.addObserver(this)
+        it.addObserver(this)
     }
 
     override fun behandlingEndretTilstand(søknadEndretTilstandEvent: BehandlingEndretTilstand) =

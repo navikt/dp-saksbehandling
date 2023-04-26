@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling.oppgave
 
 import no.nav.dagpenger.behandling.Behandling
+import no.nav.dagpenger.behandling.BehandlingObserver
 import no.nav.dagpenger.behandling.Behandlingsstatus
 import no.nav.dagpenger.behandling.Svarbart
 import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
@@ -11,8 +12,7 @@ import java.util.UUID
 // Ansvar for hvem som skal utføre behandling
 data class Oppgave private constructor(
     val uuid: UUID,
-    // TODO: Gjør den private igjen
-    val behandling: Behandling,
+    private val behandling: Behandling,
     private val prosess: Arbeidsprosess,
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
@@ -30,4 +30,5 @@ data class Oppgave private constructor(
     fun alleSteg() = behandling.alleSteg()
     fun muligeTilstander() = prosess.muligeTilstander()
     fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
+    fun addObserver(observer: BehandlingObserver) = behandling.addObserver(observer)
 }
