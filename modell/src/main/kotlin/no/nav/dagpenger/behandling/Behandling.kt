@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
+import no.nav.dagpenger.behandling.prosess.InnstillingGodkjentHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -25,13 +25,12 @@ interface Svarbart {
 
 class Behandling private constructor(
     val person: Person,
-    val steg: Set<Steg<*>> = emptySet(),
+    val steg: Set<Steg<*>>,
     val opprettet: LocalDateTime,
-    val uuid: UUID = UUID.randomUUID(),
+    val uuid: UUID,
+    var tilstand: Tilstand,
 ) : Behandlingsstatus, Svarbart {
-    private var innvilget: Boolean? = null
-
-    constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now())
+    constructor(person: Person, steg: Set<Steg<*>>) : this(person, steg, LocalDateTime.now(), UUID.randomUUID(), TilBehandling)
 
     fun nesteSteg(): Set<Steg<*>> {
         val map = steg.flatMap {
@@ -46,13 +45,13 @@ class Behandling private constructor(
         }.toSet()
     }
 
-    fun erBehandlet() = innvilget != null
+    fun erBehandlet() = tilstand == FerdigBehandlet
 
     fun fastsettelser(): Map<String, String> =
         alleSteg().filterIsInstance<Steg.Fastsettelse<*>>().associate { it.id to it.svar.toString() }
 
-    fun håndter(hendelse: SøknadBehandletHendelse) {
-        this.innvilget = hendelse.innvilget
+    fun håndter(hendelse: InnstillingGodkjentHendelse) {
+        this.tilstand.håndter(hendelse, this)
     }
 
     override fun utfall(): Boolean = steg.filterIsInstance<Steg.Vilkår>().all {
@@ -79,6 +78,23 @@ class Behandling private constructor(
 
         (stegSomSkalBesvares as Steg<T>).besvar(verdi)
     }
+
+    interface Tilstand {
+        fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
+            throw IllegalStateException("Ikke gyldig i denne tilstanden")
+        }
+    }
+
+    private fun tilstand(tilstand: Tilstand) {
+        this.tilstand = tilstand
+    }
+
+    private object TilBehandling : Tilstand {
+        override fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) =
+            behandling.tilstand(FerdigBehandlet)
+    }
+
+    private object FerdigBehandlet : Tilstand
 }
 
 class Svar<T>(val verdi: T?, val clazz: Class<T>) {

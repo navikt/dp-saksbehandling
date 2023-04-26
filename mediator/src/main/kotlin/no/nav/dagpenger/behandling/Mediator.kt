@@ -1,12 +1,9 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.hendelser.StegUtført
-import no.nav.dagpenger.behandling.hendelser.SøknadBehandletHendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
-import no.nav.dagpenger.behandling.persistence.Inmemory.hentBehandling
-import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 class Mediator(
@@ -18,7 +15,7 @@ class Mediator(
     }
 
     fun behandle(søknadBehandlet: SøknadBehandlet) {
-        val behandling = hentBehandling(søknadBehandlet.behandlingId)
+        /*val behandling = hentBehandling(søknadBehandlet.behandlingId)
         val søknadBehandletHendelse = SøknadBehandletHendelse(
             behandling = behandling,
             innvilget = søknadBehandlet.innvilget,
@@ -29,7 +26,7 @@ class Mediator(
             eventName = "søknad_behandlet_hendelse",
             map = søknadBehandletHendelse.toJsonMessageMap(),
         )
-        rapidsConnection.publish(behandling.person.ident, søknadBehandletMessage.toJson())
+        rapidsConnection.publish(behandling.person.ident, søknadBehandletMessage.toJson())*/
     }
 
     fun behandle(hendelse: StegUtført, block: Svarbart.() -> Unit) {

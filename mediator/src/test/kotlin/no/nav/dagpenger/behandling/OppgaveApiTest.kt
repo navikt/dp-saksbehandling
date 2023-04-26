@@ -21,8 +21,8 @@ import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
+import no.nav.dagpenger.behandling.prosess.Arbeidsprosess.Overgang
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -144,11 +144,11 @@ class OppgaveApiTest {
     }
 
     @Test
-    @Disabled
     fun `Skal kunne ferdigstille en oppgave`() {
-        /*withBehandlingApi {
-            val behandling = mockPersistence.hentOppgave(oppgaveId)
-            behandling.erBehandlet() shouldBe false
+        withBehandlingApi {
+            val oppgave = mockPersistence.hentOppgave(oppgaveId)
+            oppgave.tilstand() shouldBe "TilBehandling"
+            fattet shouldBe false
 
             client.post("/oppgave/$oppgaveId/tilstand") {
                 contentType(ContentType.Application.Json)
@@ -158,9 +158,20 @@ class OppgaveApiTest {
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
-                behandling.erBehandlet() shouldBe true
+                fattet shouldBe false
             }
-        }*/
+            client.post("/oppgave/$oppgaveId/tilstand") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"nyTilstand": "Fattet"}""",
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                oppgave.tilstand() shouldBe "Fattet"
+                fattet shouldBe true
+            }
+        }
     }
 
     private fun withBehandlingApi(
@@ -182,10 +193,13 @@ class OppgaveApiTest {
         }
     }
 
+    private var fattet = false
     private val mockPersistence = InMemoryOppgaveRepository().apply {
         val fakeProsess = Arbeidsprosess().apply {
-            leggTilTilstand("Start", emptyList())
-            start("Start")
+            leggTilTilstand("TilBehandling", Overgang("Innstilt"))
+            leggTilTilstand("Innstilt", Overgang("Fattet", vedOvergang = { fattet = true }))
+            leggTilTilstand("Fattet", emptyList())
+            start("TilBehandling")
         }
         lagreOppgave(
             Oppgave(

@@ -1,24 +1,29 @@
 package no.nav.dagpenger.behandling.prosess
 
 import no.nav.dagpenger.behandling.Behandling
+import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.prosess.Arbeidsprosess.Overgang
 
 object Arbeidsprosesser {
     fun totrinnsprosess(behandling: Behandling) = Arbeidsprosess().apply {
         leggTilTilstand(
             "TilBehandling",
-            listOf(
-                Arbeidsprosess.Overgang("Innstilt") { behandling.erFerdig() },
-                Arbeidsprosess.Overgang("VentPåMangelbrev"),
-            ),
+            Overgang("Innstilt") { behandling.erFerdig() },
+            Overgang("VentPåMangelbrev"),
         )
         leggTilTilstand(
             "Innstilt",
-            listOf(
-                Arbeidsprosess.Overgang("TilBehandling"),
-                Arbeidsprosess.Overgang("Vedtak"),
+            Overgang("TilBehandling"),
+            Overgang(
+                "Vedtak",
+                vedOvergang = {
+                    behandling.håndter(InnstillingGodkjentHendelse(behandling.person.ident))
+                },
             ),
         )
-        leggTilTilstand("VentPåMangelbrev", listOf(Arbeidsprosess.Overgang("TilBehandling")))
-        leggTilTilstand("Vedtak", listOf())
+        leggTilTilstand("VentPåMangelbrev", Overgang("TilBehandling"))
+        leggTilTilstand("Vedtak")
     }
 }
+
+class InnstillingGodkjentHendelse(ident: String) : Hendelse(ident)
