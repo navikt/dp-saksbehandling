@@ -46,6 +46,7 @@ jobs:
     needs: [ build ]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    environment: dev-gcp
     steps:
       - uses: actions/checkout@v3
       - uses: nais/deploy/actions/deploy@v1
