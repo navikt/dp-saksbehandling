@@ -33,7 +33,7 @@ class OppgaveApiTest {
 
     @Test
     fun `skal ikke json serialisere null verdier`() {
-        withBehandlingApi {
+        withOppgaveApi {
             client.get("/oppgave/$oppgaveId").also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -47,7 +47,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut alle oppgaver`() {
-        withBehandlingApi {
+        withOppgaveApi {
             client.get("/oppgave").let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -59,7 +59,7 @@ class OppgaveApiTest {
 
     @Test
     fun `skal kunne svare på et steg`() {
-        withBehandlingApi {
+        withOppgaveApi {
             val behandlingerJson: String = client.get("/oppgave/$oppgaveId").bodyAsText()
             val stegId = behandlingerJson.findStegUUID("vilkår1")
 
@@ -75,7 +75,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut en oppgave med en gitt id`() {
-        withBehandlingApi {
+        withOppgaveApi {
             client.get("/oppgave/$oppgaveId").also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -89,7 +89,7 @@ class OppgaveApiTest {
     @Test
     fun `Får feil ved ugyldig oppgaveId`() {
         val ugyldigId = "noeSomIkkeKanParsesTilUUID"
-        withBehandlingApi {
+        withOppgaveApi {
             shouldThrow<IllegalArgumentException> {
                 client.get("/oppgave/$ugyldigId")
             }
@@ -99,7 +99,7 @@ class OppgaveApiTest {
     @Test
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val randomUUID = UUID.randomUUID()
-        withBehandlingApi {
+        withOppgaveApi {
             client.get("/oppgave/$randomUUID").also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
                 response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $randomUUID"
@@ -109,7 +109,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
-        withBehandlingApi {
+        withOppgaveApi {
             client.post("/oppgave/sok") {
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -127,7 +127,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Får 200 OK og tom liste dersom det ikke finnes oppgaver for et gitt fnr`() {
-        withBehandlingApi {
+        withOppgaveApi {
             client.post("/oppgave/sok") {
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -145,7 +145,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne ferdigstille en oppgave`() {
-        withBehandlingApi {
+        withOppgaveApi {
             val oppgave = mockPersistence.hentOppgave(oppgaveId)
             oppgave.tilstand() shouldBe "TilBehandling"
             fattet shouldBe false
@@ -174,7 +174,7 @@ class OppgaveApiTest {
         }
     }
 
-    private fun withBehandlingApi(
+    private fun withOppgaveApi(
         mediator: Mediator = Mediator(
             rapidsConnection = TestRapid(),
             oppgaveRepository = mockPersistence,
