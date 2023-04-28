@@ -1,15 +1,28 @@
 package no.nav.dagpenger.behandling.graph
 
+interface Edge<T> {
+    val from: DAGNode<T>
+    val to: DAGNode<T>
+}
+
+class SimpleEdge<T>(override val from: DAGNode<T>, override val to: DAGNode<T>) : Edge<T>
+
 class DAGNode<T>(val value: T) {
-    private val parents = mutableSetOf<DAGNode<T>>()
-    private val children = mutableSetOf<DAGNode<T>>()
+    private val incomingEdges = mutableSetOf<Edge<T>>()
+    private val outgoingEdges = mutableSetOf<Edge<T>>()
+
+    private val parents
+        get() = incomingEdges.map { it.from }.toSet()
+    private val children
+        get() = outgoingEdges.map { it.to }.toSet()
 
     fun addChild(child: DAGNode<T>) {
         if (this == child || this in child.getDescendants()) {
             throw IllegalStateException("Adding this child would create a cycle: $child")
         } else {
-            children.add(child)
-            child.parents.add(this)
+            val edge = SimpleEdge(this, child)
+            outgoingEdges.add(edge)
+            child.incomingEdges.add(edge)
         }
     }
 
