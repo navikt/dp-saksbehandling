@@ -21,12 +21,12 @@ class Arbeidsprosess : IArbeidsprosess {
 
     fun leggTilTilstand(tilstand: Prosesstrinn) = leggTilTilstand(tilstand, emptyList())
 
-    fun leggTilTilstand(tilstand: Prosesstrinn, overgangs: List<Overgang>) {
-        this.overganger[tilstand] = overgangs.toMutableList()
+    fun leggTilTilstand(tilstand: Prosesstrinn, muligeOverganger: List<Overgang>) {
+        this.overganger[tilstand] = muligeOverganger.toMutableList()
     }
 
-    fun leggTilTilstand(tilstand: Prosesstrinn, vararg overgang: Overgang) =
-        leggTilTilstand(tilstand, overgang.toList())
+    fun leggTilTilstand(tilstand: Prosesstrinn, vararg muligeOverganger: Overgang) =
+        leggTilTilstand(tilstand, muligeOverganger.toList())
 
     fun start(tilstand: Prosesstrinn) {
         gjeldendeTilstand = tilstand
@@ -37,25 +37,25 @@ class Arbeidsprosess : IArbeidsprosess {
         if (gjeldendeTilstand == null) {
             throw IllegalStateException("Work process has not been started")
         }
-        val currentTransitions =
+        val muligeOverganger =
             overganger[gjeldendeTilstand] ?: throw IllegalStateException("Invalid current state $gjeldendeTilstand")
-        val transition = currentTransitions.firstOrNull { it.tilTilstand == tilstand && it.guard() }
+        val overgang = muligeOverganger.firstOrNull { it.tilTilstand == tilstand && it.guard() }
             ?: throw IllegalStateException("Invalid transition from state $gjeldendeTilstand to state $tilstand")
 
         gjeldendeTilstand = tilstand.also {
-            transition.vedOvergang()
+            overgang.vedOvergang()
         }
 
-        println("Transitioning from state ${transition.tilTilstand} to state $gjeldendeTilstand at ${System.currentTimeMillis()}")
+        println("Transitioning from state ${overgang.tilTilstand} to state $gjeldendeTilstand at ${System.currentTimeMillis()}")
     }
 
     fun muligeTilstander(): List<Prosesstrinn> {
         if (gjeldendeTilstand == null) {
             throw IllegalStateException("Work process has not been started")
         }
-        val currentTransitions =
+        val muligeOverganger =
             overganger[gjeldendeTilstand] ?: throw IllegalStateException("Invalid current state $gjeldendeTilstand")
 
-        return currentTransitions.filter { it.guard() }.map { it.tilTilstand }
+        return muligeOverganger.filter { it.guard() }.map { it.tilTilstand }
     }
 }
