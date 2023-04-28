@@ -60,8 +60,13 @@ class OppgaveApiTest {
     @Test
     fun `skal kunne svare på et steg`() {
         withOppgaveApi {
-            val behandlingerJson: String = client.get("/oppgave/$oppgaveId").bodyAsText()
-            val stegId = behandlingerJson.findStegUUID("vilkår1")
+            val oppgaveJSON: String = client.get("/oppgave/$oppgaveId").bodyAsText()
+            val stegId = oppgaveJSON.findStegUUID("vilkår1")
+            val oppgave = mockPersistence.hentOppgave(oppgaveId)
+            val steg = oppgave.steg(UUID.fromString(stegId))
+
+            steg.svar.verdi shouldBe null
+            steg.tilstand shouldBe Tilstand.IkkeUtført
 
             client.put("/oppgave/$oppgaveId/steg/$stegId") {
                 contentType(ContentType.Application.Json)
@@ -70,6 +75,9 @@ class OppgaveApiTest {
                     """{"type":"Boolean","svar":true,"begrunnelse":{"tekst":"Har itte","kilde":"Høggern"}}""",
                 )
             }.status shouldBe HttpStatusCode.OK
+
+            steg.svar.verdi shouldBe true
+            steg.tilstand shouldBe Tilstand.Utført
         }
     }
 
@@ -79,9 +87,9 @@ class OppgaveApiTest {
             client.get("/oppgave/$oppgaveId").also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val behandling = jacksonObjectMapper().readTree(response.bodyAsText())
-                behandling.isObject shouldBe true
-                behandling["uuid"].asText() shouldBe oppgaveId.toString()
+                val oppgave = jacksonObjectMapper().readTree(response.bodyAsText())
+                oppgave.isObject shouldBe true
+                oppgave["uuid"].asText() shouldBe oppgaveId.toString()
             }
         }
     }
