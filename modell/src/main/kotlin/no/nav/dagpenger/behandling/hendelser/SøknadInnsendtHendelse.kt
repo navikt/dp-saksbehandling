@@ -2,7 +2,6 @@ package no.nav.dagpenger.behandling.hendelser
 
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
-import no.nav.dagpenger.behandling.SpesifikkKontekst
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.prosess.Arbeidsprosesser
@@ -14,12 +13,9 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
     fun søknadId() = søknadId
     fun journalpostId() = journalpostId
 
-    override fun toSpesifikkKontekst() = SpesifikkKontekst(
-        this.javaClass.simpleName,
-        mapOf(
-            "søknadId" to søknadId.toString(),
-            "journalpostId" to journalpostId,
-        ),
+    override fun kontekst() = mapOf(
+        "søknadId" to søknadId.toString(),
+        "journalpostId" to journalpostId,
     )
 
     fun oppgave() = Oppgave(
