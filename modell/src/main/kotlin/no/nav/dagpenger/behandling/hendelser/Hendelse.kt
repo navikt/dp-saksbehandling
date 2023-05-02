@@ -9,9 +9,7 @@ abstract class Hendelse(
     private val ident: String,
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Aktivitetskontekst, IAktivitetslogg by aktivitetslogg {
-
     fun ident() = ident
-    override fun toSpesifikkKontekst(): SpesifikkKontekst {
-        return SpesifikkKontekst(this.javaClass.simpleName, mapOf("ident" to ident))
-    }
+    override fun toSpesifikkKontekst() =
+        SpesifikkKontekst(this.javaClass.simpleName, mapOf("ident" to ident))
 }

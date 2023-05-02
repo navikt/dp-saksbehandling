@@ -17,7 +17,6 @@ class Aktivitetslogg private constructor(
     constructor(forelder: Aktivitetslogg? = null) : this(forelder, mutableListOf())
 
     companion object {
-
         fun rehyder(
             aktiviteter: MutableList<Aktivitet>,
         ) = Aktivitetslogg(null, aktiviteter)
@@ -114,6 +113,7 @@ class Aktivitetslogg private constructor(
             kontekster
                 .let { kontekst -> if (typer.isEmpty()) kontekst else kontekst.filter { it.kontekstType in typer } }
                 .fold(mapOf()) { result, kontekst -> result + kontekst.kontekstMap }
+
         override fun compareTo(other: Aktivitet) = this.tidsstempel.compareTo(other.tidsstempel)
             .let { if (it == 0) other.alvorlighetsgrad.compareTo(this.alvorlighetsgrad) else it }
 
@@ -224,7 +224,6 @@ class Aktivitetslogg private constructor(
 
 // @todo Lage representasjon av aktivitetslogg som kan lagres. Sjekk dp-mottak
 // fun Aktivitetslogg.toMap() = AktivitetsloggReflect(this).toMap()
-
 interface IAktivitetslogg {
     fun info(melding: String, vararg params: Any?)
     fun warn(melding: String, vararg params: Any?)
@@ -289,16 +288,17 @@ interface AktivitetsloggVisitor {
     fun postVisitAktivitetslogg(aktivitetslogg: Aktivitetslogg) {}
 }
 
-// fun Aktivitetslogg.toMap() = AktivitetsloggMapper(this).toMap()
-
 interface Aktivitetskontekst {
     fun toSpesifikkKontekst(): SpesifikkKontekst
 }
 
 class SpesifikkKontekst(internal val kontekstType: String, internal val kontekstMap: Map<String, String> = mapOf()) {
-
     fun melding() =
         kontekstType + kontekstMap.entries.joinToString(separator = ", ", prefix = " - ") { "${it.key}: ${it.value}" }
+
+    fun toMap() = kontekstMap + mapOf(
+        "type" to kontekstType,
+    )
 
     override fun equals(other: Any?) =
         this === other || other is SpesifikkKontekst && this.kontekstMap == other.kontekstMap

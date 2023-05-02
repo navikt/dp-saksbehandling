@@ -8,6 +8,7 @@ import no.nav.dagpenger.behandling.dto.StegtypeDTO.Fastsetting
 import no.nav.dagpenger.behandling.dto.StegtypeDTO.Vilkår
 import no.nav.dagpenger.behandling.dto.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.toBehandlingDTO
+import no.nav.dagpenger.behandling.hendelser.Hendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -15,7 +16,7 @@ class OppgaveApiMappingTest {
     @Test
     fun `mapping til dtoer`() {
         val person = Person("12345678910")
-        val testBehandling = behandling(person) {
+        val testBehandling = behandling(person, object : Hendelse("12312312311") {}) {
             val fellessteg = steg {
                 fastsettelse<Boolean>("felles steg").also {
                     it.besvar(false)

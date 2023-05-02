@@ -43,7 +43,7 @@ internal class SøknadMottak(
         ) {
             val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadID, journalpostId, ident)
             mediator.behandle(søknadInnsendtHendelse)
-            logger.info { "Fått søknadhendelse for $søknadID" }
+            logger.info { "Fått SøknadInnsendtHendelse for $søknadID" }
         }
     }
 

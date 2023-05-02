@@ -27,15 +27,17 @@ class Behandling private constructor(
     val opprettet: LocalDateTime,
     val uuid: UUID,
     var tilstand: Tilstand,
+    val behandler: List<Hendelse>,
 ) : Behandlingsstatus, Svarbart {
     private val observers = mutableSetOf<BehandlingObserver>()
 
-    constructor(person: Person, steg: Set<Steg<*>>) : this(
+    constructor(person: Person, hendelse: Hendelse, steg: Set<Steg<*>>) : this(
         person,
         steg,
         LocalDateTime.now(),
         UUID.randomUUID(),
         TilBehandling,
+        listOf(hendelse),
     )
 
     fun nesteSteg(): Set<Steg<*>> {

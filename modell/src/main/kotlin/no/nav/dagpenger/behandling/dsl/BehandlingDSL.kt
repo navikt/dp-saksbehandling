@@ -6,15 +6,16 @@ import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Steg.Vilkår
+import no.nav.dagpenger.behandling.hendelser.Hendelse
 
 class BehandlingDSL() {
     val steg = mutableSetOf<Steg<*>>()
 
     companion object {
-        fun behandling(person: Person, block: BehandlingDSL.() -> Unit): Behandling {
+        fun behandling(person: Person, hendelse: Hendelse, block: BehandlingDSL.() -> Unit): Behandling {
             val dsl = BehandlingDSL()
             block(dsl)
-            return Behandling(person, dsl.steg)
+            return Behandling(person, hendelse, dsl.steg)
         }
     }
 

@@ -17,7 +17,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
+import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
@@ -29,7 +32,6 @@ import java.util.UUID
 
 class OppgaveApiTest {
     private var oppgaveId: UUID
-    private val testPerson1 = Person("12345678910")
 
     @Test
     fun `skal ikke json serialisere null verdier`() {
@@ -90,6 +92,8 @@ class OppgaveApiTest {
                 val oppgave = jacksonObjectMapper().readTree(response.bodyAsText())
                 oppgave.isObject shouldBe true
                 oppgave["uuid"].asText() shouldBe oppgaveId.toString()
+                oppgave["journalposter"].map { it.asText() } shouldBe listOf("123")
+                oppgave["hendelse"].map { it["type"].asText() } shouldBe listOf("SøknadInnsendtHendelse")
             }
         }
     }
@@ -122,13 +126,13 @@ class OppgaveApiTest {
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
-                    """{"fnr": ${testPerson1.ident}}""",
+                    """{"fnr": ${testPerson.ident}}""",
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val oppgaver = jacksonObjectMapper().readTree(response.bodyAsText())
-                oppgaver.size() shouldBe 3
+                oppgaver.size() shouldBe 2
             }
         }
     }
@@ -209,9 +213,10 @@ class OppgaveApiTest {
             leggTilTilstand("Fattet", emptyList())
             start("TilBehandling")
         }
+        val hendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent)
         lagreOppgave(
             Oppgave(
-                behandling(testPerson1) {
+                behandling(testPerson, hendelse) {
                     steg {
                         vilkår("vilkår1") {
                             avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
@@ -226,7 +231,7 @@ class OppgaveApiTest {
         )
         lagreOppgave(
             Oppgave(
-                behandling(testPerson1) {
+                behandling(testPerson, hendelse) {
                     steg {
                         vilkår("vilkår2")
                     }
@@ -236,7 +241,7 @@ class OppgaveApiTest {
         )
         lagreOppgave(
             Oppgave(
-                behandling(Person("45678910112")) {
+                behandling(Person("45678910112"), hendelse) {
                     steg {
                         vilkår("vilkår3")
                     }

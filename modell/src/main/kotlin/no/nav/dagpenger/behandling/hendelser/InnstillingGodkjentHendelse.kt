@@ -1,3 +1,3 @@
 package no.nav.dagpenger.behandling.hendelser
 
-class InnstillingGodkjentHendelse(ident: String) : Hendelse(ident)
+class InnstillingGodkjentHendelse(person: String) : Hendelse(person)

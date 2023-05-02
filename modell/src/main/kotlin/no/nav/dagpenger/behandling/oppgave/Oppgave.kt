@@ -27,6 +27,7 @@ data class Oppgave private constructor(
 
     val person get() = behandling.person
 
+    val behandler = behandling.behandler
     fun alleSteg() = behandling.alleSteg()
     fun muligeTilstander() = prosess.muligeTilstander()
     fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
