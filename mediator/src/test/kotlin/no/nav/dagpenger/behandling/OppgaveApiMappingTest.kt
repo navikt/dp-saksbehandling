@@ -11,7 +11,7 @@ import no.nav.dagpenger.behandling.dto.toBehandlingDTO
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class BehandlingApiMappingTest {
+class OppgaveApiMappingTest {
     @Test
     fun `mapping til dtoer`() {
         val person = Person("12345678910")

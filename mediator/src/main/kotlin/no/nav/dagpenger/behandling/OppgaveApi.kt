@@ -86,6 +86,7 @@ fun Application.oppgaveApi(mediator: Mediator) {
                                 SvartypeDTO.LocalDate -> besvar(stegId, LocalDate.parse(svar.svar))
                                 SvartypeDTO.Int -> besvar(stegId, svar.svar.toInt())
                                 SvartypeDTO.Boolean -> besvar(stegId, svar.svar.toBoolean())
+                                SvartypeDTO.Double -> besvar(stegId, svar.svar.toDouble())
                             }
                         }
                         call.respond(status = HttpStatusCode.OK, message = "")

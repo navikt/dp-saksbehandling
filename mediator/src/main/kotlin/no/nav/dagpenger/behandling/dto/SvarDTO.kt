@@ -25,4 +25,5 @@ internal enum class SvartypeDTO {
     LocalDate,
     Int,
     Boolean,
+    Double,
 }

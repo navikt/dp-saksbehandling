@@ -55,6 +55,7 @@ class MediatorTest {
                     "Integer" -> besvar(it.uuid, Random.nextInt())
                     "String" -> besvar(it.uuid, Random.nextBytes(10).toString())
                     "LocalDate" -> besvar(it.uuid, LocalDate.now())
+                    "Double" -> besvar(it.uuid, Random.nextDouble())
                 }
             }
 

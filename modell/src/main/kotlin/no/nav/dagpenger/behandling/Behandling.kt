@@ -8,12 +8,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class Person(val ident: String) {
-    init {
-        require(ident.matches(Regex("\\d{11}"))) { "personident må ha 11 siffer, fikk ${ident.length}" }
-    }
-}
-
 interface Behandlingsstatus {
     fun utfall(): Boolean
     fun erFerdig(): Boolean
@@ -22,6 +16,7 @@ interface Behandlingsstatus {
 interface Svarbart {
     fun besvar(uuid: UUID, verdi: String)
     fun besvar(uuid: UUID, verdi: Int)
+    fun besvar(uuid: UUID, verdi: Double)
     fun besvar(uuid: UUID, verdi: LocalDate)
     fun besvar(uuid: UUID, verdi: Boolean)
 }
@@ -74,7 +69,9 @@ class Behandling private constructor(
 
     override fun besvar(uuid: UUID, verdi: String) = _besvar(uuid, verdi)
 
-    override fun besvar(uuid: UUID, verdi: Int) = _besvar(uuid, verdi as Integer)
+    override fun besvar(uuid: UUID, verdi: Int) = _besvar(uuid, verdi)
+
+    override fun besvar(uuid: UUID, verdi: Double) = _besvar(uuid, verdi)
 
     override fun besvar(uuid: UUID, verdi: LocalDate) = _besvar(uuid, verdi)
 

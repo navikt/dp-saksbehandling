@@ -26,7 +26,7 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
             fastsettelse<String>("Rettighetstype")
         }
         steg {
-            fastsettelse<Int>("Fastsatt vanlig arbeidstid") {
+            fastsettelse<Double>("Fastsatt vanlig arbeidstid") {
                 avhengerAv(virkningsdato)
             }
         }
