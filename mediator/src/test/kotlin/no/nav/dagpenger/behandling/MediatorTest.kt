@@ -1,11 +1,11 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
-import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
@@ -18,7 +18,7 @@ import java.time.LocalDate
 import java.util.UUID
 import kotlin.random.Random
 
-class MediatorTest(ident: String) {
+class MediatorTest() {
     private val testRapid = TestRapid()
     private val ident = testIdent
     private var oppgave: Oppgave
@@ -75,7 +75,7 @@ class MediatorTest(ident: String) {
 
     private val mockOppgaveRepository = InMemoryOppgaveRepository().apply {
         oppgave = Oppgave(
-            behandling(testPerson, object : Hendelse(testIdent) {}) {
+            behandling(testPerson, testHendelse) {
                 steg {
                     vilkår("vilkår1") {
                         avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")

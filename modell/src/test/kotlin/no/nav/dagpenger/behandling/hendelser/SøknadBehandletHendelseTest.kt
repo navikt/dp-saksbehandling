@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling.hendelser
 
 import io.kotest.matchers.maps.shouldContainAll
 import no.nav.dagpenger.behandling.Behandling
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Svar
@@ -15,8 +16,9 @@ class SøknadBehandletHendelseTest {
         val dato = LocalDate.of(2023, 2, 1)
 
         val behandling = Behandling(
-            person = Person("12345678910"),
-            steg = setOf(
+            Person("12345678910"),
+            testHendelse,
+            setOf(
                 Steg.Fastsettelse("virkningsdato", Svar(dato, LocalDate::class.java)),
             ),
         )

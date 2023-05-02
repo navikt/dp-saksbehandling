@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.BehandlingObserver
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Steg
 import org.junit.jupiter.api.Test
@@ -14,7 +15,7 @@ class ArbeidsprosesserTest {
     fun `Kan kjøre totrinnsprosess på behandling`() {
         val steg = Steg.Vilkår("foo")
         val testObserver = TestObserver()
-        val behandling = Behandling(testPerson, setOf(steg)).also {
+        val behandling = Behandling(testPerson, testHendelse, setOf(steg)).also {
             it.addObserver(testObserver)
         }
         val totrinnsprosess = Arbeidsprosesser.totrinnsprosess(behandling)

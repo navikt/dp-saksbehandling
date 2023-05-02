@@ -2,6 +2,8 @@ package no.nav.dagpenger.behandling
 
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
@@ -10,8 +12,6 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class BehandlingTest {
-    private val testPerson = Person("12345678910")
-
     @Test
     fun `Skal kunne lage en behandling`() {
         val steg1 = fastsettelse<Int>("1")
@@ -21,6 +21,7 @@ class BehandlingTest {
             setOf(steg1, steg2),
             Behandling(
                 testPerson,
+                testHendelse,
                 setOf(
                     steg1,
                     steg2,
@@ -37,6 +38,7 @@ class BehandlingTest {
         val steg4 = Vilkår("4")
         val behandling = Behandling(
             testPerson,
+            testHendelse,
             setOf(
                 steg1.also { it.avhengerAv(steg2) },
                 steg3.also { it.avhengerAv(steg4) },
@@ -60,7 +62,7 @@ class BehandlingTest {
 
         assertEquals(
             setOf(steg1, steg2, steg3, steg4, steg5),
-            Behandling(testPerson, setOf(steg2, steg4, steg5)).alleSteg(),
+            Behandling(testPerson, testHendelse, setOf(steg2, steg4, steg5)).alleSteg(),
         )
     }
 
@@ -78,7 +80,10 @@ class BehandlingTest {
             it.besvar(true)
         }
 
-        assertEquals(setOf(steg3, steg4), Behandling(testPerson, steg = setOf(steg2, steg4, steg5)).nesteSteg())
+        assertEquals(
+            setOf(steg3, steg4),
+            Behandling(testPerson, testHendelse, steg = setOf(steg2, steg4, steg5)).nesteSteg(),
+        )
     }
 
     @Test
@@ -89,7 +94,7 @@ class BehandlingTest {
             it.besvar(true)
         }
         val steg3 = Vilkår("3")
-        val behandling = Behandling(testPerson, setOf(steg2, steg3))
+        val behandling = Behandling(testPerson, testHendelse, setOf(steg2, steg3))
         assertEquals(setOf(steg3), behandling.nesteSteg())
 
         steg1.besvar(2)
@@ -99,7 +104,7 @@ class BehandlingTest {
     @Test
     fun `Skal kunne besvare behandling`() {
         lateinit var testUuid: UUID
-        val behandling = behandling(testPerson) {
+        val behandling = behandling(testPerson, testHendelse) {
             steg {
                 fastsettelse<Int>("noe").also {
                     testUuid = it.uuid
@@ -116,7 +121,7 @@ class BehandlingTest {
     fun `Skal kunne besvare vilkår og fastsettelse av type boolean`() {
         lateinit var vilkår: UUID
         lateinit var fastsettelse: UUID
-        val behandling = behandling(testPerson) {
+        val behandling = behandling(testPerson, testHendelse) {
             steg {
                 vilkår("noe").also { vilkår = it.uuid }
             }
