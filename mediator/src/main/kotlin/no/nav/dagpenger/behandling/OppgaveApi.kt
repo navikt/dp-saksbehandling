@@ -80,7 +80,7 @@ fun Application.oppgaveApi(mediator: Mediator) {
                         val svar: SaksbehandlersvarDTO = call.receive()
 
                         require(svar.svar != null)
-                        val sporing = ManuellSporing(LocalDateTime.now(), Saksbehandler(), svar.begrunnelse)
+                        val sporing = ManuellSporing(LocalDateTime.now(), Saksbehandler(), svar.begrunnelse.tekst)
 
                         mediator.behandle(StegUtført("123", oppgaveId)) {
                             when (svar.type) {
@@ -119,8 +119,10 @@ fun Application.oppgaveApi(mediator: Mediator) {
 private data class SaksbehandlersvarDTO(
     val svar: String?,
     val type: SvartypeDTO,
-    val begrunnelse: String,
-)
+    val begrunnelse: BegrunnelseDTO,
+) {
+    class BegrunnelseDTO(val tekst: String)
+}
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID = parameters[pathParam]?.let {
     UUID.fromString(it)
