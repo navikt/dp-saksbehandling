@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
 import org.junit.jupiter.api.Test
@@ -40,42 +41,42 @@ class StegTest {
         far.nesteSteg() shouldBe setOf(barn1, barn2, barn3)
         mor.nesteSteg() shouldBe setOf(barn1, barn2, barn3)
 
-        far.besvar(2)
+        far.besvar(2, testSporing)
         far.nesteSteg() shouldBe emptySet()
 
-        mor.besvar(true)
+        mor.besvar(true, testSporing)
         mor.nesteSteg() shouldBe emptySet()
 
         bestefar.nesteSteg() shouldBe setOf(bestefar)
 
-        bestefar.besvar(2)
+        bestefar.besvar(2, testSporing)
         bestefar.nesteSteg() shouldBe emptySet()
     }
 
     @Test
     fun `nesteSteg skal fjerne duplikater`() {
-        barn3.besvar(true)
+        barn3.besvar(true, testSporing)
         bestefar.nesteSteg() shouldBe setOf(mor, far, barn1, barn2)
     }
 
     @Test
     fun `allesteg skal hent ut steg som er utført`() {
-        mor.besvar(true)
-        far.besvar(2)
+        mor.besvar(true, testSporing)
+        far.besvar(2, testSporing)
 
         bestefar.alleSteg() shouldBe setOf(bestefar, far, mor, barn1, barn2, barn3)
     }
 
     @Test
     fun `Dersom svaret til et steg endres resettes tilstand til forfedre`() {
-        far.besvar(1)
+        far.besvar(1, testSporing)
         far.nesteSteg() shouldBe emptySet()
-        mor.besvar(false)
+        mor.besvar(false, testSporing)
         mor.nesteSteg() shouldBe emptySet()
-        bestefar.besvar(1)
+        bestefar.besvar(1, testSporing)
         bestefar.nesteSteg() shouldBe emptySet()
 
-        barn1.besvar(2)
+        barn1.besvar(2, testSporing)
         far.nesteSteg() shouldBe setOf(barn2, barn3)
         mor.nesteSteg() shouldBe setOf(barn2, barn3)
         bestefar.nesteSteg() shouldBe setOf(far, mor, barn2, barn3)

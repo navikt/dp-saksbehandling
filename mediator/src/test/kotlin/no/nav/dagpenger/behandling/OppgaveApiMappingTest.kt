@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Tilstand.IkkeUtført
 import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
@@ -19,7 +20,7 @@ class OppgaveApiMappingTest {
         val testBehandling = behandling(person, object : Hendelse("12312312311") {}) {
             val fellessteg = steg {
                 fastsettelse<Boolean>("felles steg").also {
-                    it.besvar(false)
+                    it.besvar(false, testSporing)
                 }
             }
             steg {

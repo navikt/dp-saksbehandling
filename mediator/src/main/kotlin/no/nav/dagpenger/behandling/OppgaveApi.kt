@@ -21,12 +21,13 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.dto.FnrDTO
 import no.nav.dagpenger.behandling.dto.NyTilstandDTO
-import no.nav.dagpenger.behandling.dto.SvarDTO
 import no.nav.dagpenger.behandling.dto.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.toOppgaveDTO
 import no.nav.dagpenger.behandling.dto.toOppgaverDTO
 import no.nav.dagpenger.behandling.hendelser.StegUtført
+import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 fun Application.oppgaveApi(mediator: Mediator) {
@@ -76,17 +77,18 @@ fun Application.oppgaveApi(mediator: Mediator) {
                     put("{stegId}") {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val stegId = call.finnUUID("stegId")
-                        val svar: SvarDTO = call.receive()
+                        val svar: SaksbehandlersvarDTO = call.receive()
 
                         require(svar.svar != null)
+                        val sporing = ManuellSporing(LocalDateTime.now(), Saksbehandler(), svar.begrunnelse)
 
                         mediator.behandle(StegUtført("123", oppgaveId)) {
                             when (svar.type) {
-                                SvartypeDTO.String -> besvar(stegId, svar.svar)
-                                SvartypeDTO.LocalDate -> besvar(stegId, LocalDate.parse(svar.svar))
-                                SvartypeDTO.Int -> besvar(stegId, svar.svar.toInt())
-                                SvartypeDTO.Boolean -> besvar(stegId, svar.svar.toBoolean())
-                                SvartypeDTO.Double -> besvar(stegId, svar.svar.toDouble())
+                                SvartypeDTO.String -> besvar(stegId, svar.svar, sporing)
+                                SvartypeDTO.LocalDate -> besvar(stegId, LocalDate.parse(svar.svar), sporing)
+                                SvartypeDTO.Int -> besvar(stegId, svar.svar.toInt(), sporing)
+                                SvartypeDTO.Boolean -> besvar(stegId, svar.svar.toBoolean(), sporing)
+                                SvartypeDTO.Double -> besvar(stegId, svar.svar.toDouble(), sporing)
                             }
                         }
                         call.respond(status = HttpStatusCode.OK, message = "")
@@ -113,6 +115,12 @@ fun Application.oppgaveApi(mediator: Mediator) {
         }
     }
 }
+
+private data class SaksbehandlersvarDTO(
+    val svar: String?,
+    val type: SvartypeDTO,
+    val begrunnelse: String,
+)
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID = parameters[pathParam]?.let {
     UUID.fromString(it)

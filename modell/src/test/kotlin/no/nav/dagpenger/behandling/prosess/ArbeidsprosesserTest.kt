@@ -7,6 +7,7 @@ import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.BehandlingObserver
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Steg
 import org.junit.jupiter.api.Test
 
@@ -27,7 +28,7 @@ class ArbeidsprosesserTest {
             totrinnsprosess.gåTil("Innstilt")
         }
 
-        steg.besvar(true)
+        steg.besvar(true, testSporing)
         totrinnsprosess.muligeTilstander() shouldBe listOf("Innstilt", "VentPåMangelbrev")
         totrinnsprosess.gåTil("Innstilt")
         // Kan sendes tilbake til saksbehandler

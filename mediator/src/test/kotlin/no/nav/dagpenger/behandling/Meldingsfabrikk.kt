@@ -7,6 +7,7 @@ object Meldingsfabrikk {
     val testIdent = "12312312311"
     val testPerson = Person(testIdent)
     val testHendelse = object : Hendelse(testIdent) {}
+    val testSporing get() = NullSporing()
 
     //language=json
     internal fun `innsending ferdigstilt hendelse`(

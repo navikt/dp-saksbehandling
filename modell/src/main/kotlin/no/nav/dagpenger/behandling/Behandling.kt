@@ -14,11 +14,11 @@ interface Behandlingsstatus {
 }
 
 interface Svarbart {
-    fun besvar(uuid: UUID, verdi: String)
-    fun besvar(uuid: UUID, verdi: Int)
-    fun besvar(uuid: UUID, verdi: Double)
-    fun besvar(uuid: UUID, verdi: LocalDate)
-    fun besvar(uuid: UUID, verdi: Boolean)
+    fun besvar(uuid: UUID, verdi: String, sporing: Sporing)
+    fun besvar(uuid: UUID, verdi: Int, sporing: Sporing)
+    fun besvar(uuid: UUID, verdi: Double, sporing: Sporing)
+    fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing)
+    fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing)
 }
 
 class Behandling private constructor(
@@ -69,24 +69,24 @@ class Behandling private constructor(
     override fun erFerdig(): Boolean =
         steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
 
-    override fun besvar(uuid: UUID, verdi: String) = _besvar(uuid, verdi)
+    override fun besvar(uuid: UUID, verdi: String, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Int) = _besvar(uuid, verdi)
+    override fun besvar(uuid: UUID, verdi: Int, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Double) = _besvar(uuid, verdi)
+    override fun besvar(uuid: UUID, verdi: Double, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: LocalDate) = _besvar(uuid, verdi)
+    override fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Boolean) = _besvar(uuid, verdi)
+    override fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    private inline fun <reified T> _besvar(uuid: UUID, verdi: T) {
+    private inline fun <reified T> _besvar(uuid: UUID, verdi: T, sporing: Sporing) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
 
         require(stegSomSkalBesvares.svar.clazz == T::class.java) {
             "Fikk ${T::class.java}, forventet ${stegSomSkalBesvares.svar.clazz} ved besvaring av steg med uuid: $uuid"
         }
 
-        (stegSomSkalBesvares as Steg<T>).besvar(verdi)
+        (stegSomSkalBesvares as Steg<T>).besvar(verdi, sporing)
     }
 
     fun addObserver(søknadObserver: BehandlingObserver) {
@@ -150,12 +150,4 @@ class Behandling private constructor(
             )
         }
     }
-}
-
-class Svar<T>(val verdi: T?, val clazz: Class<T>) {
-    fun besvar(verdi: T) = Svar(verdi, this.clazz)
-    fun nullstill() = Svar(null, this.clazz)
-    val ubesvart get() = verdi == null
-
-    override fun toString() = verdi.toString()
 }

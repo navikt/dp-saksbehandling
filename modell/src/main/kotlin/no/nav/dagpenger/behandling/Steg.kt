@@ -19,12 +19,12 @@ sealed class Steg<T> private constructor(
 
     class Vilkår(
         id: String,
-    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType)) {
+    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing())) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
     companion object {
-        inline fun <reified B> fastsettelse(id: String) = Fastsettelse(id, Svar(null, B::class.java))
+        inline fun <reified B> fastsettelse(id: String) = Fastsettelse(id, Svar(null, B::class.java, NullSporing()))
     }
 
     protected abstract val node: DAGNode<Steg<*>>
@@ -52,8 +52,8 @@ sealed class Steg<T> private constructor(
 
     fun alleSteg(): Set<Steg<*>> = setOf(this) + node.getDescendants().map { it.value }
 
-    fun besvar(svar: T) {
-        this.svar = this.svar.besvar(svar)
+    fun besvar(svar: T, sporing: Sporing) {
+        this.svar = this.svar.besvar(svar, sporing)
         this.tilstand = Tilstand.Utført
         node.getAncestors().forEach {
             it.value.måGodkjennes()

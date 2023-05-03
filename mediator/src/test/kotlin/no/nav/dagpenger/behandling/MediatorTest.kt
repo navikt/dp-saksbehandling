@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.hendelser.StegUtført
@@ -32,15 +33,15 @@ class MediatorTest() {
     @Test
     fun `Behandle BehandlingSvar hendelse`() {
         mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("vilkår1"), false)
+            besvar(finnStegId("vilkår1"), false, testSporing)
         }
 
         mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("vilkår 1 dato"), LocalDate.now())
+            besvar(finnStegId("vilkår 1 dato"), LocalDate.now(), testSporing)
         }
 
         mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("fastsettelse1"), 2)
+            besvar(finnStegId("fastsettelse1"), 2, testSporing)
         }
     }
 
@@ -52,11 +53,11 @@ class MediatorTest() {
         mediator.behandle(StegUtført(testIdent, oppgaveId)) {
             oppgave.alleSteg().forEach {
                 when (it.svar.clazz.simpleName) {
-                    "Boolean" -> besvar(it.uuid, true)
-                    "Integer" -> besvar(it.uuid, Random.nextInt())
-                    "String" -> besvar(it.uuid, Random.nextBytes(10).toString())
-                    "LocalDate" -> besvar(it.uuid, LocalDate.now())
-                    "Double" -> besvar(it.uuid, Random.nextDouble())
+                    "Boolean" -> besvar(it.uuid, true, testSporing)
+                    "Integer" -> besvar(it.uuid, Random.nextInt(), testSporing)
+                    "String" -> besvar(it.uuid, Random.nextBytes(10).toString(), testSporing)
+                    "LocalDate" -> besvar(it.uuid, LocalDate.now(), testSporing)
+                    "Double" -> besvar(it.uuid, Random.nextDouble(), testSporing)
                 }
             }
 
