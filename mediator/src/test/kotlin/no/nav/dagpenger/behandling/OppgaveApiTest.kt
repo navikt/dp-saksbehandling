@@ -5,8 +5,10 @@ import io.kotest.assertions.json.shouldContainJsonKey
 import io.kotest.assertions.json.shouldNotContainJsonKey
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.beInstanceOf
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -79,6 +81,8 @@ class OppgaveApiTest {
             }.status shouldBe HttpStatusCode.OK
 
             steg.svar.verdi shouldBe true
+            steg.svar.sporing should beInstanceOf<ManuellSporing>()
+            (steg.svar.sporing as ManuellSporing).begrunnelse shouldBe "Har itte"
             steg.tilstand shouldBe Tilstand.Utført
         }
     }
