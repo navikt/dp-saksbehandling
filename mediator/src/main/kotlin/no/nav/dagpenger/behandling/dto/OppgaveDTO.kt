@@ -28,6 +28,6 @@ internal fun Oppgave.toOppgaveDTO(): OppgaveDTO {
         journalposter = this.behandler.toHendelserDTO().mapNotNull { it["journalpostId"] },
         tilstand = this.tilstand()!!,
         muligeTilstander = this.muligeTilstander(),
-        steg = this.alleSteg().toStegDTO(),
+        steg = this.nesteSteg().toStegDTO(),
     )
 }

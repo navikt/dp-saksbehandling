@@ -29,6 +29,7 @@ data class Oppgave private constructor(
 
     val behandler = behandling.behandler
     fun alleSteg() = behandling.alleSteg()
+    fun nesteSteg() = behandling.nesteSteg()
     fun muligeTilstander() = prosess.muligeTilstander()
     fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
     fun addObserver(observer: BehandlingObserver) = behandling.addObserver(observer)
