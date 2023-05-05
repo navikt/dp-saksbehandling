@@ -7,9 +7,9 @@ class InMemoryOppgaveRepository : OppgaveRepository {
     private val oppgaver = mutableListOf<Oppgave>()
 
     init {
-        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598116231", "12345678910").oppgave())
-        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598116231", "10987654321").oppgave())
-        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598116231", "12837798289").oppgave())
+        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598137908", "12345678910").oppgave())
+        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598137908", "10987654321").oppgave())
+        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598137908", "12837798289").oppgave())
     }
 
     override fun lagreOppgave(oppgave: Oppgave) {
