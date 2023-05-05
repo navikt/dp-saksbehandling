@@ -39,14 +39,17 @@ class Arbeidsprosess : IArbeidsprosess {
         }
         val muligeOverganger =
             overganger[gjeldendeTilstand] ?: throw IllegalStateException("Invalid current state $gjeldendeTilstand")
+
         val overgang = muligeOverganger.firstOrNull { it.tilTilstand == tilstand && it.guard() }
             ?: throw IllegalStateException("Invalid transition from state $gjeldendeTilstand to state $tilstand")
+
+        val forrigeTilstand = gjeldendeTilstand
 
         gjeldendeTilstand = tilstand.also {
             overgang.vedOvergang()
         }
 
-        println("Transitioning from state ${overgang.tilTilstand} to state $gjeldendeTilstand at ${System.currentTimeMillis()}")
+        println("Transitioning from state $forrigeTilstand to state $tilstand at ${System.currentTimeMillis()}")
     }
 
     fun muligeTilstander(): List<Prosesstrinn> {
