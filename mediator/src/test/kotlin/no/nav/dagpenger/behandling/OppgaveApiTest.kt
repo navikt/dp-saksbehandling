@@ -222,12 +222,12 @@ class OppgaveApiTest {
             Oppgave(
                 behandling(testPerson, hendelse) {
                     steg {
-                        vilkår("vilkår1") {
-                            avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
-                        }
+                        vilkår("vilkår1")
                     }
                     steg {
-                        fastsettelse<Int>("fastsettelse1")
+                        fastsettelse<Int>("fastsettelse1") {
+                            avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
+                        }
                     }
                 },
                 fakeProsess,
