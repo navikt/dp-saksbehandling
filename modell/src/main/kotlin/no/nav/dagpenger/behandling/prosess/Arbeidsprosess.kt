@@ -1,11 +1,15 @@
 package no.nav.dagpenger.behandling.prosess
 
+import mu.KotlinLogging
+
 typealias Prosesstrinn = String
 
 interface IArbeidsprosess {
     fun tilstand(): Prosesstrinn?
     fun gåTil(tilstand: Prosesstrinn)
 }
+
+private val logger = KotlinLogging.logger {}
 
 class Arbeidsprosess : IArbeidsprosess {
     private val overganger = mutableMapOf<Prosesstrinn, MutableList<Overgang>>()
@@ -30,7 +34,7 @@ class Arbeidsprosess : IArbeidsprosess {
 
     fun start(tilstand: Prosesstrinn) {
         gjeldendeTilstand = tilstand
-        println("Starting work process at state $gjeldendeTilstand")
+        logger.info { "Starting work process at state $gjeldendeTilstand" }
     }
 
     override fun gåTil(tilstand: Prosesstrinn) {
@@ -49,7 +53,7 @@ class Arbeidsprosess : IArbeidsprosess {
             overgang.vedOvergang()
         }
 
-        println("Transitioning from state $forrigeTilstand to state $tilstand at ${System.currentTimeMillis()}")
+        logger.info { "Transitioning from state $forrigeTilstand to state $tilstand at ${System.currentTimeMillis()}" }
     }
 
     fun muligeTilstander(): List<Prosesstrinn> {
