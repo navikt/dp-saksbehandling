@@ -12,7 +12,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 oppgaveApi(mediator = mediator)
             }.build()
 
-    private val mediator = Mediator(rapidsConnection = rapidsConnection)
+    private val mediator = Mediator(rapidsConnection = rapidsConnection, dings = DingsImpl())
 
     init {
         rapidsConnection.register(this)

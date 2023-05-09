@@ -98,6 +98,7 @@ class MediatorTest() {
     private val mediator = Mediator(
         rapidsConnection = testRapid,
         oppgaveRepository = mockOppgaveRepository,
+        dings = DingsImpl(),
     )
 
     private fun finnStegId(id: String) = oppgave.alleSteg().single { it.id == id }.uuid
