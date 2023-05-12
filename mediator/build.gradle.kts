@@ -17,7 +17,7 @@ dependencies {
 
     // demo
     testImplementation(Ktor2.Server.library("test-host"))
-    testImplementation("io.ktor:ktor-server-test-host-jvm:2.1.3")
+    testImplementation("io.ktor:ktor-server-test-host-jvm:${Ktor2.version}")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.10")
 }
 repositories {
