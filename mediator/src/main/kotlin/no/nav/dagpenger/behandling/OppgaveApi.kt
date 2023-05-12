@@ -31,7 +31,9 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 fun Application.oppgaveApi(mediator: Mediator) {
-    install(CallLogging) { }
+    install(CallLogging) {
+        disableDefaultColors()
+    }
     install(ContentNegotiation) {
         jackson {
             registerModule(JavaTimeModule())
