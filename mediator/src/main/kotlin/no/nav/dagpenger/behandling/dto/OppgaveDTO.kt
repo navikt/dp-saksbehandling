@@ -26,7 +26,7 @@ internal fun Oppgave.toOppgaveDTO(): OppgaveDTO {
         opprettet = this.opprettet.toLocalDate(),
         hendelse = this.behandler.toHendelserDTO(),
         journalposter = this.behandler.toHendelserDTO().mapNotNull { it["journalpostId"] },
-        tilstand = this.tilstand()!!,
+        tilstand = this.tilstand() ?: "🚨 Mangler tilstand 😱", // TODO: Finne ut hvorfor noen oppgaver mangler tilstand
         muligeTilstander = this.muligeTilstander(),
         steg = this.alleSteg().toStegDTO(),
     )
