@@ -16,10 +16,11 @@ class Mediator(
     val dings: Dings,
 ) : OppgaveRepository by oppgaveRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {
-        val oppgaver = dings.oppgaver(hendelse)
+        // TODO: Fullfør denne tanken. Dings skal være ansvarlig for å finne alle prosesser for en hendelse
+        /*val oppgaver = dings.oppgaver(hendelse)
         oppgaver.forEach {
             lagreOppgave(it)
-        }
+        }*/
         lagreOppgave(hendelse.oppgave())
     }
 
