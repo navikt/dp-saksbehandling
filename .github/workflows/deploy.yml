@@ -21,6 +21,7 @@ jobs:
           java-version: 19
 
       - uses: gradle/gradle-build-action@v2.6.0
+        id: build
         with:
           dependency-graph: generate-and-submit
           arguments: --configuration-cache build installDist
@@ -35,7 +36,7 @@ jobs:
         uses: nais/docker-build-push@v0
         id: docker-build-push
         with:
-          byosbom: dependency-graph-reports/deploy-build.json
+          byosbom: ${{ steps.build.outputs.dependency-graph-file }}
           team: teamdagpenger
           tag: ${{ github.sha }}
           dockerfile: mediator/Dockerfile # optional, default Dockerfile
