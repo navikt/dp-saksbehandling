@@ -12,6 +12,7 @@ import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -46,6 +47,7 @@ fun Application.oppgaveApi(mediator: Mediator) {
     }
 
     routing {
+        swaggerUI(path = "openapi", swaggerFile = "rapportering-api.yaml")
         route("oppgave") {
             get {
                 val oppgaver = mediator.hentOppgaver().toOppgaverDTO()

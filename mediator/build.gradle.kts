@@ -2,6 +2,7 @@ buildscript { repositories { mavenCentral() } }
 
 plugins {
     id("common")
+    application
 }
 
 dependencies {
@@ -10,6 +11,7 @@ dependencies {
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
+    implementation("io.ktor:ktor-server-swagger:${libs.versions.ktor.get()}")
 
     testImplementation(libs.mockk)
     testImplementation(libs.ktor.server.test.host.jvm)
@@ -21,6 +23,6 @@ repositories {
     mavenCentral()
 }
 
-/*application {
+application {
     mainClass.set("no.nav.dagpenger.behandling.AppKt")
-}*/
+}
