@@ -5,9 +5,6 @@ on:
     branches:
       - 'dependabot/**'
 
-env:
-  IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
-
 jobs:
   test:
     name: test
@@ -19,6 +16,6 @@ jobs:
           distribution: temurin
           java-version: 19
 
-      - uses: gradle/gradle-build-action@v2.4.2
+      - uses: gradle/gradle-build-action@v2.6.0
         with:
           arguments: --configuration-cache test
