@@ -19,10 +19,10 @@ class OppgaveTest {
             Arbeidsprosesser.totrinnsprosess(behandling).apply { start("TilBehandling") },
         )
 
-        oppgave.tilstand() shouldBe "TilBehandling"
+        oppgave.tilstand shouldBe "TilBehandling"
         oppgave.besvar(steg.uuid, "foob", testSporing)
 
         oppgave.gåTil("Innstilt")
-        oppgave.tilstand() shouldBe "Innstilt"
+        oppgave.tilstand shouldBe "Innstilt"
     }
 }

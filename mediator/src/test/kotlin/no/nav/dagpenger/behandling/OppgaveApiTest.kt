@@ -76,7 +76,15 @@ class OppgaveApiTest {
                 contentType(ContentType.Application.Json)
                 this.setBody(
                     //language=JSON
-                    """{"type":"Boolean","svar":true,"begrunnelse": {"tekst": "Har itte" } }""",
+                    """
+                    {
+                      "type": "Boolean",
+                      "svar": "true",
+                      "begrunnelse": {
+                        "tekst": "Har itte"
+                      }
+                    }
+                    """.trimIndent(),
                 )
             }.status shouldBe HttpStatusCode.OK
 
@@ -163,7 +171,7 @@ class OppgaveApiTest {
     fun `Skal kunne ferdigstille en oppgave`() {
         withOppgaveApi {
             val oppgave = mockPersistence.hentOppgave(oppgaveId)
-            oppgave.tilstand() shouldBe "TilBehandling"
+            oppgave.tilstand shouldBe "TilBehandling"
             fattet shouldBe false
 
             client.post("/oppgave/$oppgaveId/tilstand") {
@@ -184,7 +192,7 @@ class OppgaveApiTest {
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
-                oppgave.tilstand() shouldBe "Fattet"
+                oppgave.tilstand shouldBe "Fattet"
                 fattet shouldBe true
             }
         }

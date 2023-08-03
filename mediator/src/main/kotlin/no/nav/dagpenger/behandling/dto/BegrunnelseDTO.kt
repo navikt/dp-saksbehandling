@@ -4,37 +4,26 @@ import no.nav.dagpenger.behandling.ManuellSporing
 import no.nav.dagpenger.behandling.NullSporing
 import no.nav.dagpenger.behandling.QuizSporing
 import no.nav.dagpenger.behandling.Sporing
+import no.nav.dagpenger.behandling.api.models.BegrunnelseDTO
+import no.nav.dagpenger.behandling.api.models.KildeDTO
+import no.nav.dagpenger.behandling.api.models.QuizBegrunnelseDTO
+import no.nav.dagpenger.behandling.api.models.SaksbehandlerDTO
+import no.nav.dagpenger.behandling.api.models.SaksbehandlersBegrunnelseDTO
 import no.nav.dagpenger.behandling.oppgave.Saksbehandler
-import java.time.LocalDateTime
-
-interface BegrunnelseDTO {
-    val kilde: Kilde
-    val utført: LocalDateTime
-}
-
-internal data class SaksbehandlersBegrunnelseDTO(
-    override val kilde: Kilde = Kilde.Saksbehandler,
-    override val utført: LocalDateTime,
-    val utførtAv: Saksbehandler,
-    val tekst: String,
-) : BegrunnelseDTO
-
-internal data class QuizBegrunnelseDTO(
-    override val kilde: Kilde = Kilde.Quiz,
-    override val utført: LocalDateTime,
-    val json: String,
-) : BegrunnelseDTO
+import java.time.ZoneOffset
 
 fun Sporing.toBegrunnelseDTO(): BegrunnelseDTO? {
     return when (this) {
         is QuizSporing -> QuizBegrunnelseDTO(
-            utført = this.utført,
+            kilde = KildeDTO.Quiz,
+            utført = this.utført.atOffset(ZoneOffset.of("Europe/Oslo")),
             json = this.json,
         )
 
         is ManuellSporing -> SaksbehandlersBegrunnelseDTO(
-            utført = this.utført,
-            utførtAv = this.utførtAv,
+            kilde = KildeDTO.Saksbehandler,
+            utført = this.utført.atOffset(ZoneOffset.of("Europe/Oslo")),
+            utførtAv = this.utførtAv.toSaksbehandlerDTO(),
             tekst = this.begrunnelse,
         )
 
@@ -42,7 +31,4 @@ fun Sporing.toBegrunnelseDTO(): BegrunnelseDTO? {
     }
 }
 
-enum class Kilde {
-    Quiz,
-    Saksbehandler,
-}
+private fun Saksbehandler.toSaksbehandlerDTO() = SaksbehandlerDTO(ident)

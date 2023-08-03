@@ -10,7 +10,7 @@ class ArbeidsprosessTest {
     fun testStart() {
         val wp = Arbeidsprosess()
         wp.start("A")
-        assertEquals("A", wp.tilstand())
+        assertEquals("A", wp.tilstand)
     }
 
     @Test()

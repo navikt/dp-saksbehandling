@@ -1,29 +1,26 @@
 buildscript { repositories { mavenCentral() } }
 
 plugins {
-    id("dagpenger.common")
-    id("dagpenger.rapid-and-rivers")
+    id("common")
 }
 
 dependencies {
     implementation(project(":modell"))
-    implementation("io.ktor:ktor-server-content-negotiation:${Ktor2.version}")
-    implementation("io.ktor:ktor-serialization-jackson:${Ktor2.version}")
-    implementation("io.ktor:ktor-server-call-logging:${Ktor2.version}")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2")
-    implementation("io.ktor:ktor-server-call-logging-jvm:2.1.3")
+    implementation(project(":openapi"))
+    implementation(libs.rapids.and.rivers)
+    implementation(libs.konfig)
+    implementation(libs.bundles.ktor.server)
 
-    testImplementation(Mockk.mockk)
-
-    // demo
-    testImplementation(Ktor2.Server.library("test-host"))
-    testImplementation("io.ktor:ktor-server-test-host-jvm:${Ktor2.version}")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:1.8.10")
+    testImplementation(libs.mockk)
+    testImplementation(libs.ktor.server.test.host.jvm)
+    testImplementation(libs.bundles.kotest.assertions)
+    testImplementation(libs.junit.jupiter.params)
 }
+
 repositories {
     mavenCentral()
 }
 
-application {
+/*application {
     mainClass.set("no.nav.dagpenger.behandling.AppKt")
-}
+}*/

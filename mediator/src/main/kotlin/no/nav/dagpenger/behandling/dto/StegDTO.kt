@@ -2,16 +2,9 @@ package no.nav.dagpenger.behandling.dto
 
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Tilstand
-import java.util.UUID
-
-internal data class StegDTO(
-    val uuid: UUID,
-    val id: String, // reell arbeidssøker, vurder minsteinntekt, fastsett virkningstidspunkt, fastsett vanlig arbeidstid
-    val type: StegtypeDTO,
-    val svartype: SvartypeDTO,
-    val tilstand: Tilstand,
-    val svar: SvarDTO? = null,
-)
+import no.nav.dagpenger.behandling.api.models.StegDTO
+import no.nav.dagpenger.behandling.api.models.StegtypeDTO
+import no.nav.dagpenger.behandling.api.models.TilstandDTO
 
 internal fun Collection<Steg<*>>.toStegDTO(): List<StegDTO> = this.map { it.toStegDTO() }
 
@@ -27,12 +20,11 @@ internal fun Steg<*>.toStegDTO(): StegDTO {
         id = this.id,
         type = stegtypeDTO,
         svartype = svarDTO.type,
-        tilstand = tilstand,
+        tilstand = tilstand.toTilstandDTO(),
         svar = svarDTO,
     )
 }
 
-internal enum class StegtypeDTO {
-    Fastsetting,
-    Vilkår,
+internal fun Tilstand.toTilstandDTO(): TilstandDTO {
+    return TilstandDTO.valueOf(this.name)
 }

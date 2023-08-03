@@ -5,7 +5,7 @@ import mu.KotlinLogging
 typealias Prosesstrinn = String
 
 interface IArbeidsprosess {
-    fun tilstand(): Prosesstrinn?
+    val tilstand: Prosesstrinn?
     fun gåTil(tilstand: Prosesstrinn)
 }
 
@@ -15,7 +15,7 @@ class Arbeidsprosess : IArbeidsprosess {
     private val overganger = mutableMapOf<Prosesstrinn, MutableList<Overgang>>()
     private var gjeldendeTilstand: Prosesstrinn? = null
 
-    override fun tilstand() = gjeldendeTilstand
+    override val tilstand get() = gjeldendeTilstand
 
     data class Overgang(
         val tilTilstand: Prosesstrinn,

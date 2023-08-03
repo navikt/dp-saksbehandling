@@ -1,0 +1,270 @@
+openapi: 3.0.3
+info:
+  title: Behandling API
+  version: 1.0.0
+  description: Et API for å administrere oppgaver og deres tilstandsoverganger.
+servers:
+  - url: http://localhost:8080 # Erstatt denne URL-en med den faktiske basis-URL-en for API-et
+paths:
+  /oppgave:
+    get:
+      summary: Hent alle oppgaver
+      responses:
+        '200':
+          description: Vellykket respons med en liste over oppgaver
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Oppgave'
+  /oppgave/sok:
+    post:
+      summary: Søk etter oppgaver ved hjelp av fødselsnummer (FNR)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sok'
+      responses:
+        '200':
+          description: Vellykket respons med en liste over oppgaver som samsvarer med FNR-en
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Oppgave'
+  /oppgave/{oppgaveId}:
+    get:
+      summary: Hent en oppgave ved hjelp av dens ID
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med detaljer om oppgaven
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oppgave'
+        '404':
+          description: Oppgaven ble ikke funnet
+    put:
+      summary: Oppdater tilstanden til en oppgave ved å utføre et steg
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: stegId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaksbehandlersBegrunnelse'
+      responses:
+        '200':
+          description: Vellykket respons som indikerer at steget er utført
+  /oppgave/{oppgaveId}/tilstand:
+    post:
+      summary: Endre tilstanden til en oppgave
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NyTilstand'
+      responses:
+        '200':
+          description: Vellykket respons som indikerer at tilstanden til oppgaven er endret
+        '404':
+          description: Oppgaven ble ikke funnet
+components:
+  schemas:
+    Hendelse:
+      type: object
+      additionalProperties: true
+    Oppgave:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        person:
+          type: string
+        saksbehandler:
+          type: string
+          nullable: true
+        opprettet:
+          type: string
+          format: date
+        hendelse:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hendelse'
+        journalposter:
+          type: array
+          items:
+            type: string
+        tilstand:
+          type: string
+        steg:
+          type: array
+          items:
+            $ref: '#/components/schemas/Steg'
+        muligeTilstander:
+          type: array
+          items:
+            type: string
+    Steg:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/Stegtype'
+        svartype:
+          $ref: '#/components/schemas/Svartype'
+        tilstand:
+          $ref: '#/components/schemas/Tilstand'
+        svar:
+          $ref: '#/components/schemas/Svar'
+      required:
+        - uuid
+        - id
+        - type
+        - svartype
+        - tilstand
+    Stegtype:
+      type: string
+      enum:
+        - Fastsetting
+        - Vilkår
+    Svar:
+      type: object
+      properties:
+        svar:
+          type: string
+          nullable: true
+        type:
+          $ref: '#/components/schemas/Svartype'
+        begrunnelse:
+          $ref: '#/components/schemas/Begrunnelse'
+          nullable: true
+      required:
+        - type
+    NyttSvar:
+      type: object
+      properties:
+        svar:
+          type: string
+        type:
+          $ref: '#/components/schemas/Svartype'
+        begrunnelse:
+          type: object
+          properties:
+            tekst:
+              type: string
+          required:
+            - tekst
+      required:
+        - type
+        - begrunnelse
+        - svar
+    Svartype:
+      type: string
+      enum:
+        - Strings
+        - LocalDate
+        - Int
+        - Boolean
+        - Double
+    Begrunnelse:
+      type: object
+      discriminator:
+        propertyName: kilde
+        mapping:
+          Saksbehandler: "#/components/schemas/SaksbehandlersBegrunnelse"
+          Quiz: "#/components/schemas/QuizBegrunnelse"
+      properties:
+        kilde:
+          $ref: '#/components/schemas/Kilde'
+        utført:
+          type: string
+          format: date-time
+      required:
+        - kilde
+        - utført
+    SaksbehandlersBegrunnelse:
+      allOf:
+        - $ref: '#/components/schemas/Begrunnelse'
+        - type: object
+          properties:
+            utførtAv:
+              nullable: true
+              $ref: '#/components/schemas/Saksbehandler'
+            tekst:
+              type: string
+          required:
+            - tekst
+    QuizBegrunnelse:
+      allOf:
+        - $ref: '#/components/schemas/Begrunnelse'
+        - type: object
+          properties:
+            json:
+              type: string
+    Kilde:
+      type: string
+      enum:
+        - Quiz
+        - Saksbehandler
+    Sok:
+      type: object
+      properties:
+        fnr:
+          type: string
+      required:
+        - fnr
+    NyTilstand:
+      type: object
+      properties:
+        nyTilstand:
+          type: string
+      required:
+        - nyTilstand
+    Saksbehandler:
+      type: object
+      properties:
+        ident:
+          type: string
+    Tilstand:
+      type: string
+      enum:
+        - Utført
+        - MåGodkjennes
+        - IkkeUtført

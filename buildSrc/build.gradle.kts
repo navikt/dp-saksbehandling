@@ -1,15 +1,22 @@
 plugins {
     `kotlin-dsl`
-    kotlin("jvm") version "1.8.10"
+    id("com.diffplug.spotless") version "6.19.0"
 }
 
 repositories {
     gradlePluginPortal()
+    mavenCentral()
 }
 
 dependencies {
     implementation(kotlin("gradle-plugin"))
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.16.0")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.19.0")
+}
+
+spotless {
+    kotlinGradle {
+        ktlint()
+    }
 }
 
 kotlin {

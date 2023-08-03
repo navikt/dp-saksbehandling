@@ -1,5 +1,5 @@
 plugins {
-    id("dagpenger.common")
+    id("common")
 }
 
 repositories {
@@ -7,8 +7,8 @@ repositories {
 }
 
 dependencies {
-    api("ch.qos.logback:logback-classic:1.4.6")
-    api(Kotlin.Logging.kotlinLogging)
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
+    api("ch.qos.logback:logback-classic:1.4.7")
+    api(libs.kotlin.logging)
+    implementation(libs.jackson.kotlin)
+    testImplementation(libs.bundles.kotest.assertions)
 }
