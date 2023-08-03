@@ -47,7 +47,7 @@ fun Application.oppgaveApi(mediator: Mediator) {
     }
 
     routing {
-        swaggerUI(path = "openapi", swaggerFile = "rapportering-api.yaml")
+        swaggerUI(path = "openapi", swaggerFile = "behandling-api.yaml")
         route("oppgave") {
             get {
                 val oppgaver = mediator.hentOppgaver().toOppgaverDTO()
