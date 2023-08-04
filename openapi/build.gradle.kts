@@ -37,6 +37,7 @@ openApiGenerate {
         ),
     )
     modelNameSuffix.set("DTO")
+    templateDir.set("$projectDir/src/main/resources/templates")
     configOptions.set(
         mapOf(
             "serializationLibrary" to "jackson",

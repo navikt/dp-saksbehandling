@@ -198,7 +198,7 @@ components:
     Svartype:
       type: string
       enum:
-        - Strings
+        - String
         - LocalDate
         - Int
         - Boolean

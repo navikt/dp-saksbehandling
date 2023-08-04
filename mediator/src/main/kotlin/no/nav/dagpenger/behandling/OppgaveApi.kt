@@ -88,7 +88,7 @@ fun Application.oppgaveApi(mediator: Mediator) {
 
                         mediator.behandle(StegUtført("123", oppgaveId)) {
                             when (svar.type) {
-                                SvartypeDTO.Strings -> besvar(stegId, svar.svar, sporing)
+                                SvartypeDTO.String -> besvar(stegId, svar.svar, sporing)
                                 SvartypeDTO.LocalDate -> besvar(stegId, LocalDate.parse(svar.svar), sporing)
                                 SvartypeDTO.Int -> besvar(stegId, svar.svar.toInt(), sporing)
                                 SvartypeDTO.Boolean -> besvar(stegId, svar.svar.toBoolean(), sporing)
