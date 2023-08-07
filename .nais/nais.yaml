@@ -8,10 +8,6 @@ metadata:
     domene: behandling
 spec:
   image: {{ image }}
-  accessPolicy:
-    inbound:
-      rules:
-        - application: dp-saksbehandling-frontend
   port: 8080
   prometheus:
     enabled: true
@@ -31,3 +27,21 @@ spec:
     enabled: true
   kafka:
     pool: {{ kafka_pool }}
+  azure:
+    application:
+      enabled: true
+      tenant: {{ azure.tenant }}
+      claims:
+        groups:
+          - id: {{azure.grupper.saksbehandler}}
+          - id: {{azure.grupper.beslutter}}
+        extra:
+          - NAVident
+  accessPolicy:
+    inbound:
+      rules:
+        - application: dp-saksbehandling-frontend
+        {{#if wonderwalled}}
+        - application: wonderwalled-azure
+          namespace: aura
+        {{/if}}
