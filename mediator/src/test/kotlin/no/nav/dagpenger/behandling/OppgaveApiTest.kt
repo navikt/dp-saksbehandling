@@ -46,7 +46,7 @@ class OppgaveApiTest {
 
     @Test
     fun `skal ikke json serialisere null verdier`() {
-        withOppgaveApi{
+        withOppgaveApi {
             client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
