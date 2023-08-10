@@ -9,19 +9,24 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.beInstanceOf
+import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
+import no.nav.dagpenger.behandling.api.oppgaveApi
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
+import no.nav.dagpenger.behandling.helpers.mockAzure
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
@@ -35,10 +40,14 @@ import java.util.UUID
 class OppgaveApiTest {
     private var oppgaveId: UUID
 
+    private val testToken by mockAzure {
+        claims = mapOf("NAVident" to "123")
+    }
+
     @Test
     fun `skal ikke json serialisere null verdier`() {
-        withOppgaveApi {
-            client.get("/oppgave/$oppgaveId").also { response ->
+        withOppgaveApi{
+            client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 response.bodyAsText().let { json ->
@@ -52,7 +61,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne hente ut alle oppgaver`() {
         withOppgaveApi {
-            client.get("/oppgave").let { response ->
+            client.get("/oppgave") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val oppgaver = jacksonObjectMapper().readTree(response.bodyAsText())
@@ -64,7 +73,7 @@ class OppgaveApiTest {
     @Test
     fun `skal kunne svare på et steg`() {
         withOppgaveApi {
-            val oppgaveJSON: String = client.get("/oppgave/$oppgaveId").bodyAsText()
+            val oppgaveJSON: String = client.get("/oppgave/$oppgaveId") { autentisert() }.bodyAsText()
             val stegId = oppgaveJSON.findStegUUID("vilkår1")
             val oppgave = mockPersistence.hentOppgave(oppgaveId)
             val steg = oppgave.steg(UUID.fromString(stegId))
@@ -73,6 +82,7 @@ class OppgaveApiTest {
             steg.tilstand shouldBe Tilstand.IkkeUtført
 
             client.put("/oppgave/$oppgaveId/steg/$stegId") {
+                autentisert()
                 contentType(ContentType.Application.Json)
                 this.setBody(
                     //language=JSON
@@ -98,7 +108,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne hente ut en oppgave med en gitt id`() {
         withOppgaveApi {
-            client.get("/oppgave/$oppgaveId").also { response ->
+            client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val oppgave = jacksonObjectMapper().readTree(response.bodyAsText())
@@ -115,7 +125,7 @@ class OppgaveApiTest {
         val ugyldigId = "noeSomIkkeKanParsesTilUUID"
         withOppgaveApi {
             shouldThrow<IllegalArgumentException> {
-                client.get("/oppgave/$ugyldigId")
+                client.get("/oppgave/$ugyldigId") { autentisert() }
             }
         }
     }
@@ -124,7 +134,7 @@ class OppgaveApiTest {
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val randomUUID = UUID.randomUUID()
         withOppgaveApi {
-            client.get("/oppgave/$randomUUID").also { response ->
+            client.get("/oppgave/$randomUUID") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
                 response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $randomUUID"
             }
@@ -135,6 +145,7 @@ class OppgaveApiTest {
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
         withOppgaveApi {
             client.post("/oppgave/sok") {
+                autentisert()
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
@@ -153,6 +164,7 @@ class OppgaveApiTest {
     fun `Får 200 OK og tom liste dersom det ikke finnes oppgaver for et gitt fnr`() {
         withOppgaveApi {
             client.post("/oppgave/sok") {
+                autentisert()
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
@@ -175,6 +187,7 @@ class OppgaveApiTest {
             fattet shouldBe false
 
             client.post("/oppgave/$oppgaveId/tilstand") {
+                autentisert()
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
@@ -185,6 +198,7 @@ class OppgaveApiTest {
                 fattet shouldBe false
             }
             client.post("/oppgave/$oppgaveId/tilstand") {
+                autentisert()
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
@@ -262,5 +276,9 @@ class OppgaveApiTest {
                 fakeProsess,
             ),
         )
+    }
+
+    private fun HttpRequestBuilder.autentisert() {
+        header(HttpHeaders.Authorization, "Bearer $testToken")
     }
 }

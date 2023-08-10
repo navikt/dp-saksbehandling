@@ -17,6 +17,7 @@ dependencies {
     testImplementation(libs.ktor.server.test.host.jvm)
     testImplementation(libs.bundles.kotest.assertions)
     testImplementation(libs.junit.jupiter.params)
+    testImplementation(libs.mock.oauth2.server)
 }
 
 repositories {
