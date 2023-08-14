@@ -13,14 +13,8 @@ import java.util.UUID
 class Mediator(
     private val rapidsConnection: RapidsConnection,
     private val oppgaveRepository: OppgaveRepository = InMemoryOppgaveRepository(),
-    val dings: Dings,
 ) : OppgaveRepository by oppgaveRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {
-        // TODO: Fullfør denne tanken. Dings skal være ansvarlig for å finne alle prosesser for en hendelse
-        /*val oppgaver = dings.oppgaver(hendelse)
-        oppgaver.forEach {
-            lagreOppgave(it)
-        }*/
         lagreOppgave(hendelse.oppgave())
     }
 

@@ -216,7 +216,6 @@ class OppgaveApiTest {
         mediator: Mediator = Mediator(
             rapidsConnection = TestRapid(),
             oppgaveRepository = mockPersistence,
-            dings = DingsImpl(),
         ),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
