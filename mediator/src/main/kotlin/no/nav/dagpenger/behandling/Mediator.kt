@@ -13,9 +13,14 @@ import java.util.UUID
 class Mediator(
     private val rapidsConnection: RapidsConnection,
     private val oppgaveRepository: OppgaveRepository = InMemoryOppgaveRepository(),
+    private val personRepository: PersonRepository = InMemoryPersonRepository,
 ) : OppgaveRepository by oppgaveRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {
-        lagreOppgave(hendelse.oppgave())
+        val person = personRepository.hentPerson(hendelse.ident()) ?: Person(hendelse.ident()).also {
+            it.håndter(hendelse)
+            personRepository.lagrePerson(it)
+        }
+        lagreOppgave(hendelse.oppgave(person))
     }
 
     fun behandle(hendelse: StegUtført, block: Svarbart.() -> Unit) {

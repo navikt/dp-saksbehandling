@@ -26,12 +26,14 @@ interface BehandlingObserver {
         override val ident: String,
         val utfall: Boolean,
         val fastsettelser: Map<String, String>,
+        val sakId: UUID,
     ) : BehandlingEvent {
         override fun toMap() = mapOf(
             "behandlingId" to behandlingId,
             "ident" to ident,
             "innvilget" to utfall,
             "utfall" to utfall,
+            "sakId" to sakId,
         ) + fastsettelser
     }
 

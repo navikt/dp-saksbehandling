@@ -27,6 +27,7 @@ class BehandlingTest {
                     steg1,
                     steg2,
                 ),
+                sak = Sak(),
             ).nesteSteg(),
         )
     }
@@ -44,6 +45,7 @@ class BehandlingTest {
                 steg1.also { it.avhengerAv(steg2) },
                 steg3.also { it.avhengerAv(steg4) },
             ),
+            sak = Sak(),
         )
 
         assertEquals(setOf(steg1, steg2, steg3, steg4), behandling.alleSteg())
@@ -63,7 +65,7 @@ class BehandlingTest {
 
         assertEquals(
             setOf(steg1, steg2, steg3, steg4, steg5),
-            Behandling(testPerson, testHendelse, setOf(steg2, steg4, steg5)).alleSteg(),
+            Behandling(testPerson, testHendelse, setOf(steg2, steg4, steg5), sak = Sak()).alleSteg(),
         )
     }
 
@@ -83,7 +85,7 @@ class BehandlingTest {
 
         assertEquals(
             setOf(steg3, steg4),
-            Behandling(testPerson, testHendelse, steg = setOf(steg2, steg4, steg5)).nesteSteg(),
+            Behandling(testPerson, testHendelse, steg = setOf(steg2, steg4, steg5), sak = Sak()).nesteSteg(),
         )
     }
 
@@ -95,7 +97,7 @@ class BehandlingTest {
             it.besvar(true, testSporing)
         }
         val steg3 = Vilkår("3")
-        val behandling = Behandling(testPerson, testHendelse, setOf(steg2, steg3))
+        val behandling = Behandling(testPerson, testHendelse, setOf(steg2, steg3), sak = Sak())
         assertEquals(setOf(steg3), behandling.nesteSteg())
 
         steg1.besvar(2, testSporing)

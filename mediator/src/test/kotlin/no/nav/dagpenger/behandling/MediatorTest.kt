@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
@@ -46,6 +47,39 @@ class MediatorTest() {
     }
 
     @Test
+    fun `VedtakFattet event skal publisere melding på rapiden`() {
+        val behandlingId = UUID.randomUUID()
+        val sakId = UUID.randomUUID()
+
+        mediator.vedtakFattet(
+            BehandlingObserver.VedtakFattet(
+                behandlingId = behandlingId,
+                ident = testIdent,
+                utfall = false,
+                fastsettelser = mapOf("f1" to "f2"),
+                sakId = sakId,
+            ),
+        )
+
+        testRapid.inspektør.message(0).let {
+            it["behandlingId"].asText() shouldBe behandlingId.toString()
+            it["ident"].asText() shouldBe testIdent
+            it["utfall"].asBoolean() shouldBe false
+            it["f1"].asText() shouldBe "f2"
+            it["sakId"].asText() shouldBe sakId.toString()
+        }
+    }
+
+    @Test
+    fun `Behandle SøknadInnsendtHendelse`() {
+        mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent))
+        InMemoryPersonRepository.hentPerson(testIdent).also {
+            it shouldNotBe null
+            it!!.hentGjeldendeSak() shouldNotBe null
+        }
+    }
+
+    @Test
     fun `Behandle SøknadBehandlet`() {
         mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent))
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
@@ -76,7 +110,7 @@ class MediatorTest() {
 
     private val mockOppgaveRepository = InMemoryOppgaveRepository().apply {
         oppgave = Oppgave(
-            behandling(testPerson, testHendelse) {
+            behandling(testPerson, testHendelse, Sak()) {
                 steg {
                     vilkår("vilkår1") {
                         avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")

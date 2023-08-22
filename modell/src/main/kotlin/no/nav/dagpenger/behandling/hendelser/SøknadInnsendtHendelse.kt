@@ -2,6 +2,8 @@ package no.nav.dagpenger.behandling.hendelser
 
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.Sak
+import no.nav.dagpenger.behandling.dsl.BehandlingDSL
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.prosess.Arbeidsprosesser
@@ -23,7 +25,18 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
         Arbeidsprosesser.totrinnsprosess(behandling).apply { start("TilBehandling") },
     )
 
-    val behandling: Behandling = behandling(Person(ident()), this) {
+    fun oppgave(person: Person): Oppgave {
+        val behandling1 = behandling(person, this, person.hentGjeldendeSak(), behandlingDSL())
+
+        return Oppgave(
+            behandling1,
+            Arbeidsprosesser.totrinnsprosess(behandling1).apply { start("TilBehandling") },
+        )
+    }
+
+    val behandling: Behandling = behandling(Person(ident()), this, sak = Sak(), behandlingDSL())
+
+    private fun behandlingDSL(): BehandlingDSL.() -> Unit = {
         val virkningsdato = steg {
             fastsettelse<LocalDate>("Virkningsdato")
         }
