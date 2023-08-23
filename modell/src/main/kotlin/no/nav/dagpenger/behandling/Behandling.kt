@@ -42,6 +42,10 @@ class Behandling private constructor(
         sak,
     )
 
+    fun accept(visitor: BehandlingVisitor) {
+        visitor.visit(uuid, sak)
+    }
+
     fun nesteSteg(): Set<Steg<*>> {
         val map = steg.flatMap {
             it.nesteSteg()

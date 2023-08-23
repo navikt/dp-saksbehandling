@@ -3,6 +3,7 @@ package no.nav.dagpenger.behandling.oppgave
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.BehandlingObserver
 import no.nav.dagpenger.behandling.Behandlingsstatus
+import no.nav.dagpenger.behandling.OppgaveVisitor
 import no.nav.dagpenger.behandling.Svarbart
 import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
 import no.nav.dagpenger.behandling.prosess.IArbeidsprosess
@@ -24,6 +25,11 @@ data class Oppgave private constructor(
         null,
         LocalDateTime.now(),
     )
+
+    fun accept(visitor: OppgaveVisitor) {
+        visitor.visit(uuid)
+        behandling.accept(visitor)
+    }
 
     val person get() = behandling.person
 

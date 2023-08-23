@@ -71,6 +71,41 @@ class MediatorTest() {
     }
 
     @Test
+    fun `Flere SøknadInnsendtHendelser fører bare til én sak (Viggo case)`() {
+        mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", "88888888888"))
+        mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", "88888888888"))
+
+        mockOppgaveRepository.hentOppgaverFor("88888888888").let {
+            it.size shouldBe 2
+            val oppgaveVisitor1 = TestVisitor(it.first())
+            val oppgaveVisitor2 = TestVisitor(it.last())
+
+            oppgaveVisitor1.sak.id shouldBe oppgaveVisitor2.sak.id
+            oppgaveVisitor1.oppgaveId shouldNotBe oppgaveVisitor2.oppgaveId
+            oppgaveVisitor1.behandlingId shouldNotBe oppgaveVisitor2.behandlingId
+        }
+    }
+
+    private class TestVisitor(oppgave: Oppgave) : OppgaveVisitor {
+        lateinit var sak: Sak
+        lateinit var behandlingId: UUID
+        lateinit var oppgaveId: UUID
+
+        init {
+            oppgave.accept(this)
+        }
+
+        override fun visit(behandlingId: UUID, sak: Sak) {
+            this.behandlingId = behandlingId
+            this.sak = sak
+        }
+
+        override fun visit(oppgaveId: UUID) {
+            this.oppgaveId = oppgaveId
+        }
+    }
+
+    @Test
     fun `Behandle SøknadInnsendtHendelse`() {
         mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent))
         InMemoryPersonRepository.hentPerson(testIdent).also {
@@ -129,6 +164,7 @@ class MediatorTest() {
         lagreOppgave(oppgave)
         lagreOppgave(SøknadInnsendtHendelse(UUID.randomUUID(), "", "20987654321").oppgave())
     }
+
     private val mediator = Mediator(
         rapidsConnection = testRapid,
         oppgaveRepository = mockOppgaveRepository,

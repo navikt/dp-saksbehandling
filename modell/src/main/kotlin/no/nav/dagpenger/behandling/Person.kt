@@ -14,6 +14,12 @@ data class Person(val ident: String) {
     }
 
     fun håndter(hendelse: SøknadInnsendtHendelse) {
-        saker.add(Sak())
+        if (saker.isEmpty()) {
+            saker.add(Sak())
+        }
+    }
+
+    fun accept(visitor: PersonVisitor) {
+        visitor.visit(this.saker)
     }
 }

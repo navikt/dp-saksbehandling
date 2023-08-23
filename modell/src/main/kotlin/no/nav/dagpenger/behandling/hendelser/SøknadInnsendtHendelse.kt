@@ -26,11 +26,11 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
     )
 
     fun oppgave(person: Person): Oppgave {
-        val behandling1 = behandling(person, this, person.hentGjeldendeSak(), behandlingDSL())
+        val behandling = behandling(person, this, person.hentGjeldendeSak(), behandlingDSL())
 
         return Oppgave(
-            behandling1,
-            Arbeidsprosesser.totrinnsprosess(behandling1).apply { start("TilBehandling") },
+            behandling,
+            Arbeidsprosesser.totrinnsprosess(behandling).apply { start("TilBehandling") },
         )
     }
 
