@@ -162,7 +162,14 @@ class MediatorTest() {
         )
         oppgaveId = oppgave.uuid
         lagreOppgave(oppgave)
-        lagreOppgave(SøknadInnsendtHendelse(UUID.randomUUID(), "", "20987654321").oppgave())
+        val søknadInnsendtHendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "", "20987654321")
+        lagreOppgave(
+            søknadInnsendtHendelse.oppgave(
+                Person("20987654321").also {
+                    it.håndter(søknadInnsendtHendelse)
+                },
+            ),
+        )
     }
 
     private val mediator = Mediator(

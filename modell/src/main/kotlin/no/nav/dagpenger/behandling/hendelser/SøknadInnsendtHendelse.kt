@@ -1,8 +1,6 @@
 package no.nav.dagpenger.behandling.hendelser
 
-import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
-import no.nav.dagpenger.behandling.Sak
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.oppgave.Oppgave
@@ -20,11 +18,6 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
         "journalpostId" to journalpostId,
     )
 
-    fun oppgave() = Oppgave(
-        behandling,
-        Arbeidsprosesser.totrinnsprosess(behandling).apply { start("TilBehandling") },
-    )
-
     fun oppgave(person: Person): Oppgave {
         val behandling = behandling(person, this, person.hentGjeldendeSak(), behandlingDSL())
 
@@ -33,8 +26,6 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
             Arbeidsprosesser.totrinnsprosess(behandling).apply { start("TilBehandling") },
         )
     }
-
-    val behandling: Behandling = behandling(Person(ident()), this, sak = Sak(), behandlingDSL())
 
     private fun behandlingDSL(): BehandlingDSL.() -> Unit = {
         val virkningsdato = steg {

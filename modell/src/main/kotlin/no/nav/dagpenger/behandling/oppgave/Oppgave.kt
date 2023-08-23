@@ -28,6 +28,7 @@ data class Oppgave private constructor(
 
     fun accept(visitor: OppgaveVisitor) {
         visitor.visit(uuid)
+        visitor.visit(behandling)
         behandling.accept(visitor)
     }
 

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.oppgave
 
+import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import java.util.UUID
 
@@ -7,9 +8,35 @@ class InMemoryOppgaveRepository : OppgaveRepository {
     private val oppgaver = mutableListOf<Oppgave>()
 
     init {
-        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "12345678910").oppgave())
-        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "10987654321").oppgave())
-        oppgaver.add(SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "12837798289").oppgave())
+        SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "12345678910").let {
+            oppgaver.add(
+                it.oppgave(
+                    Person("12345678910").also { person ->
+                        person.håndter(it)
+                    },
+                ),
+            )
+        }
+
+        SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "10987654321").let {
+            oppgaver.add(
+                it.oppgave(
+                    Person("10987654321").also { person ->
+                        person.håndter(it)
+                    },
+                ),
+            )
+        }
+
+        SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "12837798289").let {
+            oppgaver.add(
+                it.oppgave(
+                    Person("12837798289").also { person ->
+                        person.håndter(it)
+                    },
+                ),
+            )
+        }
     }
 
     override fun lagreOppgave(oppgave: Oppgave) {

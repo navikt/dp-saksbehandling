@@ -240,6 +240,7 @@ class OppgaveApiTest {
             start("TilBehandling")
         }
         val hendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent)
+        testPerson.håndter(hendelse)
         lagreOppgave(
             Oppgave(
                 behandling(testPerson, hendelse) {
@@ -267,7 +268,12 @@ class OppgaveApiTest {
         )
         lagreOppgave(
             Oppgave(
-                behandling(Person("45678910112"), hendelse) {
+                behandling(
+                    Person("45678910112").also {
+                        it.håndter(hendelse)
+                    },
+                    hendelse,
+                ) {
                     steg {
                         vilkår("vilkår3")
                     }

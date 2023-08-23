@@ -13,7 +13,7 @@ class BehandlingDSL() {
     val steg = mutableSetOf<Steg<*>>()
 
     companion object {
-        fun behandling(person: Person, hendelse: Hendelse, sak: Sak = Sak(), block: BehandlingDSL.() -> Unit): Behandling {
+        fun behandling(person: Person, hendelse: Hendelse, sak: Sak = person.hentGjeldendeSak(), block: BehandlingDSL.() -> Unit): Behandling {
             val dsl = BehandlingDSL()
             block(dsl)
             return Behandling(person, hendelse, dsl.steg, sak)

@@ -107,7 +107,7 @@ class BehandlingTest {
     @Test
     fun `Skal kunne besvare behandling`() {
         lateinit var testUuid: UUID
-        val behandling = behandling(testPerson, testHendelse) {
+        val behandling = behandling(testPerson, testHendelse, sak = Sak()) {
             steg {
                 fastsettelse<Int>("noe").also {
                     testUuid = it.uuid
@@ -124,7 +124,7 @@ class BehandlingTest {
     fun `Skal kunne besvare vilkår og fastsettelse av type boolean`() {
         lateinit var vilkår: UUID
         lateinit var fastsettelse: UUID
-        val behandling = behandling(testPerson, testHendelse) {
+        val behandling = behandling(testPerson, testHendelse, sak = Sak()) {
             steg {
                 vilkår("noe").also { vilkår = it.uuid }
             }

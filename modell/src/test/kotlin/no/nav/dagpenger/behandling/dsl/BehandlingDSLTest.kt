@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.Sak
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -11,7 +12,7 @@ import java.time.LocalDate
 class BehandlingDSLTest {
     @Test
     fun `dsl test`() {
-        val behandling = behandling(Person("12345678910"), testHendelse) {
+        val behandling = behandling(Person("12345678910"), testHendelse, sak = Sak()) {
             val grandparentFelles = steg {
                 fastsettelse<LocalDate>("GrandparentFelles")
             }
