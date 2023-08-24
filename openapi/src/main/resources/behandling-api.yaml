@@ -4,7 +4,10 @@ info:
   version: 1.0.0
   description: Et API for å administrere oppgaver og deres tilstandsoverganger.
 servers:
-  - url: http://localhost:8080 # Erstatt denne URL-en med den faktiske basis-URL-en for API-et
+  - url: https://dp-behandling.intern.dev.nav.no
+    description: dev
+  - url: https://dp-behandling # Service discovery internt i clusteret
+    description: prod
 paths:
   /oppgave:
     get:
