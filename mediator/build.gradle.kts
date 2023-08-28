@@ -12,12 +12,14 @@ dependencies {
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
     implementation("io.ktor:ktor-server-swagger:${libs.versions.ktor.get()}")
+    implementation(libs.bundles.postgres)
 
     testImplementation(libs.mockk)
     testImplementation(libs.ktor.server.test.host.jvm)
     testImplementation(libs.bundles.kotest.assertions)
     testImplementation(libs.junit.jupiter.params)
     testImplementation(libs.mock.oauth2.server)
+    testImplementation(libs.bundles.postgres.test)
 }
 
 repositories {
