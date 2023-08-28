@@ -11,6 +11,17 @@ CREATE TABLE IF NOT EXISTS sak
     person_ident VARCHAR(11)                                                       NOT NULL REFERENCES person (ident)
 );
 
+-- CREATE TABLE IF NOT EXISTS behandling
+-- (
+--     id           BIGSERIAL PRIMARY KEY,
+--     person_ident VARCHAR(11)                                                       NOT NULL REFERENCES person (ident),
+--     opprettet    TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'::TEXT) NOT NULL,
+--     uuid         uuid                                                              NOT NULL UNIQUE,
+--     tilstand
+--     sak          uuid                                                              NOT NULL REFERENCES sak (uuid)
+--
+-- )
+
 -- CREATE TABLE IF NOT EXISTS aktivitet
 -- (
 --     id           BIGSERIAL PRIMARY KEY,

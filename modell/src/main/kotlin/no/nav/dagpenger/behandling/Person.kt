@@ -9,6 +9,12 @@ data class Person(val ident: String) {
         require(ident.matches(Regex("\\d{11}"))) { "personident må ha 11 siffer, fikk ${ident.length}" }
     }
 
+    companion object {
+        fun rehydrer(ident: String, saker: Set<Sak>) = Person(ident).also {
+            it.saker.addAll(saker)
+        }
+    }
+
     fun hentGjeldendeSak(): Sak {
         return saker.first()
     }
