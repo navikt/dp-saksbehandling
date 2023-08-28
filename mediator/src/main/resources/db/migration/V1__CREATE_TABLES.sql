@@ -6,21 +6,45 @@ CREATE TABLE IF NOT EXISTS person
 
 CREATE TABLE IF NOT EXISTS sak
 (
-    id    BIGSERIAL PRIMARY KEY,
-    uuid         uuid                                                              NOT NULL UNIQUE,
-    person_ident VARCHAR(11)                                                       NOT NULL REFERENCES person (ident)
+    id           BIGSERIAL PRIMARY KEY,
+    uuid         uuid        NOT NULL UNIQUE,
+    person_ident VARCHAR(11) NOT NULL REFERENCES person (ident)
 );
 
--- CREATE TABLE IF NOT EXISTS behandling
--- (
---     id           BIGSERIAL PRIMARY KEY,
---     person_ident VARCHAR(11)                                                       NOT NULL REFERENCES person (ident),
---     opprettet    TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'::TEXT) NOT NULL,
---     uuid         uuid                                                              NOT NULL UNIQUE,
---     tilstand
---     sak          uuid                                                              NOT NULL REFERENCES sak (uuid)
---
--- )
+CREATE TABLE IF NOT EXISTS behandling
+(
+    id           BIGSERIAL PRIMARY KEY,
+    person_ident VARCHAR(11)                                                       NOT NULL REFERENCES person (ident),
+    opprettet    TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'::TEXT) NOT NULL,
+    uuid         uuid                                                              NOT NULL UNIQUE,
+    tilstand     TEXT                                                              NOT NULL,
+    sak          uuid                                                              NOT NULL REFERENCES sak (uuid)
+);
+
+CREATE TABLE IF NOT EXISTS steg
+(
+    id       BIGSERIAL PRIMARY KEY,
+    uuid     uuid    NOT NULL UNIQUE,
+    stegid   TEXT    NOT NULL,
+    tilstand TEXT    NOT NULL,
+    type     TEXT    NOT NULL,
+    string   TEXT    NULL,
+    dato     DATE    NULL,
+    heltall  INT     NULL,
+    boolsk   BOOLEAN NULL,
+    desimal  FLOAT   NULL
+);
+
+CREATE TABLE IF NOT EXISTS sporing
+(
+    id          BIGSERIAL PRIMARY KEY,
+    steg        uuid                     NOT NULL REFERENCES steg (uuid),
+    utført      TIMESTAMP WITH TIME ZONE NOT NULL,
+    begrunnelse TEXT                     NULL,
+    utførtav    TEXT                     NULL,
+    json        jsonb                    NULL,
+    type        TEXT                     NOT NULL
+);
 
 -- CREATE TABLE IF NOT EXISTS aktivitet
 -- (
