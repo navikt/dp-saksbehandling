@@ -121,6 +121,8 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             ),
         ).asUpdate
 
+        val s2:
+
         return listOf(s1)
     }
 }

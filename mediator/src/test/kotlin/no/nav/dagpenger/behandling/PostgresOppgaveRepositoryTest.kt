@@ -46,7 +46,7 @@ class PostgresOppgaveRepositoryTest {
 
                 repository.hentBehandling(testBehandling.uuid).let { rehydrertBehandling ->
                     rehydrertBehandling.person shouldBe testBehandling.person
-//                    rehydrertBehandling.steg shouldBe testBehandling.steg
+                    rehydrertBehandling.steg shouldBe testBehandling.steg
                     rehydrertBehandling.opprettet shouldBe testBehandling.opprettet
                     rehydrertBehandling.uuid shouldBe testBehandling.uuid
                     rehydrertBehandling.tilstand shouldBe testBehandling.tilstand
