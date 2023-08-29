@@ -121,10 +121,44 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             ),
         ).asUpdate
 
-        val s2:
-
-        return listOf(s1)
+        val s2 = behandling.steg.map { steg ->
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, string, dato, heltall, boolsk, desimal)
+                    VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :string, :dato, :heltall, :boolsk, :desimal)
+                """.trimIndent(),
+                paramMap = mapOf("behandling_uuid" to behandling.uuid) + steg.toParamMap(),
+            ).asUpdate
+        }
+        return listOf(s1) + s2
     }
+}
+
+private fun Steg<*>.toParamMap(): Map<String, Any?> {
+    val svarType = svar.clazz.simpleName
+
+    return mapOf(
+        "uuid" to uuid,
+        "steg_id" to id,
+        "tilstand" to tilstand.toString(),
+        "type" to this.javaClass.simpleName,
+        "string" to svar.verdi.takeIf {
+            it != null && svarType == "String"
+        },
+        "dato" to svar.verdi.takeIf {
+            it != null && svarType == "LocalDate"
+        },
+        "heltall" to svar.verdi.takeIf {
+            it != null && svarType == "Integer"
+        },
+        "boolsk" to svar.verdi.takeIf {
+            it != null && svarType == "Boolean"
+        },
+        "desimal" to svar.verdi.takeIf {
+            it != null && svarType == "Double"
+        },
+    )
 }
 
 class LagrePersonStatementBuilder(private val person: Person) : PersonVisitor {

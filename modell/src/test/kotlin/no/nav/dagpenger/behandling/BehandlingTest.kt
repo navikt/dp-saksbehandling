@@ -10,6 +10,7 @@ import no.nav.dagpenger.behandling.Steg.Vilkår
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.util.UUID
 
 class BehandlingTest {
@@ -136,5 +137,17 @@ class BehandlingTest {
 
         shouldNotThrow<IllegalArgumentException> { behandling.besvar(vilkår, true, testSporing) }
         shouldNotThrow<IllegalArgumentException> { behandling.besvar(fastsettelse, false, testSporing) }
+    }
+}
+
+fun main() {
+    listOf(
+        Steg.fastsettelse<String>("1"),
+        Steg.fastsettelse<LocalDate>("2"),
+        Steg.fastsettelse<Int>("3"),
+        Steg.fastsettelse<Boolean>("4"),
+        Steg.fastsettelse<Double>("5"),
+    ).forEach {
+        println(it.svar.clazz.simpleName)
     }
 }

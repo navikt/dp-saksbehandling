@@ -9,6 +9,7 @@ import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.testBe
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.helpers.db.Postgres.withMigratedDb
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 
 class PostgresOppgaveRepositoryTest {
     private object TestData {
@@ -21,17 +22,20 @@ class PostgresOppgaveRepositoryTest {
 
         val testSteg: Set<Steg<*>>
             get() {
-                val stegC = Steg.Vilkår("C")
-                val stegB = Steg.Vilkår("B").also {
+                val stegC = Steg.fastsettelse<String>("C")
+                val stegB = Steg.fastsettelse<Int>("B").also {
                     it.avhengerAv(stegC)
                 }
-                val stegA = Steg.Vilkår("A").also {
+                val stegA = Steg.fastsettelse<LocalDate>("A").also {
                     it.avhengerAv(stegB)
                 }
-                val stegD = Steg.Vilkår("D").also {
+                val stegD = Steg.fastsettelse<Boolean>("D").also {
                     it.avhengerAv(stegC)
                 }
-                return setOf(stegA, stegB, stegC, stegD)
+
+                val stegE = Steg.fastsettelse<Double>("E")
+
+                return setOf(stegA, stegB, stegC, stegD, stegE)
             }
     }
 
