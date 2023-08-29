@@ -49,7 +49,7 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository 
     }
 }
 
-private class LagrePersonStatementBuilder(private val person: Person) : PersonVisitor {
+class LagrePersonStatementBuilder(private val person: Person) : PersonVisitor {
     val queries = mutableListOf<UpdateQueryAction>().also {
         it.add(
             queryOf(

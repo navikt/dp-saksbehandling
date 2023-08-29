@@ -29,7 +29,7 @@ sealed class Steg<T> private constructor(
 
     protected abstract val node: DAGNode<Steg<*>>
 
-    internal fun avhengerAv(steg: Steg<*>): Steg<*> {
+    fun avhengerAv(steg: Steg<*>): Steg<*> {
         node.addChild(steg.node)
         return steg
     }

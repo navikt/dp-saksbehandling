@@ -18,21 +18,30 @@ CREATE TABLE IF NOT EXISTS behandling
     opprettet    TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'::TEXT) NOT NULL,
     uuid         uuid                                                              NOT NULL UNIQUE,
     tilstand     TEXT                                                              NOT NULL,
-    sak          uuid                                                              NOT NULL REFERENCES sak (uuid)
+    sak_id       uuid                                                              NOT NULL REFERENCES sak (uuid)
 );
 
 CREATE TABLE IF NOT EXISTS steg
 (
-    id       BIGSERIAL PRIMARY KEY,
-    uuid     uuid    NOT NULL UNIQUE,
-    stegid   TEXT    NOT NULL,
-    tilstand TEXT    NOT NULL,
-    type     TEXT    NOT NULL,
-    string   TEXT    NULL,
-    dato     DATE    NULL,
-    heltall  INT     NULL,
-    boolsk   BOOLEAN NULL,
-    desimal  FLOAT   NULL
+    id            BIGSERIAL PRIMARY KEY,
+    behandling_id BIGSERIAL NOT NULL REFERENCES behandling (id),
+    uuid          uuid      NOT NULL UNIQUE,
+    stegid        TEXT      NOT NULL,
+    tilstand      TEXT      NOT NULL,
+    type          TEXT      NOT NULL,
+    string        TEXT      NULL,
+    dato          DATE      NULL,
+    heltall       INT       NULL,
+    boolsk        BOOLEAN   NULL,
+    desimal       FLOAT     NULL
+);
+
+CREATE TABLE IF NOT EXISTS sted_relasjon
+(
+    parent_id BIGSERIAL,
+    child_id  BIGSERIAL,
+    FOREIGN KEY (parent_id) REFERENCES steg (id),
+    FOREIGN KEY (child_id) REFERENCES steg (id)
 );
 
 CREATE TABLE IF NOT EXISTS sporing

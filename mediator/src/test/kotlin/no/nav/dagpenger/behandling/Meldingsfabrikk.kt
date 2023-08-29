@@ -4,8 +4,9 @@ import no.nav.dagpenger.behandling.hendelser.Hendelse
 import java.util.UUID
 
 object Meldingsfabrikk {
+    val testSak = Sak(UUID.randomUUID())
     val testIdent = "12312312311"
-    val testPerson = Person(testIdent)
+    val testPerson = Person.rehydrer(testIdent, setOf(testSak))
     val testHendelse = object : Hendelse(testIdent) {}
     val testSporing get() = NullSporing()
 
