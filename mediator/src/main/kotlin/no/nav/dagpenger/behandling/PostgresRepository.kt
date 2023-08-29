@@ -107,7 +107,10 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         //language=PostgreSQL
         val s1 = queryOf(
             statement = """
-               INSERT INTO behandling(person_ident, opprettet, uuid, tilstand, sak_id) VALUES (:person_ident,:opprettet, :uuid, :tilstand, :sak_id)
+               INSERT INTO behandling(person_ident, opprettet, uuid, tilstand, sak_id)
+               VALUES (:person_ident, :opprettet, :uuid, :tilstand, :sak_id)
+               ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand
+
             """.trimIndent(),
             paramMap = mapOf(
                 "person_ident" to behandling.person.ident,

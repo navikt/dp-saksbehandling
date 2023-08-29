@@ -57,6 +57,17 @@ class PostgresOppgaveRepositoryTest {
         }
     }
 
-    companion object {
+    @Test
+    fun `Kan oppdatere en eksisterende behandling`() {
+        withMigratedDb {
+            PostgresRepository(dataSource).let { repository ->
+                repository.lagrePerson(testPerson)
+                shouldNotThrowAny {
+                    repository.lagreBehandling(testBehandling)
+                    repository.lagreBehandling(testBehandling)
+                    // todo finne en måte å teste det som kan muteres
+                }
+            }
+        }
     }
 }
