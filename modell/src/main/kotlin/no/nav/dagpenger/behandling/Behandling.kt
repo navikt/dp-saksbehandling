@@ -32,6 +32,33 @@ class Behandling private constructor(
 ) : Behandlingsstatus, Svarbart {
     private val observers = mutableSetOf<BehandlingObserver>()
 
+    companion object {
+
+        private fun tilstand(tilstand: String): Tilstand = when (tilstand) {
+            "TilBehandling" -> TilBehandling
+            "FerdigBehandlet" -> FerdigBehandlet
+            else -> throw IllegalArgumentException("Ugyldig tilstand: $tilstand")
+        }
+
+        fun rehydrer(
+            person: Person,
+            steg: Set<Steg<*>>,
+            opprettet: LocalDateTime,
+            uuid: UUID,
+            tilstand: String,
+            behandler: List<Hendelse>,
+            sak: Sak,
+        ): Behandling = Behandling(
+            person = person,
+            steg = steg,
+            opprettet = opprettet,
+            uuid = uuid,
+            tilstand = tilstand(tilstand),
+            behandler = behandler,
+            sak = sak,
+        )
+    }
+
     constructor(person: Person, hendelse: Hendelse, steg: Set<Steg<*>>, sak: Sak) : this(
         person,
         steg,

@@ -4,12 +4,15 @@ import kotliquery.action.UpdateQueryAction
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.behandling.oppgave.Oppgave
+import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
+import java.util.UUID
 import javax.sql.DataSource
 
-class PostgresRepository(private val dataSource: DataSource) : PersonRepository {
+class PostgresRepository(private val ds: DataSource) : PersonRepository, OppgaveRepository {
 
     override fun hentPerson(ident: String): Person? =
-        using(sessionOf(dataSource)) { session ->
+        using(sessionOf(ds)) { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -23,7 +26,7 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository 
         }
 
     override fun lagrePerson(person: Person): Unit =
-        using(sessionOf(dataSource)) { session ->
+        using(sessionOf(ds)) { session ->
             val queries = LagrePersonStatementBuilder(person).queries
             session.transaction { tx ->
                 queries.forEach {
@@ -33,7 +36,7 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository 
         }
 
     private fun hentSakerFor(ident: String): Set<Sak> {
-        return using(sessionOf(dataSource)) { session ->
+        return using(sessionOf(ds)) { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -46,6 +49,76 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository 
                 }.asList,
             )
         }.toSet()
+    }
+
+    internal fun hentBehandling(uuid: UUID): Behandling {
+        return using(sessionOf(ds)) { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """SELECT id, person_ident, opprettet, uuid, tilstand, sak_id FROM behandling WHERE uuid= :uuid""",
+                    paramMap = mapOf("uuid" to uuid),
+                ).map { row ->
+                    val person =
+                        hentPerson(row.string("person_ident")) ?: throw NotFoundException("Person ikke funnet")
+                    Behandling.rehydrer(
+                        person = person,
+                        steg = setOf(), // todo implement
+                        opprettet = row.localDateTime("opprettet"),
+                        uuid = row.uuid("uuid"),
+                        tilstand = row.string("tilstand"),
+                        behandler = listOf(), // todo implement
+                        sak = Sak(UUID.randomUUID()),
+                    )
+                }.asSingle,
+            ) ?: throw NotFoundException("Behandling ikke funnet: $uuid")
+        }
+    }
+
+    internal class NotFoundException(msg: String) : RuntimeException(msg)
+
+    internal fun lagreBehandling(behandling: Behandling) {
+        using(sessionOf(ds)) { session ->
+            session.transaction { tx ->
+                behandlingInsertStatementBuilder(behandling).forEach {
+                    tx.run(it)
+                }
+            }
+        }
+    }
+
+    override fun lagreOppgave(oppgave: Oppgave) {
+        TODO("Not yet implemented")
+    }
+
+    override fun hentOppgave(uuid: UUID): Oppgave {
+        TODO("Not yet implemented")
+    }
+
+    override fun hentOppgaver(): List<Oppgave> {
+        TODO("Not yet implemented")
+    }
+
+    override fun hentOppgaverFor(fnr: String): List<Oppgave> {
+        TODO("Not yet implemented")
+    }
+
+    private fun behandlingInsertStatementBuilder(behandling: Behandling): List<UpdateQueryAction> {
+        //language=PostgreSQL
+        val s1 = queryOf(
+            statement = """
+               INSERT INTO behandling(person_ident, opprettet, uuid, tilstand, sak_id) VALUES (:person_ident,:opprettet, :uuid, :tilstand, :sak_id)
+            """.trimIndent(),
+            paramMap = mapOf(
+                "person_ident" to behandling.person.ident,
+                "opprettet" to behandling.opprettet,
+                "uuid" to behandling.uuid,
+                "tilstand" to behandling.tilstand.javaClass.simpleName,
+                "sak_id" to behandling.sak.id,
+            ),
+        ).asUpdate
+
+        return listOf(s1)
     }
 }
 
