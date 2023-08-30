@@ -1,9 +1,9 @@
 package no.nav.dagpenger.behandling.hendelser
 
-import no.nav.dagpenger.behandling.Aktivitetskontekst
-import no.nav.dagpenger.behandling.Aktivitetslogg
-import no.nav.dagpenger.behandling.IAktivitetslogg
-import no.nav.dagpenger.behandling.SpesifikkKontekst
+import no.nav.dagpenger.aktivitetslogg.Aktivitetskontekst
+import no.nav.dagpenger.aktivitetslogg.Aktivitetslogg
+import no.nav.dagpenger.aktivitetslogg.IAktivitetslogg
+import no.nav.dagpenger.aktivitetslogg.SpesifikkKontekst
 
 abstract class Hendelse(
     private val ident: String,

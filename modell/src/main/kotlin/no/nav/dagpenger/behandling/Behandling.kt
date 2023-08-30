@@ -1,5 +1,7 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.aktivitetslogg.Aktivitetskontekst
+import no.nav.dagpenger.aktivitetslogg.SpesifikkKontekst
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.Hendelse
