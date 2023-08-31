@@ -31,7 +31,6 @@ interface BehandlingObserver {
         override fun toMap() = mapOf(
             "behandlingId" to behandlingId,
             "ident" to ident,
-            "innvilget" to utfall,
             "utfall" to utfall,
             "sakId" to sakId,
         ) + fastsettelser
