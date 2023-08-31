@@ -1,3 +1,5 @@
 package no.nav.dagpenger.behandling.hendelser
 
-class InnstillingGodkjentHendelse(person: String) : Hendelse(person)
+import java.util.UUID
+
+class InnstillingGodkjentHendelse(person: String) : Hendelse(UUID.randomUUID(), person)

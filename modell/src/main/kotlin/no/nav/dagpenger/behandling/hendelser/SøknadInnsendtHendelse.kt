@@ -8,8 +8,11 @@ import no.nav.dagpenger.behandling.prosess.Arbeidsprosesser
 import java.time.LocalDate
 import java.util.UUID
 
-class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpostId: String, ident: String) :
-    Hendelse(ident) {
+class SøknadInnsendtHendelse(
+    private val søknadId: UUID,
+    private val journalpostId: String,
+    ident: String,
+) : Hendelse(UUID.randomUUID(), ident) {
     fun søknadId() = søknadId
     fun journalpostId() = journalpostId
 

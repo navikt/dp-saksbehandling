@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.mockk
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
@@ -176,6 +177,7 @@ class MediatorTest() {
     private val mediator = Mediator(
         rapidsConnection = testRapid,
         oppgaveRepository = mockOppgaveRepository,
+        aktivitetsloggMediator = mockk(relaxed = true),
     )
 
     private fun finnStegId(id: String) = oppgave.alleSteg().single { it.id == id }.uuid

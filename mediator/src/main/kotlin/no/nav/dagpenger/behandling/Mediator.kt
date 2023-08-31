@@ -10,10 +10,11 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.util.UUID
 
-class Mediator(
+internal class Mediator(
     private val rapidsConnection: RapidsConnection,
     private val oppgaveRepository: OppgaveRepository = InMemoryOppgaveRepository(),
     private val personRepository: PersonRepository = InMemoryPersonRepository,
+    private val aktivitetsloggMediator: AktivitetsloggMediator,
 ) : OppgaveRepository by oppgaveRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {
         val person = personRepository.hentPerson(hendelse.ident()) ?: Person(hendelse.ident()).also {
@@ -21,12 +22,14 @@ class Mediator(
             personRepository.lagrePerson(it)
         }
         lagreOppgave(hendelse.oppgave(person))
+        aktivitetsloggMediator.håndter(hendelse)
     }
 
     fun behandle(hendelse: StegUtført, block: Svarbart.() -> Unit) {
         val oppgave = hentOppgave(hendelse.oppgaveUUID)
         block(oppgave)
         lagreOppgave(oppgave)
+        aktivitetsloggMediator.håndter(hendelse)
     }
 
     override fun hentOppgave(uuid: UUID) = oppgaveRepository.hentOppgave(uuid).also {

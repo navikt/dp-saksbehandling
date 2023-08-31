@@ -41,7 +41,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun Application.oppgaveApi(mediator: Mediator) {
+internal fun Application.oppgaveApi(mediator: Mediator) {
     install(CallLogging) {
         disableDefaultColors()
     }

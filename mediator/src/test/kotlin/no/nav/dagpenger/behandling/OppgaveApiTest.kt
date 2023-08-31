@@ -22,6 +22,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.mockk
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.api.oppgaveApi
@@ -216,6 +217,7 @@ class OppgaveApiTest {
         mediator: Mediator = Mediator(
             rapidsConnection = TestRapid(),
             oppgaveRepository = mockPersistence,
+            aktivitetsloggMediator = mockk(relaxed = true),
         ),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
