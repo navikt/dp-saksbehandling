@@ -8,8 +8,6 @@ import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
-import no.nav.dagpenger.behandling.dto.toHendelseDTO
-import no.nav.dagpenger.behandling.dto.toHendelserDTO
 import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
@@ -119,16 +117,6 @@ class MediatorTest() {
     @Test
     fun `Behandle SøknadBehandlet`() {
         val hendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent)
-        println(hendelse.toHendelseDTO())
-
-        val foo: List<Any> = listOf(hendelse).toHendelserDTO().mapNotNull { it ->
-            println(it)
-            val it1: Map<String, String> = it["kontekstmap"] as Map<String, String>
-            println("foobar")
-            println(it1["journalpostId"])
-            it["journalpostId"]
-        }
-        println(foo)
         mediator.behandle(hendelse)
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
         val oppgave = mockOppgaveRepository.hentOppgave(oppgaveId)

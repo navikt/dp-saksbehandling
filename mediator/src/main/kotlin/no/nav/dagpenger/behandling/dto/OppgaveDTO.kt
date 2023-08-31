@@ -11,11 +11,8 @@ internal fun Oppgave.toOppgaveDTO(): OppgaveDTO {
         person = this.person.ident,
         saksbehandler = null,
         opprettet = this.opprettet.toLocalDate(),
-        hendelse = this.behandler.toHendelserDTO(),
-        journalposter = this.behandler.toHendelserDTO().mapNotNull {
-            val map = it["kontekstmap"] as Map<String, String?>
-            map["journalpostId"]
-        },
+        hendelse = this.behandler.toHendelserDTO().map { it.toMap() },
+        journalposter = this.behandler.toHendelserDTO().mapNotNull { it.kontekstMap["journalpostId"] },
         tilstand = this.tilstand
             ?: throw Exception("🚨 Mangler tilstand 😱"), // TODO: Finne ut hvorfor noen oppgaver mangler tilstand
         muligeTilstander = this.muligeTilstander(),
