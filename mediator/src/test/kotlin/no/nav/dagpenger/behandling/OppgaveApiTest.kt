@@ -115,7 +115,7 @@ class OppgaveApiTest {
                 oppgave.isObject shouldBe true
                 oppgave["uuid"].asText() shouldBe oppgaveId.toString()
                 oppgave["journalposter"].map { it.asText() } shouldBe listOf("123")
-                oppgave["hendelse"].map { it["type"].asText() } shouldBe listOf("SøknadInnsendtHendelse")
+                oppgave["hendelse"].map { it["konteksttype"].asText() } shouldBe listOf("SøknadInnsendtHendelse")
             }
         }
     }
