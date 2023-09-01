@@ -22,20 +22,24 @@ class PostgresOppgaveRepositoryTest {
 
         val testSteg: Set<Steg<*>>
             get() {
-                val stegC = Steg.fastsettelse<String>("C")
-                val stegB = Steg.fastsettelse<Int>("B").also {
-                    it.avhengerAv(stegC)
+                val fastsettelseC = Steg.fastsettelse<String>("C")
+                val fastsettelseB = Steg.fastsettelse<Int>("B").also {
+                    it.avhengerAv(fastsettelseC)
                 }
-                val stegA = Steg.fastsettelse<LocalDate>("A").also {
-                    it.avhengerAv(stegB)
+                val fastsettelseA = Steg.fastsettelse<LocalDate>("A").also {
+                    it.avhengerAv(fastsettelseB)
                 }
-                val stegD = Steg.fastsettelse<Boolean>("D").also {
-                    it.avhengerAv(stegC)
+                val fastsettelseD = Steg.fastsettelse<Boolean>("D").also {
+                    it.avhengerAv(fastsettelseC)
                 }
 
                 val stegE = Steg.fastsettelse<Double>("E")
 
-                return setOf(stegA, stegB, stegC, stegD, stegE)
+                val vilkårF = Steg.Vilkår("F").also {
+                    it.avhengerAv(stegE)
+                }
+
+                return setOf(fastsettelseA, fastsettelseB, fastsettelseC, fastsettelseD, stegE, vilkårF)
             }
     }
 

@@ -54,20 +54,20 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         }.toSet()
     }
 
-    private inline fun <reified T> Row.hentSvar(func: () -> T): Svar<T> {
+    private inline fun <reified T> Row.hentSvar(extractFun: () -> T): Svar<T> {
         val verdi = when {
             this.boolean("ubesvart") -> {
                 null
             }
 
             else -> {
-                func()
+                extractFun()
             }
         }
         return Svar(verdi, T::class.java, NullSporing())
     }
 
-    private fun Session.hentSteg(behandlingId: UUID): Set<Steg.Fastsettelse<*>> {
+    private fun Session.hentSteg(behandlingId: UUID): Set<Steg<*>> {
         return this.run(
             queryOf(
                 //language=PostgreSQL
@@ -78,9 +78,13 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
 
             ).map { row ->
                 val type = row.string("type")
+                val stegId = row.string("steg_id")
                 when (type) {
+                    "Vilkår" -> {
+                        Steg.Vilkår(stegId)
+                    }
+
                     "Fastsettelse" -> {
-                        val stegId = row.string("steg_id")
                         val svarType = row.string("svar_type")
 
                         when (svarType) {
@@ -133,7 +137,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         }
                     }
 
-                    else -> throw IllegalArgumentException("Ugyldig ty[e: $type")
+                    else -> throw IllegalArgumentException("Ugyldig type: $type")
                 }
             }.asList,
         ).toSet()
