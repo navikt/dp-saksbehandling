@@ -1,11 +1,14 @@
 package no.nav.dagpenger.behandling
 
+import kotliquery.Row
+import kotliquery.Session
 import kotliquery.action.UpdateQueryAction
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
+import java.time.LocalDate
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -51,6 +54,91 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         }.toSet()
     }
 
+    private inline fun <reified T> Row.hentSvar(func: () -> T): Svar<T> {
+        val verdi = when {
+            this.boolean("ubesvart") -> {
+                null
+            }
+
+            else -> {
+                func()
+            }
+        }
+        return Svar(verdi, T::class.java, NullSporing())
+    }
+
+    private fun Session.hentSteg(behandlingId: UUID): Set<Steg.Fastsettelse<*>> {
+        return this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """    SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal
+                                   FROM steg where behandling_uuid = :behandling_uuid
+                """.trimIndent(),
+                paramMap = mapOf("behandling_uuid" to behandlingId),
+
+            ).map { row ->
+                val type = row.string("type")
+                when (type) {
+                    "Fastsettelse" -> {
+                        val stegId = row.string("steg_id")
+                        val svarType = row.string("svar_type")
+
+                        when (svarType) {
+                            "LocalDate" -> {
+                                Steg.Fastsettelse.rehydrer<LocalDate>(
+                                    stegId,
+                                    row.hentSvar {
+                                        row.localDate("dato")
+                                    },
+                                )
+                            }
+
+                            "Integer" -> {
+                                Steg.Fastsettelse.rehydrer<Int>(
+                                    stegId,
+                                    row.hentSvar {
+                                        row.int("heltall")
+                                    },
+                                )
+                            }
+
+                            "String" -> {
+                                Steg.Fastsettelse.rehydrer<String>(
+                                    stegId,
+                                    row.hentSvar {
+                                        row.string("string")
+                                    },
+                                )
+                            }
+
+                            "Boolean" -> {
+                                Steg.Fastsettelse.rehydrer<Boolean>(
+                                    stegId,
+                                    row.hentSvar {
+                                        row.boolean("boolsk")
+                                    },
+                                )
+                            }
+
+                            "Double" -> {
+                                Steg.Fastsettelse.rehydrer<Double>(
+                                    stegId,
+                                    row.hentSvar {
+                                        row.double("desimal")
+                                    },
+                                )
+                            }
+
+                            else -> throw IllegalArgumentException("Ugyldig svartype: $svarType")
+                        }
+                    }
+
+                    else -> throw IllegalArgumentException("Ugyldig ty[e: $type")
+                }
+            }.asList,
+        ).toSet()
+    }
+
     internal fun hentBehandling(uuid: UUID): Behandling {
         return using(sessionOf(ds)) { session ->
             session.run(
@@ -63,7 +151,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         hentPerson(row.string("person_ident")) ?: throw NotFoundException("Person ikke funnet")
                     Behandling.rehydrer(
                         person = person,
-                        steg = setOf(), // todo implement
+                        steg = session.hentSteg(uuid),
                         opprettet = row.localDateTime("opprettet"),
                         uuid = row.uuid("uuid"),
                         tilstand = row.string("tilstand"),
@@ -125,8 +213,9 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             queryOf(
                 //language=PostgreSQL
                 statement = """
-                    INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, string, dato, heltall, boolsk, desimal)
-                    VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :string, :dato, :heltall, :boolsk, :desimal)
+                    INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal)
+                    VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :svar_type, :ubesvart, :string, :dato, :heltall, :boolsk, :desimal)
+                    ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand, ubesvart = :ubesvart, string = :string, dato = :dato, heltall = :heltall , boolsk = :boolsk, desimal = :desimal
                 """.trimIndent(),
                 paramMap = mapOf("behandling_uuid" to behandling.uuid) + steg.toParamMap(),
             ).asUpdate
@@ -143,6 +232,8 @@ private fun Steg<*>.toParamMap(): Map<String, Any?> {
         "steg_id" to id,
         "tilstand" to tilstand.toString(),
         "type" to this.javaClass.simpleName,
+        "svar_type" to svarType,
+        "ubesvart" to svar.ubesvart,
         "string" to svar.verdi.takeIf {
             it != null && svarType == "String"
         },

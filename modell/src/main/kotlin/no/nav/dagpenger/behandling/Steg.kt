@@ -15,6 +15,11 @@ sealed class Steg<T> private constructor(
         svar: Svar<T>,
     ) : Steg<T>(id = id, svar = svar) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
+
+        companion object {
+            inline fun <reified T> rehydrer(id: String, svar: Svar<T>): Fastsettelse<T> =
+                Fastsettelse<T>(id = id, svar = svar)
+        }
     }
 
     class Vilkår(

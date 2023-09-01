@@ -23,18 +23,21 @@ CREATE TABLE IF NOT EXISTS behandling
 
 CREATE TABLE IF NOT EXISTS steg
 (
-    id            BIGSERIAL PRIMARY KEY,
+    id              BIGSERIAL PRIMARY KEY,
     behandling_uuid uuid    NOT NULL REFERENCES behandling (uuid),
-    uuid          uuid    NOT NULL UNIQUE,
-    steg_id       TEXT    NOT NULL,
-    tilstand      TEXT    NOT NULL,
-    type          TEXT    NOT NULL,
-    string        TEXT    NULL,
-    dato          DATE    NULL,
-    heltall       INT     NULL,
-    boolsk        BOOLEAN NULL,
-    desimal       FLOAT   NULL
+    uuid            uuid    NOT NULL UNIQUE,
+    steg_id         TEXT    NOT NULL,
+    tilstand        TEXT    NOT NULL,
+    type            TEXT    NOT NULL,
+    svar_type       TEXT    NOT NULL,
+    ubesvart        BOOLEAN NOT NULL,
+    string          TEXT    NULL,
+    dato            DATE    NULL,
+    heltall         INT     NULL,
+    boolsk          BOOLEAN NULL,
+    desimal         FLOAT   NULL
 );
+
 
 CREATE TABLE IF NOT EXISTS steg_relasjon
 (
