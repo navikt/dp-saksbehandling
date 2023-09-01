@@ -10,26 +10,38 @@ sealed class Steg<T> private constructor(
     var svar: Svar<T>,
     var tilstand: Tilstand = Tilstand.IkkeUtført,
 ) {
+    override fun equals(other: Any?): Boolean {
+        return other != null && other is Steg<*> && this.uuid == other.uuid
+    }
+
+    override fun hashCode(): Int {
+        return uuid.hashCode()
+    }
+
     class Fastsettelse<T>(
+        uuid: UUID = UUID.randomUUID(),
         id: String,
         svar: Svar<T>,
-    ) : Steg<T>(id = id, svar = svar) {
+    ) : Steg<T>(uuid, id = id, svar = svar) {
+
         override val node: DAGNode<Steg<*>> = DAGNode(this)
 
         companion object {
-            inline fun <reified T> rehydrer(id: String, svar: Svar<T>): Fastsettelse<T> =
-                Fastsettelse<T>(id = id, svar = svar)
+            inline fun <reified T> rehydrer(uuid: UUID, id: String, svar: Svar<T>): Fastsettelse<T> =
+                Fastsettelse(uuid = uuid, id = id, svar = svar)
         }
     }
 
     class Vilkår(
+        uuid: UUID = UUID.randomUUID(),
         id: String,
-    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing())) {
+    ) : Steg<Boolean>(uuid = uuid, id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing())) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
     companion object {
-        inline fun <reified B> fastsettelse(id: String) = Fastsettelse(id, Svar(null, B::class.java, NullSporing()))
+        inline fun <reified B> fastsettelse(id: String) =
+            Fastsettelse(id = id, svar = Svar(null, B::class.java, NullSporing()))
     }
 
     protected abstract val node: DAGNode<Steg<*>>
@@ -39,7 +51,7 @@ sealed class Steg<T> private constructor(
         return steg
     }
 
-    override fun toString() = id
+//    override fun toString() = "${this.javaClass.simpleName}: $id"
 
     fun nesteSteg(): Set<Steg<*>> {
         val criteria: (steg: Steg<*>) -> Boolean = { it.tilstand != Tilstand.Utført }
@@ -73,5 +85,9 @@ sealed class Steg<T> private constructor(
 
     fun accept(visitor: DAGNodeVisitor) {
         node.accept(visitor)
+    }
+
+    override fun toString(): String {
+        return "Steg(type= ${this.javaClass.simpleName}, uuid=$uuid, id='$id')"
     }
 }

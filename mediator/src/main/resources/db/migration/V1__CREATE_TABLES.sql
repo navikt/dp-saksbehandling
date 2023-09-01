@@ -41,10 +41,9 @@ CREATE TABLE IF NOT EXISTS steg
 
 CREATE TABLE IF NOT EXISTS steg_relasjon
 (
-    parent_id BIGSERIAL,
-    child_id  BIGSERIAL,
-    FOREIGN KEY (parent_id) REFERENCES steg (id),
-    FOREIGN KEY (child_id) REFERENCES steg (id)
+    parent UUID NOT NULL REFERENCES steg (uuid),
+    child  UUID NOT NULL REFERENCES steg (uuid),
+    UNIQUE (parent, child)
 );
 
 CREATE TABLE IF NOT EXISTS sporing

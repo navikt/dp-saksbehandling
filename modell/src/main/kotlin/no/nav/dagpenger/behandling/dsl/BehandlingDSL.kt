@@ -13,7 +13,12 @@ class BehandlingDSL() {
     val steg = mutableSetOf<Steg<*>>()
 
     companion object {
-        fun behandling(person: Person, hendelse: Hendelse, sak: Sak = person.hentGjeldendeSak(), block: BehandlingDSL.() -> Unit): Behandling {
+        fun behandling(
+            person: Person,
+            hendelse: Hendelse,
+            sak: Sak = person.hentGjeldendeSak(),
+            block: BehandlingDSL.() -> Unit,
+        ): Behandling {
             val dsl = BehandlingDSL()
             block(dsl)
             return Behandling(person, hendelse, dsl.steg, sak)
@@ -33,7 +38,7 @@ class BehandlingDSL() {
             }
 
         fun vilkår(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
-            Vilkår(id).also {
+            Vilkår(id = id).also {
                 avhengigheter(Avhengigheter(it))
             }
 
@@ -45,7 +50,7 @@ class BehandlingDSL() {
             }
 
             fun avhengerAvVilkår(id: String, block: Avhengigheter.() -> Unit = {}) {
-                val vilkår = Vilkår(id)
+                val vilkår = Vilkår(id = id)
                 block(Avhengigheter(vilkår))
                 avhengerAv(vilkår)
             }

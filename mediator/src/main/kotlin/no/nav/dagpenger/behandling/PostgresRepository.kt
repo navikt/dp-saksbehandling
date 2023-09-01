@@ -79,9 +79,10 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             ).map { row ->
                 val type = row.string("type")
                 val stegId = row.string("steg_id")
+                val stegUUID = row.uuid("uuid")
                 when (type) {
                     "Vilkår" -> {
-                        Steg.Vilkår(stegId)
+                        Steg.Vilkår(uuid = stegUUID, id = stegId)
                     }
 
                     "Fastsettelse" -> {
@@ -90,6 +91,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         when (svarType) {
                             "LocalDate" -> {
                                 Steg.Fastsettelse.rehydrer<LocalDate>(
+                                    stegUUID,
                                     stegId,
                                     row.hentSvar {
                                         row.localDate("dato")
@@ -99,6 +101,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
 
                             "Integer" -> {
                                 Steg.Fastsettelse.rehydrer<Int>(
+                                    stegUUID,
                                     stegId,
                                     row.hentSvar {
                                         row.int("heltall")
@@ -108,6 +111,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
 
                             "String" -> {
                                 Steg.Fastsettelse.rehydrer<String>(
+                                    stegUUID,
                                     stegId,
                                     row.hentSvar {
                                         row.string("string")
@@ -117,6 +121,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
 
                             "Boolean" -> {
                                 Steg.Fastsettelse.rehydrer<Boolean>(
+                                    stegUUID,
                                     stegId,
                                     row.hentSvar {
                                         row.boolean("boolsk")
@@ -126,6 +131,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
 
                             "Double" -> {
                                 Steg.Fastsettelse.rehydrer<Double>(
+                                    stegUUID,
                                     stegId,
                                     row.hentSvar {
                                         row.double("desimal")
@@ -213,7 +219,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             ),
         ).asUpdate
 
-        val s2 = behandling.steg.map { steg ->
+        val s2 = behandling.alleSteg().map { steg ->
             queryOf(
                 //language=PostgreSQL
                 statement = """
@@ -224,6 +230,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 paramMap = mapOf("behandling_uuid" to behandling.uuid) + steg.toParamMap(),
             ).asUpdate
         }
+
         return listOf(s1) + s2
     }
 }

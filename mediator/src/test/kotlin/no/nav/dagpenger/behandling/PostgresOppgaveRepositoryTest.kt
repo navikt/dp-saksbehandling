@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
@@ -35,7 +36,7 @@ class PostgresOppgaveRepositoryTest {
 
                 val stegE = Steg.fastsettelse<Double>("E")
 
-                val vilkårF = Steg.Vilkår("F").also {
+                val vilkårF = Steg.Vilkår(id = "F").also {
                     it.avhengerAv(stegE)
                 }
 
@@ -57,8 +58,15 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.opprettet shouldBe testBehandling.opprettet
                     rehydrertBehandling.uuid shouldBe testBehandling.uuid
                     rehydrertBehandling.tilstand shouldBe testBehandling.tilstand
-                    // todo better test
-                    rehydrertBehandling.steg.map { it.id } shouldBe testBehandling.steg.map { it.id }
+                    // todo better test: Check more properties
+                    rehydrertBehandling.alleSteg() shouldContainExactly testBehandling.alleSteg()
+
+                    // todo refactor. Check children/avhengerAv relasjon
+                    rehydrertBehandling.alleSteg().first { it.id == "A" }.alleSteg().map { it.id } shouldBe
+                        testBehandling.alleSteg().first { it.id == "A" }.alleSteg().map { it.id }
+
+                    rehydrertBehandling.alleSteg().first { it.id == "F" }.alleSteg().map { it.id } shouldBe
+                        testBehandling.alleSteg().first { it.id == "F" }.alleSteg().map { it.id }
 //                    rehydrertBehandling.behandler shouldBe testBehandling.behandler
 //                    rehydrertBehandling.sak shouldBe testBehandling.sak
                 }
