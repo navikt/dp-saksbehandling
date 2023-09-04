@@ -31,8 +31,6 @@ import no.nav.dagpenger.behandling.helpers.mockAzure
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
-import no.nav.dagpenger.behandling.prosess.Arbeidsprosess.Overgang
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -180,39 +178,6 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne ferdigstille en oppgave`() {
-        withOppgaveApi {
-            val oppgave = mockPersistence.hentOppgave(oppgaveId)
-            oppgave.tilstand shouldBe "TilBehandling"
-            fattet shouldBe false
-
-            client.post("/oppgave/$oppgaveId/tilstand") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"nyTilstand": "Innstilt"}""",
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                fattet shouldBe false
-            }
-            client.post("/oppgave/$oppgaveId/tilstand") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"nyTilstand": "Fattet"}""",
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                oppgave.tilstand shouldBe "Fattet"
-                fattet shouldBe true
-            }
-        }
-    }
-
     private fun withOppgaveApi(
         mediator: Mediator = Mediator(
             rapidsConnection = TestRapid(),
@@ -235,12 +200,6 @@ class OppgaveApiTest {
 
     private var fattet = false
     private val mockPersistence = InMemoryOppgaveRepository().apply {
-        val fakeProsess = Arbeidsprosess().apply {
-            leggTilTilstand("TilBehandling", Overgang("Innstilt"))
-            leggTilTilstand("Innstilt", Overgang("Fattet", vedOvergang = { fattet = true }))
-            leggTilTilstand("Fattet", emptyList())
-            start("TilBehandling")
-        }
         val hendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent)
         testPerson.håndter(hendelse)
         lagreOppgave(
@@ -255,7 +214,6 @@ class OppgaveApiTest {
                         }
                     }
                 },
-                fakeProsess,
             ).also { oppgaveId = it.uuid },
         )
         lagreOppgave(
@@ -265,7 +223,6 @@ class OppgaveApiTest {
                         vilkår("vilkår2")
                     }
                 },
-                fakeProsess,
             ),
         )
         lagreOppgave(
@@ -280,7 +237,6 @@ class OppgaveApiTest {
                         vilkår("vilkår3")
                     }
                 },
-                fakeProsess,
             ),
         )
     }

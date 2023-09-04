@@ -28,7 +28,7 @@ class Behandling private constructor(
     val steg: Set<Steg<*>>,
     val opprettet: LocalDateTime,
     val uuid: UUID,
-    var tilstand: Tilstand,
+    private var tilstand: Tilstand,
     val behandler: List<Hendelse>,
     val sak: Sak,
 ) : Behandlingsstatus, Svarbart {
@@ -158,5 +158,9 @@ class Behandling private constructor(
                 ),
             )
         }
+    }
+
+    fun behandle(kommando: UtførStegKommando) {
+
     }
 }

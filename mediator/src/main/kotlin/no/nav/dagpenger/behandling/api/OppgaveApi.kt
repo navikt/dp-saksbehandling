@@ -27,9 +27,9 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.ManuellSporing
 import no.nav.dagpenger.behandling.Mediator
+import no.nav.dagpenger.behandling.UtførStegKommando
 import no.nav.dagpenger.behandling.api.auth.AzureAd
 import no.nav.dagpenger.behandling.api.auth.verifier
-import no.nav.dagpenger.behandling.api.models.NyTilstandDTO
 import no.nav.dagpenger.behandling.api.models.NyttSvarDTO
 import no.nav.dagpenger.behandling.api.models.SokDTO
 import no.nav.dagpenger.behandling.api.models.SvartypeDTO
@@ -111,6 +111,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 svar.begrunnelse.tekst,
                             )
 
+                            val kommando = UtførStegKommando(Saksbehandler(call.saksbehandlerId()), svar.)
                             mediator.behandle(StegUtført("123", oppgaveId)) {
                                 when (svar.type) {
                                     SvartypeDTO.String -> besvar(stegId, svar.svar, sporing)
@@ -121,23 +122,6 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 }
                             }
                             call.respond(status = HttpStatusCode.OK, message = "")
-                        }
-                    }
-
-                    route("tilstand") {
-                        post {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val nyTilstandDTO = call.receive<NyTilstandDTO>()
-
-                            try {
-                                mediator.hentOppgave(oppgaveId).gåTil(nyTilstandDTO.nyTilstand)
-                                call.respond(HttpStatusCode.OK, "")
-                            } catch (e: NoSuchElementException) {
-                                call.respond(
-                                    status = HttpStatusCode.NotFound,
-                                    message = "Fant ingen oppgave med UUID $oppgaveId",
-                                )
-                            }
                         }
                     }
                 }

@@ -13,7 +13,6 @@ import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -134,8 +133,6 @@ class MediatorTest() {
 
             oppgave.alleSteg().forEach { it.tilstand shouldBe Utført }
         }
-        oppgave.gåTil("Innstilt")
-        oppgave.gåTil("Vedtak")
 
         testRapid.inspektør.size shouldBe 2
         val event = testRapid.inspektør.message(0)
@@ -156,10 +153,6 @@ class MediatorTest() {
                 steg {
                     fastsettelse<Int>("fastsettelse1")
                 }
-            },
-            Arbeidsprosess().apply {
-                leggTilTilstand("Start")
-                start("Start")
             },
         )
         oppgaveId = oppgave.uuid
