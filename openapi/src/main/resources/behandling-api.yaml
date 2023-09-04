@@ -165,6 +165,7 @@ components:
     Stegtype:
       type: string
       enum:
+        - Prosess
         - Fastsetting
         - Vilkår
     Svar:

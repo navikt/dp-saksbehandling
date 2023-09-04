@@ -4,8 +4,10 @@ package no.nav.dagpenger.behandling.dsl
 
 import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.Rolle
 import no.nav.dagpenger.behandling.Sak
 import no.nav.dagpenger.behandling.Steg
+import no.nav.dagpenger.behandling.Steg.Prosess
 import no.nav.dagpenger.behandling.Steg.Vilkår
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 
@@ -13,7 +15,12 @@ class BehandlingDSL() {
     val steg = mutableSetOf<Steg<*>>()
 
     companion object {
-        fun behandling(person: Person, hendelse: Hendelse, sak: Sak = person.hentGjeldendeSak(), block: BehandlingDSL.() -> Unit): Behandling {
+        fun behandling(
+            person: Person,
+            hendelse: Hendelse,
+            sak: Sak = person.hentGjeldendeSak(),
+            block: BehandlingDSL.() -> Unit,
+        ): Behandling {
             val dsl = BehandlingDSL()
             block(dsl)
             return Behandling(person, hendelse, dsl.steg, sak)
@@ -27,26 +34,33 @@ class BehandlingDSL() {
     }
 
     inner class StegDSL {
-        inline fun <reified B> fastsettelse(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
+        inline fun <reified B> fastsettelse(id: String, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
             Steg.fastsettelse<B>(id).also {
-                avhengigheter(Avhengigheter(it))
+                konfigurasjon(Konfigurasjon(it))
             }
 
-        fun vilkår(id: String, avhengigheter: Avhengigheter.() -> Unit = {}) =
+        fun vilkår(id: String, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
             Vilkår(id).also {
-                avhengigheter(Avhengigheter(it))
+                konfigurasjon(Konfigurasjon(it))
             }
 
-        inner class Avhengigheter(private val avhengigSteg: Steg<*>) {
-            inline fun <reified T> avhengerAvFastsettelse(id: String, block: Avhengigheter.() -> Unit = {}) {
+        fun prosess(id: String, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
+            Prosess(id).also {
+                konfigurasjon(Konfigurasjon(it))
+            }
+
+        inner class Konfigurasjon(private val avhengigSteg: Steg<*>) {
+            var rolle: Rolle = Rolle.Saksbehandler
+
+            inline fun <reified T> avhengerAvFastsettelse(id: String, block: Konfigurasjon.() -> Unit = {}) {
                 val fastsettelse = fastsettelse<T>(id)
-                block(Avhengigheter(fastsettelse))
+                block(Konfigurasjon(fastsettelse))
                 avhengerAv(fastsettelse)
             }
 
-            fun avhengerAvVilkår(id: String, block: Avhengigheter.() -> Unit = {}) {
+            fun avhengerAvVilkår(id: String, block: Konfigurasjon.() -> Unit = {}) {
                 val vilkår = Vilkår(id)
-                block(Avhengigheter(vilkår))
+                block(Konfigurasjon(vilkår))
                 avhengerAv(vilkår)
             }
 
