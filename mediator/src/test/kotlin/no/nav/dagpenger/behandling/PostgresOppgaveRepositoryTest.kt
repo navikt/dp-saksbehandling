@@ -6,7 +6,12 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSak
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseA
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseB
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseC
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseE
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.testBehandling
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.vilkårF
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.helpers.db.Postgres.withMigratedDb
 import org.junit.jupiter.api.Test
@@ -14,34 +19,33 @@ import java.time.LocalDate
 
 class PostgresOppgaveRepositoryTest {
     private object TestData {
+        val fastsettelseC = Steg.fastsettelse<String>("C")
+        val fastsettelseB = Steg.fastsettelse<Int>("B").also {
+            it.avhengerAv(fastsettelseC)
+        }
+        val fastsettelseA = Steg.fastsettelse<LocalDate>("A").also {
+            it.avhengerAv(fastsettelseB)
+        }
+        val fastsettelseD = Steg.fastsettelse<Boolean>("D").also {
+            it.avhengerAv(fastsettelseC)
+        }
+
+        val fastsettelseE = Steg.fastsettelse<Double>("E")
+
+        val vilkårF = Steg.Vilkår(id = "F").also {
+            it.avhengerAv(fastsettelseE)
+            it.avhengerAv(fastsettelseC)
+        }
+
+        val testSteg: Set<Steg<*>> =
+            setOf(fastsettelseA, fastsettelseB, fastsettelseC, fastsettelseD, fastsettelseE, vilkårF)
+
         val testBehandling: Behandling = Behandling(
             person = testPerson,
             hendelse = testHendelse,
             steg = testSteg,
             sak = testSak,
         )
-
-        val testSteg: Set<Steg<*>>
-            get() {
-                val fastsettelseC = Steg.fastsettelse<String>("C")
-                val fastsettelseB = Steg.fastsettelse<Int>("B").also {
-                    it.avhengerAv(fastsettelseC)
-                }
-                val fastsettelseA = Steg.fastsettelse<LocalDate>("A").also {
-                    it.avhengerAv(fastsettelseB)
-                }
-                val fastsettelseD = Steg.fastsettelse<Boolean>("D").also {
-                    it.avhengerAv(fastsettelseC)
-                }
-
-                val stegE = Steg.fastsettelse<Double>("E")
-
-                val vilkårF = Steg.Vilkår(id = "F").also {
-                    it.avhengerAv(stegE)
-                }
-
-                return setOf(fastsettelseA, fastsettelseB, fastsettelseC, fastsettelseD, stegE, vilkårF)
-            }
     }
 
     @Test
@@ -62,16 +66,29 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.alleSteg() shouldContainExactly testBehandling.alleSteg()
 
                     // todo refactor. Check children/avhengerAv relasjon
-                    rehydrertBehandling.alleSteg().first { it.id == "A" }.alleSteg().map { it.id } shouldBe
-                        testBehandling.alleSteg().first { it.id == "A" }.alleSteg().map { it.id }
+                    rehydrertBehandling.getStegById("A").avhengigeSteg() shouldBe setOf(fastsettelseB)
+                    rehydrertBehandling.getStegById("B").avhengigeSteg() shouldBe setOf(fastsettelseC)
+                    rehydrertBehandling.getStegById("D").avhengigeSteg() shouldBe setOf(fastsettelseC)
+                    rehydrertBehandling.getStegById("F").avhengigeSteg() shouldBe setOf(fastsettelseC, fastsettelseE)
 
-                    rehydrertBehandling.alleSteg().first { it.id == "F" }.alleSteg().map { it.id } shouldBe
-                        testBehandling.alleSteg().first { it.id == "F" }.alleSteg().map { it.id }
-//                    rehydrertBehandling.behandler shouldBe testBehandling.behandler
-//                    rehydrertBehandling.sak shouldBe testBehandling.sak
+                    // Check rekursivt avengige stege
+                    rehydrertBehandling.getStegById("A").alleSteg() shouldBe setOf(
+                        fastsettelseA,
+                        fastsettelseB,
+                        fastsettelseC,
+                    )
+                    rehydrertBehandling.getStegById("F").alleSteg() shouldBe setOf(
+                        vilkårF,
+                        fastsettelseC,
+                        fastsettelseE,
+                    )
                 }
             }
         }
+    }
+
+    private fun Behandling.getStegById(id: String): Steg<*> {
+        return this.alleSteg().first { it.id == id }
     }
 
     @Test

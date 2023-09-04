@@ -68,7 +68,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
     }
 
     private fun Session.hentSteg(behandlingId: UUID): Set<Steg<*>> {
-        return this.run(
+        val run = this.run(
             queryOf(
                 //language=PostgreSQL
                 statement = """    SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal
@@ -146,7 +146,29 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     else -> throw IllegalArgumentException("Ugyldig type: $type")
                 }
             }.asList,
-        ).toSet()
+        )
+
+        return run.toSet().also { this.leggTilRelasjoner(behandlingId, it) }
+    }
+
+    private fun Session.leggTilRelasjoner(behandlingId: UUID, steg: Set<Steg<*>>) {
+        this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """SELECT parent_id, child_id FROM steg_relasjon WHERE behandling_id = :behandling_id""",
+                paramMap = mapOf("behandling_id" to behandlingId),
+            ).map { row ->
+                Pair(row.uuid("parent_id"), row.uuid("child_id"))
+            }.asList,
+        ).toSet().forEach { steg.leggTilRelasjon(it) }
+    }
+
+    private fun Set<Steg<*>>.leggTilRelasjon(relasjon: Pair<UUID, UUID>) {
+        this.getByUUID(relasjon.first).avhengerAv(this.getByUUID(relasjon.second))
+    }
+
+    private fun Set<Steg<*>>.getByUUID(uuid: UUID): Steg<*> {
+        return this.first { it.uuid == uuid }
     }
 
     internal fun hentBehandling(uuid: UUID): Behandling {
@@ -231,7 +253,24 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             ).asUpdate
         }
 
-        return listOf(s1) + s2
+        val s3 = behandling.alleSteg().flatMap { parent ->
+            parent.avhengigeSteg().map { children -> Pair(parent, children) }
+        }.toSet().map {
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                   INSERT INTO steg_relasjon(behandling_id, parent_id, child_id) VALUES (:behandling_id, :parent_id, :child_id)
+                   ON CONFLICT (behandling_id,parent_id,child_id) DO NOTHING 
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "behandling_id" to behandling.uuid,
+                    "parent_id" to it.first.uuid,
+                    "child_id" to it.second.uuid,
+                ),
+            ).asUpdate
+        }
+
+        return listOf(s1) + s2 + s3
     }
 }
 

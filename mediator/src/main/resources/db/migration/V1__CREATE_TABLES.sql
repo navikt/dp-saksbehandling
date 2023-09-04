@@ -41,9 +41,11 @@ CREATE TABLE IF NOT EXISTS steg
 
 CREATE TABLE IF NOT EXISTS steg_relasjon
 (
-    parent UUID NOT NULL REFERENCES steg (uuid),
-    child  UUID NOT NULL REFERENCES steg (uuid),
-    UNIQUE (parent, child)
+
+    behandling_id uuid NOT NULL REFERENCES behandling (uuid),
+    parent_id       UUID NOT NULL REFERENCES steg (uuid),
+    child_id        UUID NOT NULL REFERENCES steg (uuid),
+    UNIQUE (behandling_id, parent_id, child_id)
 );
 
 CREATE TABLE IF NOT EXISTS sporing

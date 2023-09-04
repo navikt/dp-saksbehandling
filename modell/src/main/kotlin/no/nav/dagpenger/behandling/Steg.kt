@@ -33,8 +33,8 @@ sealed class Steg<T> private constructor(
     }
 
     class Vilkår(
-        uuid: UUID = UUID.randomUUID(),
         id: String,
+        uuid: UUID = UUID.randomUUID(),
     ) : Steg<Boolean>(uuid = uuid, id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing())) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
@@ -51,7 +51,7 @@ sealed class Steg<T> private constructor(
         return steg
     }
 
-//    override fun toString() = "${this.javaClass.simpleName}: $id"
+    fun avhengigeSteg() = node.children().map { it.value }.toSet()
 
     fun nesteSteg(): Set<Steg<*>> {
         val criteria: (steg: Steg<*>) -> Boolean = { it.tilstand != Tilstand.Utført }
