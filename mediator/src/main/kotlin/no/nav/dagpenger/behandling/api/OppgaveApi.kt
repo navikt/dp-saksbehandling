@@ -120,6 +120,13 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             call.respond(status = HttpStatusCode.OK, message = "")
                         }
                     }
+
+                    route("stans") {
+                        post {
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            call.respond(status = HttpStatusCode.OK, message = "")
+                        }
+                    }
                 }
             }
         }

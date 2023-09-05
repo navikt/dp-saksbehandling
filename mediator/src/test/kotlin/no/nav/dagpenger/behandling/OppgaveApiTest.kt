@@ -178,6 +178,17 @@ class OppgaveApiTest {
         }
     }
 
+    @Test
+    fun `Kan stanse et vedtak`() {
+        withOppgaveApi {
+            client.post("/oppgave/$oppgaveId/stans") {
+                autentisert()
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+            }
+        }
+    }
+
     private fun withOppgaveApi(
         mediator: Mediator = Mediator(
             rapidsConnection = TestRapid(),
