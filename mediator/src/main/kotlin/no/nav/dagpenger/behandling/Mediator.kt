@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import mu.KotlinLogging
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
@@ -8,6 +9,8 @@ import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 internal class Mediator(
     private val rapidsConnection: RapidsConnection,
@@ -35,11 +38,15 @@ internal class Mediator(
         it.addObserver(this)
     }
 
-    override fun behandlingEndretTilstand(søknadEndretTilstandEvent: BehandlingEndretTilstand) =
-        publishEvent("behandling_endret_tilstand", søknadEndretTilstandEvent)
+    override fun behandlingEndretTilstand(behandlingEndretTilstand: BehandlingEndretTilstand) =
+        publishEvent("behandling_endret_tilstand", behandlingEndretTilstand).also {
+            logger.info { "Publiserer behandling_endret_tilstand for behandlingId=${behandlingEndretTilstand.behandlingId}" }
+        }
 
     override fun vedtakFattet(vedtakFattetEvent: VedtakFattet) =
-        publishEvent("søknad_behandlet_hendelse", vedtakFattetEvent)
+        publishEvent("søknad_behandlet_hendelse", vedtakFattetEvent).also {
+            logger.info { "Publiserer søknad_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}" }
+        }
 
     private fun publishEvent(navn: String, event: BehandlingObserver.BehandlingEvent) =
         rapidsConnection.publish(event.ident, JsonMessage.newMessage(navn, event.toMap()).toJson())
