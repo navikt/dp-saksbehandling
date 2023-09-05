@@ -61,7 +61,7 @@ class SøknadInnsendtHendelse(
                 avhengerAv(virkningsdato)
             }
         }
-        val innstilling = steg {
+        val forslagTilVedtak = steg {
             prosess("Forslag til vedtak") {
                 avhengerAv(vilkår)
                 avhengerAv(grunnlag)
@@ -74,7 +74,7 @@ class SøknadInnsendtHendelse(
         steg {
             prosess("Fatt vedtak") {
                 rolle = Beslutter
-                avhengerAv(innstilling)
+                avhengerAv(forslagTilVedtak)
             }
         }
     }
