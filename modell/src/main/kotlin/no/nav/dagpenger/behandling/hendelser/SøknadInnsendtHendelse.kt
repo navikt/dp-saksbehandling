@@ -62,7 +62,7 @@ class SøknadInnsendtHendelse(
             }
         }
         val innstilling = steg {
-            prosess("Innstill vedtak") {
+            prosess("Forslag til vedtak") {
                 avhengerAv(vilkår)
                 avhengerAv(grunnlag)
                 avhengerAv(rettighetstype)
