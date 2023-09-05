@@ -187,6 +187,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         uuid = row.uuid("uuid"),
                         tilstand = row.string("tilstand"),
                         behandler = listOf(), // todo implement
+                        // todo: Sak er allerede rehydrert som en del av person opphentingen...
                         sak = Sak(row.uuid("sak_id")),
                     )
                 }.asSingle,
