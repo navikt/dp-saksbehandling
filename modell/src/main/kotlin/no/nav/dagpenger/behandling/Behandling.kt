@@ -5,7 +5,6 @@ import no.nav.dagpenger.aktivitetslogg.SpesifikkKontekst
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.InnstillingGodkjentHendelse
 import no.nav.dagpenger.behandling.hendelser.PersonHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -67,10 +66,6 @@ class Behandling private constructor(
     private fun fastsettelser(): Map<String, String> =
         alleSteg().filterIsInstance<Steg.Fastsettelse<*>>().associate { it.id to it.svar.toString() }
 
-    fun håndter(hendelse: InnstillingGodkjentHendelse) {
-        this.tilstand.håndter(hendelse, this)
-    }
-
     fun utfør(kommando: UtførStegKommando) {
         tilstand.utfør(kommando, this)
     }
@@ -109,10 +104,6 @@ class Behandling private constructor(
     interface Tilstand : Aktivitetskontekst {
         fun entering(søknadHendelse: Hendelse, behandling: Behandling) {}
 
-        fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
-            throw IllegalStateException("Ikke gyldig i denne tilstanden")
-        }
-
         override fun toSpesifikkKontekst(): SpesifikkKontekst = this.javaClass.canonicalName.split(".").last().let {
             SpesifikkKontekst(it, emptyMap())
         }
@@ -121,13 +112,9 @@ class Behandling private constructor(
     }
 
     private object TilBehandling : Tilstand {
-        override fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
-            behandling.varsleOmVedtak(hendelse)
-            behandling.endreTilstand(FerdigBehandlet, hendelse)
-        }
 
         override fun utfør(kommando: UtførStegKommando, behandling: Behandling) {
-            kommando._utfør(behandling)
+            kommando.besvar(behandling)
 
             if (behandling.erFerdig()) {
                 behandling.varsleOmVedtak(kommando)

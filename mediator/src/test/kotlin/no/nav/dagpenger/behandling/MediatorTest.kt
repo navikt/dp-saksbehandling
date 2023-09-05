@@ -9,7 +9,6 @@ import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
-import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
@@ -33,18 +32,24 @@ class MediatorTest() {
     }
 
     @Test
-    fun `Behandle BehandlingSvar hendelse`() {
-        mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("vilkår1"), false, testSporing)
-        }
+    fun `UtførStegKommando`() {
+        mediator.utfør(
+            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+                besvar(finnStegId("vilkår1"), false, it)
+            },
+        )
 
-        mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("vilkår 1 dato"), LocalDate.now(), testSporing)
-        }
+        mediator.utfør(
+            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+                besvar(finnStegId("vilkår 1 dato"), LocalDate.now(), it)
+            },
+        )
 
-        mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("fastsettelse1"), 2, testSporing)
-        }
+        mediator.utfør(
+            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+                besvar(finnStegId("fastsettelse1"), 2, it)
+            },
+        )
     }
 
     @Test

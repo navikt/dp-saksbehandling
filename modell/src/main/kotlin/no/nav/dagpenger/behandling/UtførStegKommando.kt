@@ -15,7 +15,7 @@ class UtførStegKommando(
         behandling.utfør(this)
     }
 
-    fun _utfør(behandling: Svarbart) {
+    fun besvar(behandling: Svarbart) {
         behandling.block(sporing())
     }
 }

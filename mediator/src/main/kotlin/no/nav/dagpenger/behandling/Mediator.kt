@@ -2,7 +2,6 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
-import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
@@ -22,13 +21,6 @@ internal class Mediator(
             personRepository.lagrePerson(it)
         }
         lagreOppgave(hendelse.oppgave(person))
-        aktivitetsloggMediator.håndter(hendelse)
-    }
-
-    fun behandle(hendelse: StegUtført, block: Svarbart.() -> Unit) {
-        val oppgave = hentOppgave(hendelse.oppgaveUUID)
-        block(oppgave)
-        lagreOppgave(oppgave)
         aktivitetsloggMediator.håndter(hendelse)
     }
 
