@@ -51,10 +51,10 @@ CREATE TABLE IF NOT EXISTS steg_relasjon
 CREATE TABLE IF NOT EXISTS sporing
 (
     id          BIGSERIAL PRIMARY KEY,
-    steg        uuid                     NOT NULL REFERENCES steg (uuid),
+    steg_uuid   uuid                     NOT NULL UNIQUE REFERENCES steg (uuid),
     utført      TIMESTAMP WITH TIME ZONE NOT NULL,
     begrunnelse TEXT                     NULL,
-    utførtav    TEXT                     NULL,
+    utført_av   TEXT                     NULL,
     json        jsonb                    NULL,
     type        TEXT                     NOT NULL
 );

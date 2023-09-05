@@ -9,6 +9,7 @@ import kotliquery.using
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Saksbehandler
+import org.postgresql.util.PGobject
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -330,8 +331,26 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 ),
             ).asUpdate
         }
+        val qSporing = behandling.alleSteg().filter { it.svar.sporing !is NullSporing }.map { steg ->
+            val sporing = steg.svar.sporing
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    INSERT INTO sporing(steg_uuid, utført, begrunnelse, utført_av, json, type)
+                    VALUES (:steg_uuid, :utfort, :begrunnelse, :utfort_av, :json, :type)
+                    ON CONFLICT(steg_uuid ) DO UPDATE SET utført      = :utfort,
+                                                          begrunnelse = :begrunnelse,
+                                                          utført_av   = :utfort_av,
+                                                          json        = :json,
+                                                          type        = :type
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "steg_uuid" to steg.uuid,
+                ) + sporing.toParamMap(),
+            ).asUpdate
+        }
 
-        return listOf(qBehandling) + qSteg + qRelasjoner
+        return listOf(qBehandling) + qSteg + qRelasjoner + qSporing
     }
 
     private inner class OppgaveStmtBuilder(oppgave: Oppgave) : OppgaveVisitor {
@@ -370,6 +389,30 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             )
         }
     }
+}
+
+private fun Sporing.toParamMap(): Map<String, Any?> {
+    val (utførtAv, begrunnelse) = when (this is ManuellSporing) {
+        true -> Pair(this.utførtAv.ident, this.begrunnelse)
+        else -> Pair(null, null)
+    }
+
+    val json = when (this is QuizSporing) {
+        true -> PGobject().also {
+            it.type = "JSONB"
+            it.value = this.json
+        }
+
+        false -> null
+    }
+
+    return mapOf(
+        "utfort" to this.utført,
+        "begrunnelse" to begrunnelse,
+        "utfort_av" to utførtAv,
+        "json" to json,
+        "type" to this.javaClass.simpleName,
+    )
 }
 
 private fun Steg<*>.toParamMap(): Map<String, Any?> {
