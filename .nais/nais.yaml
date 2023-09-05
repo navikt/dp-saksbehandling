@@ -37,6 +37,16 @@ spec:
           - id: {{azure.grupper.beslutter}}
         extra:
           - NAVident
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_15
+        highAvailability: true
+        diskAutoresize: true
+        pointInTimeRecovery: true
+        tier: {{gcp.sql.tier}}
+        databases:
+          - name: aktivitetslogg
+            envVarPrefix: DB
   accessPolicy:
     inbound:
       rules:

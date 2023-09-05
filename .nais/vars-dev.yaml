@@ -3,6 +3,10 @@ ingresses: |
   ingresses:
     - https://dp-behandling.intern.dev.nav.no
 
+gcp:
+  sql:
+    tier: db-custom-1-3840
+
 wonderwalled: true
 azure:
   tenant: trygdeetaten.no
