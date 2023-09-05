@@ -39,6 +39,12 @@ sealed class Steg<T> private constructor(
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
+    class Prosess(
+        id: String,
+    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing())) {
+        override val node: DAGNode<Steg<*>> = DAGNode(this)
+    }
+
     companion object {
         inline fun <reified B> fastsettelse(id: String) =
             Fastsettelse(id = id, svar = Svar(null, B::class.java, NullSporing()))
@@ -90,4 +96,9 @@ sealed class Steg<T> private constructor(
     override fun toString(): String {
         return "Steg(type= ${this.javaClass.simpleName}, uuid=$uuid, id='$id')"
     }
+}
+
+enum class Rolle {
+    Saksbehandler,
+    Beslutter,
 }

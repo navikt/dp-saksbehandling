@@ -4,11 +4,11 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
 dependencies {
-    api("ch.qos.logback:logback-classic:1.4.7")
-    api(libs.kotlin.logging)
+    api("no.nav.dagpenger:aktivitetslogg:20230830.cf9ebc")
     implementation(libs.jackson.kotlin)
     testImplementation(libs.bundles.kotest.assertions)
 }

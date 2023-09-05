@@ -48,7 +48,3 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
 tasks.withType<KotlinCompile>().configureEach {
     dependsOn("spotlessApply")
 }
-
-
-
-

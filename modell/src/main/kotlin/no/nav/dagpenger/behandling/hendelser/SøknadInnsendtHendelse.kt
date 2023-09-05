@@ -1,15 +1,18 @@
 package no.nav.dagpenger.behandling.hendelser
 
 import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.Rolle.Beslutter
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.prosess.Arbeidsprosesser
 import java.time.LocalDate
 import java.util.UUID
 
-class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpostId: String, ident: String) :
-    Hendelse(ident) {
+class SøknadInnsendtHendelse(
+    private val søknadId: UUID,
+    private val journalpostId: String,
+    ident: String,
+) : PersonHendelse(UUID.randomUUID(), ident) {
     fun søknadId() = søknadId
     fun journalpostId() = journalpostId
 
@@ -23,7 +26,6 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
 
         return Oppgave(
             behandling,
-            Arbeidsprosesser.totrinnsprosess(behandling).apply { start("TilBehandling") },
         )
     }
 
@@ -31,11 +33,10 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
         val virkningsdato = steg {
             fastsettelse<LocalDate>("Virkningsdato")
         }
-
-        steg {
+        val rettighetstype = steg {
             fastsettelse<String>("Rettighetstype")
         }
-        steg {
+        val fastsattVanligArbeidstid = steg {
             fastsettelse<Double>("Fastsatt vanlig arbeidstid") {
                 avhengerAv(virkningsdato)
             }
@@ -45,19 +46,35 @@ class SøknadInnsendtHendelse(private val søknadId: UUID, private val journalpo
                 avhengerAv(virkningsdato)
             }
         }
-        steg {
+        val sats = steg {
             fastsettelse<Int>("Dagsats") {
                 avhengerAv(grunnlag)
             }
         }
-        steg {
+        val periode = steg {
             fastsettelse<Int>("Periode") {
                 avhengerAv(grunnlag)
             }
         }
-        steg {
+        val vilkår = steg {
             vilkår("Oppfyller kravene til dagpenger") {
                 avhengerAv(virkningsdato)
+            }
+        }
+        val forslagTilVedtak = steg {
+            prosess("Forslag til vedtak") {
+                avhengerAv(vilkår)
+                avhengerAv(grunnlag)
+                avhengerAv(rettighetstype)
+                avhengerAv(fastsattVanligArbeidstid)
+                avhengerAv(sats)
+                avhengerAv(periode)
+            }
+        }
+        steg {
+            prosess("Fatt vedtak") {
+                rolle = Beslutter
+                avhengerAv(forslagTilVedtak)
             }
         }
     }

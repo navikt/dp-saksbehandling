@@ -1,9 +1,11 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.aktivitetslogg.Aktivitetskontekst
+import no.nav.dagpenger.aktivitetslogg.SpesifikkKontekst
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.hendelser.InnstillingGodkjentHendelse
+import no.nav.dagpenger.behandling.hendelser.PersonHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -13,23 +15,15 @@ interface Behandlingsstatus {
     fun erFerdig(): Boolean
 }
 
-interface Svarbart {
-    fun besvar(uuid: UUID, verdi: String, sporing: Sporing)
-    fun besvar(uuid: UUID, verdi: Int, sporing: Sporing)
-    fun besvar(uuid: UUID, verdi: Double, sporing: Sporing)
-    fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing)
-    fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing)
-}
-
 class Behandling private constructor(
     val person: Person,
     val steg: Set<Steg<*>>,
     val opprettet: LocalDateTime,
     val uuid: UUID,
-    var tilstand: Tilstand,
-    val behandler: List<Hendelse>,
+    private var tilstand: Tilstand,
+    val behandler: List<PersonHendelse>,
     val sak: Sak,
-) : Behandlingsstatus, Svarbart {
+) : Behandlingsstatus {
     private val observers = mutableSetOf<BehandlingObserver>()
 
     companion object {
@@ -59,7 +53,7 @@ class Behandling private constructor(
         )
     }
 
-    constructor(person: Person, hendelse: Hendelse, steg: Set<Steg<*>>, sak: Sak) : this(
+    constructor(person: Person, hendelse: PersonHendelse, steg: Set<Steg<*>>, sak: Sak) : this(
         person,
         steg,
         LocalDateTime.now(),
@@ -88,11 +82,11 @@ class Behandling private constructor(
 
     fun erBehandlet() = tilstand == FerdigBehandlet
 
-    fun fastsettelser(): Map<String, String> =
+    private fun fastsettelser(): Map<String, String> =
         alleSteg().filterIsInstance<Steg.Fastsettelse<*>>().associate { it.id to it.svar.toString() }
 
-    fun håndter(hendelse: InnstillingGodkjentHendelse) {
-        this.tilstand.håndter(hendelse, this)
+    fun utfør(kommando: UtførStegKommando) {
+        tilstand.utfør(kommando, this)
     }
 
     override fun utfall(): Boolean = steg.filterIsInstance<Steg.Vilkår>().all {
@@ -102,15 +96,15 @@ class Behandling private constructor(
     override fun erFerdig(): Boolean =
         steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
 
-    override fun besvar(uuid: UUID, verdi: String, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: String, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Int, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: Int, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Double, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: Double, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
     private inline fun <reified T> _besvar(uuid: UUID, verdi: T, sporing: Sporing) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
@@ -129,19 +123,22 @@ class Behandling private constructor(
     interface Tilstand : Aktivitetskontekst {
         fun entering(søknadHendelse: Hendelse, behandling: Behandling) {}
 
-        fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
-            throw IllegalStateException("Ikke gyldig i denne tilstanden")
-        }
-
         override fun toSpesifikkKontekst(): SpesifikkKontekst = this.javaClass.canonicalName.split(".").last().let {
             SpesifikkKontekst(it, emptyMap())
         }
+
+        fun utfør(kommando: UtførStegKommando, behandling: Behandling) {}
     }
 
     private object TilBehandling : Tilstand {
-        override fun håndter(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
-            behandling.varsleOmVedtak(hendelse, behandling)
-            behandling.endreTilstand(FerdigBehandlet, hendelse)
+
+        override fun utfør(kommando: UtførStegKommando, behandling: Behandling) {
+            kommando.besvar(behandling)
+
+            if (behandling.erFerdig()) {
+                behandling.varsleOmVedtak(kommando)
+                behandling.endreTilstand(FerdigBehandlet, kommando)
+            }
         }
     }
 
@@ -171,14 +168,14 @@ class Behandling private constructor(
         }
     }
 
-    private fun varsleOmVedtak(hendelse: InnstillingGodkjentHendelse, behandling: Behandling) {
+    private fun varsleOmVedtak(hendelse: Hendelse) {
         observers.forEach {
             it.vedtakFattet(
                 VedtakFattet(
                     behandlingId = uuid,
                     ident = person.ident,
-                    utfall = behandling.utfall(),
-                    fastsettelser = behandling.fastsettelser(),
+                    utfall = this.utfall(),
+                    fastsettelser = this.fastsettelser(),
                     sakId = sak.id,
                 ),
             )

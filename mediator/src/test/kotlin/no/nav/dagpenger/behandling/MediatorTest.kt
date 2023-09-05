@@ -2,17 +2,17 @@ package no.nav.dagpenger.behandling
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.mockk
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
-import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
+import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,18 +32,24 @@ class MediatorTest() {
     }
 
     @Test
-    fun `Behandle BehandlingSvar hendelse`() {
-        mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("vilkår1"), false, testSporing)
-        }
+    fun `UtførStegKommando`() {
+        mediator.utfør(
+            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+                besvar(finnStegId("vilkår1"), false, it)
+            },
+        )
 
-        mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("vilkår 1 dato"), LocalDate.now(), testSporing)
-        }
+        mediator.utfør(
+            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+                besvar(finnStegId("vilkår 1 dato"), LocalDate.now(), it)
+            },
+        )
 
-        mediator.behandle(StegUtført(ident, oppgaveId)) {
-            besvar(finnStegId("fastsettelse1"), 2, testSporing)
-        }
+        mediator.utfør(
+            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+                besvar(finnStegId("fastsettelse1"), 2, it)
+            },
+        )
     }
 
     @Test
@@ -116,24 +122,24 @@ class MediatorTest() {
 
     @Test
     fun `Behandle SøknadBehandlet`() {
-        mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent))
+        val hendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent)
+        mediator.behandle(hendelse)
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
         val oppgave = mockOppgaveRepository.hentOppgave(oppgaveId)
-        mediator.behandle(StegUtført(testIdent, oppgaveId)) {
-            oppgave.alleSteg().forEach {
-                when (it.svar.clazz.simpleName) {
-                    "Boolean" -> besvar(it.uuid, true, testSporing)
-                    "Integer" -> besvar(it.uuid, Random.nextInt(), testSporing)
-                    "String" -> besvar(it.uuid, Random.nextBytes(10).toString(), testSporing)
-                    "LocalDate" -> besvar(it.uuid, LocalDate.now(), testSporing)
-                    "Double" -> besvar(it.uuid, Random.nextDouble(), testSporing)
+        mediator.utfør(
+            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+                oppgave.alleSteg().forEach {
+                    when (it.svar.clazz.simpleName) {
+                        "Boolean" -> besvar(it.uuid, true, testSporing)
+                        "Integer" -> besvar(it.uuid, Random.nextInt(), testSporing)
+                        "String" -> besvar(it.uuid, Random.nextBytes(10).toString(), testSporing)
+                        "LocalDate" -> besvar(it.uuid, LocalDate.now(), testSporing)
+                        "Double" -> besvar(it.uuid, Random.nextDouble(), testSporing)
+                    }
                 }
-            }
-
-            oppgave.alleSteg().forEach { it.tilstand shouldBe Utført }
-        }
-        oppgave.gåTil("Innstilt")
-        oppgave.gåTil("Vedtak")
+                oppgave.alleSteg().forEach { it.tilstand shouldBe Utført }
+            },
+        )
 
         testRapid.inspektør.size shouldBe 2
         val event = testRapid.inspektør.message(0)
@@ -155,10 +161,6 @@ class MediatorTest() {
                     fastsettelse<Int>("fastsettelse1")
                 }
             },
-            Arbeidsprosess().apply {
-                leggTilTilstand("Start")
-                start("Start")
-            },
         )
         oppgaveId = oppgave.uuid
         lagreOppgave(oppgave)
@@ -175,6 +177,7 @@ class MediatorTest() {
     private val mediator = Mediator(
         rapidsConnection = testRapid,
         oppgaveRepository = mockOppgaveRepository,
+        aktivitetsloggMediator = mockk(relaxed = true),
     )
 
     private fun finnStegId(id: String) = oppgave.alleSteg().single { it.id == id }.uuid

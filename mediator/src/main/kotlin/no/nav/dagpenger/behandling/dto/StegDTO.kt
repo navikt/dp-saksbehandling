@@ -12,6 +12,7 @@ internal fun Steg<*>.toStegDTO(): StegDTO {
     val stegtypeDTO = when (this) {
         is Steg.Fastsettelse<*> -> StegtypeDTO.Fastsetting
         is Steg.Vilkår -> StegtypeDTO.Vilkår
+        is Steg.Prosess -> StegtypeDTO.Prosess
     }
     val tilstand = this.tilstand
     val svarDTO = this.svar.toSvarDTO()

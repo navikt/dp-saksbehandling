@@ -8,6 +8,7 @@ plugins {
 dependencies {
     implementation(project(":modell"))
     implementation(project(":openapi"))
+    implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
@@ -24,6 +25,7 @@ dependencies {
 
 repositories {
     mavenCentral()
+    maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
 application {

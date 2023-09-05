@@ -13,7 +13,10 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 oppgaveApi(mediator = mediator)
             }.build()
 
-    private val mediator = Mediator(rapidsConnection = rapidsConnection)
+    private val mediator = Mediator(
+        rapidsConnection = rapidsConnection,
+        aktivitetsloggMediator = AktivitetsloggMediator(rapidsConnection),
+    )
 
     init {
         rapidsConnection.register(this)
@@ -35,7 +38,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         logger.info { "Skrur av applikasjonen" }
     }
 
-    companion object {
-        val logger = KotlinLogging.logger {}
+    private companion object {
+        private val logger = KotlinLogging.logger {}
     }
 }
