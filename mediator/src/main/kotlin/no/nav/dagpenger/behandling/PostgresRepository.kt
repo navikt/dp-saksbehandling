@@ -71,8 +71,9 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         val run = this.run(
             queryOf(
                 //language=PostgreSQL
-                statement = """    SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal
-                                   FROM steg where behandling_uuid = :behandling_uuid
+                statement = """    
+                    SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal
+                    FROM steg WHERE behandling_uuid = :behandling_uuid
                 """.trimIndent(),
                 paramMap = mapOf("behandling_uuid" to behandlingId),
 
@@ -86,9 +87,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     }
 
                     "Fastsettelse" -> {
-                        val svarType = row.string("svar_type")
-
-                        when (svarType) {
+                        when (val svarType = row.string("svar_type")) {
                             "LocalDate" -> {
                                 Steg.Fastsettelse.rehydrer<LocalDate>(
                                     stegUUID,
@@ -224,13 +223,12 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
     }
 
     private fun behandlingInsertStatementBuilder(behandling: Behandling): List<UpdateQueryAction> {
-        //language=PostgreSQL
         val s1 = queryOf(
+            //language=PostgreSQL
             statement = """
                INSERT INTO behandling(person_ident, opprettet, uuid, tilstand, sak_id)
                VALUES (:person_ident, :opprettet, :uuid, :tilstand, :sak_id)
                ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand
-
             """.trimIndent(),
             paramMap = mapOf(
                 "person_ident" to behandling.person.ident,

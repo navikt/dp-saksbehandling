@@ -20,7 +20,7 @@ class Behandling private constructor(
     val steg: Set<Steg<*>>,
     val opprettet: LocalDateTime,
     val uuid: UUID,
-    private var tilstand: Tilstand,
+    var tilstand: Tilstand,
     val behandler: List<PersonHendelse>,
     val sak: Sak,
 ) : Behandlingsstatus {
@@ -40,7 +40,7 @@ class Behandling private constructor(
             opprettet: LocalDateTime,
             uuid: UUID,
             tilstand: String,
-            behandler: List<Hendelse>,
+            behandler: List<PersonHendelse>,
             sak: Sak,
         ): Behandling = Behandling(
             person = person,
