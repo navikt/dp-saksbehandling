@@ -9,7 +9,7 @@ import no.nav.dagpenger.behandling.Sak
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Steg.Prosess
 import no.nav.dagpenger.behandling.Steg.Vilkår
-import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.PersonHendelse
 
 class BehandlingDSL() {
     val steg = mutableSetOf<Steg<*>>()
@@ -17,7 +17,7 @@ class BehandlingDSL() {
     companion object {
         fun behandling(
             person: Person,
-            hendelse: Hendelse,
+            hendelse: PersonHendelse,
             sak: Sak = person.hentGjeldendeSak(),
             block: BehandlingDSL.() -> Unit,
         ): Behandling {

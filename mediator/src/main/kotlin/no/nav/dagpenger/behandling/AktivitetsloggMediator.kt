@@ -1,12 +1,12 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.aktivitetslogg.serde.AktivitetsloggJsonBuilder
-import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.PersonHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class AktivitetsloggMediator(private val rapidsConnection: RapidsConnection) {
-    fun håndter(hendelse: Hendelse) {
+    fun håndter(hendelse: PersonHendelse) {
         rapidsConnection.publish(
             JsonMessage.newMessage(
                 "aktivitetslogg",

@@ -36,8 +36,9 @@ data class Oppgave private constructor(
     fun nesteSteg() = behandling.nesteSteg()
     fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
     fun addObserver(observer: BehandlingObserver) = behandling.addObserver(observer)
-    fun behandle(kommando: UtførStegKommando) {
-        behandling.behandle(kommando)
+
+    fun utfør(kommando: UtførStegKommando) {
+        behandling.utfør(kommando)
     }
 
     val tilstand: OppgaveTilstand
@@ -49,5 +50,5 @@ data class Oppgave private constructor(
 
 enum class OppgaveTilstand {
     TilBehandling,
-    FerdigBehandlet
+    FerdigBehandlet,
 }

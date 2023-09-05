@@ -32,6 +32,13 @@ internal class Mediator(
         aktivitetsloggMediator.håndter(hendelse)
     }
 
+    fun utfør(kommando: UtførStegKommando) {
+        val oppgave = hentOppgave(kommando.oppgaveUUID)
+        oppgave.utfør(kommando)
+        lagreOppgave(oppgave)
+        // TODO: aktivitetsloggMediator.håndter(kommando)
+    }
+
     override fun hentOppgave(uuid: UUID) = oppgaveRepository.hentOppgave(uuid).also {
         it.addObserver(this)
     }

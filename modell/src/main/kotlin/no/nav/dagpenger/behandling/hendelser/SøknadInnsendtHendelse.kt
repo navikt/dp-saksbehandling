@@ -12,7 +12,7 @@ class SøknadInnsendtHendelse(
     private val søknadId: UUID,
     private val journalpostId: String,
     ident: String,
-) : Hendelse(UUID.randomUUID(), ident) {
+) : PersonHendelse(UUID.randomUUID(), ident) {
     fun søknadId() = søknadId
     fun journalpostId() = journalpostId
 

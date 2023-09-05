@@ -6,15 +6,21 @@ import no.nav.dagpenger.aktivitetslogg.IAktivitetslogg
 import no.nav.dagpenger.aktivitetslogg.SpesifikkKontekst
 import java.util.UUID
 
+abstract class PersonHendelse(
+    meldingsreferanseId: UUID,
+    private val ident: String,
+) : Hendelse(meldingsreferanseId) {
+    fun ident() = ident
+    override fun kontekst(): Map<String, String> = mapOf("ident" to ident)
+}
+
 abstract class Hendelse(
     private val meldingsreferanseId: UUID,
-    private val ident: String,
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Aktivitetskontekst, IAktivitetslogg by aktivitetslogg {
     fun meldingsreferanseId() = meldingsreferanseId
-    fun ident() = ident
     final override fun toSpesifikkKontekst() =
-        SpesifikkKontekst(this.javaClass.simpleName, mapOf("ident" to ident) + kontekst())
+        SpesifikkKontekst(this.javaClass.simpleName, kontekst())
 
     protected open fun kontekst(): Map<String, String> = emptyMap()
 }

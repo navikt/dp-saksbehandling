@@ -25,7 +25,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.nav.dagpenger.behandling.ManuellSporing
 import no.nav.dagpenger.behandling.Mediator
 import no.nav.dagpenger.behandling.UtførStegKommando
 import no.nav.dagpenger.behandling.api.auth.AzureAd
@@ -35,10 +34,8 @@ import no.nav.dagpenger.behandling.api.models.SokDTO
 import no.nav.dagpenger.behandling.api.models.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.toOppgaveDTO
 import no.nav.dagpenger.behandling.dto.toOppgaverDTO
-import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 internal fun Application.oppgaveApi(mediator: Mediator) {
@@ -105,22 +102,21 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             val stegId = call.finnUUID("stegId")
                             val svar: NyttSvarDTO = call.receive()
 
-                            val sporing = ManuellSporing(
-                                LocalDateTime.now(),
-                                Saksbehandler(call.saksbehandlerId()),
-                                svar.begrunnelse.tekst,
-                            )
-
-                            val kommando = UtførStegKommando(Saksbehandler(call.saksbehandlerId()), svar.)
-                            mediator.behandle(StegUtført("123", oppgaveId)) {
-                                when (svar.type) {
-                                    SvartypeDTO.String -> besvar(stegId, svar.svar, sporing)
-                                    SvartypeDTO.LocalDate -> besvar(stegId, LocalDate.parse(svar.svar), sporing)
-                                    SvartypeDTO.Int -> besvar(stegId, svar.svar.toInt(), sporing)
-                                    SvartypeDTO.Boolean -> besvar(stegId, svar.svar.toBoolean(), sporing)
-                                    SvartypeDTO.Double -> besvar(stegId, svar.svar.toDouble(), sporing)
+                            val kommando =
+                                UtførStegKommando(
+                                    oppgaveUUID = oppgaveId,
+                                    saksbehandler = Saksbehandler(call.saksbehandlerId()),
+                                    begrunnelse = svar.begrunnelse.tekst,
+                                ) { sporing ->
+                                    when (svar.type) {
+                                        SvartypeDTO.String -> besvar(stegId, svar.svar, sporing)
+                                        SvartypeDTO.LocalDate -> besvar(stegId, LocalDate.parse(svar.svar), sporing)
+                                        SvartypeDTO.Int -> besvar(stegId, svar.svar.toInt(), sporing)
+                                        SvartypeDTO.Boolean -> besvar(stegId, svar.svar.toBoolean(), sporing)
+                                        SvartypeDTO.Double -> besvar(stegId, svar.svar.toDouble(), sporing)
+                                    }
                                 }
-                            }
+                            mediator.utfør(kommando)
                             call.respond(status = HttpStatusCode.OK, message = "")
                         }
                     }
