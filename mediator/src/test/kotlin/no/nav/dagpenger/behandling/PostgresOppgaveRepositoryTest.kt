@@ -79,7 +79,12 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.opprettet shouldBe testBehandling.opprettet
                     rehydrertBehandling.uuid shouldBe testBehandling.uuid
                     rehydrertBehandling.tilstand shouldBe testBehandling.tilstand
-                    // todo better test: Check more properties
+                    // todo check behandler
+//                    rehydrertBehandling.behandler shouldBe something
+
+                    rehydrertBehandling.sak shouldBe testSak
+
+                    // Steg
                     rehydrertBehandling.alleSteg() shouldContainExactly testBehandling.alleSteg()
                     rehydrertBehandling.getStegById("A").svar.verdi shouldBe enDato
                     rehydrertBehandling.getStegById("B").svar.verdi shouldBe etHeltall
@@ -87,13 +92,13 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.getStegById("D").svar.verdi shouldBe enBoolean
                     rehydrertBehandling.getStegById("E").svar.verdi shouldBe etDesimaltall
 
-                    // todo refactor. Check children/avhengerAv relasjon
+                    // Check children/avhengerAv relasjon
                     rehydrertBehandling.getStegById("A").avhengigeSteg() shouldBe setOf(fastsettelseB)
                     rehydrertBehandling.getStegById("B").avhengigeSteg() shouldBe setOf(fastsettelseC)
                     rehydrertBehandling.getStegById("D").avhengigeSteg() shouldBe setOf(fastsettelseC)
                     rehydrertBehandling.getStegById("F").avhengigeSteg() shouldBe setOf(fastsettelseC, fastsettelseE)
 
-                    // Check rekursivt avengige stege
+                    // Check rekursivt avengige steg
                     rehydrertBehandling.getStegById("A").alleSteg() shouldBe setOf(
                         fastsettelseA,
                         fastsettelseB,

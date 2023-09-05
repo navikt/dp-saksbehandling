@@ -187,7 +187,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         uuid = row.uuid("uuid"),
                         tilstand = row.string("tilstand"),
                         behandler = listOf(), // todo implement
-                        sak = Sak(UUID.randomUUID()),
+                        sak = Sak(row.uuid("sak_id")),
                     )
                 }.asSingle,
             ) ?: throw NotFoundException("Behandling ikke funnet: $uuid")
