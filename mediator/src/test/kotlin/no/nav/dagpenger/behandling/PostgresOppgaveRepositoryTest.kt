@@ -6,6 +6,11 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSak
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.enBoolean
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.enDato
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.enString
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.etDesimaltall
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.etHeltall
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseA
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseB
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseC
@@ -19,18 +24,30 @@ import java.time.LocalDate
 
 class PostgresOppgaveRepositoryTest {
     private object TestData {
-        val fastsettelseC = Steg.fastsettelse<String>("C")
+        val enString = "fastsettelseC"
+        val fastsettelseC = Steg.fastsettelse<String>("C").also {
+            it.besvar(enString, NullSporing()) // todo sporing?
+        }
+        val etHeltall = 1
         val fastsettelseB = Steg.fastsettelse<Int>("B").also {
             it.avhengerAv(fastsettelseC)
+            it.besvar(etHeltall, NullSporing())
         }
+        val enDato: LocalDate = LocalDate.of(2022, 2, 2)
         val fastsettelseA = Steg.fastsettelse<LocalDate>("A").also {
             it.avhengerAv(fastsettelseB)
+            it.besvar(enDato, NullSporing())
         }
+        val enBoolean = true
         val fastsettelseD = Steg.fastsettelse<Boolean>("D").also {
             it.avhengerAv(fastsettelseC)
+            it.besvar(enBoolean, NullSporing())
         }
 
-        val fastsettelseE = Steg.fastsettelse<Double>("E")
+        val etDesimaltall = 2.0
+        val fastsettelseE = Steg.fastsettelse<Double>("E").also {
+            it.besvar(etDesimaltall, NullSporing())
+        }
 
         val vilkårF = Steg.Vilkår(id = "F").also {
             it.avhengerAv(fastsettelseE)
@@ -64,6 +81,11 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.tilstand shouldBe testBehandling.tilstand
                     // todo better test: Check more properties
                     rehydrertBehandling.alleSteg() shouldContainExactly testBehandling.alleSteg()
+                    rehydrertBehandling.getStegById("A").svar.verdi shouldBe enDato
+                    rehydrertBehandling.getStegById("B").svar.verdi shouldBe etHeltall
+                    rehydrertBehandling.getStegById("C").svar.verdi shouldBe enString
+                    rehydrertBehandling.getStegById("D").svar.verdi shouldBe enBoolean
+                    rehydrertBehandling.getStegById("E").svar.verdi shouldBe etDesimaltall
 
                     // todo refactor. Check children/avhengerAv relasjon
                     rehydrertBehandling.getStegById("A").avhengigeSteg() shouldBe setOf(fastsettelseB)
