@@ -16,9 +16,11 @@ import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastse
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseC
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseE
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.testBehandling
+import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.testOppgave
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.vilkårF
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.helpers.db.Postgres.withMigratedDb
+import no.nav.dagpenger.behandling.oppgave.Oppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -63,6 +65,7 @@ class PostgresOppgaveRepositoryTest {
             steg = testSteg,
             sak = testSak,
         )
+        val testOppgave = Oppgave(testBehandling)
     }
 
     @Test
@@ -109,6 +112,46 @@ class PostgresOppgaveRepositoryTest {
                         fastsettelseC,
                         fastsettelseE,
                     )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `lagring og henting av oppgave`() {
+        withMigratedDb {
+            PostgresRepository(dataSource).let { repository ->
+                repository.lagrePerson(testPerson)
+                shouldNotThrowAny {
+                    repository.lagreOppgave(testOppgave)
+                }
+
+                repository.hentOppgave(testOppgave.uuid).let { oppgave ->
+                    oppgave.uuid shouldBe testOppgave.uuid
+                    oppgave.utføresAv shouldBe testOppgave.utføresAv
+                    oppgave.person shouldBe testOppgave.person
+                    oppgave.opprettet shouldBe testOppgave.opprettet
+                    oppgave.tilstand shouldBe testOppgave.tilstand
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `lagring og henting av oppgaver`() {
+        withMigratedDb {
+            PostgresRepository(dataSource).let { repository ->
+                repository.lagrePerson(testPerson)
+                shouldNotThrowAny {
+                    repository.lagreOppgave(testOppgave)
+                }
+
+                repository.hentOppgaverFor(testOppgave.person.ident).first().let { oppgave ->
+                    oppgave.uuid shouldBe testOppgave.uuid
+                    oppgave.utføresAv shouldBe testOppgave.utføresAv
+                    oppgave.person shouldBe testOppgave.person
+                    oppgave.opprettet shouldBe testOppgave.opprettet
+                    oppgave.tilstand shouldBe testOppgave.tilstand
                 }
             }
         }

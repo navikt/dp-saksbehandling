@@ -8,7 +8,9 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
+import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -56,13 +58,8 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
 
     private inline fun <reified T> Row.hentSvar(extractFun: () -> T): Svar<T> {
         val verdi = when {
-            this.boolean("ubesvart") -> {
-                null
-            }
-
-            else -> {
-                extractFun()
-            }
+            this.boolean("ubesvart") -> null
+            else -> extractFun()
         }
         return Svar(verdi, T::class.java, NullSporing())
     }
@@ -208,23 +205,87 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
     }
 
     override fun lagreOppgave(oppgave: Oppgave) {
-        TODO("Not yet implemented")
+        using(sessionOf(ds)) { session ->
+            session.transaction { tx ->
+                OppgaveStmtBuilder(oppgave).queries.forEach {
+                    tx.run(it)
+                }
+            }
+        }
     }
 
     override fun hentOppgave(uuid: UUID): Oppgave {
-        TODO("Not yet implemented")
+        return using(sessionOf(ds)) { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    SELECT opprettet, utføres_av, behandling_id
+                    FROM oppgave
+                    WHERE uuid = :uuid
+                    """.trimIndent(),
+                    mapOf("uuid" to uuid),
+                ).map { row ->
+                    val behandling: Behandling = hentBehandling(row.uuid("behandling_id"))
+                    Oppgave.rehydrer(
+                        uuid,
+                        behandling,
+                        row.stringOrNull("utføres_av"),
+                        row.localDateTime("opprettet"),
+                    )
+                }.asSingle,
+            ) ?: throw IllegalArgumentException("Fant ikke oppgave med uuid=$uuid")
+        }
     }
 
     override fun hentOppgaver(): List<Oppgave> {
-        TODO("Not yet implemented")
+        return using(sessionOf(ds)) { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    SELECT oppgave.uuid, oppgave.opprettet, utføres_av, behandling_id FROM oppgave ORDER BY opprettet DESC
+                    """.trimIndent(),
+                ).map { row ->
+                    val behandling: Behandling = hentBehandling(row.uuid("behandling_id"))
+                    Oppgave.rehydrer(
+                        row.uuid("uuid"),
+                        behandling,
+                        row.stringOrNull("utføres_av"),
+                        row.localDateTime("opprettet"),
+                    )
+                }.asList,
+            )
+        }
     }
 
     override fun hentOppgaverFor(fnr: String): List<Oppgave> {
-        TODO("Not yet implemented")
+        return using(sessionOf(ds)) { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    SELECT oppgave.uuid, oppgave.opprettet, utføres_av, behandling_id
+                    FROM oppgave
+                    LEFT JOIN behandling b ON b.uuid = oppgave.behandling_id
+                    WHERE b.person_ident = :fnr
+                    """.trimIndent(),
+                    mapOf("fnr" to fnr),
+                ).map { row ->
+                    val behandling: Behandling = hentBehandling(row.uuid("behandling_id"))
+                    Oppgave.rehydrer(
+                        row.uuid("uuid"),
+                        behandling,
+                        row.stringOrNull("utføres_av"),
+                        row.localDateTime("opprettet"),
+                    )
+                }.asList,
+            )
+        }
     }
 
     private fun behandlingInsertStatementBuilder(behandling: Behandling): List<UpdateQueryAction> {
-        val s1 = queryOf(
+        val qBehandling = queryOf(
             //language=PostgreSQL
             statement = """
                INSERT INTO behandling(person_ident, opprettet, uuid, tilstand, sak_id)
@@ -240,7 +301,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             ),
         ).asUpdate
 
-        val s2 = behandling.alleSteg().map { steg ->
+        val qSteg = behandling.alleSteg().map { steg ->
             queryOf(
                 //language=PostgreSQL
                 statement = """
@@ -252,13 +313,14 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             ).asUpdate
         }
 
-        val s3 = behandling.alleSteg().flatMap { parent ->
+        val qRelasjoner = behandling.alleSteg().flatMap { parent ->
             parent.avhengigeSteg().map { children -> Pair(parent, children) }
         }.toSet().map {
             queryOf(
                 //language=PostgreSQL
                 statement = """
-                   INSERT INTO steg_relasjon(behandling_id, parent_id, child_id) VALUES (:behandling_id, :parent_id, :child_id)
+                   INSERT INTO steg_relasjon(behandling_id, parent_id, child_id)
+                   VALUES (:behandling_id, :parent_id, :child_id)
                    ON CONFLICT (behandling_id,parent_id,child_id) DO NOTHING 
                 """.trimIndent(),
                 paramMap = mapOf(
@@ -269,7 +331,44 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             ).asUpdate
         }
 
-        return listOf(s1) + s2 + s3
+        return listOf(qBehandling) + qSteg + qRelasjoner
+    }
+
+    private inner class OppgaveStmtBuilder(oppgave: Oppgave) : OppgaveVisitor {
+        private lateinit var oppgaveId: UUID
+        private lateinit var opprettet: LocalDateTime
+        private var utføresAv: Saksbehandler? = null
+        val queries = mutableListOf<UpdateQueryAction>()
+
+        init {
+            oppgave.accept(this)
+        }
+
+        override fun visit(oppgaveId: UUID, opprettet: LocalDateTime, utføresAv: Saksbehandler?) {
+            this.oppgaveId = oppgaveId
+            this.opprettet = opprettet
+            this.utføresAv = utføresAv
+        }
+
+        override fun visit(behandling: Behandling) {
+            queries.addAll(behandlingInsertStatementBuilder(behandling))
+            queries.add(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    INSERT INTO oppgave (uuid, opprettet,utføres_av, behandling_id) 
+                    VALUES (:uuid, :opprettet, :utfores_av, :behandling_id)
+                    ON CONFLICT (uuid) DO UPDATE SET utføres_av = :utfores_av
+                    """.trimIndent(),
+                    mapOf(
+                        "uuid" to oppgaveId,
+                        "opprettet" to opprettet,
+                        "utfores_av" to utføresAv?.ident,
+                        "behandling_id" to behandling.uuid,
+                    ),
+                ).asUpdate,
+            )
+        }
     }
 }
 

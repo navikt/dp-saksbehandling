@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.api.oppgaveApi
+import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -13,8 +14,11 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 oppgaveApi(mediator = mediator)
             }.build()
 
+    private val postgresRepository = PostgresRepository(dataSource)
     private val mediator = Mediator(
         rapidsConnection = rapidsConnection,
+        oppgaveRepository = postgresRepository,
+        personRepository = postgresRepository,
         aktivitetsloggMediator = AktivitetsloggMediator(rapidsConnection),
     )
 

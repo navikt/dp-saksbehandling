@@ -22,8 +22,24 @@ data class Oppgave private constructor(
         LocalDateTime.now(),
     )
 
+    companion object {
+        fun rehydrer(
+            uuid: UUID,
+            behandling: Behandling,
+            utføresAv: String?,
+            opprettet: LocalDateTime,
+        ) = Oppgave(
+            uuid,
+            behandling,
+            utføresAv?.let {
+                Saksbehandler(it)
+            },
+            opprettet,
+        )
+    }
+
     fun accept(visitor: OppgaveVisitor) {
-        visitor.visit(uuid)
+        visitor.visit(uuid, opprettet, utføresAv)
         visitor.visit(behandling)
         behandling.accept(visitor)
     }

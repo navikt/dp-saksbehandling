@@ -17,6 +17,7 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.random.Random
 
@@ -106,7 +107,7 @@ class MediatorTest() {
             this.sak = sak
         }
 
-        override fun visit(oppgaveId: UUID) {
+        override fun visit(oppgaveId: UUID, opprettet: LocalDateTime, utføresAv: Saksbehandler?) {
             this.oppgaveId = oppgaveId
         }
     }

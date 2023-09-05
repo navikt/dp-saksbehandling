@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS steg_relasjon
 (
 
     behandling_id uuid NOT NULL REFERENCES behandling (uuid),
-    parent_id       UUID NOT NULL REFERENCES steg (uuid),
-    child_id        UUID NOT NULL REFERENCES steg (uuid),
+    parent_id     uuid NOT NULL REFERENCES steg (uuid),
+    child_id      uuid NOT NULL REFERENCES steg (uuid),
     UNIQUE (behandling_id, parent_id, child_id)
 );
 
@@ -57,6 +57,15 @@ CREATE TABLE IF NOT EXISTS sporing
     utførtav    TEXT                     NULL,
     json        jsonb                    NULL,
     type        TEXT                     NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS oppgave
+(
+    id            BIGSERIAL PRIMARY KEY,
+    uuid          uuid                                                              NOT NULL UNIQUE,
+    opprettet     TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'::TEXT) NOT NULL,
+    utføres_av    TEXT                                                              NULL,
+    behandling_id uuid                                                              NOT NULL REFERENCES behandling (uuid)
 );
 
 -- CREATE TABLE IF NOT EXISTS aktivitet
