@@ -4,7 +4,6 @@ import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.BehandlingObserver
 import no.nav.dagpenger.behandling.Behandlingsstatus
 import no.nav.dagpenger.behandling.OppgaveVisitor
-import no.nav.dagpenger.behandling.Svarbart
 import no.nav.dagpenger.behandling.UtførStegKommando
 import java.time.LocalDateTime
 import java.util.UUID
@@ -15,7 +14,7 @@ data class Oppgave private constructor(
     private val behandling: Behandling,
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
-) : Svarbart by behandling, Behandlingsstatus by behandling {
+) : Behandlingsstatus by behandling {
     constructor(behandling: Behandling) : this(
         UUID.randomUUID(),
         behandling,

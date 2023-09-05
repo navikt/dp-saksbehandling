@@ -9,13 +9,13 @@ class UtførStegKommando(
     oppgaveUUID: UUID,
     saksbehandler: Saksbehandler,
     begrunnelse: String,
-    private val block: Svarbart.(sporing: Sporing) -> Unit,
+    private val block: Behandling.(sporing: Sporing) -> Unit,
 ) : Kommando(oppgaveUUID, saksbehandler, begrunnelse) {
     override fun utfør(behandling: Behandling) {
         behandling.utfør(this)
     }
 
-    fun besvar(behandling: Svarbart) {
+    fun besvar(behandling: Behandling) {
         behandling.block(sporing())
     }
 }

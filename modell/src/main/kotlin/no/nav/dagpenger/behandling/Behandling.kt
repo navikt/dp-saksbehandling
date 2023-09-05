@@ -15,14 +15,6 @@ interface Behandlingsstatus {
     fun erFerdig(): Boolean
 }
 
-interface Svarbart {
-    fun besvar(uuid: UUID, verdi: String, sporing: Sporing)
-    fun besvar(uuid: UUID, verdi: Int, sporing: Sporing)
-    fun besvar(uuid: UUID, verdi: Double, sporing: Sporing)
-    fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing)
-    fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing)
-}
-
 class Behandling private constructor(
     val person: Person,
     val steg: Set<Steg<*>>,
@@ -31,7 +23,7 @@ class Behandling private constructor(
     private var tilstand: Tilstand,
     val behandler: List<PersonHendelse>,
     val sak: Sak,
-) : Behandlingsstatus, Svarbart {
+) : Behandlingsstatus {
     private val observers = mutableSetOf<BehandlingObserver>()
 
     constructor(person: Person, hendelse: PersonHendelse, steg: Set<Steg<*>>, sak: Sak) : this(
@@ -77,15 +69,15 @@ class Behandling private constructor(
     override fun erFerdig(): Boolean =
         steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
 
-    override fun besvar(uuid: UUID, verdi: String, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: String, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Int, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: Int, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Double, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: Double, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
-    override fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
     private inline fun <reified T> _besvar(uuid: UUID, verdi: T, sporing: Sporing) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
