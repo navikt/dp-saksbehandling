@@ -13,7 +13,7 @@ import no.nav.dagpenger.behandling.hendelser.StegUtført
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
+import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -121,21 +121,20 @@ class MediatorTest() {
         mediator.behandle(hendelse)
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
         val oppgave = mockOppgaveRepository.hentOppgave(oppgaveId)
-        mediator.behandle(StegUtført(testIdent, oppgaveId)) {
-            oppgave.alleSteg().forEach {
-                when (it.svar.clazz.simpleName) {
-                    "Boolean" -> besvar(it.uuid, true, testSporing)
-                    "Integer" -> besvar(it.uuid, Random.nextInt(), testSporing)
-                    "String" -> besvar(it.uuid, Random.nextBytes(10).toString(), testSporing)
-                    "LocalDate" -> besvar(it.uuid, LocalDate.now(), testSporing)
-                    "Double" -> besvar(it.uuid, Random.nextDouble(), testSporing)
+        mediator.utfør(
+            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+                oppgave.alleSteg().forEach {
+                    when (it.svar.clazz.simpleName) {
+                        "Boolean" -> besvar(it.uuid, true, testSporing)
+                        "Integer" -> besvar(it.uuid, Random.nextInt(), testSporing)
+                        "String" -> besvar(it.uuid, Random.nextBytes(10).toString(), testSporing)
+                        "LocalDate" -> besvar(it.uuid, LocalDate.now(), testSporing)
+                        "Double" -> besvar(it.uuid, Random.nextDouble(), testSporing)
+                    }
                 }
-            }
-
-            oppgave.alleSteg().forEach { it.tilstand shouldBe Utført }
-        }
-        oppgave.gåTil("Innstilt")
-        oppgave.gåTil("Vedtak")
+                oppgave.alleSteg().forEach { it.tilstand shouldBe Utført }
+            },
+        )
 
         testRapid.inspektør.size shouldBe 2
         val event = testRapid.inspektør.message(0)
@@ -156,10 +155,6 @@ class MediatorTest() {
                 steg {
                     fastsettelse<Int>("fastsettelse1")
                 }
-            },
-            Arbeidsprosess().apply {
-                leggTilTilstand("Start")
-                start("Start")
             },
         )
         oppgaveId = oppgave.uuid

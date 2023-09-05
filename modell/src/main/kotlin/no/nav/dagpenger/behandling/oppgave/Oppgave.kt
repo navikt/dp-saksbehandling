@@ -5,8 +5,7 @@ import no.nav.dagpenger.behandling.BehandlingObserver
 import no.nav.dagpenger.behandling.Behandlingsstatus
 import no.nav.dagpenger.behandling.OppgaveVisitor
 import no.nav.dagpenger.behandling.Svarbart
-import no.nav.dagpenger.behandling.prosess.Arbeidsprosess
-import no.nav.dagpenger.behandling.prosess.IArbeidsprosess
+import no.nav.dagpenger.behandling.UtførStegKommando
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -14,14 +13,12 @@ import java.util.UUID
 data class Oppgave private constructor(
     val uuid: UUID,
     private val behandling: Behandling,
-    private val prosess: Arbeidsprosess,
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
-) : IArbeidsprosess by prosess, Svarbart by behandling, Behandlingsstatus by behandling {
-    constructor(behandling: Behandling, prosess: Arbeidsprosess) : this(
+) : Svarbart by behandling, Behandlingsstatus by behandling {
+    constructor(behandling: Behandling) : this(
         UUID.randomUUID(),
         behandling,
-        prosess,
         null,
         LocalDateTime.now(),
     )
@@ -37,7 +34,21 @@ data class Oppgave private constructor(
     val behandler = behandling.behandler
     fun alleSteg() = behandling.alleSteg()
     fun nesteSteg() = behandling.nesteSteg()
-    fun muligeTilstander() = prosess.muligeTilstander()
     fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
     fun addObserver(observer: BehandlingObserver) = behandling.addObserver(observer)
+
+    fun utfør(kommando: UtførStegKommando) {
+        behandling.utfør(kommando)
+    }
+
+    val tilstand: OppgaveTilstand
+        get() = when (behandling.erBehandlet()) {
+            true -> OppgaveTilstand.FerdigBehandlet
+            false -> OppgaveTilstand.TilBehandling
+        }
+}
+
+enum class OppgaveTilstand {
+    TilBehandling,
+    FerdigBehandlet,
 }

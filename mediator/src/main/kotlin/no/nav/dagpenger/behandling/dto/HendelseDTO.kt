@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.dto
 
-import no.nav.dagpenger.behandling.hendelser.Hendelse
+import no.nav.dagpenger.behandling.hendelser.PersonHendelse
 
-internal fun Hendelse.toHendelseDTO() = toSpesifikkKontekst()
-internal fun Collection<Hendelse>.toHendelserDTO() = this.map { it.toHendelseDTO() }
+internal fun PersonHendelse.toHendelseDTO() = toSpesifikkKontekst()
+internal fun Collection<PersonHendelse>.toHendelserDTO() = this.map { it.toHendelseDTO() }

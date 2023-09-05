@@ -5,7 +5,6 @@ import no.nav.dagpenger.behandling.Rolle.Beslutter
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.prosess.Arbeidsprosesser
 import java.time.LocalDate
 import java.util.UUID
 
@@ -13,7 +12,7 @@ class SøknadInnsendtHendelse(
     private val søknadId: UUID,
     private val journalpostId: String,
     ident: String,
-) : Hendelse(UUID.randomUUID(), ident) {
+) : PersonHendelse(UUID.randomUUID(), ident) {
     fun søknadId() = søknadId
     fun journalpostId() = journalpostId
 
@@ -27,7 +26,6 @@ class SøknadInnsendtHendelse(
 
         return Oppgave(
             behandling,
-            Arbeidsprosesser.totrinnsprosess(behandling).apply { start("TilBehandling") },
         )
     }
 
