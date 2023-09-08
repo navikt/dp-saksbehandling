@@ -2,14 +2,18 @@ package no.nav.dagpenger.behandling
 
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
+import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.util.UUID
 
 class BehandlingTest {
@@ -136,5 +140,42 @@ class BehandlingTest {
 
         shouldNotThrow<IllegalArgumentException> { behandling.besvar(vilkår, true, testSporing) }
         shouldNotThrow<IllegalArgumentException> { behandling.besvar(fastsettelse, false, testSporing) }
+    }
+
+    @Test
+    fun `Setter riktig type utfall ved stans`() {
+        lateinit var fastsettelse: UUID
+
+        val stansBehandling = behandling(testPerson, VedtakStansetHendelse(testIdent, UUID.randomUUID()), Sak()) {
+            steg {
+                fastsettelse<LocalDate>("en fastsettelse").also { fastsettelse = it.uuid }
+            }
+        }
+
+        stansBehandling.besvar(fastsettelse, LocalDate.now(), testSporing)
+        stansBehandling.utfall() shouldBe Utfall.Stans
+    }
+
+    @Test
+    fun `Setter riktig type utfall ved innvilgelse og avslag`() {
+        lateinit var vilkår1: UUID
+        lateinit var vilkår2: UUID
+
+        val behandling = behandling(testPerson, testHendelse, Sak()) {
+            steg {
+                vilkår("et vilkår").also { vilkår1 = it.uuid }
+            }
+
+            steg {
+                vilkår("et til vilkår").also { vilkår2 = it.uuid }
+            }
+        }
+
+        behandling.besvar(vilkår1, true, testSporing)
+        behandling.besvar(vilkår2, true, testSporing)
+        behandling.utfall() shouldBe Utfall.Innvilgelse
+
+        behandling.besvar(vilkår1, false, testSporing)
+        behandling.utfall() shouldBe Utfall.Avslag
     }
 }

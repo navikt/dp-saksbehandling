@@ -24,14 +24,14 @@ interface BehandlingObserver {
     data class VedtakFattet(
         val behandlingId: UUID,
         override val ident: String,
-        val utfall: Boolean,
+        val utfall: Utfall,
         val fastsettelser: Map<String, String>,
         val sakId: UUID,
     ) : BehandlingEvent {
         override fun toMap() = mapOf(
             "behandlingId" to behandlingId,
             "ident" to ident,
-            "utfall" to utfall,
+            "utfall" to utfall.toString(),
             "sakId" to sakId,
         ) + fastsettelser
     }

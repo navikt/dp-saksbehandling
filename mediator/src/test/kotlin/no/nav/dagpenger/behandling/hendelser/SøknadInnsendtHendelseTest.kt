@@ -5,6 +5,7 @@ import no.nav.dagpenger.behandling.DefaultOppgaveVisitor
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Steg
+import no.nav.dagpenger.behandling.Utfall
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -19,14 +20,14 @@ class SøknadInnsendtHendelseTest {
     @Test
     fun `Ikke ferdig`() {
         behandling.erFerdig() shouldBe false
-        behandling.utfall() shouldBe false
+        behandling.utfall() shouldBe Utfall.Avslag
     }
 
     @Test
     fun `Ikke ferdig fordi vilkåret er oppfylt, men resten av stegene må utføres`() {
         (behandling.steg.single { it.id == "Oppfyller kravene til dagpenger" } as Steg.Vilkår).besvar(true, testSporing)
         behandling.erFerdig() shouldBe false
-        behandling.utfall() shouldBe true
+        behandling.utfall() shouldBe Utfall.Innvilgelse
     }
 
     @Test
@@ -36,6 +37,6 @@ class SøknadInnsendtHendelseTest {
             testSporing,
         )
         behandling.erFerdig() shouldBe true
-        behandling.utfall() shouldBe false
+        behandling.utfall() shouldBe Utfall.Avslag
     }
 }

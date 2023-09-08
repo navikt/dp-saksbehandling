@@ -6,13 +6,20 @@ import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.PersonHendelse
+import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
 interface Behandlingsstatus {
-    fun utfall(): Boolean
+    fun utfall(): Utfall
     fun erFerdig(): Boolean
+}
+
+enum class Utfall {
+    Innvilgelse,
+    Avslag,
+    Stans,
 }
 
 class Behandling private constructor(
@@ -62,8 +69,14 @@ class Behandling private constructor(
         tilstand.utfør(kommando, this)
     }
 
-    override fun utfall(): Boolean = steg.filterIsInstance<Steg.Vilkår>().all {
-        it.svar.verdi == true
+    override fun utfall(): Utfall {
+        if (behandler.any { it is VedtakStansetHendelse }) return Utfall.Stans
+
+        val alleVilkårOppfylt = steg.filterIsInstance<Steg.Vilkår>().all {
+            it.svar.verdi == true
+        }
+
+        return if (alleVilkårOppfylt) Utfall.Innvilgelse else Utfall.Avslag
     }
 
     override fun erFerdig(): Boolean =

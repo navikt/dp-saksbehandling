@@ -64,7 +64,7 @@ class MediatorTest {
             BehandlingObserver.VedtakFattet(
                 behandlingId = behandlingId,
                 ident = testIdent,
-                utfall = false,
+                utfall = Utfall.Avslag,
                 fastsettelser = mapOf("f1" to "f2"),
                 sakId = sakId,
             ),
