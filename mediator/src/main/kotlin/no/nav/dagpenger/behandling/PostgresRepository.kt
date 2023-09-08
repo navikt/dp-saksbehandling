@@ -10,7 +10,6 @@ import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import org.postgresql.util.PGobject
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -80,71 +79,19 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 val stegId = row.string("steg_id")
                 val stegUUID = row.uuid("uuid")
                 val sporing = hentSporing(stegUUID)
+
+                val svar = when (val svarType = row.string("svar_type")) {
+                    "LocalDate" -> row.hentSvar(sporing) { row.localDate("dato") }
+                    "Integer" -> row.hentSvar(sporing) { row.int("heltall") }
+                    "String" -> row.hentSvar(sporing) { row.string("string") }
+                    "Boolean" -> row.hentSvar(sporing) { row.boolean("boolsk") }
+                    "Double" -> row.hentSvar(sporing) { row.double("desimal") }
+                    else -> throw IllegalArgumentException("Ugyldig svartype: $svarType")
+                }
                 when (type) {
-                    "Vilkår" -> {
-                        Steg.Vilkår(uuid = stegUUID, id = stegId)
-                    }
-
-                    "Prosess" -> {
-                        Steg.Prosess(uuid = stegUUID, id = stegId)
-                    }
-
-                    "Fastsettelse" -> {
-                        when (val svarType = row.string("svar_type")) {
-                            "LocalDate" -> {
-                                Steg.Fastsettelse.rehydrer<LocalDate>(
-                                    stegUUID,
-                                    stegId,
-                                    row.hentSvar(sporing) {
-                                        row.localDate("dato")
-                                    },
-                                )
-                            }
-
-                            "Integer" -> {
-                                Steg.Fastsettelse.rehydrer<Int>(
-                                    stegUUID,
-                                    stegId,
-                                    row.hentSvar(sporing) {
-                                        row.int("heltall")
-                                    },
-                                )
-                            }
-
-                            "String" -> {
-                                Steg.Fastsettelse.rehydrer<String>(
-                                    stegUUID,
-                                    stegId,
-                                    row.hentSvar(sporing) {
-                                        row.string("string")
-                                    },
-                                )
-                            }
-
-                            "Boolean" -> {
-                                Steg.Fastsettelse.rehydrer<Boolean>(
-                                    stegUUID,
-                                    stegId,
-                                    row.hentSvar(sporing) {
-                                        row.boolean("boolsk")
-                                    },
-                                )
-                            }
-
-                            "Double" -> {
-                                Steg.Fastsettelse.rehydrer<Double>(
-                                    stegUUID,
-                                    stegId,
-                                    row.hentSvar(sporing) {
-                                        row.double("desimal")
-                                    },
-                                )
-                            }
-
-                            else -> throw IllegalArgumentException("Ugyldig svartype: $svarType")
-                        }
-                    }
-
+                    "Vilkår" -> Steg.Vilkår(uuid = stegUUID, id = stegId, svar = svar as Svar<Boolean>)
+                    "Prosess" -> Steg.Prosess(uuid = stegUUID, id = stegId, svar = svar as Svar<Boolean>)
+                    "Fastsettelse" -> Steg.Fastsettelse(uuid = stegUUID, id = stegId, svar = svar)
                     else -> throw IllegalArgumentException("Ugyldig type: $type")
                 }
             }.asList,

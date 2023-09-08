@@ -25,20 +25,16 @@ sealed class Steg<T> private constructor(
     ) : Steg<T>(uuid, id = id, svar = svar) {
 
         override val node: DAGNode<Steg<*>> = DAGNode(this)
-
-        companion object {
-            inline fun <reified T> rehydrer(uuid: UUID, id: String, svar: Svar<T>): Fastsettelse<T> =
-                Fastsettelse(uuid = uuid, id = id, svar = svar)
-        }
     }
 
     class Vilkår(
         id: String,
         uuid: UUID = UUID.randomUUID(),
+        svar: Svar<Boolean> = Svar(null, Boolean::class.javaObjectType, NullSporing),
     ) : Steg<Boolean>(
         uuid = uuid,
         id = id,
-        svar = Svar(null, Boolean::class.javaObjectType, NullSporing),
+        svar = svar,
     ) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
@@ -46,10 +42,11 @@ sealed class Steg<T> private constructor(
     class Prosess(
         id: String,
         uuid: UUID = UUID.randomUUID(),
+        svar: Svar<Boolean> = Svar(null, Boolean::class.javaObjectType, NullSporing),
     ) : Steg<Boolean>(
         uuid = uuid,
         id = id,
-        svar = Svar(null, Boolean::class.javaObjectType, NullSporing),
+        svar = svar,
     ) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
