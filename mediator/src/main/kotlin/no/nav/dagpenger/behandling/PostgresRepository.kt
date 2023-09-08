@@ -79,6 +79,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 val stegId = row.string("steg_id")
                 val stegUUID = row.uuid("uuid")
                 val sporing = hentSporing(stegUUID)
+                val tilstand = Tilstand.valueOf(row.string("tilstand"))
 
                 val svar = when (val svarType = row.string("svar_type")) {
                     "LocalDate" -> row.hentSvar(sporing) { row.localDate("dato") }
@@ -89,9 +90,9 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     else -> throw IllegalArgumentException("Ugyldig svartype: $svarType")
                 }
                 when (type) {
-                    "Vilkår" -> Steg.Vilkår(uuid = stegUUID, id = stegId, svar = svar as Svar<Boolean>)
-                    "Prosess" -> Steg.Prosess(uuid = stegUUID, id = stegId, svar = svar as Svar<Boolean>)
-                    "Fastsettelse" -> Steg.Fastsettelse(uuid = stegUUID, id = stegId, svar = svar)
+                    "Vilkår" -> Steg.Vilkår.rehydrer(uuid = stegUUID, id = stegId, svar = svar as Svar<Boolean>, tilstand)
+                    "Prosess" -> Steg.Prosess.rehydrer(uuid = stegUUID, id = stegId, svar = svar as Svar<Boolean>, tilstand)
+                    "Fastsettelse" -> Steg.Fastsettelse.rehydrer(uuid = stegUUID, id = stegId, svar = svar, tilstand)
                     else -> throw IllegalArgumentException("Ugyldig type: $type")
                 }
             }.asList,

@@ -18,37 +18,80 @@ sealed class Steg<T> private constructor(
         return uuid.hashCode()
     }
 
-    class Fastsettelse<T>(
+    class Fastsettelse<T> private constructor(
         uuid: UUID = UUID.randomUUID(),
         id: String,
         svar: Svar<T>,
-    ) : Steg<T>(uuid, id = id, svar = svar) {
+        tilstand: Tilstand,
+    ) : Steg<T>(uuid, id = id, svar = svar, tilstand) {
+        constructor(uuid: UUID = UUID.randomUUID(), id: String, svar: Svar<T>) : this(
+            uuid,
+            id,
+            svar,
+            Tilstand.IkkeUtført,
+        )
 
         override val node: DAGNode<Steg<*>> = DAGNode(this)
+
+        companion object {
+            fun <T> rehydrer(uuid: UUID, id: String, svar: Svar<T>, tilstand: Tilstand): Steg<T> {
+                return Fastsettelse(uuid, id, svar, tilstand)
+            }
+        }
     }
 
-    class Vilkår(
+    class Vilkår private constructor(
         id: String,
         uuid: UUID = UUID.randomUUID(),
-        svar: Svar<Boolean> = Svar(null, Boolean::class.javaObjectType, NullSporing),
+        svar: Svar<Boolean>,
+        tilstand: Tilstand,
     ) : Steg<Boolean>(
         uuid = uuid,
         id = id,
         svar = svar,
+        tilstand = tilstand,
     ) {
+        constructor(id: String, uuid: UUID = UUID.randomUUID()) : this(
+            id,
+            uuid,
+            Svar(null, Boolean::class.javaObjectType, NullSporing),
+            Tilstand.IkkeUtført,
+        )
+
         override val node: DAGNode<Steg<*>> = DAGNode(this)
+
+        companion object {
+            fun rehydrer(uuid: UUID, id: String, svar: Svar<Boolean>, tilstand: Tilstand): Steg<Boolean> {
+                return Vilkår(id, uuid, svar, tilstand)
+            }
+        }
     }
 
-    class Prosess(
+    class Prosess private constructor(
         id: String,
         uuid: UUID = UUID.randomUUID(),
-        svar: Svar<Boolean> = Svar(null, Boolean::class.javaObjectType, NullSporing),
+        svar: Svar<Boolean>,
+        tilstand: Tilstand,
     ) : Steg<Boolean>(
         uuid = uuid,
         id = id,
         svar = svar,
+        tilstand,
     ) {
+        constructor(id: String, uuid: UUID = UUID.randomUUID()) : this(
+            id,
+            uuid,
+            Svar(null, Boolean::class.javaObjectType, NullSporing),
+            Tilstand.IkkeUtført,
+        )
+
         override val node: DAGNode<Steg<*>> = DAGNode(this)
+
+        companion object {
+            fun rehydrer(uuid: UUID, id: String, svar: Svar<Boolean>, tilstand: Tilstand): Steg<Boolean> {
+                return Prosess(id, uuid, svar, tilstand)
+            }
+        }
     }
 
     companion object {

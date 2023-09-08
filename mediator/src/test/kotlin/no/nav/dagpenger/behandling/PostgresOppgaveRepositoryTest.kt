@@ -132,6 +132,10 @@ class PostgresOppgaveRepositoryTest {
                         fastsettelseC,
                         fastsettelseE,
                     )
+                    // Steg tilstand
+                    rehydrertBehandling.getStegById("A").let { steg ->
+                        steg.tilstand shouldBe Tilstand.Utført
+                    }
 
                     // Svar
                     rehydrertBehandling.getStegById("A").svar.let { svar ->
