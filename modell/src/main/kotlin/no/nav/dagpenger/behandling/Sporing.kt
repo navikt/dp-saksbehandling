@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 sealed class Sporing(val utført: LocalDateTime)
 
-class NullSporing() : Sporing(LocalDateTime.now())
+class NullSporing(utført: LocalDateTime = LocalDateTime.now()) : Sporing(utført)
 
 class ManuellSporing(
     utført: LocalDateTime,

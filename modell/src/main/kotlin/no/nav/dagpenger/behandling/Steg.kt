@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.graph.DAGNode
 import no.nav.dagpenger.behandling.graph.DAGNodeVisitor
+import java.time.LocalDateTime
 import java.util.UUID
 
 sealed class Steg<T> private constructor(
@@ -35,19 +36,23 @@ sealed class Steg<T> private constructor(
     class Vilkår(
         id: String,
         uuid: UUID = UUID.randomUUID(),
-    ) : Steg<Boolean>(uuid = uuid, id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing())) {
+    ) : Steg<Boolean>(
+        uuid = uuid,
+        id = id,
+        svar = Svar(null, Boolean::class.javaObjectType, NullSporing(LocalDateTime.now())),
+    ) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
     class Prosess(
         id: String,
-    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing())) {
+    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing(LocalDateTime.now()))) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
     companion object {
         inline fun <reified B> fastsettelse(id: String) =
-            Fastsettelse(id = id, svar = Svar(null, B::class.java, NullSporing()))
+            Fastsettelse(id = id, svar = Svar(null, B::class.java, NullSporing(LocalDateTime.now())))
     }
 
     protected abstract val node: DAGNode<Steg<*>>
@@ -76,6 +81,7 @@ sealed class Steg<T> private constructor(
     fun alleSteg(): Set<Steg<*>> = setOf(this) + node.getDescendants().map { it.value }
 
     fun besvar(svar: T, sporing: Sporing) {
+        require(sporing !is NullSporing) { "Sporing kan ikke være NullSporing" }
         this.svar = this.svar.besvar(svar, sporing)
         this.tilstand = Tilstand.Utført
         node.getAncestors().forEach {

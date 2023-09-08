@@ -62,10 +62,10 @@ CREATE TABLE IF NOT EXISTS sporing
 CREATE TABLE IF NOT EXISTS oppgave
 (
     id            BIGSERIAL PRIMARY KEY,
-    uuid          uuid                                                              NOT NULL UNIQUE,
-    opprettet     TIMESTAMP WITH TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'::TEXT) NOT NULL,
-    utføres_av    TEXT                                                              NULL,
-    behandling_id uuid                                                              NOT NULL REFERENCES behandling (uuid)
+    uuid          uuid                     NOT NULL UNIQUE,
+    opprettet     TIMESTAMP WITH TIME ZONE NOT NULL,
+    utføres_av    TEXT                     NULL,
+    behandling_id uuid                     NOT NULL REFERENCES behandling (uuid)
 );
 
 -- CREATE TABLE IF NOT EXISTS aktivitet

@@ -17,7 +17,6 @@ import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastse
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseC
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.fastsettelseE
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.manuellSporing
-import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.nullSporing
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.quizSporing
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.testBehandling
 import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.testOppgave
@@ -35,9 +34,9 @@ import java.time.temporal.ChronoUnit
 class PostgresOppgaveRepositoryTest {
 
     private object TestData {
-        val now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        val now: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
         val enString = "fastsettelseC"
-        val nullSporing = NullSporing()
+        val nullSporing = NullSporing(LocalDateTime.now())
         val manuellSporing = ManuellSporing(
             utført = now,
             utførtAv = Saksbehandler(ident = "saksbehandlinger"),
@@ -52,7 +51,7 @@ class PostgresOppgaveRepositoryTest {
         )
 
         val fastsettelseC = Steg.fastsettelse<String>("C").also {
-            it.besvar(enString, nullSporing)
+            it.besvar(enString, manuellSporing)
         }
         val etHeltall = 1
         val fastsettelseB = Steg.fastsettelse<Int>("B").also {
@@ -67,12 +66,12 @@ class PostgresOppgaveRepositoryTest {
         val enBoolean = true
         val fastsettelseD = Steg.fastsettelse<Boolean>("D").also {
             it.avhengerAv(fastsettelseC)
-            it.besvar(enBoolean, NullSporing())
+            it.besvar(enBoolean, ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), ""))
         }
 
         val etDesimaltall = 2.0
         val fastsettelseE = Steg.fastsettelse<Double>("E").also {
-            it.besvar(etDesimaltall, NullSporing())
+            it.besvar(etDesimaltall, ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), ""))
         }
 
         val vilkårF = Steg.Vilkår(id = "F").also {
@@ -133,8 +132,9 @@ class PostgresOppgaveRepositoryTest {
                     // Svar
                     rehydrertBehandling.getStegById("A").svar.let { svar ->
                         svar.verdi shouldBe enDato
-                        svar.sporing.shouldBeTypeOf<NullSporing>()
-                        svar.sporing.utført shouldBe nullSporing.utført
+                        svar.sporing.shouldBeTypeOf<QuizSporing>()
+                        svar.sporing.utført shouldBe quizSporing.utført
+                        (svar.sporing as QuizSporing).json shouldBe quizSporing.json
                     }
                     rehydrertBehandling.getStegById("B").svar.let { svar ->
                         svar.verdi shouldBe etHeltall
@@ -144,9 +144,9 @@ class PostgresOppgaveRepositoryTest {
                     }
                     rehydrertBehandling.getStegById("C").svar.let { svar ->
                         svar.verdi shouldBe enString
-                        svar.sporing.shouldBeTypeOf<QuizSporing>()
-                        svar.sporing.utført shouldBe quizSporing.utført
-                        (svar.sporing as QuizSporing).json shouldBe quizSporing.json
+                        svar.sporing.shouldBeTypeOf<ManuellSporing>()
+                        svar.sporing.utført shouldBe manuellSporing.utført
+                        (svar.sporing as ManuellSporing).utførtAv shouldBe manuellSporing.utførtAv
                     }
                     rehydrertBehandling.getStegById("D").svar.verdi shouldBe enBoolean
                     rehydrertBehandling.getStegById("E").svar.verdi shouldBe etDesimaltall

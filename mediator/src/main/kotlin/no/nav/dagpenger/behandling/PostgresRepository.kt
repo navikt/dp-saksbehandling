@@ -57,12 +57,12 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         }.toSet()
     }
 
-    private inline fun <reified T> Row.hentSvar(extractFun: () -> T): Svar<T> {
+    private inline fun <reified T> Row.hentSvar(sporing: Sporing, extractFun: () -> T): Svar<T> {
         val verdi = when {
             this.boolean("ubesvart") -> null
             else -> extractFun()
         }
-        return Svar(verdi, T::class.java, NullSporing())
+        return Svar(verdi, T::class.java, sporing)
     }
 
     private fun Session.hentSteg(behandlingId: UUID): Set<Steg<*>> {
@@ -70,8 +70,8 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             queryOf(
                 //language=PostgreSQL
                 statement = """    
-                    SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal
-                    FROM steg WHERE behandling_uuid = :behandling_uuid
+                SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal
+                FROM steg WHERE behandling_uuid = :behandling_uuid
                 """.trimIndent(),
                 paramMap = mapOf("behandling_uuid" to behandlingId),
 
@@ -79,6 +79,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 val type = row.string("type")
                 val stegId = row.string("steg_id")
                 val stegUUID = row.uuid("uuid")
+                val sporing = hentSporing(stegUUID)
                 when (type) {
                     "Vilkår" -> {
                         Steg.Vilkår(uuid = stegUUID, id = stegId)
@@ -90,7 +91,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                                 Steg.Fastsettelse.rehydrer<LocalDate>(
                                     stegUUID,
                                     stegId,
-                                    row.hentSvar {
+                                    row.hentSvar(sporing) {
                                         row.localDate("dato")
                                     },
                                 )
@@ -100,7 +101,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                                 Steg.Fastsettelse.rehydrer<Int>(
                                     stegUUID,
                                     stegId,
-                                    row.hentSvar {
+                                    row.hentSvar(sporing) {
                                         row.int("heltall")
                                     },
                                 )
@@ -110,7 +111,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                                 Steg.Fastsettelse.rehydrer<String>(
                                     stegUUID,
                                     stegId,
-                                    row.hentSvar {
+                                    row.hentSvar(sporing) {
                                         row.string("string")
                                     },
                                 )
@@ -120,7 +121,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                                 Steg.Fastsettelse.rehydrer<Boolean>(
                                     stegUUID,
                                     stegId,
-                                    row.hentSvar {
+                                    row.hentSvar(sporing) {
                                         row.boolean("boolsk")
                                     },
                                 )
@@ -130,7 +131,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                                 Steg.Fastsettelse.rehydrer<Double>(
                                     stegUUID,
                                     stegId,
-                                    row.hentSvar {
+                                    row.hentSvar(sporing) {
                                         row.double("desimal")
                                     },
                                 )
@@ -146,6 +147,34 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         )
 
         return run.toSet().also { this.leggTilRelasjoner(behandlingId, it) }
+    }
+
+    private fun Session.hentSporing(stegUUID: UUID): Sporing {
+        return run(
+            queryOf(
+                //language=PostgreSQL
+                """
+                    SELECT * FROM sporing WHERE steg_uuid = :uuid
+                """.trimIndent(),
+                mapOf("uuid" to stegUUID),
+            ).map { row ->
+                val utført = row.localDateTime("utført")
+                when (val type = row.string("type")) {
+                    "ManuellSporing" -> ManuellSporing(
+                        utført,
+                        Saksbehandler(row.string("utført_av")),
+                        row.string("begrunnelse"),
+                    )
+
+                    "QuizSporing" -> QuizSporing(
+                        utført,
+                        row.string("json"),
+                    )
+
+                    else -> throw IllegalStateException("Kjenner ikke til type=$type")
+                }
+            }.asSingle,
+        ) ?: NullSporing(LocalDateTime.now())
     }
 
     private fun Session.leggTilRelasjoner(behandlingId: UUID, steg: Set<Steg<*>>) {
@@ -306,9 +335,9 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             queryOf(
                 //language=PostgreSQL
                 statement = """
-                    INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal)
-                    VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :svar_type, :ubesvart, :string, :dato, :heltall, :boolsk, :desimal)
-                    ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand, ubesvart = :ubesvart, string = :string, dato = :dato, heltall = :heltall , boolsk = :boolsk, desimal = :desimal
+                INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal)
+                VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :svar_type, :ubesvart, :string, :dato, :heltall, :boolsk, :desimal)
+                ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand, ubesvart = :ubesvart, string = :string, dato = :dato, heltall = :heltall , boolsk = :boolsk, desimal = :desimal
                 """.trimIndent(),
                 paramMap = mapOf("behandling_uuid" to behandling.uuid) + steg.toParamMap(),
             ).asUpdate
@@ -320,9 +349,9 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             queryOf(
                 //language=PostgreSQL
                 statement = """
-                   INSERT INTO steg_relasjon(behandling_id, parent_id, child_id)
-                   VALUES (:behandling_id, :parent_id, :child_id)
-                   ON CONFLICT (behandling_id,parent_id,child_id) DO NOTHING 
+                INSERT INTO steg_relasjon(behandling_id, parent_id, child_id)
+                VALUES (:behandling_id, :parent_id, :child_id)
+                ON CONFLICT (behandling_id,parent_id,child_id) DO NOTHING 
                 """.trimIndent(),
                 paramMap = mapOf(
                     "behandling_id" to behandling.uuid,
@@ -336,13 +365,13 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             queryOf(
                 //language=PostgreSQL
                 statement = """
-                    INSERT INTO sporing(steg_uuid, utført, begrunnelse, utført_av, json, type)
-                    VALUES (:steg_uuid, :utfort, :begrunnelse, :utfort_av, :json, :type)
-                    ON CONFLICT(steg_uuid ) DO UPDATE SET utført      = :utfort,
-                                                          begrunnelse = :begrunnelse,
-                                                          utført_av   = :utfort_av,
-                                                          json        = :json,
-                                                          type        = :type
+                INSERT INTO sporing(steg_uuid, utført, begrunnelse, utført_av, json, type)
+                VALUES (:steg_uuid, :utfort, :begrunnelse, :utfort_av, :json, :type)
+                ON CONFLICT(steg_uuid ) DO UPDATE SET utført      = :utfort,
+                                                      begrunnelse = :begrunnelse,
+                                                      utført_av   = :utfort_av,
+                                                      json        = :json,
+                                                      type        = :type
                 """.trimIndent(),
                 paramMap = mapOf(
                     "steg_uuid" to steg.uuid,
@@ -443,7 +472,7 @@ private fun Steg<*>.toParamMap(): Map<String, Any?> {
     )
 }
 
-class LagrePersonStatementBuilder(private val person: Person) : PersonVisitor {
+private class LagrePersonStatementBuilder(private val person: Person) : PersonVisitor {
     val queries = mutableListOf<UpdateQueryAction>().also {
         it.add(
             queryOf(
