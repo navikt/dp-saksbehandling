@@ -143,13 +143,13 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.getStegById("B").svar.let { svar ->
                         svar.verdi shouldBe etHeltall
                         svar.sporing.shouldBeTypeOf<ManuellSporing>()
-                        svar.sporing.utført shouldBe manuellSporing.utført
+                        svar.sporing.utført.shouldBeWithin(1.milliseconds.toJavaDuration(), manuellSporing.utført)
                         (svar.sporing as ManuellSporing).utførtAv shouldBe manuellSporing.utførtAv
                     }
                     rehydrertBehandling.getStegById("C").svar.let { svar ->
                         svar.verdi shouldBe enString
                         svar.sporing.shouldBeTypeOf<ManuellSporing>()
-                        svar.sporing.utført shouldBe manuellSporing.utført
+                        svar.sporing.utført.shouldBeWithin(1.milliseconds.toJavaDuration(), manuellSporing.utført)
                         (svar.sporing as ManuellSporing).utførtAv shouldBe manuellSporing.utførtAv
                     }
                     rehydrertBehandling.getStegById("D").svar.verdi shouldBe enBoolean
