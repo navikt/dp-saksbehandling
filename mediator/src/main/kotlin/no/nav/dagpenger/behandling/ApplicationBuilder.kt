@@ -3,6 +3,7 @@ package no.nav.dagpenger.behandling
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.api.oppgaveApi
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -35,6 +36,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
+        runMigration()
         logger.info { "Starter appen ${Configuration.appName}" }
     }
 
