@@ -26,6 +26,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.Mediator
+import no.nav.dagpenger.behandling.Saksbehandler
 import no.nav.dagpenger.behandling.UtførStegKommando
 import no.nav.dagpenger.behandling.api.auth.AzureAd
 import no.nav.dagpenger.behandling.api.auth.verifier
@@ -35,7 +36,6 @@ import no.nav.dagpenger.behandling.api.models.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.toOppgaveDTO
 import no.nav.dagpenger.behandling.dto.toOppgaverDTO
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
-import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import java.time.LocalDate
 import java.util.UUID
 

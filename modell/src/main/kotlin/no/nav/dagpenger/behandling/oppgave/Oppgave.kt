@@ -4,6 +4,7 @@ import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.BehandlingObserver
 import no.nav.dagpenger.behandling.Behandlingsstatus
 import no.nav.dagpenger.behandling.OppgaveVisitor
+import no.nav.dagpenger.behandling.Saksbehandler
 import no.nav.dagpenger.behandling.UtførStegKommando
 import java.time.LocalDateTime
 import java.util.UUID

@@ -5,6 +5,7 @@ import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Sak
+import no.nav.dagpenger.behandling.Saksbehandler
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.UtførStegKommando
 import no.nav.dagpenger.behandling.oppgave.OppgaveTilstand.FerdigBehandlet

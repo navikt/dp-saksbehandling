@@ -3,13 +3,13 @@ package no.nav.dagpenger.behandling.dto
 import no.nav.dagpenger.behandling.ManuellSporing
 import no.nav.dagpenger.behandling.NullSporing
 import no.nav.dagpenger.behandling.QuizSporing
+import no.nav.dagpenger.behandling.Saksbehandler
 import no.nav.dagpenger.behandling.Sporing
 import no.nav.dagpenger.behandling.api.models.BegrunnelseDTO
 import no.nav.dagpenger.behandling.api.models.KildeDTO
 import no.nav.dagpenger.behandling.api.models.QuizBegrunnelseDTO
 import no.nav.dagpenger.behandling.api.models.SaksbehandlerDTO
 import no.nav.dagpenger.behandling.api.models.SaksbehandlersBegrunnelseDTO
-import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import java.time.ZoneId
 
 private val Europa_Oslo = ZoneId.of("Europe/Oslo")
