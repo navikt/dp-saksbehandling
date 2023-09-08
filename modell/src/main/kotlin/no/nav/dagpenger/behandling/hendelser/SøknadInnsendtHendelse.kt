@@ -24,9 +24,7 @@ class SøknadInnsendtHendelse(
     fun oppgave(person: Person): Oppgave {
         val behandling = behandling(person, this, person.hentGjeldendeSak(), behandlingDSL())
 
-        return Oppgave(
-            behandling,
-        )
+        return Oppgave(UUID.randomUUID(), behandling)
     }
 
     private fun behandlingDSL(): BehandlingDSL.() -> Unit = {

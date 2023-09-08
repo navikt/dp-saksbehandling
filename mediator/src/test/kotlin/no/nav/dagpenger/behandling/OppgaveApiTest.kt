@@ -9,6 +9,7 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.beInstanceOf
+import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -179,12 +180,16 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Kan stanse et vedtak`() {
+    fun `Stans av vedtak svarer med en ny oppgaveId`() {
         withOppgaveApi {
             client.post("/oppgave/$oppgaveId/stans") {
                 autentisert()
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
+
+                val responseContent = response.body<String>()
+                val parsedOppgaveId = kotlin.runCatching { UUID.fromString(responseContent) }
+                parsedOppgaveId.isSuccess shouldBe true
             }
         }
     }
@@ -193,6 +198,7 @@ class OppgaveApiTest {
         mediator: Mediator = Mediator(
             rapidsConnection = TestRapid(),
             oppgaveRepository = mockPersistence,
+            personRepository = mockPersistencePerson,
             aktivitetsloggMediator = mockk(relaxed = true),
         ),
         test: suspend ApplicationTestBuilder.() -> Unit,
@@ -215,6 +221,7 @@ class OppgaveApiTest {
         testPerson.håndter(hendelse)
         lagreOppgave(
             Oppgave(
+                UUID.randomUUID(),
                 behandling(testPerson, hendelse) {
                     steg {
                         vilkår("vilkår1")
@@ -229,6 +236,7 @@ class OppgaveApiTest {
         )
         lagreOppgave(
             Oppgave(
+                UUID.randomUUID(),
                 behandling(testPerson, hendelse) {
                     steg {
                         vilkår("vilkår2")
@@ -238,6 +246,7 @@ class OppgaveApiTest {
         )
         lagreOppgave(
             Oppgave(
+                UUID.randomUUID(),
                 behandling(
                     Person("45678910112").also {
                         it.håndter(hendelse)
@@ -250,6 +259,10 @@ class OppgaveApiTest {
                 },
             ),
         )
+    }
+
+    private val mockPersistencePerson = InMemoryPersonRepository.apply {
+        lagrePerson(testPerson)
     }
 
     private fun HttpRequestBuilder.autentisert() {

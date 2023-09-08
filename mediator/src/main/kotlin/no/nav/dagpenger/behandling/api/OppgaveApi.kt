@@ -34,6 +34,7 @@ import no.nav.dagpenger.behandling.api.models.SokDTO
 import no.nav.dagpenger.behandling.api.models.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.toOppgaveDTO
 import no.nav.dagpenger.behandling.dto.toOppgaverDTO
+import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import java.time.LocalDate
 import java.util.UUID
@@ -124,7 +125,12 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                     route("stans") {
                         post {
                             val oppgaveId = call.finnUUID("oppgaveId")
-                            call.respond(status = HttpStatusCode.OK, message = "")
+                            val ident = mediator.hentOppgave(oppgaveId).person.ident
+                            val hendelse = VedtakStansetHendelse(ident).also {
+                                mediator.behandle(it)
+                            }
+
+                            call.respond(status = HttpStatusCode.OK, hendelse.oppgaveId.toString())
                         }
                     }
                 }

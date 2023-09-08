@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
+import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -24,6 +25,14 @@ internal class Mediator(
             personRepository.lagrePerson(it)
         }
         lagreOppgave(hendelse.oppgave(person))
+        aktivitetsloggMediator.håndter(hendelse)
+    }
+
+    fun behandle(hendelse: VedtakStansetHendelse) {
+        val person = personRepository.hentPerson(hendelse.ident()) ?: throw IllegalArgumentException("Fant ikke person, kan ikke utføre stans")
+        hendelse.oppgave(person).also {
+            lagreOppgave(it)
+        }
         aktivitetsloggMediator.håndter(hendelse)
     }
 

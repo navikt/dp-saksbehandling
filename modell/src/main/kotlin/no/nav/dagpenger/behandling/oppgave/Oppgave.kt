@@ -15,8 +15,8 @@ data class Oppgave private constructor(
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
 ) : Behandlingsstatus by behandling {
-    constructor(behandling: Behandling) : this(
-        UUID.randomUUID(),
+    constructor(uuid: UUID, behandling: Behandling) : this(
+        uuid,
         behandling,
         null,
         LocalDateTime.now(),

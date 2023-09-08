@@ -10,12 +10,18 @@ import java.util.UUID
 
 class VedtakStansetHendelse(
     ident: String,
+    val oppgaveId: UUID = UUID.randomUUID(),
 ) : PersonHendelse(UUID.randomUUID(), ident) {
 
     fun oppgave(person: Person): Oppgave {
-        val behandling = behandling(person, this, person.hentGjeldendeSak(), behandlingDSLForStans())
+        val behandling = behandling(
+            person = person,
+            hendelse = this,
+            sak = person.hentGjeldendeSak(),
+            block = behandlingDSLForStans(),
+        )
 
-        return Oppgave(behandling)
+        return Oppgave(oppgaveId, behandling)
     }
 
     private fun behandlingDSLForStans(): BehandlingDSL.() -> Unit = {
