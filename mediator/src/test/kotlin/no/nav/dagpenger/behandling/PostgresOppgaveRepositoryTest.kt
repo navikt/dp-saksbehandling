@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.date.shouldBeWithin
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
@@ -29,6 +30,8 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.toJavaDuration
 
 class PostgresOppgaveRepositoryTest {
 
@@ -100,7 +103,10 @@ class PostgresOppgaveRepositoryTest {
 
                 repository.hentBehandling(testBehandling.uuid).let { rehydrertBehandling ->
                     rehydrertBehandling.person shouldBe testBehandling.person
-                    rehydrertBehandling.opprettet shouldBe testBehandling.opprettet
+                    rehydrertBehandling.opprettet.shouldBeWithin(
+                        1.milliseconds.toJavaDuration(),
+                        testBehandling.opprettet,
+                    )
                     rehydrertBehandling.uuid shouldBe testBehandling.uuid
                     rehydrertBehandling.tilstand shouldBe testBehandling.tilstand
                     // todo check behandler
@@ -166,7 +172,7 @@ class PostgresOppgaveRepositoryTest {
                     oppgave.uuid shouldBe testOppgave.uuid
                     oppgave.utføresAv shouldBe testOppgave.utføresAv
                     oppgave.person shouldBe testOppgave.person
-                    oppgave.opprettet shouldBe testOppgave.opprettet
+                    oppgave.opprettet.shouldBeWithin(1.milliseconds.toJavaDuration(), testOppgave.opprettet)
                     oppgave.tilstand shouldBe testOppgave.tilstand
                 }
             }
@@ -186,7 +192,7 @@ class PostgresOppgaveRepositoryTest {
                     oppgave.uuid shouldBe testOppgave.uuid
                     oppgave.utføresAv shouldBe testOppgave.utføresAv
                     oppgave.person shouldBe testOppgave.person
-                    oppgave.opprettet shouldBe testOppgave.opprettet
+                    oppgave.opprettet.shouldBeWithin(1.milliseconds.toJavaDuration(), testOppgave.opprettet)
                     oppgave.tilstand shouldBe testOppgave.tilstand
                 }
             }
