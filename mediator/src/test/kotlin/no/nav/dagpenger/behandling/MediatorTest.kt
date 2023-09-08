@@ -125,7 +125,7 @@ class MediatorTest {
     }
 
     @Test
-    fun `Publiserer melding søknad_behandlet_hendelse når behandlingen er ferdig`() {
+    fun `Publiserer melding rettighet_behandlet_hendelse når behandlingen er ferdig`() {
         val hendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent)
         mediator.behandle(hendelse)
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
@@ -150,7 +150,7 @@ class MediatorTest {
         val partitionKey = testRapid.inspektør.key(0)
 
         partitionKey shouldBe ident
-        event["@event_name"].asText() shouldBe "søknad_behandlet_hendelse"
+        event["@event_name"].asText() shouldBe "rettighet_behandlet_hendelse"
     }
 
     @Test

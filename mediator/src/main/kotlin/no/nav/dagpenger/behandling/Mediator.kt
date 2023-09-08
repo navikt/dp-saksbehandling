@@ -53,8 +53,8 @@ internal class Mediator(
         }
 
     override fun vedtakFattet(vedtakFattetEvent: VedtakFattet) =
-        publishEvent("søknad_behandlet_hendelse", vedtakFattetEvent).also {
-            logger.info { "Publiserer søknad_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}" }
+        publishEvent("rettighet_behandlet_hendelse", vedtakFattetEvent).also {
+            logger.info { "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}" }
         }
 
     private fun publishEvent(navn: String, event: BehandlingObserver.BehandlingEvent) =
