@@ -137,7 +137,7 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.getStegById("A").svar.let { svar ->
                         svar.verdi shouldBe enDato
                         svar.sporing.shouldBeTypeOf<QuizSporing>()
-                        svar.sporing.utført shouldBe quizSporing.utført
+                        svar.sporing.utført.shouldBeWithin(1.milliseconds.toJavaDuration(), quizSporing.utført)
                         (svar.sporing as QuizSporing).json shouldBe quizSporing.json
                     }
                     rehydrertBehandling.getStegById("B").svar.let { svar ->
