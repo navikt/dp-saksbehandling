@@ -85,6 +85,10 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         Steg.Vilkår(uuid = stegUUID, id = stegId)
                     }
 
+                    "Prosess" -> {
+                        Steg.Prosess(uuid = stegUUID, id = stegId)
+                    }
+
                     "Fastsettelse" -> {
                         when (val svarType = row.string("svar_type")) {
                             "LocalDate" -> {

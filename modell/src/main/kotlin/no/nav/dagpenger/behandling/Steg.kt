@@ -45,7 +45,12 @@ sealed class Steg<T> private constructor(
 
     class Prosess(
         id: String,
-    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing)) {
+        uuid: UUID = UUID.randomUUID(),
+    ) : Steg<Boolean>(
+        uuid = uuid,
+        id = id,
+        svar = Svar(null, Boolean::class.javaObjectType, NullSporing),
+    ) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
