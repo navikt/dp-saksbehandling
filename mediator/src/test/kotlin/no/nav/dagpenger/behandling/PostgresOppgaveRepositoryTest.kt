@@ -29,14 +29,12 @@ import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 
 class PostgresOppgaveRepositoryTest {
 
     private object TestData {
-        val now: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        val now: LocalDateTime = LocalDateTime.now()
         val enString = "fastsettelseC"
-        val nullSporing = NullSporing(LocalDateTime.now())
         val manuellSporing = ManuellSporing(
             utført = now,
             utførtAv = Saksbehandler(ident = "saksbehandlinger"),

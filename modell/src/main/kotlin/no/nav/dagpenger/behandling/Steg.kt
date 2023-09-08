@@ -2,7 +2,6 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.graph.DAGNode
 import no.nav.dagpenger.behandling.graph.DAGNodeVisitor
-import java.time.LocalDateTime
 import java.util.UUID
 
 sealed class Steg<T> private constructor(
@@ -39,20 +38,23 @@ sealed class Steg<T> private constructor(
     ) : Steg<Boolean>(
         uuid = uuid,
         id = id,
-        svar = Svar(null, Boolean::class.javaObjectType, NullSporing(LocalDateTime.now())),
+        svar = Svar(null, Boolean::class.javaObjectType, NullSporing),
     ) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
     class Prosess(
         id: String,
-    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing(LocalDateTime.now()))) {
+    ) : Steg<Boolean>(id = id, svar = Svar(null, Boolean::class.javaObjectType, NullSporing)) {
         override val node: DAGNode<Steg<*>> = DAGNode(this)
     }
 
     companion object {
         inline fun <reified B> fastsettelse(id: String) =
-            Fastsettelse(id = id, svar = Svar(null, B::class.java, NullSporing(LocalDateTime.now())))
+            Fastsettelse(
+                id = id,
+                svar = Svar(null, B::class.java, NullSporing),
+            )
     }
 
     protected abstract val node: DAGNode<Steg<*>>

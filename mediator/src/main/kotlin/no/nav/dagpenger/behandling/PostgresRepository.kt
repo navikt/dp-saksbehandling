@@ -174,7 +174,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     else -> throw IllegalStateException("Kjenner ikke til type=$type")
                 }
             }.asSingle,
-        ) ?: NullSporing(LocalDateTime.now())
+        ) ?: NullSporing
     }
 
     private fun Session.leggTilRelasjoner(behandlingId: UUID, steg: Set<Steg<*>>) {
