@@ -1,3 +1,3 @@
-package no.nav.dagpenger.behandling.oppgave
+package no.nav.dagpenger.behandling
 
 data class Saksbehandler(val ident: String)

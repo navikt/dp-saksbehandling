@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
+import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -27,6 +28,14 @@ internal class Mediator(
         aktivitetsloggMediator.håndter(hendelse)
     }
 
+    fun behandle(hendelse: VedtakStansetHendelse) {
+        val person = personRepository.hentPerson(hendelse.ident()) ?: throw IllegalArgumentException("Fant ikke person, kan ikke utføre stans")
+        hendelse.oppgave(person).also {
+            lagreOppgave(it)
+        }
+        aktivitetsloggMediator.håndter(hendelse)
+    }
+
     fun utfør(kommando: UtførStegKommando) {
         val oppgave = hentOppgave(kommando.oppgaveUUID)
         oppgave.utfør(kommando)
@@ -44,8 +53,8 @@ internal class Mediator(
         }
 
     override fun vedtakFattet(vedtakFattetEvent: VedtakFattet) =
-        publishEvent("søknad_behandlet_hendelse", vedtakFattetEvent).also {
-            logger.info { "Publiserer søknad_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}" }
+        publishEvent("rettighet_behandlet_hendelse", vedtakFattetEvent).also {
+            logger.info { "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}" }
         }
 
     private fun publishEvent(navn: String, event: BehandlingObserver.BehandlingEvent) =

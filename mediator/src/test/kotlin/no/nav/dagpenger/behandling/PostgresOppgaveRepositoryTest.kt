@@ -25,11 +25,11 @@ import no.nav.dagpenger.behandling.PostgresOppgaveRepositoryTest.TestData.vilkå
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.helpers.db.Postgres.withMigratedDb
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.toJavaDuration
 
@@ -89,7 +89,7 @@ class PostgresOppgaveRepositoryTest {
             steg = testSteg,
             sak = testSak,
         )
-        val testOppgave = Oppgave(testBehandling)
+        val testOppgave = Oppgave(UUID.randomUUID(), testBehandling)
     }
 
     @Test

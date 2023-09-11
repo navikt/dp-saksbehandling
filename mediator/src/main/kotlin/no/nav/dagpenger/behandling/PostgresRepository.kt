@@ -8,7 +8,6 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
-import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import org.postgresql.util.PGobject
 import java.time.LocalDateTime
 import java.util.UUID

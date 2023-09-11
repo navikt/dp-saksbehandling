@@ -1,7 +1,6 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.hendelser.Hendelse
-import no.nav.dagpenger.behandling.oppgave.Saksbehandler
 import java.time.LocalDateTime
 import java.util.UUID
 
