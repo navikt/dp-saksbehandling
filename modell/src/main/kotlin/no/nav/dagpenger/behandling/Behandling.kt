@@ -122,8 +122,16 @@ class Behandling private constructor(
     private inline fun <reified T> _besvar(uuid: UUID, verdi: T, sporing: Sporing) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
 
-        require(stegSomSkalBesvares.svar.clazz == T::class.java) {
-            "Fikk ${T::class.java}, forventet ${stegSomSkalBesvares.svar.clazz} ved besvaring av steg med uuid: $uuid"
+        val clazz = when (stegSomSkalBesvares.svar) {
+            is Svar.BooleanSvar -> java.lang.Boolean::class.java
+            is Svar.DoubleSvar -> java.lang.Double::class.java
+            is Svar.IntegerSvar -> Integer::class.java
+            is Svar.LocalDateSvar -> LocalDate::class.java
+            is Svar.StringSvar -> java.lang.String::class.java
+        }
+
+        require(T::class.java == clazz) {
+            "Fikk ${T::class.java}, forventet $clazz ved besvaring av steg med uuid: $uuid"
         }
 
         (stegSomSkalBesvares as Steg<T>).besvar(verdi, sporing)

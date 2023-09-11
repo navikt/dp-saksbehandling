@@ -54,7 +54,7 @@ sealed class Steg<T> private constructor(
         constructor(id: String, uuid: UUID = UUID.randomUUID()) : this(
             id,
             uuid,
-            Svar(null, Boolean::class.javaObjectType, NullSporing),
+            Svar.BooleanSvar(null, NullSporing),
             Tilstand.IkkeUtført,
         )
 
@@ -81,7 +81,7 @@ sealed class Steg<T> private constructor(
         constructor(id: String, uuid: UUID = UUID.randomUUID()) : this(
             id,
             uuid,
-            Svar(null, Boolean::class.javaObjectType, NullSporing),
+            Svar.BooleanSvar(null, NullSporing),
             Tilstand.IkkeUtført,
         )
 
@@ -95,11 +95,7 @@ sealed class Steg<T> private constructor(
     }
 
     companion object {
-        inline fun <reified B> fastsettelse(id: String) =
-            Fastsettelse(
-                id = id,
-                svar = Svar(null, B::class.java, NullSporing),
-            )
+        inline fun <reified B> fastsettelse(id: String) = Fastsettelse(id = id, svar = Svar.opprett<B>(NullSporing))
     }
 
     protected abstract val node: DAGNode<Steg<*>>

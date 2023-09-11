@@ -1,6 +1,5 @@
 package no.nav.dagpenger.behandling
 
-import kotliquery.Row
 import kotliquery.Session
 import kotliquery.action.UpdateQueryAction
 import kotliquery.queryOf
@@ -55,14 +54,6 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         }.toSet()
     }
 
-    private inline fun <reified T> Row.hentSvar(sporing: Sporing, extractFun: () -> T): Svar<T> {
-        val verdi = when {
-            this.boolean("ubesvart") -> null
-            else -> extractFun()
-        }
-        return Svar(verdi, T::class.java, sporing)
-    }
-
     private fun Session.hentSteg(behandlingId: UUID): Set<Steg<*>> {
         val run = this.run(
             queryOf(
@@ -81,17 +72,17 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 val tilstand = Tilstand.valueOf(row.string("tilstand"))
 
                 val svar = when (val svarType = row.string("svar_type")) {
-                    "LocalDate" -> row.hentSvar(sporing) { row.localDate("dato") }
-                    "Integer" -> row.hentSvar(sporing) { row.int("heltall") }
-                    "String" -> row.hentSvar(sporing) { row.string("string") }
-                    "Boolean" -> row.hentSvar(sporing) { row.boolean("boolsk") }
-                    "Double" -> row.hentSvar(sporing) { row.double("desimal") }
+                    "LocalDateSvar" -> Svar.LocalDateSvar(row.localDate("dato"), sporing)
+                    "IntegerSvar" -> Svar.IntegerSvar(row.int("heltall"), sporing)
+                    "StringSvar" -> Svar.StringSvar(row.string("string"), sporing)
+                    "BooleanSvar" -> Svar.BooleanSvar(row.boolean("boolsk"), sporing)
+                    "DoubleSvar" -> Svar.DoubleSvar(row.double("desimal"), sporing)
                     else -> throw IllegalArgumentException("Ugyldig svartype: $svarType")
                 }
                 when (type) {
-                    "Vilkår" -> Steg.Vilkår.rehydrer(uuid = stegUUID, id = stegId, svar = svar as Svar<Boolean>, tilstand)
-                    "Prosess" -> Steg.Prosess.rehydrer(uuid = stegUUID, id = stegId, svar = svar as Svar<Boolean>, tilstand)
-                    "Fastsettelse" -> Steg.Fastsettelse.rehydrer(uuid = stegUUID, id = stegId, svar = svar, tilstand)
+                    "Vilkår" -> Steg.Vilkår.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand)
+                    "Prosess" -> Steg.Prosess.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand)
+                    "Fastsettelse" -> Steg.Fastsettelse.rehydrer(stegUUID, stegId, svar, tilstand)
                     else -> throw IllegalArgumentException("Ugyldig type: $type")
                 }
             }.asList,
@@ -396,29 +387,29 @@ private fun Sporing.toParamMap(): Map<String, Any?> {
 }
 
 private fun Steg<*>.toParamMap(): Map<String, Any?> {
-    val svarType = svar.clazz.simpleName
+    val svarType = svar
 
     return mapOf(
         "uuid" to uuid,
         "steg_id" to id,
         "tilstand" to tilstand.toString(),
         "type" to this.javaClass.simpleName,
-        "svar_type" to svarType,
+        "svar_type" to svarType.javaClass.simpleName,
         "ubesvart" to svar.ubesvart,
         "string" to svar.verdi.takeIf {
-            it != null && svarType == "String"
+            it != null && svarType is Svar.StringSvar
         },
         "dato" to svar.verdi.takeIf {
-            it != null && svarType == "LocalDate"
+            it != null && svarType is Svar.LocalDateSvar
         },
         "heltall" to svar.verdi.takeIf {
-            it != null && svarType == "Integer"
+            it != null && svarType is Svar.IntegerSvar
         },
         "boolsk" to svar.verdi.takeIf {
-            it != null && svarType == "Boolean"
+            it != null && svarType is Svar.BooleanSvar
         },
         "desimal" to svar.verdi.takeIf {
-            it != null && svarType == "Double"
+            it != null && svarType is Svar.DoubleSvar
         },
     )
 }

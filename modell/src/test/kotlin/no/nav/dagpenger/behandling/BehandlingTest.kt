@@ -122,6 +122,9 @@ class BehandlingTest {
         behandling.besvar(testUuid, 5, testSporing)
         shouldThrow<NoSuchElementException> { behandling.besvar(UUID.randomUUID(), 5, testSporing) }
         shouldThrow<IllegalArgumentException> { behandling.besvar(testUuid, "String svar", testSporing) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(testUuid, LocalDate.EPOCH, testSporing) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(testUuid, false, testSporing) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(testUuid, 2.2, testSporing) }
     }
 
     @Test

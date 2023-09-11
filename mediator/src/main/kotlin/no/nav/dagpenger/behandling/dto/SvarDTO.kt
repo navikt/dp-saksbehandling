@@ -5,9 +5,12 @@ import no.nav.dagpenger.behandling.api.models.SvarDTO
 import no.nav.dagpenger.behandling.api.models.SvartypeDTO
 
 internal fun Svar<*>.toSvarDTO(): SvarDTO {
-    val type = when (clazz.simpleName) {
-        "Integer" -> SvartypeDTO.Int
-        else -> SvartypeDTO.valueOf(clazz.simpleName.replaceFirstChar { it.uppercase() })
+    val type = when (this) {
+        is Svar.BooleanSvar -> SvartypeDTO.Boolean
+        is Svar.DoubleSvar -> SvartypeDTO.Double
+        is Svar.IntegerSvar -> SvartypeDTO.Int
+        is Svar.LocalDateSvar -> SvartypeDTO.LocalDate
+        is Svar.StringSvar -> SvartypeDTO.String
     }
     return SvarDTO(
         svar = this.verdi?.toString(),
