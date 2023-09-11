@@ -179,15 +179,3 @@ class BehandlingTest {
         behandling.utfall() shouldBe Utfall.Avslag
     }
 }
-
-fun main() {
-    listOf(
-        Steg.fastsettelse<String>("1"),
-        Steg.fastsettelse<LocalDate>("2"),
-        Steg.fastsettelse<Int>("3"),
-        Steg.fastsettelse<Boolean>("4"),
-        Steg.fastsettelse<Double>("5"),
-    ).forEach {
-        println(it.svar.clazz.simpleName)
-    }
-}
