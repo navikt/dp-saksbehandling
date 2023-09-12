@@ -33,6 +33,7 @@ import no.nav.dagpenger.behandling.api.auth.verifier
 import no.nav.dagpenger.behandling.api.models.NyttSvarDTO
 import no.nav.dagpenger.behandling.api.models.SokDTO
 import no.nav.dagpenger.behandling.api.models.SvartypeDTO
+import no.nav.dagpenger.behandling.dto.OppgaveIdWrapper
 import no.nav.dagpenger.behandling.dto.toOppgaveDTO
 import no.nav.dagpenger.behandling.dto.toOppgaverDTO
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
@@ -130,7 +131,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 mediator.behandle(it)
                             }
 
-                            call.respond(status = HttpStatusCode.OK, hendelse.oppgaveId.toString())
+                            call.respond(status = HttpStatusCode.OK, OppgaveIdWrapper(hendelse.oppgaveId))
                         }
                     }
                 }

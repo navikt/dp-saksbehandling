@@ -3,6 +3,7 @@ package no.nav.dagpenger.behandling.dto
 import no.nav.dagpenger.behandling.api.models.OppgaveDTO
 import no.nav.dagpenger.behandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.behandling.oppgave.Oppgave
+import java.util.UUID
 
 internal fun Collection<Oppgave>.toOppgaverDTO() = this.map { it.toOppgaveDTO() }
 
@@ -18,3 +19,5 @@ internal fun Oppgave.toOppgaveDTO(): OppgaveDTO {
         steg = this.alleSteg().toStegDTO(),
     )
 }
+
+data class OppgaveIdWrapper(val oppgaveId: UUID)
