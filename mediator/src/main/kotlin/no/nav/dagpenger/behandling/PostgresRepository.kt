@@ -61,6 +61,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 statement = """    
                 SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal
                 FROM steg WHERE behandling_uuid = :behandling_uuid
+                ORDER BY id
                 """.trimIndent(),
                 paramMap = mapOf("behandling_uuid" to behandlingId),
 
