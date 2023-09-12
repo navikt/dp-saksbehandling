@@ -84,7 +84,7 @@ paths:
           description: Vellykket respons som indikerer at steget er utført
   /oppgave/{oppgaveId}/stans:
     post:
-      summary: Trigge opprettelse av oppgave for stans
+      summary: Trigge opprettelse av oppgave for stans og returnerer dens oppgaveId
       parameters:
         - in: path
           name: oppgaveId
@@ -98,8 +98,12 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                format: uuid
+                type: object
+                properties:
+                  oppgaveId:
+                    type: string
+                    format: uuid
+                    description: Unik oppgaveId for stansoppgaven som har blitt opprettet
 components:
   schemas:
     Hendelse:
