@@ -80,8 +80,12 @@ class PostgresOppgaveRepositoryTest {
             it.avhengerAv(fastsettelseC)
         }
 
+        val fastsettelseG = Steg.fastsettelse<String>("G").also {
+            it.avhengerAv(vilkårF)
+        }
+
         val testSteg: Set<Steg<*>> =
-            setOf(fastsettelseA, fastsettelseB, fastsettelseC, fastsettelseD, fastsettelseE, vilkårF)
+            setOf(fastsettelseA, fastsettelseB, fastsettelseC, fastsettelseD, fastsettelseE, vilkårF, fastsettelseG)
 
         val testBehandling: Behandling = Behandling(
             person = testPerson,

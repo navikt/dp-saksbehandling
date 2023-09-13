@@ -73,11 +73,11 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 val tilstand = Tilstand.valueOf(row.string("tilstand"))
 
                 val svar = when (val svarType = row.string("svar_type")) {
-                    "LocalDateSvar" -> Svar.LocalDateSvar(row.localDate("dato"), sporing)
-                    "IntegerSvar" -> Svar.IntegerSvar(row.int("heltall"), sporing)
-                    "StringSvar" -> Svar.StringSvar(row.string("string"), sporing)
+                    "LocalDateSvar" -> Svar.LocalDateSvar(row.localDateOrNull("dato"), sporing)
+                    "IntegerSvar" -> Svar.IntegerSvar(row.intOrNull("heltall"), sporing)
+                    "StringSvar" -> Svar.StringSvar(row.stringOrNull("string"), sporing)
                     "BooleanSvar" -> Svar.BooleanSvar(row.boolean("boolsk"), sporing)
-                    "DoubleSvar" -> Svar.DoubleSvar(row.double("desimal"), sporing)
+                    "DoubleSvar" -> Svar.DoubleSvar(row.doubleOrNull("desimal"), sporing)
                     else -> throw IllegalArgumentException("Ugyldig svartype: $svarType")
                 }
                 when (type) {
