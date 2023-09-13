@@ -40,7 +40,7 @@ class BehandlingDSL() {
             }
 
         fun vilkår(id: String, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
-            Vilkår(id).also {
+            Vilkår(id = id).also {
                 konfigurasjon(Konfigurasjon(it))
             }
 
@@ -59,7 +59,7 @@ class BehandlingDSL() {
             }
 
             fun avhengerAvVilkår(id: String, block: Konfigurasjon.() -> Unit = {}) {
-                val vilkår = Vilkår(id)
+                val vilkår = Vilkår(id = id)
                 block(Konfigurasjon(vilkår))
                 avhengerAv(vilkår)
             }

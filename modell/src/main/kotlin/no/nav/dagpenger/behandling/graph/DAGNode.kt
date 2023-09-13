@@ -16,6 +16,7 @@ class DAGNode<T>(val value: T) {
     private val children
         get() = outgoingEdges.map { it.to }.toSet()
 
+    fun children(): Set<DAGNode<T>> = children
     fun addChild(child: DAGNode<T>) {
         if (this == child || this in child.getDescendants()) {
             throw IllegalStateException("Adding this child would create a cycle: $child")

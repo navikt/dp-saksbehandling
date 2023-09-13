@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.graph
 
+import no.nav.dagpenger.behandling.Steg
 import java.io.File
 
 internal class StegVisualisererVisitor : DAGNodeVisitor {
@@ -8,7 +9,7 @@ internal class StegVisualisererVisitor : DAGNodeVisitor {
 
     override fun <T> visit(node: T, children: Set<DAGNode<T>>, parents: Set<DAGNode<T>>) {
         children.forEach { steg ->
-            edges.add("$node --> $steg")
+            edges.add("${(node as Steg<*>).id} --> ${(steg.value as Steg<*>).id}")
         }
     }
 

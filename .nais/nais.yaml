@@ -27,16 +27,9 @@ spec:
     enabled: true
   kafka:
     pool: {{ kafka_pool }}
-  gcp:
-    sqlInstances:
-      - type: POSTGRES_15
-        highAvailability: true
-        diskAutoresize: true
-        pointInTimeRecovery: true
-        tier: {{gcp.sql.tier}}
-        databases:
-          - name: behandling
-            envVarPrefix: DB
+  env:
+    - name: FLYWAY_CLEAN_DISABLED
+      value: "false"
   azure:
     application:
       enabled: true
@@ -47,6 +40,16 @@ spec:
           - id: {{azure.grupper.beslutter}}
         extra:
           - NAVident
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_15
+        highAvailability: true
+        diskAutoresize: true
+        pointInTimeRecovery: true
+        tier: {{gcp.sql.tier}}
+        databases:
+          - name: behandling
+            envVarPrefix: DB
   accessPolicy:
     inbound:
       rules:

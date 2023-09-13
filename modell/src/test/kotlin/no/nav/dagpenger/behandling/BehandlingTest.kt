@@ -110,18 +110,33 @@ class BehandlingTest {
 
     @Test
     fun `Skal kunne besvare behandling`() {
-        lateinit var testUuid: UUID
+        lateinit var intUUID: UUID
+        lateinit var vilkårUUID: UUID
         val behandling = behandling(testPerson, testHendelse, sak = Sak()) {
             steg {
                 fastsettelse<Int>("noe").also {
-                    testUuid = it.uuid
+                    intUUID = it.uuid
+                }
+            }
+            steg {
+                vilkår("bær").also {
+                    vilkårUUID = it.uuid
                 }
             }
         }
 
-        behandling.besvar(testUuid, 5, testSporing)
+        behandling.erFerdig() shouldBe false
+        behandling.besvar(vilkårUUID, true, testSporing)
+        behandling.erFerdig() shouldBe false
+
         shouldThrow<NoSuchElementException> { behandling.besvar(UUID.randomUUID(), 5, testSporing) }
-        shouldThrow<IllegalArgumentException> { behandling.besvar(testUuid, "String svar", testSporing) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, "String svar", testSporing) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, LocalDate.EPOCH, testSporing) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, false, testSporing) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, 2.2, testSporing) }
+
+        behandling.besvar(intUUID, 5, testSporing)
+        behandling.erFerdig() shouldBe true
     }
 
     @Test

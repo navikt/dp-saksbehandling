@@ -18,6 +18,7 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.random.Random
 
@@ -109,7 +110,7 @@ class MediatorTest {
             this.sak = sak
         }
 
-        override fun visit(oppgaveId: UUID) {
+        override fun visit(oppgaveId: UUID, opprettet: LocalDateTime, utføresAv: Saksbehandler?) {
             this.oppgaveId = oppgaveId
         }
     }
@@ -132,12 +133,12 @@ class MediatorTest {
         mediator.utfør(
             UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
                 oppgave.alleSteg().forEach {
-                    when (it.svar.clazz.simpleName) {
-                        "Boolean" -> besvar(it.uuid, true, testSporing)
-                        "Integer" -> besvar(it.uuid, Random.nextInt(), testSporing)
-                        "String" -> besvar(it.uuid, Random.nextBytes(10).toString(), testSporing)
-                        "LocalDate" -> besvar(it.uuid, LocalDate.now(), testSporing)
-                        "Double" -> besvar(it.uuid, Random.nextDouble(), testSporing)
+                    when (it.svar) {
+                        is Svar.BooleanSvar -> besvar(it.uuid, true, testSporing)
+                        is Svar.DoubleSvar -> besvar(it.uuid, Random.nextDouble(), testSporing)
+                        is Svar.IntegerSvar -> besvar(it.uuid, Random.nextInt(), testSporing)
+                        is Svar.LocalDateSvar -> besvar(it.uuid, LocalDate.now(), testSporing)
+                        is Svar.StringSvar -> besvar(it.uuid, Random.nextBytes(10).toString(), testSporing)
                     }
                 }
                 oppgave.alleSteg().forEach { it.tilstand shouldBe Utført }

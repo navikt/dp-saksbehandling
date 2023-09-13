@@ -27,11 +27,37 @@ class Behandling private constructor(
     val steg: Set<Steg<*>>,
     val opprettet: LocalDateTime,
     val uuid: UUID,
-    private var tilstand: Tilstand,
+    var tilstand: Tilstand,
     val behandler: List<PersonHendelse>,
     val sak: Sak,
 ) : Behandlingsstatus {
     private val observers = mutableSetOf<BehandlingObserver>()
+
+    companion object {
+
+        private fun tilstand(tilstand: TilstandType): Tilstand = when (tilstand) {
+            TilstandType.TilBehandling -> TilBehandling
+            TilstandType.FerdigBehandlet -> FerdigBehandlet
+        }
+
+        fun rehydrer(
+            person: Person,
+            steg: Set<Steg<*>>,
+            opprettet: LocalDateTime,
+            uuid: UUID,
+            tilstand: TilstandType,
+            behandler: List<PersonHendelse>,
+            sak: Sak,
+        ): Behandling = Behandling(
+            person = person,
+            steg = steg,
+            opprettet = opprettet,
+            uuid = uuid,
+            tilstand = tilstand(tilstand),
+            behandler = behandler,
+            sak = sak,
+        )
+    }
 
     constructor(person: Person, hendelse: PersonHendelse, steg: Set<Steg<*>>, sak: Sak) : this(
         person,
@@ -79,8 +105,7 @@ class Behandling private constructor(
         return if (alleVilkårOppfylt) Utfall.Innvilgelse else Utfall.Avslag
     }
 
-    override fun erFerdig(): Boolean =
-        steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
+    override fun erFerdig(): Boolean = steg.all { it.utført }
 
     fun besvar(uuid: UUID, verdi: String, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
@@ -95,8 +120,16 @@ class Behandling private constructor(
     private inline fun <reified T> _besvar(uuid: UUID, verdi: T, sporing: Sporing) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
 
-        require(stegSomSkalBesvares.svar.clazz == T::class.java) {
-            "Fikk ${T::class.java}, forventet ${stegSomSkalBesvares.svar.clazz} ved besvaring av steg med uuid: $uuid"
+        val clazz = when (stegSomSkalBesvares.svar) {
+            is Svar.BooleanSvar -> java.lang.Boolean::class.java
+            is Svar.DoubleSvar -> java.lang.Double::class.java
+            is Svar.IntegerSvar -> Integer::class.java
+            is Svar.LocalDateSvar -> LocalDate::class.java
+            is Svar.StringSvar -> java.lang.String::class.java
+        }
+
+        require(T::class.java == clazz) {
+            "Fikk ${T::class.java}, forventet $clazz ved besvaring av steg med uuid: $uuid"
         }
 
         (stegSomSkalBesvares as Steg<T>).besvar(verdi, sporing)
@@ -106,7 +139,14 @@ class Behandling private constructor(
         observers.add(søknadObserver)
     }
 
+    enum class TilstandType {
+        TilBehandling,
+        FerdigBehandlet,
+    }
+
     interface Tilstand : Aktivitetskontekst {
+        val type: TilstandType
+
         fun entering(søknadHendelse: Hendelse, behandling: Behandling) {}
 
         override fun toSpesifikkKontekst(): SpesifikkKontekst = this.javaClass.canonicalName.split(".").last().let {
@@ -117,6 +157,7 @@ class Behandling private constructor(
     }
 
     private object TilBehandling : Tilstand {
+        override val type = TilstandType.TilBehandling
 
         override fun utfør(kommando: UtførStegKommando, behandling: Behandling) {
             kommando.besvar(behandling)
@@ -128,7 +169,9 @@ class Behandling private constructor(
         }
     }
 
-    private object FerdigBehandlet : Tilstand
+    private object FerdigBehandlet : Tilstand {
+        override val type = TilstandType.FerdigBehandlet
+    }
 
     private fun endreTilstand(nyTilstand: Tilstand, hendelse: Hendelse) {
         if (nyTilstand == tilstand) {
