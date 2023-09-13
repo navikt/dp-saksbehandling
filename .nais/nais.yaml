@@ -28,7 +28,7 @@ spec:
   kafka:
     pool: {{ kafka_pool }}
   env:
-    - name: CLEAN_DISABLED
+    - name: FLYWAY_CLEAN_DISABLED
       value: "false"
   azure:
     application:
