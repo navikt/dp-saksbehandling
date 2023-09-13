@@ -2,7 +2,6 @@ package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.api.oppgaveApi
-import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.clean
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak

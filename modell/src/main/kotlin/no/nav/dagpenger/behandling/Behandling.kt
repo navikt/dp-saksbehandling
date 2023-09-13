@@ -35,10 +35,9 @@ class Behandling private constructor(
 
     companion object {
 
-        private fun tilstand(tilstand: String): Tilstand = when (tilstand) {
-            "TilBehandling" -> TilBehandling
-            "FerdigBehandlet" -> FerdigBehandlet
-            else -> throw IllegalArgumentException("Ugyldig tilstand: $tilstand")
+        private fun tilstand(tilstand: TilstandType): Tilstand = when (tilstand) {
+            TilstandType.TilBehandling -> TilBehandling
+            TilstandType.FerdigBehandlet -> FerdigBehandlet
         }
 
         fun rehydrer(
@@ -46,7 +45,7 @@ class Behandling private constructor(
             steg: Set<Steg<*>>,
             opprettet: LocalDateTime,
             uuid: UUID,
-            tilstand: String,
+            tilstand: TilstandType,
             behandler: List<PersonHendelse>,
             sak: Sak,
         ): Behandling = Behandling(
@@ -106,8 +105,7 @@ class Behandling private constructor(
         return if (alleVilkårOppfylt) Utfall.Innvilgelse else Utfall.Avslag
     }
 
-    override fun erFerdig(): Boolean =
-        steg.filterIsInstance<Steg.Vilkår>().any { it.svar.verdi == false } || steg.none { it.svar.ubesvart }
+    override fun erFerdig(): Boolean = steg.all { it.utført }
 
     fun besvar(uuid: UUID, verdi: String, sporing: Sporing) = _besvar(uuid, verdi, sporing)
 
@@ -141,7 +139,14 @@ class Behandling private constructor(
         observers.add(søknadObserver)
     }
 
+    enum class TilstandType {
+        TilBehandling,
+        FerdigBehandlet,
+    }
+
     interface Tilstand : Aktivitetskontekst {
+        val type: TilstandType
+
         fun entering(søknadHendelse: Hendelse, behandling: Behandling) {}
 
         override fun toSpesifikkKontekst(): SpesifikkKontekst = this.javaClass.canonicalName.split(".").last().let {
@@ -152,6 +157,7 @@ class Behandling private constructor(
     }
 
     private object TilBehandling : Tilstand {
+        override val type = TilstandType.TilBehandling
 
         override fun utfør(kommando: UtførStegKommando, behandling: Behandling) {
             kommando.besvar(behandling)
@@ -163,7 +169,9 @@ class Behandling private constructor(
         }
     }
 
-    private object FerdigBehandlet : Tilstand
+    private object FerdigBehandlet : Tilstand {
+        override val type = TilstandType.FerdigBehandlet
+    }
 
     private fun endreTilstand(nyTilstand: Tilstand, hendelse: Hendelse) {
         if (nyTilstand == tilstand) {

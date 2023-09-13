@@ -8,8 +8,11 @@ sealed class Steg<T> private constructor(
     val uuid: UUID = UUID.randomUUID(),
     val id: String,
     var svar: Svar<T>,
-    var tilstand: Tilstand = Tilstand.IkkeUtført,
+    private var _tilstand: Tilstand = Tilstand.IkkeUtført,
 ) {
+    val tilstand get() = _tilstand
+    val utført get() = _tilstand == Tilstand.Utført
+
     override fun equals(other: Any?): Boolean {
         return other != null && other is Steg<*> && this.uuid == other.uuid
     }
@@ -49,7 +52,7 @@ sealed class Steg<T> private constructor(
         uuid = uuid,
         id = id,
         svar = svar,
-        tilstand = tilstand,
+        _tilstand = tilstand,
     ) {
         constructor(id: String, uuid: UUID = UUID.randomUUID()) : this(
             id,
@@ -108,7 +111,7 @@ sealed class Steg<T> private constructor(
     fun avhengigeSteg() = node.children().map { it.value }.toSet()
 
     fun nesteSteg(): Set<Steg<*>> {
-        val criteria: (steg: Steg<*>) -> Boolean = { it.tilstand != Tilstand.Utført }
+        val criteria: (steg: Steg<*>) -> Boolean = { it._tilstand != Tilstand.Utført }
         val result = mutableSetOf<Steg<*>>()
         if (criteria(this)) {
             val x = node.getDescendants(false, criteria).map { it.value }
@@ -126,15 +129,15 @@ sealed class Steg<T> private constructor(
     fun besvar(svar: T, sporing: Sporing) {
         require(sporing !is NullSporing) { "Sporing kan ikke være NullSporing" }
         this.svar = this.svar.besvar(svar, sporing)
-        this.tilstand = Tilstand.Utført
+        this._tilstand = Tilstand.Utført
         node.getAncestors().forEach {
             it.value.måGodkjennes()
         }
     }
 
     private fun måGodkjennes() {
-        if (tilstand == Tilstand.Utført) {
-            this.tilstand = Tilstand.MåGodkjennes
+        if (_tilstand == Tilstand.Utført) {
+            this._tilstand = Tilstand.MåGodkjennes
         }
     }
 

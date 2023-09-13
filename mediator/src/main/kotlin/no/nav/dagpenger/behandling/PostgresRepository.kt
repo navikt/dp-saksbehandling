@@ -155,7 +155,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         steg = session.hentSteg(uuid),
                         opprettet = row.localDateTime("opprettet"),
                         uuid = row.uuid("uuid"),
-                        tilstand = row.string("tilstand"),
+                        tilstand = Behandling.TilstandType.valueOf(row.string("tilstand")),
                         behandler = listOf(), // todo implement
                         // todo: Sak er allerede rehydrert som en del av person opphentingen...
                         sak = Sak(row.uuid("sak_id")),
@@ -269,7 +269,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 "person_ident" to behandling.person.ident,
                 "opprettet" to behandling.opprettet,
                 "uuid" to behandling.uuid,
-                "tilstand" to behandling.tilstand.javaClass.simpleName,
+                "tilstand" to behandling.tilstand.type.toString(),
                 "sak_id" to behandling.sak.id,
             ),
         ).asUpdate

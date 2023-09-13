@@ -162,6 +162,9 @@ class PostgresOppgaveRepositoryTest {
                     }
                     rehydrertBehandling.getStegById("D").svar.verdi shouldBe enBoolean
                     rehydrertBehandling.getStegById("E").svar.verdi shouldBe etDesimaltall
+                    rehydrertBehandling.getStegById("G").svar.verdi shouldBe null
+
+                    rehydrertBehandling.tilstand.type shouldBe Behandling.TilstandType.TilBehandling
                 }
             }
         }
