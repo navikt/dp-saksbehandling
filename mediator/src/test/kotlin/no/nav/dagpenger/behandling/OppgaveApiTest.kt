@@ -7,9 +7,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.beInstanceOf
-import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -186,9 +186,13 @@ class OppgaveApiTest {
                 autentisert()
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
 
-                val responseContent = response.body<String>()
-                val parsedOppgaveId = kotlin.runCatching { UUID.fromString(responseContent) }
+                val oppgaveIdWrapper = jacksonObjectMapper().readTree(response.bodyAsText())
+                val oppgaveID = oppgaveIdWrapper["oppgaveId"].asText()
+                oppgaveID shouldNotBe null
+
+                val parsedOppgaveId = kotlin.runCatching { UUID.fromString(oppgaveID) }
                 parsedOppgaveId.isSuccess shouldBe true
             }
         }
