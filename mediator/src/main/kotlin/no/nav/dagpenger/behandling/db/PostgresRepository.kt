@@ -1,12 +1,24 @@
-package no.nav.dagpenger.behandling
+package no.nav.dagpenger.behandling.db
 
 import kotliquery.Session
 import kotliquery.action.UpdateQueryAction
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.behandling.Behandling
+import no.nav.dagpenger.behandling.ManuellSporing
+import no.nav.dagpenger.behandling.NullSporing
+import no.nav.dagpenger.behandling.OppgaveVisitor
+import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.PersonVisitor
+import no.nav.dagpenger.behandling.QuizSporing
+import no.nav.dagpenger.behandling.Sak
+import no.nav.dagpenger.behandling.Saksbehandler
+import no.nav.dagpenger.behandling.Sporing
+import no.nav.dagpenger.behandling.Steg
+import no.nav.dagpenger.behandling.Svar
+import no.nav.dagpenger.behandling.Tilstand
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
 import org.postgresql.util.PGobject
 import java.time.LocalDateTime
 import java.util.UUID

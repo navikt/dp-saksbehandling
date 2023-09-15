@@ -9,10 +9,11 @@ import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Tilstand.Utført
+import no.nav.dagpenger.behandling.db.InMemoryOppgaveRepository
+import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
-import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach

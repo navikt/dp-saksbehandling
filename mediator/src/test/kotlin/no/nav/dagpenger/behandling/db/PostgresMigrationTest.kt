@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling.db
 
+import no.nav.dagpenger.behandling.db.Postgres.withCleanDb
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.runMigration
-import no.nav.dagpenger.behandling.helpers.db.Postgres.withCleanDb
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 

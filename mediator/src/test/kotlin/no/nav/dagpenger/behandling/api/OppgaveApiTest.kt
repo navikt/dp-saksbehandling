@@ -1,4 +1,4 @@
-package no.nav.dagpenger.behandling
+package no.nav.dagpenger.behandling.api
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.json.shouldContainJsonKey
@@ -24,13 +24,17 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
+import no.nav.dagpenger.behandling.ManuellSporing
+import no.nav.dagpenger.behandling.Mediator
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
-import no.nav.dagpenger.behandling.api.oppgaveApi
+import no.nav.dagpenger.behandling.Person
+import no.nav.dagpenger.behandling.Tilstand
+import no.nav.dagpenger.behandling.db.InMemoryOppgaveRepository
+import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.helpers.mockAzure
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
-import no.nav.dagpenger.behandling.oppgave.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test

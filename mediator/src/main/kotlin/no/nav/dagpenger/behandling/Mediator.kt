@@ -3,9 +3,10 @@ package no.nav.dagpenger.behandling
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
+import no.nav.dagpenger.behandling.db.OppgaveRepository
+import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
-import no.nav.dagpenger.behandling.oppgave.OppgaveRepository
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.util.UUID

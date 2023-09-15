@@ -4,10 +4,9 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.PersonVisitor
-import no.nav.dagpenger.behandling.PostgresRepository
 import no.nav.dagpenger.behandling.Sak
+import no.nav.dagpenger.behandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
-import no.nav.dagpenger.behandling.helpers.db.Postgres.withMigratedDb
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import org.junit.jupiter.api.Test
 import java.util.UUID

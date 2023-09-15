@@ -1,7 +1,8 @@
-package no.nav.dagpenger.behandling.oppgave
+package no.nav.dagpenger.behandling.db
 
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
+import no.nav.dagpenger.behandling.oppgave.Oppgave
 import java.util.UUID
 
 class InMemoryOppgaveRepository : OppgaveRepository {
