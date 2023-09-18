@@ -108,7 +108,7 @@ class PostgresOppgaveRepositoryTest {
             PostgresRepository(dataSource).let { repository ->
                 repository.lagrePerson(testPerson)
                 shouldNotThrowAny {
-                    repository.lagreBehandling(testBehandling)
+                    repository.lagreOppgave(testOppgave)
                 }
 
                 repository.hentBehandling(testBehandling.uuid).let { rehydrertBehandling ->
@@ -221,13 +221,13 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Kan oppdatere en eksisterende behandling`() {
+    fun `Kan oppdatere en eksisterende oppgave`() {
         withMigratedDb {
             PostgresRepository(dataSource).let { repository ->
                 repository.lagrePerson(testPerson)
                 shouldNotThrowAny {
-                    repository.lagreBehandling(testBehandling)
-                    repository.lagreBehandling(testBehandling)
+                    repository.lagreOppgave(testOppgave)
+                    repository.lagreOppgave(testOppgave)
                     // todo finne en måte å teste det som kan muteres
                 }
             }
