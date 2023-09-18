@@ -39,6 +39,11 @@ class SøknadInnsendtHendelse(
                 avhengerAv(virkningsdato)
             }
         }
+        val vilkår = steg {
+            vilkår("Oppfyller kravene til dagpenger") {
+                avhengerAv(virkningsdato)
+            }
+        }
         val grunnlag = steg {
             fastsettelse<Int>("Grunnlag") {
                 avhengerAv(virkningsdato)
@@ -52,11 +57,6 @@ class SøknadInnsendtHendelse(
         val periode = steg {
             fastsettelse<Int>("Periode") {
                 avhengerAv(grunnlag)
-            }
-        }
-        val vilkår = steg {
-            vilkår("Oppfyller kravene til dagpenger") {
-                avhengerAv(virkningsdato)
             }
         }
         val forslagTilVedtak = steg {
