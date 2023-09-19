@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    api("no.nav.dagpenger:aktivitetslogg:20230830.cf9ebc")
+    api(libs.dp.aktivitetslogg)
     implementation(libs.jackson.kotlin)
     testImplementation(libs.bundles.kotest.assertions)
 }
