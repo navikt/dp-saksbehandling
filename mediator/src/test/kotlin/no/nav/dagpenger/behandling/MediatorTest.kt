@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -15,6 +16,8 @@ import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.oppgave.Oppgave
+import no.nav.dagpenger.behandling.serder.asUUID
+import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -152,6 +155,13 @@ class MediatorTest {
 
         partitionKey shouldBe ident
         event["@event_name"].asText() shouldBe "rettighet_behandlet_hendelse"
+        shouldNotThrowAny {
+            event["behandlingId"].asUUID()
+            event["ident"].asText()
+            event["Virkningsdato"].asLocalDate()
+            event["Dagsats"].asInt()
+            event["Fastsatt vanlig arbeidstid"].asDouble()
+        }
     }
 
     @Test

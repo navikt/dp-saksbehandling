@@ -17,23 +17,23 @@ sealed class Svar<T>() {
     abstract fun besvar(verdi: T, sporing: Sporing): Svar<T>
 
     // Define subtypes for different value types
-    data class BooleanSvar(override val verdi: Boolean?, override val sporing: Sporing) : Svar<Boolean>() {
+    class BooleanSvar(override val verdi: Boolean?, override val sporing: Sporing) : Svar<Boolean>() {
         override fun besvar(verdi: Boolean, sporing: Sporing) = BooleanSvar(verdi, sporing)
     }
 
-    data class StringSvar(override val verdi: String?, override val sporing: Sporing) : Svar<String>() {
+    class StringSvar(override val verdi: String?, override val sporing: Sporing) : Svar<String>() {
         override fun besvar(verdi: String, sporing: Sporing) = StringSvar(verdi, sporing)
     }
 
-    data class IntegerSvar(override val verdi: Int?, override val sporing: Sporing) : Svar<Int>() {
+    class IntegerSvar(override val verdi: Int?, override val sporing: Sporing) : Svar<Int>() {
         override fun besvar(verdi: Int, sporing: Sporing) = IntegerSvar(verdi, sporing)
     }
 
-    data class DoubleSvar(override val verdi: Double?, override val sporing: Sporing) : Svar<Double>() {
+    class DoubleSvar(override val verdi: Double?, override val sporing: Sporing) : Svar<Double>() {
         override fun besvar(verdi: Double, sporing: Sporing) = DoubleSvar(verdi, sporing)
     }
 
-    data class LocalDateSvar(override val verdi: LocalDate?, override val sporing: Sporing) : Svar<LocalDate>() {
+    class LocalDateSvar(override val verdi: LocalDate?, override val sporing: Sporing) : Svar<LocalDate>() {
         override fun besvar(verdi: LocalDate, sporing: Sporing) = LocalDateSvar(verdi, sporing)
     }
 
