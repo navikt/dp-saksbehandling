@@ -12,6 +12,12 @@ abstract class PersonHendelse(
 ) : Hendelse(meldingsreferanseId) {
     fun ident() = ident
     override fun kontekst(): Map<String, String> = mapOf("ident" to ident)
+
+    override fun equals(other: Any?): Boolean {
+        return other is PersonHendelse && other.ident == ident && super.equals(other)
+    }
+
+    override fun hashCode(): Int = super.hashCode() + ident.hashCode()
 }
 
 abstract class Hendelse(
@@ -23,4 +29,12 @@ abstract class Hendelse(
         SpesifikkKontekst(this.javaClass.simpleName, kontekst())
 
     protected open fun kontekst(): Map<String, String> = emptyMap()
+
+    override fun equals(other: Any?): Boolean {
+        return other is Hendelse && other.meldingsreferanseId == meldingsreferanseId
+    }
+
+    override fun hashCode(): Int {
+        return meldingsreferanseId.hashCode()
+    }
 }

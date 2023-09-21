@@ -76,4 +76,9 @@ class SøknadInnsendtHendelse(
             }
         }
     }
+
+    override fun hashCode(): Int = søknadId.hashCode() + journalpostId.hashCode() + super.hashCode()
+    override fun equals(other: Any?): Boolean {
+        return other is SøknadInnsendtHendelse && other.søknadId == søknadId && super.equals(other)
+    }
 }

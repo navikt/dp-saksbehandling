@@ -6,11 +6,15 @@ import no.nav.dagpenger.behandling.Behandling
 import no.nav.dagpenger.behandling.ManuellSporing
 import no.nav.dagpenger.behandling.NullSporing
 import no.nav.dagpenger.behandling.OppgaveVisitor
+import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.QuizSporing
+import no.nav.dagpenger.behandling.Sak
 import no.nav.dagpenger.behandling.Saksbehandler
 import no.nav.dagpenger.behandling.Sporing
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Svar
+import no.nav.dagpenger.behandling.Tilstand
+import no.nav.dagpenger.behandling.hendelser.PersonHendelse
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import org.postgresql.util.PGobject
 import java.time.LocalDateTime
@@ -86,6 +90,68 @@ internal class BehandlingStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, St
             ),
         ).asUpdate,
     )
+}
+
+internal class HendelseStatemenBuilder(oppgave: Oppgave) : OppgaveVisitor, StatementBuilder {
+    private val hendelser: MutableList<PersonHendelse> = mutableListOf()
+    private lateinit var behandlingId: UUID
+
+    init {
+        oppgave.accept(this)
+    }
+
+    override fun visit(
+        person: Person,
+        steg: Set<Steg<*>>,
+        opprettet: LocalDateTime,
+        behandlingId: UUID,
+        tilstand: Tilstand,
+        behandler: List<PersonHendelse>,
+        sak: Sak
+    ) {
+        this.hendelser.addAll(behandler)
+        this.behandlingId = behandlingId
+    }
+
+    override val updateQueryActions: List<UpdateQueryAction> =
+        hendelser.map { hendelse ->
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+               INSERT INTO hendelse(behandling_id, melding_referanse_id, opprettet, type, soknad_id, journalpost_id, oppgave_id)
+               VALUES (:person_ident, :opprettet, :uuid, :tilstand, :sak_id)
+               ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand
+            """.trimIndent(),
+                paramMap = mapOf(
+                    "person_ident" to behandling.person.ident,
+                    "opprettet" to behandling.opprettet,
+                    "uuid" to behandling.uuid,
+                    "tilstand" to behandling.tilstand.type.toString(),
+                    "sak_id" to behandling.sak.id,
+                ),
+            ).asUpdate,
+        }
+
+    private fun PersonHendelse.toParamMap(): Map<String, Any?> {
+        return mapOf(
+            "behandling_id" to behandlingId,
+            "melding_referanse_id" to meldingsreferanseId(),
+            "type" to this.javaClass.simpleName,
+            "soknad_id" to soknadId,
+            "journalpost_id" to journalpostId,
+            "oppgave_id" to oppgaveId,
+        )
+    }
+
+    private fun PersonHendelse.søknadInnsendtParamMap(): Map<String, Any?> =
+        when (this.javaClass.simpleName) {
+            "SøknadInnsendtHendelse" -> {
+                mapOf()
+            }
+
+            else -> emptyMap()
+        }
+
 }
 
 internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, StatementBuilder {

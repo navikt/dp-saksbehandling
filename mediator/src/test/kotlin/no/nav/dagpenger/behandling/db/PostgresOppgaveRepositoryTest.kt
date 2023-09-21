@@ -119,8 +119,9 @@ class PostgresOppgaveRepositoryTest {
                     )
                     rehydrertBehandling.uuid shouldBe testBehandling.uuid
                     rehydrertBehandling.tilstand shouldBe testBehandling.tilstand
-                    // todo check behandler
-//                    rehydrertBehandling.behandler shouldBe something
+
+                    // behandler
+                    rehydrertBehandling.behandler.first() shouldBe testBehandling.behandler.first()
 
                     rehydrertBehandling.sak shouldBe testSak
 

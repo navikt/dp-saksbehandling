@@ -182,6 +182,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 listOf(
                     // todo Order matters...
                     BehandlingStatementBuilder(oppgave).updateQueryActions,
+                    HendelseStatemenBuilder(oppgave).updateQueryActions,
                     StegStatementBuilder(oppgave).updateQueryActions,
                     RelasjonStatementBuilder(oppgave).updateQueryActions,
                     SporingStatementBuilder(oppgave).updateQueryActions,
