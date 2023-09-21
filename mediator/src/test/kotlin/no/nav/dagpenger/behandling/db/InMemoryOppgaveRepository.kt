@@ -9,7 +9,7 @@ class InMemoryOppgaveRepository : OppgaveRepository {
     private val oppgaver = mutableListOf<Oppgave>()
 
     init {
-        SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "12345678910").let {
+        SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "598137911", ident = "12345678910").let {
             oppgaver.add(
                 it.oppgave(
                     Person("12345678910").also { person ->
@@ -19,7 +19,7 @@ class InMemoryOppgaveRepository : OppgaveRepository {
             )
         }
 
-        SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "10987654321").let {
+        SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "598137911", ident = "10987654321").let {
             oppgaver.add(
                 it.oppgave(
                     Person("10987654321").also { person ->
@@ -29,7 +29,7 @@ class InMemoryOppgaveRepository : OppgaveRepository {
             )
         }
 
-        SøknadInnsendtHendelse(UUID.randomUUID(), "598137911", "12837798289").let {
+        SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "598137911", ident = "12837798289").let {
             oppgaver.add(
                 it.oppgave(
                     Person("12837798289").also { person ->

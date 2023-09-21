@@ -21,9 +21,9 @@ class PostgresPersonRepositoryTest {
             Person(testIdent).also {
                 it.håndter(
                     SøknadInnsendtHendelse(
-                        UUID.randomUUID(),
-                        "123",
-                        "123",
+                        søknadId = UUID.randomUUID(),
+                        journalpostId = "123",
+                        ident = "123",
                     ),
                 )
                 repository.lagrePerson(it)

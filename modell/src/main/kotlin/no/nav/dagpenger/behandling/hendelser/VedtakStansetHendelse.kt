@@ -9,9 +9,10 @@ import java.time.LocalDate
 import java.util.UUID
 
 class VedtakStansetHendelse(
+    meldingsreferanseId: UUID = UUID.randomUUID(),
     ident: String,
     val oppgaveId: UUID = UUID.randomUUID(),
-) : PersonHendelse(UUID.randomUUID(), ident) {
+) : PersonHendelse(meldingsreferanseId, ident) {
 
     fun oppgave(person: Person): Oppgave {
         val behandling = behandling(
@@ -39,5 +40,9 @@ class VedtakStansetHendelse(
                 avhengerAv(forslagTilVedtak)
             }
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is VedtakStansetHendelse && other.oppgaveId == oppgaveId && super.equals(other)
     }
 }

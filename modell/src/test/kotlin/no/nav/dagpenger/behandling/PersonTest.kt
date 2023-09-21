@@ -10,8 +10,20 @@ class PersonTest {
     @Test
     fun `Alle hendelser skal havne på samme sak (Viggo case)`() {
         val person = Person("12345678910")
-        person.håndter(SøknadInnsendtHendelse(UUID.randomUUID(), "123", "12345678910"))
-        person.håndter(SøknadInnsendtHendelse(UUID.randomUUID(), "123", "12345678910"))
+        person.håndter(
+            SøknadInnsendtHendelse(
+                søknadId = UUID.randomUUID(),
+                journalpostId = "123",
+                ident = "12345678910",
+            ),
+        )
+        person.håndter(
+            SøknadInnsendtHendelse(
+                søknadId = UUID.randomUUID(),
+                journalpostId = "123",
+                ident = "12345678910",
+            ),
+        )
 
         val visitor = TestVisitor(person)
         visitor.saker.size shouldBe 1

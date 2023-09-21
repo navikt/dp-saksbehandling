@@ -71,6 +71,15 @@ class Behandling private constructor(
 
     fun accept(visitor: BehandlingVisitor) {
         visitor.visit(uuid, sak)
+        visitor.visit(
+            person = this.person,
+            steg = this.steg,
+            opprettet = this.opprettet,
+            behandlingId = this.uuid,
+            tilstand = this.tilstand.type,
+            behandler = this.behandler,
+            sak = this.sak,
+        )
     }
 
     fun nesteSteg(): Set<Steg<*>> {

@@ -225,7 +225,7 @@ class OppgaveApiTest {
 
     private var fattet = false
     private val mockPersistence = InMemoryOppgaveRepository().apply {
-        val hendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent)
+        val hendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent)
         testPerson.håndter(hendelse)
         lagreOppgave(
             Oppgave(

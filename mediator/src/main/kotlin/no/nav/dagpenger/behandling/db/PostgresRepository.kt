@@ -17,6 +17,9 @@ import no.nav.dagpenger.behandling.Sporing
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Svar
 import no.nav.dagpenger.behandling.Tilstand
+import no.nav.dagpenger.behandling.hendelser.PersonHendelse
+import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
+import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import java.util.UUID
 import javax.sql.DataSource
@@ -61,6 +64,45 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 }.asList,
             )
         }.toSet()
+    }
+
+    private fun Session.hentBehandler(behandlingId: UUID, ident: String): List<PersonHendelse> {
+        return this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    SELECT melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id
+                    FROM  hendelse
+                    WHERE behandling_id = :behandling_id
+                """.trimIndent(),
+                paramMap = mapOf("behandling_id" to behandlingId),
+            ).map { row ->
+                val clazz = row.string("clazz")
+                val meldingsreferanseId = row.uuid("melding_referanse_id")
+                when (clazz) {
+                    "SøknadInnsendtHendelse" -> {
+                        SøknadInnsendtHendelse(
+                            meldingsreferanseId = meldingsreferanseId,
+                            søknadId = row.uuid("soknad_id"),
+                            journalpostId = row.string("journalpost_id"),
+                            ident = ident,
+                        )
+                    }
+
+                    "VedtakStansetHendelse" -> {
+                        VedtakStansetHendelse(
+                            meldingsreferanseId = meldingsreferanseId,
+                            ident = ident,
+                            oppgaveId = row.uuid("oppgave_id"),
+                        )
+                    }
+
+                    else -> {
+                        throw IllegalArgumentException("Ugyldig clazz: $clazz")
+                    }
+                }
+            }.asList,
+        )
     }
 
     private fun Session.hentSteg(behandlingId: UUID): Set<Steg<*>> {
@@ -165,7 +207,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         opprettet = row.localDateTime("opprettet"),
                         uuid = row.uuid("uuid"),
                         tilstand = Behandling.TilstandType.valueOf(row.string("tilstand")),
-                        behandler = listOf(), // todo implement
+                        behandler = session.hentBehandler(uuid, person.ident),
                         // todo: Sak er allerede rehydrert som en del av person opphentingen...
                         sak = Sak(row.uuid("sak_id")),
                     )

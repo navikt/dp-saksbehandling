@@ -161,7 +161,7 @@ class BehandlingTest {
     fun `Setter riktig type utfall ved stans`() {
         lateinit var fastsettelse: UUID
 
-        val stansBehandling = behandling(testPerson, VedtakStansetHendelse(testIdent, UUID.randomUUID()), Sak()) {
+        val stansBehandling = behandling(testPerson, VedtakStansetHendelse(ident = testIdent, oppgaveId = UUID.randomUUID()), Sak()) {
             steg {
                 fastsettelse<LocalDate>("en fastsettelse").also { fastsettelse = it.uuid }
             }

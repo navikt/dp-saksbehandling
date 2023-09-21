@@ -9,10 +9,11 @@ import java.time.LocalDate
 import java.util.UUID
 
 class SøknadInnsendtHendelse(
+    meldingsreferanseId: UUID = UUID.randomUUID(),
     private val søknadId: UUID,
     private val journalpostId: String,
     ident: String,
-) : PersonHendelse(UUID.randomUUID(), ident) {
+) : PersonHendelse(meldingsreferanseId, ident) {
     fun søknadId() = søknadId
     fun journalpostId() = journalpostId
 
@@ -80,5 +81,9 @@ class SøknadInnsendtHendelse(
     override fun hashCode(): Int = søknadId.hashCode() + journalpostId.hashCode() + super.hashCode()
     override fun equals(other: Any?): Boolean {
         return other is SøknadInnsendtHendelse && other.søknadId == søknadId && super.equals(other)
+    }
+
+    override fun toString(): String {
+        return "SøknadInnsendtHendelse(søknadId=$søknadId, journalpostId='$journalpostId')"
     }
 }

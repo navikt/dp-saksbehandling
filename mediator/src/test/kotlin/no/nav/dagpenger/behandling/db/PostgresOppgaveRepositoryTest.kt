@@ -6,8 +6,9 @@ import io.kotest.matchers.date.shouldBeWithin
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import no.nav.dagpenger.behandling.Behandling
+import no.nav.dagpenger.behandling.Behandling.TilstandType.TilBehandling
 import no.nav.dagpenger.behandling.ManuellSporing
-import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSak
 import no.nav.dagpenger.behandling.QuizSporing
@@ -27,9 +28,13 @@ import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.fas
 import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.fastsettelseE
 import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.manuellSporing
 import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.quizSporing
+import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.søknadInnsendtHendelse
 import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.testBehandling
 import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.testOppgave
+import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.vedtakStansetHendelse
 import no.nav.dagpenger.behandling.db.PostgresOppgaveRepositoryTest.TestData.vilkårF
+import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
+import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
@@ -93,12 +98,18 @@ class PostgresOppgaveRepositoryTest {
         val testSteg: Set<Steg<*>> =
             setOf(fastsettelseA, fastsettelseB, fastsettelseC, fastsettelseD, fastsettelseE, vilkårF, fastsettelseG)
 
-        val testBehandling: Behandling = Behandling(
+        val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent)
+        val vedtakStansetHendelse = VedtakStansetHendelse(ident = testIdent, oppgaveId = UUID.randomUUID())
+        val testBehandling = Behandling.rehydrer(
             person = testPerson,
-            hendelse = testHendelse,
             steg = testSteg,
+            opprettet = LocalDateTime.now(),
+            uuid = UUID.randomUUID(),
+            tilstand = TilBehandling,
+            behandler = listOf(søknadInnsendtHendelse, vedtakStansetHendelse),
             sak = testSak,
         )
+
         val testOppgave = Oppgave(UUID.randomUUID(), testBehandling)
     }
 
@@ -121,7 +132,7 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.tilstand shouldBe testBehandling.tilstand
 
                     // behandler
-                    rehydrertBehandling.behandler.first() shouldBe testBehandling.behandler.first()
+                    rehydrertBehandling.behandler shouldContainExactly listOf(søknadInnsendtHendelse, vedtakStansetHendelse)
 
                     rehydrertBehandling.sak shouldBe testSak
 
@@ -171,7 +182,7 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.getStegById("E").svar.verdi shouldBe etDesimaltall
                     rehydrertBehandling.getStegById("G").svar.verdi shouldBe null
 
-                    rehydrertBehandling.tilstand.type shouldBe Behandling.TilstandType.TilBehandling
+                    rehydrertBehandling.tilstand.type shouldBe TilBehandling
                 }
             }
         }

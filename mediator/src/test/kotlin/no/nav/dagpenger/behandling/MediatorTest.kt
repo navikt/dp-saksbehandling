@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
-import no.nav.dagpenger.behandling.Meldingsfabrikk.testHendelse
+import no.nav.dagpenger.behandling.Meldingsfabrikk.søknadInnsendtHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
@@ -83,8 +83,8 @@ class MediatorTest {
     @Test
     fun `Alle nye oppgaver havner på samme sak (Viggo case)`() {
         val ident = "88888888888"
-        mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", ident))
-        mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", ident))
+        mediator.behandle(SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = ident))
+        mediator.behandle(SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = ident))
 
         mockOppgaveRepository.hentOppgaverFor(ident).let {
             it.size shouldBe 2
@@ -118,7 +118,7 @@ class MediatorTest {
 
     @Test
     fun `Behandle SøknadInnsendtHendelse`() {
-        mediator.behandle(SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent))
+        mediator.behandle(SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent))
         InMemoryPersonRepository.hentPerson(testIdent).also {
             it shouldNotBe null
             it!!.hentGjeldendeSak() shouldNotBe null
@@ -127,7 +127,7 @@ class MediatorTest {
 
     @Test
     fun `Publiserer melding rettighet_behandlet_hendelse når behandlingen er ferdig`() {
-        val hendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "123", testIdent)
+        val hendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent)
         mediator.behandle(hendelse)
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
         val oppgave = mockOppgaveRepository.hentOppgave(oppgaveId)
@@ -158,18 +158,18 @@ class MediatorTest {
     fun `VedtakStansetHendelse fører til en ny oppgave med behandling for stans`() {
         val ukjentIdent = "22222222222"
         shouldThrow<IllegalArgumentException> {
-            mediator.behandle(VedtakStansetHendelse(ukjentIdent))
+            mediator.behandle(VedtakStansetHendelse(ident = ukjentIdent))
         }
 
         mockOppgaveRepository.hentOppgaverFor(testIdent).size shouldBe 2
-        mediator.behandle(VedtakStansetHendelse(testIdent))
+        mediator.behandle(VedtakStansetHendelse(ident = testIdent))
         mockOppgaveRepository.hentOppgaverFor(testIdent).size shouldBe 3
     }
 
     private val mockOppgaveRepository = InMemoryOppgaveRepository().apply {
         oppgave = Oppgave(
             UUID.randomUUID(),
-            behandling(testPerson, testHendelse, Sak(sakId)) {
+            behandling(testPerson, søknadInnsendtHendelse, Sak(sakId)) {
                 steg {
                     vilkår("vilkår1") {
                         avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
@@ -182,7 +182,7 @@ class MediatorTest {
         )
         oppgaveId = oppgave.uuid
         lagreOppgave(oppgave)
-        val søknadInnsendtHendelse = SøknadInnsendtHendelse(UUID.randomUUID(), "", testIdent)
+        val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "", ident = testIdent)
         lagreOppgave(
             søknadInnsendtHendelse.oppgave(
                 testPerson.also {

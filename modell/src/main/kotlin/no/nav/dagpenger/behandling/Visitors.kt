@@ -16,7 +16,7 @@ interface BehandlingVisitor {
         steg: Set<Steg<*>>,
         opprettet: LocalDateTime,
         behandlingId: UUID,
-        tilstand: Tilstand,
+        tilstand: Behandling.TilstandType,
         behandler: List<PersonHendelse>,
         sak: Sak,
     ) {

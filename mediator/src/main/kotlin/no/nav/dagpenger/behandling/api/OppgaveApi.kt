@@ -127,7 +127,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         post {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val ident = mediator.hentOppgave(oppgaveId).person.ident
-                            val hendelse = VedtakStansetHendelse(ident).also {
+                            val hendelse = VedtakStansetHendelse(ident = ident).also {
                                 mediator.behandle(it)
                             }
 
