@@ -21,11 +21,10 @@ class UtførStegKommando(
 
 abstract class Kommando(
     val oppgaveUUID: UUID,
-    private val saksbehandler: Saksbehandler,
+    val saksbehandler: Saksbehandler,
     private val begrunnelse: String,
     private val utført: LocalDateTime = LocalDateTime.now(),
 ) : Hendelse(UUID.randomUUID()) {
-
     fun sporing(): ManuellSporing {
         return ManuellSporing(utført, saksbehandler, begrunnelse)
     }

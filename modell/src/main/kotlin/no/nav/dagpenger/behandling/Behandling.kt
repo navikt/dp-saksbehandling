@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.aktivitetslogg.Aktivitetskontekst
+import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
 import no.nav.dagpenger.aktivitetslogg.SpesifikkKontekst
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
@@ -171,6 +172,12 @@ class Behandling private constructor(
         override fun utfør(kommando: UtførStegKommando, behandling: Behandling) {
             kommando.besvar(behandling)
 
+            kommando.info(
+                "Besvarer steg i saksbehandlingen",
+                behandling.person.ident,
+                kommando.saksbehandler.ident,
+                AuditOperasjon.UPDATE,
+            )
             if (behandling.erFerdig()) {
                 behandling.varsleOmVedtak(kommando)
                 behandling.endreTilstand(FerdigBehandlet, kommando)

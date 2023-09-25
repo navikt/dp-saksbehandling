@@ -1,4 +1,5 @@
 rootProject.name = "dp-behandling"
+
 include("modell")
 include("openapi")
 include("mediator")
@@ -9,7 +10,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-            from("no.nav.dagpenger:dp-version-catalog:20230919.31.4a1791")
+            from("no.nav.dagpenger:dp-version-catalog:20230925.34.48e3e6")
         }
     }
 }

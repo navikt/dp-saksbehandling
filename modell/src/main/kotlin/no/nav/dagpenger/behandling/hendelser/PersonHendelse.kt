@@ -25,6 +25,7 @@ abstract class Hendelse(
     internal val aktivitetslogg: Aktivitetslogg = Aktivitetslogg(),
 ) : Aktivitetskontekst, IAktivitetslogg by aktivitetslogg {
     fun meldingsreferanseId() = meldingsreferanseId
+
     final override fun toSpesifikkKontekst() =
         SpesifikkKontekst(this.javaClass.simpleName, kontekst())
 
