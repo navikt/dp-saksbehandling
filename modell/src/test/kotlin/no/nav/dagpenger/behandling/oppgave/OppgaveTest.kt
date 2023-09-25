@@ -25,7 +25,12 @@ class OppgaveTest {
 
         oppgave.tilstand shouldBe TilBehandling
         oppgave.utfør(
-            UtførStegKommando(oppgave.uuid, Saksbehandler("X12345"), "") {
+            UtførStegKommando(
+                oppgave.uuid,
+                Saksbehandler("X12345"),
+                "",
+                "02020256789",
+            ) {
                 besvar(steg.uuid, "foob", it)
             },
         )

@@ -41,19 +41,34 @@ class MediatorTest {
     @Test
     fun UtførStegKommando() {
         mediator.utfør(
-            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+            UtførStegKommando(
+                oppgaveId,
+                Saksbehandler(ident),
+                "",
+                "",
+            ) {
                 besvar(finnStegId("vilkår1"), false, it)
             },
         )
 
         mediator.utfør(
-            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+            UtførStegKommando(
+                oppgaveId,
+                Saksbehandler(ident),
+                "",
+                "",
+            ) {
                 besvar(finnStegId("vilkår 1 dato"), LocalDate.now(), it)
             },
         )
 
         mediator.utfør(
-            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+            UtførStegKommando(
+                oppgaveId,
+                Saksbehandler(ident),
+                "",
+                "",
+            ) {
                 besvar(finnStegId("fastsettelse1"), 2, it)
             },
         )
@@ -121,7 +136,13 @@ class MediatorTest {
 
     @Test
     fun `Behandle SøknadInnsendtHendelse`() {
-        mediator.behandle(SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent))
+        mediator.behandle(
+            SøknadInnsendtHendelse(
+                søknadId = UUID.randomUUID(),
+                journalpostId = "123",
+                ident = testIdent,
+            ),
+        )
         InMemoryPersonRepository.hentPerson(testIdent).also {
             it shouldNotBe null
             it!!.hentGjeldendeSak() shouldNotBe null
@@ -135,7 +156,12 @@ class MediatorTest {
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
         val oppgave = mockOppgaveRepository.hentOppgave(oppgaveId)
         mediator.utfør(
-            UtførStegKommando(oppgaveId, Saksbehandler(ident), "") {
+            UtførStegKommando(
+                oppgaveId,
+                Saksbehandler(ident),
+                "",
+                "",
+            ) {
                 oppgave.alleSteg().forEach {
                     when (it.svar) {
                         is Svar.BooleanSvar -> besvar(it.uuid, true, testSporing)
@@ -192,7 +218,8 @@ class MediatorTest {
         )
         oppgaveId = oppgave.uuid
         lagreOppgave(oppgave)
-        val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "", ident = testIdent)
+        val søknadInnsendtHendelse =
+            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "", ident = testIdent)
         lagreOppgave(
             søknadInnsendtHendelse.oppgave(
                 testPerson.also {

@@ -27,7 +27,10 @@ abstract class Hendelse(
     fun meldingsreferanseId() = meldingsreferanseId
 
     final override fun toSpesifikkKontekst() =
-        SpesifikkKontekst(this.javaClass.simpleName, kontekst())
+        SpesifikkKontekst(
+            this.javaClass.simpleName,
+            kontekst() + mapOf("meldingsreferanseId" to meldingsreferanseId.toString()),
+        )
 
     protected open fun kontekst(): Map<String, String> = emptyMap()
 

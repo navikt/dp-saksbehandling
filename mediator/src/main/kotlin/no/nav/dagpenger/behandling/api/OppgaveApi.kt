@@ -104,11 +104,14 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             val stegId = call.finnUUID("stegId")
                             val svar: NyttSvarDTO = call.receive()
 
+                            // TODO: Teit å gjøre dette for å hente ut ident
+                            val oppgave = mediator.hentOppgave(oppgaveId)
                             val kommando =
                                 UtførStegKommando(
                                     oppgaveUUID = oppgaveId,
                                     saksbehandler = Saksbehandler(call.saksbehandlerId()),
                                     begrunnelse = svar.begrunnelse.tekst,
+                                    ident = oppgave.person.ident,
                                 ) { sporing ->
                                     when (svar.type) {
                                         SvartypeDTO.String -> besvar(stegId, svar.svar, sporing)
