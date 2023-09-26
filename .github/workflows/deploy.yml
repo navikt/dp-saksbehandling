@@ -15,8 +15,10 @@ jobs:
         with:
           java-version: 17
           distribution: temurin
-      - uses: gradle/gradle-build-action@2.4.2
+
+      - uses: gradle/gradle-build-action@v2.8.0
         with:
+          dependency-graph: generate-and-submit
           arguments: --configuration-cache build installDist
 
       - uses: nais/docker-build-push@v0
