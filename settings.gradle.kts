@@ -1,1 +1,1 @@
-rootProject.name = "dp-SERVICENAME"
+rootProject.name = "dp-saksbehandling"
