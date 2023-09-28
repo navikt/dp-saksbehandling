@@ -5,3 +5,13 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+  # Maintain dependencies for gradle
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+  # Maintain dependencies for docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
