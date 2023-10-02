@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.bundles.ktor.server)
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
     implementation(libs.bundles.postgres)
+    implementation(libs.dp.biblioteker.oauth2.klient)
 
     testImplementation(libs.mockk)
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
