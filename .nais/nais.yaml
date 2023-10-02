@@ -51,6 +51,9 @@ spec:
           - name: behandling
             envVarPrefix: DB
   accessPolicy:
+    outbound:
+      rules:
+        - application: dp-iverksett
     inbound:
       rules:
         - application: dp-saksbehandling-frontend
