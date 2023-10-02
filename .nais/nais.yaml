@@ -30,6 +30,10 @@ spec:
   env:
     - name: FLYWAY_CLEAN_DISABLED
       value: "false"
+    - name: DP_IVERKSETT_URL
+      value: {{dp_iverksett.url}}
+    - name: DP_IVERKSETT_AUDIENCE
+      value: {{dp_iverksett.audience}}
   azure:
     application:
       enabled: true
