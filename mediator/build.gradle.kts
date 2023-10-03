@@ -5,6 +5,22 @@ plugins {
     application
 }
 
+val githubUser: String by project
+val githubPassword: String by project
+
+repositories {
+    mavenCentral()
+    maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+
+    maven {
+        url = uri("https://maven.pkg.github.com/navikt/dp-kontrakter")
+        credentials {
+            username = githubUser
+            password = githubPassword
+        }
+    }
+}
+
 dependencies {
     val ktorVersion = libs.versions.ktor.get()
     implementation(project(":modell"))
@@ -16,6 +32,11 @@ dependencies {
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
     implementation(libs.bundles.postgres)
     implementation(libs.dp.biblioteker.oauth2.klient)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+
+    // Kontrakter for dp-iverksett
+    implementation("no.nav.dagpenger.kontrakter:iverksett:2.0_20231003104738_fd5c7b7")
 
     testImplementation(libs.mockk)
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
@@ -23,11 +44,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:${libs.versions.junit.get()}")
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.bundles.postgres.test)
-}
-
-repositories {
-    mavenCentral()
-    maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
 application {
