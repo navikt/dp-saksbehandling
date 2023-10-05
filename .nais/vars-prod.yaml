@@ -11,5 +11,5 @@ azure:
     beslutter: "70d54cad-53a3-4788-bbe3-565096f01da7" # 0000-GA-Dagpenger-Beslutter
 
 dp-iverksett:
-  url: "http://dp-iverksett"
+  url: "https://dp-iverksett.intern.nav.no"
   audience: "prod-gcp:teamdagpenger:dp-iverksett"
