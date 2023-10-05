@@ -44,6 +44,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:${libs.versions.junit.get()}")
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.bundles.postgres.test)
+    testImplementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}")
 }
 
 application {
