@@ -13,11 +13,11 @@ repositories {
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 
     maven {
-        url = uri("https://maven.pkg.github.com/navikt/dp-kontrakter")
         credentials {
             username = githubUser
             password = githubPassword
         }
+        setUrl("https://maven.pkg.github.com/navikt/dp-kontrakter")
     }
 }
 
