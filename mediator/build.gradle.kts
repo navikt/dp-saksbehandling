@@ -36,7 +36,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
 
     // Kontrakter for dp-iverksett
-    implementation("no.nav.dagpenger.kontrakter:iverksett:2.0_20231003162750_e8a4d05")
+    implementation("no.nav.dagpenger.kontrakter:iverksett:2.0_20231006100015_48cb142")
 
     testImplementation(libs.mockk)
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
