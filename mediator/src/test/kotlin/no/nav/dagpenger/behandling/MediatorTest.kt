@@ -46,6 +46,7 @@ class MediatorTest {
                 Saksbehandler(ident),
                 "",
                 "",
+                "token",
             ) {
                 besvar(finnStegId("vilkår1"), false, it)
             },
@@ -57,6 +58,7 @@ class MediatorTest {
                 Saksbehandler(ident),
                 "",
                 "",
+                "token",
             ) {
                 besvar(finnStegId("vilkår 1 dato"), LocalDate.now(), it)
             },
@@ -68,6 +70,7 @@ class MediatorTest {
                 Saksbehandler(ident),
                 "",
                 "",
+                "token",
             ) {
                 besvar(finnStegId("fastsettelse1"), 2, it)
             },
@@ -161,6 +164,7 @@ class MediatorTest {
                 Saksbehandler(ident),
                 "",
                 "",
+                "token",
             ) {
                 oppgave.alleSteg().forEach {
                     when (it.svar) {

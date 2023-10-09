@@ -116,6 +116,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                     saksbehandler = Saksbehandler(call.saksbehandlerId()),
                                     begrunnelse = svar.begrunnelse.tekst,
                                     ident = oppgave.person.ident,
+                                    token = token,
                                 ) { sporing ->
                                     when (svar.type) {
                                         SvartypeDTO.String -> besvar(stegId, svar.svar, sporing)

@@ -30,6 +30,7 @@ class OppgaveTest {
                 Saksbehandler("X12345"),
                 "",
                 "02020256789",
+                "token",
             ) {
                 besvar(steg.uuid, "foob", it)
             },

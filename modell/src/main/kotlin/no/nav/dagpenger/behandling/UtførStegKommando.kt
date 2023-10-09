@@ -9,6 +9,7 @@ class UtførStegKommando(
     saksbehandler: Saksbehandler,
     begrunnelse: String,
     val ident: String,
+    val token: String,
     private val block: Behandling.(sporing: Sporing) -> Unit,
 ) : Kommando(oppgaveUUID, saksbehandler, begrunnelse, ident) {
     override fun utfør(behandling: Behandling) {
