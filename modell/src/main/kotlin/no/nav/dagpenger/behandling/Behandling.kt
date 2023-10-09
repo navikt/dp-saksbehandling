@@ -213,7 +213,7 @@ class Behandling private constructor(
         }
     }
 
-    private fun varsleOmVedtak(hendelse: Hendelse) {
+    private fun varsleOmVedtak(kommando: UtførStegKommando) {
         observers.forEach {
             it.vedtakFattet(
                 VedtakFattet(
@@ -223,6 +223,7 @@ class Behandling private constructor(
                     fastsettelser = this.fastsettelser(),
                     sakId = sak.id,
                 ),
+                kommando,
             )
         }
     }

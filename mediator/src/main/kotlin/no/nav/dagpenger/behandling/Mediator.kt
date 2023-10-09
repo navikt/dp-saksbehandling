@@ -58,7 +58,7 @@ internal class Mediator(
             logger.info { "Publiserer behandling_endret_tilstand for behandlingId=${behandlingEndretTilstand.behandlingId}" }
         }
 
-    override fun vedtakFattet(vedtakFattetEvent: VedtakFattet) =
+    override fun vedtakFattet(vedtakFattetEvent: VedtakFattet, kommando: UtførStegKommando) {
         publishEvent("rettighet_behandlet_hendelse", vedtakFattetEvent).also {
             logger.info { "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}" }
         }

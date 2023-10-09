@@ -19,7 +19,7 @@ interface BehandlingObserver {
         )
     }
 
-    fun vedtakFattet(vedtakFattetEvent: VedtakFattet) {}
+    fun vedtakFattet(vedtakFattetEvent: VedtakFattet, kommando: UtførStegKommando) {}
 
     data class VedtakFattet(
         val behandlingId: UUID,

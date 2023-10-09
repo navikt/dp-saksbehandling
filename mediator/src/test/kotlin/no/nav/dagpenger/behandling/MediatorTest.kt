@@ -92,6 +92,15 @@ class MediatorTest {
                 fastsettelser = mapOf("f1" to "f2"),
                 sakId = sakId,
             ),
+            UtførStegKommando(
+                oppgaveId,
+                Saksbehandler(ident),
+                "",
+                "",
+                "token",
+            ) {
+                besvar(finnStegId("vilkår1"), false, it)
+            },
         )
 
         testRapid.inspektør.message(0).let {
