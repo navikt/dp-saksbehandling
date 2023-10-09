@@ -17,6 +17,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.appendEncodedPathSegments
 import io.ktor.serialization.jackson.jackson
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Configuration
 import no.nav.dagpenger.behandling.Configuration.tokenXClient
@@ -47,26 +48,28 @@ internal class IverksettClient(
         }
     }
 
-    internal suspend fun iverksett(subjectToken: String, iverksettDto: IverksettDto) {
-        val url = URLBuilder(baseUrl).appendEncodedPathSegments(API_PATH, IVERKSETTING_PATH).build()
+    internal fun iverksett(subjectToken: String, iverksettDto: IverksettDto) {
+        runBlocking {
+            val url = URLBuilder(baseUrl).appendEncodedPathSegments(API_PATH, IVERKSETTING_PATH).build()
 
-        try {
-            httpClient.post(url) {
-                header(HttpHeaders.ContentType, ContentType.Application.Json)
-                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(subjectToken, iversettAudience)}")
-                setBody(iverksettDto)
-            }
-        } catch (e: ClientRequestException) {
-            when (e.response.status) {
-                HttpStatusCode.Accepted -> {
-                    logger.info("API kall mot iverksetting var suksessfull. Statuskode: ${e.response.status} Beskrivelse: ${e.response.status.description}")
+            try {
+                httpClient.post(url) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(subjectToken, iversettAudience)}")
+                    setBody(iverksettDto)
                 }
+            } catch (e: ClientRequestException) {
+                when (e.response.status) {
+                    HttpStatusCode.Accepted -> {
+                        logger.info("API kall mot iverksetting var suksessfull. Statuskode: ${e.response.status} Beskrivelse: ${e.response.status.description}")
+                    }
 
-                HttpStatusCode.BadRequest, HttpStatusCode.Forbidden, HttpStatusCode.Conflict -> { // TODO: Hva vil vi at skal skje når iverksetting feiler
-                    logger.warn(feilmelding(e.response))
+                    HttpStatusCode.BadRequest, HttpStatusCode.Forbidden, HttpStatusCode.Conflict -> { // TODO: Hva vil vi at skal skje når iverksetting feiler
+                        logger.warn(feilmelding(e.response))
+                    }
+
+                    else -> logger.warn("En uventet feil skjedde ved forsøk på kall mot iverksetting", e)
                 }
-
-                else -> logger.warn("En uventet feil skjedde ved forsøk på kall mot iverksetting", e)
             }
         }
     }
