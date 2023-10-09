@@ -209,6 +209,7 @@ class OppgaveApiTest {
             personRepository = mockPersistencePerson,
             behandlingRepository = mockk(),
             aktivitetsloggMediator = mockk(relaxed = true),
+            iverksettClient = mockk(),
         ),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {

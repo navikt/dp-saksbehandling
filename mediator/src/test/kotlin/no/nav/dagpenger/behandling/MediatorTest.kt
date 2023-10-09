@@ -16,6 +16,7 @@ import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
+import no.nav.dagpenger.behandling.iverksett.IverksettClient
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.serder.asUUID
 import no.nav.helse.rapids_rivers.asLocalDate
@@ -251,6 +252,7 @@ class MediatorTest {
         personRepository = mockPersonRepository,
         behandlingRepository = mockBehandlingRepository,
         aktivitetsloggMediator = mockk(relaxed = true),
+        iverksettClient = mockkIverksettClient,
     )
 
     private fun finnStegId(id: String) = oppgave.alleSteg().single { it.id == id }.uuid

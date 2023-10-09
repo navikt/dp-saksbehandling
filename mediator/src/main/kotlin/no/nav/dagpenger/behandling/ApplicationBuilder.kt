@@ -6,6 +6,7 @@ import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.behandling.db.PostgresRepository
 import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak
+import no.nav.dagpenger.behandling.iverksett.IverksettClient
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -23,6 +24,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         personRepository = postgresRepository,
         behandlingRepository = postgresRepository,
         aktivitetsloggMediator = AktivitetsloggMediator(rapidsConnection),
+        iverksettClient = IverksettClient(),
     )
 
     init {

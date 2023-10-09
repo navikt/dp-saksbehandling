@@ -8,6 +8,8 @@ import no.nav.dagpenger.behandling.db.OppgaveRepository
 import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
+import no.nav.dagpenger.behandling.iverksett.IverksettClient
+import no.nav.dagpenger.behandling.iverksett.IverksettDTOBuilder
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.util.UUID
@@ -20,6 +22,7 @@ internal class Mediator(
     private val personRepository: PersonRepository,
     private val behandlingRepository: BehandlingRepository,
     private val aktivitetsloggMediator: AktivitetsloggMediator,
+    private val iverksettClient: IverksettClient,
 ) : OppgaveRepository by oppgaveRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {
         val person = personRepository.hentPerson(hendelse.ident()) ?: Person(hendelse.ident()).also {
