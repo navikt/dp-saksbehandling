@@ -207,6 +207,7 @@ class OppgaveApiTest {
             rapidsConnection = TestRapid(),
             oppgaveRepository = mockPersistence,
             personRepository = mockPersistencePerson,
+            behandlingRepository = mockk(),
             aktivitetsloggMediator = mockk(relaxed = true),
         ),
         test: suspend ApplicationTestBuilder.() -> Unit,

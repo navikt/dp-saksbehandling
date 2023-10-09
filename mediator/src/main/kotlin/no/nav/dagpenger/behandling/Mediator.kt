@@ -3,6 +3,7 @@ package no.nav.dagpenger.behandling
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
 import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
+import no.nav.dagpenger.behandling.db.BehandlingRepository
 import no.nav.dagpenger.behandling.db.OppgaveRepository
 import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
@@ -17,6 +18,7 @@ internal class Mediator(
     private val rapidsConnection: RapidsConnection,
     private val oppgaveRepository: OppgaveRepository,
     private val personRepository: PersonRepository,
+    private val behandlingRepository: BehandlingRepository,
     private val aktivitetsloggMediator: AktivitetsloggMediator,
 ) : OppgaveRepository by oppgaveRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {

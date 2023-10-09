@@ -21,6 +21,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         rapidsConnection = rapidsConnection,
         oppgaveRepository = postgresRepository,
         personRepository = postgresRepository,
+        behandlingRepository = postgresRepository,
         aktivitetsloggMediator = AktivitetsloggMediator(rapidsConnection),
     )
 

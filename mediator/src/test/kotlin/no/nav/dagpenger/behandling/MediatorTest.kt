@@ -10,6 +10,7 @@ import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Tilstand.Utført
+import no.nav.dagpenger.behandling.db.BehandlingRepository
 import no.nav.dagpenger.behandling.db.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
@@ -206,19 +207,20 @@ class MediatorTest {
         mockOppgaveRepository.hentOppgaverFor(testIdent).size shouldBe 3
     }
 
+    val behandling = behandling(testPerson, søknadInnsendtHendelse, Sak(sakId)) {
+        steg {
+            vilkår("vilkår1") {
+                avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
+            }
+        }
+        steg {
+            fastsettelse<Int>("fastsettelse1")
+        }
+    }
     private val mockOppgaveRepository = InMemoryOppgaveRepository().apply {
         oppgave = Oppgave(
             UUID.randomUUID(),
-            behandling(testPerson, søknadInnsendtHendelse, Sak(sakId)) {
-                steg {
-                    vilkår("vilkår1") {
-                        avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
-                    }
-                }
-                steg {
-                    fastsettelse<Int>("fastsettelse1")
-                }
-            },
+            behandling,
         )
         oppgaveId = oppgave.uuid
         lagreOppgave(oppgave)
@@ -237,10 +239,17 @@ class MediatorTest {
         lagrePerson(testPerson)
     }
 
+    private val mockBehandlingRepository = mockk<BehandlingRepository>() {
+        every { hentBehandling(any()) } returns behandling
+    }
+
+    private val mockkIverksettClient = mockk<IverksettClient>(relaxed = true)
+
     private val mediator = Mediator(
         rapidsConnection = testRapid,
         oppgaveRepository = mockOppgaveRepository,
         personRepository = mockPersonRepository,
+        behandlingRepository = mockBehandlingRepository,
         aktivitetsloggMediator = mockk(relaxed = true),
     )
 

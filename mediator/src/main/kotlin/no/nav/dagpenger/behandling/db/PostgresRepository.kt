@@ -24,7 +24,7 @@ import no.nav.dagpenger.behandling.oppgave.Oppgave
 import java.util.UUID
 import javax.sql.DataSource
 
-class PostgresRepository(private val ds: DataSource) : PersonRepository, OppgaveRepository {
+class PostgresRepository(private val ds: DataSource) : PersonRepository, OppgaveRepository, BehandlingRepository {
 
     override fun hentPerson(ident: String): Person? =
         using(sessionOf(ds)) { session ->
@@ -191,7 +191,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         return this.first { it.uuid == uuid }
     }
 
-    internal fun hentBehandling(uuid: UUID): Behandling {
+    override fun hentBehandling(uuid: UUID): Behandling {
         return using(sessionOf(ds)) { session ->
             session.run(
                 queryOf(
