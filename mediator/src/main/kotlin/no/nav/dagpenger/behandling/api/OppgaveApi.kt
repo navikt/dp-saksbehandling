@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
@@ -15,9 +16,11 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.authentication
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.swagger.swaggerUI
+import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -103,6 +106,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val stegId = call.finnUUID("stegId")
                             val svar: NyttSvarDTO = call.receive()
+                            val token = call.request.jwt()
 
                             // TODO: Teit å gjøre dette for å hente ut ident
                             val oppgave = mediator.hentOppgave(oppgaveId)
@@ -150,3 +154,7 @@ internal fun ApplicationCall.finnUUID(pathParam: String): UUID = parameters[path
 internal fun ApplicationCall.saksbehandlerId() =
     this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("NAVident")?.asString()
         ?: throw IllegalArgumentException("Ikke autentisert")
+
+internal fun ApplicationRequest.jwt(): String = this.parseAuthorizationHeader().let { authHeader ->
+    (authHeader as? HttpAuthHeader.Single)?.blob ?: throw IllegalArgumentException("JWT not found")
+}
