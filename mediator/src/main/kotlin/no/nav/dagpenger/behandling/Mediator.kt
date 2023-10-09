@@ -63,6 +63,11 @@ internal class Mediator(
             logger.info { "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}" }
         }
 
+        val behandling = behandlingRepository.hentBehandling(vedtakFattetEvent.behandlingId)
+        iverksettClient.iverksett(subjectToken = kommando.token, iverksettDto = IverksettDTOBuilder(behandling).bygg())
+        logger.info { "Rammevedtak med behandlingId ${behandling.uuid} er sendt til iverksetting" }
+    }
+
     private fun publishEvent(navn: String, event: BehandlingObserver.BehandlingEvent) =
         rapidsConnection.publish(event.ident, JsonMessage.newMessage(navn, event.toMap()).toJson())
 }

@@ -4,7 +4,9 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.behandling.Meldingsfabrikk.søknadInnsendtHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
@@ -80,7 +82,7 @@ class MediatorTest {
     }
 
     @Test
-    fun `VedtakFattet event skal publisere melding på rapiden`() {
+    fun `VedtakFattet event skal publisere melding på rapiden og iverksette`() {
         val behandlingId = UUID.randomUUID()
         val sakId = UUID.randomUUID()
 
@@ -110,6 +112,8 @@ class MediatorTest {
             it["f1"].asText() shouldBe "f2"
             it["sakId"].asText() shouldBe sakId.toString()
         }
+
+        verify(exactly = 1) { mockkIverksettClient.iverksett(any(), any()) }
     }
 
     @Test
