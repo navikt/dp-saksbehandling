@@ -34,6 +34,8 @@ spec:
       value: {{dp_iverksett.url}}
     - name: DP_IVERKSETT_AUDIENCE
       value: {{dp_iverksett.audience}}
+    - name: GRUPPE_BESLUTTER
+      value: {{azure.grupper.beslutter}}
   azure:
     application:
       enabled: true
