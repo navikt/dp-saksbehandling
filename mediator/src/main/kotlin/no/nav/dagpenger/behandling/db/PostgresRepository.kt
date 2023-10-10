@@ -140,7 +140,14 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                         }
                     when (type) {
                         "Vilkår" -> Steg.Vilkår.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand)
-                        "Prosess" -> Steg.Prosess.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand, rolle!!)
+                        "Prosess" ->
+                            Steg.Prosess.rehydrer(
+                                stegUUID,
+                                stegId,
+                                svar as Svar<Boolean>,
+                                tilstand,
+                                rolle ?: throw IllegalStateException("Forventet at rolle er satt for prosess-steg"),
+                            )
                         "Fastsettelse" -> Steg.Fastsettelse.rehydrer(stegUUID, stegId, svar, tilstand)
                         else -> throw IllegalArgumentException("Ugyldig type: $type")
                     }
