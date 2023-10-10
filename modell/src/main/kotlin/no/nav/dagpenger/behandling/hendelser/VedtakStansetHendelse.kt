@@ -35,8 +35,7 @@ class VedtakStansetHendelse(
             }
         }
         steg {
-            prosess("Fatt vedtak") {
-                rolle = Beslutter
+            prosess("Fatt vedtak", rolle = Beslutter) {
                 avhengerAv(forslagTilVedtak)
             }
         }

@@ -33,6 +33,7 @@ internal object Configuration {
     val dpIverksettAudience by lazy { properties[Key("DP_IVERKSETT_AUDIENCE", stringType)] }
 
     val beslutterGruppe = properties[Key("GRUPPE_BESLUTTER", stringType)]
+    val saksbehandlerGruppe = properties[Key("GRUPPE_SAKSBEHANDLER", stringType)]
 
     val tokenXClient by lazy {
         val tokenX = OAuth2Config.TokenX(properties)

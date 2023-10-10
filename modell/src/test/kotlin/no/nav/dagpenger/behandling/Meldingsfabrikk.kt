@@ -8,5 +8,5 @@ object Meldingsfabrikk {
     val testIdent = "12312312311"
     val testPerson = Person(testIdent)
     val testHendelse = object : PersonHendelse(UUID.randomUUID(), testIdent) {}
-    val testSporing get() = ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), "")
+    fun testSporing(roller: List<Rolle>) = ManuellSporing(LocalDateTime.now(), Saksbehandler("123", roller), "")
 }

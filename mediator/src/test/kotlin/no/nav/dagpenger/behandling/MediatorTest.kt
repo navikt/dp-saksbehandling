@@ -10,7 +10,6 @@ import io.mockk.verify
 import no.nav.dagpenger.behandling.Meldingsfabrikk.søknadInnsendtHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
-import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.db.BehandlingRepository
 import no.nav.dagpenger.behandling.db.InMemoryOppgaveRepository
@@ -176,18 +175,18 @@ class MediatorTest {
         mediator.utfør(
             UtførStegKommando(
                 oppgaveId,
-                Saksbehandler(ident),
+                Saksbehandler(ident, listOf(Rolle.Saksbehandler, Rolle.Beslutter)),
                 "",
                 "",
                 "token",
-            ) {
-                oppgave.alleSteg().forEach {
-                    when (it.svar) {
-                        is Svar.BooleanSvar -> besvar(it.uuid, true, testSporing)
-                        is Svar.DoubleSvar -> besvar(it.uuid, Random.nextDouble(), testSporing)
-                        is Svar.IntegerSvar -> besvar(it.uuid, Random.nextInt(), testSporing)
-                        is Svar.LocalDateSvar -> besvar(it.uuid, LocalDate.now(), testSporing)
-                        is Svar.StringSvar -> besvar(it.uuid, Random.nextBytes(10).toString(), testSporing)
+            ) { sporing ->
+                oppgave.alleSteg().forEach { steg ->
+                    when (steg.svar) {
+                        is Svar.BooleanSvar -> besvar(steg.uuid, true, sporing)
+                        is Svar.DoubleSvar -> besvar(steg.uuid, Random.nextDouble(), sporing)
+                        is Svar.IntegerSvar -> besvar(steg.uuid, Random.nextInt(), sporing)
+                        is Svar.LocalDateSvar -> besvar(steg.uuid, LocalDate.now(), sporing)
+                        is Svar.StringSvar -> besvar(steg.uuid, Random.nextBytes(10).toString(), sporing)
                     }
                 }
                 oppgave.alleSteg().forEach { it.tilstand shouldBe Utført }

@@ -78,13 +78,13 @@ class BehandlingTest {
         val steg1 = fastsettelse<Int>("1")
         val steg2 = Vilkår("2").also {
             it.avhengerAv(steg1)
-            it.besvar(true, testSporing)
+            it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
         }
         val steg3 = Vilkår("3")
         val steg4 = Vilkår("4").avhengerAv(steg3)
         val steg5 = Vilkår("5").also {
             it.avhengerAv(steg1)
-            it.besvar(true, testSporing)
+            it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
         }
 
         assertEquals(
@@ -98,13 +98,13 @@ class BehandlingTest {
         val steg1 = fastsettelse<Int>("1")
         val steg2 = Vilkår("2").also {
             it.avhengerAv(steg1)
-            it.besvar(true, testSporing)
+            it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
         }
         val steg3 = Vilkår("3")
         val behandling = Behandling(testPerson, testHendelse, setOf(steg2, steg3), sak = Sak())
         assertEquals(setOf(steg3), behandling.nesteSteg())
 
-        steg1.besvar(2, testSporing)
+        steg1.besvar(2, testSporing(listOf(Rolle.Saksbehandler)))
         assertEquals(setOf(steg3, steg2), behandling.nesteSteg())
     }
 
@@ -126,16 +126,16 @@ class BehandlingTest {
         }
 
         behandling.erFerdig() shouldBe false
-        behandling.besvar(vilkårUUID, true, testSporing)
+        behandling.besvar(vilkårUUID, true, testSporing(listOf(Rolle.Saksbehandler)))
         behandling.erFerdig() shouldBe false
 
-        shouldThrow<NoSuchElementException> { behandling.besvar(UUID.randomUUID(), 5, testSporing) }
-        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, "String svar", testSporing) }
-        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, LocalDate.EPOCH, testSporing) }
-        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, false, testSporing) }
-        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, 2.2, testSporing) }
+        shouldThrow<NoSuchElementException> { behandling.besvar(UUID.randomUUID(), 5, testSporing(listOf(Rolle.Saksbehandler))) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, "String svar", testSporing(listOf(Rolle.Saksbehandler))) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, LocalDate.EPOCH, testSporing(listOf(Rolle.Saksbehandler))) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, false, testSporing(listOf(Rolle.Saksbehandler))) }
+        shouldThrow<IllegalArgumentException> { behandling.besvar(intUUID, 2.2, testSporing(listOf(Rolle.Saksbehandler))) }
 
-        behandling.besvar(intUUID, 5, testSporing)
+        behandling.besvar(intUUID, 5, testSporing(listOf(Rolle.Saksbehandler)))
         behandling.erFerdig() shouldBe true
     }
 
@@ -153,8 +153,8 @@ class BehandlingTest {
             }
         }
 
-        shouldNotThrow<IllegalArgumentException> { behandling.besvar(vilkår, true, testSporing) }
-        shouldNotThrow<IllegalArgumentException> { behandling.besvar(fastsettelse, false, testSporing) }
+        shouldNotThrow<IllegalArgumentException> { behandling.besvar(vilkår, true, testSporing(listOf(Rolle.Saksbehandler))) }
+        shouldNotThrow<IllegalArgumentException> { behandling.besvar(fastsettelse, false, testSporing(listOf(Rolle.Saksbehandler))) }
     }
 
     @Test
@@ -167,7 +167,7 @@ class BehandlingTest {
             }
         }
 
-        stansBehandling.besvar(fastsettelse, LocalDate.now(), testSporing)
+        stansBehandling.besvar(fastsettelse, LocalDate.now(), testSporing(listOf(Rolle.Saksbehandler)))
         stansBehandling.utfall() shouldBe Utfall.Stans
     }
 
@@ -186,11 +186,11 @@ class BehandlingTest {
             }
         }
 
-        behandling.besvar(vilkår1, true, testSporing)
-        behandling.besvar(vilkår2, true, testSporing)
+        behandling.besvar(vilkår1, true, testSporing(listOf(Rolle.Saksbehandler)))
+        behandling.besvar(vilkår2, true, testSporing(listOf(Rolle.Saksbehandler)))
         behandling.utfall() shouldBe Utfall.Innvilgelse
 
-        behandling.besvar(vilkår1, false, testSporing)
+        behandling.besvar(vilkår1, false, testSporing(listOf(Rolle.Saksbehandler)))
         behandling.utfall() shouldBe Utfall.Avslag
     }
 }

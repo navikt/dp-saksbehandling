@@ -29,6 +29,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.Configuration.beslutterGruppe
+import no.nav.dagpenger.behandling.Configuration.saksbehandlerGruppe
 import no.nav.dagpenger.behandling.Mediator
 import no.nav.dagpenger.behandling.Rolle
 import no.nav.dagpenger.behandling.Saksbehandler
@@ -115,7 +116,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             val kommando =
                                 UtførStegKommando(
                                     oppgaveUUID = oppgaveId,
-                                    saksbehandler = Saksbehandler(call.saksbehandlerId()),
+                                    saksbehandler = Saksbehandler(call.saksbehandlerId(), call.roller()),
                                     begrunnelse = svar.begrunnelse.tekst,
                                     ident = oppgave.person.ident,
                                     token = token,
@@ -158,11 +159,15 @@ internal fun ApplicationCall.saksbehandlerId() =
     this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("NAVident")?.asString()
         ?: throw IllegalArgumentException("Ikke autentisert")
 
-internal fun ApplicationCall.rolle(): Rolle {
-    val grupper = this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("groups")?.asList(String::class.java)
-        ?: throw IllegalArgumentException("Saksbehandler med id ${this.saksbehandlerId()} tilhører ingen gruppe, kan ikke sette rolle.")
-
-    return if (grupper.contains(beslutterGruppe)) Rolle.Beslutter else Rolle.Saksbehandler
+internal fun ApplicationCall.roller(): List<Rolle> {
+    return this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("groups")?.asList(String::class.java)
+        ?.mapNotNull {
+            when (it) {
+                beslutterGruppe -> Rolle.Beslutter
+                saksbehandlerGruppe -> Rolle.Saksbehandler
+                else -> null
+            }
+        } ?: emptyList()
 }
 
 internal fun ApplicationRequest.jwt(): String = this.parseAuthorizationHeader().let { authHeader ->

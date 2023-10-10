@@ -1,5 +1,7 @@
 package no.nav.dagpenger.behandling
 
+import io.kotest.assertions.throwables.shouldNotThrow
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
@@ -41,44 +43,57 @@ class StegTest {
         far.nesteSteg() shouldBe setOf(barn1, barn2, barn3)
         mor.nesteSteg() shouldBe setOf(barn1, barn2, barn3)
 
-        far.besvar(2, testSporing)
+        far.besvar(2, testSporing(listOf(Rolle.Saksbehandler)))
         far.nesteSteg() shouldBe emptySet()
 
-        mor.besvar(true, testSporing)
+        mor.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
         mor.nesteSteg() shouldBe emptySet()
 
         bestefar.nesteSteg() shouldBe setOf(bestefar)
 
-        bestefar.besvar(2, testSporing)
+        bestefar.besvar(2, testSporing(listOf(Rolle.Saksbehandler)))
         bestefar.nesteSteg() shouldBe emptySet()
     }
 
     @Test
     fun `nesteSteg skal fjerne duplikater`() {
-        barn3.besvar(true, testSporing)
+        barn3.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
         bestefar.nesteSteg() shouldBe setOf(mor, far, barn1, barn2)
     }
 
     @Test
     fun `allesteg skal hent ut steg som er utført`() {
-        mor.besvar(true, testSporing)
-        far.besvar(2, testSporing)
+        mor.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
+        far.besvar(2, testSporing(listOf(Rolle.Saksbehandler)))
 
         bestefar.alleSteg() shouldBe setOf(bestefar, far, mor, barn1, barn2, barn3)
     }
 
     @Test
     fun `Dersom svaret til et steg endres resettes tilstand til forfedre`() {
-        far.besvar(1, testSporing)
+        far.besvar(1, testSporing(listOf(Rolle.Saksbehandler)))
         far.nesteSteg() shouldBe emptySet()
-        mor.besvar(false, testSporing)
+        mor.besvar(false, testSporing(listOf(Rolle.Saksbehandler)))
         mor.nesteSteg() shouldBe emptySet()
-        bestefar.besvar(1, testSporing)
+        bestefar.besvar(1, testSporing(listOf(Rolle.Saksbehandler)))
         bestefar.nesteSteg() shouldBe emptySet()
 
-        barn1.besvar(2, testSporing)
+        barn1.besvar(2, testSporing(listOf(Rolle.Saksbehandler)))
         far.nesteSteg() shouldBe setOf(barn2, barn3)
         mor.nesteSteg() shouldBe setOf(barn2, barn3)
         bestefar.nesteSteg() shouldBe setOf(far, mor, barn2, barn3)
+    }
+
+    @Test
+    fun `Prosess steg sjekker rolle ved besvaring`() {
+        val prosessSteg = Steg.Prosess("Prosess", rolle = Rolle.Beslutter)
+
+        shouldThrow<IllegalArgumentException> {
+            prosessSteg.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
+        }
+
+        shouldNotThrow<IllegalArgumentException> {
+            prosessSteg.besvar(true, testSporing(listOf(Rolle.Beslutter)))
+        }
     }
 }

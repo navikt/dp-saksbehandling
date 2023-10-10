@@ -11,6 +11,7 @@ import no.nav.dagpenger.behandling.NullSporing
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.PersonVisitor
 import no.nav.dagpenger.behandling.QuizSporing
+import no.nav.dagpenger.behandling.Rolle
 import no.nav.dagpenger.behandling.Sak
 import no.nav.dagpenger.behandling.Saksbehandler
 import no.nav.dagpenger.behandling.Sporing
@@ -110,7 +111,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             queryOf(
                 //language=PostgreSQL
                 statement = """    
-                SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal
+                SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal, rolle
                 FROM steg WHERE behandling_uuid = :behandling_uuid
                 ORDER BY id
                 """.trimIndent(),
@@ -122,6 +123,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 val stegUUID = row.uuid("uuid")
                 val sporing = hentSporing(stegUUID)
                 val tilstand = Tilstand.valueOf(row.string("tilstand"))
+                val rolle = row.stringOrNull("rolle")?.let { Rolle.valueOf(it) }
 
                 val svar = when (val svarType = row.string("svar_type")) {
                     "LocalDateSvar" -> Svar.LocalDateSvar(row.localDateOrNull("dato"), sporing)
@@ -133,7 +135,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 }
                 when (type) {
                     "Vilkår" -> Steg.Vilkår.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand)
-                    "Prosess" -> Steg.Prosess.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand)
+                    "Prosess" -> Steg.Prosess.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand, rolle!!)
                     "Fastsettelse" -> Steg.Fastsettelse.rehydrer(stegUUID, stegId, svar, tilstand)
                     else -> throw IllegalArgumentException("Ugyldig type: $type")
                 }

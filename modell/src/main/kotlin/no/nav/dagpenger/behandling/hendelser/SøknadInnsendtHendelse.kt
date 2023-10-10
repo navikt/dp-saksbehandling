@@ -71,8 +71,7 @@ class SøknadInnsendtHendelse(
             }
         }
         steg {
-            prosess("Fatt vedtak") {
-                rolle = Beslutter
+            prosess("Fatt vedtak", rolle = Beslutter) {
                 avhengerAv(forslagTilVedtak)
             }
         }

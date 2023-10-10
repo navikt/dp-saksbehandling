@@ -44,13 +44,12 @@ class BehandlingDSL() {
                 konfigurasjon(Konfigurasjon(it))
             }
 
-        fun prosess(id: String, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
-            Prosess(id).also {
+        fun prosess(id: String, rolle: Rolle = Rolle.Saksbehandler, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
+            Prosess(id, rolle).also {
                 konfigurasjon(Konfigurasjon(it))
             }
 
         inner class Konfigurasjon(private val avhengigSteg: Steg<*>) {
-            var rolle: Rolle = Rolle.Saksbehandler
 
             inline fun <reified T> avhengerAvFastsettelse(id: String, block: Konfigurasjon.() -> Unit = {}) {
                 val fastsettelse = fastsettelse<T>(id)

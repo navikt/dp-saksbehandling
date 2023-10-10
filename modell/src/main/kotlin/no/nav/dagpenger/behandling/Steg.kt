@@ -75,25 +75,32 @@ sealed class Steg<T> private constructor(
         uuid: UUID = UUID.randomUUID(),
         svar: Svar<Boolean>,
         tilstand: Tilstand,
+        private val rolle: Rolle,
     ) : Steg<Boolean>(
         uuid = uuid,
         id = id,
         svar = svar,
         tilstand,
     ) {
-        constructor(id: String, uuid: UUID = UUID.randomUUID()) : this(
+        constructor(id: String, rolle: Rolle, uuid: UUID = UUID.randomUUID()) : this(
             id,
             uuid,
             Svar.BooleanSvar(null, NullSporing),
             Tilstand.IkkeUtført,
+            rolle,
         )
 
         override val node: DAGNode<Steg<*>> = DAGNode(this)
 
         companion object {
-            fun rehydrer(uuid: UUID, id: String, svar: Svar<Boolean>, tilstand: Tilstand): Steg<Boolean> {
-                return Prosess(id, uuid, svar, tilstand)
+            fun rehydrer(uuid: UUID, id: String, svar: Svar<Boolean>, tilstand: Tilstand, rolle: Rolle): Steg<Boolean> {
+                return Prosess(id, uuid, svar, tilstand, rolle)
             }
+        }
+
+        override fun besvar(svar: Boolean, sporing: Sporing) {
+            require(sporing is ManuellSporing && sporing.utførtAv.harRolle(rolle)) { "Kan kun utføres av saksbehandler med rolle: $rolle" }
+            super.besvar(svar, sporing)
         }
     }
 
@@ -126,7 +133,7 @@ sealed class Steg<T> private constructor(
 
     fun alleSteg(): Set<Steg<*>> = setOf(this) + node.getDescendants().map { it.value }
 
-    fun besvar(svar: T, sporing: Sporing) {
+    open fun besvar(svar: T, sporing: Sporing) {
         require(sporing !is NullSporing) { "Sporing kan ikke være NullSporing" }
         this.svar = this.svar.besvar(svar, sporing)
         this._tilstand = Tilstand.Utført
