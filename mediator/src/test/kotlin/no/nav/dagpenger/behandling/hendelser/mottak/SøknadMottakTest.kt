@@ -8,7 +8,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.behandling.Mediator
-import no.nav.dagpenger.behandling.Meldingsfabrikk.`innsending ferdigstilt hendelse`
+import no.nav.dagpenger.behandling.Meldingsfabrikk.innsendingFerdigstiltHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -21,9 +21,10 @@ class SøknadMottakTest {
     @ValueSource(strings = ["NySøknad"])
     fun `Skal behandle innsending_ferdigstilt event for type NySøknad`(type: String) {
         val slot = slot<SøknadInnsendtHendelse>()
-        val mockMediator = mockk<Mediator>().also {
-            every { it.behandle(capture(slot)) } just Runs
-        }
+        val mockMediator =
+            mockk<Mediator>().also {
+                every { it.behandle(capture(slot)) } just Runs
+            }
 
         TestRapid().let { testRapid ->
             SøknadMottak(
@@ -35,7 +36,7 @@ class SøknadMottakTest {
             val ident = testIdent
 
             testRapid.sendTestMessage(
-                `innsending ferdigstilt hendelse`(
+                innsendingFerdigstiltHendelse(
                     søknadId = søknadId,
                     journalpostId = journalpostId,
                     type = type,

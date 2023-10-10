@@ -45,11 +45,12 @@ internal object PostgresDataSourceBuilder {
 
     private val flyWayBuilder: FluentConfiguration = Flyway.configure().connectRetries(10)
 
-    fun clean(): CleanResult = flyWayBuilder
-        .cleanDisabled(getOrThrow(ConfigUtils.CLEAN_DISABLED).toBooleanStrict())
-        .dataSource(dataSource)
-        .load()
-        .clean()
+    fun clean(): CleanResult =
+        flyWayBuilder
+            .cleanDisabled(getOrThrow(ConfigUtils.CLEAN_DISABLED).toBooleanStrict())
+            .dataSource(dataSource)
+            .load()
+            .clean()
 
     internal fun runMigration(initSql: String? = null): Int =
         flyWayBuilder
@@ -61,5 +62,4 @@ internal object PostgresDataSourceBuilder {
             .size
 }
 
-fun String.toSnakeCase() =
-    this.replace(Regex("([a-z])([A-Z])|\\."), "$1_$2").uppercase(Locale.getDefault())
+fun String.toSnakeCase() = this.replace(Regex("([a-z])([A-Z])|\\."), "$1_$2").uppercase(Locale.getDefault())

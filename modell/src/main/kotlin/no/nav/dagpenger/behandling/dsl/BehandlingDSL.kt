@@ -34,30 +34,42 @@ class BehandlingDSL() {
     }
 
     inner class StegDSL {
-        inline fun <reified B> fastsettelse(id: String, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
-            Steg.fastsettelse<B>(id).also {
-                konfigurasjon(Konfigurasjon(it))
-            }
+        inline fun <reified B> fastsettelse(
+            id: String,
+            konfigurasjon: Konfigurasjon.() -> Unit = {},
+        ) = Steg.fastsettelse<B>(id).also {
+            konfigurasjon(Konfigurasjon(it))
+        }
 
-        fun vilkår(id: String, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
-            Vilkår(id = id).also {
-                konfigurasjon(Konfigurasjon(it))
-            }
+        fun vilkår(
+            id: String,
+            konfigurasjon: Konfigurasjon.() -> Unit = {},
+        ) = Vilkår(id = id).also {
+            konfigurasjon(Konfigurasjon(it))
+        }
 
-        fun prosess(id: String, rolle: Rolle = Rolle.Saksbehandler, konfigurasjon: Konfigurasjon.() -> Unit = {}) =
-            Prosess(id, rolle).also {
-                konfigurasjon(Konfigurasjon(it))
-            }
+        fun prosess(
+            id: String,
+            rolle: Rolle = Rolle.Saksbehandler,
+            konfigurasjon: Konfigurasjon.() -> Unit = {},
+        ) = Prosess(id, rolle).also {
+            konfigurasjon(Konfigurasjon(it))
+        }
 
         inner class Konfigurasjon(private val avhengigSteg: Steg<*>) {
-
-            inline fun <reified T> avhengerAvFastsettelse(id: String, block: Konfigurasjon.() -> Unit = {}) {
+            inline fun <reified T> avhengerAvFastsettelse(
+                id: String,
+                block: Konfigurasjon.() -> Unit = {},
+            ) {
                 val fastsettelse = fastsettelse<T>(id)
                 block(Konfigurasjon(fastsettelse))
                 avhengerAv(fastsettelse)
             }
 
-            fun avhengerAvVilkår(id: String, block: Konfigurasjon.() -> Unit = {}) {
+            fun avhengerAvVilkår(
+                id: String,
+                block: Konfigurasjon.() -> Unit = {},
+            ) {
                 val vilkår = Vilkår(id = id)
                 block(Konfigurasjon(vilkår))
                 avhengerAv(vilkår)

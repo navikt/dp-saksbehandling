@@ -138,9 +138,10 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         post {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val ident = mediator.hentOppgave(oppgaveId).person.ident
-                            val hendelse = VedtakStansetHendelse(ident = ident).also {
-                                mediator.behandle(it)
-                            }
+                            val hendelse =
+                                VedtakStansetHendelse(ident = ident).also {
+                                    mediator.behandle(it)
+                                }
 
                             call.respond(status = HttpStatusCode.OK, OppgaveIdWrapper(hendelse.oppgaveId))
                         }
@@ -151,9 +152,10 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
     }
 }
 
-internal fun ApplicationCall.finnUUID(pathParam: String): UUID = parameters[pathParam]?.let {
-    UUID.fromString(it)
-} ?: throw IllegalArgumentException("Kunne ikke finne oppgaveId i path")
+internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
+    parameters[pathParam]?.let {
+        UUID.fromString(it)
+    } ?: throw IllegalArgumentException("Kunne ikke finne oppgaveId i path")
 
 internal fun ApplicationCall.saksbehandlerId() =
     this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("NAVident")?.asString()
@@ -170,6 +172,7 @@ internal fun ApplicationCall.roller(): List<Rolle> {
         } ?: emptyList()
 }
 
-internal fun ApplicationRequest.jwt(): String = this.parseAuthorizationHeader().let { authHeader ->
-    (authHeader as? HttpAuthHeader.Single)?.blob ?: throw IllegalArgumentException("JWT not found")
-}
+internal fun ApplicationRequest.jwt(): String =
+    this.parseAuthorizationHeader().let { authHeader ->
+        (authHeader as? HttpAuthHeader.Single)?.blob ?: throw IllegalArgumentException("JWT not found")
+    }

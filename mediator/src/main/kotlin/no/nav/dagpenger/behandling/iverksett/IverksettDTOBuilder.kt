@@ -11,7 +11,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 internal class IverksettDTOBuilder(behandling: Behandling) : BehandlingVisitor {
-
     private lateinit var sakId: UUID
     private lateinit var behandlingId: UUID
     private lateinit var ident: String
@@ -20,11 +19,12 @@ internal class IverksettDTOBuilder(behandling: Behandling) : BehandlingVisitor {
         behandling.accept(this)
     }
 
-    fun bygg() = IverksettDto(
-        sakId = sakId,
-        behandlingId = behandlingId,
-        personIdent = ident,
-    )
+    fun bygg() =
+        IverksettDto(
+            sakId = sakId,
+            behandlingId = behandlingId,
+            personIdent = ident,
+        )
 
     override fun visit(
         person: Person,

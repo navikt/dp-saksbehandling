@@ -203,14 +203,15 @@ class OppgaveApiTest {
     }
 
     private fun withOppgaveApi(
-        mediator: Mediator = Mediator(
-            rapidsConnection = TestRapid(),
-            oppgaveRepository = mockPersistence,
-            personRepository = mockPersistencePerson,
-            behandlingRepository = mockk(),
-            aktivitetsloggMediator = mockk(relaxed = true),
-            iverksettClient = mockk(),
-        ),
+        mediator: Mediator =
+            Mediator(
+                rapidsConnection = TestRapid(),
+                oppgaveRepository = mockPersistence,
+                personRepository = mockPersistencePerson,
+                behandlingRepository = mockk(),
+                aktivitetsloggMediator = mockk(relaxed = true),
+                iverksettClient = mockk(),
+            ),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -226,54 +227,56 @@ class OppgaveApiTest {
     }
 
     private var fattet = false
-    private val mockPersistence = InMemoryOppgaveRepository().apply {
-        val hendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent)
-        testPerson.håndter(hendelse)
-        lagreOppgave(
-            Oppgave(
-                UUID.randomUUID(),
-                behandling(testPerson, hendelse) {
-                    steg {
-                        vilkår("vilkår1")
-                    }
-                    steg {
-                        fastsettelse<Int>("fastsettelse1") {
-                            avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
+    private val mockPersistence =
+        InMemoryOppgaveRepository().apply {
+            val hendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent)
+            testPerson.håndter(hendelse)
+            lagreOppgave(
+                Oppgave(
+                    UUID.randomUUID(),
+                    behandling(testPerson, hendelse) {
+                        steg {
+                            vilkår("vilkår1")
                         }
-                    }
-                },
-            ).also { oppgaveId = it.uuid },
-        )
-        lagreOppgave(
-            Oppgave(
-                UUID.randomUUID(),
-                behandling(testPerson, hendelse) {
-                    steg {
-                        vilkår("vilkår2")
-                    }
-                },
-            ),
-        )
-        lagreOppgave(
-            Oppgave(
-                UUID.randomUUID(),
-                behandling(
-                    Person("45678910112").also {
-                        it.håndter(hendelse)
+                        steg {
+                            fastsettelse<Int>("fastsettelse1") {
+                                avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
+                            }
+                        }
                     },
-                    hendelse,
-                ) {
-                    steg {
-                        vilkår("vilkår3")
-                    }
-                },
-            ),
-        )
-    }
+                ).also { oppgaveId = it.uuid },
+            )
+            lagreOppgave(
+                Oppgave(
+                    UUID.randomUUID(),
+                    behandling(testPerson, hendelse) {
+                        steg {
+                            vilkår("vilkår2")
+                        }
+                    },
+                ),
+            )
+            lagreOppgave(
+                Oppgave(
+                    UUID.randomUUID(),
+                    behandling(
+                        Person("45678910112").also {
+                            it.håndter(hendelse)
+                        },
+                        hendelse,
+                    ) {
+                        steg {
+                            vilkår("vilkår3")
+                        }
+                    },
+                ),
+            )
+        }
 
-    private val mockPersistencePerson = InMemoryPersonRepository.apply {
-        lagrePerson(testPerson)
-    }
+    private val mockPersistencePerson =
+        InMemoryPersonRepository.apply {
+            lagrePerson(testPerson)
+        }
 
     private fun HttpRequestBuilder.autentisert() {
         header(HttpHeaders.Authorization, "Bearer $testToken")

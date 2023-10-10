@@ -14,6 +14,7 @@ import java.util.UUID
 
 interface Behandlingsstatus {
     fun utfall(): Utfall
+
     fun erFerdig(): Boolean
 }
 
@@ -35,11 +36,11 @@ class Behandling private constructor(
     private val observers = mutableSetOf<BehandlingObserver>()
 
     companion object {
-
-        private fun tilstand(tilstand: TilstandType): Tilstand = when (tilstand) {
-            TilstandType.TilBehandling -> TilBehandling
-            TilstandType.FerdigBehandlet -> FerdigBehandlet
-        }
+        private fun tilstand(tilstand: TilstandType): Tilstand =
+            when (tilstand) {
+                TilstandType.TilBehandling -> TilBehandling
+                TilstandType.FerdigBehandlet -> FerdigBehandlet
+            }
 
         fun rehydrer(
             person: Person,
@@ -49,15 +50,16 @@ class Behandling private constructor(
             tilstand: TilstandType,
             behandler: List<PersonHendelse>,
             sak: Sak,
-        ): Behandling = Behandling(
-            person = person,
-            steg = steg,
-            opprettet = opprettet,
-            uuid = uuid,
-            tilstand = tilstand(tilstand),
-            behandler = behandler,
-            sak = sak,
-        )
+        ): Behandling =
+            Behandling(
+                person = person,
+                steg = steg,
+                opprettet = opprettet,
+                uuid = uuid,
+                tilstand = tilstand(tilstand),
+                behandler = behandler,
+                sak = sak,
+            )
     }
 
     constructor(person: Person, hendelse: PersonHendelse, steg: Set<Steg<*>>, sak: Sak) : this(
@@ -84,9 +86,10 @@ class Behandling private constructor(
     }
 
     fun nesteSteg(): Set<Steg<*>> {
-        val map = steg.flatMap {
-            it.nesteSteg()
-        }
+        val map =
+            steg.flatMap {
+                it.nesteSteg()
+            }
         return map.toSet()
     }
 
@@ -108,35 +111,62 @@ class Behandling private constructor(
     override fun utfall(): Utfall {
         if (behandler.any { it is VedtakStansetHendelse }) return Utfall.Stans
 
-        val alleVilkårOppfylt = steg.filterIsInstance<Steg.Vilkår>().all {
-            it.svar.verdi == true
-        }
+        val alleVilkårOppfylt =
+            steg.filterIsInstance<Steg.Vilkår>().all {
+                it.svar.verdi == true
+            }
 
         return if (alleVilkårOppfylt) Utfall.Innvilgelse else Utfall.Avslag
     }
 
     override fun erFerdig(): Boolean = steg.all { it.utført }
 
-    fun besvar(uuid: UUID, verdi: String, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(
+        uuid: UUID,
+        verdi: String,
+        sporing: Sporing,
+    ) = _besvar(uuid, verdi, sporing)
 
-    fun besvar(uuid: UUID, verdi: Int, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(
+        uuid: UUID,
+        verdi: Int,
+        sporing: Sporing,
+    ) = _besvar(uuid, verdi, sporing)
 
-    fun besvar(uuid: UUID, verdi: Double, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(
+        uuid: UUID,
+        verdi: Double,
+        sporing: Sporing,
+    ) = _besvar(uuid, verdi, sporing)
 
-    fun besvar(uuid: UUID, verdi: LocalDate, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(
+        uuid: UUID,
+        verdi: LocalDate,
+        sporing: Sporing,
+    ) = _besvar(uuid, verdi, sporing)
 
-    fun besvar(uuid: UUID, verdi: Boolean, sporing: Sporing) = _besvar(uuid, verdi, sporing)
+    fun besvar(
+        uuid: UUID,
+        verdi: Boolean,
+        sporing: Sporing,
+    ) = _besvar(uuid, verdi, sporing)
 
-    private inline fun <reified T> _besvar(uuid: UUID, verdi: T, sporing: Sporing) {
+    @Suppress("FunctionName")
+    private inline fun <reified T> _besvar(
+        uuid: UUID,
+        verdi: T,
+        sporing: Sporing,
+    ) {
         val stegSomSkalBesvares = alleSteg().single { it.uuid == uuid }
 
-        val clazz = when (stegSomSkalBesvares.svar) {
-            is Svar.BooleanSvar -> java.lang.Boolean::class.java
-            is Svar.DoubleSvar -> java.lang.Double::class.java
-            is Svar.IntegerSvar -> Integer::class.java
-            is Svar.LocalDateSvar -> LocalDate::class.java
-            is Svar.StringSvar -> java.lang.String::class.java
-        }
+        val clazz =
+            when (stegSomSkalBesvares.svar) {
+                is Svar.BooleanSvar -> java.lang.Boolean::class.java
+                is Svar.DoubleSvar -> java.lang.Double::class.java
+                is Svar.IntegerSvar -> Integer::class.java
+                is Svar.LocalDateSvar -> LocalDate::class.java
+                is Svar.StringSvar -> java.lang.String::class.java
+            }
 
         require(T::class.java == clazz) {
             "Fikk ${T::class.java}, forventet $clazz ved besvaring av steg med uuid: $uuid"
@@ -157,19 +187,29 @@ class Behandling private constructor(
     interface Tilstand : Aktivitetskontekst {
         val type: TilstandType
 
-        fun entering(søknadHendelse: Hendelse, behandling: Behandling) {}
+        fun entering(
+            søknadHendelse: Hendelse,
+            behandling: Behandling,
+        ) {}
 
-        override fun toSpesifikkKontekst(): SpesifikkKontekst = this.javaClass.canonicalName.split(".").last().let {
-            SpesifikkKontekst(it, emptyMap())
-        }
+        override fun toSpesifikkKontekst(): SpesifikkKontekst =
+            this.javaClass.canonicalName.split(".").last().let {
+                SpesifikkKontekst(it, emptyMap())
+            }
 
-        fun utfør(kommando: UtførStegKommando, behandling: Behandling) {}
+        fun utfør(
+            kommando: UtførStegKommando,
+            behandling: Behandling,
+        ) {}
     }
 
     private object TilBehandling : Tilstand {
         override val type = TilstandType.TilBehandling
 
-        override fun utfør(kommando: UtførStegKommando, behandling: Behandling) {
+        override fun utfør(
+            kommando: UtførStegKommando,
+            behandling: Behandling,
+        ) {
             kommando.besvar(behandling)
 
             kommando.info(
@@ -189,7 +229,10 @@ class Behandling private constructor(
         override val type = TilstandType.FerdigBehandlet
     }
 
-    private fun endreTilstand(nyTilstand: Tilstand, hendelse: Hendelse) {
+    private fun endreTilstand(
+        nyTilstand: Tilstand,
+        hendelse: Hendelse,
+    ) {
         if (nyTilstand == tilstand) {
             return // Vi er allerede i tilstanden
         }

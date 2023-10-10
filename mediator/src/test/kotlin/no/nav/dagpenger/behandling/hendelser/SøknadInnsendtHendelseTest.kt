@@ -13,9 +13,10 @@ class SøknadInnsendtHendelseTest {
     private val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = "12345678910")
     private val person = Person("12345678910").also { it.håndter(søknadInnsendtHendelse) }
 
-    private val behandling = søknadInnsendtHendelse.oppgave(person).let {
-        DefaultOppgaveVisitor(it).behandling
-    }
+    private val behandling =
+        søknadInnsendtHendelse.oppgave(person).let {
+            DefaultOppgaveVisitor(it).behandling
+        }
 
     @Test
     fun `Ikke ferdig`() {

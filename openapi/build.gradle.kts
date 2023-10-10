@@ -26,7 +26,9 @@ dependencies {
 }
 
 openApiGenerate {
-    generatorName.set("kotlin") // Egentlig en client generator, men kotlin-server støtter ikke arv i klassene som genereres: https://github.com/OpenAPITools/openapi-generator/issues/11552
+    generatorName.set(
+        "kotlin",
+    ) // Egentlig en client generator, men kotlin-server støtter ikke arv i klassene som genereres: https://github.com/OpenAPITools/openapi-generator/issues/11552
     inputSpec.set("$projectDir/src/main/resources/behandling-api.yaml")
     outputDir.set("$buildDir/generated/")
     packageName.set("no.nav.dagpenger.behandling.api")

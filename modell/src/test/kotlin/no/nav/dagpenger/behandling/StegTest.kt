@@ -12,20 +12,23 @@ class StegTest {
     private val barn1 = fastsettelse<Int>("barn1")
     private val barn2 = fastsettelse<Int>("barn2")
     private val barn3 = Vilkår("barn3")
-    private val mor = Vilkår("mor").also {
-        it.avhengerAv(barn1)
-        it.avhengerAv(barn2)
-        it.avhengerAv(barn3)
-    }
-    private val far = fastsettelse<Int>("far").also {
-        it.avhengerAv(barn1)
-        it.avhengerAv(barn2)
-        it.avhengerAv(barn3)
-    }
-    private val bestefar = fastsettelse<Int>("bestefar").also {
-        it.avhengerAv(mor)
-        it.avhengerAv(far)
-    }
+    private val mor =
+        Vilkår("mor").also {
+            it.avhengerAv(barn1)
+            it.avhengerAv(barn2)
+            it.avhengerAv(barn3)
+        }
+    private val far =
+        fastsettelse<Int>("far").also {
+            it.avhengerAv(barn1)
+            it.avhengerAv(barn2)
+            it.avhengerAv(barn3)
+        }
+    private val bestefar =
+        fastsettelse<Int>("bestefar").also {
+            it.avhengerAv(mor)
+            it.avhengerAv(far)
+        }
 
     @Test
     fun `alleSteg ska hente ut steget selv og alle avhengigheter`() {

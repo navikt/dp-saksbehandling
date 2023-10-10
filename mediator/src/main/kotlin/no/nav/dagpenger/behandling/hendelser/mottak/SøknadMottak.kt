@@ -32,7 +32,10 @@ internal class SøknadMottak(
         }.register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+    ) {
         val journalpostId = packet["journalpostId"].asText()
         val ident = packet["fødselsnummer"].asText()
 
@@ -40,17 +43,21 @@ internal class SøknadMottak(
         withLoggingContext(
             "søknadId" to søknadID.toString(),
         ) {
-            val søknadInnsendtHendelse = SøknadInnsendtHendelse(
-                søknadId = søknadID,
-                journalpostId = journalpostId,
-                ident = ident,
-            )
+            val søknadInnsendtHendelse =
+                SøknadInnsendtHendelse(
+                    søknadId = søknadID,
+                    journalpostId = journalpostId,
+                    ident = ident,
+                )
             mediator.behandle(søknadInnsendtHendelse)
             logger.info { "Fått SøknadInnsendtHendelse for $søknadID" }
         }
     }
 
-    override fun onError(problems: MessageProblems, context: MessageContext) {
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+    ) {
         logger.info { "${this.javaClass.simpleName} kunne ikke lese melding: \n $problems" }
     }
 }

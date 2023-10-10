@@ -26,7 +26,6 @@ import java.util.UUID
 import javax.sql.DataSource
 
 class PostgresRepository(private val ds: DataSource) : PersonRepository, OppgaveRepository, BehandlingRepository {
-
     override fun hentPerson(ident: String): Person? =
         using(sessionOf(ds)) { session ->
             session.run(
@@ -67,15 +66,19 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         }.toSet()
     }
 
-    private fun Session.hentBehandler(behandlingId: UUID, ident: String): List<PersonHendelse> {
+    private fun Session.hentBehandler(
+        behandlingId: UUID,
+        ident: String,
+    ): List<PersonHendelse> {
         return this.run(
             queryOf(
                 //language=PostgreSQL
-                statement = """
+                statement =
+                    """
                     SELECT melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id
                     FROM  hendelse
                     WHERE behandling_id = :behandling_id
-                """.trimIndent(),
+                    """.trimIndent(),
                 paramMap = mapOf("behandling_id" to behandlingId),
             ).map { row ->
                 val clazz = row.string("clazz")
@@ -107,40 +110,42 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
     }
 
     private fun Session.hentSteg(behandlingId: UUID): Set<Steg<*>> {
-        val run = this.run(
-            queryOf(
-                //language=PostgreSQL
-                statement = """    
-                SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal, rolle
-                FROM steg WHERE behandling_uuid = :behandling_uuid
-                ORDER BY id
-                """.trimIndent(),
-                paramMap = mapOf("behandling_uuid" to behandlingId),
+        val run =
+            this.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """    
+                        SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal, rolle
+                        FROM steg WHERE behandling_uuid = :behandling_uuid
+                        ORDER BY id
+                        """.trimIndent(),
+                    paramMap = mapOf("behandling_uuid" to behandlingId),
+                ).map { row ->
+                    val type = row.string("type")
+                    val stegId = row.string("steg_id")
+                    val stegUUID = row.uuid("uuid")
+                    val sporing = hentSporing(stegUUID)
+                    val tilstand = Tilstand.valueOf(row.string("tilstand"))
+                    val rolle = row.stringOrNull("rolle")?.let { Rolle.valueOf(it) }
 
-            ).map { row ->
-                val type = row.string("type")
-                val stegId = row.string("steg_id")
-                val stegUUID = row.uuid("uuid")
-                val sporing = hentSporing(stegUUID)
-                val tilstand = Tilstand.valueOf(row.string("tilstand"))
-                val rolle = row.stringOrNull("rolle")?.let { Rolle.valueOf(it) }
-
-                val svar = when (val svarType = row.string("svar_type")) {
-                    "LocalDateSvar" -> Svar.LocalDateSvar(row.localDateOrNull("dato"), sporing)
-                    "IntegerSvar" -> Svar.IntegerSvar(row.intOrNull("heltall"), sporing)
-                    "StringSvar" -> Svar.StringSvar(row.stringOrNull("string"), sporing)
-                    "BooleanSvar" -> Svar.BooleanSvar(row.boolean("boolsk"), sporing)
-                    "DoubleSvar" -> Svar.DoubleSvar(row.doubleOrNull("desimal"), sporing)
-                    else -> throw IllegalArgumentException("Ugyldig svartype: $svarType")
-                }
-                when (type) {
-                    "Vilkår" -> Steg.Vilkår.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand)
-                    "Prosess" -> Steg.Prosess.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand, rolle!!)
-                    "Fastsettelse" -> Steg.Fastsettelse.rehydrer(stegUUID, stegId, svar, tilstand)
-                    else -> throw IllegalArgumentException("Ugyldig type: $type")
-                }
-            }.asList,
-        )
+                    val svar =
+                        when (val svarType = row.string("svar_type")) {
+                            "LocalDateSvar" -> Svar.LocalDateSvar(row.localDateOrNull("dato"), sporing)
+                            "IntegerSvar" -> Svar.IntegerSvar(row.intOrNull("heltall"), sporing)
+                            "StringSvar" -> Svar.StringSvar(row.stringOrNull("string"), sporing)
+                            "BooleanSvar" -> Svar.BooleanSvar(row.boolean("boolsk"), sporing)
+                            "DoubleSvar" -> Svar.DoubleSvar(row.doubleOrNull("desimal"), sporing)
+                            else -> throw IllegalArgumentException("Ugyldig svartype: $svarType")
+                        }
+                    when (type) {
+                        "Vilkår" -> Steg.Vilkår.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand)
+                        "Prosess" -> Steg.Prosess.rehydrer(stegUUID, stegId, svar as Svar<Boolean>, tilstand, rolle!!)
+                        "Fastsettelse" -> Steg.Fastsettelse.rehydrer(stegUUID, stegId, svar, tilstand)
+                        else -> throw IllegalArgumentException("Ugyldig type: $type")
+                    }
+                }.asList,
+            )
 
         return run.toSet().also { this.leggTilRelasjoner(behandlingId, it) }
     }
@@ -150,22 +155,24 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             queryOf(
                 //language=PostgreSQL
                 """
-                    SELECT * FROM sporing WHERE steg_uuid = :uuid
+                SELECT * FROM sporing WHERE steg_uuid = :uuid
                 """.trimIndent(),
                 mapOf("uuid" to stegUUID),
             ).map { row ->
                 val utført = row.localDateTime("utført")
                 when (val type = row.string("type")) {
-                    "ManuellSporing" -> ManuellSporing(
-                        utført,
-                        Saksbehandler(row.string("utført_av")),
-                        row.string("begrunnelse"),
-                    )
+                    "ManuellSporing" ->
+                        ManuellSporing(
+                            utført,
+                            Saksbehandler(row.string("utført_av")),
+                            row.string("begrunnelse"),
+                        )
 
-                    "QuizSporing" -> QuizSporing(
-                        utført,
-                        row.string("json"),
-                    )
+                    "QuizSporing" ->
+                        QuizSporing(
+                            utført,
+                            row.string("json"),
+                        )
 
                     else -> throw IllegalStateException("Kjenner ikke til type=$type")
                 }
@@ -173,7 +180,10 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         ) ?: NullSporing
     }
 
-    private fun Session.leggTilRelasjoner(behandlingId: UUID, steg: Set<Steg<*>>) {
+    private fun Session.leggTilRelasjoner(
+        behandlingId: UUID,
+        steg: Set<Steg<*>>,
+    ) {
         this.run(
             queryOf(
                 //language=PostgreSQL
@@ -310,17 +320,19 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
 }
 
 private class LagrePersonStatementBuilder(private val person: Person) : PersonVisitor {
-    val queries = mutableListOf<UpdateQueryAction>().also {
-        it.add(
-            queryOf(
-                //language=PostgreSQL
-                statement = """INSERT INTO person(ident) VALUES (:ident) ON CONFLICT DO NOTHING""",
-                paramMap = mapOf(
-                    "ident" to person.ident,
-                ),
-            ).asUpdate,
-        )
-    }
+    val queries =
+        mutableListOf<UpdateQueryAction>().also {
+            it.add(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """INSERT INTO person(ident) VALUES (:ident) ON CONFLICT DO NOTHING""",
+                    paramMap =
+                        mapOf(
+                            "ident" to person.ident,
+                        ),
+                ).asUpdate,
+            )
+        }
 
     init {
         person.accept(this)
@@ -332,10 +344,11 @@ private class LagrePersonStatementBuilder(private val person: Person) : PersonVi
                 queryOf(
                     //language=PostgreSQL
                     statement = """INSERT INTO sak(uuid, person_ident) VALUES (:uuid, :person_ident) ON CONFLICT DO NOTHING""",
-                    paramMap = mapOf(
-                        "uuid" to sak.id,
-                        "person_ident" to person.ident,
-                    ),
+                    paramMap =
+                        mapOf(
+                            "uuid" to sak.id,
+                            "person_ident" to person.ident,
+                        ),
                 ).asUpdate,
             )
         }

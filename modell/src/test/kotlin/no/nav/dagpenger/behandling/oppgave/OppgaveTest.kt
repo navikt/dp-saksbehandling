@@ -18,10 +18,11 @@ class OppgaveTest {
     fun foobar() {
         val steg = Steg.fastsettelse<String>("foo")
         val behandling = Behandling(Person("02020256789"), testHendelse, setOf(steg), sak = Sak())
-        val oppgave = Oppgave(
-            UUID.randomUUID(),
-            behandling,
-        )
+        val oppgave =
+            Oppgave(
+                UUID.randomUUID(),
+                behandling,
+            )
 
         oppgave.tilstand shouldBe TilBehandling
         oppgave.utfør(

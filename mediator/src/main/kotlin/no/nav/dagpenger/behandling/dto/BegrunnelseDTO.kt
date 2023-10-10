@@ -13,20 +13,23 @@ import no.nav.dagpenger.behandling.api.models.SaksbehandlersBegrunnelseDTO
 import java.time.ZoneId
 
 private val Europa_Oslo = ZoneId.of("Europe/Oslo")
+
 fun Sporing.toBegrunnelseDTO(): BegrunnelseDTO? {
     return when (this) {
-        is QuizSporing -> QuizBegrunnelseDTO(
-            kilde = KildeDTO.Quiz,
-            utført = this.utført.atZone(Europa_Oslo).toOffsetDateTime(),
-            json = this.json,
-        )
+        is QuizSporing ->
+            QuizBegrunnelseDTO(
+                kilde = KildeDTO.Quiz,
+                utført = this.utført.atZone(Europa_Oslo).toOffsetDateTime(),
+                json = this.json,
+            )
 
-        is ManuellSporing -> SaksbehandlersBegrunnelseDTO(
-            kilde = KildeDTO.Saksbehandler,
-            utført = this.utført.atZone(Europa_Oslo).toOffsetDateTime(),
-            utførtAv = this.utførtAv.toSaksbehandlerDTO(),
-            tekst = this.begrunnelse,
-        )
+        is ManuellSporing ->
+            SaksbehandlersBegrunnelseDTO(
+                kilde = KildeDTO.Saksbehandler,
+                utført = this.utført.atZone(Europa_Oslo).toOffsetDateTime(),
+                utførtAv = this.utførtAv.toSaksbehandlerDTO(),
+                tekst = this.begrunnelse,
+            )
 
         is NullSporing -> null
     }

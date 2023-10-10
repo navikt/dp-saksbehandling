@@ -20,7 +20,10 @@ class MockAzure(private val config: MockConfig) {
         System.setProperty("AZURE_OPENID_CONFIG_JWKS_URI", "${mockOAuth2Server.jwksUrl(AZURE_OPENID_CONFIG_ISSUER)}")
     }
 
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): Any =
+    operator fun getValue(
+        thisRef: Any?,
+        property: KProperty<*>,
+    ): Any =
         mockOAuth2Server.issueToken(
             audience = AZURE_APP_CLIENT_ID,
             issuerId = AZURE_OPENID_CONFIG_ISSUER,

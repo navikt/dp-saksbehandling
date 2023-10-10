@@ -8,7 +8,6 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class DAGNodeTest {
-
     private val farfar = DAGNode("farfar")
     private val far = DAGNode("far")
     private val mor = DAGNode("mor")

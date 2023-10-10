@@ -10,24 +10,25 @@ import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config
 
 internal object Configuration {
+    const val APP_NAME = "dp-behandling"
 
-    const val appName = "dp-behandling"
-
-    private val defaultProperties = ConfigurationMap(
-        mapOf(
-            "RAPID_APP_NAME" to appName,
-            "KAFKA_CONSUMER_GROUP_ID" to "dp-behandling-v1",
-            "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
-            "KAFKA_EXTRA_TOPIC" to "teamdagpenger.journalforing.v1",
-            "KAFKA_RESET_POLICY" to "latest",
-        ),
-    )
+    private val defaultProperties =
+        ConfigurationMap(
+            mapOf(
+                "RAPID_APP_NAME" to APP_NAME,
+                "KAFKA_CONSUMER_GROUP_ID" to "dp-behandling-v1",
+                "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
+                "KAFKA_EXTRA_TOPIC" to "teamdagpenger.journalforing.v1",
+                "KAFKA_RESET_POLICY" to "latest",
+            ),
+        )
     val properties =
         ConfigurationProperties.systemProperties() overriding EnvironmentVariables() overriding defaultProperties
 
-    val config: Map<String, String> = properties.list().reversed().fold(emptyMap()) { map, pair ->
-        map + pair.second
-    }
+    val config: Map<String, String> =
+        properties.list().reversed().fold(emptyMap()) { map, pair ->
+            map + pair.second
+        }
 
     val dpIverksettUrl by lazy { properties[Key("DP_IVERKSETT_URL", stringType)] }
     val dpIverksettAudience by lazy { properties[Key("DP_IVERKSETT_AUDIENCE", stringType)] }

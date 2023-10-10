@@ -9,7 +9,10 @@ interface PersonVisitor {
 }
 
 interface BehandlingVisitor {
-    fun visit(behandlingId: UUID, sak: Sak) {}
+    fun visit(
+        behandlingId: UUID,
+        sak: Sak,
+    ) {}
 
     fun visit(
         person: Person,
@@ -24,6 +27,11 @@ interface BehandlingVisitor {
 }
 
 interface OppgaveVisitor : BehandlingVisitor {
-    fun visit(oppgaveId: UUID, opprettet: LocalDateTime, utføresAv: Saksbehandler?) {}
+    fun visit(
+        oppgaveId: UUID,
+        opprettet: LocalDateTime,
+        utføresAv: Saksbehandler?,
+    ) {}
+
     fun visit(behandling: Behandling) {}
 }

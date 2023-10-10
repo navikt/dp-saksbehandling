@@ -45,70 +45,78 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.toJavaDuration
 
 class PostgresOppgaveRepositoryTest {
-
     private object TestData {
         val now: LocalDateTime = LocalDateTime.now()
         val enString = "fastsettelseC"
-        val manuellSporing = ManuellSporing(
-            utført = now,
-            utførtAv = Saksbehandler(ident = "saksbehandlinger"),
-            begrunnelse = "",
-
-        )
+        val manuellSporing =
+            ManuellSporing(
+                utført = now,
+                utførtAv = Saksbehandler(ident = "saksbehandlinger"),
+                begrunnelse = "",
+            )
 
         @Language("JSON")
-        val quizSporing = QuizSporing(
-            utført = now,
-            json = """{}""",
-        )
+        val quizSporing =
+            QuizSporing(
+                utført = now,
+                json = """{}""",
+            )
 
-        val fastsettelseC = Steg.fastsettelse<String>("C").also {
-            it.besvar(enString, manuellSporing)
-        }
+        val fastsettelseC =
+            Steg.fastsettelse<String>("C").also {
+                it.besvar(enString, manuellSporing)
+            }
         val etHeltall = 1
-        val fastsettelseB = Steg.fastsettelse<Int>("B").also {
-            it.avhengerAv(fastsettelseC)
-            it.besvar(etHeltall, manuellSporing)
-        }
+        val fastsettelseB =
+            Steg.fastsettelse<Int>("B").also {
+                it.avhengerAv(fastsettelseC)
+                it.besvar(etHeltall, manuellSporing)
+            }
         val enDato: LocalDate = LocalDate.of(2022, 2, 2)
-        val fastsettelseA = Steg.fastsettelse<LocalDate>("A").also {
-            it.avhengerAv(fastsettelseB)
-            it.besvar(enDato, quizSporing)
-        }
+        val fastsettelseA =
+            Steg.fastsettelse<LocalDate>("A").also {
+                it.avhengerAv(fastsettelseB)
+                it.besvar(enDato, quizSporing)
+            }
         val enBoolean = true
-        val fastsettelseD = Steg.fastsettelse<Boolean>("D").also {
-            it.avhengerAv(fastsettelseC)
-            it.besvar(enBoolean, ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), ""))
-        }
+        val fastsettelseD =
+            Steg.fastsettelse<Boolean>("D").also {
+                it.avhengerAv(fastsettelseC)
+                it.besvar(enBoolean, ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), ""))
+            }
 
         val etDesimaltall = 2.0
-        val fastsettelseE = Steg.fastsettelse<Double>("E").also {
-            it.besvar(etDesimaltall, ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), ""))
-        }
+        val fastsettelseE =
+            Steg.fastsettelse<Double>("E").also {
+                it.besvar(etDesimaltall, ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), ""))
+            }
 
-        val vilkårF = Steg.Vilkår(id = "F").also {
-            it.avhengerAv(fastsettelseE)
-            it.avhengerAv(fastsettelseC)
-        }
+        val vilkårF =
+            Steg.Vilkår(id = "F").also {
+                it.avhengerAv(fastsettelseE)
+                it.avhengerAv(fastsettelseC)
+            }
 
-        val fastsettelseG = Steg.fastsettelse<String>("G").also {
-            it.avhengerAv(vilkårF)
-        }
+        val fastsettelseG =
+            Steg.fastsettelse<String>("G").also {
+                it.avhengerAv(vilkårF)
+            }
 
         val testSteg: Set<Steg<*>> =
             setOf(fastsettelseA, fastsettelseB, fastsettelseC, fastsettelseD, fastsettelseE, vilkårF, fastsettelseG)
 
         val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent)
         val vedtakStansetHendelse = VedtakStansetHendelse(ident = testIdent, oppgaveId = UUID.randomUUID())
-        val testBehandling = Behandling.rehydrer(
-            person = testPerson,
-            steg = testSteg,
-            opprettet = LocalDateTime.now(),
-            uuid = UUID.randomUUID(),
-            tilstand = TilBehandling,
-            behandler = listOf(søknadInnsendtHendelse, vedtakStansetHendelse),
-            sak = testSak,
-        )
+        val testBehandling =
+            Behandling.rehydrer(
+                person = testPerson,
+                steg = testSteg,
+                opprettet = LocalDateTime.now(),
+                uuid = UUID.randomUUID(),
+                tilstand = TilBehandling,
+                behandler = listOf(søknadInnsendtHendelse, vedtakStansetHendelse),
+                sak = testSak,
+            )
 
         val testOppgave = Oppgave(UUID.randomUUID(), testBehandling)
     }
@@ -144,16 +152,18 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.getStegById("D").avhengigeSteg() shouldBe setOf(fastsettelseC)
                     rehydrertBehandling.getStegById("F").avhengigeSteg() shouldBe setOf(fastsettelseC, fastsettelseE)
                     // Check rekursivt avengige steg
-                    rehydrertBehandling.getStegById("A").alleSteg() shouldBe setOf(
-                        fastsettelseA,
-                        fastsettelseB,
-                        fastsettelseC,
-                    )
-                    rehydrertBehandling.getStegById("F").alleSteg() shouldBe setOf(
-                        vilkårF,
-                        fastsettelseC,
-                        fastsettelseE,
-                    )
+                    rehydrertBehandling.getStegById("A").alleSteg() shouldBe
+                        setOf(
+                            fastsettelseA,
+                            fastsettelseB,
+                            fastsettelseC,
+                        )
+                    rehydrertBehandling.getStegById("F").alleSteg() shouldBe
+                        setOf(
+                            vilkårF,
+                            fastsettelseC,
+                            fastsettelseE,
+                        )
                     // Steg tilstand
                     rehydrertBehandling.getStegById("A").let { steg ->
                         steg.tilstand shouldBe Tilstand.Utført

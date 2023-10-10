@@ -13,13 +13,13 @@ object Meldingsfabrikk {
 
     val testSporing get() = ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), "")
 
-    //language=json
-    internal fun `innsending ferdigstilt hendelse`(
+    internal fun innsendingFerdigstiltHendelse(
         søknadId: UUID,
         journalpostId: String,
         type: String,
         ident: String,
-    ): String = //language=JSON
+    ): String =
+        //language=JSON
         """
         {
           "journalpostId": "$journalpostId",

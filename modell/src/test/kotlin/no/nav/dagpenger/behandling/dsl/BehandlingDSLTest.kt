@@ -13,48 +13,52 @@ import java.time.LocalDate
 class BehandlingDSLTest {
     @Test
     fun `dsl test`() {
-        val behandling = behandling(Person("12345678910"), testHendelse, sak = Sak()) {
-            val grandparentFelles = steg {
-                fastsettelse<LocalDate>("GrandparentFelles")
-            }
+        val behandling =
+            behandling(Person("12345678910"), testHendelse, sak = Sak()) {
+                val grandparentFelles =
+                    steg {
+                        fastsettelse<LocalDate>("GrandparentFelles")
+                    }
 
-            steg {
-                vilkår("Grandparent2") {
-                    avhengerAv(grandparentFelles)
-                }
-            }
-
-            steg {
-                fastsettelse<Boolean>("Grandparent3") {
-                    avhengerAvFastsettelse<Int>("Parent1")
-                    avhengerAvFastsettelse<String>("Parent2") {
-                        avhengerAvFastsettelse<String>("Child21")
-                        avhengerAvVilkår("Child22")
+                steg {
+                    vilkår("Grandparent2") {
                         avhengerAv(grandparentFelles)
                     }
                 }
+
+                steg {
+                    fastsettelse<Boolean>("Grandparent3") {
+                        avhengerAvFastsettelse<Int>("Parent1")
+                        avhengerAvFastsettelse<String>("Parent2") {
+                            avhengerAvFastsettelse<String>("Child21")
+                            avhengerAvVilkår("Child22")
+                            avhengerAv(grandparentFelles)
+                        }
+                    }
+                }
             }
-        }
 
         behandling.steg.map { it.id } shouldBe setOf("GrandparentFelles", "Grandparent2", "Grandparent3")
 
         behandling.alleSteg().size shouldBe 7
-        behandling.alleSteg().map { it.id } shouldBe setOf(
-            "GrandparentFelles",
-            "Grandparent2",
-            "Grandparent3",
-            "Parent1",
-            "Parent2",
-            "Child21",
-            "Child22",
-        )
-        behandling.nesteSteg().map { it.id } shouldBe setOf(
-            "GrandparentFelles",
-            "Parent1",
-            "Parent2",
-            "Child21",
-            "Child22",
-        )
+        behandling.alleSteg().map { it.id } shouldBe
+            setOf(
+                "GrandparentFelles",
+                "Grandparent2",
+                "Grandparent3",
+                "Parent1",
+                "Parent2",
+                "Child21",
+                "Child22",
+            )
+        behandling.nesteSteg().map { it.id } shouldBe
+            setOf(
+                "GrandparentFelles",
+                "Parent1",
+                "Parent2",
+                "Child21",
+                "Child22",
+            )
         // Besvare
         val grandparentFelles = behandling.nesteSteg().single { it.id == "GrandparentFelles" }
         behandling.besvar(grandparentFelles.uuid, LocalDate.now(), testSporing(listOf(Rolle.Saksbehandler)))

@@ -9,11 +9,12 @@ import no.nav.dagpenger.behandling.api.models.TilstandDTO
 internal fun Collection<Steg<*>>.toStegDTO(): List<StegDTO> = this.map { it.toStegDTO() }
 
 internal fun Steg<*>.toStegDTO(): StegDTO {
-    val stegtypeDTO = when (this) {
-        is Steg.Fastsettelse<*> -> StegtypeDTO.Fastsetting
-        is Steg.Vilkår -> StegtypeDTO.Vilkår
-        is Steg.Prosess -> StegtypeDTO.Prosess
-    }
+    val stegtypeDTO =
+        when (this) {
+            is Steg.Fastsettelse<*> -> StegtypeDTO.Fastsetting
+            is Steg.Vilkår -> StegtypeDTO.Vilkår
+            is Steg.Prosess -> StegtypeDTO.Prosess
+        }
     val tilstand = this.tilstand
     val svarDTO = this.svar.toSvarDTO()
     return StegDTO(

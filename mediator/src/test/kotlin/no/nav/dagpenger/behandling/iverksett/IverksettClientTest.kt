@@ -12,25 +12,26 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class IverksettClientTest {
-
     private val testTokenProvider: (token: String, audience: String) -> String = { _, _ -> "testToken" }
     private val baseUrl = "http://baseUrl"
     val subjectToken = "gylidg_token"
     private val audience = "testAudience"
 
-    val iverksettDto = IverksettDto(
-        sakId = UUID.randomUUID(),
-        behandlingId = UUID.randomUUID(),
-        personIdent = testIdent,
-    )
+    val iverksettDto =
+        IverksettDto(
+            sakId = UUID.randomUUID(),
+            behandlingId = UUID.randomUUID(),
+            personIdent = testIdent,
+        )
 
     @Test
-    fun `Iverksett svarer med 202`() = runBlocking {
-        val mockEngine = mockEngine(HttpStatusCode.Accepted)
-        val iverksettClient = IverksettClient(baseUrl, audience, tokenProvider = testTokenProvider, engine = mockEngine)
+    fun `Iverksett svarer med 202`() =
+        runBlocking {
+            val mockEngine = mockEngine(HttpStatusCode.Accepted)
+            val iverksettClient = IverksettClient(baseUrl, audience, tokenProvider = testTokenProvider, engine = mockEngine)
 
-        iverksettClient.iverksett(subjectToken, iverksettDto)
-    }
+            iverksettClient.iverksett(subjectToken, iverksettDto)
+        }
 
     // TODO: Testcases for de ulike feilscenarier
 //    @Test
@@ -40,9 +41,10 @@ class IverksettClientTest {
 //
 //    }
 
-    private fun mockEngine(statusCode: HttpStatusCode) = MockEngine { request ->
-        request.headers[HttpHeaders.Accept] shouldBe "application/json"
-        request.headers[HttpHeaders.Authorization] shouldBe "Bearer ${testTokenProvider.invoke(subjectToken, audience)}"
-        respond(content = "", statusCode)
-    }
+    private fun mockEngine(statusCode: HttpStatusCode) =
+        MockEngine { request ->
+            request.headers[HttpHeaders.Accept] shouldBe "application/json"
+            request.headers[HttpHeaders.Authorization] shouldBe "Bearer ${testTokenProvider.invoke(subjectToken, audience)}"
+            respond(content = "", statusCode)
+        }
 }

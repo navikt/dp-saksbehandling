@@ -25,17 +25,19 @@ internal class Mediator(
     private val iverksettClient: IverksettClient,
 ) : OppgaveRepository by oppgaveRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {
-        val person = personRepository.hentPerson(hendelse.ident()) ?: Person(hendelse.ident()).also {
-            it.håndter(hendelse)
-            personRepository.lagrePerson(it)
-        }
+        val person =
+            personRepository.hentPerson(hendelse.ident()) ?: Person(hendelse.ident()).also {
+                it.håndter(hendelse)
+                personRepository.lagrePerson(it)
+            }
         lagreOppgave(hendelse.oppgave(person))
         aktivitetsloggMediator.håndter(hendelse)
     }
 
     fun behandle(hendelse: VedtakStansetHendelse) {
-        val person = personRepository.hentPerson(hendelse.ident())
-            ?: throw IllegalArgumentException("Fant ikke person, kan ikke utføre stans")
+        val person =
+            personRepository.hentPerson(hendelse.ident())
+                ?: throw IllegalArgumentException("Fant ikke person, kan ikke utføre stans")
         hendelse.oppgave(person).also {
             lagreOppgave(it)
         }
@@ -49,18 +51,26 @@ internal class Mediator(
         aktivitetsloggMediator.håndter(kommando)
     }
 
-    override fun hentOppgave(uuid: UUID) = oppgaveRepository.hentOppgave(uuid).also {
-        it.addObserver(this)
-    }
-
-    override fun behandlingEndretTilstand(behandlingEndretTilstand: BehandlingEndretTilstand) =
-        publishEvent("behandling_endret_tilstand", behandlingEndretTilstand).also {
-            logger.info { "Publiserer behandling_endret_tilstand for behandlingId=${behandlingEndretTilstand.behandlingId}" }
+    override fun hentOppgave(uuid: UUID) =
+        oppgaveRepository.hentOppgave(uuid).also {
+            it.addObserver(this)
         }
 
-    override fun vedtakFattet(vedtakFattetEvent: VedtakFattet, kommando: UtførStegKommando) {
+    override fun behandlingEndretTilstand(behandlingEndretTilstandEvent: BehandlingEndretTilstand) =
+        publishEvent("behandling_endret_tilstand", behandlingEndretTilstandEvent).also {
+            logger.info {
+                "Publiserer behandling_endret_tilstand for behandlingId=${behandlingEndretTilstandEvent.behandlingId}"
+            }
+        }
+
+    override fun vedtakFattet(
+        vedtakFattetEvent: VedtakFattet,
+        kommando: UtførStegKommando,
+    ) {
         publishEvent("rettighet_behandlet_hendelse", vedtakFattetEvent).also {
-            logger.info { "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}" }
+            logger.info {
+                "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}"
+            }
         }
 
         val behandling = behandlingRepository.hentBehandling(vedtakFattetEvent.behandlingId)
@@ -68,6 +78,8 @@ internal class Mediator(
         logger.info { "Rammevedtak med behandlingId ${behandling.uuid} er sendt til iverksetting" }
     }
 
-    private fun publishEvent(navn: String, event: BehandlingObserver.BehandlingEvent) =
-        rapidsConnection.publish(event.ident, JsonMessage.newMessage(navn, event.toMap()).toJson())
+    private fun publishEvent(
+        navn: String,
+        event: BehandlingObserver.BehandlingEvent,
+    ) = rapidsConnection.publish(event.ident, JsonMessage.newMessage(navn, event.toMap()).toJson())
 }

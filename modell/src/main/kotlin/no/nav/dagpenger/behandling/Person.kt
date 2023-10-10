@@ -10,7 +10,10 @@ data class Person(val ident: String) {
     }
 
     companion object {
-        fun rehydrer(ident: String, saker: Set<Sak>) = Person(ident).also {
+        fun rehydrer(
+            ident: String,
+            saker: Set<Sak>,
+        ) = Person(ident).also {
             it.saker.addAll(saker)
         }
     }

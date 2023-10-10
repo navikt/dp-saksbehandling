@@ -32,23 +32,26 @@ internal class IverksettClient(
     private val tokenProvider: (token: String, audience: String) -> String = tilOboToken,
     engine: HttpClientEngine = CIO.create {},
 ) {
-
     private companion object {
         val logger = KotlinLogging.logger {}
     }
 
-    private val httpClient = HttpClient(engine) {
-        expectSuccess = true
+    private val httpClient =
+        HttpClient(engine) {
+            expectSuccess = true
 
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            install(ContentNegotiation) {
+                jackson {
+                    registerModule(JavaTimeModule())
+                    disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                }
             }
         }
-    }
 
-    internal fun iverksett(subjectToken: String, iverksettDto: IverksettDto) {
+    internal fun iverksett(
+        subjectToken: String,
+        iverksettDto: IverksettDto,
+    ) {
         runBlocking {
             val url = URLBuilder(baseUrl).appendEncodedPathSegments(API_PATH, IVERKSETTING_PATH).build()
 
@@ -61,10 +64,15 @@ internal class IverksettClient(
             } catch (e: ClientRequestException) {
                 when (e.response.status) {
                     HttpStatusCode.Accepted -> {
-                        logger.info("API kall mot iverksetting var suksessfull. Statuskode: ${e.response.status} Beskrivelse: ${e.response.status.description}")
+                        logger.info(
+                            """API kall mot iverksetting var suksessfull. Statuskode: ${e.response.status} 
+                            |Beskrivelse: ${e.response.status.description}
+                            """.trimMargin(),
+                        )
                     }
 
-                    HttpStatusCode.BadRequest, HttpStatusCode.Forbidden, HttpStatusCode.Conflict -> { // TODO: Hva vil vi at skal skje når iverksetting feiler
+                    HttpStatusCode.BadRequest, HttpStatusCode.Forbidden, HttpStatusCode.Conflict -> {
+                        // TODO: Hva vil vi at skal skje når iverksetting feiler
                         logger.warn(feilmelding(e.response))
                     }
 

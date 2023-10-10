@@ -15,7 +15,11 @@ open class DefaultOppgaveVisitor(oppgave: Oppgave) : OppgaveVisitor {
         oppgave.accept(this)
     }
 
-    override fun visit(oppgaveId: UUID, opprettet: LocalDateTime, utføresAv: Saksbehandler?) {
+    override fun visit(
+        oppgaveId: UUID,
+        opprettet: LocalDateTime,
+        utføresAv: Saksbehandler?,
+    ) {
         this.oppgaveId = oppgaveId
     }
 

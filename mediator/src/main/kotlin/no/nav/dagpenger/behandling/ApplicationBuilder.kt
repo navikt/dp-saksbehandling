@@ -18,14 +18,15 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             }.build()
 
     private val postgresRepository = PostgresRepository(dataSource)
-    private val mediator = Mediator(
-        rapidsConnection = rapidsConnection,
-        oppgaveRepository = postgresRepository,
-        personRepository = postgresRepository,
-        behandlingRepository = postgresRepository,
-        aktivitetsloggMediator = AktivitetsloggMediator(rapidsConnection),
-        iverksettClient = IverksettClient(),
-    )
+    private val mediator =
+        Mediator(
+            rapidsConnection = rapidsConnection,
+            oppgaveRepository = postgresRepository,
+            personRepository = postgresRepository,
+            behandlingRepository = postgresRepository,
+            aktivitetsloggMediator = AktivitetsloggMediator(rapidsConnection),
+            iverksettClient = IverksettClient(),
+        )
 
     init {
         rapidsConnection.register(this)
@@ -42,7 +43,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     override fun onStartup(rapidsConnection: RapidsConnection) {
         // clean()
         runMigration()
-        logger.info { "Starter appen ${Configuration.appName}" }
+        logger.info { "Starter appen ${Configuration.APP_NAME}" }
     }
 
     override fun onShutdown(rapidsConnection: RapidsConnection) {

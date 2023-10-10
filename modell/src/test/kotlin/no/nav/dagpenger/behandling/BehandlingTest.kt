@@ -42,15 +42,16 @@ class BehandlingTest {
         val steg2 = Vilkår("2")
         val steg3 = Vilkår("3")
         val steg4 = Vilkår("4")
-        val behandling = Behandling(
-            testPerson,
-            testHendelse,
-            setOf(
-                steg1.also { it.avhengerAv(steg2) },
-                steg3.also { it.avhengerAv(steg4) },
-            ),
-            sak = Sak(),
-        )
+        val behandling =
+            Behandling(
+                testPerson,
+                testHendelse,
+                setOf(
+                    steg1.also { it.avhengerAv(steg2) },
+                    steg3.also { it.avhengerAv(steg4) },
+                ),
+                sak = Sak(),
+            )
 
         assertEquals(setOf(steg1, steg2, steg3, steg4), behandling.alleSteg())
         assertEquals(setOf(steg2, steg4), behandling.nesteSteg())
@@ -62,10 +63,11 @@ class BehandlingTest {
         val steg2 = Vilkår("2").also { it.avhengerAv(steg1) }
         val steg3 = Vilkår("3")
         val steg4 = Vilkår("4").also { it.avhengerAv(steg3) }
-        val steg5 = Vilkår("5").also {
-            it.avhengerAv(steg2)
-            it.avhengerAv(steg4)
-        }
+        val steg5 =
+            Vilkår("5").also {
+                it.avhengerAv(steg2)
+                it.avhengerAv(steg4)
+            }
 
         assertEquals(
             setOf(steg1, steg2, steg3, steg4, steg5),
@@ -76,16 +78,18 @@ class BehandlingTest {
     @Test
     fun `Utførte steg blir ikke med i neste steg`() {
         val steg1 = fastsettelse<Int>("1")
-        val steg2 = Vilkår("2").also {
-            it.avhengerAv(steg1)
-            it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
-        }
+        val steg2 =
+            Vilkår("2").also {
+                it.avhengerAv(steg1)
+                it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
+            }
         val steg3 = Vilkår("3")
         val steg4 = Vilkår("4").avhengerAv(steg3)
-        val steg5 = Vilkår("5").also {
-            it.avhengerAv(steg1)
-            it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
-        }
+        val steg5 =
+            Vilkår("5").also {
+                it.avhengerAv(steg1)
+                it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
+            }
 
         assertEquals(
             setOf(steg3, steg4),
@@ -96,10 +100,11 @@ class BehandlingTest {
     @Test
     fun `Steg nullstilles når avhengighet endres`() {
         val steg1 = fastsettelse<Int>("1")
-        val steg2 = Vilkår("2").also {
-            it.avhengerAv(steg1)
-            it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
-        }
+        val steg2 =
+            Vilkår("2").also {
+                it.avhengerAv(steg1)
+                it.besvar(true, testSporing(listOf(Rolle.Saksbehandler)))
+            }
         val steg3 = Vilkår("3")
         val behandling = Behandling(testPerson, testHendelse, setOf(steg2, steg3), sak = Sak())
         assertEquals(setOf(steg3), behandling.nesteSteg())
@@ -112,18 +117,19 @@ class BehandlingTest {
     fun `Skal kunne besvare behandling`() {
         lateinit var intUUID: UUID
         lateinit var vilkårUUID: UUID
-        val behandling = behandling(testPerson, testHendelse, sak = Sak()) {
-            steg {
-                fastsettelse<Int>("noe").also {
-                    intUUID = it.uuid
+        val behandling =
+            behandling(testPerson, testHendelse, sak = Sak()) {
+                steg {
+                    fastsettelse<Int>("noe").also {
+                        intUUID = it.uuid
+                    }
+                }
+                steg {
+                    vilkår("bær").also {
+                        vilkårUUID = it.uuid
+                    }
                 }
             }
-            steg {
-                vilkår("bær").also {
-                    vilkårUUID = it.uuid
-                }
-            }
-        }
 
         behandling.erFerdig() shouldBe false
         behandling.besvar(vilkårUUID, true, testSporing(listOf(Rolle.Saksbehandler)))
@@ -143,15 +149,16 @@ class BehandlingTest {
     fun `Skal kunne besvare vilkår og fastsettelse av type boolean`() {
         lateinit var vilkår: UUID
         lateinit var fastsettelse: UUID
-        val behandling = behandling(testPerson, testHendelse, sak = Sak()) {
-            steg {
-                vilkår("noe").also { vilkår = it.uuid }
-            }
+        val behandling =
+            behandling(testPerson, testHendelse, sak = Sak()) {
+                steg {
+                    vilkår("noe").also { vilkår = it.uuid }
+                }
 
-            steg {
-                fastsettelse<Boolean>("boolean").also { fastsettelse = it.uuid }
+                steg {
+                    fastsettelse<Boolean>("boolean").also { fastsettelse = it.uuid }
+                }
             }
-        }
 
         shouldNotThrow<IllegalArgumentException> { behandling.besvar(vilkår, true, testSporing(listOf(Rolle.Saksbehandler))) }
         shouldNotThrow<IllegalArgumentException> { behandling.besvar(fastsettelse, false, testSporing(listOf(Rolle.Saksbehandler))) }
@@ -161,11 +168,12 @@ class BehandlingTest {
     fun `Setter riktig type utfall ved stans`() {
         lateinit var fastsettelse: UUID
 
-        val stansBehandling = behandling(testPerson, VedtakStansetHendelse(ident = testIdent, oppgaveId = UUID.randomUUID()), Sak()) {
-            steg {
-                fastsettelse<LocalDate>("en fastsettelse").also { fastsettelse = it.uuid }
+        val stansBehandling =
+            behandling(testPerson, VedtakStansetHendelse(ident = testIdent, oppgaveId = UUID.randomUUID()), Sak()) {
+                steg {
+                    fastsettelse<LocalDate>("en fastsettelse").also { fastsettelse = it.uuid }
+                }
             }
-        }
 
         stansBehandling.besvar(fastsettelse, LocalDate.now(), testSporing(listOf(Rolle.Saksbehandler)))
         stansBehandling.utfall() shouldBe Utfall.Stans
@@ -176,15 +184,16 @@ class BehandlingTest {
         lateinit var vilkår1: UUID
         lateinit var vilkår2: UUID
 
-        val behandling = behandling(testPerson, testHendelse, Sak()) {
-            steg {
-                vilkår("et vilkår").also { vilkår1 = it.uuid }
-            }
+        val behandling =
+            behandling(testPerson, testHendelse, Sak()) {
+                steg {
+                    vilkår("et vilkår").also { vilkår1 = it.uuid }
+                }
 
-            steg {
-                vilkår("et til vilkår").also { vilkår2 = it.uuid }
+                steg {
+                    vilkår("et til vilkår").also { vilkår2 = it.uuid }
+                }
             }
-        }
 
         behandling.besvar(vilkår1, true, testSporing(listOf(Rolle.Saksbehandler)))
         behandling.besvar(vilkår2, true, testSporing(listOf(Rolle.Saksbehandler)))

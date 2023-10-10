@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class PersonTest {
-
     @Test
     fun `Alle hendelser skal havne på samme sak (Viggo case)`() {
         val person = Person("12345678910")
@@ -31,7 +30,6 @@ class PersonTest {
 }
 
 class TestVisitor(person: Person) : PersonVisitor {
-
     lateinit var saker: Set<Sak>
 
     init {

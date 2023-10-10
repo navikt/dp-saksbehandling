@@ -37,7 +37,12 @@ sealed class Steg<T> private constructor(
         override val node: DAGNode<Steg<*>> = DAGNode(this)
 
         companion object {
-            fun <T> rehydrer(uuid: UUID, id: String, svar: Svar<T>, tilstand: Tilstand): Steg<T> {
+            fun <T> rehydrer(
+                uuid: UUID,
+                id: String,
+                svar: Svar<T>,
+                tilstand: Tilstand,
+            ): Steg<T> {
                 return Fastsettelse(uuid, id, svar, tilstand)
             }
         }
@@ -49,11 +54,11 @@ sealed class Steg<T> private constructor(
         svar: Svar<Boolean>,
         tilstand: Tilstand,
     ) : Steg<Boolean>(
-        uuid = uuid,
-        id = id,
-        svar = svar,
-        _tilstand = tilstand,
-    ) {
+            uuid = uuid,
+            id = id,
+            svar = svar,
+            _tilstand = tilstand,
+        ) {
         constructor(id: String, uuid: UUID = UUID.randomUUID()) : this(
             id,
             uuid,
@@ -64,7 +69,12 @@ sealed class Steg<T> private constructor(
         override val node: DAGNode<Steg<*>> = DAGNode(this)
 
         companion object {
-            fun rehydrer(uuid: UUID, id: String, svar: Svar<Boolean>, tilstand: Tilstand): Steg<Boolean> {
+            fun rehydrer(
+                uuid: UUID,
+                id: String,
+                svar: Svar<Boolean>,
+                tilstand: Tilstand,
+            ): Steg<Boolean> {
                 return Vilkår(id, uuid, svar, tilstand)
             }
         }
@@ -77,11 +87,11 @@ sealed class Steg<T> private constructor(
         tilstand: Tilstand,
         private val rolle: Rolle,
     ) : Steg<Boolean>(
-        uuid = uuid,
-        id = id,
-        svar = svar,
-        tilstand,
-    ) {
+            uuid = uuid,
+            id = id,
+            svar = svar,
+            tilstand,
+        ) {
         constructor(id: String, rolle: Rolle, uuid: UUID = UUID.randomUUID()) : this(
             id,
             uuid,
@@ -93,12 +103,21 @@ sealed class Steg<T> private constructor(
         override val node: DAGNode<Steg<*>> = DAGNode(this)
 
         companion object {
-            fun rehydrer(uuid: UUID, id: String, svar: Svar<Boolean>, tilstand: Tilstand, rolle: Rolle): Steg<Boolean> {
+            fun rehydrer(
+                uuid: UUID,
+                id: String,
+                svar: Svar<Boolean>,
+                tilstand: Tilstand,
+                rolle: Rolle,
+            ): Steg<Boolean> {
                 return Prosess(id, uuid, svar, tilstand, rolle)
             }
         }
 
-        override fun besvar(svar: Boolean, sporing: Sporing) {
+        override fun besvar(
+            svar: Boolean,
+            sporing: Sporing,
+        ) {
             require(sporing is ManuellSporing && sporing.utførtAv.harRolle(rolle)) { "Kan kun utføres av saksbehandler med rolle: $rolle" }
             super.besvar(svar, sporing)
         }
@@ -133,7 +152,10 @@ sealed class Steg<T> private constructor(
 
     fun alleSteg(): Set<Steg<*>> = setOf(this) + node.getDescendants().map { it.value }
 
-    open fun besvar(svar: T, sporing: Sporing) {
+    open fun besvar(
+        svar: T,
+        sporing: Sporing,
+    ) {
         require(sporing !is NullSporing) { "Sporing kan ikke være NullSporing" }
         this.svar = this.svar.besvar(svar, sporing)
         this._tilstand = Tilstand.Utført

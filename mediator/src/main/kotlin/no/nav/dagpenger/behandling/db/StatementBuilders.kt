@@ -35,7 +35,11 @@ internal class OppaveStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statem
         oppgave.accept(this)
     }
 
-    override fun visit(oppgaveId: UUID, opprettet: LocalDateTime, utføresAv: Saksbehandler?) {
+    override fun visit(
+        oppgaveId: UUID,
+        opprettet: LocalDateTime,
+        utføresAv: Saksbehandler?,
+    ) {
         this.oppgaveId = oppgaveId
         this.opprettet = opprettet
         this.utføresAv = utføresAv
@@ -45,22 +49,23 @@ internal class OppaveStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statem
         this.behandlingId = behandling.uuid
     }
 
-    override val updateQueryActions: List<UpdateQueryAction> = listOf(
-        queryOf(
-            //language=PostgreSQL
-            """
-                    INSERT INTO oppgave (uuid, opprettet,utføres_av, behandling_id) 
-                    VALUES (:uuid, :opprettet, :utfores_av, :behandling_id)
-                    ON CONFLICT (uuid) DO UPDATE SET utføres_av = :utfores_av
-            """.trimIndent(),
-            mapOf(
-                "uuid" to oppgaveId,
-                "opprettet" to opprettet,
-                "utfores_av" to utføresAv?.ident,
-                "behandling_id" to behandlingId,
-            ),
-        ).asUpdate,
-    )
+    override val updateQueryActions: List<UpdateQueryAction> =
+        listOf(
+            queryOf(
+                //language=PostgreSQL
+                """
+                INSERT INTO oppgave (uuid, opprettet,utføres_av, behandling_id) 
+                VALUES (:uuid, :opprettet, :utfores_av, :behandling_id)
+                ON CONFLICT (uuid) DO UPDATE SET utføres_av = :utfores_av
+                """.trimIndent(),
+                mapOf(
+                    "uuid" to oppgaveId,
+                    "opprettet" to opprettet,
+                    "utfores_av" to utføresAv?.ident,
+                    "behandling_id" to behandlingId,
+                ),
+            ).asUpdate,
+        )
 }
 
 internal class BehandlingStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, StatementBuilder {
@@ -74,23 +79,26 @@ internal class BehandlingStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, St
         this.behandling = behandling
     }
 
-    override val updateQueryActions: List<UpdateQueryAction> = listOf(
-        queryOf(
-            //language=PostgreSQL
-            statement = """
-               INSERT INTO behandling(person_ident, opprettet, uuid, tilstand, sak_id)
-               VALUES (:person_ident, :opprettet, :uuid, :tilstand, :sak_id)
-               ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand
-            """.trimIndent(),
-            paramMap = mapOf(
-                "person_ident" to behandling.person.ident,
-                "opprettet" to behandling.opprettet,
-                "uuid" to behandling.uuid,
-                "tilstand" to behandling.tilstand.type.toString(),
-                "sak_id" to behandling.sak.id,
-            ),
-        ).asUpdate,
-    )
+    override val updateQueryActions: List<UpdateQueryAction> =
+        listOf(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO behandling(person_ident, opprettet, uuid, tilstand, sak_id)
+                    VALUES (:person_ident, :opprettet, :uuid, :tilstand, :sak_id)
+                    ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "person_ident" to behandling.person.ident,
+                        "opprettet" to behandling.opprettet,
+                        "uuid" to behandling.uuid,
+                        "tilstand" to behandling.tilstand.type.toString(),
+                        "sak_id" to behandling.sak.id,
+                    ),
+            ).asUpdate,
+        )
 }
 
 internal class HendelseStatemenBuilder(oppgave: Oppgave) : OppgaveVisitor, StatementBuilder {
@@ -118,11 +126,12 @@ internal class HendelseStatemenBuilder(oppgave: Oppgave) : OppgaveVisitor, State
         hendelser.map { hendelse ->
             queryOf(
                 //language=PostgreSQL
-                statement = """
-               INSERT INTO hendelse(behandling_id, melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id)
-               VALUES (:behandling_id, :melding_referanse_id, :clazz, :soknad_id, :journalpost_id, :oppgave_id)
-               ON CONFLICT (melding_referanse_id) DO NOTHING
-                """.trimIndent(),
+                statement =
+                    """
+                    INSERT INTO hendelse(behandling_id, melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id)
+                    VALUES (:behandling_id, :melding_referanse_id, :clazz, :soknad_id, :journalpost_id, :oppgave_id)
+                    ON CONFLICT (melding_referanse_id) DO NOTHING
+                    """.trimIndent(),
                 paramMap = hendelse.toParamMap(),
             ).asUpdate
         }
@@ -169,17 +178,19 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
     }
 
     override fun visit(behandling: Behandling) {
-        _updateQueryActions = behandling.alleSteg().toList().map {
-            queryOf(
-                //language=PostgreSQL
-                statement = """
-                INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal)
-                VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :svar_type, :ubesvart, :string, :dato, :heltall, :boolsk, :desimal)
-                ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand, ubesvart = :ubesvart, string = :string, dato = :dato, heltall = :heltall , boolsk = :boolsk, desimal = :desimal
-                """.trimIndent(),
-                paramMap = mapOf("behandling_uuid" to behandling.uuid) + it.toParamMap(),
-            ).asUpdate
-        }
+        _updateQueryActions =
+            behandling.alleSteg().toList().map {
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal)
+                        VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :svar_type, :ubesvart, :string, :dato, :heltall, :boolsk, :desimal)
+                        ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand, ubesvart = :ubesvart, string = :string, dato = :dato, heltall = :heltall , boolsk = :boolsk, desimal = :desimal
+                        """.trimIndent(),
+                    paramMap = mapOf("behandling_uuid" to behandling.uuid) + it.toParamMap(),
+                ).asUpdate
+            }
     }
 
     override val updateQueryActions: List<UpdateQueryAction> = _updateQueryActions
@@ -194,21 +205,26 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
             "type" to this.javaClass.simpleName,
             "svar_type" to svarType.javaClass.simpleName,
             "ubesvart" to svar.ubesvart,
-            "string" to svar.verdi.takeIf {
-                it != null && svarType is Svar.StringSvar
-            },
-            "dato" to svar.verdi.takeIf {
-                it != null && svarType is Svar.LocalDateSvar
-            },
-            "heltall" to svar.verdi.takeIf {
-                it != null && svarType is Svar.IntegerSvar
-            },
-            "boolsk" to svar.verdi.takeIf {
-                it != null && svarType is Svar.BooleanSvar
-            },
-            "desimal" to svar.verdi.takeIf {
-                it != null && svarType is Svar.DoubleSvar
-            },
+            "string" to
+                svar.verdi.takeIf {
+                    it != null && svarType is Svar.StringSvar
+                },
+            "dato" to
+                svar.verdi.takeIf {
+                    it != null && svarType is Svar.LocalDateSvar
+                },
+            "heltall" to
+                svar.verdi.takeIf {
+                    it != null && svarType is Svar.IntegerSvar
+                },
+            "boolsk" to
+                svar.verdi.takeIf {
+                    it != null && svarType is Svar.BooleanSvar
+                },
+            "desimal" to
+                svar.verdi.takeIf {
+                    it != null && svarType is Svar.DoubleSvar
+                },
         )
     }
 }
@@ -221,23 +237,26 @@ internal class RelasjonStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Stat
     }
 
     override fun visit(behandling: Behandling) {
-        _updateQueryActions = behandling.alleSteg().flatMap { parent ->
-            parent.avhengigeSteg().map { children -> Pair(parent, children) }
-        }.toSet().map {
-            queryOf(
-                //language=PostgreSQL
-                statement = """
-                INSERT INTO steg_relasjon(behandling_id, parent_id, child_id)
-                VALUES (:behandling_id, :parent_id, :child_id)
-                ON CONFLICT (behandling_id,parent_id,child_id) DO NOTHING 
-                """.trimIndent(),
-                paramMap = mapOf(
-                    "behandling_id" to behandling.uuid,
-                    "parent_id" to it.first.uuid,
-                    "child_id" to it.second.uuid,
-                ),
-            ).asUpdate
-        }
+        _updateQueryActions =
+            behandling.alleSteg().flatMap { parent ->
+                parent.avhengigeSteg().map { children -> Pair(parent, children) }
+            }.toSet().map {
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        INSERT INTO steg_relasjon(behandling_id, parent_id, child_id)
+                        VALUES (:behandling_id, :parent_id, :child_id)
+                        ON CONFLICT (behandling_id,parent_id,child_id) DO NOTHING 
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandling.uuid,
+                            "parent_id" to it.first.uuid,
+                            "child_id" to it.second.uuid,
+                        ),
+                ).asUpdate
+            }
     }
 
     override val updateQueryActions: List<UpdateQueryAction> = _updateQueryActions
@@ -251,42 +270,48 @@ internal class SporingStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, State
     }
 
     override fun visit(behandling: Behandling) {
-        _updateQueryActions = behandling.alleSteg().filter { it.svar.sporing !is NullSporing }.map { steg ->
-            val sporing = steg.svar.sporing
-            queryOf(
-                //language=PostgreSQL
-                statement = """
-                INSERT INTO sporing(steg_uuid, utført, begrunnelse, utført_av, json, type)
-                VALUES (:steg_uuid, :utfort, :begrunnelse, :utfort_av, :json, :type)
-                ON CONFLICT(steg_uuid ) DO UPDATE SET utført      = :utfort,
-                                                      begrunnelse = :begrunnelse,
-                                                      utført_av   = :utfort_av,
-                                                      json        = :json,
-                                                      type        = :type
-                """.trimIndent(),
-                paramMap = mapOf(
-                    "steg_uuid" to steg.uuid,
-                ) + sporing.toParamMap(),
-            ).asUpdate
-        }
+        _updateQueryActions =
+            behandling.alleSteg().filter { it.svar.sporing !is NullSporing }.map { steg ->
+                val sporing = steg.svar.sporing
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        INSERT INTO sporing(steg_uuid, utført, begrunnelse, utført_av, json, type)
+                        VALUES (:steg_uuid, :utfort, :begrunnelse, :utfort_av, :json, :type)
+                        ON CONFLICT(steg_uuid ) DO UPDATE SET utført      = :utfort,
+                                                              begrunnelse = :begrunnelse,
+                                                              utført_av   = :utfort_av,
+                                                              json        = :json,
+                                                              type        = :type
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "steg_uuid" to steg.uuid,
+                        ) + sporing.toParamMap(),
+                ).asUpdate
+            }
     }
 
     override val updateQueryActions: List<UpdateQueryAction> = _updateQueryActions
 
     private fun Sporing.toParamMap(): Map<String, Any?> {
-        val (utførtAv, begrunnelse) = when (this is ManuellSporing) {
-            true -> Pair(this.utførtAv.ident, this.begrunnelse)
-            else -> Pair(null, null)
-        }
-
-        val json = when (this is QuizSporing) {
-            true -> PGobject().also {
-                it.type = "JSONB"
-                it.value = this.json
+        val (utførtAv, begrunnelse) =
+            when (this is ManuellSporing) {
+                true -> Pair(this.utførtAv.ident, this.begrunnelse)
+                else -> Pair(null, null)
             }
 
-            false -> null
-        }
+        val json =
+            when (this is QuizSporing) {
+                true ->
+                    PGobject().also {
+                        it.type = "JSONB"
+                        it.value = this.json
+                    }
+
+                false -> null
+            }
 
         return mapOf(
             "utfort" to this.utført,

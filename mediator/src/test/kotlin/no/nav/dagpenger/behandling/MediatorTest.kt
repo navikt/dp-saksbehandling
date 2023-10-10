@@ -42,7 +42,7 @@ class MediatorTest {
     }
 
     @Test
-    fun UtførStegKommando() {
+    fun `UtførStegKommando kan utføre steg`() {
         mediator.utfør(
             UtførStegKommando(
                 oppgaveId,
@@ -141,12 +141,19 @@ class MediatorTest {
             oppgave.accept(this)
         }
 
-        override fun visit(behandlingId: UUID, sak: Sak) {
+        override fun visit(
+            behandlingId: UUID,
+            sak: Sak,
+        ) {
             this.behandlingId = behandlingId
             this.sak = sak
         }
 
-        override fun visit(oppgaveId: UUID, opprettet: LocalDateTime, utføresAv: Saksbehandler?) {
+        override fun visit(
+            oppgaveId: UUID,
+            opprettet: LocalDateTime,
+            utføresAv: Saksbehandler?,
+        ) {
             this.oppgaveId = oppgaveId
         }
     }
@@ -220,52 +227,58 @@ class MediatorTest {
         mockOppgaveRepository.hentOppgaverFor(testIdent).size shouldBe 3
     }
 
-    val behandling = behandling(testPerson, søknadInnsendtHendelse, Sak(sakId)) {
-        steg {
-            vilkår("vilkår1") {
-                avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
+    val behandling =
+        behandling(testPerson, søknadInnsendtHendelse, Sak(sakId)) {
+            steg {
+                vilkår("vilkår1") {
+                    avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
+                }
+            }
+            steg {
+                fastsettelse<Int>("fastsettelse1")
             }
         }
-        steg {
-            fastsettelse<Int>("fastsettelse1")
+    private val mockOppgaveRepository =
+        InMemoryOppgaveRepository().apply {
+            oppgave =
+                Oppgave(
+                    UUID.randomUUID(),
+                    behandling,
+                )
+            oppgaveId = oppgave.uuid
+            lagreOppgave(oppgave)
+            val søknadInnsendtHendelse =
+                SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "", ident = testIdent)
+            lagreOppgave(
+                søknadInnsendtHendelse.oppgave(
+                    testPerson.also {
+                        it.håndter(søknadInnsendtHendelse)
+                    },
+                ),
+            )
         }
-    }
-    private val mockOppgaveRepository = InMemoryOppgaveRepository().apply {
-        oppgave = Oppgave(
-            UUID.randomUUID(),
-            behandling,
-        )
-        oppgaveId = oppgave.uuid
-        lagreOppgave(oppgave)
-        val søknadInnsendtHendelse =
-            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "", ident = testIdent)
-        lagreOppgave(
-            søknadInnsendtHendelse.oppgave(
-                testPerson.also {
-                    it.håndter(søknadInnsendtHendelse)
-                },
-            ),
-        )
-    }
 
-    private val mockPersonRepository = InMemoryPersonRepository.apply {
-        lagrePerson(testPerson)
-    }
+    private val mockPersonRepository =
+        InMemoryPersonRepository.apply {
+            lagrePerson(testPerson)
+        }
 
-    private val mockBehandlingRepository = mockk<BehandlingRepository>() {
-        every { hentBehandling(any()) } returns behandling
-    }
+    private val mockBehandlingRepository =
+        mockk<BehandlingRepository> {
+            every { hentBehandling(any()) } returns behandling
+        }
 
     private val mockkIverksettClient = mockk<IverksettClient>(relaxed = true)
 
-    private val mediator = Mediator(
-        rapidsConnection = testRapid,
-        oppgaveRepository = mockOppgaveRepository,
-        personRepository = mockPersonRepository,
-        behandlingRepository = mockBehandlingRepository,
-        aktivitetsloggMediator = mockk(relaxed = true),
-        iverksettClient = mockkIverksettClient,
-    )
+    private val mediator =
+        Mediator(
+            rapidsConnection = testRapid,
+            oppgaveRepository = mockOppgaveRepository,
+            personRepository = mockPersonRepository,
+            behandlingRepository = mockBehandlingRepository,
+            aktivitetsloggMediator = mockk(relaxed = true),
+            iverksettClient = mockkIverksettClient,
+        )
 
     private fun finnStegId(id: String) = oppgave.alleSteg().single { it.id == id }.uuid
 }

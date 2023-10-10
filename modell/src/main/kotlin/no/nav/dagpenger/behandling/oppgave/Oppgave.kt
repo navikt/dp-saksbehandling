@@ -48,9 +48,13 @@ data class Oppgave private constructor(
     val person get() = behandling.person
 
     val behandler = behandling.behandler
+
     fun alleSteg() = behandling.alleSteg()
+
     fun nesteSteg() = behandling.nesteSteg()
+
     fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
+
     fun addObserver(observer: BehandlingObserver) = behandling.addObserver(observer)
 
     fun utfør(kommando: UtførStegKommando) {
@@ -58,10 +62,11 @@ data class Oppgave private constructor(
     }
 
     val tilstand: OppgaveTilstand
-        get() = when (behandling.erBehandlet()) {
-            true -> OppgaveTilstand.FerdigBehandlet
-            false -> OppgaveTilstand.TilBehandling
-        }
+        get() =
+            when (behandling.erBehandlet()) {
+                true -> OppgaveTilstand.FerdigBehandlet
+                false -> OppgaveTilstand.TilBehandling
+            }
 }
 
 enum class OppgaveTilstand {

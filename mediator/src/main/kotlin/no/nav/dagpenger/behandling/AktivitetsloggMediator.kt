@@ -11,10 +11,11 @@ internal class AktivitetsloggMediator(private val rapidsConnection: RapidsConnec
             JsonMessage.newMessage(
                 "aktivitetslogg",
                 mapOf(
-                    "hendelse" to mapOf(
-                        "type" to hendelse.toSpesifikkKontekst().kontekstType,
-                        "meldingsreferanseId" to hendelse.meldingsreferanseId(),
-                    ),
+                    "hendelse" to
+                        mapOf(
+                            "type" to hendelse.toSpesifikkKontekst().kontekstType,
+                            "meldingsreferanseId" to hendelse.meldingsreferanseId(),
+                        ),
                     "ident" to hendelse.ident(),
                     "aktiviteter" to AktivitetsloggJsonBuilder(hendelse).asList(),
                 ),

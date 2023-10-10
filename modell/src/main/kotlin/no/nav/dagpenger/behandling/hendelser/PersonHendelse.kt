@@ -11,6 +11,7 @@ abstract class PersonHendelse(
     private val ident: String,
 ) : Hendelse(meldingsreferanseId) {
     fun ident() = ident
+
     override fun kontekst(): Map<String, String> = mapOf("ident" to ident)
 
     override fun equals(other: Any?): Boolean {
