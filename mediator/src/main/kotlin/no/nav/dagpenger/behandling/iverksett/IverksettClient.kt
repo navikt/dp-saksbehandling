@@ -27,7 +27,7 @@ private const val IVERKSETTING_PATH: String = "iverksetting"
 
 internal class IverksettClient(
     private val baseUrl: String = Configuration.dpIverksettUrl,
-    private val iversettAudience: String = Configuration.dpIverksettAudience,
+    private val iverksettScope: String = Configuration.dpIverksettScope,
     private val tokenProvider: (token: String, audience: String) -> String = tilOboToken,
     engine: HttpClientEngine = CIO.create {},
 ) {
@@ -57,7 +57,7 @@ internal class IverksettClient(
             try {
                 httpClient.post(url) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json)
-                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(subjectToken, iversettAudience)}")
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(subjectToken, iverksettScope)}")
                     setBody(iverksettDto)
                 }
             } catch (e: ClientRequestException) {
@@ -78,6 +78,6 @@ internal class IverksettClient(
     }
 }
 
-private val tilOboToken = { token: String, audience: String ->
-    azureAdClient.onBehalfOf(token, audience).accessToken
+private val tilOboToken = { token: String, scope: String ->
+    azureAdClient.onBehalfOf(token, scope).accessToken
 }

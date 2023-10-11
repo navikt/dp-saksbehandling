@@ -34,6 +34,8 @@ spec:
       value: {{dp_iverksett.url}}
     - name: DP_IVERKSETT_AUDIENCE
       value: {{dp_iverksett.audience}}
+    - name: DP_IVERKSETT_SCOPE
+      value: {{dp-iverksett.scope}}
     - name: AAREG_URL
       value: {{aareg.url}}
     - name: AAREG_AUDIENCE

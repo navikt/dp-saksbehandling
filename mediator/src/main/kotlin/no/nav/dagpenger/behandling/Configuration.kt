@@ -31,7 +31,7 @@ internal object Configuration {
         }
 
     val dpIverksettUrl by lazy { properties[Key("DP_IVERKSETT_URL", stringType)] }
-    val dpIverksettAudience by lazy { properties[Key("DP_IVERKSETT_AUDIENCE", stringType)] }
+    val dpIverksettScope by lazy { properties[Key("DP_IVERKSETT_SCOPE", stringType)] }
 
     val aaregUrl by lazy { properties[Key("AAREG_URL", stringType)] }
     val aaregAudience by lazy { properties[Key("AAREG_URL", stringType)] }
