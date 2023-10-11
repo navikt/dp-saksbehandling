@@ -1,7 +1,9 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.behandling.api.arbeidsforholdApi
 import no.nav.dagpenger.behandling.api.oppgaveApi
+import no.nav.dagpenger.behandling.arbeidsforhold.AaregClient
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.behandling.db.PostgresRepository
@@ -15,6 +17,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
                 oppgaveApi(mediator = mediator)
+                arbeidsforholdApi(aaregClient = AaregClient())
             }.build()
 
     private val postgresRepository = PostgresRepository(dataSource)

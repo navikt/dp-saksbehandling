@@ -34,6 +34,10 @@ spec:
       value: {{dp_iverksett.url}}
     - name: DP_IVERKSETT_AUDIENCE
       value: {{dp_iverksett.audience}}
+    - name: AAREG_URL
+      value: {{aareg.url}}
+    - name: AAREG_AUDIENCE
+      value: {{aareg.audience}}
     - name: GRUPPE_SAKSBEHANDLER
       value: {{azure.grupper.saksbehandler}}
     - name: GRUPPE_BESLUTTER
@@ -62,6 +66,8 @@ spec:
     outbound:
       rules:
         - application: dp-iverksett
+      external:
+        - host: https://aareg-services-q2.dev-fss-pub.nais.io
     inbound:
       rules:
         - application: dp-saksbehandling-frontend

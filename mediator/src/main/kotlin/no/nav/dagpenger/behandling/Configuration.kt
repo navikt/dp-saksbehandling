@@ -33,6 +33,9 @@ internal object Configuration {
     val dpIverksettUrl by lazy { properties[Key("DP_IVERKSETT_URL", stringType)] }
     val dpIverksettAudience by lazy { properties[Key("DP_IVERKSETT_AUDIENCE", stringType)] }
 
+    val aaregUrl by lazy { properties[Key("AAREG_URL", stringType)] }
+    val aaregAudience by lazy { properties[Key("AAREG_URL", stringType)] }
+
     val beslutterGruppe = properties[Key("GRUPPE_BESLUTTER", stringType)]
     val saksbehandlerGruppe = properties[Key("GRUPPE_SAKSBEHANDLER", stringType)]
 

@@ -17,3 +17,7 @@ azure:
 dp-iverksett:
   url: "https://dp-iverksett"
   audience: "dev-gcp:teamdagpenger:dp-iverksett"
+
+aareg:
+  url: "https://aareg-services-q2.dev-fss-pub.nais.io"
+  audience: "dev-fss:arbeidsforhold:aareg-services-nais-q2"
