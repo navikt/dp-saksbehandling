@@ -20,7 +20,7 @@ import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.Configuration
-import no.nav.dagpenger.behandling.Configuration.tokenXClient
+import no.nav.dagpenger.behandling.Configuration.azureAdClient
 import no.nav.dagpenger.kontrakter.iverksett.IverksettDto
 
 private const val API_PATH = "api"
@@ -87,5 +87,5 @@ internal class IverksettClient(
 }
 
 private val tilOboToken = { token: String, audience: String ->
-    tokenXClient.tokenExchange(token, audience).accessToken
+    azureAdClient.onBehalfOf(token, audience).accessToken
 }

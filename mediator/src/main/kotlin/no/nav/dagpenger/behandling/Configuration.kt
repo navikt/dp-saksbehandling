@@ -46,4 +46,12 @@ internal object Configuration {
             authType = tokenX.privateKey(),
         )
     }
+
+    val azureAdClient by lazy {
+        val azureAdConfig = OAuth2Config.AzureAd(properties)
+        CachedOauth2Client(
+            tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
+            authType = azureAdConfig.clientSecret(),
+        )
+    }
 }
