@@ -11,6 +11,7 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.HttpHeaders
 import io.ktor.http.URLBuilder
@@ -51,6 +52,8 @@ internal class AaregClient(
                     httpClient.get(url) {
                         header(HttpHeaders.Authorization, "Bearer ${tilOboToken(subjectToken, aaregScope)}")
                         header("Nav-Personident", fnr)
+                        parameter("arbeidsforholdstatus", "AKTIV, AVSLUTTET")
+                        parameter("historikk", "true")
                     }
                 if (response.status.value == 200) {
                     logger.info("Kall til AAREG gikk OK")
