@@ -1,6 +1,5 @@
 package no.nav.dagpenger.behandling.api
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
@@ -16,7 +15,7 @@ internal fun Application.arbeidsforholdApi(aaregClient: AaregClient) {
             post("arbeidsforhold") {
                 val ident = call.receive<Ident>()
                 val arbeidsforhold = aaregClient.hentArbeidsforhold(ident.ident, call.request.jwt())
-                call.respond(status = HttpStatusCode.OK, arbeidsforhold)
+                call.respond(arbeidsforhold)
             }
         }
     }
