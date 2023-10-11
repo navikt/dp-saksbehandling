@@ -10,7 +10,6 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -64,16 +63,12 @@ internal class IverksettClient(
             } catch (e: ClientRequestException) {
                 when (e.response.status) {
                     HttpStatusCode.Accepted -> {
-                        logger.info(
-                            """API kall mot iverksetting var suksessfull. Statuskode: ${e.response.status} 
-                            |Beskrivelse: ${e.response.status.description}
-                            """.trimMargin(),
-                        )
+                        logger.info("API kall mot iverksetting var suksessfull.")
                     }
 
                     HttpStatusCode.BadRequest, HttpStatusCode.Forbidden, HttpStatusCode.Conflict -> {
                         // TODO: Hva vil vi at skal skje når iverksetting feiler
-                        logger.warn(feilmelding(e.response))
+                        logger.warn("API kall mot iverksetting feilet.", e)
                     }
 
                     else -> logger.warn("En uventet feil skjedde ved forsøk på kall mot iverksetting", e)
@@ -81,9 +76,6 @@ internal class IverksettClient(
             }
         }
     }
-
-    private fun feilmelding(respons: HttpResponse) =
-        "API kall mot iverksetting feilet. Statuskode: ${respons.status} Beskrivelse: ${respons.status.description}"
 }
 
 private val tilOboToken = { token: String, audience: String ->
