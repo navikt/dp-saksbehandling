@@ -22,4 +22,4 @@ dp-iverksett:
 
 aareg:
   url: "https://aareg-services-q2.dev-fss-pub.nais.io"
-  audience: "dev-fss:arbeidsforhold:aareg-services-nais-q2"
+  scope: "api://dev-fss.arbeidsforhold.aareg-services-nais-q2/.default"

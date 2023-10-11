@@ -38,8 +38,8 @@ spec:
       value: {{dp-iverksett.scope}}
     - name: AAREG_URL
       value: {{aareg.url}}
-    - name: AAREG_AUDIENCE
-      value: {{aareg.audience}}
+    - name: AAREG_SCOPE
+      value: {{aareg.scope}}
     - name: GRUPPE_SAKSBEHANDLER
       value: {{azure.grupper.saksbehandler}}
     - name: GRUPPE_BESLUTTER

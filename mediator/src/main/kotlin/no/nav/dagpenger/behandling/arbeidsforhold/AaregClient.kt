@@ -12,7 +12,6 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.URLBuilder
 import io.ktor.http.appendEncodedPathSegments
@@ -24,7 +23,7 @@ import no.nav.dagpenger.behandling.arbeidsforhold.dto.Arbeidsforhold
 
 internal class AaregClient(
     private val baseUrl: String = Configuration.aaregUrl,
-    private val aaregAudience: String = Configuration.aaregAudience,
+    private val aaregScope: String = Configuration.aaregScope,
     engine: HttpClientEngine = CIO.create {},
 ) {
     private val httpClient =
@@ -50,8 +49,7 @@ internal class AaregClient(
             try {
                 val response: HttpResponse =
                     httpClient.get(url) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json)
-                        header(HttpHeaders.Authorization, "Bearer ${tilOboToken(subjectToken, aaregAudience)}")
+                        header(HttpHeaders.Authorization, "Bearer ${tilOboToken(subjectToken, aaregScope)}")
                         header("Nav-Personident", fnr)
                     }
                 if (response.status.value == 200) {
@@ -70,8 +68,8 @@ internal class AaregClient(
     companion object {
         private const val API_PATH = "api"
         private const val ARBEIDSFORHOLD_PATH = "v2/arbeidstaker/arbeidsforhold"
-        private val tilOboToken = { token: String, audience: String ->
-            Configuration.tokenXClient.tokenExchange(token, audience).accessToken
+        private val tilOboToken = { token: String, scope: String ->
+            Configuration.azureAdClient.onBehalfOf(token, scope).accessToken
         }
         private val logger = KotlinLogging.logger {}
     }
