@@ -39,14 +39,6 @@ internal object Configuration {
     val beslutterGruppe = properties[Key("GRUPPE_BESLUTTER", stringType)]
     val saksbehandlerGruppe = properties[Key("GRUPPE_SAKSBEHANDLER", stringType)]
 
-    val tokenXClient by lazy {
-        val tokenX = OAuth2Config.TokenX(properties)
-        CachedOauth2Client(
-            tokenEndpointUrl = tokenX.tokenEndpointUrl,
-            authType = tokenX.privateKey(),
-        )
-    }
-
     val azureAdClient by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)
         CachedOauth2Client(

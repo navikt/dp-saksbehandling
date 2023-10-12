@@ -12,5 +12,4 @@ azure:
 
 dp-iverksett:
   url: "https://dp-iverksett"
-  audience: "prod-gcp:teamdagpenger:dp-iverksett"
   scope: "api://prod-gcp.teamdagpenger.dp-iverksett/.default"
