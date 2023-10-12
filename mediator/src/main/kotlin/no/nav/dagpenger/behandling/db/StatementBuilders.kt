@@ -184,9 +184,18 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
                     //language=PostgreSQL
                     statement =
                         """
-                        INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal)
-                        VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :svar_type, :ubesvart, :string, :dato, :heltall, :boolsk, :desimal)
-                        ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand, ubesvart = :ubesvart, string = :string, dato = :dato, heltall = :heltall , boolsk = :boolsk, desimal = :desimal
+                        INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk,
+                                          desimal, rolle)
+                        VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :svar_type, :ubesvart, :string, :dato, :heltall, :boolsk,
+                                :desimal, :rolle)
+                        ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand,
+                                                        ubesvart = :ubesvart,
+                                                        string   = :string,
+                                                        dato     = :dato,
+                                                        heltall  = :heltall,
+                                                        boolsk   = :boolsk,
+                                                        desimal  = :desimal,
+                                                        rolle    = :rolle
                         """.trimIndent(),
                     paramMap = mapOf("behandling_uuid" to behandling.uuid) + it.toParamMap(),
                 ).asUpdate
@@ -197,6 +206,12 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
 
     private fun Steg<*>.toParamMap(): Map<String, Any?> {
         val svarType = this.svar
+
+        val rolle =
+            when (this) {
+                is Steg.Prosess -> rolle
+                else -> null
+            }
 
         return mapOf(
             "uuid" to uuid,
@@ -225,6 +240,7 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
                 svar.verdi.takeIf {
                     it != null && svarType is Svar.DoubleSvar
                 },
+            "rolle" to rolle?.name,
         )
     }
 }

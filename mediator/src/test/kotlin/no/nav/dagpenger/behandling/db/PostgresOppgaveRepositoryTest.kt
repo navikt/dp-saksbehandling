@@ -12,6 +12,7 @@ import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testSak
 import no.nav.dagpenger.behandling.QuizSporing
+import no.nav.dagpenger.behandling.Rolle
 import no.nav.dagpenger.behandling.Saksbehandler
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Tilstand
@@ -102,8 +103,21 @@ class PostgresOppgaveRepositoryTest {
                 it.avhengerAv(vilkårF)
             }
 
+        val prosessH = Steg.Prosess("H", Rolle.Beslutter)
+        val prosessI = Steg.Prosess("I", Rolle.Saksbehandler)
+
         val testSteg: Set<Steg<*>> =
-            setOf(fastsettelseA, fastsettelseB, fastsettelseC, fastsettelseD, fastsettelseE, vilkårF, fastsettelseG)
+            setOf(
+                fastsettelseA,
+                fastsettelseB,
+                fastsettelseC,
+                fastsettelseD,
+                fastsettelseE,
+                vilkårF,
+                fastsettelseG,
+                prosessH,
+                prosessI,
+            )
 
         val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent)
         val vedtakStansetHendelse = VedtakStansetHendelse(ident = testIdent, oppgaveId = UUID.randomUUID())
@@ -193,6 +207,10 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.getStegById("G").svar.verdi shouldBe null
 
                     rehydrertBehandling.tilstand.type shouldBe TilBehandling
+
+                    // Sjekk roller
+                    (rehydrertBehandling.getStegById("H") as Steg.Prosess).rolle shouldBe Rolle.Beslutter
+                    (rehydrertBehandling.getStegById("I") as Steg.Prosess).rolle shouldBe Rolle.Saksbehandler
                 }
             }
         }

@@ -85,7 +85,7 @@ sealed class Steg<T> private constructor(
         uuid: UUID = UUID.randomUUID(),
         svar: Svar<Boolean>,
         tilstand: Tilstand,
-        private val rolle: Rolle,
+        val rolle: Rolle,
     ) : Steg<Boolean>(
             uuid = uuid,
             id = id,
