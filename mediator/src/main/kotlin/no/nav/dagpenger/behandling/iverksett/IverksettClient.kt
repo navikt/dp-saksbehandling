@@ -55,24 +55,26 @@ internal class IverksettClient(
             val url = URLBuilder(baseUrl).appendEncodedPathSegments(API_PATH, IVERKSETTING_PATH).build()
 
             try {
-                httpClient.post(url) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json)
-                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(subjectToken, iverksettScope)}")
-                    setBody(iverksettDto)
+                logger.info { "Prøver å sende behandling med id ${iverksettDto.behandlingId} til iverksetting" }
+                val respons =
+                    httpClient.post(url) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json)
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${tokenProvider.invoke(subjectToken, iverksettScope)}",
+                        )
+                        setBody(iverksettDto)
+                    }
+
+                if (respons.status == HttpStatusCode.Accepted) {
+                    logger.info("API kall mot iverksetting var suksessfull for behandling med id ${iverksettDto.behandlingId}")
+                } else {
+                    logger.warn(
+                        "API kall mot iverksetting feilet med status: ${respons.status}",
+                    ) // TODO: Hva vil vi at skal skje når iverksetting feiler
                 }
             } catch (e: ClientRequestException) {
-                when (e.response.status) {
-                    HttpStatusCode.Accepted -> {
-                        logger.info("API kall mot iverksetting var suksessfull.")
-                    }
-
-                    HttpStatusCode.BadRequest, HttpStatusCode.Forbidden, HttpStatusCode.Conflict -> {
-                        // TODO: Hva vil vi at skal skje når iverksetting feiler
-                        logger.warn("API kall mot iverksetting feilet.", e)
-                    }
-
-                    else -> logger.warn("En uventet feil skjedde ved forsøk på kall mot iverksetting", e)
-                }
+                logger.warn("Kall mot iverksetting feilet", e)
             }
         }
     }
