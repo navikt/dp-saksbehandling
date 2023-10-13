@@ -67,15 +67,16 @@ internal class Mediator(
         vedtakFattetEvent: VedtakFattet,
         kommando: UtførStegKommando,
     ) {
+        val behandling = behandlingRepository.hentBehandling(vedtakFattetEvent.behandlingId)
+        iverksettClient.iverksett(subjectToken = kommando.token, iverksettDto = IverksettDTOBuilder(behandling).bygg())
+        logger.info { "Rammevedtak med behandlingId ${behandling.uuid} er sendt til iverksetting" }
+
         publishEvent("rettighet_behandlet_hendelse", vedtakFattetEvent).also {
             logger.info {
                 "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}"
             }
         }
 
-        val behandling = behandlingRepository.hentBehandling(vedtakFattetEvent.behandlingId)
-        iverksettClient.iverksett(subjectToken = kommando.token, iverksettDto = IverksettDTOBuilder(behandling).bygg())
-        logger.info { "Rammevedtak med behandlingId ${behandling.uuid} er sendt til iverksetting" }
     }
 
     private fun publishEvent(

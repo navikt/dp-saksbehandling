@@ -54,27 +54,21 @@ internal class IverksettClient(
         runBlocking {
             val url = URLBuilder(baseUrl).appendEncodedPathSegments(API_PATH, IVERKSETTING_PATH).build()
 
-            try {
-                logger.info { "Prøver å sende behandling med id ${iverksettDto.behandlingId} til iverksetting" }
-                val respons =
-                    httpClient.post(url) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json)
-                        header(
-                            HttpHeaders.Authorization,
-                            "Bearer ${tokenProvider.invoke(subjectToken, iverksettScope)}",
-                        )
-                        setBody(iverksettDto)
-                    }
-
-                if (respons.status == HttpStatusCode.Accepted) {
-                    logger.info("API kall mot iverksetting var suksessfull for behandling med id ${iverksettDto.behandlingId}")
-                } else {
-                    logger.warn(
-                        "API kall mot iverksetting feilet med status: ${respons.status}",
-                    ) // TODO: Hva vil vi at skal skje når iverksetting feiler
+            logger.info { "Prøver å sende behandling med id ${iverksettDto.behandlingId} til iverksetting" }
+            val respons =
+                httpClient.post(url) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer ${tokenProvider.invoke(subjectToken, iverksettScope)}",
+                    )
+                    setBody(iverksettDto)
                 }
-            } catch (e: ClientRequestException) {
-                logger.warn("Kall mot iverksetting feilet", e)
+
+            if (respons.status == HttpStatusCode.Accepted) {
+                logger.info("API kall mot iverksetting var suksessfull for behandling med id ${iverksettDto.behandlingId}")
+            } else {
+                throw RuntimeException("API kall mot iverksetting feilet med status: ${respons.status}")
             }
         }
     }

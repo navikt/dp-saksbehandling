@@ -119,7 +119,9 @@ class Behandling private constructor(
         return if (alleVilkårOppfylt) Utfall.Innvilgelse else Utfall.Avslag
     }
 
-    override fun erFerdig(): Boolean = steg.all { it.utført }
+    override fun erFerdig(): Boolean {
+        return steg.all { it.utført }
+    }
 
     fun besvar(
         uuid: UUID,

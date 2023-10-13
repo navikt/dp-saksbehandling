@@ -15,7 +15,7 @@ azure:
     beslutter: "11b8475a-fb12-41aa-b1f6-8497c1b5385b" # 0000-GA-Dagpenger-Beslutter
 
 dp-iverksett:
-  url: "https://dp-iverksett"
+  url: "http://dp-iverksett"
   scope: "api://dev-gcp.teamdagpenger.dp-iverksett/.default"
 
 aareg:
