@@ -53,7 +53,7 @@ internal class IverksettClient(
         runBlocking {
             val url = URLBuilder(baseUrl).appendEncodedPathSegments(API_PATH, IVERKSETTING_PATH).build()
 
-            logger.info { "Prøver å sende behandling med id ${iverksettDto.behandlingId} til iverksetting. URL: $url" }
+            logger.info { "Prøver å sende behandling med id ${iverksettDto.behandlingId} til iverksetting." }
             val respons =
                 httpClient.post(url) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json)
