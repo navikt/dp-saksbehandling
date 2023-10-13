@@ -76,7 +76,6 @@ internal class Mediator(
                 "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}"
             }
         }
-
     }
 
     private fun publishEvent(
