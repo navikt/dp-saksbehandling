@@ -31,7 +31,7 @@ spec:
     - name: FLYWAY_CLEAN_DISABLED
       value: "false"
     - name: DP_IVERKSETT_URL
-      value: {{dp_iverksett.url}}
+      value: {{dp-iverksett.url}}
     - name: DP_IVERKSETT_SCOPE
       value: {{dp-iverksett.scope}}
     - name: AAREG_URL
