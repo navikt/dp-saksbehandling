@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.iverksett
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -28,23 +29,35 @@ class IverksettClientTest {
     fun `Iverksett svarer med 202`() =
         runBlocking {
             val mockEngine = mockEngine(HttpStatusCode.Accepted)
-            val iverksettClient = IverksettClient(baseUrl, audience, tokenProvider = testTokenProvider, engine = mockEngine)
+            val iverksettClient =
+                IverksettClient(baseUrl, audience, tokenProvider = testTokenProvider, engine = mockEngine)
 
             iverksettClient.iverksett(subjectToken, iverksettDto)
         }
 
-    // TODO: Testcases for de ulike feilscenarier
-//    @Test
-//    fun `Iverksett svarer med 400`(): Unit = runBlocking {
-//        val mockEngine = mockEngine(HttpStatusCode.Forbidden)
-//        val iverksettClient = IverksettClient(baseUrl, audience, tokenProvider = testTokenProvider, engine = mockEngine)
-//
-//    }
+    @Test
+    fun `Det kastes en exception dersom kallet til iverksetting feiler`(): Unit =
+        runBlocking {
+            (399 until 599).forEach { statusCode ->
+                val mockEngine = mockEngine(HttpStatusCode.fromValue(statusCode))
+                val iverksettClient =
+                    IverksettClient(baseUrl, audience, tokenProvider = testTokenProvider, engine = mockEngine)
+
+                shouldThrow<RuntimeException> {
+                    iverksettClient.iverksett(subjectToken, iverksettDto)
+                }
+            }
+        }
 
     private fun mockEngine(statusCode: HttpStatusCode) =
         MockEngine { request ->
             request.headers[HttpHeaders.Accept] shouldBe "application/json"
-            request.headers[HttpHeaders.Authorization] shouldBe "Bearer ${testTokenProvider.invoke(subjectToken, audience)}"
+            request.headers[HttpHeaders.Authorization] shouldBe "Bearer ${
+                testTokenProvider.invoke(
+                    subjectToken,
+                    audience,
+                )
+            }"
             respond(content = "", statusCode)
         }
 }
