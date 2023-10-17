@@ -16,7 +16,7 @@ tasks {
 sourceSets {
     main {
         java {
-            setSrcDirs(listOf("$buildDir/generated/src/main/kotlin"))
+            setSrcDirs(listOf("src/main/kotlin", "$buildDir/generated/src/main/kotlin"))
         }
     }
 }

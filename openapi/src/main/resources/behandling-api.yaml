@@ -104,6 +104,27 @@ paths:
                     type: string
                     format: uuid
                     description: Unik oppgaveId for stansoppgaven som har blitt opprettet
+  /arbeidsforhold:
+    post:
+      summary: Hent arbeidsforhold ved hjelp av fødselsnummer (FNR)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Saksbehandler'
+      responses:
+        '200':
+          description: Vellykket respons med liste av arbeidsforhold
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Arbeidsforhold"
+
+
+
 components:
   schemas:
     Hendelse:
@@ -274,3 +295,31 @@ components:
         - Utført
         - MåGodkjennes
         - IkkeUtført
+    Arbeidsforhold:
+      type: object
+      properties:
+        id:
+          type: string
+        orgnr:
+          type: string
+        ansettelsestype:
+          type: string
+        startdato:
+          type: string
+          format: date
+        yrke:
+          type: string
+          nullable: true
+        sluttdato:
+          type: string
+          format: date
+          nullable: true
+        sluttaarsak:
+          type: string
+          nullable: true
+      required:
+        - id
+        - orgnr
+        - ansettelsestype
+        - startdato
+
