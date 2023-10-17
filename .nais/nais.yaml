@@ -74,4 +74,6 @@ spec:
         {{#if wonderwalled}}
         - application: wonderwalled-azure
           namespace: aura
+        - application: azure-token-generator
+          namespace: aura
         {{/if}}
