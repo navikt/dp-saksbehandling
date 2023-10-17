@@ -25,6 +25,7 @@ import no.nav.dagpenger.behandling.arbeidsforhold.dto.Arbeidsforhold
 internal class AaregClient(
     private val baseUrl: String = Configuration.aaregUrl,
     private val aaregScope: String = Configuration.aaregScope,
+    private val tokenProvider: (token: String, audience: String) -> String = tilOboToken,
     engine: HttpClientEngine = CIO.create {},
 ) {
     private val httpClient =
@@ -50,7 +51,7 @@ internal class AaregClient(
             try {
                 val response: HttpResponse =
                     httpClient.get(url) {
-                        header(HttpHeaders.Authorization, "Bearer ${tilOboToken(subjectToken, aaregScope)}")
+                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(subjectToken, aaregScope)}")
                         header("Nav-Personident", fnr)
                         parameter("arbeidsforholdstatus", "AKTIV, AVSLUTTET")
                         parameter("historikk", "true")
