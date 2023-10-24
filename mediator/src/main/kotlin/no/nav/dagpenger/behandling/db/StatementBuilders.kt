@@ -185,9 +185,9 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
                     statement =
                         """
                         INSERT INTO steg (behandling_uuid, uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk,
-                                          desimal, rolle)
+                                          desimal, rolle, krever_totrinnskontroll)
                         VALUES (:behandling_uuid, :uuid, :steg_id, :tilstand, :type, :svar_type, :ubesvart, :string, :dato, :heltall, :boolsk,
-                                :desimal, :rolle)
+                                :desimal, :rolle, :krever_totrinnskontroll)
                         ON CONFLICT(uuid) DO UPDATE SET tilstand = :tilstand,
                                                         ubesvart = :ubesvart,
                                                         string   = :string,
@@ -195,7 +195,8 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
                                                         heltall  = :heltall,
                                                         boolsk   = :boolsk,
                                                         desimal  = :desimal,
-                                                        rolle    = :rolle
+                                                        rolle    = :rolle,
+                                                        krever_totrinnskontroll = :krever_totrinnskontroll
                         """.trimIndent(),
                     paramMap = mapOf("behandling_uuid" to behandling.uuid) + it.toParamMap(),
                 ).asUpdate
@@ -211,6 +212,12 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
             when (this) {
                 is Steg.Prosess -> rolle
                 else -> null
+            }
+
+        val kreverTotrinnskontroll: Boolean =
+            when (this) {
+                is Steg.Prosess -> this.kreverTotrinnskontroll
+                else -> false
             }
 
         return mapOf(
@@ -241,6 +248,7 @@ internal class StegStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statemen
                     it != null && svarType is Svar.DoubleSvar
                 },
             "rolle" to rolle?.name,
+            "krever_totrinnskontroll" to kreverTotrinnskontroll,
         )
     }
 }

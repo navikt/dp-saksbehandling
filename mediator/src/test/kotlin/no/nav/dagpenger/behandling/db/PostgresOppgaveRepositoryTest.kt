@@ -103,7 +103,7 @@ class PostgresOppgaveRepositoryTest {
                 it.avhengerAv(vilkårF)
             }
 
-        val prosessH = Steg.Prosess("H", Rolle.Beslutter)
+        val prosessH = Steg.Prosess("H", Rolle.Beslutter, kreverTotrinnskontroll = true)
         val prosessI = Steg.Prosess("I", Rolle.Saksbehandler)
 
         val testSteg: Set<Steg<*>> =
@@ -119,7 +119,8 @@ class PostgresOppgaveRepositoryTest {
                 prosessI,
             )
 
-        val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent)
+        val søknadInnsendtHendelse =
+            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent)
         val vedtakStansetHendelse = VedtakStansetHendelse(ident = testIdent, oppgaveId = UUID.randomUUID())
         val testBehandling =
             Behandling.rehydrer(
@@ -154,7 +155,11 @@ class PostgresOppgaveRepositoryTest {
                     rehydrertBehandling.tilstand shouldBe testBehandling.tilstand
 
                     // behandler
-                    rehydrertBehandling.behandler shouldContainExactly listOf(søknadInnsendtHendelse, vedtakStansetHendelse)
+                    rehydrertBehandling.behandler shouldContainExactly
+                        listOf(
+                            søknadInnsendtHendelse,
+                            vedtakStansetHendelse,
+                        )
 
                     rehydrertBehandling.sak shouldBe testSak
 
@@ -208,9 +213,15 @@ class PostgresOppgaveRepositoryTest {
 
                     rehydrertBehandling.tilstand.type shouldBe TilBehandling
 
-                    // Sjekk roller
-                    (rehydrertBehandling.getStegById("H") as Steg.Prosess).rolle shouldBe Rolle.Beslutter
-                    (rehydrertBehandling.getStegById("I") as Steg.Prosess).rolle shouldBe Rolle.Saksbehandler
+                    // Sjekk roller og krav om totrinnskontroll
+                    (rehydrertBehandling.getStegById("H") as Steg.Prosess).let { steg ->
+                        steg.rolle shouldBe Rolle.Beslutter
+                        steg.kreverTotrinnskontroll shouldBe true
+                    }
+                    (rehydrertBehandling.getStegById("I") as Steg.Prosess).let { steg ->
+                        steg.rolle shouldBe Rolle.Saksbehandler
+                        steg.kreverTotrinnskontroll shouldBe false
+                    }
                 }
             }
         }

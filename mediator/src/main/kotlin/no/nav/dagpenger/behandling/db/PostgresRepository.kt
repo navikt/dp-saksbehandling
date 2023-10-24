@@ -116,7 +116,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     //language=PostgreSQL
                     statement =
                         """    
-                        SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal, rolle
+                        SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal, rolle, krever_totrinnskontroll
                         FROM steg WHERE behandling_uuid = :behandling_uuid
                         ORDER BY id
                         """.trimIndent(),
@@ -128,6 +128,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     val sporing = hentSporing(stegUUID)
                     val tilstand = Tilstand.valueOf(row.string("tilstand"))
                     val rolle = row.stringOrNull("rolle")?.let { Rolle.valueOf(it) }
+                    val kreverTotrinnskontroll = row.boolean("krever_totrinnskontroll")
 
                     val svar =
                         when (val svarType = row.string("svar_type")) {
@@ -147,6 +148,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                                 svar as Svar<Boolean>,
                                 tilstand,
                                 rolle ?: throw IllegalStateException("Forventet at rolle er satt for prosess-steg"),
+                                kreverTotrinnskontroll,
                             )
                         "Fastsettelse" -> Steg.Fastsettelse.rehydrer(stegUUID, stegId, svar, tilstand)
                         else -> throw IllegalArgumentException("Ugyldig type: $type")

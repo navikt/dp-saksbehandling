@@ -7,6 +7,7 @@ import no.nav.dagpenger.behandling.Meldingsfabrikk.testSporing
 import no.nav.dagpenger.behandling.Steg.Companion.fastsettelse
 import no.nav.dagpenger.behandling.Steg.Vilkår
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class StegTest {
     private val barn1 = fastsettelse<Int>("barn1")
@@ -98,5 +99,20 @@ class StegTest {
         shouldNotThrow<IllegalArgumentException> {
             prosessSteg.besvar(true, testSporing(listOf(Rolle.Beslutter)))
         }
+    }
+
+    @Test
+    fun `Den som fullfører totrinnskontrollen kan ikke ha besvart tidligere steg i totrinnskontrollen`() {
+        val saksbehandler1 = Saksbehandler("123", roller = listOf(Rolle.Beslutter, Rolle.Saksbehandler))
+        val saksbehandler2 = Saksbehandler("456", roller = listOf(Rolle.Beslutter))
+
+        val steg1 = Steg.Prosess("Krever totrinnskontroll", Rolle.Saksbehandler, kreverTotrinnskontroll = true)
+        val steg2 = Steg.Prosess("Fullføre totrinnskontroll", Rolle.Beslutter)
+        steg2.avhengerAv(steg1)
+
+        steg1.besvar(true, ManuellSporing(LocalDateTime.now(), saksbehandler1, "begrunnelse"))
+        shouldThrow<IllegalArgumentException> { steg2.besvar(true, ManuellSporing(LocalDateTime.now(), saksbehandler1, "begrunnelse")) }
+
+        steg2.besvar(true, ManuellSporing(LocalDateTime.now(), saksbehandler2, "begrunnelse"))
     }
 }

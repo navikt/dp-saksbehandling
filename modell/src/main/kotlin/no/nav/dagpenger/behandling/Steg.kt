@@ -86,18 +86,25 @@ sealed class Steg<T> private constructor(
         svar: Svar<Boolean>,
         tilstand: Tilstand,
         val rolle: Rolle,
+        val kreverTotrinnskontroll: Boolean,
     ) : Steg<Boolean>(
             uuid = uuid,
             id = id,
             svar = svar,
             tilstand,
         ) {
-        constructor(id: String, rolle: Rolle, uuid: UUID = UUID.randomUUID()) : this(
+        constructor(
+            id: String,
+            rolle: Rolle,
+            uuid: UUID = UUID.randomUUID(),
+            kreverTotrinnskontroll: Boolean = false,
+        ) : this(
             id,
             uuid,
             Svar.BooleanSvar(null, NullSporing),
             Tilstand.IkkeUtført,
             rolle,
+            kreverTotrinnskontroll,
         )
 
         override val node: DAGNode<Steg<*>> = DAGNode(this)
@@ -109,8 +116,9 @@ sealed class Steg<T> private constructor(
                 svar: Svar<Boolean>,
                 tilstand: Tilstand,
                 rolle: Rolle,
+                kreverTotrinnskontroll: Boolean,
             ): Steg<Boolean> {
-                return Prosess(id, uuid, svar, tilstand, rolle)
+                return Prosess(id, uuid, svar, tilstand, rolle, kreverTotrinnskontroll)
             }
         }
 
@@ -119,6 +127,12 @@ sealed class Steg<T> private constructor(
             sporing: Sporing,
         ) {
             require(sporing is ManuellSporing && sporing.utførtAv.harRolle(rolle)) { "Kan kun utføres av saksbehandler med rolle: $rolle" }
+            require(
+                avhengigeStegMedTotrinnskontroll().none {
+                    (it.svar.sporing as ManuellSporing).utførtAv == sporing.utførtAv
+                },
+            ) { "Den som fullfører totrinnskontrollen kan ikke ha besvart tidligere steg i totrinnskontrollen" }
+
             super.besvar(svar, sporing)
         }
     }
@@ -135,6 +149,8 @@ sealed class Steg<T> private constructor(
     }
 
     fun avhengigeSteg() = node.children().map { it.value }.toSet()
+
+    fun avhengigeStegMedTotrinnskontroll() = avhengigeSteg().filterIsInstance<Prosess>().filter { it.kreverTotrinnskontroll }
 
     fun nesteSteg(): Set<Steg<*>> {
         val criteria: (steg: Steg<*>) -> Boolean = { it._tilstand != Tilstand.Utført }
