@@ -143,12 +143,16 @@ paths:
                 items:
                   $ref: "#/components/schemas/Arbeidsforhold"
 
-
-
 components:
   schemas:
     MinsteInntektVurdering:
       type: object
+      required:
+        - uuid
+        - virkningsdato
+        - vilkaarOppfylt
+        - inntektsId
+        - inntektPerioder
       properties:
         uuid:
           type: string
@@ -158,22 +162,22 @@ components:
           format: date
         vilkaarOppfylt:
           type: boolean
-        grunnbeloep:
-          type: number
-          format: double
-        inntektId:
+        inntektsId:
           type: string
           format: uuid
-        regel:
-          type: string
-        inntekter:
+        inntektPerioder:
           type: array
           items:
-            $ref: '#/components/schemas/Inntekt'
-    Inntekt:
+            $ref: '#/components/schemas/inntektPerioder'
+    inntektPerioder:
+      required:
+        - periodeType
+        - fra
+        - til
+        - inntekt
       type: object
       properties:
-        id:
+        periodeType:
           type: string
         fra:
           type: string
@@ -182,20 +186,6 @@ components:
         inntekt:
           type: number
           format: double
-        oppfyllerKrav:
-          type: boolean
-          nullable: true
-        perioder:
-          type: array
-          items:
-            $ref: '#/components/schemas/InntektPeriode'
-    InntektPeriode:
-      type: object
-      properties:
-        periode:
-          type: string
-        inntekt:
-          type: number
     Hendelse:
       type: object
       additionalProperties: true
