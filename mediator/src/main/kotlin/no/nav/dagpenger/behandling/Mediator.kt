@@ -6,6 +6,7 @@ import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.db.BehandlingRepository
 import no.nav.dagpenger.behandling.db.OppgaveRepository
 import no.nav.dagpenger.behandling.db.PersonRepository
+import no.nav.dagpenger.behandling.db.VurderingRepository
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.iverksett.IverksettClient
@@ -23,7 +24,8 @@ internal class Mediator(
     private val behandlingRepository: BehandlingRepository,
     private val aktivitetsloggMediator: AktivitetsloggMediator,
     private val iverksettClient: IverksettClient,
-) : OppgaveRepository by oppgaveRepository, BehandlingObserver {
+    private val vurderingRepository: VurderingRepository,
+) : OppgaveRepository by oppgaveRepository, VurderingRepository by vurderingRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {
         val person =
             personRepository.hentPerson(hendelse.ident()) ?: Person(hendelse.ident()).also {

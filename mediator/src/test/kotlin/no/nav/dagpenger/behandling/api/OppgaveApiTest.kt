@@ -2,6 +2,7 @@ package no.nav.dagpenger.behandling.api
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.json.shouldContainJsonKey
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.assertions.json.shouldNotContainJsonKey
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -30,6 +31,7 @@ import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
 import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Tilstand
+import no.nav.dagpenger.behandling.db.HardkodedVurderingRepository
 import no.nav.dagpenger.behandling.db.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
@@ -202,6 +204,43 @@ class OppgaveApiTest {
         }
     }
 
+    @Test
+    fun `Skal kunne hente ut minsteinntekt vurdering`() {
+        withOppgaveApi {
+            client.get("/oppgave/$oppgaveId/vurdering/minsteinntekt") {
+                autentisert()
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+
+                //language=JSON
+                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                    {
+                       "uuid": "01HGT2BCAS6SSGYRER20V98MHT",
+                       "virkningsdato": "2023-08-16",
+                       "vilkaarOppfylt": true,
+                       "inntektsId": "01HGT2BCA4B2DNXVHRGEENPCYY",
+                       "inntektPerioder": [
+                         {
+                           "periodeType": "12 måneder",
+                           "fra": "2022-08",
+                           "til": "2023-07",
+                           "inntekt": 250143.0
+                         },
+                         {
+                           "periodeType": "36 måneder",
+                           "fra": "2020-08",
+                           "til": "2023-07",
+                           "inntekt": 647760.4
+                         }
+                       ]
+                     } 
+                    """.trimIndent()
+            }
+        }
+    }
+
     private fun withOppgaveApi(
         mediator: Mediator =
             Mediator(
@@ -211,6 +250,7 @@ class OppgaveApiTest {
                 behandlingRepository = mockk(),
                 aktivitetsloggMediator = mockk(relaxed = true),
                 iverksettClient = mockk(),
+                vurderingRepository = HardkodedVurderingRepository(),
             ),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
@@ -226,10 +266,10 @@ class OppgaveApiTest {
         }
     }
 
-    private var fattet = false
     private val mockPersistence =
         InMemoryOppgaveRepository().apply {
-            val hendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent)
+            val hendelse =
+                SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent)
             testPerson.håndter(hendelse)
             lagreOppgave(
                 Oppgave(

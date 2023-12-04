@@ -146,6 +146,14 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             call.respond(status = HttpStatusCode.OK, OppgaveIdWrapper(hendelse.oppgaveId))
                         }
                     }
+
+                    route("/vurdering/minsteinntekt") {
+                        get {
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val vurdering = mediator.hentMinsteInntektVurdering(oppgaveId)
+                            call.respond(status = HttpStatusCode.OK, vurdering)
+                        }
+                    }
                 }
             }
         }

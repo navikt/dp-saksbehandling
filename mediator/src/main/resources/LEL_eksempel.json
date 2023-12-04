@@ -1,0 +1,532 @@
+{
+  "system_read_count": 6,
+  "system_started": "2023-12-04T10:25:33.595441835",
+  "system_correlation_id": "01HGT2BB8V3KXHBRCV5M93KVT0",
+  "behovId": "01HGT2BB8QQAQKVTCNSF527FCD",
+  "aktørId": "123",
+  "kontekstId": "42756291",
+  "kontekstType": "vedtak",
+  "behandlingsId": "01HGT2BB8PJFHXJG4CB8RBRMBR",
+  "beregningsDato": "2023-08-16",
+  "harAvtjentVerneplikt": false,
+  "oppfyllerKravTilFangstOgFisk": false,
+  "antallBarn": 0.0,
+  "lærling": false,
+  "regelverksdato": "2023-08-16",
+  "system_breadcrumbs": [
+    {
+      "appId": "dp-regel-api",
+      "dateTime": "2023-12-04T10:25:33.595464333",
+      "instance": "about:blank"
+    },
+    {
+      "appId": "dp-regel-sats",
+      "dateTime": "2023-12-04T10:25:34.706188235",
+      "instance": "about:blank"
+    },
+    {
+      "appId": "dp-regel-api",
+      "dateTime": "2023-12-04T10:25:34.888443664",
+      "instance": "about:blank"
+    }
+  ],
+  "@id": "c13ad404-64e3-495c-8b69-754512d75fa2",
+  "@opprettet": "2023-12-04T10:25:34.693746405",
+  "system_participating_services": [
+    {
+      "id": "f7f4d999-6c13-49e4-b012-141d8d0ba4f5",
+      "time": "2023-12-04T10:25:33.634279182",
+      "service": "dp-inntekt-klassifiserer",
+      "instance": "dp-inntekt-klassifiserer-7ddc6446db-qlv9d",
+      "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-inntekt-klassifiserer:2023.12.01-09.00-6e07f59"
+    },
+    {
+      "id": "4070fe82-9042-41ff-b14c-bf222ce19fa1",
+      "time": "2023-12-04T10:25:34.670926498",
+      "service": "dp-inntekt-klassifiserer",
+      "instance": "dp-inntekt-klassifiserer-7ddc6446db-qlv9d",
+      "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-inntekt-klassifiserer:2023.12.01-09.00-6e07f59"
+    },
+    {
+      "id": "4070fe82-9042-41ff-b14c-bf222ce19fa1",
+      "time": "2023-12-04T10:25:34.680539665",
+      "service": "dp-regel-minsteinntekt",
+      "instance": "dp-regel-minsteinntekt-6dbd87768f-7k7gk",
+      "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-regel-minsteinntekt:2023.11.30-05.07-4363388"
+    },
+    {
+      "id": "408ee66b-6696-41b3-8580-830121a90b8f",
+      "time": "2023-12-04T10:25:34.681230763",
+      "service": "dp-regel-minsteinntekt",
+      "instance": "dp-regel-minsteinntekt-6dbd87768f-7k7gk",
+      "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-regel-minsteinntekt:2023.11.30-05.07-4363388"
+    },
+    {
+      "id": "408ee66b-6696-41b3-8580-830121a90b8f",
+      "time": "2023-12-04T10:25:34.686244241",
+      "service": "dp-regel-grunnlag",
+      "instance": "dp-regel-grunnlag-85f8449bdf-lczxr",
+      "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-regel-grunnlag:2023.11.24-08.26-8ad4082"
+    },
+    {
+      "id": "0d6ac1e0-2d8f-4992-bc1f-ab2c634155b8",
+      "time": "2023-12-04T10:25:34.687714112",
+      "service": "dp-regel-grunnlag",
+      "instance": "dp-regel-grunnlag-85f8449bdf-lczxr",
+      "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-regel-grunnlag:2023.11.24-08.26-8ad4082"
+    },
+    {
+      "id": "0d6ac1e0-2d8f-4992-bc1f-ab2c634155b8",
+      "time": "2023-12-04T10:25:34.693294095",
+      "service": "dp-regel-periode",
+      "instance": "dp-regel-periode-797cb896b9-rl94p",
+      "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-regel-periode:2023.11.24-08.21-44003f4"
+    },
+    {
+      "id": "c13ad404-64e3-495c-8b69-754512d75fa2",
+      "time": "2023-12-04T10:25:34.693746405",
+      "service": "dp-regel-periode",
+      "instance": "dp-regel-periode-797cb896b9-rl94p",
+      "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-regel-periode:2023.11.24-08.21-44003f4"
+    }
+  ],
+  "inntektV1": {
+    "inntektsId": "01HGT2BCA4B2DNXVHRGEENPCYY",
+    "inntektsListe": [
+      {
+        "årMåned": "2020-11",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "9400",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2020-08",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "9851",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2020-09",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "10998",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2020-12",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "17672",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2020-10",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "9607",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-06",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "12940.72",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-11",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "30058.23",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-03",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "18800.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-09",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "16076.02",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-01",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "9400.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-07",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "18811.31",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-12",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "22680.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-05",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "9400.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-04",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "9400.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2021-10",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "21807.14",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-07",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "24797.83",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-05",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "22260.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-06",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "36298.15",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-04",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "22260.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-10",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "32760.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-12",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "21840.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-08",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "8085.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-11",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "22470.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-01",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "20580.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-02",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "22260.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-03",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "22260.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2022-09",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "8085.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2023-05",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "21840.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2023-02",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "21840.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2023-03",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "21840.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2023-01",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "22470.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2023-04",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "21840.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      },
+      {
+        "årMåned": "2023-06",
+        "klassifiserteInntekter": [
+          {
+            "beløp": "47073.00",
+            "inntektKlasse": "ARBEIDSINNTEKT"
+          }
+        ],
+        "harAvvik": false
+      }
+    ],
+    "manueltRedigert": false,
+    "sisteAvsluttendeKalenderMåned": "2023-07"
+  },
+  "@forårsaket_av": {
+    "id": "0d6ac1e0-2d8f-4992-bc1f-ab2c634155b8",
+    "opprettet": "2023-12-04T10:25:34.687714112"
+  },
+  "minsteinntektResultat": {
+    "sporingsId": "01HGT2BCAR5Z8RCMGMH91S389B",
+    "subsumsjonsId": "01HGT2BCAS6SSGYRER20V98MHT",
+    "regelIdentifikator": "Minsteinntekt.v1",
+    "oppfyllerMinsteinntekt": true,
+    "beregningsregel": "ORDINAER"
+  },
+  "minsteinntektInntektsPerioder": [
+    {
+      "inntektsPeriode": {
+        "førsteMåned": "2022-08",
+        "sisteMåned": "2023-07"
+      },
+      "inntekt": 250143.0,
+      "periode": 1.0,
+      "inneholderFangstOgFisk": false,
+      "andel": 250143.0
+    },
+    {
+      "inntektsPeriode": {
+        "førsteMåned": "2021-08",
+        "sisteMåned": "2022-07"
+      },
+      "inntekt": 261337.37,
+      "periode": 2.0,
+      "inneholderFangstOgFisk": false,
+      "andel": 261337.37
+    },
+    {
+      "inntektsPeriode": {
+        "førsteMåned": "2020-08",
+        "sisteMåned": "2021-07"
+      },
+      "inntekt": 136280.03,
+      "periode": 3.0,
+      "inneholderFangstOgFisk": false,
+      "andel": 136280.03
+    }
+  ],
+  "grunnlagInntektsPerioder": [
+    {
+      "inntektsPeriode": {
+        "førsteMåned": "2022-08",
+        "sisteMåned": "2023-07"
+      },
+      "inntekt": "250143.00",
+      "periode": 1.0,
+      "inneholderFangstOgFisk": false
+    },
+    {
+      "inntektsPeriode": {
+        "førsteMåned": "2021-08",
+        "sisteMåned": "2022-07"
+      },
+      "inntekt": "261337.37",
+      "periode": 2.0,
+      "inneholderFangstOgFisk": false
+    },
+    {
+      "inntektsPeriode": {
+        "førsteMåned": "2020-08",
+        "sisteMåned": "2021-07"
+      },
+      "inntekt": "136280.03",
+      "periode": 3.0,
+      "inneholderFangstOgFisk": false
+    }
+  ],
+  "grunnlagResultat": {
+    "sporingsId": "01HGT2BCAZPZF43CVECY7402Y4",
+    "subsumsjonsId": "01HGT2BCAZKB9RNMF5EVJNAEQP",
+    "regelIdentifikator": "Grunnlag.v1",
+    "avkortet": 261755.0,
+    "uavkortet": 261755.0,
+    "beregningsregel": "ArbeidsinntektSiste12(2021)",
+    "harAvkortet": false,
+    "grunnbeløpBrukt": 118620.0
+  },
+  "periodeResultat": {
+    "sporingsId": "01HGT2BCB58GHS0Z92XFRGX3BB",
+    "subsumsjonsId": "01HGT2BCB5JRMH4EBQQ0ZHXQ9Q",
+    "regelIdentifikator": "Periode.v1",
+    "periodeAntallUker": 104.0
+  },
+  "satsResultat": {
+    "sporingsId": "01HGT2BCBQDVCKJ21HPCE3XQKX",
+    "subsumsjonsId": "01HGT2BCBQGCWEE3TQDVV1NCV4",
+    "regelIdentifikator": "Sats.v1",
+    "dagsats": 628.0,
+    "ukesats": 3140.0,
+    "benyttet90ProsentRegel": false,
+    "beregningsregel": "ORDINAER"
+  }
+}
+
+
+
+
+

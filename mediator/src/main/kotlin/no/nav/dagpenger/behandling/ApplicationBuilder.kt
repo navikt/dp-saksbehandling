@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.behandling.api.arbeidsforholdApi
 import no.nav.dagpenger.behandling.api.oppgaveApi
 import no.nav.dagpenger.behandling.arbeidsforhold.AaregClient
+import no.nav.dagpenger.behandling.db.HardkodedVurderingRepository
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.behandling.db.PostgresRepository
@@ -29,6 +30,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             behandlingRepository = postgresRepository,
             aktivitetsloggMediator = AktivitetsloggMediator(rapidsConnection),
             iverksettClient = IverksettClient(),
+            vurderingRepository = HardkodedVurderingRepository(),
         )
 
     init {

@@ -278,6 +278,7 @@ class MediatorTest {
             behandlingRepository = mockBehandlingRepository,
             aktivitetsloggMediator = mockk(relaxed = true),
             iverksettClient = mockkIverksettClient,
+            vurderingRepository = mockk(relaxed = true),
         )
 
     private fun finnStegId(id: String) = oppgave.alleSteg().single { it.id == id }.uuid

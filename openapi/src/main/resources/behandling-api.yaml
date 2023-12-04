@@ -156,7 +156,7 @@ components:
       properties:
         uuid:
           type: string
-          format: uuid
+          format: ulid
         virkningsdato:
           type: string
           format: date
@@ -164,12 +164,12 @@ components:
           type: boolean
         inntektsId:
           type: string
-          format: uuid
+          format: ulid
         inntektPerioder:
           type: array
           items:
-            $ref: '#/components/schemas/inntektPerioder'
-    inntektPerioder:
+            $ref: '#/components/schemas/inntektPeriode'
+    inntektPeriode:
       required:
         - periodeType
         - fra
