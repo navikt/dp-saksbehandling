@@ -58,6 +58,7 @@ paths:
                 $ref: '#/components/schemas/Oppgave'
         '404':
           description: Oppgaven ble ikke funnet
+  /oppgave/{oppgaveId}/steg/{stegId}:
     put:
       summary: Oppdater tilstanden til en oppgave ved å utføre et steg
       parameters:
@@ -82,6 +83,25 @@ paths:
       responses:
         '200':
           description: Vellykket respons som indikerer at steget er utført
+  /oppgave/{oppgaveId}/vurdering/minsteinntekt:
+    get:
+      summary: Gir informasjon om minsteinntektsvurdering
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med informasjon om vurderingen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MinsteInntektVurdering'
+
+
   /oppgave/{oppgaveId}/stans:
     post:
       summary: Trigge opprettelse av oppgave for stans og returnerer dens oppgaveId
@@ -127,6 +147,55 @@ paths:
 
 components:
   schemas:
+    MinsteInntektVurdering:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        virkningsdato:
+          type: string
+          format: date
+        vilkaarOppfylt:
+          type: boolean
+        grunnbeloep:
+          type: number
+          format: double
+        inntektId:
+          type: string
+          format: uuid
+        regel:
+          type: string
+        inntekter:
+          type: array
+          items:
+            $ref: '#/components/schemas/Inntekt'
+    Inntekt:
+      type: object
+      properties:
+        id:
+          type: string
+        fra:
+          type: string
+        til:
+          type: string
+        inntekt:
+          type: number
+          format: double
+        oppfyllerKrav:
+          type: boolean
+          nullable: true
+        perioder:
+          type: array
+          items:
+            $ref: '#/components/schemas/InntektPeriode'
+    InntektPeriode:
+      type: object
+      properties:
+        periode:
+          type: string
+        inntekt:
+          type: number
     Hendelse:
       type: object
       additionalProperties: true
