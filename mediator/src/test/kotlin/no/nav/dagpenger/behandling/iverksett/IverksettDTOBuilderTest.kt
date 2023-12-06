@@ -25,7 +25,7 @@ class IverksettDTOBuilderTest {
             it should beInstanceOf<IverksettDto>()
             it.sakId shouldBe sakId
             it.behandlingId shouldBe behandling.uuid
-            it.personIdent shouldBe testIdent
+            it.personident.verdi shouldBe testIdent
         }
     }
 }

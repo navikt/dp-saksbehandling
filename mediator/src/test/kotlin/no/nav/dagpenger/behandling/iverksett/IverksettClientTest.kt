@@ -8,6 +8,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
+import no.nav.dagpenger.kontrakter.felles.Personident
 import no.nav.dagpenger.kontrakter.iverksett.IverksettDto
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -22,7 +23,7 @@ class IverksettClientTest {
         IverksettDto(
             sakId = UUID.randomUUID(),
             behandlingId = UUID.randomUUID(),
-            personIdent = testIdent,
+            personident = Personident(testIdent),
         )
 
     @Test

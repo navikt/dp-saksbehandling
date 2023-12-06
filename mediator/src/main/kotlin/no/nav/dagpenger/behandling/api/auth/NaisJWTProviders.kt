@@ -30,4 +30,5 @@ abstract class NaisJWTProviders private constructor(
 private fun getEnvOrSystem(name: String) = System.getenv(name) ?: System.getProperty(name)
 
 object AzureAd : NaisJWTProviders("AZURE_OPENID_CONFIG_JWKS_URI", "AZURE_OPENID_CONFIG_ISSUER", "AZURE_APP_CLIENT_ID")
+
 object TokenX : NaisJWTProviders("TOKEN_X_JWKS_URI", "TOKEN_X_ISSUER", "TOKEN_X_CLIENT_ID")

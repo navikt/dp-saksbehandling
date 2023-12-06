@@ -6,7 +6,7 @@ import java.util.UUID
 
 object Meldingsfabrikk {
     val testSak = Sak(UUID.randomUUID())
-    val testIdent = "12312312311"
+    val testIdent = "13083826694"
     val testPerson = Person.rehydrer(testIdent, setOf(testSak))
     val søknadInnsendtHendelse =
         SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent)

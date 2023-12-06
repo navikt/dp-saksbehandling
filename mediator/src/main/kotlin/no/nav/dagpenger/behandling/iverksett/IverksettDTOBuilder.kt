@@ -6,6 +6,7 @@ import no.nav.dagpenger.behandling.Person
 import no.nav.dagpenger.behandling.Sak
 import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.hendelser.PersonHendelse
+import no.nav.dagpenger.kontrakter.felles.Personident
 import no.nav.dagpenger.kontrakter.iverksett.IverksettDto
 import java.time.LocalDateTime
 import java.util.UUID
@@ -23,7 +24,7 @@ internal class IverksettDTOBuilder(behandling: Behandling) : BehandlingVisitor {
         IverksettDto(
             sakId = sakId,
             behandlingId = behandlingId,
-            personIdent = ident,
+            personident = Personident(ident),
         )
 
     override fun visit(
