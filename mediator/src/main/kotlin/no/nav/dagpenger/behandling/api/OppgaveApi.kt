@@ -40,6 +40,7 @@ import no.nav.dagpenger.behandling.api.models.NyttSvarDTO
 import no.nav.dagpenger.behandling.api.models.SokDTO
 import no.nav.dagpenger.behandling.api.models.SvartypeDTO
 import no.nav.dagpenger.behandling.dto.OppgaveIdWrapper
+import no.nav.dagpenger.behandling.dto.toDTO
 import no.nav.dagpenger.behandling.dto.toOppgaveDTO
 import no.nav.dagpenger.behandling.dto.toOppgaverDTO
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
@@ -150,7 +151,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                     route("/vurdering/minsteinntekt") {
                         get {
                             val oppgaveId = call.finnUUID("oppgaveId")
-                            val vurdering = mediator.hentMinsteInntektVurdering(oppgaveId)
+                            val vurdering = mediator.hentMinsteInntektVurdering(oppgaveId).toDTO()
                             call.respond(status = HttpStatusCode.OK, vurdering)
                         }
                     }

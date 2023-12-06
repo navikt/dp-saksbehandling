@@ -214,29 +214,31 @@ class OppgaveApiTest {
                 "${response.contentType()}" shouldContain "application/json"
 
                 //language=JSON
-                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder
-                    """
-                    {
-                       "uuid": "01HGT2BCAS6SSGYRER20V98MHT",
-                       "virkningsdato": "2023-08-16",
-                       "vilkaarOppfylt": true,
-                       "inntektsId": "01HGT2BCA4B2DNXVHRGEENPCYY",
-                       "inntektPerioder": [
-                         {
-                           "periodeType": "12 måneder",
-                           "fra": "2022-08",
-                           "til": "2023-07",
-                           "inntekt": 250143.0
-                         },
-                         {
-                           "periodeType": "36 måneder",
-                           "fra": "2020-08",
-                           "til": "2023-07",
-                           "inntekt": 647760.4
-                         }
-                       ]
-                     } 
-                    """.trimIndent()
+                response.bodyAsText().let { resultJson ->
+
+                    resultJson shouldEqualSpecifiedJsonIgnoringOrder
+                        """
+                        {
+                          "virkningsdato": "2023-08-16",
+                          "vilkaarOppfylt": true,
+                          "inntektsId": "01HGT2BCA4B2DNXVHRGEENPCYY",
+                          "inntektPerioder": [
+                            {
+                              "periodeType": "12 måneder",
+                              "fra": "2022-08",
+                              "til": "2023-07",
+                              "inntekt": 250143.0
+                            },
+                            {
+                              "periodeType": "36 måneder",
+                              "fra": "2020-08",
+                              "til": "2023-07",
+                              "inntekt": 647760.4
+                            }
+                          ]
+                        } 
+                        """.trimIndent()
+                }
             }
         }
     }

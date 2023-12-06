@@ -1,24 +1,30 @@
 package no.nav.dagpenger.behandling.db
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.nav.dagpenger.behandling.InntektPeriode
+import no.nav.dagpenger.behandling.MinsteinntektVurdering
 import no.nav.dagpenger.behandling.api.json.objectMapper
-import no.nav.dagpenger.behandling.api.models.InntektPeriodeDTO
-import no.nav.dagpenger.behandling.api.models.MinsteInntektVurderingDTO
 import no.nav.dagpenger.behandling.db.PacketMapper.beregningsdato
-import no.nav.dagpenger.behandling.db.PacketMapper.calculateInntektPerioder
+import no.nav.dagpenger.behandling.db.PacketMapper.beregningsregel
+import no.nav.dagpenger.behandling.db.PacketMapper.inntektPerioder
 import no.nav.dagpenger.behandling.db.PacketMapper.inntektsId
 import no.nav.dagpenger.behandling.db.PacketMapper.oppFyllerMinsteinntekt
+import no.nav.dagpenger.behandling.db.PacketMapper.regelIdentifikator
 import no.nav.dagpenger.behandling.db.PacketMapper.subsumsjonsId
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
 
 interface VurderingRepository {
-    fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteInntektVurderingDTO
+    fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteinntektVurdering
 }
 
 internal object PacketMapper {
     fun JsonNode.subsumsjonsId(): String = this["minsteinntektResultat"]["subsumsjonsId"].asText()
+
+    fun JsonNode.regelIdentifikator(): String = this["minsteinntektResultat"]["regelIdentifikator"].asText()
+
+    fun JsonNode.beregningsregel(): String = this["minsteinntektResultat"]["beregningsregel"].asText()
 
     fun JsonNode.beregningsdato(): LocalDate =
         this["beregningsDato"].asText().let {
@@ -29,45 +35,16 @@ internal object PacketMapper {
 
     fun JsonNode.inntektsId(): String = this["inntektV1"]["inntektsId"].asText()
 
-    private data class InntektPeriodeInfo(
-        val inntektsPeriode: InntektPeriode,
-        val inntekt: Double,
-        val periode: Int,
-        val inneholderFangstOgFisk: Boolean,
-        val andel: Double,
-    ) {
-        data class InntektPeriode(
-            val førsteMåned: YearMonth,
-            val sisteMåned: YearMonth,
-        )
-    }
+    private fun JsonNode.asYearMonth(): YearMonth = YearMonth.parse(this.asText())
 
-    fun JsonNode.calculateInntektPerioder(): List<InntektPeriodeDTO> {
-        val list =
-            this["minsteinntektInntektsPerioder"].map {
-                objectMapper.convertValue(it, InntektPeriodeInfo::class.java)
-            }.sortedBy { it.periode }
-
-        val first =
-            list.first().let {
-                InntektPeriodeDTO(
-                    periodeType = "12 måneder",
-                    fra = it.inntektsPeriode.førsteMåned.toString(),
-                    til = it.inntektsPeriode.sisteMåned.toString(),
-                    // todo sjekke andel
-                    inntekt = it.inntekt,
-                )
-            }
-
-        val second =
-            InntektPeriodeDTO(
-                periodeType = "36 måneder",
-                fra = list.last().inntektsPeriode.førsteMåned.toString(),
-                til = list.first().inntektsPeriode.sisteMåned.toString(),
-                inntekt = list.sumOf { it.inntekt },
+    fun JsonNode.inntektPerioder(): List<InntektPeriode> {
+        return this["minsteinntektInntektsPerioder"].map { node ->
+            InntektPeriode(
+                førsteMåned = node["inntektsPeriode"]["førsteMåned"].asYearMonth(),
+                sisteMåned = node["inntektsPeriode"]["sisteMåned"].asYearMonth(),
+                inntekt = node["inntekt"].asDouble(),
             )
-
-        return listOf(first, second)
+        }
     }
 }
 
@@ -76,24 +53,26 @@ private fun JsonNode.asBooleanStrict(): Boolean = asText().toBooleanStrict()
 internal class HardkodedVurderingRepository : VurderingRepository {
     private val resourceRetriever = object {}.javaClass
     private val vurderinger =
-        mutableListOf<MinsteInntektVurderingDTO>().also {
+        mutableListOf<MinsteinntektVurdering>().also {
             it.populate()
         }
 
-    private fun MutableList<MinsteInntektVurderingDTO>.populate() {
+    private fun MutableList<MinsteinntektVurdering>.populate() {
         val jsonNode = objectMapper.readTree(resourceRetriever.getResource("/LEL_eksempel.json")?.readText()!!)
         this.add(
-            MinsteInntektVurderingDTO(
-                uuid = jsonNode.subsumsjonsId(),
+            MinsteinntektVurdering(
                 virkningsdato = jsonNode.beregningsdato(),
                 vilkaarOppfylt = jsonNode.oppFyllerMinsteinntekt(),
                 inntektsId = jsonNode.inntektsId(),
-                inntektPerioder = jsonNode.calculateInntektPerioder(),
+                inntektPerioder = jsonNode.inntektPerioder(),
+                subsumsjonsId = jsonNode.subsumsjonsId(),
+                regelIdentifikator = jsonNode.regelIdentifikator(),
+                beregningsRegel = jsonNode.beregningsregel(),
             ),
         )
     }
 
-    override fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteInntektVurderingDTO {
+    override fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteinntektVurdering {
         return vurderinger.first()
     }
 }
