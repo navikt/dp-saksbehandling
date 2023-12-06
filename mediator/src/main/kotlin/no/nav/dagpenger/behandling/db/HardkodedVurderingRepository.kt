@@ -41,9 +41,15 @@ internal class HardkodedVurderingRepository : VurderingRepository {
         return vurderinger.first()
     }
 
+    override fun lagreMinsteinntektVurdering(
+        oppgaveId: UUID,
+        vurdering: MinsteinntektVurdering,
+    ) {
+        TODO("Not yet implemented")
+    }
+
     private fun JsonNode.asBooleanStrict(): Boolean = asText().toBooleanStrict()
 }
-
 
 internal object PacketMapper {
     fun JsonNode.subsumsjonsId(): String = this["minsteinntektResultat"]["subsumsjonsId"].asText()

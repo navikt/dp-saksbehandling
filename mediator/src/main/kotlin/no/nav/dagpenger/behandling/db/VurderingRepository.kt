@@ -5,6 +5,9 @@ import java.util.UUID
 
 interface VurderingRepository {
     fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteinntektVurdering
+
+    fun lagreMinsteinntektVurdering(
+        oppgaveId: UUID,
+        vurdering: MinsteinntektVurdering,
+    )
 }
-
-
