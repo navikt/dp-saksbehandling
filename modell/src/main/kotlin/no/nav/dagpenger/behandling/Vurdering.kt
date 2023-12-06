@@ -56,7 +56,7 @@ class MinsteinntektVurdering(
         }
     }
 
-    fun calculateInntektPerioder(): Pair<InntektPeriode, InntektPeriode> {
+    private fun calculateInntektPerioder(): Pair<InntektPeriode, InntektPeriode> {
         return inntektPerioder.sortedByDescending { it.førsteMåned }.let { inntektPerioder ->
             Pair(
                 first =
