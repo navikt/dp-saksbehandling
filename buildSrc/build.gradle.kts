@@ -12,15 +12,3 @@ dependencies {
     implementation(kotlin("gradle-plugin"))
     implementation("com.diffplug.spotless:spotless-plugin-gradle:6.23.3")
 }
-
-spotless {
-    kotlinGradle {
-        ktlint()
-    }
-}
-
-kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
