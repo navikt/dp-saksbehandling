@@ -40,7 +40,6 @@ jobs:
         uses: nais/docker-build-push@v0
         id: docker-build-push
         with:
-          byosbom: ${{ steps.build.outputs.dependency-graph-file }}
           team: teamdagpenger
           tag: ${{ github.sha }}
           dockerfile: mediator/Dockerfile # optional, default Dockerfile
