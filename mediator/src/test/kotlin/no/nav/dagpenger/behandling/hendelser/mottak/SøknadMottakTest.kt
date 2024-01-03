@@ -14,6 +14,7 @@ import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import java.time.LocalDate
 import java.util.UUID
 
 class SøknadMottakTest {
@@ -34,6 +35,7 @@ class SøknadMottakTest {
             val søknadId = UUID.randomUUID()
             val journalpostId = "jp1"
             val ident = testIdent
+            val innsendtDato = LocalDate.now()
 
             testRapid.sendTestMessage(
                 innsendingFerdigstiltHendelse(
@@ -50,6 +52,7 @@ class SøknadMottakTest {
                 hendelse.journalpostId() shouldBe journalpostId
                 hendelse.ident() shouldBe ident
                 hendelse.søknadId() shouldBe søknadId
+                hendelse.innsendtDato shouldBe innsendtDato
             }
         }
     }

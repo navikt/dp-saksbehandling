@@ -75,7 +75,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 //language=PostgreSQL
                 statement =
                     """
-                    SELECT melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id
+                    SELECT melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id, soknad_innsendt_dato
                     FROM  hendelse
                     WHERE behandling_id = :behandling_id
                     """.trimIndent(),
@@ -90,6 +90,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                             søknadId = row.uuid("soknad_id"),
                             journalpostId = row.string("journalpost_id"),
                             ident = ident,
+                            innsendtDato = row.localDate("soknad_innsendt_dato"),
                         )
                     }
 

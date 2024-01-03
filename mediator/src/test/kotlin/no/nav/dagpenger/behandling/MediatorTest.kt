@@ -118,8 +118,12 @@ class MediatorTest {
     @Test
     fun `Alle nye oppgaver havner på samme sak (Viggo case)`() {
         val ident = "88888888888"
-        mediator.behandle(SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = ident))
-        mediator.behandle(SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = ident))
+        mediator.behandle(
+            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = ident, innsendtDato = LocalDate.MIN),
+        )
+        mediator.behandle(
+            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = ident, innsendtDato = LocalDate.MIN),
+        )
 
         mockOppgaveRepository.hentOppgaverFor(ident).let {
             it.size shouldBe 2
@@ -165,6 +169,7 @@ class MediatorTest {
                 søknadId = UUID.randomUUID(),
                 journalpostId = "123",
                 ident = testIdent,
+                innsendtDato = LocalDate.MIN,
             ),
         )
         InMemoryPersonRepository.hentPerson(testIdent).also {
@@ -175,7 +180,8 @@ class MediatorTest {
 
     @Test
     fun `Publiserer melding rettighet_behandlet_hendelse når behandlingen er ferdig`() {
-        val hendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent)
+        val hendelse =
+            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent, innsendtDato = LocalDate.MIN)
         mediator.behandle(hendelse)
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
         val oppgave = mockOppgaveRepository.hentOppgave(oppgaveId)
@@ -248,7 +254,7 @@ class MediatorTest {
             oppgaveId = oppgave.uuid
             lagreOppgave(oppgave)
             val søknadInnsendtHendelse =
-                SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "", ident = testIdent)
+                SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "", ident = testIdent, innsendtDato = LocalDate.MIN)
             lagreOppgave(
                 søknadInnsendtHendelse.oppgave(
                     testPerson.also {

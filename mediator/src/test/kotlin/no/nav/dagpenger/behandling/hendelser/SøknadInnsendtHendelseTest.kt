@@ -7,10 +7,17 @@ import no.nav.dagpenger.behandling.Steg
 import no.nav.dagpenger.behandling.Utfall
 import no.nav.dagpenger.behandling.helpers.DefaultOppgaveVisitor
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.util.UUID
 
 class SøknadInnsendtHendelseTest {
-    private val søknadInnsendtHendelse = SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = "12345678910")
+    private val søknadInnsendtHendelse =
+        SøknadInnsendtHendelse(
+            søknadId = UUID.randomUUID(),
+            journalpostId = "123",
+            ident = "12345678910",
+            innsendtDato = LocalDate.now(),
+        )
     private val person = Person("12345678910").also { it.håndter(søknadInnsendtHendelse) }
 
     private val behandling =

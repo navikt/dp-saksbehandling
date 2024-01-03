@@ -13,6 +13,7 @@ class SøknadInnsendtHendelse(
     private val søknadId: UUID,
     private val journalpostId: String,
     ident: String,
+    val innsendtDato: LocalDate,
 ) : PersonHendelse(meldingsreferanseId, ident) {
     fun søknadId() = søknadId
 

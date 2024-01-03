@@ -128,8 +128,8 @@ internal class HendelseStatemenBuilder(oppgave: Oppgave) : OppgaveVisitor, State
                 //language=PostgreSQL
                 statement =
                     """
-                    INSERT INTO hendelse(behandling_id, melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id)
-                    VALUES (:behandling_id, :melding_referanse_id, :clazz, :soknad_id, :journalpost_id, :oppgave_id)
+                    INSERT INTO hendelse(behandling_id, melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id, soknad_innsendt_dato)
+                    VALUES (:behandling_id, :melding_referanse_id, :clazz, :soknad_id, :journalpost_id, :oppgave_id, :soknad_innsendt_dato)
                     ON CONFLICT (melding_referanse_id) DO NOTHING
                     """.trimIndent(),
                 paramMap = hendelse.toParamMap(),
@@ -163,6 +163,7 @@ internal class HendelseStatemenBuilder(oppgave: Oppgave) : OppgaveVisitor, State
                 mapOf(
                     "soknad_id" to hendelse.søknadId(),
                     "journalpost_id" to hendelse.journalpostId(),
+                    "soknad_innsendt_dato" to hendelse.innsendtDato,
                 )
             }
 

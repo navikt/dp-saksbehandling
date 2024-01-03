@@ -9,6 +9,7 @@ import no.nav.dagpenger.behandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import org.junit.jupiter.api.Test
+import java.time.LocalDate.MIN
 import java.util.UUID
 
 class PostgresPersonRepositoryTest {
@@ -24,6 +25,7 @@ class PostgresPersonRepositoryTest {
                         søknadId = UUID.randomUUID(),
                         journalpostId = "123",
                         ident = "123",
+                        innsendtDato = MIN,
                     ),
                 )
                 repository.lagrePerson(it)

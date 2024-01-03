@@ -120,7 +120,7 @@ class PostgresOppgaveRepositoryTest {
             )
 
         val søknadInnsendtHendelse =
-            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent)
+            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent, innsendtDato = LocalDate.now())
         val vedtakStansetHendelse = VedtakStansetHendelse(ident = testIdent, oppgaveId = UUID.randomUUID())
         val testBehandling =
             Behandling.rehydrer(
