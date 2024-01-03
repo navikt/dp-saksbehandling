@@ -55,6 +55,8 @@ data class Oppgave private constructor(
 
     fun steg(uuid: UUID) = behandling.steg.single { it.uuid == uuid }
 
+    fun steg(id: String) = behandling.steg.single { it.id == id }
+
     fun addObserver(observer: BehandlingObserver) = behandling.addObserver(observer)
 
     fun utfør(kommando: UtførStegKommando) {

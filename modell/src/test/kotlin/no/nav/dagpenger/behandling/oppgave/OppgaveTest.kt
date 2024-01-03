@@ -15,6 +15,17 @@ import java.util.UUID
 
 class OppgaveTest {
     @Test
+    fun `skal kunne hente ut et steg basert på id`() {
+        Oppgave(
+            UUID.randomUUID(),
+            Behandling(
+                Person("02020256789"), testHendelse,
+                setOf<Steg<out Any>>(Steg.fastsettelse<String>("bar"), Steg.Vilkår("foo")), sak = Sak(),
+            ),
+        ).steg("foo").id shouldBe "foo"
+    }
+
+    @Test
     fun foobar() {
         val steg = Steg.fastsettelse<String>("foo")
         val behandling = Behandling(Person("02020256789"), testHendelse, setOf(steg), sak = Sak())

@@ -119,10 +119,20 @@ class MediatorTest {
     fun `Alle nye oppgaver havner på samme sak (Viggo case)`() {
         val ident = "88888888888"
         mediator.behandle(
-            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = ident, innsendtDato = LocalDate.MIN),
+            SøknadInnsendtHendelse(
+                søknadId = UUID.randomUUID(),
+                journalpostId = "123",
+                ident = ident,
+                innsendtDato = LocalDate.MIN,
+            ),
         )
         mediator.behandle(
-            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = ident, innsendtDato = LocalDate.MIN),
+            SøknadInnsendtHendelse(
+                søknadId = UUID.randomUUID(),
+                journalpostId = "123",
+                ident = ident,
+                innsendtDato = LocalDate.MIN,
+            ),
         )
 
         mockOppgaveRepository.hentOppgaverFor(ident).let {
@@ -179,9 +189,40 @@ class MediatorTest {
     }
 
     @Test
+    fun `SKal sende ut behov om minsteinntektvurdering ved SøknadInnsendtHendelse`() {
+        val virkningsDato = LocalDate.of(2021, 1, 1)
+        mediator.behandle(
+            SøknadInnsendtHendelse(
+                søknadId = UUID.randomUUID(),
+                journalpostId = "123",
+                ident = testIdent,
+                innsendtDato = virkningsDato,
+            ),
+        )
+        testRapid.inspektør.size shouldBe 1
+        val event = testRapid.inspektør.message(0)
+        val partitionKey = testRapid.inspektør.key(0)
+
+        partitionKey shouldBe ident
+        event["@event_name"].asText() shouldBe "behov"
+        shouldNotThrowAny {
+            event["@behov"].asIterable().single().asText() shouldBe "VurderingAvMinsteinntekt"
+            event["ident"].asText() shouldBe testIdent
+            event["virkningsdato"].asLocalDate() shouldBe virkningsDato
+            event["oppgaveUUID"].asUUID()
+            event["stegUUID"].asUUID()
+        }
+    }
+
+    @Test
     fun `Publiserer melding rettighet_behandlet_hendelse når behandlingen er ferdig`() {
         val hendelse =
-            SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "123", ident = testIdent, innsendtDato = LocalDate.MIN)
+            SøknadInnsendtHendelse(
+                søknadId = UUID.randomUUID(),
+                journalpostId = "123",
+                ident = testIdent,
+                innsendtDato = LocalDate.MIN,
+            )
         mediator.behandle(hendelse)
         val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
         val oppgave = mockOppgaveRepository.hentOppgave(oppgaveId)
@@ -206,9 +247,9 @@ class MediatorTest {
             },
         )
 
-        testRapid.inspektør.size shouldBe 2
-        val event = testRapid.inspektør.message(0)
-        val partitionKey = testRapid.inspektør.key(0)
+        testRapid.inspektør.size shouldBe 3
+        val event = testRapid.inspektør.message(1)
+        val partitionKey = testRapid.inspektør.key(1)
 
         partitionKey shouldBe ident
         event["@event_name"].asText() shouldBe "rettighet_behandlet_hendelse"
@@ -254,7 +295,12 @@ class MediatorTest {
             oppgaveId = oppgave.uuid
             lagreOppgave(oppgave)
             val søknadInnsendtHendelse =
-                SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "", ident = testIdent, innsendtDato = LocalDate.MIN)
+                SøknadInnsendtHendelse(
+                    søknadId = UUID.randomUUID(),
+                    journalpostId = "",
+                    ident = testIdent,
+                    innsendtDato = LocalDate.MIN,
+                )
             lagreOppgave(
                 søknadInnsendtHendelse.oppgave(
                     testPerson.also {

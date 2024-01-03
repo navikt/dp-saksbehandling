@@ -47,12 +47,20 @@ class SøknadInnsendtHendelse(
                         avhengerAv(virkningsdato)
                     }
                 }
+
+            val minsteinntekt =
+                steg {
+                    vilkår("Oppfyller kravet til minsteinntekt") {
+                        avhengerAv(virkningsdato)
+                    }
+                }
             val vilkår =
                 steg {
                     vilkår("Oppfyller kravene til dagpenger") {
                         avhengerAv(virkningsdato)
                     }
                 }
+
             val grunnlag =
                 steg {
                     fastsettelse<Int>("Grunnlag") {
@@ -74,6 +82,7 @@ class SøknadInnsendtHendelse(
             val forslagTilVedtak =
                 steg {
                     prosess("Forslag til vedtak") {
+                        avhengerAv(minsteinntekt)
                         avhengerAv(vilkår)
                         avhengerAv(grunnlag)
                         avhengerAv(rettighetstype)

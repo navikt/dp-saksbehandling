@@ -11,6 +11,7 @@ import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.iverksett.IverksettClient
 import no.nav.dagpenger.behandling.iverksett.IverksettDTOBuilder
+import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.util.UUID
@@ -32,8 +33,31 @@ internal class Mediator(
                 it.håndter(hendelse)
                 personRepository.lagrePerson(it)
             }
-        lagreOppgave(hendelse.oppgave(person))
+        val oppgave = hendelse.oppgave(person)
+        lagreOppgave(oppgave)
         aktivitetsloggMediator.håndter(hendelse)
+        publiserBehovForVilkårsvurderingAvMinsteinntekt(hendelse, oppgave)
+    }
+
+    private fun publiserBehovForVilkårsvurderingAvMinsteinntekt(
+        hendelse: SøknadInnsendtHendelse,
+        oppgave: Oppgave,
+    ) {
+        val ident = oppgave.person.ident
+        val stegUUID = oppgave.steg("Oppfyller kravet til minsteinntekt").uuid
+        rapidsConnection.publish(
+            key = ident,
+            message =
+                JsonMessage.newNeed(
+                    listOf("VurderingAvMinsteinntekt"),
+                    mapOf(
+                        "ident" to ident,
+                        "oppgaveUUID" to oppgave.uuid,
+                        "stegUUID" to stegUUID,
+                        "virkningsdato" to hendelse.innsendtDato,
+                    ),
+                ).toJson(),
+        )
     }
 
     fun behandle(hendelse: VedtakStansetHendelse) {
