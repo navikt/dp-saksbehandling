@@ -212,6 +212,7 @@ class MediatorTest {
             event["oppgaveUUID"].asUUID()
             event["stegUUID"].asUUID()
         }
+
     }
 
     @Test
