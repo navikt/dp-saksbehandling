@@ -2,13 +2,13 @@ package no.nav.dagpenger.behandling.db
 
 import com.fasterxml.jackson.databind.JsonNode
 import no.nav.dagpenger.behandling.InntektPeriode
-import no.nav.dagpenger.behandling.MinsteinntektVurdering
+import no.nav.dagpenger.behandling.MinsteInntektVurdering
 import no.nav.dagpenger.behandling.api.json.objectMapper
 import no.nav.dagpenger.behandling.db.PacketMapper.beregningsdato
 import no.nav.dagpenger.behandling.db.PacketMapper.beregningsregel
 import no.nav.dagpenger.behandling.db.PacketMapper.inntektPerioder
 import no.nav.dagpenger.behandling.db.PacketMapper.inntektsId
-import no.nav.dagpenger.behandling.db.PacketMapper.oppFyllerMinsteinntekt
+import no.nav.dagpenger.behandling.db.PacketMapper.oppFyllerMinsteInntekt
 import no.nav.dagpenger.behandling.db.PacketMapper.regelIdentifikator
 import no.nav.dagpenger.behandling.db.PacketMapper.subsumsjonsId
 import java.time.LocalDate
@@ -18,32 +18,32 @@ import java.util.UUID
 internal class HardkodedVurderingRepository : VurderingRepository {
     private val resourceRetriever = object {}.javaClass
     private val vurderinger =
-        mutableListOf<MinsteinntektVurdering>().also {
+        mutableListOf<MinsteInntektVurdering>().also {
             it.populate()
         }
 
-    private fun MutableList<MinsteinntektVurdering>.populate() {
+    private fun MutableList<MinsteInntektVurdering>.populate() {
         val jsonNode = objectMapper.readTree(resourceRetriever.getResource("/LEL_eksempel.json")?.readText()!!)
         this.add(
-            MinsteinntektVurdering(
+            MinsteInntektVurdering(
                 virkningsdato = jsonNode.beregningsdato(),
-                vilkaarOppfylt = jsonNode.oppFyllerMinsteinntekt(),
+                vilkaarOppfylt = jsonNode.oppFyllerMinsteInntekt(),
                 inntektsId = jsonNode.inntektsId(),
                 inntektPerioder = jsonNode.inntektPerioder(),
                 subsumsjonsId = jsonNode.subsumsjonsId(),
                 regelIdentifikator = jsonNode.regelIdentifikator(),
-                beregningsRegel = jsonNode.beregningsregel(),
+                beregningsregel = jsonNode.beregningsregel(),
             ),
         )
     }
 
-    override fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteinntektVurdering {
+    override fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteInntektVurdering {
         return vurderinger.first()
     }
 
-    override fun lagreMinsteinntektVurdering(
+    override fun lagreMinsteInntektVurdering(
         oppgaveId: UUID,
-        vurdering: MinsteinntektVurdering,
+        vurdering: MinsteInntektVurdering,
     ) {
         TODO("Not yet implemented")
     }
@@ -63,7 +63,7 @@ internal object PacketMapper {
             LocalDate.parse(it)
         }
 
-    fun JsonNode.oppFyllerMinsteinntekt() = this["minsteinntektResultat"]["oppfyllerMinsteinntekt"].asBooleanStrict()
+    fun JsonNode.oppFyllerMinsteInntekt() = this["minsteinntektResultat"]["oppfyllerMinsteinntekt"].asBooleanStrict()
 
     fun JsonNode.inntektsId(): String = this["inntektV1"]["inntektsId"].asText()
 

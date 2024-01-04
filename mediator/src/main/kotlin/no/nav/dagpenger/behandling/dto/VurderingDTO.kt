@@ -1,10 +1,10 @@
 package no.nav.dagpenger.behandling.dto
 
-import no.nav.dagpenger.behandling.MinsteinntektVurdering
+import no.nav.dagpenger.behandling.MinsteInntektVurdering
 import no.nav.dagpenger.behandling.api.models.InntektPeriodeDTO
 import no.nav.dagpenger.behandling.api.models.MinsteInntektVurderingDTO
 
-fun MinsteinntektVurdering.toDTO(): MinsteInntektVurderingDTO {
+fun MinsteInntektVurdering.toDTO(): MinsteInntektVurderingDTO {
     return MinsteInntektVurderingDTO(
         uuid = this.uuid.toString(),
         virkningsdato = this.virkningsdato,
@@ -14,15 +14,15 @@ fun MinsteinntektVurdering.toDTO(): MinsteInntektVurderingDTO {
             listOf(
                 InntektPeriodeDTO(
                     periodeType = "12 måneder",
-                    fra = this.tolveMånedPeriode.førsteMåned.toString(),
-                    til = this.tolveMånedPeriode.sisteMåned.toString(),
-                    inntekt = this.tolveMånedPeriode.inntekt,
+                    fra = this.tolvMånederPeriode.førsteMåned.toString(),
+                    til = this.tolvMånederPeriode.sisteMåned.toString(),
+                    inntekt = this.tolvMånederPeriode.inntekt,
                 ),
                 InntektPeriodeDTO(
                     periodeType = "36 måneder",
-                    fra = this.trettiSeksMånedPeriode.førsteMåned.toString(),
-                    til = this.trettiSeksMånedPeriode.sisteMåned.toString(),
-                    inntekt = this.trettiSeksMånedPeriode.inntekt,
+                    fra = this.trettiseksMånederPeriode.førsteMåned.toString(),
+                    til = this.trettiseksMånederPeriode.sisteMåned.toString(),
+                    inntekt = this.trettiseksMånederPeriode.inntekt,
                 ),
             ),
     )

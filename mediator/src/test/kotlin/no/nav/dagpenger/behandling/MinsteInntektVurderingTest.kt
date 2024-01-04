@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.YearMonth
 
-class MinsteinntektVurderingTest {
+class MinsteInntektVurderingTest {
     private val inntekstPerioder =
         listOf(
             InntektPeriode(
@@ -27,15 +27,15 @@ class MinsteinntektVurderingTest {
 
     @Test
     fun `12 måned periode fylles ut riktig`() {
-        MinsteinntektVurdering(
+        MinsteInntektVurdering(
             virkningsdato = LocalDate.MAX,
             vilkaarOppfylt = false,
             inntektsId = "",
             inntektPerioder = inntekstPerioder,
             subsumsjonsId = "",
             regelIdentifikator = "",
-            beregningsRegel = "",
-        ).tolveMånedPeriode shouldBe
+            beregningsregel = "",
+        ).tolvMånederPeriode shouldBe
             InntektPeriode(
                 førsteMåned = YearMonth.of(2020, 3),
                 sisteMåned = YearMonth.of(2020, 4),
@@ -45,15 +45,15 @@ class MinsteinntektVurderingTest {
 
     @Test
     fun `36 måned periode fylles ut riktig`() {
-        MinsteinntektVurdering(
+        MinsteInntektVurdering(
             virkningsdato = LocalDate.MAX,
             vilkaarOppfylt = false,
             inntektsId = "",
             inntektPerioder = inntekstPerioder,
             subsumsjonsId = "",
             regelIdentifikator = "",
-            beregningsRegel = "",
-        ).trettiSeksMånedPeriode shouldBe
+            beregningsregel = "",
+        ).trettiseksMånederPeriode shouldBe
             InntektPeriode(
                 førsteMåned = YearMonth.of(2020, 1),
                 sisteMåned = YearMonth.of(2020, 4),

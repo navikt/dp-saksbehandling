@@ -189,7 +189,7 @@ class MediatorTest {
     }
 
     @Test
-    fun `SKal sende ut behov om minsteinntektvurdering ved SøknadInnsendtHendelse`() {
+    fun `Skal sende ut behov om minsteinntektvurdering ved SøknadInnsendtHendelse`() {
         val virkningsDato = LocalDate.of(2021, 1, 1)
         mediator.behandle(
             SøknadInnsendtHendelse(
@@ -206,7 +206,7 @@ class MediatorTest {
         partitionKey shouldBe ident
         event["@event_name"].asText() shouldBe "behov"
         shouldNotThrowAny {
-            event["@behov"].asIterable().single().asText() shouldBe "VurderingAvMinsteinntekt"
+            event["@behov"].asIterable().single().asText() shouldBe "VurderingAvMinsteInntekt"
             event["ident"].asText() shouldBe testIdent
             event["virkningsdato"].asLocalDate() shouldBe virkningsDato
             event["oppgaveUUID"].asUUID()

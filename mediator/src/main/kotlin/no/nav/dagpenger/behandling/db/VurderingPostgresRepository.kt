@@ -5,13 +5,13 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.behandling.InntektPeriode
-import no.nav.dagpenger.behandling.MinsteinntektVurdering
+import no.nav.dagpenger.behandling.MinsteInntektVurdering
 import java.util.UUID
 import javax.sql.DataSource
 
-class VurderingPostgresRepository(private val ds: DataSource) : VurderingRepository {
-    override fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteinntektVurdering {
-        return using(sessionOf(ds)) { session ->
+class VurderingPostgresRepository(private val dataSource: DataSource) : VurderingRepository {
+    override fun hentMinsteInntektVurdering(oppgaveId: UUID): MinsteInntektVurdering {
+        return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -19,7 +19,7 @@ class VurderingPostgresRepository(private val ds: DataSource) : VurderingReposit
                     paramMap = mapOf("oppgaveId" to oppgaveId),
                 ).map { row ->
                     val uuid = row.uuid("uuid")
-                    MinsteinntektVurdering(
+                    MinsteInntektVurdering(
                         uuid = uuid,
                         virkningsdato = row.localDate("virkningsdato"),
                         vilkaarOppfylt = row.boolean("vilkaarOppfylt"),
@@ -27,16 +27,16 @@ class VurderingPostgresRepository(private val ds: DataSource) : VurderingReposit
                         inntektPerioder = session.hentInntektPerioder(uuid),
                         subsumsjonsId = row.string("subsumsjonsId"),
                         regelIdentifikator = row.string("regelIdentifikator"),
-                        beregningsRegel = row.string("beregningsRegel"),
+                        beregningsregel = row.string("beregningsRegel"),
                     )
                 }.asSingle,
-            ) ?: throw RuntimeException("Fanit ikke vurdering for oppgaveId: $oppgaveId")
+            ) ?: throw RuntimeException("Fant ikke minsteinntekt-vurdering for oppgaveId: $oppgaveId")
         }
     }
 
-    override fun lagreMinsteinntektVurdering(
+    override fun lagreMinsteInntektVurdering(
         oppgaveId: UUID,
-        vurdering: MinsteinntektVurdering,
+        vurdering: MinsteInntektVurdering,
     ) {
         TODO("Not yet implemented")
     }

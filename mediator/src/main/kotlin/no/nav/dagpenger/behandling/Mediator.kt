@@ -36,20 +36,20 @@ internal class Mediator(
         val oppgave = hendelse.oppgave(person)
         lagreOppgave(oppgave)
         aktivitetsloggMediator.håndter(hendelse)
-        publiserBehovForVilkårsvurderingAvMinsteinntekt(hendelse, oppgave)
+        publiserBehovForVilkårsvurderingAvMinsteInntekt(hendelse, oppgave)
     }
 
-    private fun publiserBehovForVilkårsvurderingAvMinsteinntekt(
+    private fun publiserBehovForVilkårsvurderingAvMinsteInntekt(
         hendelse: SøknadInnsendtHendelse,
         oppgave: Oppgave,
     ) {
         val ident = oppgave.person.ident
-        val stegUUID = oppgave.steg("Oppfyller kravet til minsteinntekt").uuid
+        val stegUUID = oppgave.steg("Oppfyller kravet til minste inntekt").uuid
         rapidsConnection.publish(
             key = ident,
             message =
                 JsonMessage.newNeed(
-                    listOf("VurderingAvMinsteinntekt"),
+                    listOf("VurderingAvMinsteInntekt"),
                     mapOf(
                         "ident" to ident,
                         "oppgaveUUID" to oppgave.uuid,
