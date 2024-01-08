@@ -1,8 +1,12 @@
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.5.0"
+}
 rootProject.name = "dp-behandling"
 
 include("modell")
 include("openapi")
 include("mediator")
+include("opplysninger")
 
 dependencyResolutionManagement {
     repositories {
