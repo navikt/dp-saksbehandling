@@ -50,3 +50,11 @@ dependencies {
 application {
     mainClass.set("no.nav.dagpenger.behandling.AppKt")
 }
+
+tasks.jar {
+    dependsOn(":openapi:jar")
+    manifest { attributes["Main-Class"] = application.mainClass }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
