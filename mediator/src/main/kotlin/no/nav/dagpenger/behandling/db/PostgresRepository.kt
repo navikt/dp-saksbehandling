@@ -22,6 +22,7 @@ import no.nav.dagpenger.behandling.hendelser.PersonHendelse
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.oppgave.Oppgave
+import java.time.LocalDate
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -74,7 +75,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
             queryOf(
                 //language=PostgreSQL
                 statement =
-                    """
+                """
                     SELECT melding_referanse_id, clazz, soknad_id, journalpost_id, oppgave_id, soknad_innsendt_dato
                     FROM  hendelse
                     WHERE behandling_id = :behandling_id
@@ -90,7 +91,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                             søknadId = row.uuid("soknad_id"),
                             journalpostId = row.string("journalpost_id"),
                             ident = ident,
-                            innsendtDato = row.localDate("soknad_innsendt_dato"),
+                            innsendtDato = row.localDateOrNull("soknad_innsendt_dato") ?: LocalDate.MIN,
                         )
                     }
 
@@ -116,7 +117,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """    
+                    """    
                         SELECT uuid, steg_id, tilstand, type, svar_type, ubesvart, string, dato, heltall, boolsk, desimal, rolle, krever_totrinnskontroll
                         FROM steg WHERE behandling_uuid = :behandling_uuid
                         ORDER BY id
@@ -151,6 +152,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                                 rolle ?: throw IllegalStateException("Forventet at rolle er satt for prosess-steg"),
                                 kreverTotrinnskontroll,
                             )
+
                         "Fastsettelse" -> Steg.Fastsettelse.rehydrer(stegUUID, stegId, svar, tilstand)
                         else -> throw IllegalArgumentException("Ugyldig type: $type")
                     }
@@ -337,9 +339,9 @@ private class LagrePersonStatementBuilder(private val person: Person) : PersonVi
                     //language=PostgreSQL
                     statement = """INSERT INTO person(ident) VALUES (:ident) ON CONFLICT DO NOTHING""",
                     paramMap =
-                        mapOf(
-                            "ident" to person.ident,
-                        ),
+                    mapOf(
+                        "ident" to person.ident,
+                    ),
                 ).asUpdate,
             )
         }
@@ -355,10 +357,10 @@ private class LagrePersonStatementBuilder(private val person: Person) : PersonVi
                     //language=PostgreSQL
                     statement = """INSERT INTO sak(uuid, person_ident) VALUES (:uuid, :person_ident) ON CONFLICT DO NOTHING""",
                     paramMap =
-                        mapOf(
-                            "uuid" to sak.id,
-                            "person_ident" to person.ident,
-                        ),
+                    mapOf(
+                        "uuid" to sak.id,
+                        "person_ident" to person.ident,
+                    ),
                 ).asUpdate,
             )
         }
