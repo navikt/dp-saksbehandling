@@ -243,7 +243,6 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
     internal class NotFoundException(msg: String) : RuntimeException(msg)
 
     override fun lagreOppgave(oppgave: Oppgave) {
-        println("***KAKTUS: " + OppaveStatementBuilder(oppgave).updateQueryActions.toString())
         using(sessionOf(ds)) { session ->
             session.transaction { tx ->
                 listOf(
@@ -253,7 +252,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     StegStatementBuilder(oppgave).updateQueryActions,
                     RelasjonStatementBuilder(oppgave).updateQueryActions,
                     SporingStatementBuilder(oppgave).updateQueryActions,
-                    OppaveStatementBuilder(oppgave).updateQueryActions,
+                    OppgaveStatementBuilder(oppgave).updateQueryActions,
                 ).flatten().forEach {
                     tx.run(it)
                 }

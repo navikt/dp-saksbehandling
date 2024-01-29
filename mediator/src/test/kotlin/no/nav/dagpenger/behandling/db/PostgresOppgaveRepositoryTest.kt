@@ -268,6 +268,7 @@ class PostgresOppgaveRepositoryTest {
                     oppgave.person shouldBe testOppgave.person
                     oppgave.opprettet.shouldBeWithin(1.milliseconds.toJavaDuration(), testOppgave.opprettet)
                     oppgave.tilstand shouldBe testOppgave.tilstand
+                    oppgave.emneknagger shouldBe testOppgave.emneknagger
                 }
             }
         }

@@ -40,13 +40,12 @@ data class Oppgave private constructor(
                     Saksbehandler(it)
                 },
             opprettet = opprettet,
-            // TODO fix
             emneknagger = emneknagger,
         )
     }
 
     fun accept(visitor: OppgaveVisitor) {
-        visitor.visit(uuid, opprettet, utføresAv, emptySet())
+        visitor.visit(uuid, opprettet, utføresAv, emneknagger)
         visitor.visit(behandling)
         behandling.accept(visitor)
     }

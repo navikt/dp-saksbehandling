@@ -25,7 +25,7 @@ interface StatementBuilder {
     val updateQueryActions: List<UpdateQueryAction>
 }
 
-internal class OppaveStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, StatementBuilder {
+internal class OppgaveStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, StatementBuilder {
     private lateinit var oppgaveUUID: UUID
     private lateinit var opprettet: LocalDateTime
     private var utføresAv: Saksbehandler? = null
@@ -57,7 +57,7 @@ internal class OppaveStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statem
             queryOf(
                 //language=PostgreSQL
                 """
-                INSERT INTO oppgave_emneknagger (oppgave_uuid, emneknagg)
+                INSERT INTO oppgave_emneknagg (oppgave_uuid, emneknagg)
                 VALUES (:oppgave_uuid, :emneknagg)
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
