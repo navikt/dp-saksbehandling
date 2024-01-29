@@ -15,12 +15,14 @@ data class Oppgave private constructor(
     private val behandling: Behandling,
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
+    val typer: Set<String>,
 ) : Behandlingsstatus by behandling {
-    constructor(uuid: UUID, behandling: Behandling) : this(
-        uuid,
-        behandling,
-        null,
-        LocalDateTime.now(),
+    constructor(uuid: UUID, behandling: Behandling, typer: Set<String> = emptySet()) : this(
+        uuid = uuid,
+        behandling = behandling,
+        utføresAv = null,
+        opprettet = LocalDateTime.now(),
+        typer = typer,
     )
 
     companion object {
@@ -30,12 +32,15 @@ data class Oppgave private constructor(
             utføresAv: String?,
             opprettet: LocalDateTime,
         ) = Oppgave(
-            uuid,
-            behandling,
-            utføresAv?.let {
-                Saksbehandler(it)
-            },
-            opprettet,
+            uuid = uuid,
+            behandling = behandling,
+            utføresAv =
+                utføresAv?.let {
+                    Saksbehandler(it)
+                },
+            opprettet = opprettet,
+            // TODO fix
+            typer = emptySet(),
         )
     }
 

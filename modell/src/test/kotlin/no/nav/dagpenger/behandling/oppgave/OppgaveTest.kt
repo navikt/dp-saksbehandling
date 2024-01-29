@@ -22,7 +22,21 @@ class OppgaveTest {
                 Person("02020256789"), testHendelse,
                 setOf<Steg<out Any>>(Steg.fastsettelse<String>("bar"), Steg.Vilkår("foo")), sak = Sak(),
             ),
+            setOf("a", "b"),
         ).steg("foo").id shouldBe "foo"
+    }
+
+    @Test
+    fun `skal kunne opprette oppgave med en eller flere typer`() {
+        Oppgave(
+            uuid = UUID.randomUUID(),
+            behandling =
+                Behandling(
+                    Person("02020256789"), testHendelse,
+                    setOf<Steg<out Any>>(Steg.fastsettelse<String>("bar"), Steg.Vilkår("foo")), sak = Sak(),
+                ),
+            typer = setOf("a", "b"),
+        ).typer shouldBe setOf("a", "b")
     }
 
     @Test
