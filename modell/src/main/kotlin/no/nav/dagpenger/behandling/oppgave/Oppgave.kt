@@ -15,14 +15,14 @@ data class Oppgave private constructor(
     private val behandling: Behandling,
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
-    val typer: Set<String>,
+    val emneknagger: Set<String>,
 ) : Behandlingsstatus by behandling {
-    constructor(uuid: UUID, behandling: Behandling, typer: Set<String> = emptySet()) : this(
+    constructor(uuid: UUID, behandling: Behandling, emneknagger: Set<String> = emptySet()) : this(
         uuid = uuid,
         behandling = behandling,
         utføresAv = null,
         opprettet = LocalDateTime.now(),
-        typer = typer,
+        emneknagger = emneknagger,
     )
 
     companion object {
@@ -31,6 +31,7 @@ data class Oppgave private constructor(
             behandling: Behandling,
             utføresAv: String?,
             opprettet: LocalDateTime,
+            emneknagger: Set<String>,
         ) = Oppgave(
             uuid = uuid,
             behandling = behandling,
@@ -40,12 +41,12 @@ data class Oppgave private constructor(
                 },
             opprettet = opprettet,
             // TODO fix
-            typer = emptySet(),
+            emneknagger = emneknagger,
         )
     }
 
     fun accept(visitor: OppgaveVisitor) {
-        visitor.visit(uuid, opprettet, utføresAv)
+        visitor.visit(uuid, opprettet, utføresAv, emptySet())
         visitor.visit(behandling)
         behandling.accept(visitor)
     }

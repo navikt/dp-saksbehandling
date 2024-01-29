@@ -164,11 +164,12 @@ class MediatorTest {
         }
 
         override fun visit(
-            oppgaveId: UUID,
+            oppgaveUUID: UUID,
             opprettet: LocalDateTime,
             utføresAv: Saksbehandler?,
+            emneknagger: Set<String>,
         ) {
-            this.oppgaveId = oppgaveId
+            this.oppgaveId = oppgaveUUID
         }
     }
 

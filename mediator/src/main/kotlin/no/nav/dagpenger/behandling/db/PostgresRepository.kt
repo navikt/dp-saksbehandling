@@ -243,6 +243,7 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
     internal class NotFoundException(msg: String) : RuntimeException(msg)
 
     override fun lagreOppgave(oppgave: Oppgave) {
+        println("***KAKTUS: " + OppaveStatementBuilder(oppgave).updateQueryActions.toString())
         using(sessionOf(ds)) { session ->
             session.transaction { tx ->
                 listOf(
@@ -274,10 +275,11 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                 ).map { row ->
                     val behandling: Behandling = hentBehandling(row.uuid("behandling_id"))
                     Oppgave.rehydrer(
-                        uuid,
-                        behandling,
-                        row.stringOrNull("utføres_av"),
-                        row.localDateTime("opprettet"),
+                        uuid = uuid,
+                        behandling = behandling,
+                        utføresAv = row.stringOrNull("utføres_av"),
+                        opprettet = row.localDateTime("opprettet"),
+                        emneknagger = session.hentEmneknaggerFor(uuid).toSet(),
                     )
                 }.asSingle,
             ) ?: throw IllegalArgumentException("Fant ikke oppgave med uuid=$uuid")
@@ -294,11 +296,13 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     """.trimIndent(),
                 ).map { row ->
                     val behandling: Behandling = hentBehandling(row.uuid("behandling_id"))
+                    val oppgaveUUID = row.uuid("uuid")
                     Oppgave.rehydrer(
-                        row.uuid("uuid"),
-                        behandling,
-                        row.stringOrNull("utføres_av"),
-                        row.localDateTime("opprettet"),
+                        uuid = oppgaveUUID,
+                        behandling = behandling,
+                        utføresAv = row.stringOrNull("utføres_av"),
+                        opprettet = row.localDateTime("opprettet"),
+                        emneknagger = session.hentEmneknaggerFor(oppgaveUUID).toSet(),
                     )
                 }.asList,
             )
@@ -319,17 +323,35 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
                     mapOf("fnr" to fnr),
                 ).map { row ->
                     val behandling: Behandling = hentBehandling(row.uuid("behandling_id"))
+                    val oppgaveUUID = row.uuid("uuid")
                     Oppgave.rehydrer(
-                        row.uuid("uuid"),
-                        behandling,
-                        row.stringOrNull("utføres_av"),
-                        row.localDateTime("opprettet"),
+                        uuid = oppgaveUUID,
+                        behandling = behandling,
+                        utføresAv = row.stringOrNull("utføres_av"),
+                        opprettet = row.localDateTime("opprettet"),
+                        emneknagger = session.hentEmneknaggerFor(oppgaveUUID).toSet(),
                     )
                 }.asList,
             )
         }
     }
 }
+
+private fun Session.hentEmneknaggerFor(oppgaveUUID: UUID) =
+    this.run(
+        queryOf(
+            //language=PostgreSQL
+            statement =
+                """
+                |SELECT emneknagg 
+                |FROM oppgave_emneknagg
+                |WHERE oppgave_uuid = :oppgave_uuid  
+                """.trimMargin(),
+            paramMap = mapOf("oppgave_uuid" to oppgaveUUID),
+        ).map { rad ->
+            rad.string("emneknagg")
+        }.asList,
+    )
 
 private class LagrePersonStatementBuilder(private val person: Person) : PersonVisitor {
     val queries =

@@ -27,7 +27,7 @@ class OppgaveTest {
     }
 
     @Test
-    fun `skal kunne opprette oppgave med en eller flere typer`() {
+    fun `skal kunne opprette oppgave med en eller flere emneknagger`() {
         Oppgave(
             uuid = UUID.randomUUID(),
             behandling =
@@ -35,8 +35,8 @@ class OppgaveTest {
                     Person("02020256789"), testHendelse,
                     setOf<Steg<out Any>>(Steg.fastsettelse<String>("bar"), Steg.Vilkår("foo")), sak = Sak(),
                 ),
-            typer = setOf("a", "b"),
-        ).typer shouldBe setOf("a", "b")
+            emneknagger = setOf("søknadsbehandling", "vurderAvslagPåMinsteinntekt"),
+        ).emneknagger shouldBe setOf("søknadsbehandling", "vurderAvslagPåMinsteinntekt")
     }
 
     @Test

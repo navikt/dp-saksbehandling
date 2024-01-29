@@ -26,9 +26,10 @@ interface StatementBuilder {
 }
 
 internal class OppaveStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, StatementBuilder {
-    private lateinit var oppgaveId: UUID
+    private lateinit var oppgaveUUID: UUID
     private lateinit var opprettet: LocalDateTime
     private var utføresAv: Saksbehandler? = null
+    private lateinit var emneknagger: Set<String>
     private lateinit var behandlingId: UUID
 
     init {
@@ -36,18 +37,36 @@ internal class OppaveStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statem
     }
 
     override fun visit(
-        oppgaveId: UUID,
+        oppgaveUUID: UUID,
         opprettet: LocalDateTime,
         utføresAv: Saksbehandler?,
+        emneknagger: Set<String>,
     ) {
-        this.oppgaveId = oppgaveId
+        this.oppgaveUUID = oppgaveUUID
         this.opprettet = opprettet
         this.utføresAv = utføresAv
+        this.emneknagger = emneknagger
     }
 
     override fun visit(behandling: Behandling) {
         this.behandlingId = behandling.uuid
     }
+
+    private val opprettOppgaveEmneknagger: List<UpdateQueryAction> =
+        this.emneknagger.map {
+            queryOf(
+                //language=PostgreSQL
+                """
+                INSERT INTO oppgave_emneknagger (oppgave_uuid, emneknagg)
+                VALUES (:oppgave_uuid, :emneknagg)
+                ON CONFLICT DO NOTHING
+                """.trimIndent(),
+                mapOf(
+                    "oppgave_uuid" to oppgaveUUID,
+                    "emneknagg" to it,
+                ),
+            ).asUpdate
+        }.toList()
 
     override val updateQueryActions: List<UpdateQueryAction> =
         listOf(
@@ -59,13 +78,13 @@ internal class OppaveStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, Statem
                 ON CONFLICT (uuid) DO UPDATE SET utføres_av = :utfores_av
                 """.trimIndent(),
                 mapOf(
-                    "uuid" to oppgaveId,
+                    "uuid" to oppgaveUUID,
                     "opprettet" to opprettet,
                     "utfores_av" to utføresAv?.ident,
                     "behandling_id" to behandlingId,
                 ),
             ).asUpdate,
-        )
+        ) + opprettOppgaveEmneknagger
 }
 
 internal class BehandlingStatementBuilder(oppgave: Oppgave) : OppgaveVisitor, StatementBuilder {

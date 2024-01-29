@@ -28,9 +28,10 @@ interface BehandlingVisitor {
 
 interface OppgaveVisitor : BehandlingVisitor {
     fun visit(
-        oppgaveId: UUID,
+        oppgaveUUID: UUID,
         opprettet: LocalDateTime,
         utføresAv: Saksbehandler?,
+        emneknagger: Set<String>,
     ) {}
 
     fun visit(behandling: Behandling) {}
