@@ -1,19 +1,24 @@
 package no.nav.dagpenger.behandling
 
-sealed class Opplysning(protected val opplysningstype: Opplysningstype) : Klassifiserbart by opplysningstype {
-    abstract fun bekreft(): Faktum
+sealed class Opplysning<T : Comparable<T>>(
+    val opplysningstype: Opplysningstype<T>,
+    val verdi: T,
+) : Klassifiserbart by opplysningstype {
+    abstract fun bekreft(): Faktum<T>
 
     fun avhengerAv() = opplysningstype.bestårAv()
 }
 
-class Etterlyst(opplysningstype: Opplysningstype) : Opplysning(opplysningstype) {
-    override fun bekreft() = Faktum(super.opplysningstype)
+class Hypotese<T : Comparable<T>>(
+    opplysningstype: Opplysningstype<T>,
+    verdi: T,
+) : Opplysning<T>(opplysningstype, verdi) {
+    override fun bekreft() = Faktum<T>(super.opplysningstype, verdi)
 }
 
-class Hypotese(opplysningstype: Opplysningstype) : Opplysning(opplysningstype) {
-    override fun bekreft() = Faktum(super.opplysningstype)
-}
-
-class Faktum(opplysningstype: Opplysningstype) : Opplysning(opplysningstype) {
+class Faktum<T : Comparable<T>>(
+    opplysningstype: Opplysningstype<T>,
+    verdi: T,
+) : Opplysning<T>(opplysningstype, verdi) {
     override fun bekreft() = this
 }

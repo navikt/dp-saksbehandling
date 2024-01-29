@@ -7,14 +7,15 @@ import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysninger
 import no.nav.dagpenger.behandling.Opplysningstype
 import org.junit.jupiter.api.Assertions.assertTrue
+import java.time.LocalDate
 
 class OpplysningSteg : No {
-    private lateinit var opplysning: Opplysning
+    private lateinit var opplysning: Opplysning<*>
     private val opplysninger = Opplysninger()
 
     init {
         Gitt("at vi har en hypotese") {
-            opplysning = Hypotese(Opplysningstype("Fødselsdato"))
+            opplysning = Hypotese(Opplysningstype<LocalDate>("Fødselsdato"), LocalDate.now())
         }
         Når("den blir bekreftet") {
             opplysning = opplysning.bekreft()
@@ -27,10 +28,10 @@ class OpplysningSteg : No {
             TODO()
         }
         Gitt("at vi har en hypotese om {string}") { type: String ->
-            opplysninger.leggTil(Hypotese(Opplysningstype(type)))
+            opplysninger.leggTil(Hypotese(Opplysningstype<LocalDate>(type), LocalDate.now()))
         }
         Så("kan vi utlede {string}") { type: String ->
-            assertTrue(opplysninger.har(Opplysningstype(type)))
+            assertTrue(opplysninger.har(Opplysningstype<LocalDate>(type)))
         }
     }
 }
