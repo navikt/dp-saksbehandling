@@ -34,7 +34,10 @@ class SøknadInnsendtHendelseTest {
     @Test
     fun `Ikke ferdig fordi vilkåret er oppfylt, men resten av stegene må utføres`() {
         (behandling.steg.single { it.id == "Oppfyller kravene til dagpenger" } as Steg.Vilkår).besvar(true, testSporing)
-        (behandling.steg.single { it.id == "Oppfyller kravet til minste inntekt" } as Steg.Vilkår).besvar(true, testSporing)
+        (behandling.steg.single { it.id == "Oppfyller kravet til minste inntekt" } as Steg.Vilkår).besvar(
+            true,
+            testSporing,
+        )
         behandling.erFerdig() shouldBe false
         behandling.utfall() shouldBe Utfall.Innvilgelse
     }
@@ -47,5 +50,10 @@ class SøknadInnsendtHendelseTest {
         )
         // TODO: behandling.erFerdig() shouldBe true
         behandling.utfall() shouldBe Utfall.Avslag
+    }
+
+    @Test
+    fun `Oppgaver basert på SøknadInnsendtHendelse får emneknagg Søknadsbehandling`() {
+        søknadInnsendtHendelse.oppgave(person).emneknagger.single() shouldBe "Søknadsbehandling"
     }
 }
