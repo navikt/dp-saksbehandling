@@ -24,6 +24,7 @@ class OpplysningerTest {
         assertEquals(3, opplysninger.size)
         assertTrue(opplysninger.har(minsteinntekt))
         assertTrue(opplysninger.har(alder))
+        assertTrue(opplysninger.har(vilkår))
     }
 
     @Test
