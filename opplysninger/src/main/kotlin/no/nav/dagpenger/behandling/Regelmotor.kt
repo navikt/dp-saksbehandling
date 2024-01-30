@@ -1,9 +1,6 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.regel.EnAvRegel
-import no.nav.dagpenger.behandling.regel.Multiplikasjon
 import no.nav.dagpenger.behandling.regel.Regel
-import no.nav.dagpenger.behandling.regel.StørreEnn
 
 class Regelmotor(
     private val regler: MutableMap<Opplysningstype<*>, Regel<*>> = mutableMapOf(),
@@ -24,29 +21,7 @@ class Regelmotor(
         }
     }
 
-    fun enAvRegel(
-        produserer: Opplysningstype<Boolean>,
-        vararg opplysningstype: Opplysningstype<Boolean>,
-    ): Regel<Boolean> {
-        return EnAvRegel(produserer, *opplysningstype).also { leggTil(produserer, it) }
-    }
-
-    fun multiplikasjon(
-        produserer: Opplysningstype<Double>,
-        vararg opplysningstype: Opplysningstype<Double>,
-    ): Regel<Double> {
-        return Multiplikasjon(produserer, *opplysningstype).also { leggTil(produserer, it) }
-    }
-
-    fun størreEnn(
-        produserer: Opplysningstype<Boolean>,
-        er: Opplysningstype<Double>,
-        størreEnn: Opplysningstype<Double>,
-    ): Regel<Boolean> {
-        return StørreEnn(produserer, er, størreEnn).also { leggTil(produserer, it) }
-    }
-
-    private fun leggTil(
+    internal fun leggTil(
         produserer: Opplysningstype<*>,
         regel: Regel<*>,
     ) {
