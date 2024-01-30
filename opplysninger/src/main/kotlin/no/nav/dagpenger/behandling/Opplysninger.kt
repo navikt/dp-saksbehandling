@@ -10,7 +10,7 @@ class Opplysninger(
 
     fun leggTil(opplysning: Opplysning<*>) {
         opplysninger.add(opplysning)
-        regelmotor.kjør(opplysning)
+        regelmotor.evaluer()
     }
 
     fun har(opplysningstype: Opplysningstype<*>) = opplysninger.any { it.er(opplysningstype) }

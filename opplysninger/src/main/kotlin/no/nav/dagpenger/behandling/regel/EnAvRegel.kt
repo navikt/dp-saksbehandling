@@ -2,7 +2,7 @@ package no.nav.dagpenger.behandling.regel
 
 import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysningstype
-import no.nav.dagpenger.behandling.Regelmotor
+import no.nav.dagpenger.behandling.Regelsett
 
 class EnAvRegel(
     produserer: Opplysningstype<Boolean>,
@@ -13,9 +13,9 @@ class EnAvRegel(
     }
 }
 
-fun Regelmotor.enAvRegel(
+fun Regelsett.enAvRegel(
     produserer: Opplysningstype<Boolean>,
     vararg opplysningstype: Opplysningstype<Boolean>,
 ): Regel<Boolean> {
-    return EnAvRegel(produserer, *opplysningstype).also { leggTil(produserer, it) }
+    return EnAvRegel(produserer, *opplysningstype).also { leggTil(it) }
 }

@@ -14,6 +14,8 @@ abstract class Regel<T : Comparable<T>>(
 
     protected abstract fun kjør(opplysninger: List<Opplysning<*>>): T
 
+    fun produserer(opplysningstype: Opplysningstype<*>) = produserer.er(opplysningstype)
+
     fun blurp(opplysninger: List<Opplysning<*>>): Opplysning<T> {
         return Hypotese(produserer, kjør(opplysninger))
     }

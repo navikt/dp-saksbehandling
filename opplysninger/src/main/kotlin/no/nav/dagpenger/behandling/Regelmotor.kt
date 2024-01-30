@@ -3,30 +3,58 @@ package no.nav.dagpenger.behandling
 import no.nav.dagpenger.behandling.regel.Regel
 
 class Regelmotor(
-    private val regler: MutableMap<Opplysningstype<*>, Regel<*>> = mutableMapOf(),
+    vararg regelsett: Regelsett,
 ) {
+    private val muligeRegler: MutableList<Regel<*>> = regelsett.flatMap { it.regler }.toMutableList()
+    private val plan: MutableList<Regel<*>> = mutableListOf()
+    private val kjørteRegler: MutableList<Regel<*>> = mutableListOf()
+
     private lateinit var opplysninger: Opplysninger
 
     fun registrer(opplysninger: Opplysninger) {
         this.opplysninger = opplysninger
     }
 
-    fun kjør(opplysning: Opplysning<*>) {
+    fun evaluer() {
         // TODO: Skriv om til EligibilityEngine fra DSL boka til Fowler
-        val regelSomSkalKjøres = regler.filter { it.value.kanKjøre(opplysninger) }
-        regelSomSkalKjøres.forEach {
-            val verdi = it.value.blurp(opplysninger)
-            opplysninger.leggTil(verdi)
-            // TODO: Finn ut om opplysningen skal bekreftes til faktum (om den er basert på faktum)
+
+        aktiverRegler()
+        while (plan.size > 0) {
+            kjørRegelPlan()
+            aktiverRegler()
+        }
+    }
+
+    private fun kjørRegelPlan() {
+        while (plan.size > 0) {
+            kjør(plan.first())
+        }
+    }
+
+    private fun kjør(regel: Regel<*>) {
+        val opplysning = regel.blurp(opplysninger)
+        kjørteRegler.add(regel)
+        plan.remove(regel)
+        opplysninger.leggTil(opplysning)
+    }
+
+    private fun aktiverRegler() {
+        muligeRegler.filter {
+            it.kanKjøre(opplysninger)
+        }.forEach {
+            plan.add(it)
+        }
+        plan.forEach {
+            muligeRegler.remove(it)
         }
     }
 
     fun trenger(opplysningstype: Opplysningstype<*>): Set<Opplysningstype<*>> {
-        return when (regler.containsKey(opplysningstype)) {
-            false -> return emptySet()
-            true ->
-                regler[opplysningstype]!!.avhengerAv.map {
-                    if (regler[it] != null) {
+        return when (val regel = finn(opplysningstype)) {
+            null -> return emptySet()
+            else ->
+                regel.avhengerAv.map {
+                    if (finn(it) != null) {
                         trenger(it)
                     } else {
                         setOf(it)
@@ -35,11 +63,15 @@ class Regelmotor(
         }
     }
 
-    internal fun leggTil(
-        produserer: Opplysningstype<*>,
-        regel: Regel<*>,
-    ) {
-        if (regler.containsKey(produserer)) throw IllegalStateException("Regel for $produserer finnes allerede")
-        regler[produserer] = regel
+    private fun finn(opplysningstype: Opplysningstype<*>): Regel<*>? {
+        return muligeRegler.find { it.produserer(opplysningstype) }
+    }
+}
+
+class Regelsett(
+    internal val regler: MutableList<Regel<*>> = mutableListOf(),
+) {
+    fun leggTil(regel: Regel<*>) {
+        regler.add(regel)
     }
 }

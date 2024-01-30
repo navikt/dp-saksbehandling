@@ -2,7 +2,7 @@ package no.nav.dagpenger.behandling.regel
 
 import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysningstype
-import no.nav.dagpenger.behandling.Regelmotor
+import no.nav.dagpenger.behandling.Regelsett
 
 private class Multiplikasjon(
     produserer: Opplysningstype<Double>,
@@ -24,9 +24,9 @@ private class Multiplikasjon(
     }
 }
 
-fun Regelmotor.multiplikasjon(
+fun Regelsett.multiplikasjon(
     produserer: Opplysningstype<Double>,
     vararg opplysningstype: Opplysningstype<Double>,
 ): Regel<Double> {
-    return Multiplikasjon(produserer, *opplysningstype).also { leggTil(produserer, it) }
+    return Multiplikasjon(produserer, *opplysningstype).also { leggTil(it) }
 }
