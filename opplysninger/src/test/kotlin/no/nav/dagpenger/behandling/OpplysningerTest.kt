@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -33,17 +34,16 @@ class OpplysningerTest {
 
         val regelmotor = Regelmotor()
 
-        // Disse bør få utledesAv fra reglene
         val nedreTerskel = Opplysningstype<Double>("Nedre terskel")
         regelmotor.multiplikasjon(nedreTerskel, nedreTerskelFaktor, grunnbeløp)
 
         val øvreTerskel = Opplysningstype<Double>("Øvre terskel")
         regelmotor.multiplikasjon(øvreTerskel, øvreTerskelFaktor, grunnbeløp)
 
-        val overNedreTerskel = Opplysningstype<Boolean>("Over nedre terskel")
+        val overNedreTerskel = Opplysningstype<Boolean>("Inntekt er over nedre terskel")
         regelmotor.størreEnn(overNedreTerskel, inntekt, nedreTerskel)
 
-        val overØvreTerskel = Opplysningstype<Boolean>("Over øvre terskel")
+        val overØvreTerskel = Opplysningstype<Boolean>("Inntekt er over øvre terskel")
         regelmotor.størreEnn(overØvreTerskel, inntekt, øvreTerskel)
 
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
@@ -65,10 +65,18 @@ class OpplysningerTest {
         opplysninger.leggTil(Faktum(inntekt, 321321.0))
         assertEquals(1, opplysninger.trenger(minsteinntekt).size)
 
-        opplysninger.leggTil(Faktum(grunnbeløp, 123123.0))
+        opplysninger.leggTil(Faktum(grunnbeløp, 118620.0))
         assertEquals(0, opplysninger.trenger(minsteinntekt).size)
 
         assertTrue(opplysninger.har(minsteinntekt))
         assertTrue(opplysninger.find { it.er(minsteinntekt) }?.verdi as Boolean)
+
+        opplysninger.leggTil(Faktum(minsteinntekt, false))
+
+        opplysninger.forEach { println(it) }
+        assertTrue(opplysninger.har(minsteinntekt))
+        assertFalse(opplysninger.findLast { it.er(minsteinntekt) }?.verdi as Boolean)
+
+        opplysninger.forEach { println(it) }
     }
 }

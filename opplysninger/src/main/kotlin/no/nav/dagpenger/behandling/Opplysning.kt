@@ -6,16 +6,14 @@ sealed class Opplysning<T : Comparable<T>>(
 ) : Klassifiserbart by opplysningstype {
     abstract fun bekreft(): Faktum<T>
 
-    fun avhengerAv() = opplysningstype.bestårAv()
-
-    override fun toString() = "Opplysning om $opplysningstype, verdi: $verdi"
+    override fun toString() = "${javaClass.simpleName} om $opplysningstype har verdi: $verdi"
 }
 
 class Hypotese<T : Comparable<T>>(
     opplysningstype: Opplysningstype<T>,
     verdi: T,
 ) : Opplysning<T>(opplysningstype, verdi) {
-    override fun bekreft() = Faktum<T>(super.opplysningstype, verdi)
+    override fun bekreft() = Faktum(super.opplysningstype, verdi)
 }
 
 class Faktum<T : Comparable<T>>(
