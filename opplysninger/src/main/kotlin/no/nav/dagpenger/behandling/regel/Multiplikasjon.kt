@@ -4,7 +4,7 @@ import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysningstype
 import no.nav.dagpenger.behandling.Regelsett
 
-private class Multiplikasjon(
+internal class Multiplikasjon(
     produserer: Opplysningstype<Double>,
     private vararg val opplysningstyper: Opplysningstype<Double>,
 ) : Regel<Double>(produserer, opplysningstyper.toList()) {

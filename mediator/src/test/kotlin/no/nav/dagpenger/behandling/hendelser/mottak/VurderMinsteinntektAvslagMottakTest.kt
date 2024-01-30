@@ -16,7 +16,7 @@ class VurderMinsteinntektAvslagMottakTest {
     fun `Skal behandle manuell_behandling hendelser grunnet mulig gjenopptak`() {
         testRapid.sendTestMessage(testMessageMuligGjenopptak)
 
-        //TODO
+        // TODO
         // hent oppgave basert på søknad-id
         // insert oppgave_emneknagg for vurderAvslagPåMinsteinntekt
     }

@@ -4,7 +4,7 @@ import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysningstype
 import no.nav.dagpenger.behandling.Regelsett
 
-class StørreEnn(
+internal class StørreEnn(
     produserer: Opplysningstype<Boolean>,
     private val a: Opplysningstype<Double>,
     private val b: Opplysningstype<Double>,

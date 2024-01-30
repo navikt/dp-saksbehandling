@@ -54,11 +54,11 @@ class Regelmotor(
 
     // @todo: Lage graf representasjon av denne? Som kan traverseres, spørres om hvilke noder som er tilgjengelige fra en node, etc.
     fun trenger(opplysningstype: Opplysningstype<*>): Set<Opplysningstype<*>> {
-        return when (val regel = finn(opplysningstype)) {
+        return when (val regel = finnRegel(opplysningstype)) {
             null -> return emptySet()
             else ->
                 regel.avhengerAv.map {
-                    if (finn(it) != null) {
+                    if (finnRegel(it) != null) {
                         trenger(it)
                     } else {
                         setOf(it)
@@ -67,7 +67,7 @@ class Regelmotor(
         }
     }
 
-    private fun finn(opplysningstype: Opplysningstype<*>): Regel<*>? {
+    private fun finnRegel(opplysningstype: Opplysningstype<*>): Regel<*>? {
         return muligeRegler.find { it.produserer(opplysningstype) }
     }
 }
