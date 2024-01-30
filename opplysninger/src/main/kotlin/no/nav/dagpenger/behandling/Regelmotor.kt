@@ -8,16 +8,19 @@ class Regelmotor(
     private val muligeRegler: MutableList<Regel<*>> = regelsett.flatMap { it.regler }.toMutableList()
     private val plan: MutableList<Regel<*>> = mutableListOf()
     private val kjørteRegler: MutableList<Regel<*>> = mutableListOf()
-
     private lateinit var opplysninger: Opplysninger
+
+    init {
+        require(muligeRegler.groupBy { it.produserer }.all { it.value.size == 1 }) {
+            "Regelsett inneholder flere regler som produserer samme opplysningstype."
+        }
+    }
 
     fun registrer(opplysninger: Opplysninger) {
         this.opplysninger = opplysninger
     }
 
     fun evaluer() {
-        // TODO: Skriv om til EligibilityEngine fra DSL boka til Fowler
-
         aktiverRegler()
         while (plan.size > 0) {
             kjørRegelPlan()
@@ -32,7 +35,7 @@ class Regelmotor(
     }
 
     private fun kjør(regel: Regel<*>) {
-        val opplysning = regel.blurp(opplysninger)
+        val opplysning = regel.lagProdukt(opplysninger)
         kjørteRegler.add(regel)
         plan.remove(regel)
         opplysninger.leggTil(opplysning)
@@ -49,6 +52,7 @@ class Regelmotor(
         }
     }
 
+    // @todo: Lage graf representasjon av denne? Som kan traverseres, spørres om hvilke noder som er tilgjengelige fra en node, etc.
     fun trenger(opplysningstype: Opplysningstype<*>): Set<Opplysningstype<*>> {
         return when (val regel = finn(opplysningstype)) {
             null -> return emptySet()

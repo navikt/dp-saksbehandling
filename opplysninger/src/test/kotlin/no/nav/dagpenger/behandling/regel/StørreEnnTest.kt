@@ -16,7 +16,7 @@ class StørreEnnTest {
             )
 
         val utledet =
-            regel.blurp(
+            regel.lagProdukt(
                 listOf(
                     Faktum(Opplysningstype<Double>("A"), 2.0),
                     Faktum(Opplysningstype<Double>("B"), 1.0),
