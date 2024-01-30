@@ -2,7 +2,7 @@ package no.nav.dagpenger.behandling.regel
 
 import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysningstype
-import no.nav.dagpenger.behandling.Regelmotor
+import no.nav.dagpenger.behandling.Regelsett
 
 class StørreEnn(
     produserer: Opplysningstype<Boolean>,
@@ -21,10 +21,10 @@ class StørreEnn(
     }
 }
 
-fun Regelmotor.størreEnn(
+fun Regelsett.størreEnn(
     produserer: Opplysningstype<Boolean>,
     er: Opplysningstype<Double>,
     størreEnn: Opplysningstype<Double>,
 ): Regel<Boolean> {
-    return StørreEnn(produserer, er, størreEnn).also { leggTil(produserer, it) }
+    return StørreEnn(produserer, er, størreEnn).also { leggTil(it) }
 }

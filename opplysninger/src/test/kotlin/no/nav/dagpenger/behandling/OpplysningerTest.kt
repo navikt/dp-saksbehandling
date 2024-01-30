@@ -36,24 +36,24 @@ class OpplysningerTest {
         val inntekt = Opplysningstype<Double>("Inntekt")
         val grunnbeløp = Opplysningstype<Double>("Grunnbeløp")
 
-        val regelmotor = Regelmotor()
+        val regelsett = Regelsett()
 
         val nedreTerskel = Opplysningstype<Double>("Inntektskrav for nedre terskel (1.5G)")
-        regelmotor.multiplikasjon(nedreTerskel, nedreTerskelFaktor, grunnbeløp)
+        regelsett.multiplikasjon(nedreTerskel, nedreTerskelFaktor, grunnbeløp)
 
         val øvreTerskel = Opplysningstype<Double>("Inntektskrav for øvre terskel (3G)")
-        regelmotor.multiplikasjon(øvreTerskel, øvreTerskelFaktor, grunnbeløp)
+        regelsett.multiplikasjon(øvreTerskel, øvreTerskelFaktor, grunnbeløp)
 
         val overNedreTerskel = Opplysningstype<Boolean>("Inntekt er over nedre terskel (1.5G)")
-        regelmotor.størreEnn(overNedreTerskel, inntekt, nedreTerskel)
+        regelsett.størreEnn(overNedreTerskel, inntekt, nedreTerskel)
 
         val overØvreTerskel = Opplysningstype<Boolean>("Inntekt er over øvre terskel (3G)")
-        regelmotor.størreEnn(overØvreTerskel, inntekt, øvreTerskel)
+        regelsett.størreEnn(overØvreTerskel, inntekt, øvreTerskel)
 
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
-        regelmotor.enAvRegel(minsteinntekt, overNedreTerskel, overØvreTerskel)
+        regelsett.enAvRegel(minsteinntekt, overNedreTerskel, overØvreTerskel)
 
-        val opplysninger = Opplysninger(regelmotor)
+        val opplysninger = Opplysninger(Regelmotor(regelsett))
         val actual = opplysninger.trenger(minsteinntekt)
         assertEquals(4, actual.size)
         assertEquals(setOf(inntekt, nedreTerskelFaktor, grunnbeløp, øvreTerskelFaktor), actual)
@@ -78,7 +78,5 @@ class OpplysningerTest {
         opplysninger.forEach { println(it) }
         assertTrue(opplysninger.har(minsteinntekt))
         assertFalse(opplysninger.findLast { it.er(minsteinntekt) }?.verdi as Boolean)
-
-        opplysninger.forEach { println(it) }
     }
 }
