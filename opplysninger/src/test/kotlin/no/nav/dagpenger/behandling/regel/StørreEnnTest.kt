@@ -39,4 +39,17 @@ class StørreEnnTest {
 
         assertFalse(utledet.verdi)
     }
+
+    @Test
+    fun `mangler enn`() {
+        val utledet =
+            regel.lagProdukt(
+                listOf(
+                    Faktum(Opplysningstype<Double>("A"), 1.0),
+                    Faktum(Opplysningstype<Double>("B"), 2.0),
+                ),
+            )
+
+        assertFalse(utledet.verdi)
+    }
 }

@@ -10,14 +10,9 @@ internal class StørreEnn(
     private val b: Opplysningstype<Double>,
 ) : Regel<Boolean>(produserer, listOf(a, b)) {
     override fun kjør(opplysninger: List<Opplysning<*>>): Boolean {
-        val verdi =
-            opplysninger.filter { it.er(a) || it.er(b) }.let { opplysninger ->
-                val a = opplysninger.find { it.er(a) }?.verdi as Double
-                val b = opplysninger.find { it.er(b) }?.verdi as Double
-
-                a > b
-            }
-        return verdi
+        val a = opplysninger.find { opplysning -> opplysning.er(a) }?.verdi as Double
+        val b = opplysninger.find { opplysning -> opplysning.er(b) }?.verdi as Double
+        return a > b
     }
 }
 
