@@ -31,31 +31,29 @@ class OpplysningerTest {
     fun `finn alle løvnoder som mangler`() {
         val vilkår = Opplysningstype<Boolean>("Vilkår")
 
-        val nedreTerskelFaktor = Opplysningstype<Double>("Nedre inntektsterskel")
-        val øvreTerskelFaktor = Opplysningstype<Double>("Øvre inntektsterskel")
+        val nedreTerskelFaktor = Opplysningstype<Double>("Nedre terskel (1.5G)")
+        val øvreTerskelFaktor = Opplysningstype<Double>("Øvre terskel (1.5G)")
         val inntekt = Opplysningstype<Double>("Inntekt")
         val grunnbeløp = Opplysningstype<Double>("Grunnbeløp")
 
         val regelmotor = Regelmotor()
 
-        val nedreTerskel = Opplysningstype<Double>("Nedre terskel")
+        val nedreTerskel = Opplysningstype<Double>("Inntektskrav for nedre terskel (1.5G)")
         regelmotor.multiplikasjon(nedreTerskel, nedreTerskelFaktor, grunnbeløp)
 
-        val øvreTerskel = Opplysningstype<Double>("Øvre terskel")
+        val øvreTerskel = Opplysningstype<Double>("Inntektskrav for øvre terskel (3G)")
         regelmotor.multiplikasjon(øvreTerskel, øvreTerskelFaktor, grunnbeløp)
 
-        val overNedreTerskel = Opplysningstype<Boolean>("Inntekt er over nedre terskel")
+        val overNedreTerskel = Opplysningstype<Boolean>("Inntekt er over nedre terskel (1.5G)")
         regelmotor.størreEnn(overNedreTerskel, inntekt, nedreTerskel)
 
-        val overØvreTerskel = Opplysningstype<Boolean>("Inntekt er over øvre terskel")
+        val overØvreTerskel = Opplysningstype<Boolean>("Inntekt er over øvre terskel (3G)")
         regelmotor.størreEnn(overØvreTerskel, inntekt, øvreTerskel)
 
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
         regelmotor.enAvRegel(minsteinntekt, overNedreTerskel, overØvreTerskel)
 
         val opplysninger = Opplysninger(regelmotor)
-
-        // Finn alle opplysninger som ikke kan utledes (har ikke andre avhengigheter) og mangler
         val actual = opplysninger.trenger(minsteinntekt)
         assertEquals(4, actual.size)
         assertEquals(listOf(inntekt, nedreTerskelFaktor, grunnbeløp, øvreTerskelFaktor), actual)

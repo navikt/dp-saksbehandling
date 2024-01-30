@@ -1,6 +1,7 @@
-package no.nav.dagpenger.behandling
+package no.nav.dagpenger.behandling.regel
 
-import no.nav.dagpenger.behandling.regel.StørreEnn
+import no.nav.dagpenger.behandling.Faktum
+import no.nav.dagpenger.behandling.Opplysningstype
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
