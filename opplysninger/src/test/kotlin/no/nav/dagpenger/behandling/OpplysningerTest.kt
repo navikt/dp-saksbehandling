@@ -46,7 +46,6 @@ class OpplysningerTest {
         val overØvreTerskel = Opplysningstype<Boolean>("Over øvre terskel")
         regelmotor.størreEnn(overØvreTerskel, inntekt, øvreTerskel)
 
-        // val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår, utledesAv = mutableSetOf(overNedreTerskel, overØvreTerskel))
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
         regelmotor.enAvRegel(minsteinntekt, overNedreTerskel, overØvreTerskel)
 
