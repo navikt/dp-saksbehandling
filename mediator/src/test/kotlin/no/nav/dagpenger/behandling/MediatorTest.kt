@@ -190,32 +190,6 @@ class MediatorTest {
     }
 
     @Test
-    fun `Skal sende ut behov om minsteinntektvurdering ved SøknadInnsendtHendelse`() {
-        val virkningsDato = LocalDate.of(2021, 1, 1)
-        mediator.behandle(
-            SøknadInnsendtHendelse(
-                søknadId = UUID.randomUUID(),
-                journalpostId = "123",
-                ident = testIdent,
-                innsendtDato = virkningsDato,
-            ),
-        )
-        testRapid.inspektør.size shouldBe 1
-        val event = testRapid.inspektør.message(0)
-        val partitionKey = testRapid.inspektør.key(0)
-
-        partitionKey shouldBe ident
-        event["@event_name"].asText() shouldBe "behov"
-        shouldNotThrowAny {
-            event["@behov"].asIterable().single().asText() shouldBe "VurderingAvMinsteInntekt"
-            event["ident"].asText() shouldBe testIdent
-            event["virkningsdato"].asLocalDate() shouldBe virkningsDato
-            event["oppgaveUUID"].asUUID()
-            event["stegUUID"].asUUID()
-        }
-    }
-
-    @Test
     fun `Publiserer melding rettighet_behandlet_hendelse når behandlingen er ferdig`() {
         val hendelse =
             SøknadInnsendtHendelse(
@@ -248,9 +222,9 @@ class MediatorTest {
             },
         )
 
-        testRapid.inspektør.size shouldBe 3
-        val event = testRapid.inspektør.message(1)
-        val partitionKey = testRapid.inspektør.key(1)
+        testRapid.inspektør.size shouldBe 2
+        val event = testRapid.inspektør.message(0)
+        val partitionKey = testRapid.inspektør.key(0)
 
         partitionKey shouldBe ident
         event["@event_name"].asText() shouldBe "rettighet_behandlet_hendelse"
