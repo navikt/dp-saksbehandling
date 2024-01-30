@@ -3,6 +3,7 @@ buildscript { repositories { mavenCentral() } }
 plugins {
     id("common")
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 val githubUser: String? by project
@@ -51,10 +52,15 @@ application {
     mainClass.set("no.nav.dagpenger.behandling.AppKt")
 }
 
+/*
 tasks.jar {
-    dependsOn(":openapi:jar")
     manifest { attributes["Main-Class"] = application.mainClass }
+    dependsOn(":openapi:jar")
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}*/
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    mergeServiceFiles()
 }
