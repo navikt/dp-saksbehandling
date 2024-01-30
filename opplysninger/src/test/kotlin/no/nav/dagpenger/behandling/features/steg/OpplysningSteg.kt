@@ -6,12 +6,13 @@ import no.nav.dagpenger.behandling.Hypotese
 import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysninger
 import no.nav.dagpenger.behandling.Opplysningstype
+import no.nav.dagpenger.behandling.Regelmotor
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.time.LocalDate
 
 class OpplysningSteg : No {
     private lateinit var opplysning: Opplysning<*>
-    private val opplysninger = Opplysninger()
+    private val opplysninger = Opplysninger(Regelmotor())
 
     init {
         Gitt("at vi har en hypotese") {

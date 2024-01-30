@@ -7,6 +7,8 @@ sealed class Opplysning<T : Comparable<T>>(
     abstract fun bekreft(): Faktum<T>
 
     fun avhengerAv() = opplysningstype.bestårAv()
+
+    override fun toString() = "Opplysning om $opplysningstype, verdi: $verdi"
 }
 
 class Hypotese<T : Comparable<T>>(

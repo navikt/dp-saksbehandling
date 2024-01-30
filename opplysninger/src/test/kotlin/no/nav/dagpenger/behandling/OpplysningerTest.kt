@@ -11,7 +11,7 @@ class OpplysningerTest {
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
         val alder = Opplysningstype("Alder", vilkår)
 
-        val opplysninger = Opplysninger()
+        val opplysninger = Opplysninger(Regelmotor())
 
         opplysninger.leggTil(Faktum(minsteinntekt, true))
         opplysninger.leggTil(Faktum(alder, true))
@@ -31,21 +31,26 @@ class OpplysningerTest {
         val inntekt = Opplysningstype<Double>("Inntekt")
         val grunnbeløp = Opplysningstype<Double>("Grunnbeløp")
 
+        val regelmotor = Regelmotor()
+
         // Disse bør få utledesAv fra reglene
-        val nedreTerskel =
-            Opplysningstype<Double>("Nedre terskel", utledesAv = mutableSetOf(nedreTerskelFaktor, grunnbeløp))
-        val øvreTerskel =
-            Opplysningstype<Double>("Øvre terskel", utledesAv = mutableSetOf(øvreTerskelFaktor, grunnbeløp))
-        val overNedreTerskel =
-            Opplysningstype<Boolean>("Over nedre terskel", utledesAv = mutableSetOf(nedreTerskel, inntekt))
-        val overØvreTerskel =
-            Opplysningstype<Boolean>("Over øvre terskel", utledesAv = mutableSetOf(øvreTerskel, inntekt))
+        val nedreTerskel = Opplysningstype<Double>("Nedre terskel")
+        regelmotor.multiplikasjon(nedreTerskel, nedreTerskelFaktor, grunnbeløp)
+
+        val øvreTerskel = Opplysningstype<Double>("Øvre terskel")
+        regelmotor.multiplikasjon(øvreTerskel, øvreTerskelFaktor, grunnbeløp)
+
+        val overNedreTerskel = Opplysningstype<Boolean>("Over nedre terskel")
+        regelmotor.størreEnn(overNedreTerskel, inntekt, nedreTerskel)
+
+        val overØvreTerskel = Opplysningstype<Boolean>("Over øvre terskel")
+        regelmotor.størreEnn(overØvreTerskel, inntekt, øvreTerskel)
 
         // val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår, utledesAv = mutableSetOf(overNedreTerskel, overØvreTerskel))
-        val minsteinntekt =
-            Opplysningstype("Minsteinntekt", vilkår, regel = EnAvRegel(overNedreTerskel, overØvreTerskel))
+        val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
+        regelmotor.enAvRegel(minsteinntekt, overNedreTerskel, overØvreTerskel)
 
-        val opplysninger = Opplysninger()
+        val opplysninger = Opplysninger(regelmotor)
 
         // Finn alle opplysninger som ikke kan utledes (har ikke andre avhengigheter) og mangler
         val actual = opplysninger.trenger(minsteinntekt)
