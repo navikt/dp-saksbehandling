@@ -31,11 +31,7 @@ class Opplysningstype<T : Comparable<T>>(
         return navn
     }
 
-    override fun equals(other: Any?): Boolean = other is Opplysningstype<*> && other.navn == this.navn && other.parent == this.parent
+    override fun equals(other: Any?): Boolean = other is Opplysningstype<*> && other.navn == this.navn
 
-    override fun hashCode(): Int {
-        var result = navn.hashCode()
-        result = 31 * result + (parent?.hashCode() ?: 0)
-        return result
-    }
+    override fun hashCode() = navn.hashCode() * 31
 }
