@@ -16,5 +16,5 @@ class Opplysninger(
     fun har(opplysningstype: Opplysningstype<*>) = opplysninger.any { it.er(opplysningstype) }
 
     // TODO: Flytt bestårAv() til regel(motor)
-    fun trenger(opplysningstype: Opplysningstype<*>) = opplysningstype.bestårAv().filter { !har(it) }
+    fun trenger(opplysningstype: Opplysningstype<*>) = regelmotor.trenger(opplysningstype)
 }

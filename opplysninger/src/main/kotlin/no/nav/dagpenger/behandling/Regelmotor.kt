@@ -21,12 +21,25 @@ class Regelmotor(
         }
     }
 
+    fun trenger(opplysningstype: Opplysningstype<*>): Set<Opplysningstype<*>> {
+        return when (regler.containsKey(opplysningstype)) {
+            false -> return emptySet()
+            true ->
+                regler[opplysningstype]!!.avhengerAv.map {
+                    if (regler[it] != null) {
+                        trenger(it)
+                    } else {
+                        setOf(it)
+                    }
+                }.flatten().filterNot { opplysninger.har(it) }.toSet()
+        }
+    }
+
     internal fun leggTil(
         produserer: Opplysningstype<*>,
         regel: Regel<*>,
     ) {
         if (regler.containsKey(produserer)) throw IllegalStateException("Regel for $produserer finnes allerede")
-        produserer.utledesAv.addAll(regel.avhengerAv)
         regler[produserer] = regel
     }
 }

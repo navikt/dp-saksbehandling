@@ -8,19 +8,10 @@ class Opplysningstype<T : Comparable<T>>(
     private val navn: String,
     private val parent: Opplysningstype<T>? = null,
     private val child: MutableSet<Opplysningstype<*>> = mutableSetOf(),
-    val utledesAv: MutableSet<Opplysningstype<*>> = mutableSetOf(),
 ) : Klassifiserbart {
     init {
         parent?.child?.add(this)
     }
-
-    fun bestårAv(): Set<Opplysningstype<*>> =
-        (
-            utledesAv.toSet() +
-                utledesAv.map {
-                    it.bestårAv()
-                }.flatten()
-        ).filter { it.utledesAv.isEmpty() }.toSet()
 
     override fun er(type: Opplysningstype<*>): Boolean {
         return navn == type.navn || parent?.er(type) ?: false

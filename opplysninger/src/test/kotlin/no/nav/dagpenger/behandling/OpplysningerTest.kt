@@ -56,7 +56,7 @@ class OpplysningerTest {
         val opplysninger = Opplysninger(regelmotor)
         val actual = opplysninger.trenger(minsteinntekt)
         assertEquals(4, actual.size)
-        assertEquals(listOf(inntekt, nedreTerskelFaktor, grunnbeløp, øvreTerskelFaktor), actual)
+        assertEquals(setOf(inntekt, nedreTerskelFaktor, grunnbeløp, øvreTerskelFaktor), actual)
 
         opplysninger.leggTil(Faktum(nedreTerskelFaktor, 1.5))
         assertEquals(3, opplysninger.trenger(minsteinntekt).size)
