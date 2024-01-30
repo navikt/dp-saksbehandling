@@ -7,4 +7,5 @@ dependencies {
     testImplementation("io.cucumber:cucumber-java8:$cucumberVersion")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:$cucumberVersion")
     testImplementation("org.junit.platform:junit-platform-suite:1.10.1")
+    testImplementation(libs.kotest.assertions.core)
 }

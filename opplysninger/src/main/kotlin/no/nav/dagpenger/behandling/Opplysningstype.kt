@@ -4,7 +4,7 @@ interface Klassifiserbart {
     fun er(type: Opplysningstype<*>): Boolean
 }
 
-data class Opplysningstype<T : Comparable<T>>(
+class Opplysningstype<T : Comparable<T>>(
     private val navn: String,
     private val parent: Opplysningstype<T>? = null,
     private val child: MutableSet<Opplysningstype<*>> = mutableSetOf(),
@@ -31,6 +31,14 @@ data class Opplysningstype<T : Comparable<T>>(
     override fun toString(): String {
         // TODO: Det er noe muffens med hierarki og data class
         return navn
+    }
+
+    override fun equals(other: Any?): Boolean = other is Opplysningstype<*> && other.navn == this.navn && other.parent == this.parent
+
+    override fun hashCode(): Int {
+        var result = navn.hashCode()
+        result = 31 * result + (parent?.hashCode() ?: 0)
+        return result
     }
 }
 

@@ -2,7 +2,6 @@ package no.nav.dagpenger.behandling
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 import kotlin.test.assertEquals
 
 class OpplysningerTest {
@@ -11,9 +10,12 @@ class OpplysningerTest {
         val vilkår = Opplysningstype<Boolean>("Vilkår")
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
         val alder = Opplysningstype("Alder", vilkår)
-        val fødselsdato = Opplysningstype<LocalDate>("Fødselsdato")
 
         val opplysninger = Opplysninger()
+
+        opplysninger.leggTil(Faktum(minsteinntekt, true))
+        opplysninger.leggTil(Faktum(alder, true))
+        opplysninger.leggTil(Faktum(vilkår, true))
 
         assertEquals(3, opplysninger.size)
         assertTrue(opplysninger.har(minsteinntekt))
