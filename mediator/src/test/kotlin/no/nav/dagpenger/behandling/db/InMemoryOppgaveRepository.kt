@@ -65,5 +65,9 @@ class InMemoryOppgaveRepository : OppgaveRepository {
 
     override fun hentOppgaver() = oppgaver
 
+    override fun hentOppgaveFor(søknadUUID: UUID): Oppgave? {
+        TODO("Not yet implemented")
+    }
+
     override fun hentOppgaverFor(fnr: String) = oppgaver.filter { it.person.ident == fnr }
 }

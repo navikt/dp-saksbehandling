@@ -308,6 +308,10 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         }
     }
 
+    override fun hentOppgaveFor(søknadUUID: UUID): Oppgave? {
+        TODO("Not yet implemented")
+    }
+
     override fun hentOppgaverFor(fnr: String): List<Oppgave> {
         return using(sessionOf(ds)) { session ->
             session.run(
