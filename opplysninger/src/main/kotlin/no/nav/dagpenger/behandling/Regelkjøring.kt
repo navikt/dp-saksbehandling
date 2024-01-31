@@ -48,7 +48,7 @@ class Regelkjøring(
 
     private fun aktiverRegler() {
         muligeRegler.filter {
-            it.kanKjøre(opplysninger, forDato)
+            it.kanKjøre(opplysninger)
         }.forEach {
             plan.add(it)
         }

@@ -5,7 +5,7 @@ interface Klassifiserbart {
 }
 
 class Opplysningstype<T : Comparable<T>>(
-    private val navn: String,
+    val navn: String,
     private val parent: Opplysningstype<T>? = null,
     private val child: MutableSet<Opplysningstype<*>> = mutableSetOf(),
 ) : Klassifiserbart {
@@ -19,7 +19,7 @@ class Opplysningstype<T : Comparable<T>>(
 
     override fun toString(): String {
         // TODO: Det er noe muffens med hierarki og data class
-        return navn
+        return "Opplysningstype(navn='$navn', parent=${parent?.navn}, child=${child.size})"
     }
 
     override fun equals(other: Any?): Boolean = other is Opplysningstype<*> && other.navn == this.navn

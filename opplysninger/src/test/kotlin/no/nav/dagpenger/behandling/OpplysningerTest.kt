@@ -1,6 +1,8 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.regel.Regel
+import no.nav.dagpenger.behandling.dag.DAGPrettyPrint
+import no.nav.dagpenger.behandling.dag.MermaidDiagramBuilder
+import no.nav.dagpenger.behandling.dag.RegeltreBygger
 import no.nav.dagpenger.behandling.regel.enAvRegel
 import no.nav.dagpenger.behandling.regel.multiplikasjon
 import no.nav.dagpenger.behandling.regel.oppslag
@@ -100,8 +102,14 @@ class OpplysningerTest {
 
         // Sett virkningsdato som en opplysning
         opplysninger.leggTil(Faktum(virkningsdato, fraDato.toLocalDate()))
-        val dag = DAG(opplysninger.regelkjøring.muligeRegler, minsteinntekt)
-        println(dag.lag())
+
+        val dag =
+            RegeltreBygger(opplysninger.regelkjøring.muligeRegler).byggDAG()
+
+        DAGPrettyPrint(dag).prettyPrint(minsteinntekt)
+        val mermaidDiagram = MermaidDiagramBuilder(dag).toMermaidDiagram()
+        println(mermaidDiagram)
+
         // Flyt for å innhente manglende opplysninger
         val actual = opplysninger.trenger(minsteinntekt)
         assertEquals(3, actual.size)
@@ -130,36 +138,3 @@ class OpplysningerTest {
 1. Gyldighetsperiode for regler
 2. Sporing av utledning
  */
-
-data class OpplysningNode(val navn: String, val produsertAv: RegelNode? = null)
-
-data class RegelNode(val navn: String, val avhengerAv: List<OpplysningNode>)
-
-class DAG(val regler: List<Regel<*>>, val opplysningstype: Opplysningstype<*>) {
-    fun lag(): OpplysningNode? {
-        return regler.find { it.produserer(opplysningstype) }?.let {
-            blurp(it)
-        }
-    }
-
-    fun blurp(regel: Regel<*>): OpplysningNode {
-        if (regel.avhengerAv.isEmpty()) {
-            return OpplysningNode("Tom node")
-        }
-        val produserAvRegel =
-            RegelNode(
-                regel.toString(),
-                // Alle noder regelen er avhengig av
-                regel.avhengerAv.mapNotNull { opplysningstype ->
-                    regler.find { it.produserer(opplysningstype) }
-                        ?.let {
-                            blurp(it)
-                        }
-                },
-            )
-        return OpplysningNode(
-            regel.produserer.toString(),
-            produserAvRegel,
-        )
-    }
-}
