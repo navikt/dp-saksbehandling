@@ -9,6 +9,7 @@ import no.nav.dagpenger.behandling.Opplysningstype
 import no.nav.dagpenger.behandling.Regelmotor
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class OpplysningSteg : No {
     private lateinit var opplysning: Opplysning<*>
@@ -32,7 +33,7 @@ class OpplysningSteg : No {
             opplysninger.leggTil(Hypotese(Opplysningstype<LocalDate>(type), LocalDate.now()))
         }
         Så("kan vi utlede {string}") { type: String ->
-            assertTrue(opplysninger.har(Opplysningstype<LocalDate>(type)))
+            assertTrue(opplysninger.har(Opplysningstype<LocalDate>(type), LocalDateTime.now()))
         }
     }
 }

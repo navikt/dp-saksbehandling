@@ -6,7 +6,9 @@ import no.nav.dagpenger.behandling.regel.oppslag
 import no.nav.dagpenger.behandling.regel.størreEnn
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 class OpplysningerTest {
@@ -22,9 +24,25 @@ class OpplysningerTest {
         opplysninger.leggTil(Faktum(alder, true))
         opplysninger.leggTil(Faktum(vilkår, true))
 
-        assertTrue(opplysninger.har(minsteinntekt))
-        assertTrue(opplysninger.har(alder))
-        assertTrue(opplysninger.har(vilkår))
+        assertTrue(opplysninger.har(minsteinntekt, LocalDateTime.now()))
+        assertTrue(opplysninger.har(alder, LocalDateTime.now()))
+        assertTrue(opplysninger.har(vilkår, LocalDateTime.now()))
+    }
+
+    @Test
+    fun `tillater ikke overlappende opplysninger av samme type`() {
+        val opplysningstype = Opplysningstype<Double>("Type")
+        val opplysninger = Opplysninger(Regelmotor())
+
+        opplysninger.leggTil(Faktum(opplysningstype, 0.5, Gyldighetsperiode(1.mai, 10.mai)))
+        assertThrows<IllegalArgumentException> {
+            opplysninger.leggTil(Faktum(opplysningstype, 0.5))
+        }
+        opplysninger.leggTil(Faktum(opplysningstype, 1.5, Gyldighetsperiode(11.mai)))
+
+        assertEquals(0.5, opplysninger.finnOpplysning(opplysningstype, 8.mai).verdi)
+        assertEquals(0.5, opplysninger.finnOpplysning(opplysningstype, 10.mai).verdi)
+        assertEquals(1.5, opplysninger.finnOpplysning(opplysningstype, 12.mai).verdi)
     }
 
     private object Grunnbeløp {
@@ -61,9 +79,10 @@ class OpplysningerTest {
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
         regelsett.enAvRegel(minsteinntekt, overNedreTerskel, overØvreTerskel)
 
+        val fraDato = LocalDateTime.now()
         val opplysninger = Opplysninger(Regelmotor(regelsett))
         opplysninger.leggTil(Faktum(virkningsdato, LocalDate.now()))
-        val actual = opplysninger.trenger(minsteinntekt)
+        val actual = opplysninger.trenger(minsteinntekt, fraDato)
 
         assertEquals(3, actual.size)
         assertEquals(setOf(inntekt, nedreTerskelFaktor, øvreTerskelFaktor), actual)
@@ -71,15 +90,21 @@ class OpplysningerTest {
         assertEquals(Grunnbeløp.TEST_GRUNNBELØP, opplysninger.finnOpplysning(grunnbeløp).verdi)
 
         opplysninger.leggTil(Faktum(nedreTerskelFaktor, 1.5))
-        assertEquals(2, opplysninger.trenger(minsteinntekt).size)
+        assertEquals(2, opplysninger.trenger(minsteinntekt, fraDato).size)
 
         opplysninger.leggTil(Faktum(øvreTerskelFaktor, 3.0))
-        assertEquals(1, opplysninger.trenger(minsteinntekt).size)
+        assertEquals(1, opplysninger.trenger(minsteinntekt, fraDato).size)
 
-        opplysninger.leggTil(Hypotese(inntekt, 321321.0))
-        assertEquals(0, opplysninger.trenger(minsteinntekt).size)
+        opplysninger.leggTil(
+            Hypotese(
+                inntekt,
+                321321.0,
+                // Gyldighetsperiode(LocalDate.now().minusYears(2), LocalDate.now().minusWeeks(2)),
+            ),
+        )
+        assertEquals(0, opplysninger.trenger(minsteinntekt, fraDato).size)
 
-        assertTrue(opplysninger.har(minsteinntekt))
+        assertTrue(opplysninger.har(minsteinntekt, fraDato))
         assertTrue(opplysninger.finnOpplysning(minsteinntekt).verdi)
 
         println(opplysninger.toString())

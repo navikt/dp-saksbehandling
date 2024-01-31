@@ -10,7 +10,10 @@ abstract class Regel<T : Comparable<T>>(
     internal val produserer: Opplysningstype<T>,
     val avhengerAv: List<Opplysningstype<*>> = emptyList(),
 ) {
-    fun kanKjøre(opplysninger: LesbarOpplysninger): Boolean = opplysninger.finnAlle(avhengerAv).size == avhengerAv.size
+    fun kanKjøre(opplysninger: LesbarOpplysninger): Boolean =
+        opplysninger
+            .finnAlle(avhengerAv)
+            .size == avhengerAv.size
 
     protected abstract fun kjør(opplysninger: LesbarOpplysninger): T
 

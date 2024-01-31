@@ -1,6 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.regel.Regel
+import java.time.LocalDateTime
 
 class Regelmotor(
     vararg regelsett: Regelsett,
@@ -53,17 +54,20 @@ class Regelmotor(
     }
 
     // @todo: Lage graf representasjon av denne? Som kan traverseres, spørres om hvilke noder som er tilgjengelige fra en node, etc.
-    fun trenger(opplysningstype: Opplysningstype<*>): Set<Opplysningstype<*>> {
+    fun trenger(
+        opplysningstype: Opplysningstype<*>,
+        fraDato: LocalDateTime,
+    ): Set<Opplysningstype<*>> {
         return when (val regel = finnRegel(opplysningstype)) {
             null -> return emptySet()
             else ->
                 regel.avhengerAv.map {
                     if (finnRegel(it) != null) {
-                        trenger(it)
+                        trenger(it, fraDato)
                     } else {
                         setOf(it)
                     }
-                }.flatten().filterNot { opplysninger.har(it) }.toSet()
+                }.flatten().filterNot { opplysninger.har(it, fraDato) }.toSet()
         }
     }
 

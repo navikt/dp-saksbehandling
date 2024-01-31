@@ -1,15 +1,6 @@
 package no.nav.dagpenger.behandling
 
-import java.time.LocalDate
 import java.time.LocalDateTime
-
-data class Gyldighetsperiode(val fom: LocalDateTime = LocalDateTime.MIN, private val tom: LocalDateTime = LocalDateTime.MAX) {
-    constructor(fom: LocalDate, tom: LocalDate) : this(fom.atStartOfDay(), tom.atStartOfDay())
-
-    fun inneholder(dato: LocalDateTime) = dato in fom..tom
-
-    fun inneholder(dato: LocalDate) = inneholder(dato.atStartOfDay())
-}
 
 sealed class Opplysning<T : Comparable<T>>(
     val opplysningstype: Opplysningstype<T>,
@@ -19,6 +10,10 @@ sealed class Opplysning<T : Comparable<T>>(
     abstract fun bekreft(): Faktum<T>
 
     override fun toString() = "${javaClass.simpleName} om $opplysningstype har verdi: $verdi"
+
+    fun sammeSom(opplysning: Opplysning<*>): Boolean {
+        return opplysningstype == opplysning.opplysningstype && gyldighetsperiode.overlapp(opplysning.gyldighetsperiode)
+    }
 }
 
 class Hypotese<T : Comparable<T>>(
@@ -26,6 +21,12 @@ class Hypotese<T : Comparable<T>>(
     verdi: T,
     gyldighetsperiode: Gyldighetsperiode = Gyldighetsperiode(),
 ) : Opplysning<T>(opplysningstype, verdi, gyldighetsperiode) {
+    constructor(opplysningstype: Opplysningstype<T>, verdi: T, gyldighetsperiode: ClosedRange<LocalDateTime>) : this(
+        opplysningstype,
+        verdi,
+        Gyldighetsperiode(gyldighetsperiode.start, gyldighetsperiode.endInclusive),
+    )
+
     override fun bekreft() = Faktum(super.opplysningstype, verdi, gyldighetsperiode)
 }
 
@@ -34,5 +35,11 @@ class Faktum<T : Comparable<T>>(
     verdi: T,
     gyldighetsperiode: Gyldighetsperiode = Gyldighetsperiode(),
 ) : Opplysning<T>(opplysningstype, verdi, gyldighetsperiode) {
+    constructor(opplysningstype: Opplysningstype<T>, verdi: T, gyldighetsperiode: ClosedRange<LocalDateTime>) : this(
+        opplysningstype,
+        verdi,
+        Gyldighetsperiode(gyldighetsperiode.start, gyldighetsperiode.endInclusive),
+    )
+
     override fun bekreft() = this
 }
