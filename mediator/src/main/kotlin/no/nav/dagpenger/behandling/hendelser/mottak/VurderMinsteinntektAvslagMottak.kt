@@ -17,9 +17,21 @@ internal class VurderMinsteinntektAvslagMottak(
     companion object {
         private val logger = KotlinLogging.logger {}
 
+        val årsakerTilManuellBehandling =
+            listOf(
+                "mulig gjenopptak",
+                "svangerskapsrelaterte sykepenger",
+                "EØS-arbeid",
+                "har hatt lukkede saker siste 8 uker",
+                "det er inntekt neste kalendermåned",
+                "mulige inntekter fra fangst og fisk",
+                "jobbet utenfor Norge",
+            )
+
         val rapidFilter: River.() -> Unit = {
             validate { it.requireKey("@id") }
             validate { it.demandValue("@event_name", "manuell_behandling") }
+            validate { it.demandAny("seksjon_navn", årsakerTilManuellBehandling) }
             validate { it.requireKey("søknad_uuid", "seksjon_navn", "identer") }
         }
     }
