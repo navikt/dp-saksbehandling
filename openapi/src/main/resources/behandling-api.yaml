@@ -211,6 +211,10 @@ components:
           type: array
           items:
             type: string
+        emneknagger:
+          type: array
+          items:
+            type: string
         tilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
         steg:

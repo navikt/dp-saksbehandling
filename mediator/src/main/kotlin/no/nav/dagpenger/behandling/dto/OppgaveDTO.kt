@@ -17,6 +17,7 @@ internal fun Oppgave.toOppgaveDTO(): OppgaveDTO {
         journalposter = this.behandler.toHendelserDTO().mapNotNull { it.kontekstMap["journalpostId"] },
         tilstand = OppgaveTilstandDTO.valueOf(this.tilstand.toString()),
         steg = this.alleSteg().toStegDTO(),
+        emneknagger = this.emneknagger.toList(),
     )
 }
 
