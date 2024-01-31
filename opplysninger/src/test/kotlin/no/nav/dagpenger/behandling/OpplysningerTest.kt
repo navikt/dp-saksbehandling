@@ -2,10 +2,12 @@ package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.regel.enAvRegel
 import no.nav.dagpenger.behandling.regel.multiplikasjon
+import no.nav.dagpenger.behandling.regel.oppslag
 import no.nav.dagpenger.behandling.regel.størreEnn
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import kotlin.test.assertEquals
 
 class OpplysningerTest {
@@ -27,16 +29,24 @@ class OpplysningerTest {
         assertTrue(opplysninger.har(vilkår))
     }
 
+    object Grunnbeløp {
+        const val test = 118620.0
+
+        fun finnFor(dato: LocalDate) = test
+    }
+
     @Test
     fun `finn alle løvnoder som mangler`() {
         val vilkår = Opplysningstype<Boolean>("Vilkår")
+        val regelsett = Regelsett()
 
         val nedreTerskelFaktor = Opplysningstype<Double>("Nedre terskel (1.5G)")
         val øvreTerskelFaktor = Opplysningstype<Double>("Øvre terskel (1.5G)")
         val inntekt = Opplysningstype<Double>("Inntekt")
         val grunnbeløp = Opplysningstype<Double>("Grunnbeløp")
+        val virkningsdato = Opplysningstype<LocalDate>("Virkningsdato")
 
-        val regelsett = Regelsett()
+        regelsett.oppslag(grunnbeløp, virkningsdato) { Grunnbeløp.finnFor(it) }
 
         val nedreTerskel = Opplysningstype<Double>("Inntektskrav for nedre terskel (1.5G)")
         regelsett.multiplikasjon(nedreTerskel, nedreTerskelFaktor, grunnbeløp)
@@ -54,20 +64,21 @@ class OpplysningerTest {
         regelsett.enAvRegel(minsteinntekt, overNedreTerskel, overØvreTerskel)
 
         val opplysninger = Opplysninger(Regelmotor(regelsett))
+        opplysninger.leggTil(Faktum(virkningsdato, LocalDate.now()))
         val actual = opplysninger.trenger(minsteinntekt)
-        assertEquals(4, actual.size)
-        assertEquals(setOf(inntekt, nedreTerskelFaktor, grunnbeløp, øvreTerskelFaktor), actual)
+
+        assertEquals(3, actual.size)
+        assertEquals(setOf(inntekt, nedreTerskelFaktor, øvreTerskelFaktor), actual)
+
+        assertEquals(Grunnbeløp.test, opplysninger.find { it.er(grunnbeløp) }?.verdi as Double)
 
         opplysninger.leggTil(Faktum(nedreTerskelFaktor, 1.5))
-        assertEquals(3, opplysninger.trenger(minsteinntekt).size)
-
-        opplysninger.leggTil(Faktum(øvreTerskelFaktor, 3.0))
         assertEquals(2, opplysninger.trenger(minsteinntekt).size)
 
-        opplysninger.leggTil(Faktum(inntekt, 321321.0))
+        opplysninger.leggTil(Faktum(øvreTerskelFaktor, 3.0))
         assertEquals(1, opplysninger.trenger(minsteinntekt).size)
 
-        opplysninger.leggTil(Faktum(grunnbeløp, 118620.0))
+        opplysninger.leggTil(Faktum(inntekt, 321321.0))
         assertEquals(0, opplysninger.trenger(minsteinntekt).size)
 
         assertTrue(opplysninger.har(minsteinntekt))
@@ -80,3 +91,9 @@ class OpplysningerTest {
         assertFalse(opplysninger.findLast { it.er(minsteinntekt) }?.verdi as Boolean)
     }
 }
+
+/*
+1. Gyldighetsperiode
+2. Sporing av utledning
+3. Bygge ut opplysninger med de hjelpefunksjoner vi trenger (og fjerne at den framstår som en List<Opplysning>)
+ */
