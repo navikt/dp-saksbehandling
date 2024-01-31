@@ -24,7 +24,6 @@ internal class EnAvRegelTest {
                     )
                 },
             ),
-            mutableListOf(),
         )
     private val regel =
         EnAvRegel(Opplysningstype("A"), opplysningB, opplysningC)

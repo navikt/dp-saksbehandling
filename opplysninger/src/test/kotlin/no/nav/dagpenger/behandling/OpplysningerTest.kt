@@ -91,5 +91,4 @@ class OpplysningerTest {
 2. Gyldighetsperiode for regler
 3. Behandling med utgangspunkt i en dato
 4. Sporing av utledning
-5. Bygge ut opplysninger med de hjelpefunksjoner vi trenger (og fjerne at den framstår som en List<Opplysning>)
  */
