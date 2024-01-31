@@ -11,7 +11,7 @@ interface LesbarOpplysninger {
 }
 
 class Opplysninger(
-    private val regelkjøring: Regelkjøring,
+    val regelkjøring: Regelkjøring,
     opplysninger: List<Opplysning<*>> = emptyList(),
 ) : LesbarOpplysninger {
     private val opplysninger: MutableList<Opplysning<*>> = opplysninger.toMutableList()

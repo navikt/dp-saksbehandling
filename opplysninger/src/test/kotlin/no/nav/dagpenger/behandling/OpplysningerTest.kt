@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling
 
+import no.nav.dagpenger.behandling.regel.Regel
 import no.nav.dagpenger.behandling.regel.enAvRegel
 import no.nav.dagpenger.behandling.regel.multiplikasjon
 import no.nav.dagpenger.behandling.regel.oppslag
@@ -97,7 +98,10 @@ class OpplysningerTest {
                 ),
             )
 
+        // Sett virkningsdato som en opplysning
         opplysninger.leggTil(Faktum(virkningsdato, fraDato.toLocalDate()))
+        val dag = DAG(opplysninger.regelkjøring.muligeRegler, minsteinntekt)
+        println(dag.lag())
         // Flyt for å innhente manglende opplysninger
         val actual = opplysninger.trenger(minsteinntekt)
         assertEquals(3, actual.size)
@@ -111,7 +115,7 @@ class OpplysningerTest {
         opplysninger.leggTil(Faktum(øvreTerskelFaktor, 3.0))
         assertEquals(1, opplysninger.trenger(minsteinntekt).size)
 
-        // Har er ikke lengre gyldig og må hentes på nytt
+        // Har er ikke lengre gyldig inntekt og må hentes på nytt
         opplysninger.leggTil(Hypotese(inntekt, 321321.0, Gyldighetsperiode(9.mai)))
         assertEquals(0, opplysninger.trenger(minsteinntekt).size)
 
@@ -123,8 +127,41 @@ class OpplysningerTest {
 }
 
 /*
-1. Gyldighetsperiode for opplysninger
-2. Gyldighetsperiode for regler
-3. Behandling med utgangspunkt i en dato
-4. Sporing av utledning
+1. Gyldighetsperiode for regler
+2. Sporing av utledning
  */
+
+class OpplysningNode(val navn: String, val produsertAv: RegelNode? = null)
+
+class RegelNode(val navn: String, val avhengerAv: List<OpplysningNode>)
+
+class DAG(val regler: List<Regel<*>>, val opplysningstype: Opplysningstype<*>) {
+    fun lag(): OpplysningNode? {
+        return regler.find { it.produserer(opplysningstype) }?.let {
+            blurp(it)
+        }
+    }
+
+    fun blurp(regel: Regel<*>): OpplysningNode {
+        if (regel.avhengerAv.isEmpty()) {
+            return OpplysningNode("Tom node")
+        }
+        val produserAvRegel =
+            RegelNode(
+                regel.toString(),
+                // Alle noder regelen er avhengig av
+                regel.avhengerAv.mapNotNull {
+                    regler.find { it.produserer(opplysningstype) }
+                        ?.let {
+                            println(it)
+                            println(it.avhengerAv)
+                            blurp(it)
+                        }
+                },
+            )
+        return OpplysningNode(
+            regel.produserer.toString(),
+            produserAvRegel,
+        )
+    }
+}

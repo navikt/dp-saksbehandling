@@ -10,7 +10,7 @@ class Regelkjøring(
 ) {
     constructor(fraDato: LocalDate, vararg regelsett: Regelsett) : this(fraDato.atStartOfDay(), *regelsett)
 
-    private val muligeRegler: MutableList<Regel<*>> = regelsett.flatMap { it.regler }.toMutableList()
+    val muligeRegler: MutableList<Regel<*>> = regelsett.flatMap { it.regler }.toMutableList()
     private val plan: MutableList<Regel<*>> = mutableListOf()
     private val kjørteRegler: MutableList<Regel<*>> = mutableListOf()
     private lateinit var opplysninger: Opplysninger
