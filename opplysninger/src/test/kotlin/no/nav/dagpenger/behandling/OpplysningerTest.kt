@@ -41,7 +41,8 @@ class OpplysningerTest {
 
         assertEquals(0.5, opplysninger.finnOpplysning(opplysningstype).verdi)
         assertEquals(0.5, opplysninger.finnOpplysning(opplysningstype).verdi)
-        assertEquals(1.5, opplysninger.finnOpplysning(opplysningstype).verdi)
+        // TODO: Denne testen er ikk elengre mulig nå som regelkjøring eier fraDato
+        // assertEquals(1.5, opplysninger.finnOpplysning(opplysningstype).verdi)
     }
 
     private object Grunnbeløp {
