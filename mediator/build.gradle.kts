@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 buildscript { repositories { mavenCentral() } }
 
 plugins {
@@ -52,15 +54,6 @@ application {
     mainClass.set("no.nav.dagpenger.behandling.AppKt")
 }
 
-/*
-tasks.jar {
-    manifest { attributes["Main-Class"] = application.mainClass }
-    dependsOn(":openapi:jar")
-
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-}*/
-
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+tasks.withType<ShadowJar> {
     mergeServiceFiles()
 }
