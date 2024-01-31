@@ -6,6 +6,7 @@ import no.nav.dagpenger.behandling.Behandlingsstatus
 import no.nav.dagpenger.behandling.OppgaveVisitor
 import no.nav.dagpenger.behandling.Saksbehandler
 import no.nav.dagpenger.behandling.UtførStegKommando
+import no.nav.dagpenger.behandling.hendelser.VurderAvslagPåMinsteinntektHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -15,15 +16,18 @@ data class Oppgave private constructor(
     private val behandling: Behandling,
     val utføresAv: Saksbehandler?,
     val opprettet: LocalDateTime,
-    val emneknagger: Set<String>,
+    private val _emneknagger: MutableSet<String>,
 ) : Behandlingsstatus by behandling {
     constructor(uuid: UUID, behandling: Behandling, emneknagger: Set<String> = emptySet()) : this(
         uuid = uuid,
         behandling = behandling,
         utføresAv = null,
         opprettet = LocalDateTime.now(),
-        emneknagger = emneknagger,
+        _emneknagger = emneknagger.toMutableSet(),
     )
+
+    val emneknagger: Set<String>
+        get() = _emneknagger.toSet()
 
     companion object {
         fun rehydrer(
@@ -40,12 +44,12 @@ data class Oppgave private constructor(
                     Saksbehandler(it)
                 },
             opprettet = opprettet,
-            emneknagger = emneknagger,
+            _emneknagger = emneknagger.toMutableSet(),
         )
     }
 
     fun accept(visitor: OppgaveVisitor) {
-        visitor.visit(uuid, opprettet, utføresAv, emneknagger)
+        visitor.visit(uuid, opprettet, utføresAv, emneknagger.toSet())
         visitor.visit(behandling)
         behandling.accept(visitor)
     }
@@ -66,6 +70,10 @@ data class Oppgave private constructor(
 
     fun utfør(kommando: UtførStegKommando) {
         behandling.utfør(kommando)
+    }
+
+    fun behandle(vurderAvslagPåMinsteinntektHendelse: VurderAvslagPåMinsteinntektHendelse) {
+        this._emneknagger.add("VurderAvslagPåMinsteinntekt")
     }
 
     val tilstand: OppgaveTilstand

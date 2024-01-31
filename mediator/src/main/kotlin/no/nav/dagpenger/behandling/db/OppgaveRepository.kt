@@ -10,7 +10,7 @@ interface OppgaveRepository {
 
     fun hentOppgaver(): List<Oppgave>
 
-    fun hentOppgaveFor(søknadUUID: UUID): Oppgave?
+    fun hentOppgaveFor(søknadUUID: UUID): Oppgave
 
     fun hentOppgaverFor(fnr: String): List<Oppgave>
 }

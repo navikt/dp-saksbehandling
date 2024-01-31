@@ -88,6 +88,8 @@ internal class Mediator(
     ) = rapidsConnection.publish(event.ident, JsonMessage.newMessage(navn, event.toMap()).toJson())
 
     fun behandle(vurderAvslagPåMinsteinntektHendelse: VurderAvslagPåMinsteinntektHendelse) {
-        TODO("Not yet implemented")
+        val oppgave = oppgaveRepository.hentOppgaveFor(vurderAvslagPåMinsteinntektHendelse.søknadUUID)
+        oppgave.behandle(vurderAvslagPåMinsteinntektHendelse)
+        oppgaveRepository.lagreOppgave(oppgave)
     }
 }

@@ -154,6 +154,7 @@ class MediatorTest {
         lateinit var sak: Sak
         lateinit var behandlingId: UUID
         lateinit var oppgaveId: UUID
+        lateinit var emneknagger: Set<String>
 
         init {
             oppgave.accept(this)
@@ -174,6 +175,7 @@ class MediatorTest {
             emneknagger: Set<String>,
         ) {
             this.oppgaveId = oppgaveUUID
+            this.emneknagger = emneknagger
         }
     }
 
@@ -199,26 +201,35 @@ class MediatorTest {
             val postgresRepository = PostgresRepository(dataSource)
             val mediator = mediatorMedDb(postgresRepository)
 
+            val søknadId = UUID.randomUUID()
+
             mediator.behandle(
                 SøknadInnsendtHendelse(
-                    søknadId = UUID.randomUUID(),
+                    søknadId = søknadId,
                     journalpostId = "123",
-                    ident = ident,
-                    innsendtDato = LocalDate.MIN,
+                    ident = testIdent,
+                    innsendtDato = LocalDate.now(),
                 ),
             )
+
+            TestVisitor(postgresRepository.hentOppgaveFor(søknadId)).emneknagger shouldBe
+                setOf(
+                    "Søknadsbehandling",
+                )
 
             mediator.behandle(
                 VurderAvslagPåMinsteinntektHendelse(
                     ident = testIdent,
-                    søknadUUID = UUID.randomUUID(),
-                    meldingsreferanseId = UUID.randomUUID(),
+                    søknadUUID = søknadId,
+                    meldingsreferanseId = søknadId,
                 ),
             )
 
-            // Hva skal vi gjøre?
-            // Vi skal finne oppgaveUUID fra søknad_uuid
-            // Legg deretter til emneknagg = minsteinntektgreier på oppgaven
+            TestVisitor(postgresRepository.hentOppgaveFor(søknadId)).emneknagger shouldBe
+                setOf(
+                    "Søknadsbehandling",
+                    "VurderAvslagPåMinsteinntekt",
+                )
         }
 
     private fun mediatorMedDb(postgresRepository: PostgresRepository) =
