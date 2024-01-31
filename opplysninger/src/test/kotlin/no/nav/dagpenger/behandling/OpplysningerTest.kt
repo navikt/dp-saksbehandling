@@ -22,7 +22,6 @@ class OpplysningerTest {
         opplysninger.leggTil(Faktum(alder, true))
         opplysninger.leggTil(Faktum(vilkår, true))
 
-        assertEquals(3, opplysninger.size)
         assertTrue(opplysninger.har(minsteinntekt))
         assertTrue(opplysninger.har(alder))
         assertTrue(opplysninger.har(vilkår))
@@ -69,7 +68,7 @@ class OpplysningerTest {
         assertEquals(3, actual.size)
         assertEquals(setOf(inntekt, nedreTerskelFaktor, øvreTerskelFaktor), actual)
 
-        assertEquals(Grunnbeløp.TEST_GRUNNBELØP, opplysninger.find { it.er(grunnbeløp) }?.verdi as Double)
+        assertEquals(Grunnbeløp.TEST_GRUNNBELØP, opplysninger.finnOpplysning(grunnbeløp).verdi)
 
         opplysninger.leggTil(Faktum(nedreTerskelFaktor, 1.5))
         assertEquals(2, opplysninger.trenger(minsteinntekt).size)
@@ -81,9 +80,9 @@ class OpplysningerTest {
         assertEquals(0, opplysninger.trenger(minsteinntekt).size)
 
         assertTrue(opplysninger.har(minsteinntekt))
-        assertTrue(opplysninger.find { it.er(minsteinntekt) }?.verdi as Boolean)
+        assertTrue(opplysninger.finnOpplysning(minsteinntekt).verdi)
 
-        opplysninger.forEach { println(it) }
+        println(opplysninger.toString())
     }
 }
 

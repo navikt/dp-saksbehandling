@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.regel
 
-import no.nav.dagpenger.behandling.Opplysning
+import no.nav.dagpenger.behandling.LesbarOpplysninger
 import no.nav.dagpenger.behandling.Opplysningstype
 import no.nav.dagpenger.behandling.Regelsett
 import java.time.LocalDate
@@ -10,9 +10,9 @@ internal class Oppslag<T : Comparable<T>>(
     private val dato: Opplysningstype<LocalDate>,
     private val block: (LocalDate) -> T,
 ) : Regel<T>(produserer, listOf(dato)) {
-    override fun kjør(opplysninger: List<Opplysning<*>>): T {
+    override fun kjør(opplysninger: LesbarOpplysninger): T {
         val oppslagsdato =
-            opplysninger.find { it.er(dato) }?.verdi as LocalDate
+            opplysninger.finnOpplysning(dato).verdi
 
         return block(oppslagsdato)
     }

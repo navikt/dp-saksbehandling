@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.regel
 
-import no.nav.dagpenger.behandling.Opplysning
+import no.nav.dagpenger.behandling.LesbarOpplysninger
 import no.nav.dagpenger.behandling.Opplysningstype
 import no.nav.dagpenger.behandling.Regelsett
 
@@ -8,14 +8,8 @@ internal class Multiplikasjon(
     produserer: Opplysningstype<Double>,
     private vararg val opplysningstyper: Opplysningstype<Double>,
 ) : Regel<Double>(produserer, opplysningstyper.toList()) {
-    override fun kjør(opplysninger: List<Opplysning<*>>): Double {
-        val verdier =
-            opplysningstyper.filter { opplysningstype ->
-                opplysninger.any { it.er(opplysningstype) }
-            }.map { opplysningstype ->
-                opplysninger.findLast { it.er(opplysningstype) }?.verdi as Double
-            }
-
+    override fun kjør(opplysninger: LesbarOpplysninger): Double {
+        val verdier = opplysninger.finnAlle(opplysningstyper.toList()).map { it.verdi as Double }
         return verdier.reduce { acc, d -> acc * d }
     }
 

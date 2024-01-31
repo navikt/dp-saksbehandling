@@ -1,6 +1,6 @@
 package no.nav.dagpenger.behandling.regel
 
-import no.nav.dagpenger.behandling.Opplysning
+import no.nav.dagpenger.behandling.LesbarOpplysninger
 import no.nav.dagpenger.behandling.Opplysningstype
 import no.nav.dagpenger.behandling.Regelsett
 
@@ -8,8 +8,8 @@ internal class EnAvRegel(
     produserer: Opplysningstype<Boolean>,
     private vararg val opplysningstyper: Opplysningstype<Boolean>,
 ) : Regel<Boolean>(produserer, opplysningstyper.toList()) {
-    override fun kjør(opplysninger: List<Opplysning<*>>): Boolean {
-        return opplysningstyper.any { finn -> opplysninger.filter { opplysning -> opplysning.er(finn) }.any { it.verdi as Boolean } }
+    override fun kjør(opplysninger: LesbarOpplysninger): Boolean {
+        return opplysninger.finnAlle(opplysningstyper.toList()).any { it.verdi as Boolean }
     }
 }
 
