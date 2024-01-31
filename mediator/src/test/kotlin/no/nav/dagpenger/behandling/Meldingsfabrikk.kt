@@ -9,13 +9,18 @@ object Meldingsfabrikk {
     val testSak = Sak(UUID.randomUUID())
     val testIdent = "13083826694"
     val testPerson = Person.rehydrer(testIdent, setOf(testSak))
-    val søknadInnsendtHendelse =
-        SøknadInnsendtHendelse(søknadId = UUID.randomUUID(), journalpostId = "jp", ident = testIdent, innsendtDato = LocalDate.now())
+    val testSøknadUUID = UUID.randomUUID()
+    val søknadInnsendtHendelse = SøknadInnsendtHendelse(
+        søknadId = testSøknadUUID,
+        journalpostId = "jp",
+        ident = testIdent,
+        innsendtDato = LocalDate.now()
+    )
 
     val testSporing get() = ManuellSporing(LocalDateTime.now(), Saksbehandler("123"), "")
 
     internal fun innsendingFerdigstiltHendelse(
-        søknadId: UUID,
+        søknadId: UUID = testSøknadUUID,
         journalpostId: String,
         type: String,
         ident: String,
