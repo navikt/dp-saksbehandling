@@ -34,19 +34,15 @@ internal class VurderMinsteinntektAvslagMottak(
         val søknadUUID = packet["søknad_uuid"].asUUID()
         val årsakTilManuellBehandling = packet["seksjon_navn"].asText()
 
-        withLoggingContext(
-            "søknadId" to søknadUUID.toString(),
-        ) {
-            println(
-                "***** KAKTUS: Fått hendelse om manuell behandling ($årsakTilManuellBehandling) av avslag på " +
-                    "minsteinntekt. SøknadId: $søknadUUID",
-            )
-            logger.info {
-                "Fått hendelse om manuell behandling ($årsakTilManuellBehandling) av avslag på " +
-                    "minsteinntekt. SøknadId: $søknadUUID"
-            }
+        withLoggingContext("søknadId" to "$søknadUUID") {
+            loggManuellBehandling(årsakTilManuellBehandling)
         }
     }
+
+    private fun loggManuellBehandling(årsakTilManuellBehandling: String?) =
+        logger.info(
+            "Fått hendelse om manuell behandling ($årsakTilManuellBehandling) av avslag på minsteinntekt",
+        )
 
     override fun onError(
         problems: MessageProblems,
