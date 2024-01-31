@@ -29,10 +29,10 @@ class OpplysningerTest {
         assertTrue(opplysninger.har(vilkår))
     }
 
-    object Grunnbeløp {
-        const val test = 118620.0
+    private object Grunnbeløp {
+        const val TEST_GRUNNBELØP = 118620.0
 
-        fun finnFor(dato: LocalDate) = test
+        fun finnFor(dato: LocalDate) = TEST_GRUNNBELØP
     }
 
     @Test
@@ -70,7 +70,7 @@ class OpplysningerTest {
         assertEquals(3, actual.size)
         assertEquals(setOf(inntekt, nedreTerskelFaktor, øvreTerskelFaktor), actual)
 
-        assertEquals(Grunnbeløp.test, opplysninger.find { it.er(grunnbeløp) }?.verdi as Double)
+        assertEquals(Grunnbeløp.TEST_GRUNNBELØP, opplysninger.find { it.er(grunnbeløp) }?.verdi as Double)
 
         opplysninger.leggTil(Faktum(nedreTerskelFaktor, 1.5))
         assertEquals(2, opplysninger.trenger(minsteinntekt).size)
