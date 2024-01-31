@@ -131,9 +131,9 @@ class OpplysningerTest {
 2. Sporing av utledning
  */
 
-class OpplysningNode(val navn: String, val produsertAv: RegelNode? = null)
+data class OpplysningNode(val navn: String, val produsertAv: RegelNode? = null)
 
-class RegelNode(val navn: String, val avhengerAv: List<OpplysningNode>)
+data class RegelNode(val navn: String, val avhengerAv: List<OpplysningNode>)
 
 class DAG(val regler: List<Regel<*>>, val opplysningstype: Opplysningstype<*>) {
     fun lag(): OpplysningNode? {

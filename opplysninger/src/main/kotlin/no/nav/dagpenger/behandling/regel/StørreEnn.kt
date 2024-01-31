@@ -14,6 +14,10 @@ internal class StørreEnn(
         val b = opplysninger.finnOpplysning(b).verdi
         return a > b
     }
+
+    override fun toString(): String {
+        return "Større enn $a > $b"
+    }
 }
 
 fun Regelsett.størreEnn(

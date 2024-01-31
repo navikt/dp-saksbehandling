@@ -11,6 +11,10 @@ internal class EnAvRegel(
     override fun kjør(opplysninger: LesbarOpplysninger): Boolean {
         return opplysninger.finnAlle(opplysningstyper.toList()).any { it.verdi as Boolean }
     }
+
+    override fun toString(): String {
+        return "En av ${opplysningstyper.joinToString(", ")} er sanne"
+    }
 }
 
 fun Regelsett.enAvRegel(
