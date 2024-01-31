@@ -40,7 +40,6 @@ import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -194,16 +193,14 @@ class PostgresOppgaveRepositoryTest {
                     repository.lagreOppgave(testOppgave)
                 }
 
-                assertThrows<NotImplementedError> {
-                    repository.hentOppgaveFor(testSøknadUUID).let { oppgave ->
-                        requireNotNull(oppgave)
-                        oppgave.uuid shouldBe testOppgave.uuid
-                        oppgave.utføresAv shouldBe testOppgave.utføresAv
-                        oppgave.person shouldBe testOppgave.person
-                        oppgave.opprettet.shouldBeWithin(1.milliseconds.toJavaDuration(), testOppgave.opprettet)
-                        oppgave.tilstand shouldBe testOppgave.tilstand
-                        oppgave.emneknagger shouldBe testOppgave.emneknagger
-                    }
+                repository.hentOppgaveFor(testSøknadUUID).let { oppgave ->
+                    requireNotNull(oppgave)
+                    oppgave.uuid shouldBe testOppgave.uuid
+                    oppgave.utføresAv shouldBe testOppgave.utføresAv
+                    oppgave.person shouldBe testOppgave.person
+                    oppgave.opprettet.shouldBeWithin(1.milliseconds.toJavaDuration(), testOppgave.opprettet)
+                    oppgave.tilstand shouldBe testOppgave.tilstand
+                    oppgave.emneknagger shouldBe testOppgave.emneknagger
                 }
             }
         }

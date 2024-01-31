@@ -78,8 +78,7 @@ class OppgaveApiTest {
         }
     }
 
-    private fun denFørsteOppgavenSineEmneknagger(oppgaver: JsonNode): String? =
-        oppgaver.first()["emneknagger"].first().asText()
+    private fun denFørsteOppgavenSineEmneknagger(oppgaver: JsonNode): String? = oppgaver.first()["emneknagger"].first().asText()
 
     @Test
     fun `skal kunne svare på et steg`() {
