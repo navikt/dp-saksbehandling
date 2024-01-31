@@ -150,11 +150,9 @@ class DAG(val regler: List<Regel<*>>, val opplysningstype: Opplysningstype<*>) {
             RegelNode(
                 regel.toString(),
                 // Alle noder regelen er avhengig av
-                regel.avhengerAv.mapNotNull {
+                regel.avhengerAv.mapNotNull { opplysningstype ->
                     regler.find { it.produserer(opplysningstype) }
                         ?.let {
-                            println(it)
-                            println(it.avhengerAv)
                             blurp(it)
                         }
                 },
