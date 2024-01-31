@@ -14,9 +14,13 @@ import no.nav.dagpenger.behandling.Tilstand.Utført
 import no.nav.dagpenger.behandling.db.BehandlingRepository
 import no.nav.dagpenger.behandling.db.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
+import no.nav.dagpenger.behandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.behandling.db.PostgresRepository
 import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
+import no.nav.dagpenger.behandling.hendelser.VurderAvslagPåMinsteinntektHendelse
 import no.nav.dagpenger.behandling.iverksett.IverksettClient
 import no.nav.dagpenger.behandling.oppgave.Oppgave
 import no.nav.dagpenger.behandling.serder.asUUID
@@ -188,6 +192,45 @@ class MediatorTest {
             it!!.hentGjeldendeSak() shouldNotBe null
         }
     }
+
+    @Test
+    fun `Behandle VurderAvslagPåMinsteinntektHendelse`() =
+        withMigratedDb {
+            val postgresRepository = PostgresRepository(dataSource)
+            val mediator = mediatorMedDb(postgresRepository)
+
+            mediator.behandle(
+                SøknadInnsendtHendelse(
+                    søknadId = UUID.randomUUID(),
+                    journalpostId = "123",
+                    ident = ident,
+                    innsendtDato = LocalDate.MIN,
+                ),
+            )
+
+            mediator.behandle(
+                VurderAvslagPåMinsteinntektHendelse(
+                    ident = testIdent,
+                    søknadUUID = UUID.randomUUID(),
+                    meldingsreferanseId = UUID.randomUUID(),
+                ),
+            )
+
+            // Hva skal vi gjøre?
+            // Vi skal finne oppgaveUUID fra søknad_uuid
+            // Legg deretter til emneknagg = minsteinntektgreier på oppgaven
+        }
+
+    private fun mediatorMedDb(postgresRepository: PostgresRepository) =
+        Mediator(
+            rapidsConnection = testRapid,
+            oppgaveRepository = postgresRepository,
+            personRepository = postgresRepository,
+            behandlingRepository = postgresRepository,
+            aktivitetsloggMediator = mockk(relaxed = true),
+            iverksettClient = mockkIverksettClient,
+            vurderingRepository = mockk(relaxed = true),
+        )
 
     @Test
     fun `Publiserer melding rettighet_behandlet_hendelse når behandlingen er ferdig`() {
