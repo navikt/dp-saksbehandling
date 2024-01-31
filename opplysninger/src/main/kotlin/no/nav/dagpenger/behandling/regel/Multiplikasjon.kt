@@ -13,7 +13,7 @@ internal class Multiplikasjon(
             opplysningstyper.filter { opplysningstype ->
                 opplysninger.any { it.er(opplysningstype) }
             }.map { opplysningstype ->
-                opplysninger.find { it.er(opplysningstype) }?.verdi as Double
+                opplysninger.findLast { it.er(opplysningstype) }?.verdi as Double
             }
 
         return verdier.reduce { acc, d -> acc * d }

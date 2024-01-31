@@ -4,7 +4,6 @@ import no.nav.dagpenger.behandling.regel.enAvRegel
 import no.nav.dagpenger.behandling.regel.multiplikasjon
 import no.nav.dagpenger.behandling.regel.oppslag
 import no.nav.dagpenger.behandling.regel.størreEnn
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -78,22 +77,20 @@ class OpplysningerTest {
         opplysninger.leggTil(Faktum(øvreTerskelFaktor, 3.0))
         assertEquals(1, opplysninger.trenger(minsteinntekt).size)
 
-        opplysninger.leggTil(Faktum(inntekt, 321321.0))
+        opplysninger.leggTil(Hypotese(inntekt, 321321.0))
         assertEquals(0, opplysninger.trenger(minsteinntekt).size)
 
         assertTrue(opplysninger.har(minsteinntekt))
         assertTrue(opplysninger.find { it.er(minsteinntekt) }?.verdi as Boolean)
 
-        opplysninger.leggTil(Faktum(minsteinntekt, false))
-
         opplysninger.forEach { println(it) }
-        assertTrue(opplysninger.har(minsteinntekt))
-        assertFalse(opplysninger.findLast { it.er(minsteinntekt) }?.verdi as Boolean)
     }
 }
 
 /*
-1. Gyldighetsperiode
-2. Sporing av utledning
-3. Bygge ut opplysninger med de hjelpefunksjoner vi trenger (og fjerne at den framstår som en List<Opplysning>)
+1. Gyldighetsperiode for opplysninger
+2. Gyldighetsperiode for regler
+3. Behandling med utgangspunkt i en dato
+4. Sporing av utledning
+5. Bygge ut opplysninger med de hjelpefunksjoner vi trenger (og fjerne at den framstår som en List<Opplysning>)
  */

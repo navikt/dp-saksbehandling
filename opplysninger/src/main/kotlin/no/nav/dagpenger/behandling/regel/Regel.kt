@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.regel
 
+import no.nav.dagpenger.behandling.Faktum
 import no.nav.dagpenger.behandling.Hypotese
 import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysningstype
@@ -17,6 +18,13 @@ abstract class Regel<T : Comparable<T>>(
     fun produserer(opplysningstype: Opplysningstype<*>) = produserer.er(opplysningstype)
 
     fun lagProdukt(opplysninger: List<Opplysning<*>>): Opplysning<T> {
-        return Hypotese(produserer, kjør(opplysninger))
+        val basertPåFaktum =
+            avhengerAv.flatMap { opplysninger.filter { opplysning -> opplysning.er(it) } }.all {
+                it is Faktum<*>
+            }
+        return when (basertPåFaktum) {
+            true -> return Faktum(produserer, kjør(opplysninger))
+            false -> Hypotese(produserer, kjør(opplysninger))
+        }
     }
 }
