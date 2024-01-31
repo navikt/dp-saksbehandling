@@ -308,8 +308,29 @@ class PostgresRepository(private val ds: DataSource) : PersonRepository, Oppgave
         }
     }
 
-    override fun hentOppgaveFor(søknadUUID: UUID): Oppgave? {
-        TODO("Not yet implemented")
+    override fun hentOppgaveFor(søknadUUID: UUID): Oppgave {
+        val oppgaveveId =
+            hentOppgaveUUIDFor(søknadUUID) ?: throw IllegalArgumentException("Fant ikke oppgave for søknad=$søknadUUID")
+        return hentOppgave(oppgaveveId)
+    }
+
+    private fun hentOppgaveUUIDFor(søknadId: UUID): UUID? {
+        return using(sessionOf(ds)) { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        SELECT o.uuid
+                        FROM oppgave o
+                        JOIN behandling b ON b.uuid = o.behandling_id
+                        JOIN hendelse h ON b.uuid = h.behandling_id
+                        WHERE h.soknad_id = :soknad_id """,
+                    paramMap = mapOf("soknad_id" to søknadId),
+                ).map { row ->
+                    row.uuid("uuid")
+                }.asSingle,
+            )
+        }
     }
 
     override fun hentOppgaverFor(fnr: String): List<Oppgave> {

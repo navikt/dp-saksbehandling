@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.api
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.json.shouldContainJsonKey
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
@@ -72,9 +73,12 @@ class OppgaveApiTest {
                 "${response.contentType()}" shouldContain "application/json"
                 val oppgaver = jacksonObjectMapper().readTree(response.bodyAsText())
                 oppgaver.size() shouldBe 6
+                denFørsteOppgavenSineEmneknagger(oppgaver) shouldBe "Søknadsbehandling"
             }
         }
     }
+
+    private fun denFørsteOppgavenSineEmneknagger(oppgaver: JsonNode): String? = oppgaver.first()["emneknagger"].first().asText()
 
     @Test
     fun `skal kunne svare på et steg`() {
@@ -291,6 +295,7 @@ class OppgaveApiTest {
                             }
                         }
                     },
+                    emneknagger = setOf("Søknadsbehandling", "VurderAvslagAvMinsteinntekt"),
                 ).also { oppgaveId = it.uuid },
             )
             lagreOppgave(
@@ -301,6 +306,7 @@ class OppgaveApiTest {
                             vilkår("vilkår2")
                         }
                     },
+                    emneknagger = setOf("Søknadsbehandling", "VurderAvslagAvMinsteinntekt"),
                 ),
             )
             lagreOppgave(
@@ -316,6 +322,7 @@ class OppgaveApiTest {
                             vilkår("vilkår3")
                         }
                     },
+                    emneknagger = setOf("Søknadsbehandling", "VurderAvslagAvMinsteinntekt"),
                 ),
             )
         }

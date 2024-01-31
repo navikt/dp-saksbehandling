@@ -9,6 +9,7 @@ import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.db.VurderingRepository
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
+import no.nav.dagpenger.behandling.hendelser.VurderAvslagPåMinsteinntektHendelse
 import no.nav.dagpenger.behandling.iverksett.IverksettClient
 import no.nav.dagpenger.behandling.iverksett.IverksettDTOBuilder
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -85,4 +86,10 @@ internal class Mediator(
         navn: String,
         event: BehandlingObserver.BehandlingEvent,
     ) = rapidsConnection.publish(event.ident, JsonMessage.newMessage(navn, event.toMap()).toJson())
+
+    fun behandle(vurderAvslagPåMinsteinntektHendelse: VurderAvslagPåMinsteinntektHendelse) {
+        val oppgave = oppgaveRepository.hentOppgaveFor(vurderAvslagPåMinsteinntektHendelse.søknadUUID)
+        oppgave.behandle(vurderAvslagPåMinsteinntektHendelse)
+        oppgaveRepository.lagreOppgave(oppgave)
+    }
 }

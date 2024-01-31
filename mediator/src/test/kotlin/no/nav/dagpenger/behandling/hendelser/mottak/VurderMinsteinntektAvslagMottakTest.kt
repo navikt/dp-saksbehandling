@@ -1,24 +1,27 @@
 package no.nav.dagpenger.behandling.hendelser.mottak
 
 import io.mockk.mockk
+import io.mockk.verify
+import no.nav.dagpenger.behandling.Mediator
+import no.nav.dagpenger.behandling.hendelser.VurderAvslagPåMinsteinntektHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 
 class VurderMinsteinntektAvslagMottakTest {
     private val testRapid = TestRapid()
+    private val mediator = mockk<Mediator>(relaxed = true)
 
     init {
-        VurderMinsteinntektAvslagMottak(testRapid, mockk())
+        VurderMinsteinntektAvslagMottak(testRapid, mediator)
     }
 
     @Test
     fun `Skal behandle manuell_behandling hendelser grunnet mulig gjenopptak`() {
         testRapid.sendTestMessage(testMessageMuligGjenopptak)
-
-        // TODO
-        // hent oppgave basert på søknad-id
-        // insert oppgave_emneknagg for vurderAvslagPåMinsteinntekt
+        verify(exactly = 1) {
+            mediator.behandle(any<VurderAvslagPåMinsteinntektHendelse>())
+        }
     }
 
     @Language("JSON")

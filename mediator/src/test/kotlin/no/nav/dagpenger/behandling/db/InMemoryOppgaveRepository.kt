@@ -65,7 +65,7 @@ class InMemoryOppgaveRepository : OppgaveRepository {
 
     override fun hentOppgaver() = oppgaver
 
-    override fun hentOppgaveFor(søknadUUID: UUID): Oppgave? {
+    override fun hentOppgaveFor(søknadUUID: UUID): Oppgave {
         TODO("Not yet implemented")
     }
 
