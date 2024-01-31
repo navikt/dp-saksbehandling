@@ -4,8 +4,9 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.Faktum
 import no.nav.dagpenger.behandling.Opplysninger
 import no.nav.dagpenger.behandling.Opplysningstype
-import no.nav.dagpenger.behandling.Regelmotor
+import no.nav.dagpenger.behandling.Regelkjøring
 import no.nav.dagpenger.behandling.Regelsett
+import no.nav.dagpenger.behandling.mai
 import org.junit.jupiter.api.Test
 
 internal class EnAvRegelTest {
@@ -14,7 +15,8 @@ internal class EnAvRegelTest {
     private val produserer = Opplysningstype<Boolean>("A")
     private val opplysninger =
         Opplysninger(
-            Regelmotor(
+            Regelkjøring(
+                1.mai,
                 Regelsett().also {
 
                     it.enAvRegel(

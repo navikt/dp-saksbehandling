@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
-import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
 class OpplysningerTest {
@@ -18,21 +17,21 @@ class OpplysningerTest {
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
         val alder = Opplysningstype("Alder", vilkår)
 
-        val opplysninger = Opplysninger(Regelmotor())
+        val opplysninger = Opplysninger(Regelkjøring(1.mai.atStartOfDay()))
 
         opplysninger.leggTil(Faktum(minsteinntekt, true))
         opplysninger.leggTil(Faktum(alder, true))
         opplysninger.leggTil(Faktum(vilkår, true))
 
-        assertTrue(opplysninger.har(minsteinntekt, LocalDateTime.now()))
-        assertTrue(opplysninger.har(alder, LocalDateTime.now()))
-        assertTrue(opplysninger.har(vilkår, LocalDateTime.now()))
+        assertTrue(opplysninger.har(minsteinntekt))
+        assertTrue(opplysninger.har(alder))
+        assertTrue(opplysninger.har(vilkår))
     }
 
     @Test
     fun `tillater ikke overlappende opplysninger av samme type`() {
         val opplysningstype = Opplysningstype<Double>("Type")
-        val opplysninger = Opplysninger(Regelmotor())
+        val opplysninger = Opplysninger(Regelkjøring(1.mai))
 
         opplysninger.leggTil(Faktum(opplysningstype, 0.5, Gyldighetsperiode(1.mai, 10.mai)))
         assertThrows<IllegalArgumentException> {
@@ -40,9 +39,9 @@ class OpplysningerTest {
         }
         opplysninger.leggTil(Faktum(opplysningstype, 1.5, Gyldighetsperiode(11.mai)))
 
-        assertEquals(0.5, opplysninger.finnOpplysning(opplysningstype, 8.mai).verdi)
-        assertEquals(0.5, opplysninger.finnOpplysning(opplysningstype, 10.mai).verdi)
-        assertEquals(1.5, opplysninger.finnOpplysning(opplysningstype, 12.mai).verdi)
+        assertEquals(0.5, opplysninger.finnOpplysning(opplysningstype).verdi)
+        assertEquals(0.5, opplysninger.finnOpplysning(opplysningstype).verdi)
+        assertEquals(1.5, opplysninger.finnOpplysning(opplysningstype).verdi)
     }
 
     private object Grunnbeløp {
@@ -79,32 +78,43 @@ class OpplysningerTest {
         val minsteinntekt = Opplysningstype("Minsteinntekt", vilkår)
         regelsett.enAvRegel(minsteinntekt, overNedreTerskel, overØvreTerskel)
 
-        val fraDato = LocalDateTime.now()
-        val opplysninger = Opplysninger(Regelmotor(regelsett))
-        opplysninger.leggTil(Faktum(virkningsdato, LocalDate.now()))
-        val actual = opplysninger.trenger(minsteinntekt, fraDato)
+        val fraDato = 10.mai.atStartOfDay()
+        val opplysninger =
+            Opplysninger(
+                Regelkjøring(
+                    fraDato,
+                    regelsett,
+                ),
+                listOf(
+                    // Setter opp opplysninger med ting som er kjent fra før
+                    // Har er ikke lengre gyldig og må hentes på nytt
+                    Hypotese(
+                        inntekt,
+                        321321.0,
+                        Gyldighetsperiode(1.januar, 1.mai),
+                    ),
+                ),
+            )
 
+        opplysninger.leggTil(Faktum(virkningsdato, fraDato.toLocalDate()))
+        // Flyt for å innhente manglende opplysninger
+        val actual = opplysninger.trenger(minsteinntekt)
         assertEquals(3, actual.size)
         assertEquals(setOf(inntekt, nedreTerskelFaktor, øvreTerskelFaktor), actual)
 
         assertEquals(Grunnbeløp.TEST_GRUNNBELØP, opplysninger.finnOpplysning(grunnbeløp).verdi)
 
         opplysninger.leggTil(Faktum(nedreTerskelFaktor, 1.5))
-        assertEquals(2, opplysninger.trenger(minsteinntekt, fraDato).size)
+        assertEquals(2, opplysninger.trenger(minsteinntekt).size)
 
         opplysninger.leggTil(Faktum(øvreTerskelFaktor, 3.0))
-        assertEquals(1, opplysninger.trenger(minsteinntekt, fraDato).size)
+        assertEquals(1, opplysninger.trenger(minsteinntekt).size)
 
-        opplysninger.leggTil(
-            Hypotese(
-                inntekt,
-                321321.0,
-                // Gyldighetsperiode(LocalDate.now().minusYears(2), LocalDate.now().minusWeeks(2)),
-            ),
-        )
-        assertEquals(0, opplysninger.trenger(minsteinntekt, fraDato).size)
+        // Har er ikke lengre gyldig og må hentes på nytt
+        opplysninger.leggTil(Hypotese(inntekt, 321321.0, Gyldighetsperiode(9.mai)))
+        assertEquals(0, opplysninger.trenger(minsteinntekt).size)
 
-        assertTrue(opplysninger.har(minsteinntekt, fraDato))
+        assertTrue(opplysninger.har(minsteinntekt))
         assertTrue(opplysninger.finnOpplysning(minsteinntekt).verdi)
 
         println(opplysninger.toString())

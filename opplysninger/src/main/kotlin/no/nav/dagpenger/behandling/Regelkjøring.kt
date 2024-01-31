@@ -1,11 +1,15 @@
 package no.nav.dagpenger.behandling
 
 import no.nav.dagpenger.behandling.regel.Regel
+import java.time.LocalDate
 import java.time.LocalDateTime
 
-class Regelmotor(
+class Regelkjøring(
+    val forDato: LocalDateTime,
     vararg regelsett: Regelsett,
 ) {
+    constructor(fraDato: LocalDate, vararg regelsett: Regelsett) : this(fraDato.atStartOfDay(), *regelsett)
+
     private val muligeRegler: MutableList<Regel<*>> = regelsett.flatMap { it.regler }.toMutableList()
     private val plan: MutableList<Regel<*>> = mutableListOf()
     private val kjørteRegler: MutableList<Regel<*>> = mutableListOf()
@@ -44,7 +48,7 @@ class Regelmotor(
 
     private fun aktiverRegler() {
         muligeRegler.filter {
-            it.kanKjøre(opplysninger)
+            it.kanKjøre(opplysninger, forDato)
         }.forEach {
             plan.add(it)
         }
@@ -67,7 +71,7 @@ class Regelmotor(
                     } else {
                         setOf(it)
                     }
-                }.flatten().filterNot { opplysninger.har(it, fraDato) }.toSet()
+                }.flatten().filterNot { opplysninger.har(it) }.toSet()
         }
     }
 

@@ -3,8 +3,9 @@ package no.nav.dagpenger.behandling.regel
 import no.nav.dagpenger.behandling.Faktum
 import no.nav.dagpenger.behandling.Opplysninger
 import no.nav.dagpenger.behandling.Opplysningstype
-import no.nav.dagpenger.behandling.Regelmotor
+import no.nav.dagpenger.behandling.Regelkjøring
 import no.nav.dagpenger.behandling.Regelsett
+import no.nav.dagpenger.behandling.mai
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -18,7 +19,8 @@ class MultiplikasjonTest {
 
     private val opplysninger =
         Opplysninger(
-            Regelmotor(
+            Regelkjøring(
+                1.mai,
                 Regelsett().also {
                     it.multiplikasjon(
                         sum,

@@ -4,7 +4,7 @@ import no.nav.dagpenger.behandling.regel.enAvRegel
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-class RegelmotorTest {
+class RegelkjøringTest {
     @Test
     fun `Regelsett kan ikke inneholder flere regler som produserer samme opplysningstype`() {
         val regelsett =
@@ -14,7 +14,7 @@ class RegelmotorTest {
             }
 
         assertThrows<IllegalArgumentException> {
-            Regelmotor(regelsett)
+            Regelkjøring(1.mai, regelsett)
         }
     }
 }

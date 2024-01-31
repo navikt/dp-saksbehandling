@@ -6,14 +6,14 @@ import no.nav.dagpenger.behandling.Hypotese
 import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysninger
 import no.nav.dagpenger.behandling.Opplysningstype
-import no.nav.dagpenger.behandling.Regelmotor
+import no.nav.dagpenger.behandling.Regelkjøring
+import no.nav.dagpenger.behandling.mai
 import org.junit.jupiter.api.Assertions.assertTrue
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class OpplysningSteg : No {
     private lateinit var opplysning: Opplysning<*>
-    private val opplysninger = Opplysninger(Regelmotor())
+    private val opplysninger = Opplysninger(Regelkjøring(1.mai))
 
     init {
         Gitt("at vi har en hypotese") {
@@ -33,7 +33,7 @@ class OpplysningSteg : No {
             opplysninger.leggTil(Hypotese(Opplysningstype<LocalDate>(type), LocalDate.now()))
         }
         Så("kan vi utlede {string}") { type: String ->
-            assertTrue(opplysninger.har(Opplysningstype<LocalDate>(type), LocalDateTime.now()))
+            assertTrue(opplysninger.har(Opplysningstype<LocalDate>(type)))
         }
     }
 }

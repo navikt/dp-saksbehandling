@@ -5,12 +5,16 @@ import no.nav.dagpenger.behandling.Hypotese
 import no.nav.dagpenger.behandling.LesbarOpplysninger
 import no.nav.dagpenger.behandling.Opplysning
 import no.nav.dagpenger.behandling.Opplysningstype
+import java.time.LocalDateTime
 
 abstract class Regel<T : Comparable<T>>(
     internal val produserer: Opplysningstype<T>,
     val avhengerAv: List<Opplysningstype<*>> = emptyList(),
 ) {
-    fun kanKjøre(opplysninger: LesbarOpplysninger): Boolean =
+    fun kanKjøre(
+        opplysninger: LesbarOpplysninger,
+        fraDato: LocalDateTime,
+    ): Boolean =
         opplysninger
             .finnAlle(avhengerAv)
             .size == avhengerAv.size

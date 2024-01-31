@@ -1,116 +1,46 @@
 package no.nav.dagpenger.behandling
 
-import java.time.LocalDate
-import java.time.LocalDateTime
-
 interface LesbarOpplysninger {
-    fun <T : Comparable<T>> finnOpplysning(
-        opplysningstype: Opplysningstype<T>,
-        gyldigForDato: LocalDateTime = LocalDateTime.now(),
-    ): Opplysning<T>
+    fun <T : Comparable<T>> finnOpplysning(opplysningstype: Opplysningstype<T>): Opplysning<T>
 
-    fun <T : Comparable<T>> finnOpplysning(
-        opplysningstype: Opplysningstype<T>,
-        gyldigForDato: LocalDate,
-    ): Opplysning<T>
+    fun har(opplysningstype: Opplysningstype<*>): Boolean
 
-    fun har(
-        opplysningstype: Opplysningstype<*>,
-        fraDato: LocalDateTime,
-    ): Boolean
+    fun trenger(opplysningstype: Opplysningstype<*>): Set<Opplysningstype<*>>
 
-    fun har(
-        opplysningstype: Opplysningstype<*>,
-        fraDato: LocalDate,
-    ): Boolean
-
-    fun trenger(
-        opplysningstype: Opplysningstype<*>,
-        fraDato: LocalDateTime,
-    ): Set<Opplysningstype<*>>
-
-    fun trenger(
-        opplysningstype: Opplysningstype<*>,
-        fraDato: LocalDate,
-    ): Set<Opplysningstype<*>>
-
-    fun finnAlle(
-        opplysningstyper: List<Opplysningstype<*>>,
-        fraDato: LocalDateTime = LocalDateTime.now(),
-    ): List<Opplysning<*>>
-
-    fun finnAlle(
-        opplysningstyper: List<Opplysningstype<*>>,
-        fraDato: LocalDate,
-    ): List<Opplysning<*>>
+    fun finnAlle(opplysningstyper: List<Opplysningstype<*>>): List<Opplysning<*>>
 }
 
-class Opplysninger private constructor(
-    private val regelmotor: Regelmotor,
-    private val opplysninger: MutableList<Opplysning<*>>,
+class Opplysninger(
+    private val regelkjøring: Regelkjøring,
+    opplysninger: List<Opplysning<*>> = emptyList(),
 ) : LesbarOpplysninger {
-    constructor(regelmotor: Regelmotor) : this(regelmotor, mutableListOf())
+    private val opplysninger: MutableList<Opplysning<*>> = opplysninger.toMutableList()
+
+    constructor(regelkjøring: Regelkjøring) : this(regelkjøring, mutableListOf())
 
     init {
-        regelmotor.registrer(this)
+        regelkjøring.registrer(this)
     }
 
-    override fun <T : Comparable<T>> finnOpplysning(
-        opplysningstype: Opplysningstype<T>,
-        gyldigForDato: LocalDateTime,
-    ): Opplysning<T> {
-        return finnNullableOpplysning(opplysningstype, gyldigForDato)
-            ?: throw IllegalStateException("Har ikke opplysning $opplysningstype som er gyldig for $gyldigForDato")
+    override fun <T : Comparable<T>> finnOpplysning(opplysningstype: Opplysningstype<T>): Opplysning<T> {
+        return finnNullableOpplysning(opplysningstype)
+            ?: throw IllegalStateException("Har ikke opplysning $opplysningstype som er gyldig for ${regelkjøring.forDato}")
     }
-
-    override fun <T : Comparable<T>> finnOpplysning(
-        opplysningstype: Opplysningstype<T>,
-        gyldigForDato: LocalDate,
-    ): Opplysning<T> = finnOpplysning(opplysningstype, gyldigForDato.atStartOfDay())
 
     fun leggTil(opplysning: Opplysning<*>) {
-        require(
-            opplysninger.none {
-                it.sammeSom(opplysning)
-            },
-        ) { "Opplysning ${opplysning.opplysningstype} finnes allerede med overlappende gyldighetsperiode" }
+        require(opplysninger.none { it.sammeSom(opplysning) }) {
+            "Opplysning ${opplysning.opplysningstype} finnes allerede med overlappende gyldighetsperiode"
+        }
         opplysninger.add(opplysning)
-        regelmotor.evaluer()
+        regelkjøring.evaluer()
     }
 
-    private fun <T : Comparable<T>> finnNullableOpplysning(
-        opplysningstype: Opplysningstype<T>,
-        gyldigForDato: LocalDateTime,
-    ): Opplysning<T>? =
-        opplysninger.firstOrNull { it.er(opplysningstype) && it.gyldighetsperiode.inneholder(gyldigForDato) } as Opplysning<T>?
+    private fun <T : Comparable<T>> finnNullableOpplysning(opplysningstype: Opplysningstype<T>): Opplysning<T>? =
+        opplysninger.firstOrNull { it.er(opplysningstype) && it.gyldighetsperiode.inneholder(regelkjøring.forDato) } as Opplysning<T>?
 
-    override fun har(
-        opplysningstype: Opplysningstype<*>,
-        fraDato: LocalDateTime,
-    ) = finnNullableOpplysning(opplysningstype, fraDato) != null
+    override fun har(opplysningstype: Opplysningstype<*>) = finnNullableOpplysning(opplysningstype) != null
 
-    override fun har(
-        opplysningstype: Opplysningstype<*>,
-        fraDato: LocalDate,
-    ) = har(opplysningstype, fraDato.atStartOfDay())
+    override fun trenger(opplysningstype: Opplysningstype<*>) = regelkjøring.trenger(opplysningstype, regelkjøring.forDato)
 
-    override fun trenger(
-        opplysningstype: Opplysningstype<*>,
-        fraDato: LocalDateTime,
-    ) = regelmotor.trenger(opplysningstype, fraDato)
-
-    override fun trenger(
-        opplysningstype: Opplysningstype<*>,
-        fraDato: LocalDate,
-    ) = trenger(opplysningstype, fraDato.atStartOfDay())
-
-    override fun finnAlle(
-        opplysningstyper: List<Opplysningstype<*>>,
-        fraDato: LocalDateTime,
-    ) = opplysningstyper.mapNotNull { finnNullableOpplysning(it, fraDato) }
-
-    override fun finnAlle(
-        opplysningstyper: List<Opplysningstype<*>>,
-        fraDato: LocalDate,
-    ) = finnAlle(opplysningstyper, fraDato.atStartOfDay())
+    override fun finnAlle(opplysningstyper: List<Opplysningstype<*>>) = opplysningstyper.mapNotNull { finnNullableOpplysning(it) }
 }
