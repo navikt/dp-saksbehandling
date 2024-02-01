@@ -1,8 +1,7 @@
 package no.nav.dagpenger.behandling
 
-import no.nav.dagpenger.behandling.dag.DAGPrettyPrint
-import no.nav.dagpenger.behandling.dag.MermaidDiagramBuilder
 import no.nav.dagpenger.behandling.dag.RegeltreBygger
+import no.nav.dagpenger.behandling.dag.printer.MermaidPrinter
 import no.nav.dagpenger.behandling.regel.enAvRegel
 import no.nav.dagpenger.behandling.regel.multiplikasjon
 import no.nav.dagpenger.behandling.regel.oppslag
@@ -60,7 +59,7 @@ class OpplysningerTest {
         val regelsett = Regelsett()
 
         val nedreTerskelFaktor = Opplysningstype<Double>("Nedre terskel (1.5G)")
-        val øvreTerskelFaktor = Opplysningstype<Double>("Øvre terskel (1.5G)")
+        val øvreTerskelFaktor = Opplysningstype<Double>("Øvre terskel (3G)")
         val inntekt = Opplysningstype<Double>("Inntekt")
         val grunnbeløp = Opplysningstype<Double>("Grunnbeløp")
         val virkningsdato = Opplysningstype<LocalDate>("Virkningsdato")
@@ -92,23 +91,12 @@ class OpplysningerTest {
                 listOf(
                     // Setter opp opplysninger med ting som er kjent fra før
                     // Har er ikke lengre gyldig og må hentes på nytt
-                    Hypotese(
-                        inntekt,
-                        321321.0,
-                        Gyldighetsperiode(1.januar, 1.mai),
-                    ),
+                    Faktum(inntekt, 221221.0, Gyldighetsperiode(1.januar, 1.mai)),
                 ),
             )
 
         // Sett virkningsdato som en opplysning
         opplysninger.leggTil(Faktum(virkningsdato, fraDato.toLocalDate()))
-
-        val dag =
-            RegeltreBygger(opplysninger.regelkjøring.muligeRegler).byggDAG()
-
-        DAGPrettyPrint(dag).prettyPrint(minsteinntekt)
-        val mermaidDiagram = MermaidDiagramBuilder(dag).toMermaidDiagram()
-        println(mermaidDiagram)
 
         // Flyt for å innhente manglende opplysninger
         val actual = opplysninger.trenger(minsteinntekt)
@@ -130,6 +118,9 @@ class OpplysningerTest {
         assertTrue(opplysninger.har(minsteinntekt))
         assertTrue(opplysninger.finnOpplysning(minsteinntekt).verdi)
 
+        val dag = RegeltreBygger(regelsett).dag()
+        val mermaidDiagram = MermaidPrinter(dag).toPrint()
+        println(mermaidDiagram)
         println(opplysninger.toString())
     }
 }
