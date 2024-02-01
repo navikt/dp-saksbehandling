@@ -45,7 +45,7 @@ internal class VurderMinsteinntektAvslagMottak(
         context: MessageContext,
     ) {
         val søknadUUID = packet["søknad_uuid"].asUUID()
-        val ident = packet["identer"].asText()
+        val ident = packet.folkeregisterIdent()
         val meldingsreferanseId = packet["@id"].asUUID()
         val årsakTilManuellBehandling = packet["seksjon_navn"].asText()
 
@@ -65,4 +65,6 @@ internal class VurderMinsteinntektAvslagMottak(
         logger.info(
             "Fått hendelse om manuell behandling ($årsakTilManuellBehandling) av avslag på minsteinntekt",
         )
+
+    private fun JsonMessage.folkeregisterIdent() = this["identer"].first { it["type"].asText() == "folkeregisterident" }["id"].asText()
 }
