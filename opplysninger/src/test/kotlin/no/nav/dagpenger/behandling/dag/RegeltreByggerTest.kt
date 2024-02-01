@@ -5,6 +5,7 @@ import no.nav.dagpenger.behandling.Regelsett
 import no.nav.dagpenger.behandling.regel.multiplikasjon
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import kotlin.test.assertContains
 
 class RegeltreByggerTest {
     @Test
@@ -18,5 +19,12 @@ class RegeltreByggerTest {
         val regeltre = RegeltreBygger(regelsett.regler()).dag()
         assertEquals(3, regeltre.nodes.size, "Har en node for hver opplysningstype")
         assertEquals(2, regeltre.edges.size, "Har en kobling fra utledet til avhengig opplysningstype")
+
+        val leafNodes = regeltre.findLeafNodes()
+        assertEquals(2, leafNodes.size, "Har to løvnoder")
+
+        val opplysningerUtenAvhengigheter = leafNodes.map { it.data }
+        assertContains(opplysningerUtenAvhengigheter, a)
+        assertContains(opplysningerUtenAvhengigheter, b)
     }
 }
