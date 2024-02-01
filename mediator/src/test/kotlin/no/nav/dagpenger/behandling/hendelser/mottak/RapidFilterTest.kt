@@ -18,6 +18,26 @@ class RapidFilterTest {
             "søknad_uuid" to "søknadId33",
             "seksjon_navn" to "mulig gjenopptak",
             "identer" to "ident1",
+            "fakta" to
+                listOf(
+                    mapOf(
+                        "id" to "33",
+                        "navn" to "Har brukt opp forrige dagpengeperiode",
+                    ),
+                ),
+            "identer" to
+                listOf(
+                    mapOf(
+                        "id" to "01010155555",
+                        "type" to "folkeregisterident",
+                        "historisk" to false,
+                    ),
+                    mapOf(
+                        "id" to "1000098693185",
+                        "type" to "aktørid",
+                        "historisk" to false,
+                    ),
+                ),
         )
 
     @Test
@@ -129,6 +149,7 @@ class RapidFilterTest {
 
     private class TestListener(rapidsConnection: RapidsConnection) : River.PacketListener {
         var onPacketCalled = false
+        lateinit var packet: JsonMessage
 
         init {
             River(rapidsConnection).apply(
@@ -141,6 +162,7 @@ class RapidFilterTest {
             context: MessageContext,
         ) {
             this.onPacketCalled = true
+            this.packet = packet
         }
 
         override fun onError(
