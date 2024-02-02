@@ -8,6 +8,8 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 class RapidFilterTest {
     private val testRapid = TestRapid()
@@ -40,75 +42,30 @@ class RapidFilterTest {
                 ),
         )
 
-    @Test
-    fun `Skal behandle pakker med alle required keys og gyldige seksjon_navn`() {
-        val testListener = TestListener(testRapid)
-        testRapid.sendTestMessage(
-            JsonMessage.newMessage(testMessage).toJson(),
-        )
-        testListener.onPacketCalled shouldBe true
-
-        testRapid.sendTestMessage(
-            testMessage.muterOgKonverterToJsonString {
-                it.remove("seksjon_navn")
-                it.put("seksjon_navn", "svangerskapsrelaterte sykepenger")
-            },
-        )
-        testListener.onPacketCalled shouldBe true
-
-        testRapid.sendTestMessage(
-            testMessage.muterOgKonverterToJsonString {
-                it.remove("seksjon_navn")
-                it.put("seksjon_navn", "EØS-arbeid")
-            },
-        )
-        testListener.onPacketCalled shouldBe true
-
-        testRapid.sendTestMessage(
-            testMessage.muterOgKonverterToJsonString {
-                it.remove("seksjon_navn")
-                it.put("seksjon_navn", "har hatt lukkede saker siste 8 uker")
-            },
-        )
-        testListener.onPacketCalled shouldBe true
-
-        testRapid.sendTestMessage(
-            testMessage.muterOgKonverterToJsonString {
-                it.remove("seksjon_navn")
-                it.put("seksjon_navn", "det er inntekt neste kalendermåned")
-            },
-        )
-        testListener.onPacketCalled shouldBe true
-
-        testRapid.sendTestMessage(
-            testMessage.muterOgKonverterToJsonString {
-                it.remove("seksjon_navn")
-                it.put("seksjon_navn", "mulige inntekter fra fangst og fisk")
-            },
-        )
-        testListener.onPacketCalled shouldBe true
-
-        testRapid.sendTestMessage(
-            testMessage.muterOgKonverterToJsonString {
-                it.remove("seksjon_navn")
-                it.put("seksjon_navn", "jobbet utenfor Norge")
-            },
-        )
-        testListener.onPacketCalled shouldBe true
-    }
-
-    @Test
-    fun `Skal ikke behandle pakker med ugyldig seksjon_navn`() {
+    @ParameterizedTest
+    @CsvSource(
+        VurderMinsteinntektAvslagMottak.MULIG_GJENOPPTAK + ", true",
+        VurderMinsteinntektAvslagMottak.EØS_ARBEID + ", true",
+        VurderMinsteinntektAvslagMottak.LUKKEDE_SAKER_NYLIG + ", true",
+        VurderMinsteinntektAvslagMottak.SVANGERSKAPSRELATERTE_SYKEPENGER + ", true",
+        VurderMinsteinntektAvslagMottak.INNTEKT_FRA_FANGST_OG_FISKE + ", true",
+        VurderMinsteinntektAvslagMottak.INNTEKT_NESTE_KALENDERMÅNED + ", true",
+        VurderMinsteinntektAvslagMottak.JOBB_UTENFOR_NORGE + ", true",
+        "tull og tøys, false",
+    )
+    fun `Skal behandle pakker med alle required keys og gyldige seksjon_navn`(
+        årsakManuellVurderingMinsteinntektAvslag: String,
+        skalBehandles: Boolean,
+    ) {
         val testListener = TestListener(testRapid)
 
         testRapid.sendTestMessage(
             testMessage.muterOgKonverterToJsonString {
                 it.remove("seksjon_navn")
-                it.put("seksjon_navn", "tull og tøys")
+                it.put("seksjon_navn", årsakManuellVurderingMinsteinntektAvslag)
             },
         )
-
-        testListener.onPacketCalled shouldBe false
+        testListener.onPacketCalled shouldBe skalBehandles
     }
 
     @Test
