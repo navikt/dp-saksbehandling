@@ -6,6 +6,7 @@ rootProject.name = "dp-behandling"
 include("modell")
 include("openapi")
 include("mediator")
+include("mediator2")
 include("opplysninger")
 
 dependencyResolutionManagement {
