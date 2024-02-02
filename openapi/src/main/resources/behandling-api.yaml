@@ -69,9 +69,6 @@ components:
           format: uuid
         personIdent:
           type: string
-        saksbehandler:
-          type: string
-          nullable: true
         datoOpprettet:
           type: string
           format: date
