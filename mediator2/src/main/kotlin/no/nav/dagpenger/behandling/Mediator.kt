@@ -1,9 +1,12 @@
 package no.nav.dagpenger.behandling
 
+import mu.KotlinLogging
 import no.nav.dagpenger.behandling.modell.hendelser.VurderAvslagPåMinsteinntektHendelse
 
-class Mediator {
+private val logger = KotlinLogging.logger {}
+
+internal class Mediator {
     fun behandle(vurderAvslagPåMinsteinntektHendelse: VurderAvslagPåMinsteinntektHendelse) {
-        TODO("Not yet implemented")
+        logger.info { "Her skal vi behandle noe" }
     }
 }

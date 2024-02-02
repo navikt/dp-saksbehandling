@@ -1,4 +1,4 @@
-package no.nav.dagpenger.behandling.hendelser.mottak
+package no.nav.dagpenger.behandling.mottak
 
 import com.fasterxml.jackson.databind.JsonNode
 import mu.KotlinLogging

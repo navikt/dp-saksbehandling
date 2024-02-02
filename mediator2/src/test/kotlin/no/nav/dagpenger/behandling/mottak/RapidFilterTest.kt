@@ -1,4 +1,4 @@
-package no.nav.dagpenger.behandling.hendelser.mottak
+package no.nav.dagpenger.behandling.mottak
 
 import io.kotest.matchers.shouldBe
 import no.nav.helse.rapids_rivers.JsonMessage

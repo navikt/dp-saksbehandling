@@ -3,7 +3,6 @@ package no.nav.dagpenger.behandling.mottak
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.behandling.Mediator
-import no.nav.dagpenger.behandling.hendelser.mottak.VurderMinsteinntektAvslagMottak
 import no.nav.dagpenger.behandling.modell.hendelser.VurderAvslagPåMinsteinntektHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
