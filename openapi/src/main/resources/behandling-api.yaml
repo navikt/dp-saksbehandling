@@ -103,6 +103,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Opplysning'
+        tilstand:
+          $ref: '#/components/schemas/StegTilstand'
+
       required:
         - uuid
         - stegNavn
@@ -138,3 +141,9 @@ components:
           type: string
       required:
         - fnr
+    StegTilstand:
+      type: string
+      enum:
+        - Groenn
+        - Roed
+        - Gul
