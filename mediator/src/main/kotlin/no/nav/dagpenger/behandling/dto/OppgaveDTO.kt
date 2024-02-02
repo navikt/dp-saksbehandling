@@ -10,11 +10,10 @@ internal fun Collection<Oppgave>.toOppgaverDTO() = this.map { it.toOppgaveDTO() 
 internal fun Oppgave.toOppgaveDTO(): OppgaveDTO {
     return OppgaveDTO(
         uuid = this.uuid,
-        person = this.person.ident,
+        personIdent = this.person.ident,
         saksbehandler = null,
-        opprettet = this.opprettet.toLocalDate(),
-        hendelse = this.behandler.toHendelserDTO().map { it.toMap() },
-        journalposter = this.behandler.toHendelserDTO().mapNotNull { it.kontekstMap["journalpostId"] },
+        datoOpprettet = this.opprettet.toLocalDate(),
+        journalpostIder = this.behandler.toHendelserDTO().mapNotNull { it.kontekstMap["journalpostId"] },
         tilstand = OppgaveTilstandDTO.valueOf(this.tilstand.toString()),
         steg = this.alleSteg().toStegDTO(),
         emneknagger = this.emneknagger.toList(),

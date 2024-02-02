@@ -124,8 +124,7 @@ class OppgaveApiTest {
                 val oppgave = jacksonObjectMapper().readTree(response.bodyAsText())
                 oppgave.isObject shouldBe true
                 oppgave["uuid"].asText() shouldBe oppgaveId.toString()
-                oppgave["journalposter"].map { it.asText() } shouldBe listOf("123")
-                oppgave["hendelse"].map { it["konteksttype"].asText() } shouldBe listOf("SøknadInnsendtHendelse")
+                oppgave["journalpostIder"].map { it.asText() } shouldBe listOf("123")
             }
         }
     }

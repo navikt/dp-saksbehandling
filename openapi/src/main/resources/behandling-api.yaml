@@ -186,28 +186,21 @@ components:
         inntekt:
           type: number
           format: double
-    Hendelse:
-      type: object
-      additionalProperties: true
     Oppgave:
       type: object
       properties:
         uuid:
           type: string
           format: uuid
-        person:
+        personIdent:
           type: string
         saksbehandler:
           type: string
           nullable: true
-        opprettet:
+        datoOpprettet:
           type: string
           format: date
-        hendelse:
-          type: array
-          items:
-            $ref: '#/components/schemas/Hendelse'
-        journalposter:
+        journalpostIder:
           type: array
           items:
             type: string
