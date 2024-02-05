@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
@@ -20,6 +21,7 @@ import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.ApplicationRequest
+import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -28,6 +30,12 @@ import io.ktor.server.routing.routing
 import no.nav.dagpenger.behandling.Mediator
 import no.nav.dagpenger.behandling.api.auth.AzureAd
 import no.nav.dagpenger.behandling.api.auth.verifier
+import no.nav.dagpenger.behandling.api.models.OppgaveDTO
+import no.nav.dagpenger.behandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.behandling.api.models.OpplysningDTO
+import no.nav.dagpenger.behandling.api.models.OpplysningTypeDTO
+import no.nav.dagpenger.behandling.api.models.StegDTO
+import java.time.LocalDate
 import java.util.UUID
 
 internal fun Application.oppgaveApi(mediator: Mediator) {
@@ -60,8 +68,8 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    // val oppgaver = mediator.hentOppgaver().toOppgaverDTO()
-                    // call.respond(HttpStatusCode.OK, oppgaver)
+                    val oppgaver = oppgaveDtos
+                    call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
 
                 route("sok") {
@@ -126,6 +134,66 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
         }
     }
 }
+
+internal val oppgaveDtos =
+    listOf(
+        OppgaveDTO(
+            uuid = UUID.randomUUID(),
+            personIdent = "12345678901",
+            datoOpprettet = LocalDate.now(),
+            journalpostIder = listOf("12345678"),
+            emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
+            tilstand = OppgaveTilstandDTO.TilBehandling,
+            steg =
+                listOf(
+                    StegDTO(
+                        uuid = UUID.randomUUID(),
+                        stegNavn = "Gjenopptak / 8 uker",
+                        opplysninger =
+                            listOf(
+                                OpplysningDTO(
+                                    opplysningNavn = "Mulig gjenopptak",
+                                    opplysningType = OpplysningTypeDTO.Boolean,
+                                    svar = null,
+                                ),
+                                OpplysningDTO(
+                                    opplysningNavn = "Har hatt lukkede saker siste 8 uker",
+                                    opplysningType = OpplysningTypeDTO.Boolean,
+                                    svar = null,
+                                ),
+                            ),
+                    ),
+                    StegDTO(
+                        uuid = UUID.randomUUID(),
+                        stegNavn = "Minste arbeidsinntekt",
+                        opplysninger =
+                            listOf(
+                                OpplysningDTO(
+                                    opplysningNavn = "EØS-arbeid",
+                                    opplysningType = OpplysningTypeDTO.Boolean,
+                                    svar = null,
+                                ),
+                                OpplysningDTO(
+                                    opplysningNavn = "Jobb utenfor Norge",
+                                    opplysningType = OpplysningTypeDTO.Boolean,
+                                    svar = null,
+                                ),
+                                OpplysningDTO(
+                                    opplysningNavn = "Svangerskapsrelaterte sykepenger",
+                                    opplysningType = OpplysningTypeDTO.Boolean,
+                                    svar = null,
+                                ),
+                                OpplysningDTO(
+                                    opplysningNavn = "Det er inntekt neste kalendermåned",
+                                    opplysningType = OpplysningTypeDTO.Boolean,
+                                    svar = null,
+                                ),
+                            ),
+                        tilstand = null,
+                    ),
+                ),
+        ),
+    )
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {

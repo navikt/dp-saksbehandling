@@ -1,5 +1,6 @@
 package no.nav.dagpenger.behandling.api
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.json.shouldContainJsonKey
@@ -23,6 +24,8 @@ import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.behandling.Mediator
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
+import no.nav.dagpenger.behandling.api.json.objectMapper
+import no.nav.dagpenger.behandling.api.models.OppgaveDTO
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -49,20 +52,19 @@ class OppgaveApiTest {
     }
 
     @Test
-    @Disabled
     fun `Skal kunne hente ut alle oppgaver`() {
         withOppgaveApi {
             client.get("/oppgave") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val oppgaver = jacksonObjectMapper().readTree(response.bodyAsText())
-                oppgaver.size() shouldBe 6
-                denFørsteOppgavenSineEmneknagger(oppgaver) shouldBe "Søknadsbehandling"
+                val oppgaver = objectMapper.readValue(
+                    response.bodyAsText(),
+                    object : TypeReference<List<OppgaveDTO>>() {})
+                oppgaver shouldBe oppgaveDtos
             }
         }
     }
 
-    private fun denFørsteOppgavenSineEmneknagger(oppgaver: JsonNode): String? = oppgaver.first()["emneknagger"].first().asText()
 
     @Test
     @Disabled
