@@ -4,7 +4,6 @@ import no.nav.dagpenger.aktivitetslogg.Aktivitetskontekst
 import no.nav.dagpenger.aktivitetslogg.AuditOperasjon
 import no.nav.dagpenger.aktivitetslogg.SpesifikkKontekst
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
-import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
 import no.nav.dagpenger.behandling.hendelser.Hendelse
 import no.nav.dagpenger.behandling.hendelser.PersonHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
@@ -151,7 +150,10 @@ class Behandling private constructor(
         uuid: UUID,
         verdi: Boolean,
         sporing: Sporing,
-    ) = _besvar(uuid, verdi, sporing)
+    ) {
+        @Suppress("FunctionName")
+        _besvar(uuid, verdi, sporing)
+    }
 
     @Suppress("FunctionName")
     private inline fun <reified T> _besvar(
@@ -221,7 +223,6 @@ class Behandling private constructor(
                 AuditOperasjon.UPDATE,
             )
             if (behandling.erFerdig()) {
-                behandling.varsleOmVedtak(kommando)
                 behandling.endreTilstand(FerdigBehandlet, kommando)
             }
         }
@@ -254,21 +255,6 @@ class Behandling private constructor(
                     gjeldendeTilstand = tilstand.javaClass.simpleName,
                     forrigeTilstand = forrigeTilstand.javaClass.simpleName,
                 ),
-            )
-        }
-    }
-
-    private fun varsleOmVedtak(kommando: UtførStegKommando) {
-        observers.forEach {
-            it.vedtakFattet(
-                VedtakFattet(
-                    behandlingId = uuid,
-                    ident = person.ident,
-                    utfall = this.utfall(),
-                    fastsettelser = this.fastsettelser(),
-                    sakId = sak.id,
-                ),
-                kommando,
             )
         }
     }

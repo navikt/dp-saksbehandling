@@ -2,16 +2,12 @@ package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.BehandlingObserver.BehandlingEndretTilstand
-import no.nav.dagpenger.behandling.BehandlingObserver.VedtakFattet
-import no.nav.dagpenger.behandling.db.BehandlingRepository
 import no.nav.dagpenger.behandling.db.OppgaveRepository
 import no.nav.dagpenger.behandling.db.PersonRepository
 import no.nav.dagpenger.behandling.db.VurderingRepository
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.hendelser.VurderAvslagPåMinsteinntektHendelse
-import no.nav.dagpenger.behandling.iverksett.IverksettClient
-import no.nav.dagpenger.behandling.iverksett.IverksettDTOBuilder
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 import java.util.UUID
@@ -22,9 +18,7 @@ internal class Mediator(
     private val rapidsConnection: RapidsConnection,
     private val oppgaveRepository: OppgaveRepository,
     private val personRepository: PersonRepository,
-    private val behandlingRepository: BehandlingRepository,
     private val aktivitetsloggMediator: AktivitetsloggMediator,
-    private val iverksettClient: IverksettClient,
     private val vurderingRepository: VurderingRepository,
 ) : OppgaveRepository by oppgaveRepository, VurderingRepository by vurderingRepository, BehandlingObserver {
     fun behandle(hendelse: SøknadInnsendtHendelse) {
@@ -66,21 +60,6 @@ internal class Mediator(
                 "Publiserer behandling_endret_tilstand for behandlingId=${behandlingEndretTilstandEvent.behandlingId}"
             }
         }
-
-    override fun vedtakFattet(
-        vedtakFattetEvent: VedtakFattet,
-        kommando: UtførStegKommando,
-    ) {
-        val behandling = behandlingRepository.hentBehandling(vedtakFattetEvent.behandlingId)
-        iverksettClient.iverksett(subjectToken = kommando.token, iverksettDto = IverksettDTOBuilder(behandling).bygg())
-        logger.info { "Rammevedtak med behandlingId ${behandling.uuid} er sendt til iverksetting" }
-
-        publishEvent("rettighet_behandlet_hendelse", vedtakFattetEvent).also {
-            logger.info {
-                "Publiserer rettighet_behandlet_hendelse for behandlingId=${vedtakFattetEvent.behandlingId}"
-            }
-        }
-    }
 
     private fun publishEvent(
         navn: String,

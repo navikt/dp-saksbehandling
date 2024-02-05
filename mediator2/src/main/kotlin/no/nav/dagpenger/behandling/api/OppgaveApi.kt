@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
@@ -21,30 +20,14 @@ import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.ApplicationRequest
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.nav.dagpenger.behandling.Configuration.beslutterGruppe
-import no.nav.dagpenger.behandling.Configuration.saksbehandlerGruppe
 import no.nav.dagpenger.behandling.Mediator
-import no.nav.dagpenger.behandling.Rolle
-import no.nav.dagpenger.behandling.Saksbehandler
-import no.nav.dagpenger.behandling.UtførStegKommando
 import no.nav.dagpenger.behandling.api.auth.AzureAd
 import no.nav.dagpenger.behandling.api.auth.verifier
-import no.nav.dagpenger.behandling.api.models.NyttSvarDTO
-import no.nav.dagpenger.behandling.api.models.SokDTO
-import no.nav.dagpenger.behandling.api.models.SvartypeDTO
-import no.nav.dagpenger.behandling.dto.OppgaveIdWrapper
-import no.nav.dagpenger.behandling.dto.toDTO
-import no.nav.dagpenger.behandling.dto.toOppgaveDTO
-import no.nav.dagpenger.behandling.dto.toOppgaverDTO
-import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
-import java.time.LocalDate
 import java.util.UUID
 
 internal fun Application.oppgaveApi(mediator: Mediator) {
@@ -77,15 +60,15 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    val oppgaver = mediator.hentOppgaver().toOppgaverDTO()
-                    call.respond(HttpStatusCode.OK, oppgaver)
+                    // val oppgaver = mediator.hentOppgaver().toOppgaverDTO()
+                    // call.respond(HttpStatusCode.OK, oppgaver)
                 }
 
                 route("sok") {
                     post {
-                        val fnrDTO = call.receive<SokDTO>()
-                        val oppgave = mediator.hentOppgaverFor(fnrDTO.fnr).toOppgaverDTO()
-                        call.respond(HttpStatusCode.OK, oppgave)
+                        // val fnrDTO = call.receive<SokDTO>()
+                        // val oppgave = mediator.hentOppgaverFor(fnrDTO.fnr).toOppgaverDTO()
+                        // call.respond(HttpStatusCode.OK, oppgave)
                     }
                 }
 
@@ -93,6 +76,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
 
+                        /*
                         try {
                             val oppgave = mediator.hentOppgave(oppgaveId).toOppgaveDTO()
 
@@ -102,11 +86,12 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 status = HttpStatusCode.NotFound,
                                 message = "Fant ingen oppgave med UUID $oppgaveId",
                             )
-                        }
+                        }*/
                     }
 
                     route("steg") {
                         put("{stegId}") {
+                            /*
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val stegId = call.finnUUID("stegId")
                             val svar: NyttSvarDTO = call.receive()
@@ -132,27 +117,8 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 }
                             mediator.utfør(kommando)
                             call.respond(status = HttpStatusCode.OK, message = "")
-                        }
-                    }
 
-                    route("stans") {
-                        post {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val ident = mediator.hentOppgave(oppgaveId).person.ident
-                            val hendelse =
-                                VedtakStansetHendelse(ident = ident).also {
-                                    mediator.behandle(it)
-                                }
-
-                            call.respond(status = HttpStatusCode.OK, OppgaveIdWrapper(hendelse.oppgaveId))
-                        }
-                    }
-
-                    route("/vurdering/minsteinntekt") {
-                        get {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val vurdering = mediator.hentMinsteInntektVurdering(oppgaveId).toDTO()
-                            call.respond(status = HttpStatusCode.OK, vurdering)
+                             */
                         }
                     }
                 }
@@ -170,6 +136,7 @@ internal fun ApplicationCall.saksbehandlerId() =
     this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("NAVident")?.asString()
         ?: throw IllegalArgumentException("Ikke autentisert")
 
+/*
 internal fun ApplicationCall.roller(): List<Rolle> {
     return this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("groups")?.asList(String::class.java)
         ?.mapNotNull {
@@ -179,7 +146,7 @@ internal fun ApplicationCall.roller(): List<Rolle> {
                 else -> null
             }
         } ?: emptyList()
-}
+}*/
 
 internal fun ApplicationRequest.jwt(): String =
     this.parseAuthorizationHeader().let { authHeader ->

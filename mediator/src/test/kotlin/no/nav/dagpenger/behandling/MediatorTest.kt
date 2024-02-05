@@ -1,17 +1,12 @@
 package no.nav.dagpenger.behandling
 
-import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import no.nav.dagpenger.behandling.Meldingsfabrikk.søknadInnsendtHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
-import no.nav.dagpenger.behandling.Tilstand.Utført
-import no.nav.dagpenger.behandling.db.BehandlingRepository
 import no.nav.dagpenger.behandling.db.InMemoryOppgaveRepository
 import no.nav.dagpenger.behandling.db.InMemoryPersonRepository
 import no.nav.dagpenger.behandling.db.Postgres.withMigratedDb
@@ -21,17 +16,13 @@ import no.nav.dagpenger.behandling.dsl.BehandlingDSL.Companion.behandling
 import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.hendelser.VedtakStansetHendelse
 import no.nav.dagpenger.behandling.hendelser.VurderAvslagPåMinsteinntektHendelse
-import no.nav.dagpenger.behandling.iverksett.IverksettClient
 import no.nav.dagpenger.behandling.oppgave.Oppgave
-import no.nav.dagpenger.behandling.serder.asUUID
-import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import kotlin.random.Random
 
 class MediatorTest {
     private val testRapid = TestRapid()
@@ -82,41 +73,6 @@ class MediatorTest {
                 besvar(finnStegId("fastsettelse1"), 2, it)
             },
         )
-    }
-
-    @Test
-    fun `VedtakFattet event skal publisere melding på rapiden og iverksette`() {
-        val behandlingId = UUID.randomUUID()
-        val sakId = UUID.randomUUID()
-
-        mediator.vedtakFattet(
-            BehandlingObserver.VedtakFattet(
-                behandlingId = behandlingId,
-                ident = testIdent,
-                utfall = Utfall.Avslag,
-                fastsettelser = mapOf("f1" to "f2"),
-                sakId = sakId,
-            ),
-            UtførStegKommando(
-                oppgaveId,
-                Saksbehandler(ident),
-                "",
-                "",
-                "token",
-            ) {
-                besvar(finnStegId("vilkår1"), false, it)
-            },
-        )
-
-        testRapid.inspektør.message(0).let {
-            it["behandlingId"].asText() shouldBe behandlingId.toString()
-            it["ident"].asText() shouldBe testIdent
-            it["utfall"].asBoolean() shouldBe false
-            it["f1"].asText() shouldBe "f2"
-            it["sakId"].asText() shouldBe sakId.toString()
-        }
-
-        verify(exactly = 1) { mockkIverksettClient.iverksett(any(), any()) }
     }
 
     @Test
@@ -237,59 +193,9 @@ class MediatorTest {
             rapidsConnection = testRapid,
             oppgaveRepository = postgresRepository,
             personRepository = postgresRepository,
-            behandlingRepository = postgresRepository,
             aktivitetsloggMediator = mockk(relaxed = true),
-            iverksettClient = mockkIverksettClient,
             vurderingRepository = mockk(relaxed = true),
         )
-
-    @Test
-    fun `Publiserer melding rettighet_behandlet_hendelse når behandlingen er ferdig`() {
-        val hendelse =
-            SøknadInnsendtHendelse(
-                søknadId = UUID.randomUUID(),
-                journalpostId = "123",
-                ident = testIdent,
-                innsendtDato = LocalDate.MIN,
-            )
-        mediator.behandle(hendelse)
-        val oppgaveId = mockOppgaveRepository.hentOppgaver().last().uuid
-        val oppgave = mockOppgaveRepository.hentOppgave(oppgaveId)
-        mediator.utfør(
-            UtførStegKommando(
-                oppgaveId,
-                Saksbehandler(ident, listOf(Rolle.Saksbehandler, Rolle.Beslutter)),
-                "",
-                "",
-                "token",
-            ) { sporing ->
-                oppgave.alleSteg().forEach { steg ->
-                    when (steg.svar) {
-                        is Svar.BooleanSvar -> besvar(steg.uuid, true, sporing)
-                        is Svar.DoubleSvar -> besvar(steg.uuid, Random.nextDouble(), sporing)
-                        is Svar.IntegerSvar -> besvar(steg.uuid, Random.nextInt(), sporing)
-                        is Svar.LocalDateSvar -> besvar(steg.uuid, LocalDate.now(), sporing)
-                        is Svar.StringSvar -> besvar(steg.uuid, Random.nextBytes(10).toString(), sporing)
-                    }
-                }
-                oppgave.alleSteg().forEach { it.tilstand shouldBe Utført }
-            },
-        )
-
-        testRapid.inspektør.size shouldBe 2
-        val event = testRapid.inspektør.message(0)
-        val partitionKey = testRapid.inspektør.key(0)
-
-        partitionKey shouldBe ident
-        event["@event_name"].asText() shouldBe "rettighet_behandlet_hendelse"
-        shouldNotThrowAny {
-            event["behandlingId"].asUUID()
-            event["ident"].asText()
-            event["Virkningsdato"].asLocalDate()
-            event["Dagsats"].asInt()
-            event["Fastsatt vanlig arbeidstid"].asDouble()
-        }
-    }
 
     @Test
     fun `VedtakStansetHendelse fører til en ny oppgave med behandling for stans`() {
@@ -344,21 +250,12 @@ class MediatorTest {
             lagrePerson(testPerson)
         }
 
-    private val mockBehandlingRepository =
-        mockk<BehandlingRepository> {
-            every { hentBehandling(any()) } returns behandling
-        }
-
-    private val mockkIverksettClient = mockk<IverksettClient>(relaxed = true)
-
     private val mediator =
         Mediator(
             rapidsConnection = testRapid,
             oppgaveRepository = mockOppgaveRepository,
             personRepository = mockPersonRepository,
-            behandlingRepository = mockBehandlingRepository,
             aktivitetsloggMediator = mockk(relaxed = true),
-            iverksettClient = mockkIverksettClient,
             vurderingRepository = mockk(relaxed = true),
         )
 

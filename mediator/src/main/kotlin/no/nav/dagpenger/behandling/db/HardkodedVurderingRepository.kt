@@ -1,9 +1,12 @@
 package no.nav.dagpenger.behandling.db
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.dagpenger.behandling.InntektPeriode
 import no.nav.dagpenger.behandling.MinsteInntektVurdering
-import no.nav.dagpenger.behandling.api.json.objectMapper
 import no.nav.dagpenger.behandling.db.PacketMapper.beregningsdato
 import no.nav.dagpenger.behandling.db.PacketMapper.beregningsregel
 import no.nav.dagpenger.behandling.db.PacketMapper.inntektPerioder
@@ -14,6 +17,12 @@ import no.nav.dagpenger.behandling.db.PacketMapper.subsumsjonsId
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
+
+internal val objectMapper =
+    jacksonObjectMapper()
+        .registerModule(JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
 internal class HardkodedVurderingRepository : VurderingRepository {
     private val resourceRetriever = object {}.javaClass
@@ -47,8 +56,6 @@ internal class HardkodedVurderingRepository : VurderingRepository {
     ) {
         TODO("Not yet implemented")
     }
-
-    private fun JsonNode.asBooleanStrict(): Boolean = asText().toBooleanStrict()
 }
 
 internal object PacketMapper {
