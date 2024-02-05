@@ -3,7 +3,11 @@ package no.nav.dagpenger.behandling
 import com.natpryce.konfig.ConfigurationMap
 import com.natpryce.konfig.ConfigurationProperties
 import com.natpryce.konfig.EnvironmentVariables
+import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
+import com.natpryce.konfig.stringType
+import no.nav.dagpenger.oauth2.CachedOauth2Client
+import no.nav.dagpenger.oauth2.OAuth2Config
 
 internal object Configuration {
     const val APP_NAME = "dp-behandling"
@@ -27,4 +31,21 @@ internal object Configuration {
         properties.list().reversed().fold(emptyMap()) { map, pair ->
             map + pair.second
         }
+
+    val dpIverksettUrl by lazy { properties[Key("DP_IVERKSETT_URL", stringType)] }
+    val dpIverksettScope by lazy { properties[Key("DP_IVERKSETT_SCOPE", stringType)] }
+
+    val aaregUrl by lazy { properties[Key("AAREG_URL", stringType)] }
+    val aaregScope by lazy { properties[Key("AAREG_SCOPE", stringType)] }
+
+    val beslutterGruppe = properties[Key("GRUPPE_BESLUTTER", stringType)]
+    val saksbehandlerGruppe = properties[Key("GRUPPE_SAKSBEHANDLER", stringType)]
+
+    val azureAdClient by lazy {
+        val azureAdConfig = OAuth2Config.AzureAd(properties)
+        CachedOauth2Client(
+            tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
+            authType = azureAdConfig.clientSecret(),
+        )
+    }
 }

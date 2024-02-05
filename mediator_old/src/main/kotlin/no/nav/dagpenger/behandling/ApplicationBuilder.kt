@@ -1,6 +1,11 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.behandling.db.HardkodedVurderingRepository
+import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.behandling.db.PostgresDataSourceBuilder.runMigration
+import no.nav.dagpenger.behandling.db.PostgresRepository
+import no.nav.dagpenger.behandling.hendelser.mottak.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -10,11 +15,22 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             .withKtorModule {
             }.build()
 
+    private val postgresRepository = PostgresRepository(dataSource)
     private val mediator =
-        Mediator()
+        Mediator(
+            rapidsConnection = rapidsConnection,
+            oppgaveRepository = postgresRepository,
+            personRepository = postgresRepository,
+            aktivitetsloggMediator = AktivitetsloggMediator(rapidsConnection),
+            vurderingRepository = HardkodedVurderingRepository(),
+        )
 
     init {
         rapidsConnection.register(this)
+        SøknadMottak(
+            rapidsConnection = rapidsConnection,
+            mediator,
+        )
     }
 
     fun start() {
@@ -22,6 +38,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
+        // clean()
+        runMigration()
         logger.info { "Starter appen ${Configuration.APP_NAME}" }
     }
 

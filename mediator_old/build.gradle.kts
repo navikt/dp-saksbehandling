@@ -1,16 +1,31 @@
+buildscript { repositories { mavenCentral() } }
+
 plugins {
     id("common")
+//    application
+//    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
+
+val githubUser: String? by project
+val githubPassword: String? by project
 
 repositories {
     mavenCentral()
     maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+
+    maven {
+        credentials {
+            username = githubUser
+            password = githubPassword
+        }
+        setUrl("https://maven.pkg.github.com/navikt/dp-kontrakter")
+    }
 }
 
 dependencies {
     val ktorVersion = libs.versions.ktor.get()
-    implementation(project(":openapi"))
     implementation(project(":modell"))
+    implementation(project(":openapi"))
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
@@ -21,6 +36,9 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
 
+    // Kontrakter for dp-iverksett
+    implementation("no.nav.dagpenger.kontrakter:iverksett:2.0_20231222084529_f0d8240")
+
     testImplementation(libs.mockk)
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
     testImplementation(libs.bundles.kotest.assertions)
@@ -29,3 +47,11 @@ dependencies {
     testImplementation(libs.bundles.postgres.test)
     testImplementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}")
 }
+
+// application {
+//    mainClass.set("no.nav.dagpenger.behandling.AppKt")
+// }
+//
+// tasks.withType<ShadowJar> {
+//    mergeServiceFiles()
+// }
