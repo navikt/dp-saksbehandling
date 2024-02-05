@@ -1,7 +1,6 @@
 package no.nav.dagpenger.behandling.api
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.json.shouldContainJsonKey
 import io.kotest.assertions.json.shouldNotContainJsonKey
@@ -57,14 +56,15 @@ class OppgaveApiTest {
             client.get("/oppgave") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val oppgaver = objectMapper.readValue(
-                    response.bodyAsText(),
-                    object : TypeReference<List<OppgaveDTO>>() {})
+                val oppgaver =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        object : TypeReference<List<OppgaveDTO>>() {},
+                    )
                 oppgaver shouldBe oppgaveDtos
             }
         }
     }
-
 
     @Test
     @Disabled
@@ -105,16 +105,17 @@ class OppgaveApiTest {
     }
 
     @Test
-    @Disabled
     fun `Skal kunne hente ut en oppgave med en gitt id`() {
         withOppgaveApi {
             client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val oppgave = jacksonObjectMapper().readTree(response.bodyAsText())
-                oppgave.isObject shouldBe true
-                oppgave["uuid"].asText() shouldBe oppgaveId.toString()
-                oppgave["journalpostIder"].map { it.asText() } shouldBe listOf("123")
+                val oppgave =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        OppgaveDTO::class.java,
+                    )
+                oppgave shouldBe oppgaveDTO
             }
         }
     }
@@ -143,7 +144,6 @@ class OppgaveApiTest {
     }
 
     @Test
-    @Disabled
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
         withOppgaveApi {
             client.post("/oppgave/sok") {
@@ -156,8 +156,12 @@ class OppgaveApiTest {
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val oppgaver = jacksonObjectMapper().readTree(response.bodyAsText())
-                oppgaver.size() shouldBe 2
+                val oppgaver =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        object : TypeReference<List<OppgaveDTO>>() {},
+                    )
+                oppgaver shouldBe oppgaveDtos
             }
         }
     }

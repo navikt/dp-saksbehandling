@@ -74,59 +74,28 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 
                 route("sok") {
                     post {
-                        // val fnrDTO = call.receive<SokDTO>()
-                        // val oppgave = mediator.hentOppgaverFor(fnrDTO.fnr).toOppgaverDTO()
-                        // call.respond(HttpStatusCode.OK, oppgave)
+                        val oppgaver = oppgaveDtos
+                        call.respond(status = HttpStatusCode.OK, oppgaver)
                     }
                 }
 
                 route("{oppgaveId}") {
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
-
-                        /*
                         try {
-                            val oppgave = mediator.hentOppgave(oppgaveId).toOppgaveDTO()
-
+                            val oppgave = oppgaveDTO
                             call.respond(HttpStatusCode.OK, oppgave)
                         } catch (e: NoSuchElementException) {
                             call.respond(
                                 status = HttpStatusCode.NotFound,
                                 message = "Fant ingen oppgave med UUID $oppgaveId",
                             )
-                        }*/
+                        }
                     }
 
                     route("steg") {
                         put("{stegId}") {
-                            /*
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val stegId = call.finnUUID("stegId")
-                            val svar: NyttSvarDTO = call.receive()
-                            val token = call.request.jwt()
-
-                            // TODO: Teit å gjøre dette for å hente ut ident
-                            val oppgave = mediator.hentOppgave(oppgaveId)
-                            val kommando =
-                                UtførStegKommando(
-                                    oppgaveUUID = oppgaveId,
-                                    saksbehandler = Saksbehandler(call.saksbehandlerId(), call.roller()),
-                                    begrunnelse = svar.begrunnelse.tekst,
-                                    ident = oppgave.person.ident,
-                                    token = token,
-                                ) { sporing ->
-                                    when (svar.type) {
-                                        SvartypeDTO.String -> besvar(stegId, svar.svar, sporing)
-                                        SvartypeDTO.LocalDate -> besvar(stegId, LocalDate.parse(svar.svar), sporing)
-                                        SvartypeDTO.Int -> besvar(stegId, svar.svar.toInt(), sporing)
-                                        SvartypeDTO.Boolean -> besvar(stegId, svar.svar.toBoolean(), sporing)
-                                        SvartypeDTO.Double -> besvar(stegId, svar.svar.toDouble(), sporing)
-                                    }
-                                }
-                            mediator.utfør(kommando)
-                            call.respond(status = HttpStatusCode.OK, message = "")
-
-                             */
+                            call.respond(HttpStatusCode.NoContent)
                         }
                     }
                 }
@@ -135,65 +104,67 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
     }
 }
 
-internal val oppgaveDtos =
-    listOf(
-        OppgaveDTO(
-            uuid = UUID.randomUUID(),
-            personIdent = "12345678901",
-            datoOpprettet = LocalDate.now(),
-            journalpostIder = listOf("12345678"),
-            emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
-            tilstand = OppgaveTilstandDTO.TilBehandling,
-            steg =
-                listOf(
-                    StegDTO(
-                        uuid = UUID.randomUUID(),
-                        stegNavn = "Gjenopptak / 8 uker",
-                        opplysninger =
-                            listOf(
-                                OpplysningDTO(
-                                    opplysningNavn = "Mulig gjenopptak",
-                                    opplysningType = OpplysningTypeDTO.Boolean,
-                                    svar = null,
-                                ),
-                                OpplysningDTO(
-                                    opplysningNavn = "Har hatt lukkede saker siste 8 uker",
-                                    opplysningType = OpplysningTypeDTO.Boolean,
-                                    svar = null,
-                                ),
+internal val oppgaveUUID = UUID.fromString("018d7964-347c-788b-aa97-8acaba091245")
+
+internal val oppgaveDTO =
+    OppgaveDTO(
+        uuid = oppgaveUUID,
+        personIdent = "12345678901",
+        datoOpprettet = LocalDate.now(),
+        journalpostIder = listOf("12345678"),
+        emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
+        tilstand = OppgaveTilstandDTO.TilBehandling,
+        steg =
+            listOf(
+                StegDTO(
+                    uuid = UUID.randomUUID(),
+                    stegNavn = "Gjenopptak / 8 uker",
+                    opplysninger =
+                        listOf(
+                            OpplysningDTO(
+                                opplysningNavn = "Mulig gjenopptak",
+                                opplysningType = OpplysningTypeDTO.Boolean,
+                                svar = null,
                             ),
-                    ),
-                    StegDTO(
-                        uuid = UUID.randomUUID(),
-                        stegNavn = "Minste arbeidsinntekt",
-                        opplysninger =
-                            listOf(
-                                OpplysningDTO(
-                                    opplysningNavn = "EØS-arbeid",
-                                    opplysningType = OpplysningTypeDTO.Boolean,
-                                    svar = null,
-                                ),
-                                OpplysningDTO(
-                                    opplysningNavn = "Jobb utenfor Norge",
-                                    opplysningType = OpplysningTypeDTO.Boolean,
-                                    svar = null,
-                                ),
-                                OpplysningDTO(
-                                    opplysningNavn = "Svangerskapsrelaterte sykepenger",
-                                    opplysningType = OpplysningTypeDTO.Boolean,
-                                    svar = null,
-                                ),
-                                OpplysningDTO(
-                                    opplysningNavn = "Det er inntekt neste kalendermåned",
-                                    opplysningType = OpplysningTypeDTO.Boolean,
-                                    svar = null,
-                                ),
+                            OpplysningDTO(
+                                opplysningNavn = "Har hatt lukkede saker siste 8 uker",
+                                opplysningType = OpplysningTypeDTO.Boolean,
+                                svar = null,
                             ),
-                        tilstand = null,
-                    ),
+                        ),
                 ),
-        ),
+                StegDTO(
+                    uuid = UUID.randomUUID(),
+                    stegNavn = "Minste arbeidsinntekt",
+                    opplysninger =
+                        listOf(
+                            OpplysningDTO(
+                                opplysningNavn = "EØS-arbeid",
+                                opplysningType = OpplysningTypeDTO.Boolean,
+                                svar = null,
+                            ),
+                            OpplysningDTO(
+                                opplysningNavn = "Jobb utenfor Norge",
+                                opplysningType = OpplysningTypeDTO.Boolean,
+                                svar = null,
+                            ),
+                            OpplysningDTO(
+                                opplysningNavn = "Svangerskapsrelaterte sykepenger",
+                                opplysningType = OpplysningTypeDTO.Boolean,
+                                svar = null,
+                            ),
+                            OpplysningDTO(
+                                opplysningNavn = "Det er inntekt neste kalendermåned",
+                                opplysningType = OpplysningTypeDTO.Boolean,
+                                svar = null,
+                            ),
+                        ),
+                    tilstand = null,
+                ),
+            ),
     )
+
+internal val oppgaveDtos = listOf(oppgaveDTO)
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {
