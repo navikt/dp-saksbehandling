@@ -1,6 +1,5 @@
 package no.nav.dagpenger.behandling.mottak
 
-import com.fasterxml.jackson.databind.JsonNode
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.behandling.Mediator
@@ -9,7 +8,6 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
-import java.util.UUID
 
 internal class VurderMinsteinntektAvslagMottak(
     rapidsConnection: RapidsConnection,
@@ -71,8 +69,4 @@ internal class VurderMinsteinntektAvslagMottak(
         logger.info(
             "Fått hendelse om manuell behandling ($årsakTilManuellBehandling) av avslag på minsteinntekt",
         )
-
-    private fun JsonMessage.folkeregisterIdent() = this["identer"].first { it["type"].asText() == "folkeregisterident" }["id"].asText()
-
-    fun JsonNode.asUUID(): UUID = this.asText().let { UUID.fromString(it) }
 }
