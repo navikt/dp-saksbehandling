@@ -1,5 +1,8 @@
 # dp-behandling
 
+## API dokumentasjon
+Link til swagger api dokumentasjon: 
+
 ## Komme i gang
 
 Backend-applikasjon som lytter på søknadshendelser, validerer vilkår, oppretter sak og sender resultat av behandlingen ut på rapiden.
