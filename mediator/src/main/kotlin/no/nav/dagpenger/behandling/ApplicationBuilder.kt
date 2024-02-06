@@ -14,7 +14,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 this.oppgaveApi(mediator)
             }.build()
 
-
     init {
         rapidsConnection.register(this)
     }
