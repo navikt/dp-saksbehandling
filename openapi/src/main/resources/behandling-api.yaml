@@ -61,7 +61,7 @@ paths:
 
   /oppgave/{oppgaveId}/steg/{stegId}:
     put:
-      summary: Besvar opplysninger knyttet til et steg i en oppgave
+      summary: Besvar opplysninger knyttet til et steg i en oppgave.
       requestBody:
         required: true
         content:
