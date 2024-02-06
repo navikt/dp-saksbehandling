@@ -23,7 +23,7 @@ object Meldingsfabrikk {
     internal fun innsendingFerdigstiltHendelse(
         søknadId: UUID = testSøknadUUID,
         journalpostId: String,
-        type: String,
+        type: String = "NySøknad",
         ident: String,
         datoRegistert: LocalDate = LocalDate.now(),
     ): String =
