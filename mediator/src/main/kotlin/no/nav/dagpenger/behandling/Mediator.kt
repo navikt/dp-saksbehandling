@@ -1,7 +1,7 @@
 package no.nav.dagpenger.behandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
+import no.nav.dagpenger.behandling.modell.hendelser.SøknadInnsendtHendelse
 import no.nav.dagpenger.behandling.modell.hendelser.VurderAvslagPåMinsteinntektHendelse
 
 private val logger = KotlinLogging.logger {}

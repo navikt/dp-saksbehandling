@@ -13,7 +13,6 @@ repositories {
 dependencies {
     val ktorVersion = libs.versions.ktor.get()
     implementation(project(":openapi"))
-    implementation(project(":modell"))
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)

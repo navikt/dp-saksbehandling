@@ -22,7 +22,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.behandling.Mediator
-import no.nav.dagpenger.behandling.Meldingsfabrikk.testPerson
+import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.api.json.objectMapper
 import no.nav.dagpenger.behandling.api.models.OppgaveDTO
 import org.junit.jupiter.api.Disabled
@@ -151,7 +151,7 @@ class OppgaveApiTest {
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
-                    """{"fnr": ${testPerson.ident}}""",
+                    """{"fnr": $testIdent}""",
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK

@@ -10,7 +10,7 @@ import io.mockk.verify
 import no.nav.dagpenger.behandling.Mediator
 import no.nav.dagpenger.behandling.Meldingsfabrikk.innsendingFerdigstiltHendelse
 import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
-import no.nav.dagpenger.behandling.hendelser.SøknadInnsendtHendelse
+import no.nav.dagpenger.behandling.modell.hendelser.SøknadInnsendtHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -50,9 +50,9 @@ class SøknadMottakTest {
         verify(exactly = 1) { mockMediator.behandle(any<SøknadInnsendtHendelse>()) }
 
         slot.captured.let { hendelse ->
-            hendelse.journalpostId() shouldBe journalpostId
-            hendelse.ident() shouldBe ident
-            hendelse.søknadId() shouldBe søknadId
+            hendelse.journalpostId shouldBe journalpostId
+            hendelse.ident shouldBe ident
+            hendelse.søknadId shouldBe søknadId
             hendelse.innsendtDato shouldBe innsendtDato
         }
     }
