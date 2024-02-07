@@ -196,6 +196,7 @@ internal val oppgaveFerdigBehandletDTO =
                                 svar = SvarDTO("false"),
                             ),
                         ),
+                    tilstand = StegTilstandDTO.Groenn,
                 ),
                 StegDTO(
                     uuid = UUID.randomUUID(),
