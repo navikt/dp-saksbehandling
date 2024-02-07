@@ -105,9 +105,9 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne hente ut en oppgave med en gitt id`() {
+    fun `Skal kunne hente ut en oppgave av type TilBehandling med gitt id`() {
         withOppgaveApi {
-            client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
+            client.get("/oppgave/$oppgaveTilBehandlingUUID") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val oppgave =
@@ -115,7 +115,23 @@ class OppgaveApiTest {
                         response.bodyAsText(),
                         OppgaveDTO::class.java,
                     )
-                oppgave shouldBe oppgaveDTO
+                oppgave shouldBe oppgaveTilBehandlingDTO
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente ut en oppgave av type FerdigBehandlet med gitt id`() {
+        withOppgaveApi {
+            client.get("/oppgave/$oppgaveFerdigBehandletUUID") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val oppgave =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        OppgaveDTO::class.java,
+                    )
+                oppgave shouldBe oppgaveFerdigBehandletDTO
             }
         }
     }
