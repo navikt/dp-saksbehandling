@@ -12,6 +12,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -132,6 +133,37 @@ class OppgaveApiTest {
                         OppgaveDTO::class.java,
                     )
                 oppgave shouldBe oppgaveFerdigBehandletDTO
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta info om utført steg`() {
+        withOppgaveApi {
+            client.put("/oppgave/$oppgaveFerdigBehandletUUID/steg/$stegIdGjenopptak8Uker") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(objectMapper.writeValueAsString(opplysningerGjenopptak8uker))
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne avslå på bakgrunn av kravet til minsteinntekt`() {
+        withOppgaveApi {
+            client.put("/oppgave/$oppgaveTilBehandlingUUID/avslag") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne lukke oppgave`() {
+        withOppgaveApi {
+            client.put("/oppgave/$oppgaveTilBehandlingUUID/lukk") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
             }
         }
     }

@@ -103,6 +103,18 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
+
+                    route("avslag") {
+                        put {
+                            call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
+
+                    route("lukk") {
+                        put {
+                            call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
                 }
             }
         }
@@ -111,6 +123,20 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 
 internal val oppgaveFerdigBehandletUUID = UUID.fromString("7f9c2ac7-5bf2-46e6-a618-c1f4f85cd3f2")
 internal val oppgaveTilBehandlingUUID = UUID.fromString("018d7964-347c-788b-aa97-8acaba091245")
+internal val stegIdGjenopptak8Uker = UUID.fromString("8d936e88-b5fe-4e6b-96de-82a341494954")
+internal val opplysningerGjenopptak8uker =
+    listOf(
+        OpplysningDTO(
+            opplysningNavn = "Mulig gjenopptak",
+            opplysningType = OpplysningTypeDTO.Boolean,
+            svar = SvarDTO("false"),
+        ),
+        OpplysningDTO(
+            opplysningNavn = "Har hatt lukkede saker siste 8 uker",
+            opplysningType = OpplysningTypeDTO.Boolean,
+            svar = SvarDTO("false"),
+        ),
+    )
 
 internal val oppgaveTilBehandlingDTO =
     OppgaveDTO(
@@ -123,7 +149,7 @@ internal val oppgaveTilBehandlingDTO =
         steg =
             listOf(
                 StegDTO(
-                    uuid = UUID.randomUUID(),
+                    uuid = stegIdGjenopptak8Uker,
                     stegNavn = "Gjenopptak / 8 uker",
                     opplysninger =
                         listOf(
@@ -183,19 +209,7 @@ internal val oppgaveFerdigBehandletDTO =
                 StegDTO(
                     uuid = UUID.randomUUID(),
                     stegNavn = "Gjenopptak / 8 uker",
-                    opplysninger =
-                        listOf(
-                            OpplysningDTO(
-                                opplysningNavn = "Mulig gjenopptak",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = SvarDTO("false"),
-                            ),
-                            OpplysningDTO(
-                                opplysningNavn = "Har hatt lukkede saker siste 8 uker",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = SvarDTO("false"),
-                            ),
-                        ),
+                    opplysninger = opplysningerGjenopptak8uker,
                     tilstand = StegTilstandDTO.Groenn,
                 ),
                 StegDTO(
