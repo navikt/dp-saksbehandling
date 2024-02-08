@@ -85,7 +85,7 @@ paths:
         '204':
           description: Vellykket oppdatering av opplysninger i et steg
         '404':
-          description: Oppgaven ble ikke funnet
+          description: Oppgaven eller steget ble ikke funnet
 
   /oppgave/{oppgaveId}/avslag:
     put:
