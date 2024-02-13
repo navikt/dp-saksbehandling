@@ -1,12 +1,17 @@
 package no.nav.dagpenger.behandling.mottak
 
 import mu.KotlinLogging
+import mu.withLoggingContext
+import no.nav.dagpenger.behandling.Mediator
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
-internal class BehandlingOpprettetMottak(rapidsConnection: RapidsConnection) : River.PacketListener {
+internal class BehandlingOpprettetMottak(
+    rapidsConnection: RapidsConnection,
+    private val mediator: Mediator,
+) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
@@ -23,6 +28,18 @@ internal class BehandlingOpprettetMottak(rapidsConnection: RapidsConnection) : R
         packet: JsonMessage,
         context: MessageContext,
     ) {
-        println("Hei her er jeg!")
+        val søknadId = packet["søknadId"].asUUID()
+        val behandlingId = packet["behandlingId"].asUUID()
+        val ident = packet["ident"].asText()
+
+        withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+            mediator.behandle(
+                BehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = ident,
+                ),
+            )
+        }
     }
 }
