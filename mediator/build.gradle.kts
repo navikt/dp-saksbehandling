@@ -32,7 +32,7 @@ dependencies {
     testImplementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}")
 }
 application {
-    mainClass.set("no.nav.dagpenger.behandling.AppKt")
+    mainClass.set("no.nav.dagpenger.saksbehandling.AppKt")
 }
 
 tasks.withType<ShadowJar> {
