@@ -22,9 +22,9 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
-import no.nav.dagpenger.behandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.api.json.objectMapper
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.util.UUID

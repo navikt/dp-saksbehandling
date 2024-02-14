@@ -27,16 +27,16 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import no.nav.dagpenger.behandling.api.models.OppgaveDTO
-import no.nav.dagpenger.behandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.behandling.api.models.OpplysningDTO
-import no.nav.dagpenger.behandling.api.models.OpplysningTypeDTO
-import no.nav.dagpenger.behandling.api.models.StegDTO
-import no.nav.dagpenger.behandling.api.models.StegTilstandDTO
-import no.nav.dagpenger.behandling.api.models.SvarDTO
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.api.auth.AzureAd
 import no.nav.dagpenger.saksbehandling.api.auth.verifier
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.StegDTO
+import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import java.time.LocalDate
 import java.util.UUID
 
