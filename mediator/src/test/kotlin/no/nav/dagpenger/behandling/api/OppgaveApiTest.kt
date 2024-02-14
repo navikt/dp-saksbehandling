@@ -23,7 +23,6 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.behandling.Mediator
-import no.nav.dagpenger.behandling.Meldingsfabrikk.testIdent
 import no.nav.dagpenger.behandling.api.json.objectMapper
 import no.nav.dagpenger.behandling.api.models.OppgaveDTO
 import org.junit.jupiter.api.Disabled
@@ -31,6 +30,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class OppgaveApiTest {
+    val testIdent = "13083826694"
     private val testToken by mockAzure {
         claims = mapOf("NAVident" to "123")
     }
