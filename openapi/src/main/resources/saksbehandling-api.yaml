@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Behandling API
+  title: Saksbehandling API
   version: 1.0.0
   description: Et API for å administrere oppgaver og deres tilstandsoverganger.
 servers:

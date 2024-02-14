@@ -65,7 +65,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
     }
 
     routing {
-        swaggerUI(path = "openapi", swaggerFile = "behandling-api.yaml")
+        swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
 
         authenticate("azureAd") {
             route("oppgave") {
