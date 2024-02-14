@@ -1,7 +1,7 @@
 apiVersion: nais.io/v1alpha1
 kind: Application
 metadata:
-  name: dp-behandling
+  name: dp-saksbehandling
   namespace: teamdagpenger
   labels:
     team: teamdagpenger
@@ -30,14 +30,6 @@ spec:
   env:
     - name: FLYWAY_CLEAN_DISABLED
       value: "false"
-    - name: DP_IVERKSETT_URL
-      value: {{dp-iverksett.url}}
-    - name: DP_IVERKSETT_SCOPE
-      value: {{dp-iverksett.scope}}
-    - name: AAREG_URL
-      value: {{aareg.url}}
-    - name: AAREG_SCOPE
-      value: {{aareg.scope}}
     - name: GRUPPE_SAKSBEHANDLER
       value: {{azure.grupper.saksbehandler}}
     - name: GRUPPE_BESLUTTER
@@ -63,11 +55,6 @@ spec:
           - name: behandling
             envVarPrefix: DB
   accessPolicy:
-    outbound:
-      rules:
-        - application: dp-iverksett
-      external:
-        - host: aareg-services-q2.dev-fss-pub.nais.io
     inbound:
       rules:
         - application: dp-saksbehandling-frontend

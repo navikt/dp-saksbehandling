@@ -1,7 +1,7 @@
-# dp-behandling
+# dp-saksbehandling
 
 ## API dokumentasjon
-Link til swagger api dokumentasjon: https://navikt.github.io/dp-behandling/
+Link til swagger api dokumentasjon: https://navikt.github.io/dp-saksbehandling/
 
 ## Komme i gang
 
