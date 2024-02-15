@@ -5,7 +5,6 @@ rootProject.name = "dp-saksbehandling"
 
 include("modell")
 include("openapi")
-include("mediator_old")
 include("mediator")
 include("opplysninger")
 
