@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 
 private val logger = KotlinLogging.logger {}
 
