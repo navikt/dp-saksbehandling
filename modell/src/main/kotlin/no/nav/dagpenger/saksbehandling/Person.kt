@@ -1,9 +1,11 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VerifiserOpplysningHendelse
+import java.util.UUID
 
 data class Person(val ident: String) {
-    val behandlinger = mutableSetOf<Behandling>()
+    val behandlinger = mutableMapOf<UUID, Behandling>()
 
     init {
         require(ident.matches(Regex("\\d{11}"))) { "personident må ha 11 siffer, fikk ${ident.length}" }
@@ -11,6 +13,18 @@ data class Person(val ident: String) {
 
     fun håndter(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
         val behandling = Behandling(behandlingOpprettetHendelse.behandlingId)
-        behandlinger.add(behandling)
+        behandlinger.put(behandling.behandlingId, behandling)
+    }
+
+    fun håndter(verifiserOpplysningHendelse: VerifiserOpplysningHendelse) {
+        val behandling = behandlinger.get(verifiserOpplysningHendelse.behandlingId)
+        if (behandling != null) {
+            behandling.håndter(verifiserOpplysningHendelse)
+        } else {
+            throw IllegalStateException(
+                "Fant ikke behandling med id: ${verifiserOpplysningHendelse.behandlingId} ved håndtering av " +
+                    "verifiser_opplysning hendelse",
+            )
+        }
     }
 }

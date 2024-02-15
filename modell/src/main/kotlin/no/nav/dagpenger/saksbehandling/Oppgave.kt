@@ -4,14 +4,12 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 data class Oppgave private constructor(
-    val uuid: UUID,
-    private val behandling: Behandling,
+    val oppgaveId: UUID,
     val opprettet: LocalDateTime,
     private val _emneknagger: MutableSet<String>,
 ) {
-    constructor(uuid: UUID, behandling: Behandling, emneknagger: Set<String> = emptySet()) : this(
-        uuid = uuid,
-        behandling = behandling,
+    constructor(oppgaveId: UUID, emneknagger: Set<String> = emptySet()) : this(
+        oppgaveId = oppgaveId,
         opprettet = LocalDateTime.now(),
         _emneknagger = emneknagger.toMutableSet(),
     )

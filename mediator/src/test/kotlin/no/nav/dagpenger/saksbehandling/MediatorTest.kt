@@ -1,8 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
-import no.nav.dagpenger.saksbehandling.mottak.VerifiserOpplysningMottaker
+import no.nav.dagpenger.saksbehandling.mottak.VerifiserOpplysningMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterEach
@@ -19,7 +20,7 @@ class MediatorTest {
 
     init {
         BehandlingOpprettetMottak(testRapid, mediator)
-        VerifiserOpplysningMottaker(testRapid, mediator)
+        VerifiserOpplysningMottak(testRapid, mediator)
     }
 
     @AfterEach
@@ -44,6 +45,7 @@ class MediatorTest {
         requireNotNull(person)
         person.ident shouldBe testIdent
         person.behandlinger.size shouldBe 1
+        person.behandlinger.get(behandlingId)!!.oppgave shouldNotBe null
     }
 
     @Language("JSON")

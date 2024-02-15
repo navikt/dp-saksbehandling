@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
@@ -22,6 +23,6 @@ class BehandlingOpprettetHendelseTest {
 
         person.ident shouldBe ident
         person.behandlinger.size shouldBe 1
-        person.behandlinger.first().behandlingId shouldBe behandlingId
+        person.behandlinger.get(behandlingId) shouldNotBe null
     }
 }
