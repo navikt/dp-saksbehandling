@@ -80,30 +80,31 @@ class OppgaveApiTest {
                 oppgaver.shouldContain(forventetOppgaveDTO)
             }
         }
-
-        /**
-         * Collection should contain element
-         * OppgaveDTO(uuid=018dc175-183b-7c53-919a-86e5ea222685, personIdent=123, datoOpprettet=2024-02-19, journalpostIder=null, emneknagger=null, tilstand=null, steg=null) based on object equality;
-         * but the collection is
-         * [OppgaveDTO(uuid=018dc175-183b-7c53-919a-86e5ea222685, personIdent=123, datoOpprettet=2024-02-19, journalpostIder=[], emneknagger=[], tilstand=TilBehandling, steg=[]),
-         *
-         * OppgaveDTO(uuid=018d7964-347c-788b-aa97-8acaba091245, personIdent=12345678901, datoOpprettet=2024-02-19, journalpostIder=[12345678], emneknagger=[VurderAvslagPåMinsteinntekt], tilstand=TilBehandling, steg=[StegDTO(uuid=8d936e88-b5fe-4e6b-96de-82a341494954, stegNavn=Gjenopptak / 8 uker, opplysninger=[OpplysningDTO(opplysningNavn=Mulig gjenopptak, opplysningType=Boolean, svar=null),
-         * OpplysningDTO(opplysningNavn=Har hatt lukkede saker siste 8 uker, opplysningType=Boolean, svar=null)], tilstand=null), StegDTO(uuid=3134e404-6a76-4079-aac0-b4c12bdb54b2, stegNavn=Minste arbeidsinntekt, opplysninger=[OpplysningDTO(opplysningNavn=EØS-arbeid, opplysningType=Boolean, svar=null), OpplysningDTO(opplysningNavn=Jobb utenfor Norge, opplysningType=Boolean, svar=null), OpplysningDTO(opplysningNavn=Svangerskapsrelaterte sykepenger, opplysningType=Boolean, svar=null), OpplysningDTO(opplysningNavn=Det er inntekt neste kalendermåned, opplysningType=Boolean, svar=null)], tilstand=null)]), OppgaveDTO(uuid=7f9c2ac7-5bf2-46e6-a618-c1f4f85cd3f2, personIdent=12345678901, datoOpprettet=2024-02-19, journalpostIder=[98989, 76767], emneknagger=[VurderAvslagPåMinsteinntekt], tilstand=FerdigBehandlet, steg=[StegDTO(uuid=5942f3e5-97d3-4d88-828f-b8b14679a691, stegNavn=Gjenopptak / 8 uker, opplysninger=[OpplysningDTO(opplysningNavn=Mulig gjenopptak, opplysningType=Boolean, svar=SvarDTO(verdi=false)), OpplysningDTO(opplysningNavn=Har hatt lukkede saker siste 8 uker, opplysningType=Boolean, svar=SvarDTO(verdi=false))], tilstand=Groenn), StegDTO(uuid=72a4521e-e828-4d9f-ae87-520a80bb8016, stegNavn=Minste arbeidsinntekt, opplysninger=[OpplysningDTO(opplysningNavn=EØS-arbeid, opplysningType=Boolean, svar=SvarDTO(verdi=false)), OpplysningDTO(opplysningNavn=Jobb utenfor Norge, opplysningType=Boolean, svar=SvarDTO(verdi=false)), OpplysningDTO(opplysningNavn=Svangerskapsrelaterte sykepenger, opplysningType=Boolean, svar=SvarDTO(verdi=false)), OpplysningDTO(opplysningNavn=Det er inntekt neste kalendermåned, opplysningType=Boolean, svar=SvarDTO(verdi=false))], tilstand=Groenn)])]
-         */
     }
 
     @Test
     fun `Skal kunne hente ut en oppgave av type TilBehandling med gitt id`() {
-        withOppgaveApi {
-            client.get("/oppgave/$oppgaveTilBehandlingUUID") { autentisert() }.also { response ->
+        val mediatorMock: Mediator = mockk<Mediator>()
+        val oppgaveId = UUIDv7.ny()
+        val oppgave =
+            Oppgave(
+                oppgaveId = oppgaveId,
+                opprettet = LocalDateTime.now(),
+                ident = "12345612345",
+                emneknagger = setOf("Søknadsbehandling"),
+            )
+        every { mediatorMock.hent(oppgaveId) } returns oppgave
+
+        withOppgaveApi(mediator = mediatorMock) {
+            client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val oppgave =
+                val actualOppgave =
                     objectMapper.readValue(
                         response.bodyAsText(),
                         OppgaveDTO::class.java,
                     )
-                oppgave shouldBe oppgaveTilBehandlingDTO
+                actualOppgave shouldBe oppgave.tilOppgaveDTO()
             }
         }
     }

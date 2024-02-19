@@ -86,17 +86,19 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                 route("{oppgaveId}") {
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        try {
+                        val oppgave: OppgaveDTO? =
                             when (oppgaveId) {
-                                oppgaveTilBehandlingUUID -> call.respond(HttpStatusCode.OK, oppgaveTilBehandlingDTO)
-                                oppgaveFerdigBehandletUUID -> call.respond(HttpStatusCode.OK, oppgaveFerdigBehandletDTO)
-                                else -> throw NoSuchElementException()
+                                oppgaveTilBehandlingUUID -> oppgaveTilBehandlingDTO
+                                oppgaveFerdigBehandletUUID -> oppgaveFerdigBehandletDTO
+                                else -> mediator.hent(oppgaveId)?.tilOppgaveDTO()
                             }
-                        } catch (e: NoSuchElementException) {
+                        if (oppgave == null) {
                             call.respond(
                                 status = HttpStatusCode.NotFound,
                                 message = "Fant ingen oppgave med UUID $oppgaveId",
                             )
+                        } else {
+                            call.respond(HttpStatusCode.OK, oppgave)
                         }
                     }
 
@@ -127,7 +129,7 @@ private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveDTO() }
 }
 
-private fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
+internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
     return OppgaveDTO(
         uuid = this.oppgaveId,
         personIdent = this.ident,
