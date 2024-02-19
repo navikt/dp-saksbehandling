@@ -14,7 +14,13 @@ data class Person(val ident: String) {
         val behandling =
             Behandling(
                 behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                oppgave = Oppgave(UUIDv7.ny(), setOf("Søknadsbehandling")),
+                oppgave =
+                    Oppgave(
+                        oppgaveId = UUIDv7.ny(),
+                        ident = søknadsbehandlingOpprettetHendelse.ident,
+                        emneknagger = setOf("Søknadsbehandling"),
+                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                    ),
             )
         behandlinger.put(behandling.behandlingId, behandling)
     }

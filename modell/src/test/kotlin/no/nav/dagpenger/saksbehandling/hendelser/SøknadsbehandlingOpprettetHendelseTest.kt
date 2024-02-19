@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class SøknadsbehandlingOpprettetHendelseTest {
     private val ident = "12345612345"
@@ -18,6 +19,7 @@ class SøknadsbehandlingOpprettetHendelseTest {
                 søknadId = UUIDv7.ny(),
                 behandlingId = behandlingId,
                 ident = ident,
+                opprettet = LocalDateTime.now(),
             )
         person.håndter(søknadsbehandlingOpprettetHendelse)
 

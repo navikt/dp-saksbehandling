@@ -8,6 +8,7 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import no.nav.helse.rapids_rivers.asLocalDateTime
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
@@ -17,7 +18,7 @@ internal class BehandlingOpprettetMottak(
         private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "behandling_opprettet") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId", "@opprettet") }
         }
     }
 
@@ -32,6 +33,7 @@ internal class BehandlingOpprettetMottak(
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
+        val opprettet = packet["@opprettet"].asLocalDateTime()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             mediator.behandle(
@@ -39,6 +41,7 @@ internal class BehandlingOpprettetMottak(
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     ident = ident,
+                    opprettet = opprettet,
                 ),
             )
         }

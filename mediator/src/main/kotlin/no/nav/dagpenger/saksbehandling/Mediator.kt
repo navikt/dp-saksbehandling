@@ -5,11 +5,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 
 private val logger = KotlinLogging.logger {}
 
-internal class Mediator(private val personRepository: PersonRepository) {
+internal class Mediator(private val personRepository: PersonRepository) : PersonRepository by personRepository {
     fun behandle(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val ident = søknadsbehandlingOpprettetHendelse.ident
-        val person = personRepository.hent(ident) ?: Person(ident)
+        val person = hent(ident) ?: Person(ident)
         person.håndter(søknadsbehandlingOpprettetHendelse)
-        personRepository.lagre(person)
+        lagre(person)
     }
 }

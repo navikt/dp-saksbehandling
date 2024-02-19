@@ -28,6 +28,8 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.api.auth.AzureAd
 import no.nav.dagpenger.saksbehandling.api.auth.verifier
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -70,7 +72,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    val oppgaver = oppgaveDtos
+                    val oppgaver = mediator.hentAlleOppgaver().tilOppgaverDTO() + oppgaveDtos
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
 
@@ -119,6 +121,33 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
             }
         }
     }
+}
+
+private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
+    return this.map { oppgave -> oppgave.tilOppgaveDTO() }
+}
+
+private fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
+    return OppgaveDTO(
+        uuid = this.oppgaveId,
+        personIdent = this.ident,
+        datoOpprettet = this.opprettet.toLocalDate(),
+        journalpostIder = emptyList(),
+        emneknagger = this.emneknagger.toList(),
+        // @TODO: Hent tilstand fra oppgave? (FerdigBehandlet, TilBehandling)
+        tilstand = OppgaveTilstandDTO.TilBehandling,
+        steg = this.steg.map { steg -> steg.tilStegDTO() },
+    )
+}
+
+private fun Steg.tilStegDTO(): StegDTO {
+    return StegDTO(
+        uuid = this.stegId,
+        stegNavn = this.navn,
+        opplysninger = emptyList(),
+        // @TODO: Hent stegtilstand fra steg?
+        tilstand = StegTilstandDTO.Groenn,
+    )
 }
 
 internal val oppgaveFerdigBehandletUUID = UUID.fromString("7f9c2ac7-5bf2-46e6-a618-c1f4f85cd3f2")
