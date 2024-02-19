@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Mediator
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
@@ -15,8 +15,8 @@ class BehandligOpprettetMottakTest {
     val søknadId = UUID.randomUUID()
     val behandlingId = UUID.randomUUID()
     val ident = "12345678901"
-    private val behandlingOpprettetHendelse =
-        BehandlingOpprettetHendelse(
+    private val søknadsbehandlingOpprettetHendelse =
+        SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
             behandlingId = behandlingId,
             ident = ident,
@@ -30,7 +30,7 @@ class BehandligOpprettetMottakTest {
     fun `Skal behandle behandling_opprettet hendelse`() {
         testRapid.sendTestMessage(behandlingOpprettetMelding)
         verify(exactly = 1) {
-            mediator.behandle(behandlingOpprettetHendelse)
+            mediator.behandle(søknadsbehandlingOpprettetHendelse)
         }
     }
 
