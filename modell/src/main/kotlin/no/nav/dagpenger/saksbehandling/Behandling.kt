@@ -10,7 +10,7 @@ class Behandling(
 
     fun håndter(verifiserOpplysningHendelse: VerifiserOpplysningHendelse) {
         if (oppgave == null) {
-            oppgave = Oppgave(UUIDv7.ny(), setOf("VerifiserOpplysninger"))
+            oppgave = Oppgave(oppgaveId = UUIDv7.ny(), emneknagger = setOf("VerifiserOpplysninger"))
         }
     }
 }
