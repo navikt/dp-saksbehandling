@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
@@ -26,16 +27,20 @@ class MediatorTest {
     }
 
     @Test
-    fun `Lagre ny behandling`() {
-        testRapid.sendTestMessage(behandlingOpprettetMelding(testIdent))
+    fun `Lagre ny søknadsbehandling`() {
+        testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding(testIdent))
         val person = personRepository.hent(testIdent)
         requireNotNull(person)
         person.ident shouldBe testIdent
         person.behandlinger.size shouldBe 1
+        person.behandlinger.get(behandlingId)?.oppgave shouldNotBe null
+        val oppgaver = personRepository.hentAlleOppgaver()
+        oppgaver.size shouldBe 1
+        personRepository.hent(oppgaveId = oppgaver.first().oppgaveId) shouldNotBe null
     }
 
     @Language("JSON")
-    private fun behandlingOpprettetMelding(ident: String) =
+    private fun søknadsbehandlingOpprettetMelding(ident: String) =
         """
         {
             "@event_name": "behandling_opprettet",

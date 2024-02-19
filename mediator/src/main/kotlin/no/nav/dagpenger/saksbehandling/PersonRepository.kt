@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling
 
-interface PersonRepository {
+import java.util.UUID
+
+interface PersonRepository : OppgaveRepository {
     fun lagre(person: Person)
 
     fun hent(ident: String): Person?
@@ -14,6 +16,18 @@ class InMemoryPersonRepository : PersonRepository {
     }
 
     override fun hent(ident: String): Person? = personMap[ident]
+
+    override fun hent(oppgaveId: UUID): Oppgave? =
+        hentAlleOppgaver().firstOrNull { oppgave ->
+            oppgave.oppgaveId == oppgaveId
+        }
+
+    override fun hentAlleOppgaver(): List<Oppgave> =
+        personMap.values.flatMap { person ->
+            person.behandlinger.values.map { behandling ->
+                behandling.oppgave
+            }
+        }
 
     fun slettAlt() = personMap.clear()
 }
