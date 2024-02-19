@@ -36,20 +36,6 @@ class OppgaveApiTest {
     }
     private val oppgaveId = UUID.randomUUID()
 
-    @Test
-    @Disabled
-    fun `skal ikke json serialisere null verdier`() {
-        withOppgaveApi {
-            client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText().let { json ->
-                    json shouldContainJsonKey "$.steg[0].svar.type"
-                    json shouldNotContainJsonKey "$.steg[0].svar.svar"
-                }
-            }
-        }
-    }
 
     @Test
     fun `Skal kunne hente ut alle oppgaver`() {
@@ -64,44 +50,6 @@ class OppgaveApiTest {
                     )
                 oppgaver shouldBe oppgaveDtos
             }
-        }
-    }
-
-    @Test
-    @Disabled
-    fun `skal kunne svare på et steg`() {
-        withOppgaveApi {
-            val oppgaveJSON = client.get("/oppgave/$oppgaveId") { autentisert() }.bodyAsText()
-            val stegId = oppgaveJSON.findStegUUID("vilkår1")
-
-            /*
-            val oppgave = mockPersistence.hentOppgave(oppgaveId)
-            val steg = oppgave.steg(UUID.fromString(stegId))
-            steg.svar.verdi shouldBe null
-            steg.tilstand shouldBe Tilstand.IkkeUtført
-            client.put("/oppgave/$oppgaveId/steg/$stegId") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                this.setBody(
-                    //language=JSON
-                    """
-                    {
-                      "type": "Boolean",
-                      "svar": "true",
-                      "begrunnelse": {
-                        "tekst": "Har itte"
-                      }
-                    }
-                    """.trimIndent(),
-                )
-            }.status shouldBe HttpStatusCode.OK
-
-            steg.svar.verdi shouldBe true
-            steg.svar.sporing should beInstanceOf<ManuellSporing>()
-            (steg.svar.sporing as ManuellSporing).begrunnelse shouldBe "Har itte"
-            steg.tilstand shouldBe Tilstand.Utført
-
-             */
         }
     }
 
