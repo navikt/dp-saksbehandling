@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.api
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -202,26 +201,6 @@ class OppgaveApiTest {
         }
     }
 
-    @Test
-    @Disabled
-    fun `Får 200 OK og tom liste dersom det ikke finnes oppgaver for et gitt fnr`() {
-        withOppgaveApi {
-            client.post("/oppgave/sok") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"fnr": "789"}""",
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val oppgaver = jacksonObjectMapper().readTree(response.bodyAsText())
-                oppgaver.shouldBeEmpty()
-            }
-        }
-    }
-
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(),
         test: suspend ApplicationTestBuilder.() -> Unit,
@@ -238,69 +217,6 @@ class OppgaveApiTest {
         }
     }
 
-    /*
-    private val mockPersistence =
-        InMemoryOppgaveRepository().apply {
-            val hendelse =
-                SøknadInnsendtHendelse(
-                    søknadId = UUID.randomUUID(),
-                    journalpostId = "123",
-                    ident = testIdent,
-                    innsendtDato = LocalDate.now(),
-                )
-            testPerson.håndter(hendelse)
-            lagreOppgave(
-                Oppgave(
-                    UUID.randomUUID(),
-                    behandling(testPerson, hendelse) {
-                        steg {
-                            vilkår("vilkår1")
-                        }
-                        steg {
-                            fastsettelse<Int>("fastsettelse1") {
-                                avhengerAvFastsettelse<LocalDate>("vilkår 1 dato")
-                            }
-                        }
-                    },
-                    emneknagger = setOf("Søknadsbehandling", "VurderAvslagAvMinsteinntekt"),
-                ).also { oppgaveId = it.uuid },
-            )
-            lagreOppgave(
-                Oppgave(
-                    UUID.randomUUID(),
-                    behandling(testPerson, hendelse) {
-                        steg {
-                            vilkår("vilkår2")
-                        }
-                    },
-                    emneknagger = setOf("Søknadsbehandling", "VurderAvslagAvMinsteinntekt"),
-                ),
-            )
-            lagreOppgave(
-                Oppgave(
-                    UUID.randomUUID(),
-                    behandling(
-                        Person("45678910112").also {
-                            it.håndter(hendelse)
-                        },
-                        hendelse,
-                    ) {
-                        steg {
-                            vilkår("vilkår3")
-                        }
-                    },
-                    emneknagger = setOf("Søknadsbehandling", "VurderAvslagAvMinsteinntekt"),
-                ),
-            )
-        }
-
-
-    private val mockPersistencePerson =
-        InMemoryPersonRepository.apply {
-            lagrePerson(testPerson)
-        }
-
-     */
     private fun HttpRequestBuilder.autentisert() {
         header(HttpHeaders.Authorization, "Bearer $testToken")
     }
