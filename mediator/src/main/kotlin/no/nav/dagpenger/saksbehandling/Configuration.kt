@@ -26,4 +26,6 @@ internal object Configuration {
         properties.list().reversed().fold(emptyMap()) { map, pair ->
             map + pair.second
         }
+
+    val behandlingUrl: String = TODO()
 }
