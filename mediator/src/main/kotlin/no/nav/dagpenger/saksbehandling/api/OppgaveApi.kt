@@ -103,10 +103,13 @@ internal fun Application.oppgaveApi(
                                 message = "Fant ingen oppgave med UUID $oppgaveId",
                             )
                         } else {
-                            val behandling = kotlin.runCatching { behandlingKlient.hentBehandling(oppgave.behandlingId) }
-                                .getOrNull()
-                            val minsteinntektOpplysning = behandling?.opplysning?.findLast { it.opplysningstype == "Minsteinntekt" }
-                            val alerdsKravOpplysning = behandling?.opplysning?.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
+                            val behandling =
+                                kotlin.runCatching { behandlingKlient.hentBehandling(oppgave.behandlingId) }
+                                    .getOrNull()
+                            val minsteinntektOpplysning =
+                                behandling?.opplysning?.findLast { it.opplysningstype == "Minsteinntekt" }
+                            val alerdsKravOpplysning =
+                                behandling?.opplysning?.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
                             val nyeSteg = mutableListOf<StegDTO>()
                             minsteinntektOpplysning?.let { minsteinntekt ->
                                 val utledetOpplysninger = hentUtledetOpplysning(minsteinntekt)
