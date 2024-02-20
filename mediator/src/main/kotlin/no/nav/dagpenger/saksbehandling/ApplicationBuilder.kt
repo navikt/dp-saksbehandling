@@ -13,12 +13,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val behandlingKlient: BehandlingKlient =
         BehandlingKlient(
             behandlingUrl = Configuration.behandlingUrl,
-            oboTokenProvider = { token: String ->
-                Configuration.azureAdClient.onBehalfOf(
-                    token = token,
-                    scope = Configuration.dpBehandlingScope,
-                ).accessToken
-            },
+            behandlingScope = Configuration.behandlingScope,
+            tokenProvider = Configuration.tilOboToken,
         )
 
     private val rapidsConnection: RapidsConnection =

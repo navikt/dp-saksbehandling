@@ -33,7 +33,7 @@ internal object Configuration {
         }
 
     val behandlingUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
-    val dpBehandlingScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
+    val behandlingScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
 
     val azureAdClient by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)
@@ -41,5 +41,8 @@ internal object Configuration {
             tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
             authType = azureAdConfig.clientSecret(),
         )
+    }
+    val tilOboToken = { token: String, scope: String ->
+        azureAdClient.onBehalfOf(token, scope).accessToken
     }
 }

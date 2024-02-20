@@ -11,7 +11,9 @@ import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 
 internal class BehandlingKlientTest {
-    private val testTokenProvider: (String) -> String = { "testToken" }
+    private val testTokenProvider: (String, String) -> String = {
+            _, _ -> "token"
+    }
     private val baseUrl = "http://baseUrl"
     private val saksbehandlerToken = "saksbehandlerToken"
 
@@ -24,7 +26,8 @@ internal class BehandlingKlientTest {
         val behandlingKlient =
             BehandlingKlient(
                 behandlingUrl = baseUrl,
-                oboTokenProvider = testTokenProvider,
+                behandlingScope = "scope",
+                tokenProvider = testTokenProvider,
                 engine = mockEngine,
             )
         val behandling =

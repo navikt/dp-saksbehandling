@@ -15,12 +15,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
-import no.nav.dagpenger.saksbehandling.Configuration
 import java.util.UUID
 
 class BehandlingKlient(
-    private val behandlingUrl: String = Configuration.behandlingUrl,
-    private val oboTokenProvider: (String) -> String,
+    private val behandlingUrl: String,
+    private val behandlingScope: String,
+    private val tokenProvider: (token: String, audience: String) -> String,
     engine: HttpClientEngine = CIO.create {},
 ) {
     private val client = createHttpClient(engine)
@@ -34,7 +34,7 @@ class BehandlingKlient(
             try {
                 val response: HttpResponse =
                     client.get(url) {
-                        header(HttpHeaders.Authorization, "Bearer ${oboTokenProvider.invoke(saksbehandlerToken)}")
+                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}")
                         accept(ContentType.Application.Json)
                     }
 
