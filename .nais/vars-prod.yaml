@@ -8,4 +8,4 @@ azure:
 
 dp-behandling:
   url: "http://dp-behandling"
-  scope: "api://prod-gcp:teamdagpenger:dp-behandling/.default"
+  scope: "prod-gcp:teamdagpenger:dp-behandling"
