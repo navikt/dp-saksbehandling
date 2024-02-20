@@ -124,7 +124,10 @@ components:
     Oppgave:
       type: object
       properties:
-        uuid:
+        oppgaveId:
+          type: string
+          format: uuid
+        behandlingId:
           type: string
           format: uuid
         personIdent:
@@ -146,6 +149,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Steg'
+      required:
+        - oppgaveId
+        - behandlingId
+        - personIdent
+        - datoOpprettet
+        - tilstand
+        - steg
+        - emneknagger
     OppgaveTilstand:
       type: string
       enum:

@@ -8,9 +8,8 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 
 class BehandlingKlientTest {
-    private val testTokenProvider: (token: String) -> String = { _ -> "testToken" }
+    private val testTokenProvider: () -> String = { "testToken" }
     private val baseUrl = "http://baseUrl"
-    private val subjectToken = "gylidg_token"
 
     @Test
     fun `Skal hente json fra behandling`() {
@@ -26,7 +25,7 @@ class BehandlingKlientTest {
             )
         val behandling =
             runBlocking {
-                behandlingKlient.hentBehandling(UUIDv7.ny(), subjectToken)
+                behandlingKlient.hentBehandling(UUIDv7.ny())
             }
         behandling shouldNotBe null
     }

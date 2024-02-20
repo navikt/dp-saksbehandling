@@ -19,21 +19,18 @@ import java.util.UUID
 
 class BehandlingKlient(
     private val behandlingUrl: String = Configuration.behandlingUrl,
-    private val tokenProvider: (String) -> String,
+    private val tokenProvider: () -> String,
     engine: HttpClientEngine = CIO.create {},
 ) {
     private val client = createHttpClient(engine)
 
-    suspend fun hentBehandling(
-        behandlingId: UUID,
-        subjectToken: String,
-    ): JsonNode =
+    suspend fun hentBehandling(behandlingId: UUID): JsonNode =
         withContext(Dispatchers.IO) {
             val url = URLBuilder(behandlingUrl).appendEncodedPathSegments("behandling", behandlingId.toString()).build()
             try {
                 val response: HttpResponse =
                     client.get(url) {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(subjectToken)}")
+                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                     }
                 if (response.status.value == 200) {
                     logger.info("Kall til dp-behandling gikk OK")

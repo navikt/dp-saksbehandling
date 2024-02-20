@@ -30,6 +30,7 @@ import io.ktor.server.routing.routing
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Steg
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.AzureAd
 import no.nav.dagpenger.saksbehandling.api.auth.verifier
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -42,7 +43,10 @@ import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import java.time.LocalDate
 import java.util.UUID
 
-internal fun Application.oppgaveApi(mediator: Mediator) {
+internal fun Application.oppgaveApi(
+    mediator: Mediator,
+    // behandlingKlient: BehandlingKlient,
+) {
     install(CallLogging) {
         disableDefaultColors()
     }
@@ -98,6 +102,8 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 message = "Fant ingen oppgave med UUID $oppgaveId",
                             )
                         } else {
+                            // val behandling = behandlingKlient.hentBehandling(oppgave.behandlingId)
+
                             call.respond(HttpStatusCode.OK, oppgave)
                         }
                     }
@@ -131,8 +137,9 @@ private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
 
 internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
     return OppgaveDTO(
-        uuid = this.oppgaveId,
+        oppgaveId = this.oppgaveId,
         personIdent = this.ident,
+        behandlingId = this.behandlingId,
         datoOpprettet = this.opprettet.toLocalDate(),
         journalpostIder = emptyList(),
         emneknagger = this.emneknagger.toList(),
@@ -171,12 +178,13 @@ internal val opplysningerGjenopptak8uker =
 
 internal val oppgaveTilBehandlingDTO =
     OppgaveDTO(
-        uuid = oppgaveTilBehandlingUUID,
+        oppgaveId = oppgaveTilBehandlingUUID,
         personIdent = "12345678901",
         datoOpprettet = LocalDate.now(),
         journalpostIder = listOf("12345678"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
         tilstand = OppgaveTilstandDTO.TilBehandling,
+        behandlingId = UUIDv7.ny(),
         steg =
             listOf(
                 StegDTO(
@@ -229,12 +237,13 @@ internal val oppgaveTilBehandlingDTO =
 
 internal val oppgaveFerdigBehandletDTO =
     OppgaveDTO(
-        uuid = oppgaveFerdigBehandletUUID,
+        oppgaveId = oppgaveFerdigBehandletUUID,
         personIdent = "12345678901",
         datoOpprettet = LocalDate.now(),
         journalpostIder = listOf("98989", "76767"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
         tilstand = OppgaveTilstandDTO.FerdigBehandlet,
+        behandlingId = UUIDv7.ny(),
         steg =
             listOf(
                 StegDTO(

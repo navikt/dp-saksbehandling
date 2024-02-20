@@ -17,11 +17,12 @@ data class Person(val ident: String) {
                 oppgave =
                     Oppgave(
                         oppgaveId = UUIDv7.ny(),
+                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
                         ident = søknadsbehandlingOpprettetHendelse.ident,
                         emneknagger = setOf("Søknadsbehandling"),
                         opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                     ),
             )
-        behandlinger.put(behandling.behandlingId, behandling)
+        behandlinger[behandling.behandlingId] = behandling
     }
 }

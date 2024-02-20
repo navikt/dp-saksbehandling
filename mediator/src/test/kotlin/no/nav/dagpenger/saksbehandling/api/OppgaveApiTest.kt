@@ -43,6 +43,7 @@ class OppgaveApiTest {
     fun `Skal kunne hente ut alle oppgaver`() {
         val oppgaveId = UUIDv7.ny()
         val opprettet = LocalDateTime.now()
+        val behandlingId = UUIDv7.ny()
         val mediatorMock =
             mockk<Mediator>().also {
                 every { it.hentAlleOppgaver() } returns
@@ -51,12 +52,14 @@ class OppgaveApiTest {
                             oppgaveId = oppgaveId,
                             ident = "123",
                             opprettet = opprettet,
+                            behandlingId = behandlingId,
                         ),
                     )
             }
         val forventetOppgaveDTO =
             OppgaveDTO(
-                uuid = oppgaveId,
+                oppgaveId = oppgaveId,
+                behandlingId = behandlingId,
                 personIdent = "123",
                 datoOpprettet = opprettet.toLocalDate(),
                 tilstand = OppgaveTilstandDTO.TilBehandling,
@@ -88,9 +91,10 @@ class OppgaveApiTest {
         val oppgave =
             Oppgave(
                 oppgaveId = oppgaveId,
-                opprettet = LocalDateTime.now(),
                 ident = "12345612345",
                 emneknagger = setOf("Søknadsbehandling"),
+                opprettet = LocalDateTime.now(),
+                behandlingId = UUIDv7.ny(),
             )
         every { mediatorMock.hent(oppgaveId) } returns oppgave
 

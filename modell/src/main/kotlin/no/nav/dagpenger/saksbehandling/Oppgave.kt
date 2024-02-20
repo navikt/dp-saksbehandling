@@ -9,13 +9,21 @@ data class Oppgave private constructor(
     val ident: String,
     private val _emneknagger: MutableSet<String>,
     val steg: MutableList<Steg>,
+    val behandlingId: UUID,
 ) {
-    constructor(oppgaveId: UUID, ident: String, emneknagger: Set<String> = emptySet(), opprettet: LocalDateTime) : this(
+    constructor(
+        oppgaveId: UUID,
+        ident: String,
+        emneknagger: Set<String> = emptySet(),
+        opprettet: LocalDateTime,
+        behandlingId: UUID,
+    ) : this(
         oppgaveId = oppgaveId,
         ident = ident,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         steg = mutableListOf(),
+        behandlingId = behandlingId,
     )
 
     val emneknagger: Set<String>
