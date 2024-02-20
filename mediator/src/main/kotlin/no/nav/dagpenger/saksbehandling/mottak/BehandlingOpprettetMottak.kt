@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
+import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
@@ -35,6 +36,8 @@ internal class BehandlingOpprettetMottak(
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
+        logger.info { "Mottok behandling opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             mediator.behandle(
                 SøknadsbehandlingOpprettetHendelse(
@@ -45,5 +48,12 @@ internal class BehandlingOpprettetMottak(
                 ),
             )
         }
+    }
+
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+    ) {
+        logger.error { "Forstod ikke behandling opprettet hendelse. \n $problems" }
     }
 }
