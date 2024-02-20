@@ -27,7 +27,7 @@ internal object Configuration {
                 "KAFKA_RESET_POLICY" to "latest",
                 "GRUPPE_BESLUTTER" to "123",
                 "GRUPPE_SAKSBEHANDLER" to "456",
-                "DP_BEHANDLING_URL" to "http://dp-behandling",
+                "DP_BEHANDLING_API_URL" to "http://dp-behandling",
             ),
         )
     val properties =
@@ -38,7 +38,7 @@ internal object Configuration {
             map + pair.second
         }
 
-    val behandlingUrl: String = properties[Key("DP_BEHANDLING_URL", stringType)]
+    val behandlingUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
     val dpBehandlingScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
 
     val dpBehandlingApiTokenProvider by lazy {
