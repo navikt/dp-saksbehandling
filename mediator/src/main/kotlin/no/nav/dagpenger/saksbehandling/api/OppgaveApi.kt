@@ -91,6 +91,7 @@ internal fun Application.oppgaveApi(
                 route("{oppgaveId}") {
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
+                        val saksbehandlerToken = call.request.jwt()
                         val oppgave: OppgaveDTO? =
                             when (oppgaveId) {
                                 oppgaveTilBehandlingUUID -> oppgaveTilBehandlingDTO
@@ -104,7 +105,7 @@ internal fun Application.oppgaveApi(
                             )
                         } else {
                             val behandling =
-                                kotlin.runCatching { behandlingKlient.hentBehandling(oppgave.behandlingId) }
+                                kotlin.runCatching { behandlingKlient.hentBehandling(oppgave.behandlingId, saksbehandlerToken) }
                                     .getOrNull()
                             val minsteinntektOpplysning =
                                 behandling?.opplysning?.findLast { it.opplysningstype == "Minsteinntekt" }

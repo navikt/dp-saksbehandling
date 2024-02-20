@@ -20,18 +20,21 @@ import java.util.UUID
 
 class BehandlingKlient(
     private val behandlingUrl: String = Configuration.behandlingUrl,
-    private val tokenProvider: () -> String,
+    private val oboTokenProvider: (String) -> String,
     engine: HttpClientEngine = CIO.create {},
 ) {
     private val client = createHttpClient(engine)
 
-    suspend fun hentBehandling(behandlingId: UUID): BehandlingDTO =
+    suspend fun hentBehandling(
+        behandlingId: UUID,
+        saksbehandlerToken: String,
+    ): BehandlingDTO =
         withContext(Dispatchers.IO) {
             val url = URLBuilder(behandlingUrl).appendEncodedPathSegments("behandling", behandlingId.toString()).build()
             try {
                 val response: HttpResponse =
                     client.get(url) {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                        header(HttpHeaders.Authorization, "Bearer ${oboTokenProvider.invoke(saksbehandlerToken)}")
                         accept(ContentType.Application.Json)
                     }
 
@@ -44,5 +47,8 @@ class BehandlingKlient(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val tilOboToken = { token: String, scope: String ->
+            Configuration.azureAdClient.onBehalfOf(token, scope).accessToken
+        }
     }
 }
