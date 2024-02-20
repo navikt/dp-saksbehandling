@@ -40,10 +40,14 @@ import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
+import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import java.time.LocalDate
 import java.util.UUID
 
-internal fun Application.oppgaveApi(mediator: Mediator) {
+internal fun Application.oppgaveApi(
+    mediator: Mediator,
+    behandlingKlient: BehandlingKlient,
+) {
     install(CallLogging) {
         disableDefaultColors()
     }
@@ -99,9 +103,50 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 message = "Fant ingen oppgave med UUID $oppgaveId",
                             )
                         } else {
-                            // val behandling = behandlingKlient.hentBehandling(oppgave.behandlingId)
+                            val behandling = behandlingKlient.hentBehandling(oppgave.behandlingId)
+                            val minsteinntektOpplysning = behandling.opplysning.findLast { it.opplysningstype == "Minsteinntekt" }
+                            val alerdsKravOpplysning = behandling.opplysning.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
+                            val nyeSteg = mutableListOf<StegDTO>()
+                            minsteinntektOpplysning?.let { minsteinntekt ->
+                                val utledetOpplysninger = hentUtledetOpplysning(minsteinntekt)
 
-                            call.respond(HttpStatusCode.OK, oppgave)
+                                nyeSteg.add(
+                                    StegDTO(
+                                        uuid = UUIDv7.ny(),
+                                        stegNavn = "Har minste arbeidsinntekt",
+                                        opplysninger =
+                                            listOf(
+                                                OpplysningDTO(
+                                                    opplysningNavn = "Minsteinntekt",
+                                                    opplysningType = OpplysningTypeDTO.Boolean,
+                                                    svar = SvarDTO(minsteinntekt.verdi),
+                                                ),
+                                            ) + utledetOpplysninger,
+                                    ),
+                                )
+                            }
+
+                            alerdsKravOpplysning?.let { aldersKrav ->
+                                val utledetOpplysninger = hentUtledetOpplysning(aldersKrav)
+                                nyeSteg.add(
+                                    StegDTO(
+                                        uuid = UUIDv7.ny(),
+                                        stegNavn = "Under 67 år",
+                                        opplysninger =
+                                            listOf(
+                                                OpplysningDTO(
+                                                    opplysningNavn = "Under 67 år",
+                                                    opplysningType = OpplysningTypeDTO.Boolean,
+                                                    svar = SvarDTO(aldersKrav.verdi),
+                                                ),
+                                            ) + utledetOpplysninger,
+                                    ),
+                                )
+                            }
+
+                            val oppdatertOppgave = oppgave.copy(steg = oppgave.steg + nyeSteg)
+
+                            call.respond(HttpStatusCode.OK, oppdatertOppgave)
                         }
                     }
 
@@ -127,6 +172,22 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
         }
     }
 }
+
+private fun hentUtledetOpplysning(fraOpplysning: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO) =
+    fraOpplysning.utledetAv?.opplysninger?.map {
+        OpplysningDTO(
+            opplysningNavn = it.opplysningstype,
+            opplysningType =
+                when (it.datatype) {
+                    "boolean" -> OpplysningTypeDTO.Boolean
+                    "string" -> OpplysningTypeDTO.String
+                    "double" -> OpplysningTypeDTO.Double
+                    "LocalDate" -> OpplysningTypeDTO.LocalDate
+                    else -> OpplysningTypeDTO.String
+                },
+            svar = SvarDTO(it.verdi),
+        )
+    } ?: emptyList()
 
 private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveDTO() }

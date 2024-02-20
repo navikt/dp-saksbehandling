@@ -2,16 +2,23 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
+import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val personRepository = InMemoryPersonRepository()
     private val mediator = Mediator(personRepository)
+    private val behandlingKlient: BehandlingKlient =
+        BehandlingKlient(
+            behandlingUrl = Configuration.behandlingUrl,
+            tokenProvider = { Configuration.dpBehandlingApiTokenProvider.clientCredentials(Configuration.dpBehandlingScope).accessToken },
+        )
+
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
-                this.oppgaveApi(mediator)
+                this.oppgaveApi(mediator, behandlingKlient)
             }.build()
 
     init {

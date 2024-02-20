@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.json.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -207,10 +208,11 @@ class OppgaveApiTest {
 
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(),
+        behandllingKlient: BehandlingKlient = mockk<BehandlingKlient>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
-            application { oppgaveApi(mediator) }
+            application { oppgaveApi(mediator, behandllingKlient) }
             test()
         }
     }
