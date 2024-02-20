@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -20,6 +21,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             .withKtorModule {
                 this.oppgaveApi(mediator, behandlingKlient)
             }.build()
+
+    private val behandlingOpprettetMottak = BehandlingOpprettetMottak(rapidsConnection, mediator)
 
     init {
         rapidsConnection.register(this)
