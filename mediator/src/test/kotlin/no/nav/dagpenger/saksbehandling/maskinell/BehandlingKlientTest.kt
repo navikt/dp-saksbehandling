@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 
-class BehandlingKlientTest {
+internal class BehandlingKlientTest {
     private val testTokenProvider: (String) -> String = { "testToken" }
     private val baseUrl = "http://baseUrl"
     private val saksbehandlerToken = "saksbehandlerToken"

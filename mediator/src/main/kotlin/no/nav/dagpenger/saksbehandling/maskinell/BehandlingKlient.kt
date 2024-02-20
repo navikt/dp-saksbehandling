@@ -47,8 +47,5 @@ class BehandlingKlient(
 
     companion object {
         private val logger = KotlinLogging.logger {}
-        private val tilOboToken = { token: String, scope: String ->
-            Configuration.azureAdClient.onBehalfOf(token, scope).accessToken
-        }
     }
 }
