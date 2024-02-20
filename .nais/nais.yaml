@@ -34,6 +34,10 @@ spec:
       value: {{azure.grupper.saksbehandler}}
     - name: GRUPPE_BESLUTTER
       value: {{azure.grupper.beslutter}}
+    - name: DP_BEHANDLING_URL
+      value: {{dp-behandling.url}}
+    - name: DP_BEHANDLING_SCOPE
+      value: {{dp-behandling.scope}}
   azure:
     application:
       enabled: true

@@ -6,3 +6,6 @@ azure:
     saksbehandler: "2e9c63d8-322e-4c1f-b500-a0abb812761c" # 0000-GA-Dagpenger-Saksbehandler
     beslutter: "70d54cad-53a3-4788-bbe3-565096f01da7" # 0000-GA-Dagpenger-Beslutter
 
+dp-behandling:
+  url: "http://dp-behandling"
+  scope: "prod-gcp:teamdagpenger:dp-behandling"
