@@ -15,8 +15,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             behandlingUrl = Configuration.behandlingUrl,
             oboTokenProvider = { token: String ->
                 Configuration.azureAdClient.onBehalfOf(
-                    token,
-                    Configuration.dpBehandlingScope,
+                    token = token,
+                    scope = Configuration.dpBehandlingScope,
                 ).accessToken
             },
         )
