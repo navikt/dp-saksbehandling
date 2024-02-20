@@ -43,10 +43,7 @@ import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import java.time.LocalDate
 import java.util.UUID
 
-internal fun Application.oppgaveApi(
-    mediator: Mediator,
-    // behandlingKlient: BehandlingKlient,
-) {
+internal fun Application.oppgaveApi(mediator: Mediator) {
     install(CallLogging) {
         disableDefaultColors()
     }
