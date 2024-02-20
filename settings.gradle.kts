@@ -1,12 +1,6 @@
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
 }
-rootProject.name = "dp-saksbehandling"
-
-include("modell")
-include("openapi")
-include("mediator")
-include("opplysninger")
 
 dependencyResolutionManagement {
     repositories {
@@ -18,3 +12,9 @@ dependencyResolutionManagement {
         }
     }
 }
+
+rootProject.name = "dp-saksbehandling"
+include("modell")
+include("openapi")
+include("mediator")
+include("opplysninger-kontrakt")
