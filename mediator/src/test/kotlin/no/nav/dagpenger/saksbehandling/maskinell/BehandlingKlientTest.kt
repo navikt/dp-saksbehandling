@@ -12,7 +12,8 @@ import java.time.OffsetDateTime
 
 internal class BehandlingKlientTest {
     private val testTokenProvider: (String, String) -> String = {
-            _, _ -> "token"
+            _, _ ->
+        "token"
     }
     private val baseUrl = "http://baseUrl"
     private val saksbehandlerToken = "saksbehandlerToken"
