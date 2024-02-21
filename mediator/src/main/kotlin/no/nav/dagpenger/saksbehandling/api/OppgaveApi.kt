@@ -27,6 +27,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Steg
@@ -70,6 +71,8 @@ internal fun Application.oppgaveApi(
             }
         }
     }
+
+    val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
     routing {
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
@@ -150,6 +153,7 @@ internal fun Application.oppgaveApi(
                             }
 
                             val oppdatertOppgave = oppgave.copy(steg = oppgave.steg + nyeSteg)
+                            sikkerLogger.info { "Oppdatert oppgave: $oppdatertOppgave" }
 
                             call.respond(HttpStatusCode.OK, oppdatertOppgave)
                         }
