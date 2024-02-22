@@ -28,8 +28,7 @@ class BehandlingKlient(
     suspend fun hentBehandling(
         behandlingId: UUID,
         saksbehandlerToken: String,
-    ): BehandlingDTO =
-        withContext(Dispatchers.IO) {
+    ): BehandlingDTO = withContext(Dispatchers.IO) {
             val url = URLBuilder(behandlingUrl).appendEncodedPathSegments("behandling", behandlingId.toString()).build()
             try {
                 val response: HttpResponse =
@@ -38,6 +37,7 @@ class BehandlingKlient(
                         accept(ContentType.Application.Json)
                     }
 
+                sikkerLogger.info { "Response fra dp-behandling: $response" }
                 return@withContext response.body<BehandlingDTO>()
             } catch (e: Exception) {
                 logger.warn("Kall til dp-behandling feilet", e)
@@ -47,5 +47,6 @@ class BehandlingKlient(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerLogger = KotlinLogging.logger("tjenestekall")
     }
 }
