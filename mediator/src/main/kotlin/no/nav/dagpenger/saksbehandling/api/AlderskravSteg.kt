@@ -7,30 +7,29 @@ import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 
-fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
-    val minsteinntektOpplysning = minsteinntektOpplysningFra(behandlingDTO)
-
+fun alderskravStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
+    val alderskravOpplysning = alderskravOpplysningFra(behandlingDTO)
     return when {
-        minsteinntektOpplysning != null ->
+        alderskravOpplysning != null ->
             StegDTO(
                 uuid = UUIDv7.ny(),
-                stegNavn = "Har minste arbeidsinntekt",
+                stegNavn = "Under 67 år",
                 opplysninger =
                     listOf(
                         OpplysningDTO(
-                            opplysningNavn = "Minsteinntekt",
+                            opplysningNavn = "Under 67 år",
                             opplysningType = OpplysningTypeDTO.Boolean,
-                            svar = SvarDTO(minsteinntektOpplysning.verdi),
+                            svar = SvarDTO(alderskravOpplysning.verdi),
                         ),
-                    ) + opplysningsgrunnlagFor(minsteinntektOpplysning),
+                    ) + opplysningsgrunnlagFor(alderskravOpplysning),
             )
 
         else -> null
     }
 }
 
-private fun minsteinntektOpplysningFra(behandling: BehandlingDTO?) =
-    behandling?.opplysning?.findLast { it.opplysningstype == "Minsteinntekt" }
+private fun alderskravOpplysningFra(behandling: BehandlingDTO?) =
+    behandling?.opplysning?.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
 
 private fun opplysningsgrunnlagFor(opplysning: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO) =
     opplysning.utledetAv?.opplysninger?.map {

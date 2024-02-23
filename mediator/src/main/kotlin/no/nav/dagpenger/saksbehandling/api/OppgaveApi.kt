@@ -1,24 +1,12 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.auth.HttpAuthHeader
-import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
-import io.ktor.server.application.install
-import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.authentication
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.parseAuthorizationHeader
-import io.ktor.server.plugins.callloging.CallLogging
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.response.respond
@@ -28,13 +16,11 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.auth.AzureAd
-import no.nav.dagpenger.saksbehandling.api.auth.verifier
+import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
@@ -50,28 +36,7 @@ internal fun Application.oppgaveApi(
     mediator: Mediator,
     behandlingKlient: BehandlingKlient,
 ) {
-    install(CallLogging) {
-        disableDefaultColors()
-    }
-
-    install(ContentNegotiation) {
-        jackson {
-            registerModule(JavaTimeModule())
-            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            enable(SerializationFeature.INDENT_OUTPUT)
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        }
-    }
-
-    install(Authentication) {
-        jwt("azureAd") {
-            verifier(AzureAd)
-            validate { credentials ->
-                JWTPrincipal(credentials.payload)
-            }
-        }
-    }
+    apiConfig()
 
     val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
@@ -106,31 +71,14 @@ internal fun Application.oppgaveApi(
                             }
 
                         if (oppgave != null) {
-                            val behandling =
+                            val behandlingDTO =
                                 kotlin.runCatching {
                                     behandlingKlient.hentBehandling(oppgave.behandlingId, saksbehandlerToken)
                                 }.getOrNull()
 
                             val nyeSteg = mutableListOf<StegDTO>()
-                            minsteinntektSteg(behandling)?.let { nyeSteg.add(it) }
-
-                            val alderskravOpplysning = alderskravOpplysningFra(behandling)
-                            if (alderskravOpplysning != null) {
-                                val alderskravSteg =
-                                    StegDTO(
-                                        uuid = UUIDv7.ny(),
-                                        stegNavn = "Under 67 år",
-                                        opplysninger =
-                                            listOf(
-                                                OpplysningDTO(
-                                                    opplysningNavn = "Under 67 år",
-                                                    opplysningType = OpplysningTypeDTO.Boolean,
-                                                    svar = SvarDTO(alderskravOpplysning.verdi),
-                                                ),
-                                            ) + opplysningsgrunnlagFor(alderskravOpplysning),
-                                    )
-                                nyeSteg.add(alderskravSteg)
-                            }
+                            minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
+                            alderskravStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
 
                             val oppdatertOppgave = oppgave.copy(steg = oppgave.steg + nyeSteg)
                             sikkerLogger.info { "Oppdatert oppgave: $oppdatertOppgave" }
@@ -166,25 +114,6 @@ internal fun Application.oppgaveApi(
         }
     }
 }
-
-private fun alderskravOpplysningFra(behandling: BehandlingDTO?) =
-    behandling?.opplysning?.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
-
-private fun opplysningsgrunnlagFor(opplysning: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO) =
-    opplysning.utledetAv?.opplysninger?.map {
-        OpplysningDTO(
-            opplysningNavn = it.opplysningstype,
-            opplysningType =
-                when (it.datatype) {
-                    "boolean" -> OpplysningTypeDTO.Boolean
-                    "string" -> OpplysningTypeDTO.String
-                    "double" -> OpplysningTypeDTO.Double
-                    "LocalDate" -> OpplysningTypeDTO.LocalDate
-                    else -> OpplysningTypeDTO.String
-                },
-            svar = SvarDTO(it.verdi),
-        )
-    } ?: emptyList()
 
 private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveDTO() }
@@ -344,22 +273,6 @@ internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {
         UUID.fromString(it)
     } ?: throw IllegalArgumentException("Kunne ikke finne oppgaveId i path")
-
-internal fun ApplicationCall.saksbehandlerId() =
-    this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("NAVident")?.asString()
-        ?: throw IllegalArgumentException("Ikke autentisert")
-
-/*
-internal fun ApplicationCall.roller(): List<Rolle> {
-    return this.authentication.principal<JWTPrincipal>()?.payload?.claims?.get("groups")?.asList(String::class.java)
-        ?.mapNotNull {
-            when (it) {
-                beslutterGruppe -> Rolle.Beslutter
-                saksbehandlerGruppe -> Rolle.Saksbehandler
-                else -> null
-            }
-        } ?: emptyList()
-}*/
 
 internal fun ApplicationRequest.jwt(): String =
     this.parseAuthorizationHeader().let { authHeader ->
