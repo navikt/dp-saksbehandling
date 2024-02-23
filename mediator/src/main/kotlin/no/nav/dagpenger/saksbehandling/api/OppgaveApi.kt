@@ -112,24 +112,7 @@ internal fun Application.oppgaveApi(
                                 }.getOrNull()
 
                             val nyeSteg = mutableListOf<StegDTO>()
-
-                            val minsteinntektOpplysning = minsteinntektOpplysningFra(behandling)
-                            if (minsteinntektOpplysning != null) {
-                                val minsteinntektSteg =
-                                    StegDTO(
-                                        uuid = UUIDv7.ny(),
-                                        stegNavn = "Har minste arbeidsinntekt",
-                                        opplysninger =
-                                            listOf(
-                                                OpplysningDTO(
-                                                    opplysningNavn = "Minsteinntekt",
-                                                    opplysningType = OpplysningTypeDTO.Boolean,
-                                                    svar = SvarDTO(minsteinntektOpplysning.verdi),
-                                                ),
-                                            ) + opplysningsgrunnlagFor(minsteinntektOpplysning),
-                                    )
-                                nyeSteg.add(minsteinntektSteg)
-                            }
+                            minsteinntektSteg(behandling)?.let { nyeSteg.add(it) }
 
                             val alderskravOpplysning = alderskravOpplysningFra(behandling)
                             if (alderskravOpplysning != null) {
@@ -186,9 +169,6 @@ internal fun Application.oppgaveApi(
 
 private fun alderskravOpplysningFra(behandling: BehandlingDTO?) =
     behandling?.opplysning?.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
-
-private fun minsteinntektOpplysningFra(behandling: BehandlingDTO?) =
-    behandling?.opplysning?.findLast { it.opplysningstype == "Minsteinntekt" }
 
 private fun opplysningsgrunnlagFor(opplysning: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO) =
     opplysning.utledetAv?.opplysninger?.map {
