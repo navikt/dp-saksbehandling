@@ -99,6 +99,7 @@ internal fun Application.oppgaveApi(
 
                         val oppgave: OppgaveDTO? =
                             when (oppgaveId) {
+                                // TODO: Fjern mockene når man får strøm på APIet
                                 oppgaveTilBehandlingUUID -> oppgaveTilBehandlingDTO
                                 oppgaveFerdigBehandletUUID -> oppgaveFerdigBehandletDTO
                                 else -> mediator.hent(oppgaveId)?.tilOppgaveDTO()
@@ -113,10 +114,8 @@ internal fun Application.oppgaveApi(
                             val nyeSteg = mutableListOf<StegDTO>()
 
                             val minsteinntektOpplysning = minsteinntektOpplysningFra(behandling)
-                            minsteinntektOpplysning?.let { minsteinntekt ->
-                                val utledetOpplysninger = hentUtledetOpplysning(minsteinntekt)
-
-                                nyeSteg.add(
+                            if (minsteinntektOpplysning != null) {
+                                val minsteinntektSteg =
                                     StegDTO(
                                         uuid = UUIDv7.ny(),
                                         stegNavn = "Har minste arbeidsinntekt",
@@ -125,17 +124,16 @@ internal fun Application.oppgaveApi(
                                                 OpplysningDTO(
                                                     opplysningNavn = "Minsteinntekt",
                                                     opplysningType = OpplysningTypeDTO.Boolean,
-                                                    svar = SvarDTO(minsteinntekt.verdi),
+                                                    svar = SvarDTO(minsteinntektOpplysning.verdi),
                                                 ),
-                                            ) + utledetOpplysninger,
-                                    ),
-                                )
+                                            ) + opplysningsgrunnlagFor(minsteinntektOpplysning),
+                                    )
+                                nyeSteg.add(minsteinntektSteg)
                             }
 
                             val alderskravOpplysning = alderskravOpplysningFra(behandling)
-                            alderskravOpplysning?.let { aldersKrav ->
-                                val utledetOpplysninger = hentUtledetOpplysning(aldersKrav)
-                                nyeSteg.add(
+                            if (alderskravOpplysning != null) {
+                                val alderskravSteg =
                                     StegDTO(
                                         uuid = UUIDv7.ny(),
                                         stegNavn = "Under 67 år",
@@ -144,11 +142,11 @@ internal fun Application.oppgaveApi(
                                                 OpplysningDTO(
                                                     opplysningNavn = "Under 67 år",
                                                     opplysningType = OpplysningTypeDTO.Boolean,
-                                                    svar = SvarDTO(aldersKrav.verdi),
+                                                    svar = SvarDTO(alderskravOpplysning.verdi),
                                                 ),
-                                            ) + utledetOpplysninger,
-                                    ),
-                                )
+                                            ) + opplysningsgrunnlagFor(alderskravOpplysning),
+                                    )
+                                nyeSteg.add(alderskravSteg)
                             }
 
                             val oppdatertOppgave = oppgave.copy(steg = oppgave.steg + nyeSteg)
@@ -192,8 +190,8 @@ private fun alderskravOpplysningFra(behandling: BehandlingDTO?) =
 private fun minsteinntektOpplysningFra(behandling: BehandlingDTO?) =
     behandling?.opplysning?.findLast { it.opplysningstype == "Minsteinntekt" }
 
-private fun hentUtledetOpplysning(fraOpplysning: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO) =
-    fraOpplysning.utledetAv?.opplysninger?.map {
+private fun opplysningsgrunnlagFor(opplysning: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO) =
+    opplysning.utledetAv?.opplysninger?.map {
         OpplysningDTO(
             opplysningNavn = it.opplysningstype,
             opplysningType =
