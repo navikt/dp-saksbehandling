@@ -28,6 +28,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
+import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Steg
@@ -95,26 +96,23 @@ internal fun Application.oppgaveApi(
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val saksbehandlerToken = call.request.jwt()
+
                         val oppgave: OppgaveDTO? =
                             when (oppgaveId) {
                                 oppgaveTilBehandlingUUID -> oppgaveTilBehandlingDTO
                                 oppgaveFerdigBehandletUUID -> oppgaveFerdigBehandletDTO
                                 else -> mediator.hent(oppgaveId)?.tilOppgaveDTO()
                             }
-                        if (oppgave == null) {
-                            call.respond(
-                                status = HttpStatusCode.NotFound,
-                                message = "Fant ingen oppgave med UUID $oppgaveId",
-                            )
-                        } else {
+
+                        if (oppgave != null) {
                             val behandling =
-                                kotlin.runCatching { behandlingKlient.hentBehandling(oppgave.behandlingId, saksbehandlerToken) }
-                                    .getOrNull()
-                            val minsteinntektOpplysning =
-                                behandling?.opplysning?.findLast { it.opplysningstype == "Minsteinntekt" }
-                            val alerdsKravOpplysning =
-                                behandling?.opplysning?.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
+                                kotlin.runCatching {
+                                    behandlingKlient.hentBehandling(oppgave.behandlingId, saksbehandlerToken)
+                                }.getOrNull()
+
                             val nyeSteg = mutableListOf<StegDTO>()
+
+                            val minsteinntektOpplysning = minsteinntektOpplysningFra(behandling)
                             minsteinntektOpplysning?.let { minsteinntekt ->
                                 val utledetOpplysninger = hentUtledetOpplysning(minsteinntekt)
 
@@ -134,7 +132,8 @@ internal fun Application.oppgaveApi(
                                 )
                             }
 
-                            alerdsKravOpplysning?.let { aldersKrav ->
+                            val alderskravOpplysning = alderskravOpplysningFra(behandling)
+                            alderskravOpplysning?.let { aldersKrav ->
                                 val utledetOpplysninger = hentUtledetOpplysning(aldersKrav)
                                 nyeSteg.add(
                                     StegDTO(
@@ -156,6 +155,11 @@ internal fun Application.oppgaveApi(
                             sikkerLogger.info { "Oppdatert oppgave: $oppdatertOppgave" }
 
                             call.respond(HttpStatusCode.OK, oppdatertOppgave)
+                        } else {
+                            call.respond(
+                                status = HttpStatusCode.NotFound,
+                                message = "Fant ingen oppgave med UUID $oppgaveId",
+                            )
                         }
                     }
 
@@ -181,6 +185,12 @@ internal fun Application.oppgaveApi(
         }
     }
 }
+
+private fun alderskravOpplysningFra(behandling: BehandlingDTO?) =
+    behandling?.opplysning?.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
+
+private fun minsteinntektOpplysningFra(behandling: BehandlingDTO?) =
+    behandling?.opplysning?.findLast { it.opplysningstype == "Minsteinntekt" }
 
 private fun hentUtledetOpplysning(fraOpplysning: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO) =
     fraOpplysning.utledetAv?.opplysninger?.map {

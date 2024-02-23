@@ -28,7 +28,8 @@ class BehandlingKlient(
     suspend fun hentBehandling(
         behandlingId: UUID,
         saksbehandlerToken: String,
-    ): BehandlingDTO = withContext(Dispatchers.IO) {
+    ): BehandlingDTO =
+        withContext(Dispatchers.IO) {
             val url = URLBuilder(behandlingUrl).appendEncodedPathSegments("behandling", behandlingId.toString()).build()
             try {
                 val response: HttpResponse =

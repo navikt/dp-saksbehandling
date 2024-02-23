@@ -114,6 +114,20 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
+        val ikkeEksisterendeOppgaveId = UUID.randomUUID()
+        val mediator = mockk<Mediator>()
+        every { mediator.hent(ikkeEksisterendeOppgaveId) }.returns(null)
+
+        withOppgaveApi(mediator) {
+            client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+                response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $ikkeEksisterendeOppgaveId"
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne hente ut en oppgave av type FerdigBehandlet med gitt id`() {
         withOppgaveApi {
             client.get("/oppgave/$oppgaveFerdigBehandletUUID") { autentisert() }.also { response ->
@@ -172,18 +186,6 @@ class OppgaveApiTest {
     }
 
     @Test
-    @Disabled
-    fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
-        val randomUUID = UUID.randomUUID()
-        withOppgaveApi {
-            client.get("/oppgave/$randomUUID") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NotFound
-                response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $randomUUID"
-            }
-        }
-    }
-
-    @Test
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
         withOppgaveApi {
             client.post("/oppgave/sok") {
@@ -207,7 +209,7 @@ class OppgaveApiTest {
     }
 
     private fun withOppgaveApi(
-        mediator: Mediator = mockk<Mediator>(),
+        mediator: Mediator = mockk<Mediator>(relaxed = true),
         behandllingKlient: BehandlingKlient = mockk<BehandlingKlient>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
