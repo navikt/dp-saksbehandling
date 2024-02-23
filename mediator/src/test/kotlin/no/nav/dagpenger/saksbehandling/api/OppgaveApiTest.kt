@@ -24,7 +24,7 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.json.objectMapper
+import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
@@ -118,7 +118,6 @@ class OppgaveApiTest {
         val ikkeEksisterendeOppgaveId = UUID.randomUUID()
         val mediator = mockk<Mediator>()
         every { mediator.hent(ikkeEksisterendeOppgaveId) }.returns(null)
-
         withOppgaveApi(mediator) {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
