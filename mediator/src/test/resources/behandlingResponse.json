@@ -1,0 +1,457 @@
+{
+  "behandlingId": "018de49f-5158-756a-a36a-3cde0fd8d82b",
+  "opplysning": [
+    {
+      "id": "018de49f-5161-7056-90b8-712a17df38b4",
+      "opplysningstype": "Søknadstidspunkt",
+      "verdi": "2024-02-26",
+      "status": "Faktum",
+      "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+      "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+      "datatype": "LocalDate",
+      "kilde": null,
+      "utledetAv": null
+    },
+    {
+      "id": "018de49f-5161-7056-90b8-712a17df38b5",
+      "opplysningstype": "Virkningsdato",
+      "verdi": "2024-02-26",
+      "status": "Faktum",
+      "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+      "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+      "datatype": "LocalDate",
+      "kilde": null,
+      "utledetAv": {
+        "regel": {
+          "navn": "SisteAv"
+        },
+        "opplysninger": [
+          {
+            "id": "018de49f-5161-7056-90b8-712a17df38b4",
+            "opplysningstype": "Søknadstidspunkt",
+            "verdi": "2024-02-26",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "LocalDate",
+            "kilde": null,
+            "utledetAv": null
+          }
+        ],
+        "opplysningstype": null
+      }
+    },
+    {
+      "id": "018de49f-5161-7056-90b8-712a17df38b6",
+      "opplysningstype": "Aldersgrense",
+      "verdi": "67",
+      "status": "Faktum",
+      "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+      "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+      "datatype": "int",
+      "kilde": null,
+      "utledetAv": {
+        "regel": {
+          "navn": "Oppslag"
+        },
+        "opplysninger": [
+          {
+            "id": "018de49f-5161-7056-90b8-712a17df38b5",
+            "opplysningstype": "Virkningsdato",
+            "verdi": "2024-02-26",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "LocalDate",
+            "kilde": null,
+            "utledetAv": {
+              "regel": {
+                "navn": "SisteAv"
+              },
+              "opplysninger": [
+                {
+                  "id": "018de49f-5161-7056-90b8-712a17df38b4",
+                  "opplysningstype": "Søknadstidspunkt",
+                  "verdi": "2024-02-26",
+                  "status": "Faktum",
+                  "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                  "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                  "datatype": "LocalDate",
+                  "kilde": null,
+                  "utledetAv": null
+                }
+              ],
+              "opplysningstype": null
+            }
+          }
+        ],
+        "opplysningstype": null
+      }
+    },
+    {
+      "id": "018de49f-5163-763f-ac66-576a95c8da83",
+      "opplysningstype": "Grunnbeløp",
+      "verdi": "118620.0",
+      "status": "Faktum",
+      "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+      "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+      "datatype": "double",
+      "kilde": null,
+      "utledetAv": {
+        "regel": {
+          "navn": "Oppslag"
+        },
+        "opplysninger": [
+          {
+            "id": "018de49f-5161-7056-90b8-712a17df38b5",
+            "opplysningstype": "Virkningsdato",
+            "verdi": "2024-02-26",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "LocalDate",
+            "kilde": null,
+            "utledetAv": {
+              "regel": {
+                "navn": "SisteAv"
+              },
+              "opplysninger": [
+                {
+                  "id": "018de49f-5161-7056-90b8-712a17df38b4",
+                  "opplysningstype": "Søknadstidspunkt",
+                  "verdi": "2024-02-26",
+                  "status": "Faktum",
+                  "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                  "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                  "datatype": "LocalDate",
+                  "kilde": null,
+                  "utledetAv": null
+                }
+              ],
+              "opplysningstype": null
+            }
+          }
+        ],
+        "opplysningstype": null
+      }
+    },
+    {
+      "id": "018de49f-5163-763f-ac66-576a95c8da84",
+      "opplysningstype": "Antall G for krav til 12 mnd inntekt",
+      "verdi": "1.5",
+      "status": "Faktum",
+      "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+      "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+      "datatype": "double",
+      "kilde": null,
+      "utledetAv": {
+        "regel": {
+          "navn": "Oppslag"
+        },
+        "opplysninger": [
+          {
+            "id": "018de49f-5161-7056-90b8-712a17df38b5",
+            "opplysningstype": "Virkningsdato",
+            "verdi": "2024-02-26",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "LocalDate",
+            "kilde": null,
+            "utledetAv": {
+              "regel": {
+                "navn": "SisteAv"
+              },
+              "opplysninger": [
+                {
+                  "id": "018de49f-5161-7056-90b8-712a17df38b4",
+                  "opplysningstype": "Søknadstidspunkt",
+                  "verdi": "2024-02-26",
+                  "status": "Faktum",
+                  "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                  "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                  "datatype": "LocalDate",
+                  "kilde": null,
+                  "utledetAv": null
+                }
+              ],
+              "opplysningstype": null
+            }
+          }
+        ],
+        "opplysningstype": null
+      }
+    },
+    {
+      "id": "018de49f-5164-78fe-942f-74f46d42aa7a",
+      "opplysningstype": "Antall G for krav til 36 mnd inntekt",
+      "verdi": "3.0",
+      "status": "Faktum",
+      "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+      "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+      "datatype": "double",
+      "kilde": null,
+      "utledetAv": {
+        "regel": {
+          "navn": "Oppslag"
+        },
+        "opplysninger": [
+          {
+            "id": "018de49f-5161-7056-90b8-712a17df38b5",
+            "opplysningstype": "Virkningsdato",
+            "verdi": "2024-02-26",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "LocalDate",
+            "kilde": null,
+            "utledetAv": {
+              "regel": {
+                "navn": "SisteAv"
+              },
+              "opplysninger": [
+                {
+                  "id": "018de49f-5161-7056-90b8-712a17df38b4",
+                  "opplysningstype": "Søknadstidspunkt",
+                  "verdi": "2024-02-26",
+                  "status": "Faktum",
+                  "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                  "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                  "datatype": "LocalDate",
+                  "kilde": null,
+                  "utledetAv": null
+                }
+              ],
+              "opplysningstype": null
+            }
+          }
+        ],
+        "opplysningstype": null
+      }
+    },
+    {
+      "id": "018de49f-5164-78fe-942f-74f46d42aa7b",
+      "opplysningstype": "Inntektskrav for siste 12 mnd",
+      "verdi": "177930.0",
+      "status": "Faktum",
+      "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+      "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+      "datatype": "double",
+      "kilde": null,
+      "utledetAv": {
+        "regel": {
+          "navn": "Multiplikasjon"
+        },
+        "opplysninger": [
+          {
+            "id": "018de49f-5163-763f-ac66-576a95c8da84",
+            "opplysningstype": "Antall G for krav til 12 mnd inntekt",
+            "verdi": "1.5",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "double",
+            "kilde": null,
+            "utledetAv": {
+              "regel": {
+                "navn": "Oppslag"
+              },
+              "opplysninger": [
+                {
+                  "id": "018de49f-5161-7056-90b8-712a17df38b5",
+                  "opplysningstype": "Virkningsdato",
+                  "verdi": "2024-02-26",
+                  "status": "Faktum",
+                  "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                  "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                  "datatype": "LocalDate",
+                  "kilde": null,
+                  "utledetAv": {
+                    "regel": {
+                      "navn": "SisteAv"
+                    },
+                    "opplysninger": [
+                      {
+                        "id": "018de49f-5161-7056-90b8-712a17df38b4",
+                        "opplysningstype": "Søknadstidspunkt",
+                        "verdi": "2024-02-26",
+                        "status": "Faktum",
+                        "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                        "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                        "datatype": "LocalDate",
+                        "kilde": null,
+                        "utledetAv": null
+                      }
+                    ],
+                    "opplysningstype": null
+                  }
+                }
+              ],
+              "opplysningstype": null
+            }
+          },
+          {
+            "id": "018de49f-5163-763f-ac66-576a95c8da83",
+            "opplysningstype": "Grunnbeløp",
+            "verdi": "118620.0",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "double",
+            "kilde": null,
+            "utledetAv": {
+              "regel": {
+                "navn": "Oppslag"
+              },
+              "opplysninger": [
+                {
+                  "id": "018de49f-5161-7056-90b8-712a17df38b5",
+                  "opplysningstype": "Virkningsdato",
+                  "verdi": "2024-02-26",
+                  "status": "Faktum",
+                  "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                  "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                  "datatype": "LocalDate",
+                  "kilde": null,
+                  "utledetAv": {
+                    "regel": {
+                      "navn": "SisteAv"
+                    },
+                    "opplysninger": [
+                      {
+                        "id": "018de49f-5161-7056-90b8-712a17df38b4",
+                        "opplysningstype": "Søknadstidspunkt",
+                        "verdi": "2024-02-26",
+                        "status": "Faktum",
+                        "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                        "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                        "datatype": "LocalDate",
+                        "kilde": null,
+                        "utledetAv": null
+                      }
+                    ],
+                    "opplysningstype": null
+                  }
+                }
+              ],
+              "opplysningstype": null
+            }
+          }
+        ],
+        "opplysningstype": null
+      }
+    },
+    {
+      "id": "018de49f-5164-78fe-942f-74f46d42aa7c",
+      "opplysningstype": "Inntektskrav for siste 36 mnd",
+      "verdi": "355860.0",
+      "status": "Faktum",
+      "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+      "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+      "datatype": "double",
+      "kilde": null,
+      "utledetAv": {
+        "regel": {
+          "navn": "Multiplikasjon"
+        },
+        "opplysninger": [
+          {
+            "id": "018de49f-5164-78fe-942f-74f46d42aa7a",
+            "opplysningstype": "Antall G for krav til 36 mnd inntekt",
+            "verdi": "3.0",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "double",
+            "kilde": null,
+            "utledetAv": {
+              "regel": {
+                "navn": "Oppslag"
+              },
+              "opplysninger": [
+                {
+                  "id": "018de49f-5161-7056-90b8-712a17df38b5",
+                  "opplysningstype": "Virkningsdato",
+                  "verdi": "2024-02-26",
+                  "status": "Faktum",
+                  "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                  "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                  "datatype": "LocalDate",
+                  "kilde": null,
+                  "utledetAv": {
+                    "regel": {
+                      "navn": "SisteAv"
+                    },
+                    "opplysninger": [
+                      {
+                        "id": "018de49f-5161-7056-90b8-712a17df38b4",
+                        "opplysningstype": "Søknadstidspunkt",
+                        "verdi": "2024-02-26",
+                        "status": "Faktum",
+                        "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                        "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                        "datatype": "LocalDate",
+                        "kilde": null,
+                        "utledetAv": null
+                      }
+                    ],
+                    "opplysningstype": null
+                  }
+                }
+              ],
+              "opplysningstype": null
+            }
+          },
+          {
+            "id": "018de49f-5163-763f-ac66-576a95c8da83",
+            "opplysningstype": "Grunnbeløp",
+            "verdi": "118620.0",
+            "status": "Faktum",
+            "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+            "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+            "datatype": "double",
+            "kilde": null,
+            "utledetAv": {
+              "regel": {
+                "navn": "Oppslag"
+              },
+              "opplysninger": [
+                {
+                  "id": "018de49f-5161-7056-90b8-712a17df38b5",
+                  "opplysningstype": "Virkningsdato",
+                  "verdi": "2024-02-26",
+                  "status": "Faktum",
+                  "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                  "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                  "datatype": "LocalDate",
+                  "kilde": null,
+                  "utledetAv": {
+                    "regel": {
+                      "navn": "SisteAv"
+                    },
+                    "opplysninger": [
+                      {
+                        "id": "018de49f-5161-7056-90b8-712a17df38b4",
+                        "opplysningstype": "Søknadstidspunkt",
+                        "verdi": "2024-02-26",
+                        "status": "Faktum",
+                        "gyldigFraOgMed": "-999999999-01-01T00:00:00+18:00",
+                        "gyldigTilOgMed": "+999999999-12-31T23:59:59.999999999-18:00",
+                        "datatype": "LocalDate",
+                        "kilde": null,
+                        "utledetAv": null
+                      }
+                    ],
+                    "opplysningstype": null
+                  }
+                }
+              ],
+              "opplysningstype": null
+            }
+          }
+        ],
+        "opplysningstype": null
+      }
+    }
+  ]
+}
