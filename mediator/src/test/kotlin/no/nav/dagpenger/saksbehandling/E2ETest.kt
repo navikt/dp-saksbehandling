@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import java.io.FileNotFoundException
 import java.time.OffsetDateTime
 
 class E2ETest {
@@ -37,14 +38,13 @@ class E2ETest {
     private val mediator = Mediator(personRepository)
     val mockEngine =
         MockEngine { request ->
-            respond(behandlingJsonResponse, headers = headersOf("Content-Type", "application/json"))
+            respond("/behandlingResponse.json".fileAsText(), headers = headersOf("Content-Type", "application/json"))
         }
 
     private val testToken by mockAzure {
         claims = mapOf("NAVident" to "123")
     }
-    private val testTokenProvider: (String, String) -> String = {
-            _, _ ->
+    private val testTokenProvider: (String, String) -> String = { _, _ ->
         "token"
     }
     private val baseUrl = "http://baseUrl"
@@ -136,4 +136,9 @@ class E2ETest {
           ]
         }       
         """.trimIndent()
+
+    internal fun String.fileAsText(): String {
+        return object {}.javaClass.getResource(this)?.readText()
+            ?: throw FileNotFoundException()
+    }
 }
