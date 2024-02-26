@@ -55,35 +55,17 @@ internal fun Application.oppgaveApi(
                 route("{oppgaveId}") {
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        val saksbehandlerToken = call.request.jwt()
+                        val saksbehandlerSignatur = call.request.jwt()
+                        val hendelse = OppgaveHendelse(oppgaveId, saksbehandlerSignatur)
+                        val oppgave = mediator.hubba(hendelse).tilOppgaveDTO()
+                        when (oppgave) {
+                            null ->
+                                call.respond(
+                                    status = HttpStatusCode.NotFound,
+                                    message = "Fant ingen oppgave med UUID $oppgaveId",
+                                )
 
-                        val oppgave: OppgaveDTO? =
-                            when (oppgaveId) {
-                                // TODO: Fjern mockene når man får strøm på APIet
-                                oppgaveTilBehandlingUUID -> oppgaveTilBehandlingDTO
-                                oppgaveFerdigBehandletUUID -> oppgaveFerdigBehandletDTO
-                                else -> mediator.hent(oppgaveId)?.tilOppgaveDTO()
-                            }
-
-                        if (oppgave != null) {
-                            val behandlingDTO =
-                                kotlin.runCatching {
-                                    behandlingKlient.hentBehandling(oppgave.behandlingId, saksbehandlerToken)
-                                }.getOrNull()
-
-                            val nyeSteg = mutableListOf<StegDTO>()
-                            minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
-                            alderskravStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
-
-                            val oppdatertOppgave = oppgave.copy(steg = oppgave.steg + nyeSteg)
-                            sikkerLogger.info { "Oppdatert oppgave: $oppdatertOppgave" }
-
-                            call.respond(HttpStatusCode.OK, oppdatertOppgave)
-                        } else {
-                            call.respond(
-                                status = HttpStatusCode.NotFound,
-                                message = "Fant ingen oppgave med UUID $oppgaveId",
-                            )
+                            else -> call.respond(HttpStatusCode.OK, oppgave)
                         }
                     }
 

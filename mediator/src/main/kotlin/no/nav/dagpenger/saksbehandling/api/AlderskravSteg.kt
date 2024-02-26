@@ -3,7 +3,10 @@ package no.nav.dagpenger.saksbehandling.api
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
-import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO.Boolean
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO.Double
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO.LocalDate
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO.String
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO as BehandlingOpplysningDTO
@@ -11,13 +14,12 @@ import no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO as Beha
 fun alderskravStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
     val alderskravOpplysning = alderskravOpplysningFra(behandlingDTO)
     return when {
-        alderskravOpplysning != null -> {
+        alderskravOpplysning != null ->
             StegDTO(
                 uuid = UUIDv7.ny(),
                 stegNavn = "Under 67 år",
                 opplysninger = hentAlleBehandlingsOpplysninger(alderskravOpplysning).tilOpplysningsDTOer(),
             )
-        }
 
         else -> null
     }
@@ -30,11 +32,11 @@ private fun BehandlingOpplysningDTO.tilOpplysningDTO() =
         opplysningNavn = this.opplysningstype,
         opplysningType =
             when (this.datatype) {
-                "boolean" -> OpplysningTypeDTO.Boolean
-                "string" -> OpplysningTypeDTO.String
-                "double" -> OpplysningTypeDTO.Double
-                "LocalDate" -> OpplysningTypeDTO.LocalDate
-                else -> OpplysningTypeDTO.String
+                "boolean" -> Boolean
+                "string" -> String
+                "double" -> Double
+                "LocalDate" -> LocalDate
+                else -> String
             },
         svar = SvarDTO(this.verdi),
     )

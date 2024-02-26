@@ -17,10 +17,11 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun hent(ident: String): Person? = personMap[ident]
 
-    override fun hent(oppgaveId: UUID): Oppgave? =
-        hentAlleOppgaver().firstOrNull { oppgave ->
+    override fun hent(oppgaveId: UUID): Oppgave? {
+        return hentAlleOppgaver().firstOrNull { oppgave ->
             oppgave.oppgaveId == oppgaveId
         }
+    }
 
     override fun hentAlleOppgaver(): List<Oppgave> =
         personMap.values.flatMap { person ->
