@@ -1,12 +1,12 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
-import no.nav.dagpenger.behandling.opplysninger.api.models.UtledningDTO
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
+import no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO as BehandlingOpplysningDTO
 
 fun alderskravStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
     val alderskravOpplysning = alderskravOpplysningFra(behandlingDTO)
@@ -15,21 +15,7 @@ fun alderskravStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
             StegDTO(
                 uuid = UUIDv7.ny(),
                 stegNavn = "Under 67 år",
-                opplysninger =
-                    hentAlleOpplysninger(alderskravOpplysning).map {
-                        OpplysningDTO(
-                            opplysningNavn = it.opplysningstype,
-                            opplysningType =
-                                when (it.datatype) {
-                                    "boolean" -> OpplysningTypeDTO.Boolean
-                                    "string" -> OpplysningTypeDTO.String
-                                    "double" -> OpplysningTypeDTO.Double
-                                    "LocalDate" -> OpplysningTypeDTO.LocalDate
-                                    else -> OpplysningTypeDTO.String
-                                },
-                            svar = SvarDTO(it.verdi),
-                        )
-                    },
+                opplysninger = hentAlleBehandlingsOpplysninger(alderskravOpplysning).tilOpplysningsDTOer(),
             )
         }
 
@@ -37,20 +23,39 @@ fun alderskravStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
     }
 }
 
-fun hentAlleOpplysninger(
-    opplysningDTO: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO,
-): List<no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO> {
-    val allOpplysning = mutableListOf<no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO>()
+private fun Collection<BehandlingOpplysningDTO>.tilOpplysningsDTOer() = this.map { it.tilOpplysningDTO() }
 
-    fun traverseOpplysning(opplysningList: List<no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO>) {
-        for (opplysning in opplysningList) {
-            allOpplysning.add(opplysning)
-            opplysning.utledetAv?.opplysninger?.let { traverseOpplysning(it) }
-        }
+private fun BehandlingOpplysningDTO.tilOpplysningDTO() =
+    OpplysningDTO(
+        opplysningNavn = this.opplysningstype,
+        opplysningType =
+            when (this.datatype) {
+                "boolean" -> OpplysningTypeDTO.Boolean
+                "string" -> OpplysningTypeDTO.String
+                "double" -> OpplysningTypeDTO.Double
+                "LocalDate" -> OpplysningTypeDTO.LocalDate
+                else -> OpplysningTypeDTO.String
+            },
+        svar = SvarDTO(this.verdi),
+    )
+
+private fun hentAlleBehandlingsOpplysninger(opplysningDTO: BehandlingOpplysningDTO): List<BehandlingOpplysningDTO> {
+    val aggregerteOpplysninger = mutableListOf<BehandlingOpplysningDTO>()
+    traverserOpplysningsTre(
+        opplysninger = listOf(opplysningDTO),
+        aggregerteOpplysninger = aggregerteOpplysninger,
+    )
+    return aggregerteOpplysninger.toList()
+}
+
+private fun traverserOpplysningsTre(
+    opplysninger: List<BehandlingOpplysningDTO>,
+    aggregerteOpplysninger: MutableList<BehandlingOpplysningDTO>,
+) {
+    for (opplysning in opplysninger) {
+        aggregerteOpplysninger.add(opplysning)
+        opplysning.utledetAv?.opplysninger?.let { traverserOpplysningsTre(it, aggregerteOpplysninger) }
     }
-
-    traverseOpplysning(listOf(opplysningDTO))
-    return allOpplysning.toList()
 }
 
 private fun alderskravOpplysningFra(behandling: BehandlingDTO?) =

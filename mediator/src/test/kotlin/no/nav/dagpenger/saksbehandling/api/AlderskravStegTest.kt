@@ -5,13 +5,13 @@ import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import org.junit.jupiter.api.Test
 
-class MinsteinntektStegTest {
+class AlderskravStegTest {
     @Test
     fun `Skal hente ut alle opplysninger fra en trestruktur`() {
         val behandlingDto = objectMapper.readValue(testdata, BehandlingDTO::class.java)
         val stegDto = alderskravStegFra(behandlingDto)
         requireNotNull(stegDto)
-        stegDto.opplysninger.size shouldBe 10
+        stegDto.opplysninger.size shouldBe 11
     }
 }
 

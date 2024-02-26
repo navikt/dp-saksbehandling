@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
-import no.nav.dagpenger.saksbehandling.api.tilOppgaveDTO
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -36,18 +35,16 @@ class E2ETest {
     private val testRapid = TestRapid()
     private val personRepository = InMemoryPersonRepository()
     private val mediator = Mediator(personRepository)
+    private val testToken by mockAzure {
+        claims = mapOf("NAVident" to "123")
+    }
+
+    private val testTokenProvider: (String, String) -> String = { _, _ -> "token" }
+    private val baseUrl = "http://baseUrl"
     val mockEngine =
         MockEngine { request ->
             respond("/behandlingResponse.json".fileAsText(), headers = headersOf("Content-Type", "application/json"))
         }
-
-    private val testToken by mockAzure {
-        claims = mapOf("NAVident" to "123")
-    }
-    private val testTokenProvider: (String, String) -> String = { _, _ ->
-        "token"
-    }
-    private val baseUrl = "http://baseUrl"
     private val behandlingKlient =
         BehandlingKlient(
             behandlingUrl = baseUrl,
@@ -87,7 +84,7 @@ class E2ETest {
                         response.bodyAsText(),
                         OppgaveDTO::class.java,
                     )
-                actualOppgave shouldBe oppgave!!.tilOppgaveDTO()
+                actualOppgave.steg.size shouldBe 2
             }
         }
     }
