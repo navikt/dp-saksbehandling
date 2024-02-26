@@ -11,49 +11,47 @@ import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 fun alderskravStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
     val alderskravOpplysning = alderskravOpplysningFra(behandlingDTO)
     return when {
-        alderskravOpplysning != null ->
+        alderskravOpplysning != null -> {
             StegDTO(
                 uuid = UUIDv7.ny(),
                 stegNavn = "Under 67 år",
                 opplysninger =
-                listOf(
-                    OpplysningDTO(
-                        opplysningNavn = "Under 67 år",
-                        opplysningType = OpplysningTypeDTO.Boolean,
-                        svar = SvarDTO(alderskravOpplysning.verdi),
-                    ),
-                ) + opplysningsgrunnlagFor(alderskravOpplysning),
+                    hentAlleOpplysninger(alderskravOpplysning).map {
+                        OpplysningDTO(
+                            opplysningNavn = it.opplysningstype,
+                            opplysningType =
+                                when (it.datatype) {
+                                    "boolean" -> OpplysningTypeDTO.Boolean
+                                    "string" -> OpplysningTypeDTO.String
+                                    "double" -> OpplysningTypeDTO.Double
+                                    "LocalDate" -> OpplysningTypeDTO.LocalDate
+                                    else -> OpplysningTypeDTO.String
+                                },
+                            svar = SvarDTO(it.verdi),
+                        )
+                    },
             )
+        }
 
         else -> null
     }
 }
 
+fun hentAlleOpplysninger(
+    opplysningDTO: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO,
+): List<no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO> {
+    val allOpplysning = mutableListOf<no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO>()
+
+    fun traverseOpplysning(opplysningList: List<no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO>) {
+        for (opplysning in opplysningList) {
+            allOpplysning.add(opplysning)
+            opplysning.utledetAv?.opplysninger?.let { traverseOpplysning(it) }
+        }
+    }
+
+    traverseOpplysning(listOf(opplysningDTO))
+    return allOpplysning.toList()
+}
+
 private fun alderskravOpplysningFra(behandling: BehandlingDTO?) =
     behandling?.opplysning?.findLast { it.opplysningstype == "Oppfyller kravet til alder" }
-
-private fun tull(utledningDTO: UtledningDTO?, opplysninger: MutableList<OpplysningDTO>) {
-    if(utledningDTO == null) return
-    
-}
-
-private fun opplysningsgrunnlagFor(opplysning: no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO): List<OpplysningDTO> {
-    val opplysninger = mutableListOf<OpplysningDTO>()
-    opplysning.utledetAv!!.opplysninger.forEach {
-
-    }
-    return opplysning.utledetAv?.opplysninger?.map {
-        OpplysningDTO(
-            opplysningNavn = it.opplysningstype,
-            opplysningType =
-            when (it.datatype) {
-                "boolean" -> OpplysningTypeDTO.Boolean
-                "string" -> OpplysningTypeDTO.String
-                "double" -> OpplysningTypeDTO.Double
-                "LocalDate" -> OpplysningTypeDTO.LocalDate
-                else -> OpplysningTypeDTO.String
-            },
-            svar = SvarDTO(it.verdi),
-        )
-    } ?: emptyList()
-}
