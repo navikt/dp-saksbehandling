@@ -8,7 +8,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
-import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.UUID
 
 // TODO: Fjernes ettersom vi kommer lenger i utviklingen
@@ -34,7 +34,7 @@ internal val oppgaveTilBehandlingDTO =
     OppgaveDTO(
         oppgaveId = oppgaveTilBehandlingUUID,
         personIdent = "12345678901",
-        datoOpprettet = LocalDate.now(),
+        tidspunktOpprettet = ZonedDateTime.now(),
         journalpostIder = listOf("12345678"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
         tilstand = OppgaveTilstandDTO.TilBehandling,
@@ -91,7 +91,7 @@ internal val oppgaveFerdigBehandletDTO =
     OppgaveDTO(
         oppgaveId = oppgaveFerdigBehandletUUID,
         personIdent = "12345678901",
-        datoOpprettet = LocalDate.now(),
+        tidspunktOpprettet = ZonedDateTime.now(),
         journalpostIder = listOf("98989", "76767"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
         tilstand = OppgaveTilstandDTO.FerdigBehandlet,

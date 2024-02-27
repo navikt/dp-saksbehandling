@@ -127,9 +127,9 @@ components:
           format: uuid
         personIdent:
           type: string
-        datoOpprettet:
+        tidspunktOpprettet:
           type: string
-          format: date
+          format: date-time
         journalpostIder:
           type: array
           items:
@@ -148,7 +148,7 @@ components:
         - oppgaveId
         - behandlingId
         - personIdent
-        - datoOpprettet
+        - tidspunktOpprettet
         - tilstand
         - steg
         - emneknagger

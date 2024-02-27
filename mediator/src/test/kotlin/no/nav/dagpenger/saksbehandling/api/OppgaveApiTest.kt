@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -19,6 +18,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Mediator
@@ -26,10 +26,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import org.junit.jupiter.api.Disabled
+import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class OppgaveApiTest {
@@ -37,12 +37,11 @@ class OppgaveApiTest {
     private val testToken by mockAzure {
         claims = mapOf("NAVident" to "123")
     }
-    private val oppgaveId = UUID.randomUUID()
 
     @Test
     fun `Skal kunne hente ut alle oppgaver`() {
         val oppgaveId = UUIDv7.ny()
-        val opprettet = LocalDateTime.now()
+        val opprettet = ZonedDateTime.now()
         val behandlingId = UUIDv7.ny()
         val mediatorMock =
             mockk<Mediator>().also {
@@ -51,22 +50,11 @@ class OppgaveApiTest {
                         Oppgave(
                             oppgaveId = oppgaveId,
                             ident = "123",
-                            opprettet = opprettet,
+                            opprettet = opprettet.toLocalDateTime(),
                             behandlingId = behandlingId,
                         ),
                     )
             }
-        val forventetOppgaveDTO =
-            OppgaveDTO(
-                oppgaveId = oppgaveId,
-                behandlingId = behandlingId,
-                personIdent = "123",
-                datoOpprettet = opprettet.toLocalDate(),
-                tilstand = OppgaveTilstandDTO.TilBehandling,
-                journalpostIder = listOf(),
-                emneknagger = listOf(),
-                steg = listOf(),
-            )
 
         withOppgaveApi(mediator = mediatorMock) {
             client.get("/oppgave") { autentisert() }.let { response ->
@@ -77,26 +65,21 @@ class OppgaveApiTest {
                         response.bodyAsText(),
                         object : TypeReference<List<OppgaveDTO>>() {},
                     )
-                oppgaver.shouldContain(oppgaveTilBehandlingDTO)
+                oppgaver shouldContain oppgaveTilBehandlingDTO
                 oppgaver.shouldContain(oppgaveFerdigBehandletDTO)
-                oppgaver.shouldContain(forventetOppgaveDTO)
             }
         }
     }
 
     @Test
-    fun `Skal kunne hente ut en oppgave av type TilBehandling med gitt id`() {
-        val mediatorMock: Mediator = mockk<Mediator>()
+    fun `Når saksbehandler henter en oppgave, oppdater den med steg og opplysninger`() {
+        val behandlingKlient = mockk<BehandlingKlient>()
+        val mediatorMock = Mediator(personRepository = mockk(relaxed = true), behandlingKlient = behandlingKlient)
         val oppgaveId = UUIDv7.ny()
-        val oppgave =
-            Oppgave(
-                oppgaveId = oppgaveId,
-                ident = "12345612345",
-                emneknagger = setOf("Søknadsbehandling"),
-                opprettet = LocalDateTime.now(),
-                behandlingId = UUIDv7.ny(),
-            )
-        every { mediatorMock.hent(oppgaveId) } returns oppgave
+        val oppgave = testOppgave(oppgaveId)
+        val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, "en signatur")
+
+        coEvery { mediatorMock.oppdaterOppgaveMedSteg(oppdaterOppgaveHendelse) } returns oppgave
 
         withOppgaveApi(mediator = mediatorMock) {
             client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
@@ -173,7 +156,6 @@ class OppgaveApiTest {
     }
 
     @Test
-    @Disabled
     fun `Får feil ved ugyldig oppgaveId`() {
         val ugyldigId = "noeSomIkkeKanParsesTilUUID"
         withOppgaveApi {
@@ -219,4 +201,13 @@ class OppgaveApiTest {
     private fun HttpRequestBuilder.autentisert() {
         header(HttpHeaders.Authorization, "Bearer $testToken")
     }
+
+    private fun testOppgave(oppgaveId: UUID) =
+        Oppgave(
+            oppgaveId = oppgaveId,
+            ident = "12345612345",
+            emneknagger = setOf("Søknadsbehandling"),
+            opprettet = LocalDateTime.now(),
+            behandlingId = UUIDv7.ny(),
+        )
 }
