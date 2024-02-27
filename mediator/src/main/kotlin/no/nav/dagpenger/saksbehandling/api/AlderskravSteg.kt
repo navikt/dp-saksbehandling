@@ -36,12 +36,12 @@ private fun BehandlingOpplysningDTO.tilOpplysningDTO() =
     OpplysningDTO(
         opplysningNavn = this.opplysningstype,
         opplysningType =
-        when (this.datatype) {
-            "boolean" -> Boolean
-            "string" -> String
-            "double" -> Double
-            "LocalDate" -> LocalDate
-            else -> String
-        },
+            when (this.datatype) {
+                "boolean" -> Boolean
+                "string" -> String
+                "double" -> Double
+                "LocalDate" -> LocalDate
+                else -> String
+            },
         svar = SvarDTO(this.verdi),
     )
