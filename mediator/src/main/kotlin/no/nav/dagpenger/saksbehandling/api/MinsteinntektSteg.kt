@@ -9,10 +9,11 @@ fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     val minsteinntektOpplysningTre = minsteinntektOpplysningFra(behandlingDTO)
 
     return when {
-        minsteinntektOpplysningTre != null -> Steg(
-            navn = "Har minste arbeidsinntekt",
-            opplysninger = hentAlleOpplysningerFra(minsteinntektOpplysningTre),
-        )
+        minsteinntektOpplysningTre != null ->
+            Steg(
+                navn = "Har minste arbeidsinntekt",
+                opplysninger = hentAlleOpplysningerFra(minsteinntektOpplysningTre),
+            )
 
         else -> null
     }

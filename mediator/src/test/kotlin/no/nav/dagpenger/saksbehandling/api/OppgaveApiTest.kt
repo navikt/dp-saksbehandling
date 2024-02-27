@@ -27,7 +27,6 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -209,18 +208,11 @@ class OppgaveApiTest {
 
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(relaxed = true),
-        behandllingKlient: BehandlingKlient = mockk<BehandlingKlient>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
             application { oppgaveApi(mediator) }
             test()
-        }
-    }
-
-    private fun String.findStegUUID(id: String): String {
-        jacksonObjectMapper().readTree(this).let { root ->
-            return root["steg"].first { it["id"].asText() == id }["uuid"].asText()
         }
     }
 
