@@ -4,8 +4,7 @@ data class Opplysning(
     private val navn: String,
     val verdi: String? = null,
     val dataType: String,
-//    val datatype: String,
-//    private val gyldigFraOgMed: LocalDate,
-//    private val gyldigTilOgMed: LocalDate,
+//    private val gyldigFraOgMed: ZonedDate,
+//    private val gyldigTilOgMed: ZonedDate,
 //    val kilde: String,
 )

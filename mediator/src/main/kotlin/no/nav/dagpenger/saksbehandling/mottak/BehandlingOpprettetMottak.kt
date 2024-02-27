@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
+import com.fasterxml.jackson.databind.JsonNode
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Mediator
@@ -10,6 +11,8 @@ import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
@@ -44,7 +47,7 @@ internal class BehandlingOpprettetMottak(
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     ident = ident,
-                    opprettet = opprettet,
+                    opprettet = ZonedDateTime.of(opprettet, ZoneId.systemDefault()),
                 ),
             )
         }
@@ -57,3 +60,5 @@ internal class BehandlingOpprettetMottak(
         logger.error { "Forstod ikke behandling opprettet hendelse. \n $problems" }
     }
 }
+
+private fun JsonNode.asZonedDateTime() = ZonedDateTime.parse(this.asText())

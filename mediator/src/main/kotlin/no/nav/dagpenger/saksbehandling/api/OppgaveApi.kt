@@ -23,8 +23,6 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.util.UUID
 
 internal fun Application.oppgaveApi(mediator: Mediator) {
@@ -94,7 +92,7 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
         oppgaveId = this.oppgaveId,
         personIdent = this.ident,
         behandlingId = this.behandlingId,
-        tidspunktOpprettet = ZonedDateTime.of(this.opprettet, ZoneId.of("Europe/Oslo")),
+        tidspunktOpprettet = this.opprettet,
         journalpostIder = emptyList(),
         emneknagger = this.emneknagger.toList(),
         // @TODO: Hent tilstand fra oppgave? (FerdigBehandlet, TilBehandling)

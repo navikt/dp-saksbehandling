@@ -8,6 +8,8 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class BehandligOpprettetMottakTest {
@@ -15,14 +17,14 @@ class BehandligOpprettetMottakTest {
     private val mediator = mockk<Mediator>(relaxed = true)
     val søknadId = UUID.randomUUID()
     val behandlingId = UUID.randomUUID()
-    val opprettet = LocalDateTime.parse("2024-01-30T10:43:32.988331190")
+    val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
     val ident = "12345678901"
     private val søknadsbehandlingOpprettetHendelse =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
             behandlingId = behandlingId,
             ident = ident,
-            opprettet = opprettet,
+            opprettet = ZonedDateTime.of(opprettet, ZoneId.systemDefault()),
         )
 
     init {

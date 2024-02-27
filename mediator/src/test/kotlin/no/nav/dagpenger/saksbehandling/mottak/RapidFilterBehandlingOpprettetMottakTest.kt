@@ -17,6 +17,7 @@ class RapidFilterBehandlingOpprettetMottakTest {
         mapOf(
             "@event_name" to "behandling_opprettet",
             "@id" to "id1",
+            "@opprettet" to "2024-02-27T10:41:52.800935377",
             "søknadId" to "søknadId33",
             "behandlingId" to "behandlingId4949494",
             "ident" to "ident123",

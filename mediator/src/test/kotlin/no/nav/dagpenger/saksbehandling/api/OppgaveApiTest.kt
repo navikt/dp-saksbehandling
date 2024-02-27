@@ -28,7 +28,6 @@ import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -50,7 +49,7 @@ class OppgaveApiTest {
                         Oppgave(
                             oppgaveId = oppgaveId,
                             ident = "123",
-                            opprettet = opprettet.toLocalDateTime(),
+                            opprettet = opprettet,
                             behandlingId = behandlingId,
                         ),
                     )
@@ -207,7 +206,7 @@ class OppgaveApiTest {
             oppgaveId = oppgaveId,
             ident = "12345612345",
             emneknagger = setOf("Søknadsbehandling"),
-            opprettet = LocalDateTime.now(),
+            opprettet = ZonedDateTime.now(),
             behandlingId = UUIDv7.ny(),
         )
 }
