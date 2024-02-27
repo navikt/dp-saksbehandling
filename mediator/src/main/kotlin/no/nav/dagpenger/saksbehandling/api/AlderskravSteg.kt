@@ -18,7 +18,6 @@ fun alderskravStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
     return when {
         alderskravOpplysningsTre != null ->
             StegDTO(
-                uuid = UUIDv7.ny(),
                 stegNavn = "Under 67 år",
                 opplysninger = hentAlleOpplysningerFra(alderskravOpplysningsTre).tilOpplysningsDTOer(),
             )

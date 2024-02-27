@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.api.OppgaveHendelse
+import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
@@ -23,7 +23,7 @@ internal class Mediator(
         lagre(person)
     }
 
-    suspend fun hubba(hendelse: OppgaveHendelse): Oppgave? {
+    suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Oppgave? {
         val oppgave = personRepository.hent(hendelse.oppgaveId)
         return when (oppgave) {
             null -> null

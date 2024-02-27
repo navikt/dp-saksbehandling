@@ -9,13 +9,14 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val personRepository = InMemoryPersonRepository()
-    private val mediator = Mediator(personRepository)
     private val behandlingKlient: BehandlingKlient =
         BehandlingKlient(
             behandlingUrl = Configuration.behandlingUrl,
             behandlingScope = Configuration.behandlingScope,
             tokenProvider = Configuration.tilOboToken,
         )
+    private val mediator = Mediator(personRepository, behandlingKlient)
+
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))

@@ -56,8 +56,8 @@ internal fun Application.oppgaveApi(
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val saksbehandlerSignatur = call.request.jwt()
-                        val hendelse = OppgaveHendelse(oppgaveId, saksbehandlerSignatur)
-                        val oppgave = mediator.hubba(hendelse).tilOppgaveDTO()
+                        val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
+                        val oppgave = mediator.oppdaterOppgaveMedSteg(oppdaterOppgaveHendelse)
                         when (oppgave) {
                             null ->
                                 call.respond(
@@ -65,14 +65,12 @@ internal fun Application.oppgaveApi(
                                     message = "Fant ingen oppgave med UUID $oppgaveId",
                                 )
 
-                            else -> call.respond(HttpStatusCode.OK, oppgave)
+                            else -> call.respond(HttpStatusCode.OK, oppgave.tilOppgaveDTO())
                         }
                     }
 
-                    route("steg") {
-                        put("{stegId}") {
-                            call.respond(HttpStatusCode.NoContent)
-                        }
+                    put {
+                        call.respond(HttpStatusCode.NoContent)
                     }
 
                     route("avslag") {
@@ -112,7 +110,6 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
 
 private fun Steg.tilStegDTO(): StegDTO {
     return StegDTO(
-        uuid = this.stegId,
         stegNavn = this.navn,
         opplysninger = emptyList(),
         // @TODO: Hent stegtilstand fra steg?

@@ -42,7 +42,6 @@ internal val oppgaveTilBehandlingDTO =
         steg =
             listOf(
                 StegDTO(
-                    uuid = stegIdGjenopptak8Uker,
                     stegNavn = "Gjenopptak / 8 uker",
                     opplysninger =
                         listOf(
@@ -59,7 +58,6 @@ internal val oppgaveTilBehandlingDTO =
                         ),
                 ),
                 StegDTO(
-                    uuid = UUID.randomUUID(),
                     stegNavn = "Minste arbeidsinntekt",
                     opplysninger =
                         listOf(
@@ -101,13 +99,11 @@ internal val oppgaveFerdigBehandletDTO =
         steg =
             listOf(
                 StegDTO(
-                    uuid = UUID.randomUUID(),
                     stegNavn = "Gjenopptak / 8 uker",
                     opplysninger = opplysningerGjenopptak8uker,
                     tilstand = StegTilstandDTO.Groenn,
                 ),
                 StegDTO(
-                    uuid = UUID.randomUUID(),
                     stegNavn = "Minste arbeidsinntekt",
                     opplysninger =
                         listOf(

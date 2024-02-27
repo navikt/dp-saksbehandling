@@ -59,9 +59,8 @@ paths:
         '404':
           description: Oppgaven ble ikke funnet
 
-  /oppgave/{oppgaveId}/steg/{stegId}:
     put:
-      summary: Besvar opplysninger knyttet til et steg i en oppgave.
+      summary: Besvar opplysninger i en oppgave.
       requestBody:
         required: true
         content:
@@ -75,17 +74,13 @@ paths:
           schema:
             type: string
             format: uuid
-        - in: path
-          name: stegId
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         '204':
-          description: Vellykket oppdatering av opplysninger i et steg
+          description: Vellykket oppdatering av opplysninger i en oppgave
+        '400':
+          description: Kunne ikke lagre opplysninger.
         '404':
-          description: Oppgaven eller steget ble ikke funnet
+          description: Oppgaven ble ikke funnet
 
   /oppgave/{oppgaveId}/avslag:
     put:
@@ -165,9 +160,6 @@ components:
     Steg:
       type: object
       properties:
-        uuid:
-          type: string
-          format: uuid
         stegNavn:
           type: string
         opplysninger:
@@ -176,7 +168,6 @@ components:
           $ref: '#/components/schemas/StegTilstand'
 
       required:
-        - uuid
         - stegNavn
         - opplysninger
 

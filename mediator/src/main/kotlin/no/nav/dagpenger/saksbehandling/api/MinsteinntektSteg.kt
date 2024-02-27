@@ -15,7 +15,6 @@ fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): StegDTO? {
     return when {
         minsteinntektOpplysningTre != null ->
             StegDTO(
-                uuid = UUIDv7.ny(),
                 stegNavn = "Har minste arbeidsinntekt",
                 opplysninger =
                     listOf(
