@@ -7,11 +7,12 @@ import org.junit.jupiter.api.Test
 
 class AlderskravStegTest {
     @Test
-    fun `Skal hente ut alle opplysninger fra en trestruktur`() {
+    fun `Skal hente ut opplysningsdeltreet som omhandler aldersvilkåret`() {
         val behandlingDto = objectMapper.readValue(testdata, BehandlingDTO::class.java)
-        val stegDto = alderskravStegFra(behandlingDto)
-        requireNotNull(stegDto)
-        stegDto.opplysninger.size shouldBe 11
+
+        val steg = alderskravStegFra(behandlingDto)
+        requireNotNull(steg)
+        steg.navn shouldBe "Under 67 år"
     }
 }
 

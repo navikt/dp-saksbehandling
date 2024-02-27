@@ -34,7 +34,6 @@ class E2ETest {
 
     private val testRapid = TestRapid()
     private val personRepository = InMemoryPersonRepository()
-    private val mediator = Mediator(personRepository)
     private val testToken by mockAzure {
         claims = mapOf("NAVident" to "123")
     }
@@ -52,6 +51,7 @@ class E2ETest {
             tokenProvider = testTokenProvider,
             engine = mockEngine,
         )
+    private val mediator = Mediator(personRepository, behandlingKlient)
 
     init {
         BehandlingOpprettetMottak(testRapid, mediator)
@@ -91,7 +91,7 @@ class E2ETest {
 
     private fun withOppgaveApi(test: suspend ApplicationTestBuilder.() -> Unit) {
         testApplication {
-            application { oppgaveApi(mediator, behandlingKlient) }
+            application { oppgaveApi(mediator) }
             test()
         }
     }

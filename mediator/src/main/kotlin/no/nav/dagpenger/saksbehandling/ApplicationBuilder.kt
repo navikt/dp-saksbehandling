@@ -17,11 +17,10 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val mediator = Mediator(personRepository, behandlingKlient)
 
-
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
-                this.oppgaveApi(mediator, behandlingKlient)
+                this.oppgaveApi(mediator)
             }.build().also { rapidsConnection ->
                 BehandlingOpprettetMottak(rapidsConnection, mediator)
             }

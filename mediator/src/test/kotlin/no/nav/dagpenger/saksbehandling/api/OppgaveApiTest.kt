@@ -213,7 +213,7 @@ class OppgaveApiTest {
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
-            application { oppgaveApi(mediator, behandllingKlient) }
+            application { oppgaveApi(mediator) }
             test()
         }
     }

@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
@@ -15,7 +16,7 @@ class MediatorTest {
 
     private val testRapid = TestRapid()
     private val personRepository = InMemoryPersonRepository()
-    private val mediator = Mediator(personRepository)
+    private val mediator = Mediator(personRepository, mockk())
 
     init {
         BehandlingOpprettetMottak(testRapid, mediator)

@@ -15,7 +15,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Steg
@@ -24,16 +23,10 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
-import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import java.util.UUID
 
-internal fun Application.oppgaveApi(
-    mediator: Mediator,
-    behandlingKlient: BehandlingKlient,
-) {
+internal fun Application.oppgaveApi(mediator: Mediator) {
     apiConfig()
-
-    val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
     routing {
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")

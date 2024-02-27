@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
-import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 
@@ -33,11 +32,11 @@ internal class Mediator(
                         behandlingKlient.hentBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
                     }.getOrNull()
 
-                val nyeSteg = mutableListOf<StegDTO>()
+                val nyeSteg = mutableListOf<Steg>()
                 minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
                 alderskravStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
 
-                val oppdatertOppgave = oppgave.copy(steg = oppgave.steg + nyeSteg)
+                val oppdatertOppgave = oppgave.copy(steg = nyeSteg)
                 sikkerLogger.info { "Oppdatert oppgave: $oppdatertOppgave" }
                 return oppdatertOppgave
             }
