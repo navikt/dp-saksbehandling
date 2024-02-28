@@ -58,7 +58,10 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                     message = "Fant ingen oppgave med UUID $oppgaveId",
                                 )
 
-                            else -> call.respond(HttpStatusCode.OK, oppgave.tilOppgaveDTO())
+                            else -> {
+                                val message = oppgave.tilOppgaveDTO()
+                                call.respond(HttpStatusCode.OK, message)
+                            }
                         }
                     }
 

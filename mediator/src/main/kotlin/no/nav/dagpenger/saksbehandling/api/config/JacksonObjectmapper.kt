@@ -12,5 +12,5 @@ internal val objectMapper =
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        // .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+        .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
         .enable(SerializationFeature.INDENT_OUTPUT)
