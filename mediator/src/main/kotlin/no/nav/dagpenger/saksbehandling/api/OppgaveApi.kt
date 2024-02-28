@@ -15,6 +15,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Steg
@@ -26,6 +27,8 @@ import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import java.util.UUID
 
 internal fun Application.oppgaveApi(mediator: Mediator) {
+    val sikkerLogger = KotlinLogging.logger("tjenestekall")
+
     apiConfig()
 
     routing {
@@ -59,8 +62,15 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 )
 
                             else -> {
-                                val message = oppgave.tilOppgaveDTO()
-                                call.respond(HttpStatusCode.OK, message)
+                                when (oppgaveId) {
+                                    oppgaveTilBehandlingUUID -> call.respond(HttpStatusCode.OK, oppgaveTilBehandlingDTO)
+                                    oppgaveFerdigBehandletUUID -> call.respond(HttpStatusCode.OK, oppgaveFerdigBehandletDTO)
+                                    else -> {
+                                        val message = oppgave.tilOppgaveDTO()
+                                        sikkerLogger.info { "Oppgave hentet: $message" }
+                                        call.respond(HttpStatusCode.OK, message)
+                                    }
+                                }
                             }
                         }
                     }
