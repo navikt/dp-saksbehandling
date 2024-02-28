@@ -38,6 +38,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
             route("oppgave") {
                 get {
                     val oppgaver = mediator.hentAlleOppgaver().tilOppgaverDTO() + oppgaveDtos
+                    sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
 
@@ -70,7 +71,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 
                             else -> {
                                 val message = oppgave.tilOppgaveDTO()
-                                sikkerLogger.info { "Oppgave hentet: $message" }
+                                sikkerLogger.info { "Oppgave $oppgaveId hentes: $message" }
                                 call.respond(HttpStatusCode.OK, message)
                             }
                         }
