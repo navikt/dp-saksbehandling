@@ -55,22 +55,23 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
                         val oppgave = mediator.oppdaterOppgaveMedSteg(oppdaterOppgaveHendelse)
                         when (oppgave) {
-                            null ->
-                                call.respond(
-                                    status = HttpStatusCode.NotFound,
-                                    message = "Fant ingen oppgave med UUID $oppgaveId",
-                                )
+                            null -> {
+                                when (oppgaveId) {
+                                    oppgaveTilBehandlingId -> call.respond(HttpStatusCode.OK, oppgaveTilBehandling)
+                                    oppgaveFerdigBehandletId -> call.respond(HttpStatusCode.OK, oppgaveFerdigBehandlet)
+
+                                    else ->
+                                        call.respond(
+                                            status = HttpStatusCode.NotFound,
+                                            message = "Fant ingen oppgave med UUID $oppgaveId",
+                                        )
+                                }
+                            }
 
                             else -> {
-                                when (oppgaveId) {
-                                    oppgaveTilBehandlingUUID -> call.respond(HttpStatusCode.OK, oppgaveTilBehandlingDTO)
-                                    oppgaveFerdigBehandletUUID -> call.respond(HttpStatusCode.OK, oppgaveFerdigBehandletDTO)
-                                    else -> {
-                                        val message = oppgave.tilOppgaveDTO()
-                                        sikkerLogger.info { "Oppgave hentet: $message" }
-                                        call.respond(HttpStatusCode.OK, message)
-                                    }
-                                }
+                                val message = oppgave.tilOppgaveDTO()
+                                sikkerLogger.info { "Oppgave hentet: $message" }
+                                call.respond(HttpStatusCode.OK, message)
                             }
                         }
                     }
