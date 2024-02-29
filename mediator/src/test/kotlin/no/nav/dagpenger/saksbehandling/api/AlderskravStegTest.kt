@@ -12,7 +12,7 @@ class AlderskravStegTest {
 
         val steg = alderskravStegFra(behandlingDto)
         requireNotNull(steg)
-        steg.navn shouldBe "Under 67 år"
+        steg.navn shouldBe "Alder"
     }
 }
 

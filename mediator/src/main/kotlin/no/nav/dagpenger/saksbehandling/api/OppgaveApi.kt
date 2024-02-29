@@ -18,12 +18,16 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Opplysning
 import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import java.util.UUID
 
 internal fun Application.oppgaveApi(mediator: Mediator) {
@@ -126,12 +130,28 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
     )
 }
 
-private fun Steg.tilStegDTO(): StegDTO {
+internal fun Steg.tilStegDTO(): StegDTO {
     return StegDTO(
         stegNavn = this.navn,
-        opplysninger = emptyList(),
+        opplysninger = this.opplysninger.map { opplysning -> opplysning.tilOpplysningDTO() },
         // @TODO: Hent stegtilstand fra steg?
         tilstand = StegTilstandDTO.Groenn,
+    )
+}
+
+private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
+    val datatype: OpplysningTypeDTO =
+        when (this.dataType) {
+            "boolean" -> OpplysningTypeDTO.Boolean
+            "LocalDate" -> OpplysningTypeDTO.LocalDate
+            "int" -> OpplysningTypeDTO.Int
+            "double" -> OpplysningTypeDTO.Double
+            else -> OpplysningTypeDTO.String
+        }
+    return OpplysningDTO(
+        opplysningNavn = this.navn,
+        opplysningType = datatype,
+        svar = SvarDTO(this.verdi),
     )
 }
 
