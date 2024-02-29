@@ -54,7 +54,7 @@ internal val minsteinntektOppgaveTilBehandling =
         steg =
             listOf(
                 StegDTO(
-                    stegNavn = "Gjenopptak / 8 uker",
+                    stegNavn = "Gjenopptak",
                     opplysninger =
                         listOf(
                             OpplysningDTO(
