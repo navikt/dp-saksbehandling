@@ -112,12 +112,12 @@ internal val minsteinntektOppgaveFerdigBehandlet =
         steg =
             listOf(
                 StegDTO(
-                    stegNavn = "Gjenopptak / 8 uker",
+                    stegNavn = "Gjenopptak",
                     opplysninger = opplysningerGjenopptak8uker,
                     tilstand = StegTilstandDTO.Groenn,
                 ),
                 StegDTO(
-                    stegNavn = "Minste arbeidsinntekt",
+                    stegNavn = "Minsteinntekt",
                     opplysninger =
                         listOf(
                             OpplysningDTO(
