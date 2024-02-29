@@ -47,8 +47,8 @@ class OppgaveApiTest {
                         object : TypeReference<List<OppgaveDTO>>() {},
                     )
                 oppgaver.size shouldBe 2
-                oppgaver[0].oppgaveId shouldBe oppgaveTilBehandlingId
-                oppgaver[1].oppgaveId shouldBe oppgaveFerdigBehandletId
+                oppgaver[0].oppgaveId shouldBe minsteinntektOppgaveTilBehandlingId
+                oppgaver[1].oppgaveId shouldBe minsteinntektOppgaveFerdigBehandletId
             }
         }
     }
@@ -94,7 +94,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne avslå på bakgrunn av kravet til minsteinntekt`() {
         withOppgaveApi {
-            client.put("/oppgave/$oppgaveTilBehandlingId/avslag") { autentisert() }.also { response ->
+            client.put("/oppgave/$minsteinntektOppgaveTilBehandlingId/avslag") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }
@@ -103,7 +103,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne lukke oppgave`() {
         withOppgaveApi {
-            client.put("/oppgave/$oppgaveTilBehandlingId/lukk") { autentisert() }.also { response ->
+            client.put("/oppgave/$minsteinntektOppgaveTilBehandlingId/lukk") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }
