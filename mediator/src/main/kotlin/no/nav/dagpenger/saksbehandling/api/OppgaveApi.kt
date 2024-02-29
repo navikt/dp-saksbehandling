@@ -80,7 +80,8 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 
                             else -> {
                                 val message = oppgave.tilOppgaveDTO()
-                                sikkerLogger.info { "Oppgave $oppgaveId hentes: $message" }
+                                sikkerLogger.info { "Oppgave $oppgaveId skal gjøres om til OppgaveDTO: $oppgave" }
+                                sikkerLogger.info { "OppgaveDTO $oppgaveId hentes: $message" }
                                 call.respond(HttpStatusCode.OK, message)
                             }
                         }
