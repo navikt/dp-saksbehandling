@@ -13,8 +13,20 @@ import java.util.UUID
 
 // TODO: Fjernes ettersom vi kommer lenger i utviklingen
 
-internal val oppgaveFerdigBehandletId = UUID.fromString("7f9c2ac7-5bf2-46e6-a618-c1f4f85cd3f2")
-internal val oppgaveTilBehandlingId = UUID.fromString("018d7964-347c-788b-aa97-8acaba091245")
+internal val mockSøknadBehandlingId = UUID.fromString("018dc0e6-0be3-7f17-b410-08f2072ffcb1")
+internal val mockSøknadOppgaveId = UUID.fromString("A684607D-16C8-4BCE-A5A8-38890009E0F7")
+internal val mockSøknadOppgaveDto =
+    OppgaveDTO(
+        oppgaveId = mockSøknadOppgaveId,
+        behandlingId = mockSøknadBehandlingId,
+        personIdent = "11111199999",
+        tidspunktOpprettet = ZonedDateTime.now(),
+        emneknagger = listOf("Søknadsbehandling"),
+        tilstand = OppgaveTilstandDTO.TilBehandling,
+        steg = emptyList(),
+        journalpostIder = emptyList(),
+    )
+
 internal val opplysningerGjenopptak8uker =
     listOf(
         OpplysningDTO(
@@ -29,9 +41,10 @@ internal val opplysningerGjenopptak8uker =
         ),
     )
 
-internal val oppgaveTilBehandling =
+internal val minsteinntektOppgaveTilBehandlingId = UUID.fromString("018d7964-347c-788b-aa97-8acaba091245")
+internal val minsteinntektOppgaveTilBehandling =
     OppgaveDTO(
-        oppgaveId = oppgaveTilBehandlingId,
+        oppgaveId = minsteinntektOppgaveTilBehandlingId,
         personIdent = "12345678901",
         tidspunktOpprettet = ZonedDateTime.now(),
         journalpostIder = listOf("12345678"),
@@ -86,9 +99,10 @@ internal val oppgaveTilBehandling =
             ),
     )
 
-internal val oppgaveFerdigBehandlet =
+internal val minsteinntektOppgaveFerdigBehandletId = UUID.fromString("7f9c2ac7-5bf2-46e6-a618-c1f4f85cd3f2")
+internal val minsteinntektOppgaveFerdigBehandlet =
     OppgaveDTO(
-        oppgaveId = oppgaveFerdigBehandletId,
+        oppgaveId = minsteinntektOppgaveFerdigBehandletId,
         personIdent = "12345678901",
         tidspunktOpprettet = ZonedDateTime.now(),
         journalpostIder = listOf("98989", "76767"),
@@ -132,4 +146,8 @@ internal val oppgaveFerdigBehandlet =
             ),
     )
 
-internal val oppgaveDtos = listOf(oppgaveTilBehandling, oppgaveFerdigBehandlet)
+internal val oppgaveDtos =
+    listOf(
+        minsteinntektOppgaveTilBehandling,
+        minsteinntektOppgaveFerdigBehandlet,
+    )

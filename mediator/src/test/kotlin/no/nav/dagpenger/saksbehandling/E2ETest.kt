@@ -134,7 +134,7 @@ class E2ETest {
         }       
         """.trimIndent()
 
-    internal fun String.fileAsText(): String {
+    private fun String.fileAsText(): String {
         return object {}.javaClass.getResource(this)?.readText()
             ?: throw FileNotFoundException()
     }
