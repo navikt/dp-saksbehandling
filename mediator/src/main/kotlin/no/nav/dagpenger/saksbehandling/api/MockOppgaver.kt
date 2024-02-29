@@ -70,7 +70,7 @@ internal val minsteinntektOppgaveTilBehandling =
                         ),
                 ),
                 StegDTO(
-                    stegNavn = "Minste arbeidsinntekt",
+                    stegNavn = "Minsteinntekt",
                     opplysninger =
                         listOf(
                             OpplysningDTO(
