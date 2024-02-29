@@ -36,7 +36,7 @@ class MediatorTest {
         person.behandlinger.size shouldBe 1
         person.behandlinger.get(behandlingId)?.oppgave shouldNotBe null
         val oppgaver = personRepository.hentAlleOppgaver()
-        oppgaver.size shouldBe 1
+        oppgaver.size shouldBe 2
         personRepository.hent(oppgaveId = oppgaver.first().oppgaveId) shouldNotBe null
     }
 

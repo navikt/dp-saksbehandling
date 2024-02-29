@@ -31,16 +31,18 @@ internal class Mediator(
         return when (oppgave) {
             null -> null
             else -> {
-                val behandlingDTO = when (oppgave.behandlingId) {
-                    mockSøknadBehandlingId -> {
-                        logger.info { "Bruker mockdata for behandlingId $mockSøknadBehandlingId" }
-                        behandlingResponseMock()
-                    }
+                val behandlingDTO =
+                    when (oppgave.behandlingId) {
+                        mockSøknadBehandlingId -> {
+                            logger.info { "Bruker mockdata for behandlingId $mockSøknadBehandlingId" }
+                            behandlingResponseMock()
+                        }
 
-                    else -> kotlin.runCatching {
-                        behandlingKlient.hentBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
-                    }.getOrNull()
-                }
+                        else ->
+                            kotlin.runCatching {
+                                behandlingKlient.hentBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
+                            }.getOrNull()
+                    }
 
                 val nyeSteg = mutableListOf<Steg>()
                 minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
