@@ -6,6 +6,8 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import no.nav.dagpenger.oauth2.CachedOauth2Client
+import no.nav.dagpenger.oauth2.OAuth2Config
 
 internal object Configuration {
     const val APP_NAME = "dp-saksbehandling"
@@ -19,7 +21,7 @@ internal object Configuration {
                 "KAFKA_RESET_POLICY" to "latest",
                 "GRUPPE_BESLUTTER" to "123",
                 "GRUPPE_SAKSBEHANDLER" to "456",
-                "DP_BEHANDLING_URL" to "http://dp-behandling",
+                "DP_BEHANDLING_API_URL" to "http://dp-behandling",
             ),
         )
     val properties =
@@ -30,5 +32,17 @@ internal object Configuration {
             map + pair.second
         }
 
-    val behandlingUrl: String = properties[Key("DP_BEHANDLING_URL", stringType)]
+    val behandlingUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
+    val behandlingScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
+
+    val azureAdClient by lazy {
+        val azureAdConfig = OAuth2Config.AzureAd(properties)
+        CachedOauth2Client(
+            tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
+            authType = azureAdConfig.clientSecret(),
+        )
+    }
+    val tilOboToken = { token: String, scope: String ->
+        azureAdClient.onBehalfOf(token, scope).accessToken
+    }
 }

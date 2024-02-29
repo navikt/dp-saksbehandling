@@ -46,4 +46,15 @@ openApiGenerate {
             "enumPropertyNaming" to "original",
         ),
     )
+    typeMappings.set(
+        mapOf(
+            "DateTime" to "ZonedDateTime",
+        ),
+    )
+
+    importMappings.set(
+        mapOf(
+            "ZonedDateTime" to "java.time.ZonedDateTime",
+        ),
+    )
 }

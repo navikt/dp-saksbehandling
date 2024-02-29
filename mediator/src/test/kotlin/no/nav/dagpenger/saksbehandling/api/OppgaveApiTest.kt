@@ -1,9 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.HttpRequestBuilder
@@ -19,17 +17,16 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.mockk.every
+import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.json.objectMapper
+import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class OppgaveApiTest {
@@ -37,38 +34,10 @@ class OppgaveApiTest {
     private val testToken by mockAzure {
         claims = mapOf("NAVident" to "123")
     }
-    private val oppgaveId = UUID.randomUUID()
 
     @Test
     fun `Skal kunne hente ut alle oppgaver`() {
-        val oppgaveId = UUIDv7.ny()
-        val opprettet = LocalDateTime.now()
-        val behandlingId = UUIDv7.ny()
-        val mediatorMock =
-            mockk<Mediator>().also {
-                every { it.hentAlleOppgaver() } returns
-                    mutableListOf(
-                        Oppgave(
-                            oppgaveId = oppgaveId,
-                            ident = "123",
-                            opprettet = opprettet,
-                            behandlingId = behandlingId,
-                        ),
-                    )
-            }
-        val forventetOppgaveDTO =
-            OppgaveDTO(
-                oppgaveId = oppgaveId,
-                behandlingId = behandlingId,
-                personIdent = "123",
-                datoOpprettet = opprettet.toLocalDate(),
-                tilstand = OppgaveTilstandDTO.TilBehandling,
-                journalpostIder = listOf(),
-                emneknagger = listOf(),
-                steg = listOf(),
-            )
-
-        withOppgaveApi(mediator = mediatorMock) {
+        withOppgaveApi {
             client.get("/oppgave") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -77,26 +46,20 @@ class OppgaveApiTest {
                         response.bodyAsText(),
                         object : TypeReference<List<OppgaveDTO>>() {},
                     )
-                oppgaver.shouldContain(oppgaveTilBehandlingDTO)
-                oppgaver.shouldContain(oppgaveFerdigBehandletDTO)
-                oppgaver.shouldContain(forventetOppgaveDTO)
+                oppgaver.size shouldBe 2
+                oppgaver[0].oppgaveId shouldBe oppgaveTilBehandlingId
+                oppgaver[1].oppgaveId shouldBe oppgaveFerdigBehandletId
             }
         }
     }
 
     @Test
-    fun `Skal kunne hente ut en oppgave av type TilBehandling med gitt id`() {
-        val mediatorMock: Mediator = mockk<Mediator>()
+    fun `Når saksbehandler henter en oppgave, oppdater den med steg og opplysninger`() {
+        val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
-        val oppgave =
-            Oppgave(
-                oppgaveId = oppgaveId,
-                ident = "12345612345",
-                emneknagger = setOf("Søknadsbehandling"),
-                opprettet = LocalDateTime.now(),
-                behandlingId = UUIDv7.ny(),
-            )
-        every { mediatorMock.hent(oppgaveId) } returns oppgave
+        val oppgave = testOppgaveMedSteg(oppgaveId)
+
+        coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns oppgave
 
         withOppgaveApi(mediator = mediatorMock) {
             client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
@@ -107,36 +70,23 @@ class OppgaveApiTest {
                         response.bodyAsText(),
                         OppgaveDTO::class.java,
                     )
-                actualOppgave shouldBe oppgave.tilOppgaveDTO()
+                actualOppgave.steg.size shouldBe 1
+                actualOppgave.steg[0].stegNavn shouldBe "Teststeg"
             }
         }
     }
 
     @Test
-    fun `Skal kunne hente ut en oppgave av type FerdigBehandlet med gitt id`() {
-        withOppgaveApi {
-            client.get("/oppgave/$oppgaveFerdigBehandletUUID") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val oppgave =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        OppgaveDTO::class.java,
-                    )
-                oppgave shouldBe oppgaveFerdigBehandletDTO
+    fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
+        val ikkeEksisterendeOppgaveId = UUIDv7.ny()
+        val mediator =
+            mockk<Mediator>().also {
+                coEvery { it.oppdaterOppgaveMedSteg(any()) } returns null
             }
-        }
-    }
-
-    @Test
-    fun `Skal kunne motta info om utført steg`() {
-        withOppgaveApi {
-            client.put("/oppgave/$oppgaveFerdigBehandletUUID/steg/$stegIdGjenopptak8Uker") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(objectMapper.writeValueAsString(opplysningerGjenopptak8uker))
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
+        withOppgaveApi(mediator) {
+            client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+                response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $ikkeEksisterendeOppgaveId"
             }
         }
     }
@@ -144,7 +94,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne avslå på bakgrunn av kravet til minsteinntekt`() {
         withOppgaveApi {
-            client.put("/oppgave/$oppgaveTilBehandlingUUID/avslag") { autentisert() }.also { response ->
+            client.put("/oppgave/$oppgaveTilBehandlingId/avslag") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }
@@ -153,31 +103,18 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne lukke oppgave`() {
         withOppgaveApi {
-            client.put("/oppgave/$oppgaveTilBehandlingUUID/lukk") { autentisert() }.also { response ->
+            client.put("/oppgave/$oppgaveTilBehandlingId/lukk") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }
     }
 
     @Test
-    @Disabled
     fun `Får feil ved ugyldig oppgaveId`() {
         val ugyldigId = "noeSomIkkeKanParsesTilUUID"
         withOppgaveApi {
             shouldThrow<IllegalArgumentException> {
                 client.get("/oppgave/$ugyldigId") { autentisert() }
-            }
-        }
-    }
-
-    @Test
-    @Disabled
-    fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
-        val randomUUID = UUID.randomUUID()
-        withOppgaveApi {
-            client.get("/oppgave/$randomUUID") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NotFound
-                response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $randomUUID"
             }
         }
     }
@@ -200,13 +137,15 @@ class OppgaveApiTest {
                         response.bodyAsText(),
                         object : TypeReference<List<OppgaveDTO>>() {},
                     )
-                oppgaver shouldBe oppgaveDtos
+                oppgaver.size shouldBe 2
+                oppgaver.first() sammenlign oppgaveDtos.first()
+                oppgaver.last() sammenlign oppgaveDtos.last()
             }
         }
     }
 
     private fun withOppgaveApi(
-        mediator: Mediator = mockk<Mediator>(),
+        mediator: Mediator = mockk<Mediator>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -215,13 +154,34 @@ class OppgaveApiTest {
         }
     }
 
-    private fun String.findStegUUID(id: String): String {
-        jacksonObjectMapper().readTree(this).let { root ->
-            return root["steg"].first { it["id"].asText() == id }["uuid"].asText()
-        }
-    }
-
     private fun HttpRequestBuilder.autentisert() {
         header(HttpHeaders.Authorization, "Bearer $testToken")
+    }
+
+    private fun testOppgaveMedSteg(
+        oppgaveId: UUID,
+        opprettet: ZonedDateTime = ZonedDateTime.now(),
+    ) = Oppgave(
+        oppgaveId = oppgaveId,
+        ident = "12345612345",
+        emneknagger = setOf("Søknadsbehandling"),
+        opprettet = opprettet,
+        behandlingId = UUIDv7.ny(),
+    ).also {
+        it.steg.add(
+            Steg("Teststeg", emptyList()),
+        )
+    }
+
+    private infix fun OppgaveDTO.sammenlign(expected: OppgaveDTO) {
+        this.oppgaveId shouldBe expected.oppgaveId
+        this.behandlingId shouldBe expected.behandlingId
+        this.personIdent shouldBe expected.personIdent
+        // Vi er kun interresert i at tidspunktet er lik, uavhengig av tidssone
+        this.tidspunktOpprettet.isEqual(expected.tidspunktOpprettet) shouldBe true
+        this.emneknagger shouldBe expected.emneknagger
+        this.tilstand shouldBe expected.tilstand
+        this.steg shouldBe expected.steg
+        this.journalpostIder shouldBe expected.journalpostIder
     }
 }

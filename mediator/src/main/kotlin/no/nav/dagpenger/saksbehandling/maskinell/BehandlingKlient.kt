@@ -1,44 +1,45 @@
 package no.nav.dagpenger.saksbehandling.maskinell
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.URLBuilder
 import io.ktor.http.appendEncodedPathSegments
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import java.util.UUID
 
 class BehandlingKlient(
-    private val behandlingUrl: String = Configuration.behandlingUrl,
-    private val tokenProvider: () -> String,
+    private val behandlingUrl: String,
+    private val behandlingScope: String,
+    private val tokenProvider: (token: String, audience: String) -> String,
     engine: HttpClientEngine = CIO.create {},
 ) {
     private val client = createHttpClient(engine)
 
-    suspend fun hentBehandling(behandlingId: UUID): JsonNode =
+    suspend fun hentBehandling(
+        behandlingId: UUID,
+        saksbehandlerToken: String,
+    ): BehandlingDTO =
         withContext(Dispatchers.IO) {
             val url = URLBuilder(behandlingUrl).appendEncodedPathSegments("behandling", behandlingId.toString()).build()
             try {
                 val response: HttpResponse =
                     client.get(url) {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}")
+                        accept(ContentType.Application.Json)
                     }
-                if (response.status.value == 200) {
-                    logger.info("Kall til dp-behandling gikk OK")
-                    return@withContext jacksonObjectMapper().readTree(response.bodyAsText())
-                } else {
-                    logger.warn("Kall til dp-behandling feilet med status ${response.status}")
-                    throw IllegalStateException()
-                }
+
+                sikkerLogger.info { "Response fra dp-behandling: $response" }
+                return@withContext response.body<BehandlingDTO>()
             } catch (e: Exception) {
                 logger.warn("Kall til dp-behandling feilet", e)
                 throw e
@@ -47,5 +48,6 @@ class BehandlingKlient(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerLogger = KotlinLogging.logger("tjenestekall")
     }
 }

@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.dp.biblioteker.oauth2.klient)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
-    api("com.fasterxml.uuid:java-uuid-generator:4.3.0")
+    api("com.fasterxml.uuid:java-uuid-generator:5.0.0")
 
     testImplementation(libs.mockk)
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")

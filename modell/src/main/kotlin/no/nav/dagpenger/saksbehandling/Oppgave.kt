@@ -1,11 +1,11 @@
 package no.nav.dagpenger.saksbehandling
 
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.util.UUID
 
 data class Oppgave private constructor(
     val oppgaveId: UUID,
-    val opprettet: LocalDateTime,
+    val opprettet: ZonedDateTime,
     val ident: String,
     private val _emneknagger: MutableSet<String>,
     val steg: MutableList<Steg>,
@@ -15,7 +15,7 @@ data class Oppgave private constructor(
         oppgaveId: UUID,
         ident: String,
         emneknagger: Set<String> = emptySet(),
-        opprettet: LocalDateTime,
+        opprettet: ZonedDateTime,
         behandlingId: UUID,
     ) : this(
         oppgaveId = oppgaveId,
