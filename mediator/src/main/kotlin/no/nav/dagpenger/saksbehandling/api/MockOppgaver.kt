@@ -13,6 +13,19 @@ import java.util.UUID
 
 // TODO: Fjernes ettersom vi kommer lenger i utviklingen
 
+internal val mockSøknadBehandlingId = UUID.fromString("018dc0e6-0be3-7f17-b410-08f2072ffcb1")
+internal val mockSøknadOppgaveId = UUID.fromString("A684607D-16C8-4BCE-A5A8-38890009E0F7")
+internal val mockSøknadOppgaveDto = OppgaveDTO(
+    oppgaveId = mockSøknadOppgaveId,
+    behandlingId = mockSøknadBehandlingId,
+    personIdent = "12345612345",
+    tidspunktOpprettet = ZonedDateTime.now(),
+    emneknagger = listOf("Søknadsbehandling"),
+    tilstand = OppgaveTilstandDTO.TilBehandling,
+    steg = emptyList(),
+    journalpostIder = emptyList()
+)
+
 internal val opplysningerGjenopptak8uker =
     listOf(
         OpplysningDTO(
@@ -132,4 +145,8 @@ internal val minsteinntektOppgaveFerdigBehandlet =
         ),
     )
 
-internal val oppgaveDtos = listOf(minsteinntektOppgaveTilBehandling, minsteinntektOppgaveFerdigBehandlet)
+internal val oppgaveDtos = listOf(
+    minsteinntektOppgaveTilBehandling,
+    minsteinntektOppgaveFerdigBehandlet,
+    mockSøknadOppgaveDto
+)

@@ -58,8 +58,15 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         when (oppgave) {
                             null -> {
                                 when (oppgaveId) {
-                                    minsteinntektOppgaveTilBehandlingId -> call.respond(HttpStatusCode.OK, minsteinntektOppgaveTilBehandling)
-                                    minsteinntektOppgaveFerdigBehandletId -> call.respond(HttpStatusCode.OK, minsteinntektOppgaveFerdigBehandlet)
+                                    minsteinntektOppgaveTilBehandlingId -> call.respond(
+                                        HttpStatusCode.OK,
+                                        minsteinntektOppgaveTilBehandling,
+                                    )
+
+                                    minsteinntektOppgaveFerdigBehandletId -> call.respond(
+                                        HttpStatusCode.OK,
+                                        minsteinntektOppgaveFerdigBehandlet,
+                                    )
 
                                     else ->
                                         call.respond(

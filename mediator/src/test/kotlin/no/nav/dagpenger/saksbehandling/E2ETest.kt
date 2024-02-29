@@ -15,6 +15,7 @@ import io.ktor.http.contentType
 import io.ktor.http.headersOf
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -134,7 +135,7 @@ class E2ETest {
         }       
         """.trimIndent()
 
-    internal fun String.fileAsText(): String {
+    private fun String.fileAsText(): String {
         return object {}.javaClass.getResource(this)?.readText()
             ?: throw FileNotFoundException()
     }

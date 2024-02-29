@@ -1,9 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
+import no.nav.dagpenger.saksbehandling.api.minsteinntektOppgaveTilBehandling
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.saksbehandling.api.minsteinntektOppgaveTilBehandling
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 
