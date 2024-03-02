@@ -31,12 +31,14 @@ tasks.test {
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    val ktlintVersion = "1.1.1"
+
     kotlin {
-        ktlint()
+        ktlint(ktlintVersion)
     }
 
     kotlinGradle {
-        ktlint()
+        ktlint(ktlintVersion)
     }
 }
 
