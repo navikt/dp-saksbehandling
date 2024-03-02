@@ -15,13 +15,13 @@ data class Person(val ident: String) {
             Behandling(
                 behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
                 oppgave =
-                    Oppgave(
-                        oppgaveId = UUIDv7.ny(),
-                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        ident = søknadsbehandlingOpprettetHendelse.ident,
-                        emneknagger = setOf("Søknadsbehandling"),
-                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                    ),
+                Oppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                    ident = søknadsbehandlingOpprettetHendelse.ident,
+                    emneknagger = setOf("Søknadsbehandling"),
+                    opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                ),
             )
         behandlinger[behandling.behandlingId] = behandling
     }

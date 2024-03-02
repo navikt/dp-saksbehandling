@@ -52,51 +52,51 @@ internal val minsteinntektOppgaveTilBehandling =
         tilstand = OppgaveTilstandDTO.TilBehandling,
         behandlingId = UUIDv7.ny(),
         steg =
-            listOf(
-                StegDTO(
-                    stegNavn = "Gjenopptak",
-                    opplysninger =
-                        listOf(
-                            OpplysningDTO(
-                                opplysningNavn = "Mulig gjenopptak",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = null,
-                            ),
-                            OpplysningDTO(
-                                opplysningNavn = "Har hatt lukkede saker siste 8 uker",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = null,
-                            ),
-                        ),
-                ),
-                StegDTO(
-                    stegNavn = "Minsteinntekt",
-                    opplysninger =
-                        listOf(
-                            OpplysningDTO(
-                                opplysningNavn = "EØS-arbeid",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = null,
-                            ),
-                            OpplysningDTO(
-                                opplysningNavn = "Jobb utenfor Norge",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = null,
-                            ),
-                            OpplysningDTO(
-                                opplysningNavn = "Svangerskapsrelaterte sykepenger",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = null,
-                            ),
-                            OpplysningDTO(
-                                opplysningNavn = "Det er inntekt neste kalendermåned",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = null,
-                            ),
-                        ),
-                    tilstand = null,
+        listOf(
+            StegDTO(
+                stegNavn = "Gjenopptak",
+                opplysninger =
+                listOf(
+                    OpplysningDTO(
+                        opplysningNavn = "Mulig gjenopptak",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = null,
+                    ),
+                    OpplysningDTO(
+                        opplysningNavn = "Har hatt lukkede saker siste 8 uker",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = null,
+                    ),
                 ),
             ),
+            StegDTO(
+                stegNavn = "Minsteinntekt",
+                opplysninger =
+                listOf(
+                    OpplysningDTO(
+                        opplysningNavn = "EØS-arbeid",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = null,
+                    ),
+                    OpplysningDTO(
+                        opplysningNavn = "Jobb utenfor Norge",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = null,
+                    ),
+                    OpplysningDTO(
+                        opplysningNavn = "Svangerskapsrelaterte sykepenger",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = null,
+                    ),
+                    OpplysningDTO(
+                        opplysningNavn = "Det er inntekt neste kalendermåned",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = null,
+                    ),
+                ),
+                tilstand = null,
+            ),
+        ),
     )
 
 internal val minsteinntektOppgaveFerdigBehandletId = UUID.fromString("7f9c2ac7-5bf2-46e6-a618-c1f4f85cd3f2")
@@ -110,40 +110,40 @@ internal val minsteinntektOppgaveFerdigBehandlet =
         tilstand = OppgaveTilstandDTO.FerdigBehandlet,
         behandlingId = UUIDv7.ny(),
         steg =
-            listOf(
-                StegDTO(
-                    stegNavn = "Gjenopptak",
-                    opplysninger = opplysningerGjenopptak8uker,
-                    tilstand = StegTilstandDTO.Groenn,
-                ),
-                StegDTO(
-                    stegNavn = "Minsteinntekt",
-                    opplysninger =
-                        listOf(
-                            OpplysningDTO(
-                                opplysningNavn = "EØS-arbeid",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = SvarDTO("false"),
-                            ),
-                            OpplysningDTO(
-                                opplysningNavn = "Jobb utenfor Norge",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = SvarDTO("false"),
-                            ),
-                            OpplysningDTO(
-                                opplysningNavn = "Svangerskapsrelaterte sykepenger",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = SvarDTO("false"),
-                            ),
-                            OpplysningDTO(
-                                opplysningNavn = "Det er inntekt neste kalendermåned",
-                                opplysningType = OpplysningTypeDTO.Boolean,
-                                svar = SvarDTO("false"),
-                            ),
-                        ),
-                    tilstand = StegTilstandDTO.Groenn,
-                ),
+        listOf(
+            StegDTO(
+                stegNavn = "Gjenopptak",
+                opplysninger = opplysningerGjenopptak8uker,
+                tilstand = StegTilstandDTO.Groenn,
             ),
+            StegDTO(
+                stegNavn = "Minsteinntekt",
+                opplysninger =
+                listOf(
+                    OpplysningDTO(
+                        opplysningNavn = "EØS-arbeid",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = SvarDTO("false"),
+                    ),
+                    OpplysningDTO(
+                        opplysningNavn = "Jobb utenfor Norge",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = SvarDTO("false"),
+                    ),
+                    OpplysningDTO(
+                        opplysningNavn = "Svangerskapsrelaterte sykepenger",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = SvarDTO("false"),
+                    ),
+                    OpplysningDTO(
+                        opplysningNavn = "Det er inntekt neste kalendermåned",
+                        opplysningType = OpplysningTypeDTO.Boolean,
+                        svar = SvarDTO("false"),
+                    ),
+                ),
+                tilstand = StegTilstandDTO.Groenn,
+            ),
+        ),
     )
 
 internal val oppgaveDtos =
