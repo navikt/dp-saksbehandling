@@ -181,8 +181,8 @@ components:
       properties:
         opplysningNavn:
           type: string
-        opplysningType:
-          $ref: '#/components/schemas/OpplysningType'
+        dataType:
+          $ref: '#/components/schemas/DataType'
         svar:
           $ref: '#/components/schemas/Svar'
           nullable: true
@@ -192,7 +192,7 @@ components:
         verdi:
           type: string
           nullable: false
-    OpplysningType:
+    DataType:
       type: string
       enum:
         - String

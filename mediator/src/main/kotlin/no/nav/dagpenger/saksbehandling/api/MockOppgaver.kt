@@ -1,10 +1,10 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.models.DataTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
-import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
@@ -31,12 +31,12 @@ internal val opplysningerGjenopptak8uker =
     listOf(
         OpplysningDTO(
             opplysningNavn = "Mulig gjenopptak",
-            opplysningType = OpplysningTypeDTO.Boolean,
+            dataType = DataTypeDTO.Boolean,
             svar = SvarDTO("false"),
         ),
         OpplysningDTO(
             opplysningNavn = "Har hatt lukkede saker siste 8 uker",
-            opplysningType = OpplysningTypeDTO.Boolean,
+            dataType = DataTypeDTO.Boolean,
             svar = SvarDTO("false"),
         ),
     )
@@ -59,12 +59,12 @@ internal val minsteinntektOppgaveTilBehandling =
                         listOf(
                             OpplysningDTO(
                                 opplysningNavn = "Mulig gjenopptak",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = null,
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Har hatt lukkede saker siste 8 uker",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = null,
                             ),
                         ),
@@ -75,22 +75,22 @@ internal val minsteinntektOppgaveTilBehandling =
                         listOf(
                             OpplysningDTO(
                                 opplysningNavn = "EØS-arbeid",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = null,
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Jobb utenfor Norge",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = null,
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Svangerskapsrelaterte sykepenger",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = null,
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Det er inntekt neste kalendermåned",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = null,
                             ),
                         ),
@@ -122,22 +122,22 @@ internal val minsteinntektOppgaveFerdigBehandlet =
                         listOf(
                             OpplysningDTO(
                                 opplysningNavn = "EØS-arbeid",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = SvarDTO("false"),
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Jobb utenfor Norge",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = SvarDTO("false"),
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Svangerskapsrelaterte sykepenger",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = SvarDTO("false"),
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Det er inntekt neste kalendermåned",
-                                opplysningType = OpplysningTypeDTO.Boolean,
+                                dataType = DataTypeDTO.Boolean,
                                 svar = SvarDTO("false"),
                             ),
                         ),

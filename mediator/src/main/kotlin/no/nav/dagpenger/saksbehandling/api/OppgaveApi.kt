@@ -21,10 +21,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Opplysning
 import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.api.models.DataTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
-import no.nav.dagpenger.saksbehandling.api.models.OpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
@@ -140,17 +140,17 @@ internal fun Steg.tilStegDTO(): StegDTO {
 }
 
 private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
-    val datatype: OpplysningTypeDTO =
+    val datatype: DataTypeDTO =
         when (this.dataType) {
-            "boolean" -> OpplysningTypeDTO.Boolean
-            "LocalDate" -> OpplysningTypeDTO.LocalDate
-            "int" -> OpplysningTypeDTO.Int
-            "double" -> OpplysningTypeDTO.Double
-            else -> OpplysningTypeDTO.String
+            "boolean" -> DataTypeDTO.Boolean
+            "LocalDate" -> DataTypeDTO.LocalDate
+            "int" -> DataTypeDTO.Int
+            "double" -> DataTypeDTO.Double
+            else -> DataTypeDTO.String
         }
     return OpplysningDTO(
         opplysningNavn = this.navn,
-        opplysningType = datatype,
+        dataType = datatype,
         svar = SvarDTO(this.verdi),
     )
 }
