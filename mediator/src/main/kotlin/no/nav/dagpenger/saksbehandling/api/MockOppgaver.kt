@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.api.models.DataTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningStatusDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
@@ -32,11 +33,13 @@ internal val opplysningerGjenopptak8uker =
         OpplysningDTO(
             opplysningNavn = "Mulig gjenopptak",
             dataType = DataTypeDTO.Boolean,
+            status = OpplysningStatusDTO.Hypotese,
             svar = SvarDTO("false"),
         ),
         OpplysningDTO(
             opplysningNavn = "Har hatt lukkede saker siste 8 uker",
             dataType = DataTypeDTO.Boolean,
+            status = OpplysningStatusDTO.Hypotese,
             svar = SvarDTO("false"),
         ),
     )
@@ -60,11 +63,13 @@ internal val minsteinntektOppgaveTilBehandling =
                             OpplysningDTO(
                                 opplysningNavn = "Mulig gjenopptak",
                                 dataType = DataTypeDTO.Boolean,
+                                status = OpplysningStatusDTO.Hypotese,
                                 svar = null,
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Har hatt lukkede saker siste 8 uker",
                                 dataType = DataTypeDTO.Boolean,
+                                status = OpplysningStatusDTO.Hypotese,
                                 svar = null,
                             ),
                         ),
@@ -76,25 +81,29 @@ internal val minsteinntektOppgaveTilBehandling =
                             OpplysningDTO(
                                 opplysningNavn = "EØS-arbeid",
                                 dataType = DataTypeDTO.Boolean,
-                                svar = null,
+                                status = OpplysningStatusDTO.Faktum,
+                                svar = SvarDTO("false"),
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Jobb utenfor Norge",
                                 dataType = DataTypeDTO.Boolean,
-                                svar = null,
+                                status = OpplysningStatusDTO.Faktum,
+                                svar = SvarDTO("false"),
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Svangerskapsrelaterte sykepenger",
                                 dataType = DataTypeDTO.Boolean,
+                                status = OpplysningStatusDTO.Hypotese,
                                 svar = null,
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Det er inntekt neste kalendermåned",
                                 dataType = DataTypeDTO.Boolean,
+                                status = OpplysningStatusDTO.Hypotese,
                                 svar = null,
                             ),
                         ),
-                    tilstand = null,
+                    tilstand = StegTilstandDTO.Gul,
                 ),
             ),
     )
@@ -123,21 +132,25 @@ internal val minsteinntektOppgaveFerdigBehandlet =
                             OpplysningDTO(
                                 opplysningNavn = "EØS-arbeid",
                                 dataType = DataTypeDTO.Boolean,
+                                status = OpplysningStatusDTO.Faktum,
                                 svar = SvarDTO("false"),
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Jobb utenfor Norge",
                                 dataType = DataTypeDTO.Boolean,
+                                status = OpplysningStatusDTO.Faktum,
                                 svar = SvarDTO("false"),
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Svangerskapsrelaterte sykepenger",
                                 dataType = DataTypeDTO.Boolean,
+                                status = OpplysningStatusDTO.Faktum,
                                 svar = SvarDTO("false"),
                             ),
                             OpplysningDTO(
                                 opplysningNavn = "Det er inntekt neste kalendermåned",
                                 dataType = DataTypeDTO.Boolean,
+                                status = OpplysningStatusDTO.Faktum,
                                 svar = SvarDTO("false"),
                             ),
                         ),

@@ -166,7 +166,6 @@ components:
           $ref: '#/components/schemas/Opplysninger'
         tilstand:
           $ref: '#/components/schemas/StegTilstand'
-
       required:
         - stegNavn
         - opplysninger
@@ -181,11 +180,16 @@ components:
       properties:
         opplysningNavn:
           type: string
+        status:
+          $ref: '#/components/schemas/OpplysningStatus'
         dataType:
           $ref: '#/components/schemas/DataType'
         svar:
           $ref: '#/components/schemas/Svar'
-          nullable: true
+      required:
+        - opplysningNavn
+        - status
+        - dataType
     Svar:
       type: object
       properties:
@@ -200,6 +204,11 @@ components:
         - Int
         - Boolean
         - Double
+    OpplysningStatus:
+      type: string
+      enum:
+        - Hypotese
+        - Faktum
     Sok:
       type: object
       properties:

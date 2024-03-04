@@ -19,12 +19,14 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Opplysning
+import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.DataTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningStatusDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
@@ -150,6 +152,11 @@ private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
         }
     return OpplysningDTO(
         opplysningNavn = this.navn,
+        status =
+            when (this.status) {
+                OpplysningStatus.Hypotese -> OpplysningStatusDTO.Hypotese
+                OpplysningStatus.Faktum -> OpplysningStatusDTO.Faktum
+            },
         dataType = datatype,
         svar = SvarDTO(this.verdi),
     )

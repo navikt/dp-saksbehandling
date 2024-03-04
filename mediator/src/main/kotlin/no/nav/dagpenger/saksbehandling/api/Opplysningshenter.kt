@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO
 import no.nav.dagpenger.saksbehandling.Opplysning
+import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import java.util.UUID
 
 fun hentAlleUnikeOpplysningerFra(opplysningstre: OpplysningDTO): List<Opplysning> {
@@ -28,4 +29,9 @@ private fun OpplysningDTO.toOpplysning() =
         navn = this.opplysningstype,
         verdi = this.verdi,
         dataType = this.datatype,
+        status =
+            when (this.status) {
+                OpplysningDTO.Status.Hypotese -> OpplysningStatus.Hypotese
+                OpplysningDTO.Status.Faktum -> OpplysningStatus.Faktum
+            },
     )
