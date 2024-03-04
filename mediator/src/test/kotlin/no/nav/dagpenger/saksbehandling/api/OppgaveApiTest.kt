@@ -77,6 +77,20 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Når saksbehandler bekrefter opplysninger i en oppgave skal behandlingen bekreftes`() {
+        val mediatorMock = mockk<Mediator>()
+        val oppgaveId = UUIDv7.ny()
+        val oppgave = testOppgaveMedSteg(oppgaveId)
+
+        coEvery { mediatorMock.bekreftOppgavensOpplysninger(any()) } returns oppgave
+        withOppgaveApi {
+            client.put("/oppgave/$oppgaveId/avslag") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+        }
+    }
+
+    @Test
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val mediator =
@@ -87,15 +101,6 @@ class OppgaveApiTest {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
                 response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $ikkeEksisterendeOppgaveId"
-            }
-        }
-    }
-
-    @Test
-    fun `Skal kunne avslå på bakgrunn av kravet til minsteinntekt`() {
-        withOppgaveApi {
-            client.put("/oppgave/$minsteinntektOppgaveTilBehandlingId/avslag") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
             }
         }
     }

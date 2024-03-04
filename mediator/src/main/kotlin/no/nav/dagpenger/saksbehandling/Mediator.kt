@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
@@ -53,6 +54,21 @@ internal class Mediator(
                 return oppdatertOppgave
             }
         }
+    }
+
+    suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Oppgave? {
+        val oppgave = personRepository.hent(hendelse.oppgaveId)
+        when (oppgave) {
+            null -> return null
+            else -> {
+                kotlin.runCatching {
+                    behandlingKlient.bekreftBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
+                }
+                // TODO Skal den ha getOrNull()????
+            }
+        }
+        sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
+        return oppgave
     }
 }
 
