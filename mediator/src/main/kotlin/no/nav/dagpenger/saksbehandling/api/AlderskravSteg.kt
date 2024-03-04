@@ -11,7 +11,7 @@ fun alderskravStegFra(behandlingDTO: BehandlingDTO?): Steg? {
         alderskravOpplysningsTre != null ->
             Steg(
                 navn = "Alder",
-                opplysninger = hentAlleOpplysningerFra(alderskravOpplysningsTre),
+                opplysninger = hentAlleUnikeOpplysningerFra(alderskravOpplysningsTre),
             )
 
         else -> null

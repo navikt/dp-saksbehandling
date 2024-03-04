@@ -12,7 +12,7 @@ fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
         minsteinntektOpplysningTre != null ->
             Steg(
                 navn = "Minsteinntekt",
-                opplysninger = hentAlleOpplysningerFra(minsteinntektOpplysningTre),
+                opplysninger = hentAlleUnikeOpplysningerFra(minsteinntektOpplysningTre),
             )
 
         else -> null

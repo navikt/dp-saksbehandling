@@ -7,13 +7,13 @@ import org.junit.jupiter.api.Test
 
 class OpplysningshenterTest {
     @Test
-    fun `Skal hente ut alle opplysninger fra en trestruktur`() {
+    fun `Skal hente ut alle unike opplysninger fra en trestruktur`() {
         val behandlingDTO = objectMapper.readValue(testdata, BehandlingDTO::class.java)
         val opplysningDTO = behandlingDTO.opplysning.first()
 
-        val alleOpplysninger = hentAlleOpplysningerFra(opplysningDTO)
+        val alleOpplysninger = hentAlleUnikeOpplysningerFra(opplysningDTO)
 
-        alleOpplysninger.size shouldBe 11
+        alleOpplysninger.size shouldBe 7
     }
 
     private val testdata =
