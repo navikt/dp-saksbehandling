@@ -1,4 +1,3 @@
-import com.diffplug.spotless.LineEnding
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -32,17 +31,21 @@ tasks.test {
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
+    val ktlintVersion = "1.1.1"
+    // https://pinterest.github.io/ktlint/latest/rules/standard/
+    val overstyrteKtlintRegler = mapOf(
+        "max_line_length" to "off",
+        "ktlint_function_signature_body_expression_wrapping" to "default",
+        "ktlint_class_signature_rule_force_multiline_when_parameter_count_greater_or_equal_than" to "unset"
+    )
+
     kotlin {
-        ktlint()
+        ktlint(ktlintVersion).editorConfigOverride(overstyrteKtlintRegler)
     }
 
     kotlinGradle {
-        ktlint()
+        ktlint(ktlintVersion).editorConfigOverride(overstyrteKtlintRegler)
     }
-    // Workaround for <https://github.com/diffplug/spotless/issues/1644>
-    // using idea found at
-    // <https://github.com/diffplug/spotless/issues/1527#issuecomment-1409142798>.
-    lineEndings = LineEnding.PLATFORM_NATIVE // or any other except GIT_ATTRIBUTES
 }
 
 tasks.withType<KotlinCompile>().configureEach {

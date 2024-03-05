@@ -163,11 +163,10 @@ private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
         }
     return OpplysningDTO(
         opplysningNavn = this.navn,
-        status =
-            when (this.status) {
-                OpplysningStatus.Hypotese -> OpplysningStatusDTO.Hypotese
-                OpplysningStatus.Faktum -> OpplysningStatusDTO.Faktum
-            },
+        status = when (this.status) {
+            OpplysningStatus.Hypotese -> OpplysningStatusDTO.Hypotese
+            OpplysningStatus.Faktum -> OpplysningStatusDTO.Faktum
+        },
         dataType = datatype,
         svar = SvarDTO(this.verdi),
     )

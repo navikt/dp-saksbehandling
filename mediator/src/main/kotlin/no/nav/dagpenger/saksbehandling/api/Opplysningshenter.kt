@@ -29,9 +29,8 @@ private fun OpplysningDTO.toOpplysning() =
         navn = this.opplysningstype,
         verdi = this.verdi,
         dataType = this.datatype,
-        status =
-            when (this.status) {
-                OpplysningDTO.Status.Hypotese -> OpplysningStatus.Hypotese
-                OpplysningDTO.Status.Faktum -> OpplysningStatus.Faktum
-            },
+        status = when (this.status) {
+            OpplysningDTO.Status.Hypotese -> OpplysningStatus.Hypotese
+            OpplysningDTO.Status.Faktum -> OpplysningStatus.Faktum
+        },
     )
