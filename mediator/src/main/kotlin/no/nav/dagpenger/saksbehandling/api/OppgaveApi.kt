@@ -18,12 +18,18 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Opplysning
+import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.api.models.DataTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpplysningStatusDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import java.util.UUID
 
 internal fun Application.oppgaveApi(mediator: Mediator) {
@@ -58,8 +64,17 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         when (oppgave) {
                             null -> {
                                 when (oppgaveId) {
-                                    oppgaveTilBehandlingId -> call.respond(HttpStatusCode.OK, oppgaveTilBehandling)
-                                    oppgaveFerdigBehandletId -> call.respond(HttpStatusCode.OK, oppgaveFerdigBehandlet)
+                                    minsteinntektOppgaveTilBehandlingId ->
+                                        call.respond(
+                                            HttpStatusCode.OK,
+                                            minsteinntektOppgaveTilBehandling,
+                                        )
+
+                                    minsteinntektOppgaveFerdigBehandletId ->
+                                        call.respond(
+                                            HttpStatusCode.OK,
+                                            minsteinntektOppgaveFerdigBehandlet,
+                                        )
 
                                     else ->
                                         call.respond(
@@ -71,7 +86,8 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 
                             else -> {
                                 val message = oppgave.tilOppgaveDTO()
-                                sikkerLogger.info { "Oppgave $oppgaveId hentes: $message" }
+                                sikkerLogger.info { "Oppgave $oppgaveId skal gjøres om til OppgaveDTO: $oppgave" }
+                                sikkerLogger.info { "OppgaveDTO $oppgaveId hentes: $message" }
                                 call.respond(HttpStatusCode.OK, message)
                             }
                         }
@@ -83,7 +99,18 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 
                     route("avslag") {
                         put {
-                            call.respond(HttpStatusCode.NoContent)
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val saksbehandlerSignatur = call.request.jwt()
+                            val bekreftOppgaveHendelse = BekreftOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
+                            val oppgave = mediator.bekreftOppgavensOpplysninger(bekreftOppgaveHendelse)
+                            when (oppgave) {
+                                null ->
+                                    call.respond(
+                                        status = HttpStatusCode.NotFound,
+                                        message = "Fant ingen oppgave med UUID $oppgaveId",
+                                    )
+                                else -> call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
 
@@ -116,12 +143,32 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
     )
 }
 
-private fun Steg.tilStegDTO(): StegDTO {
+internal fun Steg.tilStegDTO(): StegDTO {
     return StegDTO(
         stegNavn = this.navn,
-        opplysninger = emptyList(),
+        opplysninger = this.opplysninger.map { opplysning -> opplysning.tilOpplysningDTO() },
         // @TODO: Hent stegtilstand fra steg?
         tilstand = StegTilstandDTO.Groenn,
+    )
+}
+
+private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
+    val datatype: DataTypeDTO =
+        when (this.dataType) {
+            "boolean" -> DataTypeDTO.Boolean
+            "LocalDate" -> DataTypeDTO.LocalDate
+            "int" -> DataTypeDTO.Int
+            "double" -> DataTypeDTO.Double
+            else -> DataTypeDTO.String
+        }
+    return OpplysningDTO(
+        opplysningNavn = this.navn,
+        status = when (this.status) {
+            OpplysningStatus.Hypotese -> OpplysningStatusDTO.Hypotese
+            OpplysningStatus.Faktum -> OpplysningStatusDTO.Faktum
+        },
+        dataType = datatype,
+        svar = SvarDTO(this.verdi),
     )
 }
 

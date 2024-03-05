@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.de.undercouch.gradle.tasks.download.Download
 
 plugins {
     id("org.openapi.generator") version "7.3.0"
-    id("de.undercouch.download") version "5.5.0"
+    id("de.undercouch.download") version "5.6.0"
     id("common")
     `java-library`
 }

@@ -10,8 +10,8 @@ fun alderskravStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     return when {
         alderskravOpplysningsTre != null ->
             Steg(
-                navn = "Under 67 år",
-                opplysninger = hentAlleOpplysningerFra(alderskravOpplysningsTre),
+                navn = "Alder",
+                opplysninger = hentAlleUnikeOpplysningerFra(alderskravOpplysningsTre),
             )
 
         else -> null

@@ -1,11 +1,16 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
+import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
+import no.nav.dagpenger.saksbehandling.api.mockSøknadBehandlingId
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
+import java.io.FileNotFoundException
 
 private val logger = KotlinLogging.logger {}
 val sikkerLogger = KotlinLogging.logger("tjenestekall")
@@ -28,9 +33,17 @@ internal class Mediator(
             null -> null
             else -> {
                 val behandlingDTO =
-                    kotlin.runCatching {
-                        behandlingKlient.hentBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
-                    }.getOrNull()
+                    when (oppgave.behandlingId) {
+                        mockSøknadBehandlingId -> {
+                            logger.info { "Bruker mockdata for behandlingId $mockSøknadBehandlingId" }
+                            behandlingResponseMock()
+                        }
+
+                        else ->
+                            kotlin.runCatching {
+                                behandlingKlient.hentBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
+                            }.getOrNull()
+                    }
 
                 val nyeSteg = mutableListOf<Steg>()
                 minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
@@ -42,4 +55,31 @@ internal class Mediator(
             }
         }
     }
+
+    suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Oppgave? {
+        val oppgave = personRepository.hent(hendelse.oppgaveId)
+        when (oppgave) {
+            null -> return null
+            else -> {
+                kotlin.runCatching {
+                    behandlingKlient.bekreftBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
+                }
+                // TODO Skal den ha getOrNull()????
+            }
+        }
+        sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
+        return oppgave
+    }
 }
+
+// TODO: Fjernes når mocken fjernes
+private fun String.fileAsText(): String {
+    return object {}.javaClass.getResource(this)?.readText()
+        ?: throw FileNotFoundException()
+}
+
+private fun behandlingResponseMock(): BehandlingDTO? =
+    objectMapper.readValue(
+        "/behandlingResponseMock.json".fileAsText(),
+        BehandlingDTO::class.java,
+    )

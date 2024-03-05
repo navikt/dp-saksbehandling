@@ -25,7 +25,6 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.io.FileNotFoundException
-import java.time.OffsetDateTime
 
 class E2ETest {
     private val testIdent = "12345612345"
@@ -85,6 +84,10 @@ class E2ETest {
                         OppgaveDTO::class.java,
                     )
                 actualOppgave.steg.size shouldBe 2
+                actualOppgave.steg[0].stegNavn shouldBe "Minsteinntekt"
+                actualOppgave.steg[0].opplysninger.size shouldNotBe 0
+                actualOppgave.steg[1].stegNavn shouldBe "Alder"
+                actualOppgave.steg[1].opplysninger.size shouldNotBe 0
             }
         }
     }
@@ -113,28 +116,7 @@ class E2ETest {
         }
         """
 
-    // language=json
-    private val behandlingJsonResponse =
-        """
-        {
-          "behandlingId": "$behandlingId",
-          "opplysning": [
-            {
-              "id": "018dc0e6-0d4b-7f11-a881-1377d9b38a2a",
-              "opplysningstype": "Søknadstidspunkt",
-              "verdi": "2024-02-19",
-              "status": "Hypotese",
-              "gyldigFraOgMed": "${OffsetDateTime.MIN}",
-              "gyldigTilOgMed": "${OffsetDateTime.MAX}",
-              "datatype": "LocalDate",
-              "kilde": null,
-              "utledetAv": null
-            }
-          ]
-        }       
-        """.trimIndent()
-
-    internal fun String.fileAsText(): String {
+    private fun String.fileAsText(): String {
         return object {}.javaClass.getResource(this)?.readText()
             ?: throw FileNotFoundException()
     }

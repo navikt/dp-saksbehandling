@@ -47,8 +47,8 @@ class OppgaveApiTest {
                         object : TypeReference<List<OppgaveDTO>>() {},
                     )
                 oppgaver.size shouldBe 2
-                oppgaver[0].oppgaveId shouldBe oppgaveTilBehandlingId
-                oppgaver[1].oppgaveId shouldBe oppgaveFerdigBehandletId
+                oppgaver[0].oppgaveId shouldBe minsteinntektOppgaveTilBehandlingId
+                oppgaver[1].oppgaveId shouldBe minsteinntektOppgaveFerdigBehandletId
             }
         }
     }
@@ -77,6 +77,20 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Når saksbehandler bekrefter opplysninger i en oppgave skal behandlingen bekreftes`() {
+        val mediatorMock = mockk<Mediator>()
+        val oppgaveId = UUIDv7.ny()
+        val oppgave = testOppgaveMedSteg(oppgaveId)
+
+        coEvery { mediatorMock.bekreftOppgavensOpplysninger(any()) } returns oppgave
+        withOppgaveApi {
+            client.put("/oppgave/$oppgaveId/avslag") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+        }
+    }
+
+    @Test
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val mediator =
@@ -92,18 +106,9 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne avslå på bakgrunn av kravet til minsteinntekt`() {
-        withOppgaveApi {
-            client.put("/oppgave/$oppgaveTilBehandlingId/avslag") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
-        }
-    }
-
-    @Test
     fun `Skal kunne lukke oppgave`() {
         withOppgaveApi {
-            client.put("/oppgave/$oppgaveTilBehandlingId/lukk") { autentisert() }.also { response ->
+            client.put("/oppgave/$minsteinntektOppgaveTilBehandlingId/lukk") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }

@@ -2,23 +2,25 @@ package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO
 import no.nav.dagpenger.saksbehandling.Opplysning
+import no.nav.dagpenger.saksbehandling.OpplysningStatus
+import java.util.UUID
 
-fun hentAlleOpplysningerFra(opplysningsTre: OpplysningDTO): List<Opplysning> {
-    val aggregerteOpplysninger = mutableListOf<OpplysningDTO>()
-    traverserOpplysningsTre(
-        opplysninger = listOf(opplysningsTre),
+fun hentAlleUnikeOpplysningerFra(opplysningstre: OpplysningDTO): List<Opplysning> {
+    val aggregerteOpplysninger = mutableMapOf<UUID, OpplysningDTO>()
+    traverserOpplysningstre(
+        opplysninger = listOf(opplysningstre),
         aggregerteOpplysninger = aggregerteOpplysninger,
     )
-    return aggregerteOpplysninger.map { it.toOpplysning() }
+    return aggregerteOpplysninger.entries.map { it.value.toOpplysning() }
 }
 
-private fun traverserOpplysningsTre(
+private fun traverserOpplysningstre(
     opplysninger: List<OpplysningDTO>,
-    aggregerteOpplysninger: MutableList<OpplysningDTO>,
+    aggregerteOpplysninger: MutableMap<UUID, OpplysningDTO>,
 ) {
-    for (opplysning in opplysninger) {
-        aggregerteOpplysninger.add(opplysning)
-        opplysning.utledetAv?.opplysninger?.let { traverserOpplysningsTre(it, aggregerteOpplysninger) }
+    opplysninger.forEach { opplysning ->
+        aggregerteOpplysninger[opplysning.id] = opplysning
+        opplysning.utledetAv?.opplysninger?.let { traverserOpplysningstre(it, aggregerteOpplysninger) }
     }
 }
 
@@ -27,4 +29,8 @@ private fun OpplysningDTO.toOpplysning() =
         navn = this.opplysningstype,
         verdi = this.verdi,
         dataType = this.datatype,
+        status = when (this.status) {
+            OpplysningDTO.Status.Hypotese -> OpplysningStatus.Hypotese
+            OpplysningDTO.Status.Faktum -> OpplysningStatus.Faktum
+        },
     )

@@ -8,8 +8,8 @@ data class Oppgave private constructor(
     val opprettet: ZonedDateTime,
     val ident: String,
     private val _emneknagger: MutableSet<String>,
-    val steg: MutableList<Steg>,
     val behandlingId: UUID,
+    val steg: MutableList<Steg>,
 ) {
     constructor(
         oppgaveId: UUID,

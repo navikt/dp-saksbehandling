@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -39,6 +40,32 @@ internal class BehandlingKlientTest {
         behandling.opplysning.shouldNotBeEmpty()
         behandling.behandlingId shouldNotBe null
     }
+
+    @Test
+    fun `Skal bekrefte behandling`() {
+        val mockEngine =
+            MockEngine { request ->
+                respond(
+                    content = emptyJsonResponse,
+                    status = HttpStatusCode.Created,
+                    headers = headersOf("Content-Type", "application/json"),
+                )
+            }
+        val behandlingKlient =
+            BehandlingKlient(
+                behandlingUrl = baseUrl,
+                behandlingScope = "scope",
+                tokenProvider = testTokenProvider,
+                engine = mockEngine,
+            )
+        runBlocking {
+            behandlingKlient.bekreftBehandling(UUIDv7.ny(), saksbehandlerToken)
+        }
+    }
+
+    // language=json
+    private val emptyJsonResponse =
+        """{}"""
 
     // language=json
     private val behandlingJsonResponse =
