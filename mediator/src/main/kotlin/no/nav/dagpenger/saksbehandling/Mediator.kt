@@ -56,6 +56,10 @@ internal class Mediator(
         }
     }
 
+    fun behandleForslagTilVedtak(any: Any) {
+        TODO("Not yet implemented")
+    }
+
     suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Oppgave? {
         val oppgave = personRepository.hent(hendelse.oppgaveId)
         when (oppgave) {
