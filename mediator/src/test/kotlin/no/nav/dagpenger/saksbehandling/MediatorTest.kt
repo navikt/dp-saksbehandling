@@ -8,6 +8,7 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import java.time.ZonedDateTime
 
 class MediatorTest {
     private val testIdent = "12345612345"
@@ -25,6 +26,44 @@ class MediatorTest {
     @AfterEach
     fun tearDown() {
         personRepository.slettAlt()
+    }
+
+    @Test
+    fun `Skal bare hente oppgaver med tilstand KLAR_FOR_BEHANDLING`() {
+        personRepository.lagre(
+            Person(
+                ident = testIdent,
+
+            ).apply {
+                val klarBehandling = Behandling(
+                    behandlingId = UUIDv7.ny(),
+                    oppgave = Oppgave(
+                        oppgaveId = UUIDv7.ny(),
+                        behandlingId = behandlingId,
+                        ident = this.ident,
+                        emneknagger = setOf("Søknadsbehandling"),
+                        opprettet = ZonedDateTime.now(),
+                        tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                    ),
+                )
+                val opprettetBehandling = Behandling(
+                    behandlingId = UUIDv7.ny(),
+                    oppgave = Oppgave(
+                        oppgaveId = UUIDv7.ny(),
+                        behandlingId = behandlingId,
+                        ident = this.ident,
+                        emneknagger = setOf("Søknadsbehandling"),
+                        opprettet = ZonedDateTime.now(),
+                        tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                    ),
+                )
+                this.behandlinger[klarBehandling.behandlingId] = klarBehandling
+                this.behandlinger[opprettetBehandling.behandlingId] = opprettetBehandling
+            },
+        )
+        val mediator = Mediator(personRepository, mockk())
+
+        mediator.hentAlleOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING).size shouldBe 1
     }
 
     @Test

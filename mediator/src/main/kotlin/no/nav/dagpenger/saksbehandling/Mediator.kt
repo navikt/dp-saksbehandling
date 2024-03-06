@@ -27,6 +27,10 @@ internal class Mediator(
         lagre(person)
     }
 
+    override fun hentAlleOppgaver(): List<Oppgave> {
+        return personRepository.hentAlleOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING)
+    }
+
     suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Oppgave? {
         val oppgave = personRepository.hent(hendelse.oppgaveId)
         return when (oppgave) {

@@ -10,6 +10,7 @@ data class Oppgave private constructor(
     private val _emneknagger: MutableSet<String>,
     val behandlingId: UUID,
     val steg: MutableList<Steg>,
+    var tilstand: Tilstand.Type,
 ) {
     constructor(
         oppgaveId: UUID,
@@ -17,6 +18,7 @@ data class Oppgave private constructor(
         emneknagger: Set<String> = emptySet(),
         opprettet: ZonedDateTime,
         behandlingId: UUID,
+        tilstand: Tilstand.Type = Tilstand.Type.OPPRETTET,
     ) : this(
         oppgaveId = oppgaveId,
         ident = ident,
@@ -24,8 +26,17 @@ data class Oppgave private constructor(
         _emneknagger = emneknagger.toMutableSet(),
         steg = mutableListOf(),
         behandlingId = behandlingId,
+        tilstand = tilstand,
     )
 
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
+
+    interface Tilstand {
+        enum class Type {
+            OPPRETTET,
+            FERDIG_BEHANDLET,
+            KLAR_TIL_BEHANDLING,
+        }
+    }
 }
