@@ -32,7 +32,7 @@ class MediatorTest {
     }
 
     @Test
-    fun `Skal bare hente oppgaver med tilstand KLAR_FOR_BEHANDLING`() {
+    fun `Skal bare hente oppgaver med tilstand KLAR_TIL_BEHANDLING`() {
         personRepository.lagre(
             Person(
                 ident = testIdent,
@@ -70,7 +70,7 @@ class MediatorTest {
     }
 
     @Test
-    fun hubbah() {
+    fun `Tester endring av oppgavens tilstand etter hvert som behandling skjer`() {
         personRepository.slettAlt()
 
         val søknadId = UUIDv7.ny()
@@ -106,6 +106,9 @@ class MediatorTest {
 
         mediator.hentAlleOppgaver().size shouldBe 1
         mediator.hentAlleOppgaver().first().behandlingId shouldBe behandlingId
+
+        // TODO Test å avbryte en oppgave (lukk) -> tilstand skal være FERDIG_BEHANDLET
+        // TODO Test å ferdigstille en oppgave (avslag) -> tilstand skal være FERDIG_BEHANDLET
     }
 
     @Test

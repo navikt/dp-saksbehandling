@@ -57,7 +57,7 @@ class OppgaveApiTest {
     fun `Når saksbehandler henter en oppgave, oppdater den med steg og opplysninger`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
-        val oppgave = testOppgaveMedSteg(oppgaveId)
+        val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
 
         coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns oppgave
 
@@ -77,10 +77,10 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Når saksbehandler bekrefter opplysninger i en oppgave skal behandlingen bekreftes`() {
+    fun `Når saksbehandler bekrefter opplysninger i en oppgave skal behandlingen bekreftes og oppgavens tilstand FERDIG_BEHANDLET`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
-        val oppgave = testOppgaveMedSteg(oppgaveId)
+        val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
 
         coEvery { mediatorMock.bekreftOppgavensOpplysninger(any()) } returns oppgave
         withOppgaveApi {
@@ -88,6 +88,22 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }
+        oppgave.tilstand shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+    }
+
+    @Test
+    fun `Når saksbehandler avbryter en oppgave skal behandlingen avbrytes og oppgavens tilstand FERDIG_BEHANDLET`() {
+        val mediatorMock = mockk<Mediator>()
+        val oppgaveId = UUIDv7.ny()
+        val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
+
+        coEvery { mediatorMock.avbrytBehandling(any()) } returns oppgave
+        withOppgaveApi {
+            client.put("/oppgave/$oppgaveId/lukk") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+        }
+        oppgave.tilstand shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
     }
 
     @Test
@@ -163,7 +179,7 @@ class OppgaveApiTest {
         header(HttpHeaders.Authorization, "Bearer $testToken")
     }
 
-    private fun testOppgaveMedSteg(
+    private fun testOppgaveFerdigBehandlet(
         oppgaveId: UUID,
         opprettet: ZonedDateTime = ZonedDateTime.now(),
     ) = Oppgave(
@@ -172,6 +188,7 @@ class OppgaveApiTest {
         emneknagger = setOf("Søknadsbehandling"),
         opprettet = opprettet,
         behandlingId = UUIDv7.ny(),
+        tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
     ).also {
         it.steg.add(
             Steg("Teststeg", emptyList()),

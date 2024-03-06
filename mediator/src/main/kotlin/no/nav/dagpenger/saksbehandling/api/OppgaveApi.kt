@@ -116,7 +116,18 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 
                     route("lukk") {
                         put {
-                            call.respond(HttpStatusCode.NoContent)
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val saksbehandlerSignatur = call.request.jwt()
+                            val avbrytBehandlingHendelse = AvbrytBehandlingHendelse(oppgaveId, saksbehandlerSignatur)
+                            val oppgave = mediator.avbrytBehandling(avbrytBehandlingHendelse)
+                            when (oppgave) {
+                                null ->
+                                    call.respond(
+                                        status = HttpStatusCode.NotFound,
+                                        message = "Fant ingen oppgave med UUID $oppgaveId",
+                                    )
+                                else -> call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
                 }
@@ -129,6 +140,13 @@ private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveDTO() }
 }
 
+private fun Oppgave.Tilstand.Type.toOppgaveTilstandDTO() =
+    when (this) {
+        Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.Opprettet
+        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FerdigBehandlet
+        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.TilBehandling
+    }
+
 internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
     return OppgaveDTO(
         oppgaveId = this.oppgaveId,
@@ -137,8 +155,7 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
         tidspunktOpprettet = this.opprettet,
         journalpostIder = emptyList(),
         emneknagger = this.emneknagger.toList(),
-        // @TODO: Hent tilstand fra oppgave? (FerdigBehandlet, TilBehandling)
-        tilstand = OppgaveTilstandDTO.TilBehandling,
+        tilstand = this.tilstand.toOppgaveTilstandDTO(),
         steg = this.steg.map { steg -> steg.tilStegDTO() },
     )
 }

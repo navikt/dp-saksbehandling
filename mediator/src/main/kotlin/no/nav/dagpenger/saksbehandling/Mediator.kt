@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
@@ -78,7 +79,21 @@ internal class Mediator(
                 // TODO Skal den ha getOrNull()????
             }
         }
+        oppgave.tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET
         sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
+        return oppgave
+    }
+
+    suspend fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Oppgave? {
+        val oppgave = personRepository.hent(hendelse.oppgaveId)
+        when (oppgave) {
+            null -> return null
+            else -> {
+                // TODO kall behandlingKlient.avbrytBehandling
+            }
+        }
+        oppgave.tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+        sikkerLogger.info { "Avbrutt oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
         return oppgave
     }
 }
