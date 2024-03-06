@@ -39,7 +39,7 @@ internal class ForslagTilVedtakMottak(
                 behandlingId = behandlingId,
             )
             logger.info { "Mottok hendelse om forslag til vedtak $forslagTilVedtakHendelse" }
-            mediator.behandleForslagTilVedtak(forslagTilVedtakHendelse)
+            mediator.behandle(forslagTilVedtakHendelse)
         }
     }
 

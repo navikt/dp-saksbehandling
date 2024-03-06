@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
 
@@ -23,5 +24,10 @@ data class Person(val ident: String) {
                 ),
             )
         behandlinger[behandling.behandlingId] = behandling
+    }
+
+    fun håndter(søknadsbehandlingOpprettetHendelse: ForslagTilVedtakHendelse) {
+        this.behandlinger[søknadsbehandlingOpprettetHendelse.behandlingId]?.håndter(søknadsbehandlingOpprettetHendelse)
+            ?: throw IllegalArgumentException("Fant ikke behandling") // todo
     }
 }

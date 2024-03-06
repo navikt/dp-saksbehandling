@@ -3,12 +3,15 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
+import java.util.UUID
 
 class MediatorTest {
     private val testIdent = "12345612345"
@@ -67,6 +70,45 @@ class MediatorTest {
     }
 
     @Test
+    fun hubbah() {
+        personRepository.slettAlt()
+
+        val søknadId = UUIDv7.ny()
+        val behandlingId = UUIDv7.ny()
+
+        // 1. event behnadling_oppettet ->
+        mediator.behandle(
+            søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
+                søknadId = søknadId,
+                behandlingId = behandlingId,
+                ident = testIdent,
+                opprettet = ZonedDateTime.now(),
+            ),
+        )
+
+        val søknadId2 = UUIDv7.ny()
+        val behandlingId2 = UUIDv7.ny()
+        mediator.behandle(
+            søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
+                søknadId = søknadId2,
+                behandlingId = behandlingId2,
+                ident = testIdent,
+                opprettet = ZonedDateTime.now(),
+            ),
+        )
+
+        mediator.hentAlleOppgaveMedTilstand(Oppgave.Tilstand.Type.OPPRETTET).size shouldBe 2
+        mediator.hentAlleOppgaver().size shouldBe 0
+
+        mediator.behandle(
+            ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
+        )
+
+        mediator.hentAlleOppgaver().size shouldBe 1
+        mediator.hentAlleOppgaver().first().behandlingId shouldBe behandlingId
+    }
+
+    @Test
     fun `Lagre ny søknadsbehandling`() {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding(testIdent))
         val person = personRepository.hent(testIdent)
@@ -80,7 +122,11 @@ class MediatorTest {
     }
 
     @Language("JSON")
-    private fun søknadsbehandlingOpprettetMelding(ident: String) =
+    private fun søknadsbehandlingOpprettetMelding(
+        ident: String,
+        søknadId: UUID = this.søknadId,
+        behandlingId: UUID = this.behandlingId,
+    ) =
         """
         {
             "@event_name": "behandling_opprettet",

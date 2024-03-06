@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
 import no.nav.dagpenger.saksbehandling.api.mockSøknadBehandlingId
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import java.io.FileNotFoundException
@@ -25,6 +26,12 @@ internal class Mediator(
         val person = hent(ident) ?: Person(ident)
         person.håndter(søknadsbehandlingOpprettetHendelse)
         lagre(person)
+    }
+    fun behandle(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+        this.hent(forslagTilVedtakHendelse.ident)?.let { person ->
+            person.håndter(forslagTilVedtakHendelse)
+            lagre(person)
+        } ?: throw IllegalArgumentException("Fant ikke person") // todo
     }
 
     override fun hentAlleOppgaver(): List<Oppgave> {
@@ -58,10 +65,6 @@ internal class Mediator(
                 return oppdatertOppgave
             }
         }
-    }
-
-    fun behandleForslagTilVedtak(any: Any) {
-        TODO("Not yet implemented")
     }
 
     suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Oppgave? {

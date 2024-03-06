@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 
@@ -19,7 +20,7 @@ class ForslagTilVedtakMottakTest {
     fun `Skal kunne motta forslag til vedtak events`() {
         testRapid.sendTestMessage(forslagTilVedtakJson)
         verify(exactly = 1) {
-            mediator.behandleForslagTilVedtak(any())
+            mediator.behandle(any<ForslagTilVedtakHendelse>())
         }
     }
 
