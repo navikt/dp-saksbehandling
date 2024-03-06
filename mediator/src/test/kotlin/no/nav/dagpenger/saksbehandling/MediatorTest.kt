@@ -3,6 +3,11 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
@@ -20,7 +25,7 @@ class MediatorTest {
 
     private val testRapid = TestRapid()
     private val personRepository = InMemoryPersonRepository()
-    private val mediator = Mediator(personRepository, mockk())
+    private val mediator = Mediator(personRepository = personRepository, behandlingKlient = mockk())
 
     init {
         BehandlingOpprettetMottak(testRapid, mediator)
@@ -32,7 +37,7 @@ class MediatorTest {
     }
 
     @Test
-    fun `Skal bare hente oppgaver med tilstand KLAR_TIL_BEHANDLING`() {
+    fun `Skal bare hente oppgaver med tilstand klar til behandling`() {
         personRepository.lagre(
             Person(
                 ident = testIdent,
@@ -57,7 +62,7 @@ class MediatorTest {
                         ident = this.ident,
                         emneknagger = setOf("Søknadsbehandling"),
                         opprettet = ZonedDateTime.now(),
-                        tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                        tilstand = OPPRETTET,
                     ),
                 )
                 this.behandlinger[klarBehandling.behandlingId] = klarBehandling
@@ -66,49 +71,69 @@ class MediatorTest {
         )
         val mediator = Mediator(personRepository, mockk())
 
-        mediator.hentAlleOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING).size shouldBe 1
+        mediator.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING).size shouldBe 1
     }
 
     @Test
     fun `Tester endring av oppgavens tilstand etter hvert som behandling skjer`() {
         personRepository.slettAlt()
 
-        val søknadId = UUIDv7.ny()
-        val behandlingId = UUIDv7.ny()
-
-        // 1. event behnadling_oppettet ->
+        val førsteSøknadId = UUIDv7.ny()
+        val førsteBehandlingId = UUIDv7.ny()
         mediator.behandle(
             søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
-                søknadId = søknadId,
-                behandlingId = behandlingId,
+                søknadId = førsteSøknadId,
+                behandlingId = førsteBehandlingId,
                 ident = testIdent,
                 opprettet = ZonedDateTime.now(),
             ),
         )
 
-        val søknadId2 = UUIDv7.ny()
-        val behandlingId2 = UUIDv7.ny()
+        val andreSøknadId = UUIDv7.ny()
+        val andreBehandlingId = UUIDv7.ny()
         mediator.behandle(
             søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
-                søknadId = søknadId2,
-                behandlingId = behandlingId2,
+                søknadId = andreSøknadId,
+                behandlingId = andreBehandlingId,
                 ident = testIdent,
                 opprettet = ZonedDateTime.now(),
             ),
         )
 
-        mediator.hentAlleOppgaveMedTilstand(Oppgave.Tilstand.Type.OPPRETTET).size shouldBe 2
+        mediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 2
         mediator.hentAlleOppgaver().size shouldBe 0
 
+        // Behandling av første søknad
         mediator.behandle(
-            ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
+            ForslagTilVedtakHendelse(ident = testIdent, søknadId = førsteSøknadId, behandlingId = førsteBehandlingId),
         )
 
         mediator.hentAlleOppgaver().size shouldBe 1
-        mediator.hentAlleOppgaver().first().behandlingId shouldBe behandlingId
+        val oppgave = mediator.hentAlleOppgaver().first()
+        oppgave.behandlingId shouldBe førsteBehandlingId
 
-        // TODO Test å avbryte en oppgave (lukk) -> tilstand skal være FERDIG_BEHANDLET
-        // TODO Test å ferdigstille en oppgave (avslag) -> tilstand skal være FERDIG_BEHANDLET
+        runBlocking {
+            mediator.bekreftOppgavensOpplysninger(BekreftOppgaveHendelse(oppgave.oppgaveId, saksbehandlerSignatur = ""))
+        }
+
+        mediator.hentAlleOppgaver().size shouldBe 0
+        mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
+
+        // Behandling av andre søknad
+        mediator.behandle(
+            ForslagTilVedtakHendelse(ident = testIdent, søknadId = andreSøknadId, behandlingId = andreBehandlingId),
+        )
+
+        mediator.hentAlleOppgaver().size shouldBe 1
+        val oppgave2 = mediator.hentAlleOppgaver().first()
+        oppgave2.behandlingId shouldBe andreBehandlingId
+
+        runBlocking {
+            mediator.avbrytBehandling(AvbrytBehandlingHendelse(oppgave2.oppgaveId, saksbehandlerSignatur = ""))
+        }
+
+        mediator.hentAlleOppgaver().size shouldBe 0
+        mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 2
     }
 
     @Test

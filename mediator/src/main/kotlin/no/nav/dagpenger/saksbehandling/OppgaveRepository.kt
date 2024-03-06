@@ -5,6 +5,6 @@ import java.util.UUID
 
 interface OppgaveRepository {
     fun hentAlleOppgaver(): List<Oppgave>
-    fun hentAlleOppgaveMedTilstand(tilstand: Type): List<Oppgave>
+    fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave>
     fun hent(oppgaveId: UUID): Oppgave?
 }

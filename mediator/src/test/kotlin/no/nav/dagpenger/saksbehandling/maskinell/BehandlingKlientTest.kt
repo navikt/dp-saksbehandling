@@ -86,6 +86,5 @@ internal class BehandlingKlientTest {
             }
           ]
         }
-                  
         """.trimIndent()
 }

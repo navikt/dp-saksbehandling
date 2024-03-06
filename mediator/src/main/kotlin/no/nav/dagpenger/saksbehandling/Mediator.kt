@@ -36,7 +36,7 @@ internal class Mediator(
     }
 
     override fun hentAlleOppgaver(): List<Oppgave> {
-        return personRepository.hentAlleOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING)
+        return personRepository.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING)
     }
 
     suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Oppgave? {

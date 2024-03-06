@@ -77,12 +77,13 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Når saksbehandler bekrefter opplysninger i en oppgave skal behandlingen bekreftes og oppgavens tilstand FERDIG_BEHANDLET`() {
+    fun `Når saksbehandler bekrefter opplysninger i en oppgave skal behandlingen bekreftes og oppgavens tilstand bli ferdigbehandlet`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
 
         coEvery { mediatorMock.bekreftOppgavensOpplysninger(any()) } returns oppgave
+
         withOppgaveApi {
             client.put("/oppgave/$oppgaveId/avslag") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
@@ -92,7 +93,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Når saksbehandler avbryter en oppgave skal behandlingen avbrytes og oppgavens tilstand FERDIG_BEHANDLET`() {
+    fun `Når saksbehandler avbryter en oppgave skal behandlingen avbrytes og oppgavens tilstand bli ferdigbehandlet`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)

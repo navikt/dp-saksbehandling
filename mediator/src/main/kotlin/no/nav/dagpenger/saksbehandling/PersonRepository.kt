@@ -52,7 +52,7 @@ class InMemoryPersonRepository : PersonRepository {
             }
         }
 
-    override fun hentAlleOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> =
+    override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> =
         hentAlleOppgaver().filter { it.tilstand == tilstand }
 
     fun slettAlt() = personMap.clear()
