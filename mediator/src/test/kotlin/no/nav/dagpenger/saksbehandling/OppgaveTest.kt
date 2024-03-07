@@ -16,7 +16,7 @@ class OppgaveTest {
             personIdent = "adipiscing",
             tidspunktOpprettet = ZonedDateTime.now(),
             emneknagger = listOf(),
-            tilstand = OppgaveTilstandDTO.FerdigBehandlet,
+            tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
             steg = listOf(),
             journalpostIder = listOf(),
         ).let {

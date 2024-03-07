@@ -142,9 +142,9 @@ private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
 
 private fun Oppgave.Tilstand.Type.toOppgaveTilstandDTO() =
     when (this) {
-        Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.Opprettet
-        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FerdigBehandlet
-        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.TilBehandling
+        Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
+        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
     }
 
 internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
