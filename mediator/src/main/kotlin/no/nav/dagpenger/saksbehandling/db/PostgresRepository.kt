@@ -2,9 +2,11 @@ package no.nav.dagpenger.saksbehandling.db
 
 import kotliquery.Row
 import kotliquery.Session
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import java.util.UUID
@@ -13,8 +15,8 @@ import javax.sql.DataSource
 class PostgresRepository(private val dataSource: DataSource) : PersonRepository, OppgaveRepository {
     override fun lagre(person: Person) {
         using(sessionOf(dataSource)) { session ->
-            session.transaction { transactionalSession ->
-                transactionalSession.run(
+            session.transaction { tx ->
+                tx.run(
                     queryOf(
                         //language=PostgreSQL
                         statement = """
@@ -27,6 +29,9 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository,
                         ),
                     ).asUpdate,
                 )
+                person.behandlinger.forEach { (_, behandling) ->
+                    tx.lagre(behandling.oppgave)
+                }
             }
         }
     }
@@ -45,36 +50,53 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository,
                         "ident" to ident,
                     ),
                 ).map { row -> Person(row.string("ident")) }.asSingle,
-            )
-        }
-    }
-
-    override fun lagre(oppgave: Oppgave) {
-        using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement = """
-                    INSERT INTO oppgave_v1 (id,person_ident,opprettet,behandling_id,tilstand)
-                    VALUES (:id, :person_ident, :opprettet, :behandling_id, :tilstand)
-                    ON CONFLICT (id) DO UPDATE SET tilstand = :tilstand
-                        """.trimIndent(),
-                        paramMap = mapOf(
-                            "id" to oppgave.oppgaveId,
-                            "person_ident" to oppgave.ident,
-                            "opprettet" to oppgave.opprettet,
-                            "behandling_id" to oppgave.behandlingId,
-                            "tilstand" to oppgave.tilstand.name,
-                        ),
-                    ).asUpdate,
-                )
-                tx.lagreEmneknagger(oppgave)
+            )?.also { person ->
+                hentOppgaverFor(person.ident).forEach { oppgave ->
+                    person.behandlinger[oppgave.behandlingId] = Behandling(oppgave.behandlingId, oppgave)
+                }
             }
         }
     }
 
-    private fun Session.lagreEmneknagger(oppgave: Oppgave) {
+    private fun hentOppgaverFor(ident: String): List<Oppgave> {
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                    SELECT id,person_ident,opprettet,behandling_id,tilstand
+                    FROM  oppgave_v1 
+                    WHERE person_ident = :person_ident
+                    """.trimIndent(),
+                    paramMap = mapOf(
+                        "person_ident" to ident,
+                    ),
+                ).map { row ->
+                    val oppgaveId = row.uuid("id")
+                    row.rehydrerOppgave(session.hentEmneknagger(oppgaveId))
+                }.asList,
+            )
+        }
+    }
+
+    private fun TransactionalSession.lagre(oppgave: Oppgave) {
+        this.run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    INSERT INTO oppgave_v1 (id,person_ident,opprettet,behandling_id,tilstand)
+                    VALUES (:id, :person_ident, :opprettet, :behandling_id, :tilstand)
+                    ON CONFLICT (id) DO UPDATE SET tilstand = :tilstand
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "id" to oppgave.oppgaveId,
+                    "person_ident" to oppgave.ident,
+                    "opprettet" to oppgave.opprettet,
+                    "behandling_id" to oppgave.behandlingId,
+                    "tilstand" to oppgave.tilstand.name,
+                ),
+            ).asUpdate,
+        )
         oppgave.emneknagger.forEach { emneknagg ->
             this.run(
                 queryOf(
@@ -83,12 +105,20 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository,
                 INSERT INTO emneknagg_v1(oppgave_id, emneknagg)
                 VALUES (:oppgave_id, :emneknagg)
                     """.trimIndent(),
-                    paramMap = mapOf(
+                    paramMap = mapOf<String, Any>(
                         "oppgave_id" to oppgave.oppgaveId,
                         "emneknagg" to emneknagg,
                     ),
                 ).asUpdate,
             )
+        }
+    }
+
+    override fun lagre(oppgave: Oppgave) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx.lagre(oppgave)
+            }
         }
     }
 
