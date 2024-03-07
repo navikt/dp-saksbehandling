@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db
 
+import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -51,8 +52,8 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository 
 
     override fun lagre(oppgave: Oppgave) {
         using(sessionOf(dataSource)) { session ->
-            session.transaction { transactionalSession ->
-                transactionalSession.run(
+            session.transaction { tx ->
+                tx.run(
                     queryOf(
                         //language=PostgreSQL
                         statement = """
@@ -69,7 +70,26 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository 
                         ),
                     ).asUpdate,
                 )
+                tx.lagreEmneknagger(oppgave)
             }
+        }
+    }
+
+    private fun Session.lagreEmneknagger(oppgave: Oppgave) {
+        oppgave.emneknagger.forEach { emneknagg ->
+            this.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                INSERT INTO emneknagg_v1(oppgave_id, emneknagg)
+                VALUES (:oppgave_id, :emneknagg)
+                    """.trimIndent(),
+                    paramMap = mapOf(
+                        "oppgave_id" to oppgave.oppgaveId,
+                        "emneknagg" to emneknagg,
+                    ),
+                ).asUpdate,
+            )
         }
     }
 
@@ -87,30 +107,55 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository 
                         "id" to oppgaveId,
                     ),
                 ).map { row ->
-                    Oppgave.rehydrer(
-                        oppgaveId = row.uuid("id"),
-                        ident = row.string("person_ident"),
-                        opprettet = row.zonedDateTime("opprettet"),
-                        behandlingId = row.uuid("behandling_id"),
-                        emneknagger = session.hentEmneknagger(oppgaveId),
-                        tilstand = Oppgave.Tilstand.Type.valueOf(
-                            row.string("tilstand"),
-                        ),
-                    )
+                    row.rehydrerOppgave(session.hentEmneknagger(oppgaveId))
                 }.asSingle,
             )
         }
     }
 
+    private fun Row.rehydrerOppgave(emneknagger: Set<String>): Oppgave {
+        return Oppgave.rehydrer(
+            oppgaveId = this.uuid("id"),
+            ident = this.string("person_ident"),
+            opprettet = this.zonedDateTime("opprettet"),
+            behandlingId = this.uuid("behandling_id"),
+            emneknagger = emneknagger,
+            tilstand = Oppgave.Tilstand.Type.valueOf(this.string("tilstand")),
+        )
+    }
+
     private fun Session.hentEmneknagger(oppgaveId: UUID): Set<String> {
-        return emptySet()
+        return this.run(
+            queryOf(
+                statement = """
+                  SELECT emneknagg 
+                  FROM emneknagg_v1
+                  WHERE oppgave_id = :oppgave_id
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "oppgave_id" to oppgaveId,
+                ),
+            ).map { row -> row.string("emneknagg") }.asList,
+        ).toSet()
     }
 
     override fun hentAlleOppgaver(): List<Oppgave> {
-        TODO("Not yet implemented")
+        return using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                    SELECT id,person_ident,opprettet,behandling_id,tilstand
+                    FROM  oppgave_v1 
+                    """.trimIndent(),
+                ).map { row ->
+                    val oppgaveId = row.uuid("id")
+                    row.rehydrerOppgave(session.hentEmneknagger(oppgaveId))
+                }.asList,
+            )
+        }
     }
-
     override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
-        TODO("Not yet implemented")
+        return hentAlleOppgaver().filter { it.tilstand == tilstand }
     }
 }

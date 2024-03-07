@@ -30,6 +30,7 @@ internal class Mediator(
         person.håndter(søknadsbehandlingOpprettetHendelse)
         lagre(person)
     }
+
     fun behandle(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         this.hent(forslagTilVedtakHendelse.ident)?.let { person ->
             person.håndter(forslagTilVedtakHendelse)
@@ -37,7 +38,7 @@ internal class Mediator(
         } ?: throw IllegalArgumentException("Fant ikke person") // todo
     }
 
-    override fun hentAlleOppgaver(): List<Oppgave> {
+    fun hentOppgaverKlarTilBehandling(): List<Oppgave> {
         return personRepository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 

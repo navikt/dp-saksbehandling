@@ -101,22 +101,22 @@ class MediatorTest {
         )
 
         mediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 2
-        mediator.hentAlleOppgaver().size shouldBe 0
+        mediator.hentOppgaverKlarTilBehandling().size shouldBe 0
 
         // Behandling av første søknad
         mediator.behandle(
             ForslagTilVedtakHendelse(ident = testIdent, søknadId = førsteSøknadId, behandlingId = førsteBehandlingId),
         )
 
-        mediator.hentAlleOppgaver().size shouldBe 1
-        val oppgave = mediator.hentAlleOppgaver().first()
+        mediator.hentOppgaverKlarTilBehandling().size shouldBe 1
+        val oppgave = mediator.hentOppgaverKlarTilBehandling().first()
         oppgave.behandlingId shouldBe førsteBehandlingId
 
         runBlocking {
             mediator.bekreftOppgavensOpplysninger(BekreftOppgaveHendelse(oppgave.oppgaveId, saksbehandlerSignatur = ""))
         }
 
-        mediator.hentAlleOppgaver().size shouldBe 0
+        mediator.hentOppgaverKlarTilBehandling().size shouldBe 0
         mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
 
         // Behandling av andre søknad
@@ -124,15 +124,15 @@ class MediatorTest {
             ForslagTilVedtakHendelse(ident = testIdent, søknadId = andreSøknadId, behandlingId = andreBehandlingId),
         )
 
-        mediator.hentAlleOppgaver().size shouldBe 1
-        val oppgave2 = mediator.hentAlleOppgaver().first()
+        mediator.hentOppgaverKlarTilBehandling().size shouldBe 1
+        val oppgave2 = mediator.hentOppgaverKlarTilBehandling().first()
         oppgave2.behandlingId shouldBe andreBehandlingId
 
         runBlocking {
             mediator.avbrytBehandling(AvbrytBehandlingHendelse(oppgave2.oppgaveId, saksbehandlerSignatur = ""))
         }
 
-        mediator.hentAlleOppgaver().size shouldBe 0
+        mediator.hentOppgaverKlarTilBehandling().size shouldBe 0
         mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 2
     }
 
