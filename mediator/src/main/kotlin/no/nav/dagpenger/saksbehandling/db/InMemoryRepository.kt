@@ -1,15 +1,12 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.db
 
+import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.api.mockSøknadOppgaveDto
 import java.util.UUID
 
-interface PersonRepository : OppgaveRepository {
-    fun lagre(person: Person)
-
-    fun hent(ident: String): Person?
-}
-
-class InMemoryPersonRepository : PersonRepository {
+class InMemoryRepository : PersonRepository, OppgaveRepository {
     private val personMap = mutableMapOf<String, Person>()
 
     init {

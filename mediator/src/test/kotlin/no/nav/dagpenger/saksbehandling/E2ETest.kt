@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
+import no.nav.dagpenger.saksbehandling.db.InMemoryRepository
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -32,7 +33,7 @@ class E2ETest {
     private val behandlingId = UUIDv7.ny()
 
     private val testRapid = TestRapid()
-    private val personRepository = InMemoryPersonRepository()
+    private val inMemoryRepository = InMemoryRepository()
     private val testToken by mockAzure {
         claims = mapOf("NAVident" to "123")
     }
@@ -50,7 +51,7 @@ class E2ETest {
             tokenProvider = testTokenProvider,
             engine = mockEngine,
         )
-    private val mediator = Mediator(personRepository, behandlingKlient)
+    private val mediator = Mediator(inMemoryRepository, inMemoryRepository, behandlingKlient)
 
     init {
         BehandlingOpprettetMottak(testRapid, mediator)
@@ -58,20 +59,20 @@ class E2ETest {
 
     @AfterEach
     fun tearDown() {
-        personRepository.slettAlt()
+        inMemoryRepository.slettAlt()
     }
 
     @Test
     fun `Skal opprette steg og opplysninger fra maskinell behandling når oppgave hentes`() {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding)
-        val person = personRepository.hent(testIdent)
+        val person = inMemoryRepository.hent(testIdent)
         requireNotNull(person)
         person.ident shouldBe testIdent
         person.behandlinger.size shouldBe 1
         person.behandlinger.get(behandlingId)?.oppgave shouldNotBe null
-        val oppgaveId = personRepository.hentAlleOppgaver().first().oppgaveId
+        val oppgaveId = inMemoryRepository.hentAlleOppgaver().first().oppgaveId
         oppgaveId shouldNotBe null
-        val oppgave = personRepository.hent(oppgaveId)
+        val oppgave = inMemoryRepository.hent(oppgaveId)
         oppgave shouldNotBe null
 
         withOppgaveApi {

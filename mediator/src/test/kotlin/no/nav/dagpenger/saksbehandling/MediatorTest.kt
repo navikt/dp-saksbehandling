@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.db.InMemoryRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
@@ -24,8 +25,9 @@ class MediatorTest {
     private val behandlingId = UUIDv7.ny()
 
     private val testRapid = TestRapid()
-    private val personRepository = InMemoryPersonRepository()
-    private val mediator = Mediator(personRepository = personRepository, behandlingKlient = mockk())
+    private val inMemoryRepository = InMemoryRepository()
+    private val mediator =
+        Mediator(personRepository = inMemoryRepository, inMemoryRepository, behandlingKlient = mockk())
 
     init {
         BehandlingOpprettetMottak(testRapid, mediator)
@@ -33,12 +35,12 @@ class MediatorTest {
 
     @AfterEach
     fun tearDown() {
-        personRepository.slettAlt()
+        inMemoryRepository.slettAlt()
     }
 
     @Test
     fun `Skal bare hente oppgaver med tilstand klar til behandling`() {
-        personRepository.lagre(
+        inMemoryRepository.lagre(
             Person(
                 ident = testIdent,
 
@@ -69,14 +71,14 @@ class MediatorTest {
                 this.behandlinger[opprettetBehandling.behandlingId] = opprettetBehandling
             },
         )
-        val mediator = Mediator(personRepository, mockk())
+        val mediator = Mediator(inMemoryRepository, inMemoryRepository, mockk())
 
         mediator.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING).size shouldBe 1
     }
 
     @Test
     fun `Tester endring av oppgavens tilstand etter hvert som behandling skjer`() {
-        personRepository.slettAlt()
+        inMemoryRepository.slettAlt()
 
         val førsteSøknadId = UUIDv7.ny()
         val førsteBehandlingId = UUIDv7.ny()
@@ -139,14 +141,14 @@ class MediatorTest {
     @Test
     fun `Lagre ny søknadsbehandling`() {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding(testIdent))
-        val person = personRepository.hent(testIdent)
+        val person = inMemoryRepository.hent(testIdent)
         requireNotNull(person)
         person.ident shouldBe testIdent
         person.behandlinger.size shouldBe 1
         person.behandlinger.get(behandlingId)?.oppgave shouldNotBe null
-        val oppgaver = personRepository.hentAlleOppgaver()
+        val oppgaver = inMemoryRepository.hentAlleOppgaver()
         oppgaver.size shouldBe 2
-        personRepository.hent(oppgaveId = oppgaver.first().oppgaveId) shouldNotBe null
+        inMemoryRepository.hent(oppgaveId = oppgaver.first().oppgaveId) shouldNotBe null
     }
 
     @Language("JSON")

@@ -1,5 +1,6 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.db
 
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import java.util.UUID
 

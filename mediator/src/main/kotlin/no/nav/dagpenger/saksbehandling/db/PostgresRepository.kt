@@ -7,11 +7,10 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.PersonRepository
 import java.util.UUID
 import javax.sql.DataSource
 
-class PostgresRepository(private val dataSource: DataSource) : PersonRepository {
+class PostgresRepository(private val dataSource: DataSource) : PersonRepository, OppgaveRepository {
     override fun lagre(person: Person) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { transactionalSession ->
@@ -155,6 +154,7 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository 
             )
         }
     }
+
     override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
         return hentAlleOppgaver().filter { it.tilstand == tilstand }
     }
