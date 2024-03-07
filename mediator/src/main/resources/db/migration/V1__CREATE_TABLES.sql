@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS person_v1
+(
+    ident VARCHAR(11) PRIMARY KEY
+);

@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.internal.configuration.ConfigUtils
 import org.testcontainers.containers.PostgreSQLContainer
+import javax.sql.DataSource
 
 internal object Postgres {
     val instance by lazy {
@@ -11,10 +12,10 @@ internal object Postgres {
         }
     }
 
-    fun withMigratedDb(block: () -> Unit) {
+    fun withMigratedDb(block: (ds: DataSource) -> Unit) {
         withCleanDb {
             PostgresDataSourceBuilder.runMigration()
-            block()
+            block(PostgresDataSourceBuilder.dataSource)
         }
     }
 
