@@ -37,6 +37,10 @@ class InMemoryPersonRepository : PersonRepository {
         personMap[person.ident] = person
     }
 
+    override fun lagre(oppgave: Oppgave) {
+        TODO("Not yet implemented")
+    }
+
     override fun hent(ident: String): Person? = personMap[ident]
 
     override fun hent(oppgaveId: UUID): Oppgave? {

@@ -30,6 +30,27 @@ data class Oppgave private constructor(
         tilstand = tilstand,
     )
 
+    companion object {
+        fun rehydrer(
+            oppgaveId: UUID,
+            ident: String,
+            opprettet: ZonedDateTime,
+            behandlingId: UUID,
+            emneknagger: Set<String>,
+            tilstand: Tilstand.Type,
+        ): Oppgave {
+            return Oppgave(
+                oppgaveId = oppgaveId,
+                opprettet = opprettet,
+                ident = ident,
+                _emneknagger = emneknagger.toMutableSet(),
+                behandlingId = behandlingId,
+                steg = mutableListOf(),
+                tilstand = tilstand,
+            )
+        }
+    }
+
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
 
