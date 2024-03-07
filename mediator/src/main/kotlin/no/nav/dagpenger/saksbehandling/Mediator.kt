@@ -2,6 +2,8 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
@@ -36,7 +38,7 @@ internal class Mediator(
     }
 
     override fun hentAlleOppgaver(): List<Oppgave> {
-        return personRepository.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING)
+        return personRepository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
     suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Oppgave? {
@@ -79,7 +81,7 @@ internal class Mediator(
                 // TODO Skal den ha getOrNull()????
             }
         }
-        oppgave.tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+        oppgave.tilstand = FERDIG_BEHANDLET
         sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
         return oppgave
     }
@@ -92,7 +94,7 @@ internal class Mediator(
                 // TODO kall behandlingKlient.avbrytBehandling
             }
         }
-        oppgave.tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+        oppgave.tilstand = FERDIG_BEHANDLET
         sikkerLogger.info { "Avbrutt oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
         return oppgave
     }

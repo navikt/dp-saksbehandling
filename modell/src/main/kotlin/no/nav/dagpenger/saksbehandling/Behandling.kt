@@ -8,7 +8,7 @@ data class Behandling(
     val behandlingId: UUID,
     val oppgave: Oppgave,
 ) {
-    fun håndter(søknadsbehandlingOpprettetHendelse: ForslagTilVedtakHendelse) {
-        oppgave.håndter(søknadsbehandlingOpprettetHendelse)
+    fun håndter(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+        oppgave.håndter(forslagTilVedtakHendelse)
     }
 }

@@ -23,7 +23,7 @@ internal val mockSøknadOppgaveDto =
         personIdent = "11111199999",
         tidspunktOpprettet = ZonedDateTime.now(),
         emneknagger = listOf("Søknadsbehandling"),
-        tilstand = OppgaveTilstandDTO.TilBehandling,
+        tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING,
         steg = emptyList(),
         journalpostIder = emptyList(),
     )
@@ -52,7 +52,7 @@ internal val minsteinntektOppgaveTilBehandling =
         tidspunktOpprettet = ZonedDateTime.now(),
         journalpostIder = listOf("12345678"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
-        tilstand = OppgaveTilstandDTO.TilBehandling,
+        tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING,
         behandlingId = UUIDv7.ny(),
         steg = listOf(
             StegDTO(
@@ -115,7 +115,7 @@ internal val minsteinntektOppgaveFerdigBehandlet =
         tidspunktOpprettet = ZonedDateTime.now(),
         journalpostIder = listOf("98989", "76767"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
-        tilstand = OppgaveTilstandDTO.FerdigBehandlet,
+        tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
         behandlingId = UUIDv7.ny(),
         steg =
         listOf(

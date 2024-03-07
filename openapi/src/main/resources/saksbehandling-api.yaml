@@ -155,9 +155,9 @@ components:
     OppgaveTilstand:
       type: string
       enum:
-        - Opprettet
-        - TilBehandling
-        - FerdigBehandlet
+        - OPPRETTET
+        - KLAR_TIL_BEHANDLING
+        - FERDIG_BEHANDLET
     Steg:
       type: object
       properties:
