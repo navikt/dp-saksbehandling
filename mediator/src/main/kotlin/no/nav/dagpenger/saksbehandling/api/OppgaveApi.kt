@@ -75,46 +75,41 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             }
                         }
                     }
-                }
-            }
+                    // TODO: avslag skal bekrefte opplysninger? Hmmmm
+                    route("avslag") {
+                        put {
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val saksbehandlerSignatur = call.request.jwt()
+                            val bekreftOppgaveHendelse = BekreftOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
+                            val oppgave = mediator.bekreftOppgavensOpplysninger(bekreftOppgaveHendelse)
+                            when (oppgave) {
+                                null ->
+                                    call.respond(
+                                        status = HttpStatusCode.NotFound,
+                                        message = "Fant ingen oppgave med UUID $oppgaveId",
+                                    )
 
-            put {
-                call.respond(HttpStatusCode.NoContent)
-            }
-
-            // TODO: avslag skal bekrefte opplysninger? Hmmmm
-            route("avslag") {
-                put {
-                    val oppgaveId = call.finnUUID("oppgaveId")
-                    val saksbehandlerSignatur = call.request.jwt()
-                    val bekreftOppgaveHendelse = BekreftOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
-                    val oppgave = mediator.bekreftOppgavensOpplysninger(bekreftOppgaveHendelse)
-                    when (oppgave) {
-                        null ->
-                            call.respond(
-                                status = HttpStatusCode.NotFound,
-                                message = "Fant ingen oppgave med UUID $oppgaveId",
-                            )
-
-                        else -> call.respond(HttpStatusCode.NoContent)
+                                else -> call.respond(HttpStatusCode.NoContent)
+                            }
+                        }
                     }
-                }
-            }
 
-            route("lukk") {
-                put {
-                    val oppgaveId = call.finnUUID("oppgaveId")
-                    val saksbehandlerSignatur = call.request.jwt()
-                    val avbrytBehandlingHendelse = AvbrytBehandlingHendelse(oppgaveId, saksbehandlerSignatur)
-                    val oppgave = mediator.avbrytBehandling(avbrytBehandlingHendelse)
-                    when (oppgave) {
-                        null ->
-                            call.respond(
-                                status = HttpStatusCode.NotFound,
-                                message = "Fant ingen oppgave med UUID $oppgaveId",
-                            )
+                    route("lukk") {
+                        put {
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val saksbehandlerSignatur = call.request.jwt()
+                            val avbrytBehandlingHendelse = AvbrytBehandlingHendelse(oppgaveId, saksbehandlerSignatur)
+                            val oppgave = mediator.avbrytBehandling(avbrytBehandlingHendelse)
+                            when (oppgave) {
+                                null ->
+                                    call.respond(
+                                        status = HttpStatusCode.NotFound,
+                                        message = "Fant ingen oppgave med UUID $oppgaveId",
+                                    )
 
-                        else -> call.respond(HttpStatusCode.NoContent)
+                                else -> call.respond(HttpStatusCode.NoContent)
+                            }
+                        }
                     }
                 }
             }
