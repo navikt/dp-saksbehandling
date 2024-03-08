@@ -82,6 +82,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                 call.respond(HttpStatusCode.NoContent)
             }
 
+            // TODO: avslag skal bekrefte opplysninger? Hmmmm
             route("avslag") {
                 put {
                     val oppgaveId = call.finnUUID("oppgaveId")
