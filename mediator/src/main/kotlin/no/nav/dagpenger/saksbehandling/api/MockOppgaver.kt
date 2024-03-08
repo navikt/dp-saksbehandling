@@ -12,22 +12,6 @@ import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import java.time.ZonedDateTime
 import java.util.UUID
 
-// TODO: Fjernes ettersom vi kommer lenger i utviklingen
-
-internal val mockSøknadBehandlingId = UUID.fromString("018dc0e6-0be3-7f17-b410-08f2072ffcb1")
-internal val mockSøknadOppgaveId = UUID.fromString("A684607D-16C8-4BCE-A5A8-38890009E0F7")
-internal val mockSøknadOppgaveDto =
-    OppgaveDTO(
-        oppgaveId = mockSøknadOppgaveId,
-        behandlingId = mockSøknadBehandlingId,
-        personIdent = "11111199999",
-        tidspunktOpprettet = ZonedDateTime.now(),
-        emneknagger = listOf("Søknadsbehandling"),
-        tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING,
-        steg = emptyList(),
-        journalpostIder = emptyList(),
-    )
-
 internal val opplysningerGjenopptak8uker =
     listOf(
         OpplysningDTO(
@@ -45,10 +29,11 @@ internal val opplysningerGjenopptak8uker =
     )
 
 internal val minsteinntektOppgaveTilBehandlingId = UUID.fromString("018d7964-347c-788b-aa97-8acaba091245")
+val personIdent = "12345678901"
 internal val minsteinntektOppgaveTilBehandling =
     OppgaveDTO(
         oppgaveId = minsteinntektOppgaveTilBehandlingId,
-        personIdent = "12345678901",
+        personIdent = personIdent,
         tidspunktOpprettet = ZonedDateTime.now(),
         journalpostIder = listOf("12345678"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
@@ -108,10 +93,11 @@ internal val minsteinntektOppgaveTilBehandling =
     )
 
 internal val minsteinntektOppgaveFerdigBehandletId = UUID.fromString("7f9c2ac7-5bf2-46e6-a618-c1f4f85cd3f2")
+val personIdent2 = "12345678902"
 internal val minsteinntektOppgaveFerdigBehandlet =
     OppgaveDTO(
         oppgaveId = minsteinntektOppgaveFerdigBehandletId,
-        personIdent = "12345678901",
+        personIdent = personIdent2,
         tidspunktOpprettet = ZonedDateTime.now(),
         journalpostIder = listOf("98989", "76767"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),

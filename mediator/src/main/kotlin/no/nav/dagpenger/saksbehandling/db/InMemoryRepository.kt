@@ -3,11 +3,19 @@ package no.nav.dagpenger.saksbehandling.db
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.api.minsteinntektOppgaveFerdigBehandletId
+import no.nav.dagpenger.saksbehandling.api.minsteinntektOppgaveTilBehandlingId
+import no.nav.dagpenger.saksbehandling.api.personIdent
+import no.nav.dagpenger.saksbehandling.api.personIdent2
 import java.util.UUID
 
 class InMemoryRepository : PersonRepository, OppgaveRepository {
     private val personMap = mutableMapOf<String, Person>()
     private val behandlinger = mutableMapOf<UUID, Behandling>()
+
+    init {
+        opprettMockData()
+    }
 
     override fun lagre(person: Person) {
         personMap[person.ident] = person
@@ -54,5 +62,25 @@ class InMemoryRepository : PersonRepository, OppgaveRepository {
     fun slettAlt() {
         personMap.clear()
         behandlinger.clear()
+    }
+
+    private fun opprettMockData() {
+        val person = Person(personIdent)
+        personMap[person.ident] = person
+
+        val person2 = Person(personIdent2)
+        personMap[person2.ident] = person2
+
+        val behandling = Behandling(
+            behandlingId = minsteinntektOppgaveTilBehandlingId,
+            person = person,
+        )
+        behandlinger[behandling.behandlingId] = behandling
+
+        val behandling2 = Behandling(
+            behandlingId = minsteinntektOppgaveFerdigBehandletId,
+            person = person2,
+        )
+        behandlinger[behandling2.behandlingId] = behandling2
     }
 }
