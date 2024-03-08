@@ -1,0 +1,95 @@
+package no.nav.dagpenger.saksbehandling.db
+
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import org.junit.jupiter.api.Test
+import java.time.ZonedDateTime
+
+class PostgresRepositoryTest {
+    private val testPerson = Person(ident = "12345678901")
+    private val behandlingId1 = UUIDv7.ny()
+    private val oppgaveKlarTilBehandling = Oppgave(
+        oppgaveId = UUIDv7.ny(),
+        ident = testPerson.ident,
+        emneknagger = setOf("Søknadsbehandling"),
+        opprettet = ZonedDateTime.now(),
+        behandlingId = behandlingId1,
+        tilstand = KLAR_TIL_BEHANDLING,
+    )
+
+    @Test
+    fun `Skal kunne lagre og hente person`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testPerson)
+
+            val personFraDatabase = repo.hentPerson(testPerson.ident)
+            personFraDatabase shouldBe testPerson
+        }
+    }
+
+    @Test
+    fun `Exception hvis vi ikke finner person basert på ident `() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+
+            shouldThrow<DataNotFoundException> {
+                repo.hentPerson(testPerson.ident)
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne lagre en behandling med oppgave`() {
+//        val testBehandling = Behandling(
+//            behandlingId = behandlingId1,
+//            person = testPerson,
+//            oppgaver = mutableListOf(oppgaveKlarTilBehandling)
+//        )
+//
+//        withMigratedDb { ds ->
+//            val repo = PostgresRepository(ds)
+//            repo.lagre(testBehandling)
+//
+//            val behandlingFraDatabase = repo.hentBehandling(behandlingId1)
+//            behandlingFraDatabase shouldBe testBehandling
+//        }
+    }
+
+    @Test
+    fun testLagre1() {
+    }
+
+    @Test
+    fun hentBehandlingFra() {
+    }
+
+    @Test
+    fun hentBehandling() {
+    }
+
+    @Test
+    fun hentAlleOppgaver() {
+    }
+
+    @Test
+    fun hentAlleOppgaverMedTilstand() {
+    }
+
+    @Test
+    fun hentOppgave() {
+    }
+
+    @Test
+    fun finnOppgaverFor() {
+    }
+
+    @Test
+    fun hentPerson() {
+    }
+}

@@ -69,10 +69,10 @@ class InMemoryRepository : Repository {
     }
 
     private fun opprettMockData() {
-        val person = Person(personIdent)
+        val person = Person(ident = personIdent)
         personMap[person.ident] = person
 
-        val person2 = Person(personIdent2)
+        val person2 = Person(ident = personIdent2)
         personMap[person2.ident] = person2
 
         val behandling = Behandling(

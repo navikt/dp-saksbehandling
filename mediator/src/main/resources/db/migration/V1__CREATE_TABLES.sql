@@ -1,18 +1,22 @@
 CREATE TABLE IF NOT EXISTS person_v1
 (
-    ident VARCHAR(11) PRIMARY KEY
+    id    UUID PRIMARY KEY,
+    ident VARCHAR(11) UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS behandling_v1
+(
+    id        UUID PRIMARY KEY,
+    person_id UUID REFERENCES person_v1 (id),
+    opprettet TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS oppgave_v1
 (
     id            UUID PRIMARY KEY,
-    person_ident  VARCHAR(11) REFERENCES person_v1 (ident),
-    opprettet     TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    behandling_id UUID                        NOT NULL,
-    tilstand      TEXT                        NOT NULL
+    behandling_id UUID REFERENCES behandling_v1 (id),
+    tilstand      TEXT NOT NULL
 );
-
-CREATE INDEX IF NOT EXISTS oppgave_person_ident_index ON oppgave_v1 (person_ident);
 
 CREATE TABLE IF NOT EXISTS emneknagg_v1
 (
