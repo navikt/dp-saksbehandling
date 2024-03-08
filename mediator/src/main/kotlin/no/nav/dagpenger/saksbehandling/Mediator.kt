@@ -1,21 +1,18 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
-import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
 import no.nav.dagpenger.saksbehandling.db.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
-import java.io.FileNotFoundException
 
 private val logger = KotlinLogging.logger {}
 val sikkerLogger = KotlinLogging.logger("tjenestekall")
@@ -110,15 +107,3 @@ internal class Mediator(
         return oppgave
     }
 }
-
-// TODO: Fjernes når mocken fjernes
-private fun String.fileAsText(): String {
-    return object {}.javaClass.getResource(this)?.readText()
-        ?: throw FileNotFoundException()
-}
-
-private fun behandlingResponseMock(): BehandlingDTO? =
-    objectMapper.readValue(
-        "/behandlingResponseMock.json".fileAsText(),
-        BehandlingDTO::class.java,
-    )

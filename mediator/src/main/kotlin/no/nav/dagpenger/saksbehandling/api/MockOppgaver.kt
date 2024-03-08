@@ -30,6 +30,7 @@ internal val opplysningerGjenopptak8uker =
 
 internal val minsteinntektOppgaveTilBehandlingId = UUID.fromString("018d7964-347c-788b-aa97-8acaba091245")
 val personIdent = "12345678901"
+val behandlingId1 = UUIDv7.ny()
 internal val minsteinntektOppgaveTilBehandling =
     OppgaveDTO(
         oppgaveId = minsteinntektOppgaveTilBehandlingId,
@@ -38,7 +39,7 @@ internal val minsteinntektOppgaveTilBehandling =
         journalpostIder = listOf("12345678"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
         tilstand = OppgaveTilstandDTO.KLAR_TIL_BEHANDLING,
-        behandlingId = UUIDv7.ny(),
+        behandlingId = behandlingId1,
         steg = listOf(
             StegDTO(
                 stegNavn = "Gjenopptak",
@@ -94,6 +95,7 @@ internal val minsteinntektOppgaveTilBehandling =
 
 internal val minsteinntektOppgaveFerdigBehandletId = UUID.fromString("7f9c2ac7-5bf2-46e6-a618-c1f4f85cd3f2")
 val personIdent2 = "12345678902"
+val behandlingId2 = UUIDv7.ny()
 internal val minsteinntektOppgaveFerdigBehandlet =
     OppgaveDTO(
         oppgaveId = minsteinntektOppgaveFerdigBehandletId,
@@ -102,7 +104,7 @@ internal val minsteinntektOppgaveFerdigBehandlet =
         journalpostIder = listOf("98989", "76767"),
         emneknagger = listOf("VurderAvslagPåMinsteinntekt"),
         tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
-        behandlingId = UUIDv7.ny(),
+        behandlingId = behandlingId2,
         steg =
         listOf(
             StegDTO(
