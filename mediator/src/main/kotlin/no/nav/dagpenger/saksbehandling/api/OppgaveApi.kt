@@ -43,14 +43,14 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    val oppgaver = mediator.hentOppgaverKlarTilBehandling().tilOppgaverDTO() + oppgaveDtos
+                    val oppgaver = mediator.hentOppgaverKlarTilBehandling().tilOppgaverDTO()
                     sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
 
                 route("sok") {
                     post {
-                        val oppgaver = oppgaveDtos
+                        val oppgaver = emptyList<OppgaveDTO>()
                         call.respond(status = HttpStatusCode.OK, oppgaver)
                     }
                 }

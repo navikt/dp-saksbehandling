@@ -18,6 +18,7 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -38,7 +39,14 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut alle oppgaver`() {
-        withOppgaveApi {
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.hentOppgaverKlarTilBehandling() } returns listOf(
+                lagTestOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                lagTestOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+            )
+        }
+
+        withOppgaveApi(mediatorMock) {
             client.get("/oppgave") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -48,8 +56,6 @@ class OppgaveApiTest {
                         object : TypeReference<List<OppgaveDTO>>() {},
                     )
                 oppgaver.size shouldBe 2
-                oppgaver[0].oppgaveId shouldBe minsteinntektOppgaveTilBehandlingId
-                oppgaver[1].oppgaveId shouldBe minsteinntektOppgaveFerdigBehandletId
             }
         }
     }
@@ -135,6 +141,7 @@ class OppgaveApiTest {
     }
 
     @Test
+    @Disabled("Venter på implementasjon")
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
         withOppgaveApi {
             client.post("/oppgave/sok") {
@@ -171,6 +178,17 @@ class OppgaveApiTest {
 
     private fun HttpRequestBuilder.autentisert() {
         header(HttpHeaders.Authorization, "Bearer $testToken")
+    }
+
+    private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type): Oppgave {
+        return Oppgave(
+            oppgaveId = UUIDv7.ny(),
+            ident = "12345612345",
+            emneknagger = setOf("Søknadsbehandling"),
+            opprettet = ZonedDateTime.now(),
+            behandlingId = UUIDv7.ny(),
+            tilstand = tilstand,
+        )
     }
 
     private fun testOppgaveFerdigBehandlet(
