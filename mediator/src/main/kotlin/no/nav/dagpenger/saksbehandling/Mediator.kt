@@ -10,7 +10,6 @@ import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
-import no.nav.dagpenger.saksbehandling.api.mockSøknadBehandlingId
 import no.nav.dagpenger.saksbehandling.db.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -28,17 +27,24 @@ internal class Mediator(
 ) : PersonRepository by personRepository, OppgaveRepository by oppgaveRepository {
 
     fun behandle(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        val ident = søknadsbehandlingOpprettetHendelse.ident
-        val person = personRepository.hent(ident) ?: Person(ident)
-        person.håndter(søknadsbehandlingOpprettetHendelse)
-        lagre(person)
+        val person = personRepository.hentBehandlingFra(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
+            søknadsbehandlingOpprettetHendelse.ident
+        )
+
+        val behandling = Behandling(
+            behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+            person = person,
+        )
+
+        behandling.håndter(søknadsbehandlingOpprettetHendelse)
+        lagre(behandling)
     }
 
     fun behandle(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        this.hent(forslagTilVedtakHendelse.ident)?.let { person ->
-            person.håndter(forslagTilVedtakHendelse)
-            lagre(person)
-        } ?: throw IllegalArgumentException("Fant ikke person") // todo
+        this.hentBehandlingFra(forslagTilVedtakHendelse.behandlingId).let { behandling ->
+            behandling.håndter(forslagTilVedtakHendelse)
+            lagre(behandling)
+        }
     }
 
     fun hentOppgaverKlarTilBehandling(): List<Oppgave> {
@@ -50,18 +56,14 @@ internal class Mediator(
         return when (oppgave) {
             null -> null
             else -> {
-                val behandlingDTO =
-                    when (oppgave.behandlingId) {
-                        mockSøknadBehandlingId -> {
-                            logger.info { "Bruker mockdata for behandlingId $mockSøknadBehandlingId" }
-                            behandlingResponseMock()
-                        }
+                val behandling = hentBehandling(oppgave.oppgaveId)
 
-                        else ->
-                            kotlin.runCatching {
-                                behandlingKlient.hentBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
-                            }.getOrNull()
-                    }
+                val behandlingDTO = kotlin.runCatching {
+                    behandlingKlient.hentBehandling(
+                        behandlingId = behandling.behandlingId,
+                        saksbehandlerToken = hendelse.saksbehandlerSignatur
+                    )
+                }.getOrNull()
 
                 val nyeSteg = mutableListOf<Steg>()
                 minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
@@ -79,14 +81,17 @@ internal class Mediator(
         when (oppgave) {
             null -> return null
             else -> {
+                val behandling = hentBehandling(oppgave.oppgaveId)
                 kotlin.runCatching {
-                    behandlingKlient.bekreftBehandling(oppgave.behandlingId, hendelse.saksbehandlerSignatur)
+                    behandlingKlient.bekreftBehandling(
+                        behandlingId = behandling.behandlingId,
+                        saksbehandlerToken = hendelse.saksbehandlerSignatur
+                    )
                 }
-                // TODO Skal den ha getOrNull()????
+                oppgave.tilstand = FERDIG_BEHANDLET
+                sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${behandling.behandlingId}" }
             }
         }
-        oppgave.tilstand = FERDIG_BEHANDLET
-        sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
         return oppgave
     }
 
@@ -96,10 +101,12 @@ internal class Mediator(
             null -> return null
             else -> {
                 // TODO kall behandlingKlient.avbrytBehandling
+
+                val behandling = hentBehandling(oppgave.oppgaveId)
+                oppgave.tilstand = FERDIG_BEHANDLET
+                sikkerLogger.info { "Avbrutt oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${behandling.behandlingId}" }
             }
         }
-        oppgave.tilstand = FERDIG_BEHANDLET
-        sikkerLogger.info { "Avbrutt oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
         return oppgave
     }
 }

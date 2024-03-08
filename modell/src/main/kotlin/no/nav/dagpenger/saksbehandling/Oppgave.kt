@@ -4,47 +4,39 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import java.time.ZonedDateTime
 import java.util.UUID
 
+
+
 data class Oppgave private constructor(
     val oppgaveId: UUID,
     val opprettet: ZonedDateTime,
-    val ident: String,
     private val _emneknagger: MutableSet<String>,
-    val behandlingId: UUID,
     val steg: MutableList<Steg>,
     var tilstand: Tilstand.Type,
 ) {
     constructor(
         oppgaveId: UUID,
-        ident: String,
         emneknagger: Set<String> = emptySet(),
         opprettet: ZonedDateTime,
-        behandlingId: UUID,
         tilstand: Tilstand.Type = Tilstand.Type.OPPRETTET,
     ) : this(
         oppgaveId = oppgaveId,
-        ident = ident,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         steg = mutableListOf(),
-        behandlingId = behandlingId,
         tilstand = tilstand,
     )
 
     companion object {
         fun rehydrer(
             oppgaveId: UUID,
-            ident: String,
             opprettet: ZonedDateTime,
-            behandlingId: UUID,
             emneknagger: Set<String>,
             tilstand: Tilstand.Type,
         ): Oppgave {
             return Oppgave(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
-                ident = ident,
                 _emneknagger = emneknagger.toMutableSet(),
-                behandlingId = behandlingId,
                 steg = mutableListOf(),
                 tilstand = tilstand,
             )

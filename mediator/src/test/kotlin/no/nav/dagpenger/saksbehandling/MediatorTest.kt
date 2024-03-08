@@ -141,14 +141,14 @@ class MediatorTest {
     @Test
     fun `Lagre ny søknadsbehandling`() {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding(testIdent))
-        val person = inMemoryRepository.hent(testIdent)
+        val person = inMemoryRepository.hentBehandlingFra(testIdent)
         requireNotNull(person)
         person.ident shouldBe testIdent
         person.behandlinger.size shouldBe 1
         person.behandlinger.get(behandlingId)?.oppgave shouldNotBe null
         val oppgaver = inMemoryRepository.hentAlleOppgaver()
         oppgaver.size shouldBe 2
-        inMemoryRepository.hent(oppgaveId = oppgaver.first().oppgaveId) shouldNotBe null
+        inMemoryRepository.hentBehandlingFra(oppgaveId = oppgaver.first().oppgaveId) shouldNotBe null
     }
 
     @Language("JSON")

@@ -38,9 +38,9 @@ class InMemoryRepository : PersonRepository, OppgaveRepository {
         TODO("Not yet implemented")
     }
 
-    override fun hent(ident: String): Person? = personMap[ident]
+    override fun hentBehandlingFra(ident: String): Person? = personMap[ident]
 
-    override fun hent(oppgaveId: UUID): Oppgave? {
+    override fun hentBehandlingFra(oppgaveId: UUID): Oppgave? {
         return hentAlleOppgaver().firstOrNull { oppgave ->
             oppgave.oppgaveId == oppgaveId
         }

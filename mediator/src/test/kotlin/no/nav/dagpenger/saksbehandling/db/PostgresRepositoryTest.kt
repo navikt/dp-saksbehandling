@@ -50,7 +50,7 @@ class PostgresRepositoryTest {
                 postgresRepository.lagre(testPersonEn)
             }
 
-            postgresRepository.hent(testPersonEn.ident).let { personFraDatabase ->
+            postgresRepository.hentBehandlingFra(testPersonEn.ident).let { personFraDatabase ->
                 require(personFraDatabase != null)
                 personFraDatabase.ident shouldBe testPersonEn.ident
                 personFraDatabase.behandlinger shouldBe testPersonEn.behandlinger
@@ -69,7 +69,7 @@ class PostgresRepositoryTest {
                 postgresRepository.lagre(testPerson)
             }
 
-            postgresRepository.hent(testPerson.ident) shouldBe testPerson
+            postgresRepository.hentBehandlingFra(testPerson.ident) shouldBe testPerson
         }
     }
 
@@ -85,7 +85,7 @@ class PostgresRepositoryTest {
                 postgresRepository.lagre(oppgaveToTilTestPersonEn)
             }
 
-            postgresRepository.hent(oppgaveId = oppgaveTilTestPersonEn.oppgaveId) shouldBe oppgaveTilTestPersonEn
+            postgresRepository.hentBehandlingFra(oppgaveId = oppgaveTilTestPersonEn.oppgaveId) shouldBe oppgaveTilTestPersonEn
             postgresRepository.hentAlleOppgaver() shouldBe listOf(oppgaveTilTestPersonEn, oppgaveToTilTestPersonEn)
         }
     }

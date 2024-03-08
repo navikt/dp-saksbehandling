@@ -36,7 +36,7 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository,
         }
     }
 
-    override fun hent(ident: String): Person? {
+    override fun hentBehandlingFra(ident: String): Person? {
         return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -122,7 +122,7 @@ class PostgresRepository(private val dataSource: DataSource) : PersonRepository,
         }
     }
 
-    override fun hent(oppgaveId: UUID): Oppgave? {
+    override fun hentBehandlingFra(oppgaveId: UUID): Oppgave? {
         return using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(

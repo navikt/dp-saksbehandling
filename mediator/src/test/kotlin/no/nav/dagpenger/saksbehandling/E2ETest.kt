@@ -65,14 +65,14 @@ class E2ETest {
     @Test
     fun `Skal opprette steg og opplysninger fra maskinell behandling når oppgave hentes`() {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding)
-        val person = inMemoryRepository.hent(testIdent)
+        val person = inMemoryRepository.hentBehandlingFra(testIdent)
         requireNotNull(person)
         person.ident shouldBe testIdent
         person.behandlinger.size shouldBe 1
         person.behandlinger.get(behandlingId)?.oppgave shouldNotBe null
         val oppgaveId = inMemoryRepository.hentAlleOppgaver().first().oppgaveId
         oppgaveId shouldNotBe null
-        val oppgave = inMemoryRepository.hent(oppgaveId)
+        val oppgave = inMemoryRepository.hentBehandlingFra(oppgaveId)
         oppgave shouldNotBe null
 
         withOppgaveApi {
