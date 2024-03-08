@@ -3,8 +3,8 @@ package no.nav.dagpenger.saksbehandling.db
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.api.minsteinntektOppgaveFerdigBehandletId
-import no.nav.dagpenger.saksbehandling.api.minsteinntektOppgaveTilBehandlingId
+import no.nav.dagpenger.saksbehandling.api.behandlingId1
+import no.nav.dagpenger.saksbehandling.api.behandlingId2
 import no.nav.dagpenger.saksbehandling.api.personIdent
 import no.nav.dagpenger.saksbehandling.api.personIdent2
 import java.util.UUID
@@ -72,13 +72,13 @@ class InMemoryRepository : PersonRepository, OppgaveRepository {
         personMap[person2.ident] = person2
 
         val behandling = Behandling(
-            behandlingId = minsteinntektOppgaveTilBehandlingId,
+            behandlingId = behandlingId1,
             person = person,
         )
         behandlinger[behandling.behandlingId] = behandling
 
         val behandling2 = Behandling(
-            behandlingId = minsteinntektOppgaveFerdigBehandletId,
+            behandlingId = behandlingId2,
             person = person2,
         )
         behandlinger[behandling2.behandlingId] = behandling2
