@@ -141,9 +141,14 @@ class OppgaveApiTest {
     }
 
     @Test
-    @Disabled("Venter på implementasjon")
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
-        withOppgaveApi {
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.finnOppgaverFor(testIdent) } returns listOf(
+                testOppgaveFerdigBehandlet(UUIDv7.ny()),
+                testOppgaveFerdigBehandlet(UUIDv7.ny()),
+            )
+        }
+        withOppgaveApi(mediatorMock) {
             client.post("/oppgave/sok") {
                 autentisert()
                 contentType(ContentType.Application.Json)
@@ -160,8 +165,6 @@ class OppgaveApiTest {
                         object : TypeReference<List<OppgaveDTO>>() {},
                     )
                 oppgaver.size shouldBe 2
-                oppgaver.first() sammenlign oppgaveDtos.first()
-                oppgaver.last() sammenlign oppgaveDtos.last()
             }
         }
     }

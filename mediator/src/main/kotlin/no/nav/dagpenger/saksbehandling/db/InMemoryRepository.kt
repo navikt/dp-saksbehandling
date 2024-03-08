@@ -9,7 +9,7 @@ import no.nav.dagpenger.saksbehandling.api.personIdent
 import no.nav.dagpenger.saksbehandling.api.personIdent2
 import java.util.UUID
 
-class InMemoryRepository : PersonRepository, OppgaveRepository {
+class InMemoryRepository : Repository {
     private val personMap = mutableMapOf<String, Person>()
     private val behandlinger = mutableMapOf<UUID, Behandling>()
 
@@ -57,6 +57,10 @@ class InMemoryRepository : PersonRepository, OppgaveRepository {
 
     override fun hentOppgave(oppgaveId: UUID): Oppgave? {
         return behandlinger.values.flatMap { it.oppgaver }.singleOrNull { it.oppgaveId == oppgaveId }
+    }
+
+    override fun finnOppgaverFor(ident: String): List<Oppgave> {
+        TODO("Not yet implemented")
     }
 
     fun slettAlt() {

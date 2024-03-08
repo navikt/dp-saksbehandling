@@ -19,7 +19,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val partialBehandlingKlientMock = PartialBehandlingKlientMock(behandlingHttpKlient)
 
-    private val mediator = Mediator(inMemoryRepository, inMemoryRepository, partialBehandlingKlientMock)
+    private val mediator = Mediator(inMemoryRepository, partialBehandlingKlientMock)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))

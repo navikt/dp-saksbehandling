@@ -22,7 +22,7 @@ class MediatorTest {
     private val testRapid = TestRapid()
     private val inMemoryRepository = InMemoryRepository()
     private val mediator =
-        Mediator(personRepository = inMemoryRepository, inMemoryRepository, behandlingKlient = mockk())
+        Mediator(repository = inMemoryRepository, behandlingKlient = mockk())
 
     init {
         BehandlingOpprettetMottak(testRapid, mediator)

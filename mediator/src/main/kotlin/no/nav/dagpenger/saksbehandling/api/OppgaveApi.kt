@@ -9,6 +9,7 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.ApplicationRequest
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -27,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningStatusDTO
+import no.nav.dagpenger.saksbehandling.api.models.SokDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
@@ -50,7 +52,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 
                 route("sok") {
                     post {
-                        val oppgaver = emptyList<OppgaveDTO>()
+                        val oppgaver = mediator.finnOppgaverFor(call.receive<SokDTO>().fnr).tilOppgaverDTO()
                         call.respond(status = HttpStatusCode.OK, oppgaver)
                     }
                 }

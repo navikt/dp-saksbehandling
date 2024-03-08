@@ -8,8 +8,7 @@ import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
-import no.nav.dagpenger.saksbehandling.db.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.PersonRepository
+import no.nav.dagpenger.saksbehandling.db.Repository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
@@ -18,13 +17,12 @@ private val logger = KotlinLogging.logger {}
 val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
 internal class Mediator(
-    private val personRepository: PersonRepository,
-    private val oppgaveRepository: OppgaveRepository,
+    private val repository: Repository,
     private val behandlingKlient: BehandlingKlient,
-) : PersonRepository by personRepository, OppgaveRepository by oppgaveRepository {
+) : Repository by repository {
 
     fun behandle(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        val person = personRepository.hentPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
+        val person = repository.hentPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
             søknadsbehandlingOpprettetHendelse.ident,
         )
 
@@ -45,11 +43,11 @@ internal class Mediator(
     }
 
     fun hentOppgaverKlarTilBehandling(): List<Oppgave> {
-        return oppgaveRepository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+        return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
     suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Oppgave? {
-        val oppgave = oppgaveRepository.hentOppgave(hendelse.oppgaveId)
+        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
         return when (oppgave) {
             null -> null
             else -> {
@@ -74,7 +72,7 @@ internal class Mediator(
     }
 
     suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Oppgave? {
-        val oppgave = oppgaveRepository.hentOppgave(hendelse.oppgaveId)
+        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
         when (oppgave) {
             null -> return null
             else -> {
@@ -93,7 +91,7 @@ internal class Mediator(
     }
 
     suspend fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Oppgave? {
-        val oppgave = oppgaveRepository.hentOppgave(hendelse.oppgaveId)
+        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
         when (oppgave) {
             null -> return null
             else -> {
