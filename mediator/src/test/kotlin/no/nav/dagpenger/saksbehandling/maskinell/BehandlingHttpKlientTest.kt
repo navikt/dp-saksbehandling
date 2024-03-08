@@ -11,7 +11,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 
-internal class BehandlingKlientTest {
+internal class BehandlingHttpKlientTest {
     private val testTokenProvider: (String, String) -> String = {
             _, _ ->
         "token"
@@ -25,8 +25,8 @@ internal class BehandlingKlientTest {
             MockEngine { request ->
                 respond(behandlingJsonResponse, headers = headersOf("Content-Type", "application/json"))
             }
-        val behandlingKlient =
-            BehandlingKlient(
+        val behandlingHttpKlient =
+            BehandlingHttpKlient(
                 behandlingUrl = baseUrl,
                 behandlingScope = "scope",
                 tokenProvider = testTokenProvider,
@@ -34,7 +34,7 @@ internal class BehandlingKlientTest {
             )
         val behandling =
             runBlocking {
-                behandlingKlient.hentBehandling(UUIDv7.ny(), saksbehandlerToken)
+                behandlingHttpKlient.hentBehandling(UUIDv7.ny(), saksbehandlerToken)
             }
         behandling shouldNotBe null
         behandling.opplysning.shouldNotBeEmpty()
@@ -51,15 +51,15 @@ internal class BehandlingKlientTest {
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
-        val behandlingKlient =
-            BehandlingKlient(
+        val behandlingHttpKlient =
+            BehandlingHttpKlient(
                 behandlingUrl = baseUrl,
                 behandlingScope = "scope",
                 tokenProvider = testTokenProvider,
                 engine = mockEngine,
             )
         runBlocking {
-            behandlingKlient.bekreftBehandling(UUIDv7.ny(), saksbehandlerToken)
+            behandlingHttpKlient.bekreftBehandling(UUIDv7.ny(), saksbehandlerToken)
         }
     }
 

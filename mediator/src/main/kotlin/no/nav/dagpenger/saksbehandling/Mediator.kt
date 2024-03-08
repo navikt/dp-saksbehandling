@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.db.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.maskinell.BehandlingHttpKlient
 import java.io.FileNotFoundException
 
 private val logger = KotlinLogging.logger {}
@@ -23,7 +23,7 @@ val sikkerLogger = KotlinLogging.logger("tjenestekall")
 internal class Mediator(
     private val personRepository: PersonRepository,
     private val oppgaveRepository: OppgaveRepository,
-    private val behandlingKlient: BehandlingKlient,
+    private val behandlingHttpKlient: BehandlingHttpKlient,
 ) : PersonRepository by personRepository, OppgaveRepository by oppgaveRepository {
 
     fun behandle(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
@@ -59,7 +59,7 @@ internal class Mediator(
                 val behandling = hentBehandlingFra(oppgave.oppgaveId)
 
                 val behandlingDTO = kotlin.runCatching {
-                    behandlingKlient.hentBehandling(
+                    behandlingHttpKlient.hentBehandling(
                         behandlingId = behandling.behandlingId,
                         saksbehandlerToken = hendelse.saksbehandlerSignatur,
                     )
@@ -83,7 +83,7 @@ internal class Mediator(
             else -> {
                 val behandling = hentBehandlingFra(oppgave.oppgaveId)
                 kotlin.runCatching {
-                    behandlingKlient.bekreftBehandling(
+                    behandlingHttpKlient.bekreftBehandling(
                         behandlingId = behandling.behandlingId,
                         saksbehandlerToken = hendelse.saksbehandlerSignatur,
                     )
