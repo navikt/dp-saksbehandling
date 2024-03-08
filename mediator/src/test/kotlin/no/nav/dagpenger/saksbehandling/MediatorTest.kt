@@ -18,8 +18,6 @@ import java.time.ZonedDateTime
 
 class MediatorTest {
     private val testIdent = "12345612345"
-    private val søknadId = UUIDv7.ny()
-    private val behandlingId = UUIDv7.ny()
 
     private val testRapid = TestRapid()
     private val inMemoryRepository = InMemoryRepository()
@@ -70,7 +68,7 @@ class MediatorTest {
         )
 
         mediator.hentOppgaverKlarTilBehandling().size shouldBe 1
-        val oppgave = mediator.hentOppgaverKlarTilBehandling().first()
+        val oppgave = mediator.hentOppgaverKlarTilBehandling().single()
         oppgave.behandlingId shouldBe førsteBehandlingId
 
         runBlocking {
@@ -78,7 +76,9 @@ class MediatorTest {
         }
 
         mediator.hentOppgaverKlarTilBehandling().size shouldBe 0
-        mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
+        val hentAlleOppgaverMedTilstand = mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET)
+        hentAlleOppgaverMedTilstand.size shouldBe 1
+        hentAlleOppgaverMedTilstand.single().behandlingId shouldBe førsteBehandlingId
 
         // Behandling av andre søknad
         mediator.behandle(
