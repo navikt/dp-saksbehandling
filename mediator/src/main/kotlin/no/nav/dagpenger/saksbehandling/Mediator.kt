@@ -27,8 +27,8 @@ internal class Mediator(
 ) : PersonRepository by personRepository, OppgaveRepository by oppgaveRepository {
 
     fun behandle(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        val person = personRepository.hentBehandlingFra(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
-            søknadsbehandlingOpprettetHendelse.ident
+        val person = personRepository.hentPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
+            søknadsbehandlingOpprettetHendelse.ident,
         )
 
         val behandling = Behandling(
@@ -41,7 +41,7 @@ internal class Mediator(
     }
 
     fun behandle(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        this.hentBehandlingFra(forslagTilVedtakHendelse.behandlingId).let { behandling ->
+        this.hentBehandling(forslagTilVedtakHendelse.behandlingId).let { behandling ->
             behandling.håndter(forslagTilVedtakHendelse)
             lagre(behandling)
         }
@@ -52,16 +52,16 @@ internal class Mediator(
     }
 
     suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Oppgave? {
-        val oppgave = oppgaveRepository.hent(hendelse.oppgaveId)
+        val oppgave = oppgaveRepository.hentOppgave(hendelse.oppgaveId)
         return when (oppgave) {
             null -> null
             else -> {
-                val behandling = hentBehandling(oppgave.oppgaveId)
+                val behandling = hentBehandlingFra(oppgave.oppgaveId)
 
                 val behandlingDTO = kotlin.runCatching {
                     behandlingKlient.hentBehandling(
                         behandlingId = behandling.behandlingId,
-                        saksbehandlerToken = hendelse.saksbehandlerSignatur
+                        saksbehandlerToken = hendelse.saksbehandlerSignatur,
                     )
                 }.getOrNull()
 
@@ -77,15 +77,15 @@ internal class Mediator(
     }
 
     suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Oppgave? {
-        val oppgave = oppgaveRepository.hent(hendelse.oppgaveId)
+        val oppgave = oppgaveRepository.hentOppgave(hendelse.oppgaveId)
         when (oppgave) {
             null -> return null
             else -> {
-                val behandling = hentBehandling(oppgave.oppgaveId)
+                val behandling = hentBehandlingFra(oppgave.oppgaveId)
                 kotlin.runCatching {
                     behandlingKlient.bekreftBehandling(
                         behandlingId = behandling.behandlingId,
-                        saksbehandlerToken = hendelse.saksbehandlerSignatur
+                        saksbehandlerToken = hendelse.saksbehandlerSignatur,
                     )
                 }
                 oppgave.tilstand = FERDIG_BEHANDLET
@@ -96,13 +96,13 @@ internal class Mediator(
     }
 
     suspend fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Oppgave? {
-        val oppgave = oppgaveRepository.hent(hendelse.oppgaveId)
+        val oppgave = oppgaveRepository.hentOppgave(hendelse.oppgaveId)
         when (oppgave) {
             null -> return null
             else -> {
                 // TODO kall behandlingKlient.avbrytBehandling
 
-                val behandling = hentBehandling(oppgave.oppgaveId)
+                val behandling = hentBehandlingFra(oppgave.oppgaveId)
                 oppgave.tilstand = FERDIG_BEHANDLET
                 sikkerLogger.info { "Avbrutt oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${behandling.behandlingId}" }
             }

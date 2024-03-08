@@ -8,7 +8,7 @@ interface PersonRepository {
     fun lagre(person: Person)
     fun lagre(behandling: Behandling)
 
-    fun hentBehandling(oppgaveId: UUID): Behandling
-    fun hentBehandlingFra(behandlingId: UUID): Behandling
-    fun hentBehandlingFra(ident: String): Person?
+    fun hentBehandlingFra(oppgaveId: UUID): Behandling
+    fun hentBehandling(behandlingId: UUID): Behandling
+    fun hentPerson(ident: String): Person?
 }

@@ -14,7 +14,6 @@ data class Behandling(
         this.oppgaver.single {
             it.tilstand == Oppgave.Tilstand.Type.OPPRETTET && it.emneknagger.contains("Søknadsbehandling")
         }.håndter(forslagTilVedtakHendelse)
-
     }
 
     fun håndter(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
@@ -23,8 +22,10 @@ data class Behandling(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = setOf("Søknadsbehandling"),
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                tilstand = Oppgave.Tilstand.Type.OPPRETTET
-            )
+                tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                ident = person.ident,
+                behandlingId = behandlingId,
+            ),
         )
     }
 }

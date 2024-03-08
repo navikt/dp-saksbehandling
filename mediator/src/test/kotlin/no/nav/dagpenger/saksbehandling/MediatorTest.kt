@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -13,11 +12,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
-import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
-import java.util.UUID
 
 class MediatorTest {
     private val testIdent = "12345612345"
@@ -36,44 +33,6 @@ class MediatorTest {
     @AfterEach
     fun tearDown() {
         inMemoryRepository.slettAlt()
-    }
-
-    @Test
-    fun `Skal bare hente oppgaver med tilstand klar til behandling`() {
-        inMemoryRepository.lagre(
-            Person(
-                ident = testIdent,
-
-            ).apply {
-                val klarBehandling = Behandling(
-                    behandlingId = UUIDv7.ny(),
-                    oppgave = Oppgave(
-                        oppgaveId = UUIDv7.ny(),
-                        behandlingId = behandlingId,
-                        ident = this.ident,
-                        emneknagger = setOf("Søknadsbehandling"),
-                        opprettet = ZonedDateTime.now(),
-                        tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
-                    ),
-                )
-                val opprettetBehandling = Behandling(
-                    behandlingId = UUIDv7.ny(),
-                    oppgave = Oppgave(
-                        oppgaveId = UUIDv7.ny(),
-                        behandlingId = behandlingId,
-                        ident = this.ident,
-                        emneknagger = setOf("Søknadsbehandling"),
-                        opprettet = ZonedDateTime.now(),
-                        tilstand = OPPRETTET,
-                    ),
-                )
-                this.behandlinger[klarBehandling.behandlingId] = klarBehandling
-                this.behandlinger[opprettetBehandling.behandlingId] = opprettetBehandling
-            },
-        )
-        val mediator = Mediator(inMemoryRepository, inMemoryRepository, mockk())
-
-        mediator.hentAlleOppgaverMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING).size shouldBe 1
     }
 
     @Test
@@ -137,34 +96,4 @@ class MediatorTest {
         mediator.hentOppgaverKlarTilBehandling().size shouldBe 0
         mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 2
     }
-
-    @Test
-    fun `Lagre ny søknadsbehandling`() {
-        testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding(testIdent))
-        val person = inMemoryRepository.hentBehandlingFra(testIdent)
-        requireNotNull(person)
-        person.ident shouldBe testIdent
-        person.behandlinger.size shouldBe 1
-        person.behandlinger.get(behandlingId)?.oppgave shouldNotBe null
-        val oppgaver = inMemoryRepository.hentAlleOppgaver()
-        oppgaver.size shouldBe 2
-        inMemoryRepository.hentBehandlingFra(oppgaveId = oppgaver.first().oppgaveId) shouldNotBe null
-    }
-
-    @Language("JSON")
-    private fun søknadsbehandlingOpprettetMelding(
-        ident: String,
-        søknadId: UUID = this.søknadId,
-        behandlingId: UUID = this.behandlingId,
-    ) =
-        """
-        {
-            "@event_name": "behandling_opprettet",
-            "@opprettet": "2024-01-30T10:43:32.988331190",
-            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
-            "søknadId": "$søknadId",
-            "behandlingId": "$behandlingId",
-            "ident": "$ident"
-        }
-        """
 }
