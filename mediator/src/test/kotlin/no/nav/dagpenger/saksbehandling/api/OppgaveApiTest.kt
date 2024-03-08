@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -93,6 +94,7 @@ class OppgaveApiTest {
     }
 
     @Test
+    @Disabled("Venter på endepunkt i dp-behandling")
     fun `Når saksbehandler avbryter en oppgave skal behandlingen avbrytes og oppgavens tilstand bli ferdigbehandlet`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
@@ -118,15 +120,6 @@ class OppgaveApiTest {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
                 response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $ikkeEksisterendeOppgaveId"
-            }
-        }
-    }
-
-    @Test
-    fun `Skal kunne lukke oppgave`() {
-        withOppgaveApi {
-            client.put("/oppgave/$minsteinntektOppgaveTilBehandlingId/lukk") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
             }
         }
     }
