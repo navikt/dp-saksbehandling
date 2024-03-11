@@ -29,6 +29,7 @@ internal class Mediator(
         val behandling = Behandling(
             behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
             person = person,
+            opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
         )
 
         behandling.håndter(søknadsbehandlingOpprettetHendelse)

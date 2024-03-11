@@ -3,12 +3,15 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import java.time.ZonedDateTime
 import java.util.UUID
 
 data class Behandling(
     val behandlingId: UUID,
     val person: Person,
+    val opprettet: ZonedDateTime,
     val oppgaver: MutableList<Oppgave> = mutableListOf(),
+
 ) {
     fun håndter(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         this.oppgaver.single {

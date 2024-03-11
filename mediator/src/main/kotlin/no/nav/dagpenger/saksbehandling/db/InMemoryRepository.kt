@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.api.behandlingId1
 import no.nav.dagpenger.saksbehandling.api.behandlingId2
 import no.nav.dagpenger.saksbehandling.api.personIdent
 import no.nav.dagpenger.saksbehandling.api.personIdent2
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class InMemoryRepository : Repository {
@@ -78,12 +79,14 @@ class InMemoryRepository : Repository {
         val behandling = Behandling(
             behandlingId = behandlingId1,
             person = person,
+            opprettet = ZonedDateTime.now(),
         )
         behandlinger[behandling.behandlingId] = behandling
 
         val behandling2 = Behandling(
             behandlingId = behandlingId2,
             person = person2,
+            opprettet = ZonedDateTime.now(),
         )
         behandlinger[behandling2.behandlingId] = behandling2
     }
