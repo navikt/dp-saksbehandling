@@ -262,6 +262,29 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         ) ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
     override fun finnOppgaverFor(ident: String): List<Oppgave> {
-        TODO("Not yet implemented")
+        return sessionOf(dataSource).run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id
+                    FROM oppgave_v1 oppg
+                    JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN person_v1 pers ON pers.id = beha.person_id
+                    WHERE pers.ident = :ident
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "ident" to ident,
+                ),
+            ).map {
+                Oppgave.rehydrer(
+                    oppgaveId = it.uuid("id"),
+                    ident = it.string("ident"),
+                    behandlingId = it.uuid("behandling_id"),
+                    opprettet = it.norskZonedDateTime("opprettet"),
+                    emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
+                    tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                )
+            }.asList,
+        )
     }
 }

@@ -121,4 +121,21 @@ class PostgresRepositoryTest {
             oppgaverTilBehandling.map { it.oppgaveId } shouldBe listOf(oppgaveId, oppgaveId2)
         }
     }
+
+    @Test
+    fun `Skal kunne hente alle oppgaver for en gitt person`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testBehandling)
+            repo.lagre(testBehandling2)
+
+            val oppgaverTilPerson1 = repo.finnOppgaverFor(testPerson.ident)
+            oppgaverTilPerson1.size shouldBe 1
+            oppgaverTilPerson1.single().oppgaveId shouldBe oppgaveId
+
+            val oppgaverTilPerson2 = repo.finnOppgaverFor(testPerson2.ident)
+            oppgaverTilPerson2.size shouldBe 2
+            oppgaverTilPerson2.map { it.oppgaveId } shouldBe listOf(oppgaveId2, oppgaveId3)
+        }
+    }
 }
