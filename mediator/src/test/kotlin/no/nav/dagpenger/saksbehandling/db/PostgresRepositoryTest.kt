@@ -75,6 +75,16 @@ class PostgresRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne lagre en behandling og hente den igjen på bakgrunn av en oppgaveId`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testBehandling)
+            val behandlingFraDatabase = repo.hentBehandlingFra(oppgaveId)
+            behandlingFraDatabase shouldBe testBehandling
+        }
+    }
+
+    @Test
     fun testLagre1() {
     }
 
