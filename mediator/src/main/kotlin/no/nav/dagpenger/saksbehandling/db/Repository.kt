@@ -10,7 +10,6 @@ internal interface Repository {
     fun lagre(behandling: Behandling)
     fun hentBehandlingFra(oppgaveId: UUID): Behandling
     fun hentBehandling(behandlingId: UUID): Behandling
-    fun lagre(oppgave: Oppgave)
     fun hentAlleOppgaver(): List<Oppgave>
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
     fun hentOppgave(oppgaveId: UUID): Oppgave?

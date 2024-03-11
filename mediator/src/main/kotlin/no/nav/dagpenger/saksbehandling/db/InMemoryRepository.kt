@@ -40,15 +40,6 @@ class InMemoryRepository : Repository {
         return personMap[ident]
     }
 
-    override fun lagre(oppgave: Oppgave) {
-        behandlinger.values.single { behandling ->
-            behandling.oppgaver.any { it.oppgaveId == oppgave.oppgaveId }
-        }.let { behandling ->
-            behandling.oppgaver.removeIf { it.oppgaveId == oppgave.oppgaveId }
-            behandling.oppgaver.add(oppgave)
-        }
-    }
-
     override fun hentAlleOppgaver(): List<Oppgave> {
         return behandlinger.values.flatMap { it.oppgaver }
     }

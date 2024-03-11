@@ -7,6 +7,7 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.db.DBUtils.norskZonedDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -19,11 +20,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     private fun Session.lagre(person: Person) {
-        //language=PostgreSQL
         run(
             queryOf(
+                //language=PostgreSQL
                 statement = """
-                     INSERT INTO person_v1 (id, ident) VALUES (:id, :ident) ON CONFLICT (id) DO UPDATE SET ident = :ident
+                     INSERT INTO person_v1 (id, ident) 
+                     VALUES (:id, :ident) 
+                     ON CONFLICT (id) DO UPDATE SET ident = :ident
                 """.trimIndent(),
                 paramMap = mapOf(
                     "id" to person.id,
@@ -37,6 +40,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
+                    //language=PostgreSQL
                     statement = """
                     SELECT * FROM person_v1 WHERE ident = :ident
                     """.trimIndent(),
@@ -79,7 +83,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 Behandling.rehydrer(
                     behandlingId = behandlingId,
                     person = hentPerson(ident),
-                    opprettet = row.zonedDateTime("opprettet"),
+                    opprettet = row.norskZonedDateTime("opprettet"),
                     oppgaver = hentOppgaverFraBehandling(behandlingId, ident),
                 )
             }.asSingle,
@@ -102,7 +106,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     oppgaveId = oppgaveId,
                     ident = ident,
                     behandlingId = behandlingId,
-                    opprettet = row.zonedDateTime("opprettet"),
+                    opprettet = row.norskZonedDateTime("opprettet"),
                     emneknagger = hentEmneknaggerForOppgave(oppgaveId),
                     tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
                 )
@@ -127,9 +131,9 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     private fun Session.lagre(behandling: Behandling) {
-        //language=PostgreSQL
         run(
             queryOf(
+                //language=PostgreSQL
                 statement = """
                      INSERT INTO behandling_v1 (id, person_id, opprettet) VALUES (:id, :person_id, :opprettet) 
                 """.trimIndent(),
@@ -179,10 +183,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 ).asUpdate,
             )
         }
-    }
-
-    override fun lagre(oppgave: Oppgave) {
-        TODO("Not yet implemented")
     }
 
     override fun hentBehandlingFra(oppgaveId: UUID): Behandling {
