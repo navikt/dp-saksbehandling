@@ -14,5 +14,6 @@ internal interface Repository {
     fun hentOppgave(oppgaveId: UUID): Oppgave?
 
     fun finnOppgaverFor(ident: String): List<Oppgave>
-    fun hentPerson(ident: String): Person?
+    fun finnPerson(ident: String): Person?
+    fun hentPerson(ident: String): Person
 }

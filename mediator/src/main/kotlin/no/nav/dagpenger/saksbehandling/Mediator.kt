@@ -22,7 +22,7 @@ internal class Mediator(
 ) : Repository by repository {
 
     fun behandle(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        val person = repository.hentPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
+        val person = repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
             ident = søknadsbehandlingOpprettetHendelse.ident,
         )
 

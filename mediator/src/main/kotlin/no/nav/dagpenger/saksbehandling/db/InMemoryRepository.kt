@@ -36,8 +36,12 @@ class InMemoryRepository : Repository {
         return behandlinger[behandlingId] ?: throw IllegalArgumentException("Fant ikke behandling med id $behandlingId")
     }
 
-    override fun hentPerson(ident: String): Person? {
+    override fun finnPerson(ident: String): Person? {
         return personMap[ident]
+    }
+
+    override fun hentPerson(ident: String): Person {
+        return personMap[ident]!!
     }
 
     override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> =

@@ -37,7 +37,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
     }
 
-    override fun hentPerson(ident: String): Person {
+    override fun finnPerson(ident: String): Person? {
         sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
@@ -54,9 +54,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         ident = row.string("ident"),
                     )
                 }.asSingle,
-            ) ?: throw DataNotFoundException("Fant ikke person med ident $ident")
+            )
         }
     }
+
+    override fun hentPerson(ident: String) =
+        finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
 
     override fun lagre(behandling: Behandling) {
         sessionOf(dataSource).use { session ->
@@ -84,7 +87,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     val ident = row.string("ident")
                     Behandling.rehydrer(
                         behandlingId = behandlingId,
-                        person = hentPerson(ident),
+                        person = finnPerson(ident)!!,
                         opprettet = row.norskZonedDateTime("opprettet"),
                         oppgaver = hentOppgaverFraBehandling(behandlingId, ident),
                     )

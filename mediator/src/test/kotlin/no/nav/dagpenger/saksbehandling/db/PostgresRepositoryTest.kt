@@ -59,7 +59,7 @@ class PostgresRepositoryTest {
             val repo = PostgresRepository(ds)
             repo.lagre(testPerson)
 
-            val personFraDatabase = repo.hentPerson(testPerson.ident)
+            val personFraDatabase = repo.finnPerson(testPerson.ident)
             personFraDatabase shouldBe testPerson
         }
     }
@@ -70,7 +70,7 @@ class PostgresRepositoryTest {
             val repo = PostgresRepository(ds)
 
             shouldThrow<DataNotFoundException> {
-                repo.hentPerson(testPerson.ident)
+                repo.finnPerson(testPerson.ident)
             }
         }
     }
