@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db
 
 import kotliquery.Session
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -141,27 +142,31 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
     }
 
-    private fun Session.lagre(oppgaver: List<Oppgave>) {
+    private fun TransactionalSession.lagre(oppgaver: List<Oppgave>) {
         oppgaver.forEach { oppgave ->
-            run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """
-                     INSERT INTO oppgave_v1 (id, behandling_id, tilstand, opprettet) VALUES (:id, :behandling_id, :tilstand, :opprettet) 
-                    """.trimIndent(),
-                    paramMap = mapOf(
-                        "id" to oppgave.oppgaveId,
-                        "behandling_id" to oppgave.behandlingId,
-                        "tilstand" to oppgave.tilstand.name,
-                        "opprettet" to oppgave.opprettet,
-                    ),
-                ).asUpdate,
-            )
-            this.lagre(oppgave.oppgaveId, oppgave.emneknagger)
+            lagre(oppgave)
         }
     }
 
-    private fun Session.lagre(oppgaveId: UUID, emneknagger: Set<String>) {
+    private fun TransactionalSession.lagre(oppgave: Oppgave) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                     INSERT INTO oppgave_v1 (id, behandling_id, tilstand, opprettet) VALUES (:id, :behandling_id, :tilstand, :opprettet) 
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "id" to oppgave.oppgaveId,
+                    "behandling_id" to oppgave.behandlingId,
+                    "tilstand" to oppgave.tilstand.name,
+                    "opprettet" to oppgave.opprettet,
+                ),
+            ).asUpdate,
+        )
+        lagre(oppgave.oppgaveId, oppgave.emneknagger)
+    }
+
+    private fun TransactionalSession.lagre(oppgaveId: UUID, emneknagger: Set<String>) {
         emneknagger.forEach { emneknagg ->
             run(
                 queryOf(
