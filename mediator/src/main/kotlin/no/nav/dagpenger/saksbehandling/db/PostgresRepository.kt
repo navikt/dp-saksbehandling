@@ -63,12 +63,66 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     override fun hentBehandling(behandlingId: UUID): Behandling {
-        return Behandling.rehydrer(
-            behandlingId = behandlingId,
-            person = hentPersonFraBehandling(behandlingId),
-            opprettet =
-            oppgaver = hentOppgaverFraBehandling(behandlingId),,
+        return sessionOf(dataSource).run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
+                    FROM behandling_v1 beha
+                    JOIN person_v1 pers ON pers.id = beha.person_id
+                    WHERE beha.id = :behandling_id
+                """.trimIndent(),
+                paramMap = mapOf("behandling_id" to behandlingId),
+            ).map { row ->
+                val ident = row.string("ident")
+                Behandling.rehydrer(
+                    behandlingId = behandlingId,
+                    person = hentPerson(ident),
+                    opprettet = row.zonedDateTime("opprettet"),
+                    oppgaver = hentOppgaverFraBehandling(behandlingId, ident),
+                )
+            }.asSingle,
+        ) ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
+    }
+
+    private fun hentOppgaverFraBehandling(behandlingId: UUID, ident: String): List<Oppgave> {
+        return sessionOf(dataSource).run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    SELECT id, tilstand, opprettet
+                    FROM oppgave_v1
+                    WHERE behandling_id = :behandling_id
+                """.trimIndent(),
+                paramMap = mapOf("behandling_id" to behandlingId),
+            ).map { row ->
+                val oppgaveId = row.uuid("id")
+                Oppgave.rehydrer(
+                    oppgaveId = oppgaveId,
+                    ident = ident,
+                    behandlingId = behandlingId,
+                    opprettet = row.zonedDateTime("opprettet"),
+                    emneknagger = hentEmneknaggerForOppgave(oppgaveId),
+                    tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                )
+            }.asList,
         )
+    }
+
+    private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
+        return sessionOf(dataSource).run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    SELECT emneknagg
+                    FROM emneknagg_v1
+                    WHERE oppgave_id = :oppgave_id
+                """.trimIndent(),
+                paramMap = mapOf("oppgave_id" to oppgaveId),
+            ).map { row ->
+                row.string("emneknagg")
+            }.asList,
+        ).toSet()
     }
 
     private fun Session.lagre(behandling: Behandling) {
@@ -93,7 +147,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                     INSERT INTO oppgave_v1 (id, behandling_id, tilstand, opprettet) VALUES (:id, :person_id, :tilstand, :opprettet) 
+                     INSERT INTO oppgave_v1 (id, behandling_id, tilstand, opprettet) VALUES (:id, :behandling_id, :tilstand, :opprettet) 
                     """.trimIndent(),
                     paramMap = mapOf(
                         "id" to oppgave.oppgaveId,
@@ -101,6 +155,22 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         "tilstand" to oppgave.tilstand.name,
                         "opprettet" to oppgave.opprettet,
                     ),
+                ).asUpdate,
+            )
+            this.lagre(oppgave.oppgaveId, oppgave.emneknagger)
+        }
+    }
+
+    private fun Session.lagre(oppgaveId: UUID, emneknagger: Set<String>) {
+        emneknagger.forEach { emneknagg ->
+            run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        INSERT INTO emneknagg_v1(oppgave_id, emneknagg) 
+                        VALUES (:oppgave_id, :emneknagg)
+                    """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId, "emneknagg" to emneknagg),
                 ).asUpdate,
             )
         }
@@ -113,7 +183,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     override fun hentBehandlingFra(oppgaveId: UUID): Behandling {
         TODO("Not yet implemented")
     }
-
 
     override fun hentAlleOppgaver(): List<Oppgave> {
         TODO("Not yet implemented")

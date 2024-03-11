@@ -12,7 +12,7 @@ data class Behandling(
     val opprettet: ZonedDateTime,
     val oppgaver: MutableList<Oppgave> = mutableListOf(),
 
-    ) {
+) {
     companion object {
         fun rehydrer(
             behandlingId: UUID,
@@ -24,7 +24,7 @@ data class Behandling(
                 behandlingId = behandlingId,
                 person = person,
                 opprettet = opprettet,
-                oppgaver = oppgaver.toMutableList()
+                oppgaver = oppgaver.toMutableList(),
             )
         }
     }
@@ -47,5 +47,4 @@ data class Behandling(
             ),
         )
     }
-
 }
