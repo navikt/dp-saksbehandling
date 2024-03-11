@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS oppgave_v1
 (
     id            UUID PRIMARY KEY,
     behandling_id UUID REFERENCES behandling_v1 (id),
-    tilstand      TEXT NOT NULL
+    tilstand      TEXT                     NOT NULL,
+    opprettet     TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS emneknagg_v1
