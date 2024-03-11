@@ -209,12 +209,31 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         ) ?: throw DataNotFoundException("Kunne ikke finne behandling med for oppgave-id: $oppgaveId")
     }
 
-    override fun hentAlleOppgaver(): List<Oppgave> {
-        TODO("Not yet implemented")
-    }
-
     override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
-        TODO("Not yet implemented")
+        return sessionOf(dataSource).run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id
+                    FROM oppgave_v1 oppg
+                    JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN person_v1 pers ON pers.id = beha.person_id
+                    WHERE oppg.tilstand = :tilstand
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "tilstand" to tilstand.name,
+                ),
+            ).map {
+                Oppgave.rehydrer(
+                    oppgaveId = it.uuid("id"),
+                    ident = it.string("ident"),
+                    behandlingId = it.uuid("behandling_id"),
+                    opprettet = it.norskZonedDateTime("opprettet"),
+                    emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
+                    tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                )
+            }.asList,
+        )
     }
 
     override fun hentOppgave(oppgaveId: UUID): Oppgave =

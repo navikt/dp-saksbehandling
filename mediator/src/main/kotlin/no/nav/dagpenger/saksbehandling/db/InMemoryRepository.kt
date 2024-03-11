@@ -40,12 +40,8 @@ class InMemoryRepository : Repository {
         return personMap[ident]
     }
 
-    override fun hentAlleOppgaver(): List<Oppgave> {
-        return behandlinger.values.flatMap { it.oppgaver }
-    }
-
     override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> =
-        hentAlleOppgaver().filter { it.tilstand == tilstand }
+        behandlinger.values.flatMap { it.oppgaver }.filter { it.tilstand == tilstand }
 
     override fun hentOppgave(oppgaveId: UUID): Oppgave? {
         return behandlinger.values.flatMap { it.oppgaver }.singleOrNull { it.oppgaveId == oppgaveId }

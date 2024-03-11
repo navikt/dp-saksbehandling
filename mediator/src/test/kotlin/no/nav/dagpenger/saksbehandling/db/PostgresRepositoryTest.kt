@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -30,6 +31,26 @@ class PostgresRepositoryTest {
         person = testPerson,
         opprettet = opprettetTidspunkt,
         oppgaver = mutableListOf(oppgaveKlarTilBehandling),
+    )
+
+    private val testPerson2 = Person(ident = "12345678902")
+    private val behandlingId2 = UUIDv7.ny()
+    private val oppgaveId2 = UUIDv7.ny()
+    private val oppgaveId3 = UUIDv7.ny()
+    private val oppgave2 = Oppgave(
+        oppgaveId = oppgaveId2,
+        ident = testPerson2.ident,
+        emneknagger = setOf("Søknadsbehandling, Utland"),
+        opprettet = opprettetTidspunkt,
+        behandlingId = behandlingId2,
+        tilstand = KLAR_TIL_BEHANDLING,
+    )
+
+    private val testBehandling2 = Behandling(
+        behandlingId = behandlingId2,
+        person = testPerson2,
+        opprettet = opprettetTidspunkt,
+        oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = FERDIG_BEHANDLET)),
     )
 
     @Test
@@ -85,34 +106,19 @@ class PostgresRepositoryTest {
     }
 
     @Test
-    fun testLagre1() {
-    }
+    fun `Skal kunne hente oppgaver basert på tilstand`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testBehandling)
+            repo.lagre(testBehandling2)
 
-    @Test
-    fun hentBehandlingFra() {
-    }
+            val ferdigBehandledeOppgaver = repo.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET)
+            ferdigBehandledeOppgaver.size shouldBe 1
+            ferdigBehandledeOppgaver.single().oppgaveId shouldBe oppgaveId3
 
-    @Test
-    fun hentBehandling() {
-    }
-
-    @Test
-    fun hentAlleOppgaver() {
-    }
-
-    @Test
-    fun hentAlleOppgaverMedTilstand() {
-    }
-
-    @Test
-    fun hentOppgave() {
-    }
-
-    @Test
-    fun finnOppgaverFor() {
-    }
-
-    @Test
-    fun hentPerson() {
+            val oppgaverTilBehandling = repo.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+            oppgaverTilBehandling.size shouldBe 2
+            oppgaverTilBehandling.map { it.oppgaveId } shouldBe listOf(oppgaveId, oppgaveId2)
+        }
     }
 }
