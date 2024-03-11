@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowAnyUnit
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -86,12 +87,36 @@ class PostgresRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne lagre en behandling med oppgave flere ganger`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+
+            shouldThrowAnyUnit {
+                repo.lagre(testBehandling)
+                repo.lagre(testBehandling)
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne lagre og hente en oppgave`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
             val oppgaveFraDatabase = repo.hentOppgave(oppgaveId)
             oppgaveFraDatabase shouldBe oppgaveKlarTilBehandling
+        }
+    }
+
+    @Test
+    fun `Skal kunne endre tilstand på en oppgave`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testBehandling)
+            repo.hentOppgave(oppgaveId).tilstand shouldBe KLAR_TIL_BEHANDLING
+
+            repo.lagre(testBehandling.copy(oppgaver = mutableListOf(oppgaveKlarTilBehandling.copy(tilstand = FERDIG_BEHANDLET))))
+            repo.hentOppgave(oppgaveId).tilstand shouldBe FERDIG_BEHANDLET
         }
     }
 

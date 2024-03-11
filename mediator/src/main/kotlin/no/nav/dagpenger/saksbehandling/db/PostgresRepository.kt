@@ -146,6 +146,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 //language=PostgreSQL
                 statement = """
                      INSERT INTO behandling_v1 (id, person_id, opprettet) VALUES (:id, :person_id, :opprettet) 
+                     ON CONFLICT DO NOTHING
                 """.trimIndent(),
                 paramMap = mapOf(
                     "id" to behandling.behandlingId,
@@ -168,6 +169,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 //language=PostgreSQL
                 statement = """
                      INSERT INTO oppgave_v1 (id, behandling_id, tilstand, opprettet) VALUES (:id, :behandling_id, :tilstand, :opprettet) 
+                        ON CONFLICT(ID) DO UPDATE SET tilstand = :tilstand
                 """.trimIndent(),
                 paramMap = mapOf(
                     "id" to oppgave.oppgaveId,
