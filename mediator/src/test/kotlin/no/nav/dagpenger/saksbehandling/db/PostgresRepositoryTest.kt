@@ -15,9 +15,10 @@ import java.time.temporal.ChronoUnit
 class PostgresRepositoryTest {
     private val testPerson = Person(ident = "12345678901")
     private val behandlingId1 = UUIDv7.ny()
+    private val oppgaveId = UUIDv7.ny()
     private val opprettetTidspunkt = ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val oppgaveKlarTilBehandling = Oppgave(
-        oppgaveId = UUIDv7.ny(),
+        oppgaveId = oppgaveId,
         ident = testPerson.ident,
         emneknagger = setOf("Søknadsbehandling"),
         opprettet = opprettetTidspunkt,
@@ -60,6 +61,16 @@ class PostgresRepositoryTest {
             repo.lagre(testBehandling)
             val behandlingFraDatabase = repo.hentBehandling(behandlingId1)
             behandlingFraDatabase shouldBe testBehandling
+        }
+    }
+
+    @Test
+    fun `Skal kunne lagre og hente en oppgave`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testBehandling)
+            val oppgaveFraDatabase = repo.hentOppgave(oppgaveId)
+            oppgaveFraDatabase shouldBe oppgaveKlarTilBehandling
         }
     }
 

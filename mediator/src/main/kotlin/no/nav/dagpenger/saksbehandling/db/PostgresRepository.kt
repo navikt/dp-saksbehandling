@@ -197,9 +197,30 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         TODO("Not yet implemented")
     }
 
-    override fun hentOppgave(oppgaveId: UUID): Oppgave? {
-        TODO("Not yet implemented")
-    }
+    override fun hentOppgave(oppgaveId: UUID): Oppgave =
+        sessionOf(dataSource).run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id
+                    FROM oppgave_v1 oppg
+                    JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN person_v1 pers ON pers.id = beha.person_id
+                    WHERE oppg.id = :oppgave_id
+                """.trimIndent(),
+                paramMap = mapOf("oppgave_id" to oppgaveId),
+            ).map { row ->
+
+                Oppgave.rehydrer(
+                    oppgaveId = oppgaveId,
+                    ident = row.string("ident"),
+                    behandlingId = row.uuid("behandling_id"),
+                    opprettet = row.norskZonedDateTime("opprettet"),
+                    emneknagger = hentEmneknaggerForOppgave(oppgaveId),
+                    tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                )
+            }.asSingle,
+        ) ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
     override fun finnOppgaverFor(ident: String): List<Oppgave> {
         TODO("Not yet implemented")
