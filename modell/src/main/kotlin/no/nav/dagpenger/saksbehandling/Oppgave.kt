@@ -8,17 +8,17 @@ data class Oppgave private constructor(
     val oppgaveId: UUID,
     val opprettet: ZonedDateTime,
     val ident: String,
-    private val _emneknagger: MutableSet<String>,
     val behandlingId: UUID,
+    private val _emneknagger: MutableSet<String>,
     val steg: MutableList<Steg>,
     var tilstand: Tilstand.Type,
 ) {
     constructor(
         oppgaveId: UUID,
         ident: String,
+        behandlingId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: ZonedDateTime,
-        behandlingId: UUID,
         tilstand: Tilstand.Type = Tilstand.Type.OPPRETTET,
     ) : this(
         oppgaveId = oppgaveId,
@@ -34,8 +34,8 @@ data class Oppgave private constructor(
         fun rehydrer(
             oppgaveId: UUID,
             ident: String,
-            opprettet: ZonedDateTime,
             behandlingId: UUID,
+            opprettet: ZonedDateTime,
             emneknagger: Set<String>,
             tilstand: Tilstand.Type,
         ): Oppgave {
@@ -43,8 +43,8 @@ data class Oppgave private constructor(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
                 ident = ident,
-                _emneknagger = emneknagger.toMutableSet(),
                 behandlingId = behandlingId,
+                _emneknagger = emneknagger.toMutableSet(),
                 steg = mutableListOf(),
                 tilstand = tilstand,
             )
