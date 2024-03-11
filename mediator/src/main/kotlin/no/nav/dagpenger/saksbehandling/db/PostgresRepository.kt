@@ -12,6 +12,7 @@ import java.util.UUID
 import javax.sql.DataSource
 
 class DataNotFoundException(message: String) : RuntimeException(message)
+
 class PostgresRepository(private val dataSource: DataSource) : Repository {
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
@@ -68,66 +69,72 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     override fun hentBehandling(behandlingId: UUID): Behandling {
-        return sessionOf(dataSource).run(
-            queryOf(
-                //language=PostgreSQL
-                statement = """
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                     SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
                     FROM behandling_v1 beha
                     JOIN person_v1 pers ON pers.id = beha.person_id
                     WHERE beha.id = :behandling_id
-                """.trimIndent(),
-                paramMap = mapOf("behandling_id" to behandlingId),
-            ).map { row ->
-                val ident = row.string("ident")
-                Behandling.rehydrer(
-                    behandlingId = behandlingId,
-                    person = hentPerson(ident),
-                    opprettet = row.norskZonedDateTime("opprettet"),
-                    oppgaver = hentOppgaverFraBehandling(behandlingId, ident),
-                )
-            }.asSingle,
-        ) ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
+                    """.trimIndent(),
+                    paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row ->
+                    val ident = row.string("ident")
+                    Behandling.rehydrer(
+                        behandlingId = behandlingId,
+                        person = hentPerson(ident),
+                        opprettet = row.norskZonedDateTime("opprettet"),
+                        oppgaver = hentOppgaverFraBehandling(behandlingId, ident),
+                    )
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
     private fun hentOppgaverFraBehandling(behandlingId: UUID, ident: String): List<Oppgave> {
-        return sessionOf(dataSource).run(
-            queryOf(
-                //language=PostgreSQL
-                statement = """
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                     SELECT id, tilstand, opprettet
                     FROM oppgave_v1
                     WHERE behandling_id = :behandling_id
-                """.trimIndent(),
-                paramMap = mapOf("behandling_id" to behandlingId),
-            ).map { row ->
-                val oppgaveId = row.uuid("id")
-                Oppgave.rehydrer(
-                    oppgaveId = oppgaveId,
-                    ident = ident,
-                    behandlingId = behandlingId,
-                    opprettet = row.norskZonedDateTime("opprettet"),
-                    emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-                    tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
-                )
-            }.asList,
-        )
+                    """.trimIndent(),
+                    paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row ->
+                    val oppgaveId = row.uuid("id")
+                    Oppgave.rehydrer(
+                        oppgaveId = oppgaveId,
+                        ident = ident,
+                        behandlingId = behandlingId,
+                        opprettet = row.norskZonedDateTime("opprettet"),
+                        emneknagger = hentEmneknaggerForOppgave(oppgaveId),
+                        tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                    )
+                }.asList,
+            )
+        }
     }
 
     private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
-        return sessionOf(dataSource).run(
-            queryOf(
-                //language=PostgreSQL
-                statement = """
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                     SELECT emneknagg
                     FROM emneknagg_v1
                     WHERE oppgave_id = :oppgave_id
-                """.trimIndent(),
-                paramMap = mapOf("oppgave_id" to oppgaveId),
-            ).map { row ->
-                row.string("emneknagg")
-            }.asList,
-        ).toSet()
+                    """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.string("emneknagg")
+                }.asList,
+            )
+        }.toSet()
     }
 
     private fun Session.lagre(behandling: Behandling) {
@@ -186,105 +193,113 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     override fun hentBehandlingFra(oppgaveId: UUID): Behandling {
-        return sessionOf(dataSource).run(
-            queryOf(
-                //language=PostgreSQL
-                statement = """
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                     SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
                     FROM behandling_v1 beha
                     JOIN person_v1 pers ON pers.id = beha.person_id
                     JOIN oppgave_v1 oppg ON oppg.behandling_id = beha.id
                     WHERE oppg.id = :oppgave_id
-                """.trimIndent(),
-                paramMap = mapOf("oppgave_id" to oppgaveId),
-            ).map { row ->
-                val ident = row.string("ident")
-                Behandling.rehydrer(
-                    behandlingId = row.uuid("behandling_id"),
-                    person = hentPerson(ident),
-                    opprettet = row.norskZonedDateTime("opprettet"),
-                    oppgaver = hentOppgaverFraBehandling(row.uuid("behandling_id"), ident),
-                )
-            }.asSingle,
-        ) ?: throw DataNotFoundException("Kunne ikke finne behandling med for oppgave-id: $oppgaveId")
+                    """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    val ident = row.string("ident")
+                    Behandling.rehydrer(
+                        behandlingId = row.uuid("behandling_id"),
+                        person = hentPerson(ident),
+                        opprettet = row.norskZonedDateTime("opprettet"),
+                        oppgaver = hentOppgaverFraBehandling(row.uuid("behandling_id"), ident),
+                    )
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Kunne ikke finne behandling med for oppgave-id: $oppgaveId")
     }
 
     override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
-        return sessionOf(dataSource).run(
-            queryOf(
-                //language=PostgreSQL
-                statement = """
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                     SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id
                     FROM oppgave_v1 oppg
                     JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN person_v1 pers ON pers.id = beha.person_id
                     WHERE oppg.tilstand = :tilstand
-                """.trimIndent(),
-                paramMap = mapOf(
-                    "tilstand" to tilstand.name,
-                ),
-            ).map {
-                Oppgave.rehydrer(
-                    oppgaveId = it.uuid("id"),
-                    ident = it.string("ident"),
-                    behandlingId = it.uuid("behandling_id"),
-                    opprettet = it.norskZonedDateTime("opprettet"),
-                    emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
-                    tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
-                )
-            }.asList,
-        )
+                    """.trimIndent(),
+                    paramMap = mapOf(
+                        "tilstand" to tilstand.name,
+                    ),
+                ).map {
+                    Oppgave.rehydrer(
+                        oppgaveId = it.uuid("id"),
+                        ident = it.string("ident"),
+                        behandlingId = it.uuid("behandling_id"),
+                        opprettet = it.norskZonedDateTime("opprettet"),
+                        emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
+                        tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                    )
+                }.asList,
+            )
+        }
     }
 
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
-        sessionOf(dataSource).run(
-            queryOf(
-                //language=PostgreSQL
-                statement = """
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                     SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id
                     FROM oppgave_v1 oppg
                     JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN person_v1 pers ON pers.id = beha.person_id
                     WHERE oppg.id = :oppgave_id
-                """.trimIndent(),
-                paramMap = mapOf("oppgave_id" to oppgaveId),
-            ).map { row ->
+                    """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
 
-                Oppgave.rehydrer(
-                    oppgaveId = oppgaveId,
-                    ident = row.string("ident"),
-                    behandlingId = row.uuid("behandling_id"),
-                    opprettet = row.norskZonedDateTime("opprettet"),
-                    emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-                    tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
-                )
-            }.asSingle,
-        ) ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+                    Oppgave.rehydrer(
+                        oppgaveId = oppgaveId,
+                        ident = row.string("ident"),
+                        behandlingId = row.uuid("behandling_id"),
+                        opprettet = row.norskZonedDateTime("opprettet"),
+                        emneknagger = hentEmneknaggerForOppgave(oppgaveId),
+                        tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                    )
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
     override fun finnOppgaverFor(ident: String): List<Oppgave> {
-        return sessionOf(dataSource).run(
-            queryOf(
-                //language=PostgreSQL
-                statement = """
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
                     SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id
                     FROM oppgave_v1 oppg
                     JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN person_v1 pers ON pers.id = beha.person_id
                     WHERE pers.ident = :ident
-                """.trimIndent(),
-                paramMap = mapOf(
-                    "ident" to ident,
-                ),
-            ).map {
-                Oppgave.rehydrer(
-                    oppgaveId = it.uuid("id"),
-                    ident = it.string("ident"),
-                    behandlingId = it.uuid("behandling_id"),
-                    opprettet = it.norskZonedDateTime("opprettet"),
-                    emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
-                    tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
-                )
-            }.asList,
-        )
+                    """.trimIndent(),
+                    paramMap = mapOf(
+                        "ident" to ident,
+                    ),
+                ).map {
+                    Oppgave.rehydrer(
+                        oppgaveId = it.uuid("id"),
+                        ident = it.string("ident"),
+                        behandlingId = it.uuid("behandling_id"),
+                        opprettet = it.norskZonedDateTime("opprettet"),
+                        emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
+                        tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                    )
+                }.asList,
+            )
+        }
     }
 }
