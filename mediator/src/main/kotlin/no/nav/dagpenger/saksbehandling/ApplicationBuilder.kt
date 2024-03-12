@@ -2,7 +2,8 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
-import no.nav.dagpenger.saksbehandling.db.InMemoryRepository
+import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
+import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.maskinell.PartialBehandlingKlientMock
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
@@ -10,7 +11,7 @@ import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
-    private val inMemoryRepository = InMemoryRepository()
+    private val repository = PostgresRepository(PostgresDataSourceBuilder.dataSource)
     private val behandlingHttpKlient: BehandlingHttpKlient =
         BehandlingHttpKlient(
             behandlingUrl = Configuration.behandlingUrl,
@@ -19,7 +20,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val partialBehandlingKlientMock = PartialBehandlingKlientMock(behandlingHttpKlient)
 
-    private val mediator = Mediator(inMemoryRepository, partialBehandlingKlientMock)
+    private val mediator = Mediator(repository, partialBehandlingKlientMock)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))

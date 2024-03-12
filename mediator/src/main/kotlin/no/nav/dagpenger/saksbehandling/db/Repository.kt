@@ -13,7 +13,6 @@ internal interface Repository {
     fun hentBehandling(behandlingId: UUID): Behandling
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
     fun hentOppgave(oppgaveId: UUID): Oppgave?
-
     fun finnOppgaverFor(ident: String): List<Oppgave>
     fun finnPerson(ident: String): Person?
     fun hentPerson(ident: String): Person
