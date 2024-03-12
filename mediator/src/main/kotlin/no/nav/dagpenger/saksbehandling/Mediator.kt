@@ -26,6 +26,9 @@ internal class Mediator(
             ident = søknadsbehandlingOpprettetHendelse.ident,
         )
 
+        // TODO: mer elegant duplikatsjekk
+        if (repository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) return
+
         val behandling = Behandling(
             behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
             person = person,

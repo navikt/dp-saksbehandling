@@ -30,14 +30,16 @@ class MediatorTest {
 
             val førsteSøknadId = UUIDv7.ny()
             val førsteBehandlingId = UUIDv7.ny()
-            mediator.behandle(
-                søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
-                    søknadId = førsteSøknadId,
-                    behandlingId = førsteBehandlingId,
-                    ident = testIdent,
-                    opprettet = ZonedDateTime.now(),
-                ),
+            val førsteSøknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
+                søknadId = førsteSøknadId,
+                behandlingId = førsteBehandlingId,
+                ident = testIdent,
+                opprettet = ZonedDateTime.now(),
             )
+
+            mediator.behandle(søknadsbehandlingOpprettetHendelse = førsteSøknadsbehandlingOpprettetHendelse)
+            mediator.behandle(søknadsbehandlingOpprettetHendelse = førsteSøknadsbehandlingOpprettetHendelse)
+            mediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
             val andreSøknadId = UUIDv7.ny()
             val andreBehandlingId = UUIDv7.ny()

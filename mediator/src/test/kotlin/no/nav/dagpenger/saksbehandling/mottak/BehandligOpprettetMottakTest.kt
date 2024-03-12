@@ -39,6 +39,15 @@ class BehandligOpprettetMottakTest {
         }
     }
 
+    @Test
+    fun `Skal ignorere duplikate behandling_opprettet hendelser`() {
+        testRapid.sendTestMessage(behandlingOpprettetMelding)
+        verify(exactly = 1) {
+            mediator.behandle(søknadsbehandlingOpprettetHendelse)
+            mediator.behandle(søknadsbehandlingOpprettetHendelse)
+        }
+    }
+
     @Language("JSON")
     private val behandlingOpprettetMelding =
         """

@@ -78,6 +78,17 @@ class PostgresRepositoryTest {
     }
 
     @Test
+    fun `Exception hvis vi ikke får hentet behandling basert på behandlingId`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+
+            shouldThrow<DataNotFoundException> {
+                repo.hentBehandling(behandlingId1)
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne lagre en behandling med oppgave`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)

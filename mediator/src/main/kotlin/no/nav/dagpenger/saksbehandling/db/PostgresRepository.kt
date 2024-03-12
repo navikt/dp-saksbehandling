@@ -79,7 +79,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
-    override fun hentBehandling(behandlingId: UUID): Behandling {
+    override fun finnBehandling(behandlingId: UUID): Behandling? {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -101,7 +101,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     )
                 }.asSingle,
             )
-        } ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
+        }
+    }
+
+    override fun hentBehandling(behandlingId: UUID): Behandling {
+        return finnBehandling(behandlingId) ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
     private fun hentOppgaverFraBehandling(behandlingId: UUID, ident: String): List<Oppgave> {
