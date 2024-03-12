@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
+import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.maskinell.PartialBehandlingKlientMock
@@ -39,6 +40,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
+        runMigration()
         logger.info { "Starter appen ${Configuration.APP_NAME}" }
     }
 
