@@ -65,3 +65,23 @@ spec:
     outbound:
       rules:
         - application: dp-behandling
+  gcp:
+    sqlInstances:
+      - collation: nb_NO.UTF8
+        databases:
+          - envVarPrefix: DB
+            name: saksbehandling
+        diskAutoresize: true
+        diskType: SSD
+        highAvailability: {{ db.highAvailability }}
+        insights:
+          enabled: true
+          queryStringLength: 4500
+          recordApplicationTags: true
+          recordClientAddress: true
+        maintenance:
+          day: 1
+          hour: 4
+        pointInTimeRecovery: {{ db.pointInTimeRecovery }}
+        tier: {{ db.tier }}
+        type: POSTGRES_15

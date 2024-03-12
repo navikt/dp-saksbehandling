@@ -13,3 +13,8 @@ azure:
 dp-behandling:
   url: "http://dp-behandling"
   scope: "api://dev-gcp.teamdagpenger.dp-behandling/.default"
+
+db:
+  highAvailability: false
+  pointInTimeRecovery: false
+  tier: db-custom-1-3840
