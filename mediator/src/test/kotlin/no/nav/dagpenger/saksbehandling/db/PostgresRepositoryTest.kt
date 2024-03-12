@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import org.junit.jupiter.api.Test
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
@@ -18,7 +19,7 @@ class PostgresRepositoryTest {
     private val testPerson = Person(ident = "12345678901")
     private val behandlingId1 = UUIDv7.ny()
     private val oppgaveId = UUIDv7.ny()
-    private val opprettetTidspunkt = ZonedDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+    private val opprettetTidspunkt = ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).truncatedTo(ChronoUnit.SECONDS)
     private val oppgaveKlarTilBehandling = Oppgave(
         oppgaveId = oppgaveId,
         ident = testPerson.ident,
