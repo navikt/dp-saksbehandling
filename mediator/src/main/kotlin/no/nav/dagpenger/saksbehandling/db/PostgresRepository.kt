@@ -71,6 +71,14 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
+    override fun lagre(oppgave: Oppgave) {
+        sessionOf(dataSource).use { session ->
+            session.transaction { tx ->
+                tx.lagre(oppgave)
+            }
+        }
+    }
+
     override fun hentBehandling(behandlingId: UUID): Behandling {
         return sessionOf(dataSource).use { session ->
             session.run(

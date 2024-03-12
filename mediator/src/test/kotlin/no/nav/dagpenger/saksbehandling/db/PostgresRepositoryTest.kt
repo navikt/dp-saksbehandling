@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.assertions.throwables.shouldThrowAnyUnit
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -66,12 +66,12 @@ class PostgresRepositoryTest {
     }
 
     @Test
-    fun `Exception hvis vi ikke finner person basert på ident `() {
+    fun `Exception hvis vi ikke får hentet person basert på ident`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
             shouldThrow<DataNotFoundException> {
-                repo.finnPerson(testPerson.ident)
+                repo.hentPerson(testPerson.ident)
             }
         }
     }
@@ -91,7 +91,7 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
-            shouldThrowAnyUnit {
+            shouldNotThrowAny {
                 repo.lagre(testBehandling)
                 repo.lagre(testBehandling)
             }

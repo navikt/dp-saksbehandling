@@ -22,13 +22,14 @@ class MediatorTest {
     fun `Tester endring av oppgavens tilstand etter hvert som behandling skjer`() {
         withMigratedDb { datasource ->
             val testIdent = "12345612345"
-            val testRapid = TestRapid()
-            val postgresRepository = PostgresRepository(datasource)
-            val mediator = Mediator(repository = postgresRepository, behandlingKlient = mockk())
+            val mediator = Mediator(
+                repository = PostgresRepository(datasource),
+                behandlingKlient = mockk(),
+            )
+            BehandlingOpprettetMottak(TestRapid(), mediator)
+
             val førsteSøknadId = UUIDv7.ny()
             val førsteBehandlingId = UUIDv7.ny()
-            BehandlingOpprettetMottak(testRapid, mediator)
-
             mediator.behandle(
                 søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
                     søknadId = førsteSøknadId,

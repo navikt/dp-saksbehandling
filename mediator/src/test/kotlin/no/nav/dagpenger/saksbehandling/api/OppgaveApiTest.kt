@@ -89,7 +89,7 @@ class OppgaveApiTest {
         val oppgaveId = UUIDv7.ny()
         val ferdigbehandletOppgave = testOppgaveFerdigBehandlet(oppgaveId)
 
-        coEvery { mediatorMock.bekreftOppgavensOpplysninger(any()) } returns ferdigbehandletOppgave
+        coEvery { mediatorMock.bekreftOppgavensOpplysninger(any()) } returns Result.success(Unit)
 
         withOppgaveApi(mediator = mediatorMock) {
             client.put("/oppgave/$oppgaveId/avslag") { autentisert() }.also { response ->
@@ -106,7 +106,7 @@ class OppgaveApiTest {
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
 
-        coEvery { mediatorMock.avbrytBehandling(any()) } returns oppgave
+        coEvery { mediatorMock.avbrytBehandling(any()) } returns Result.success(Unit)
         withOppgaveApi {
             client.put("/oppgave/$oppgaveId/lukk") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent

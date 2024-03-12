@@ -77,22 +77,21 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             }
                         }
                     }
-                    // TODO: avslag skal bekrefte opplysninger? Hmmmm
+
                     route("avslag") {
                         put {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandlerSignatur = call.request.jwt()
                             val bekreftOppgaveHendelse = BekreftOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
-                            val oppgave = mediator.bekreftOppgavensOpplysninger(bekreftOppgaveHendelse)
-                            when (oppgave) {
-                                null ->
+
+                            mediator.bekreftOppgavensOpplysninger(bekreftOppgaveHendelse)
+                                .onSuccess { call.respond(HttpStatusCode.NoContent) }
+                                .onFailure { e ->
                                     call.respond(
                                         status = HttpStatusCode.NotFound,
-                                        message = "Fant ingen oppgave med UUID $oppgaveId",
+                                        message = e.message.toString(),
                                     )
-
-                                else -> call.respond(HttpStatusCode.NoContent)
-                            }
+                                }
                         }
                     }
 
@@ -101,16 +100,14 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandlerSignatur = call.request.jwt()
                             val avbrytBehandlingHendelse = AvbrytBehandlingHendelse(oppgaveId, saksbehandlerSignatur)
-                            val oppgave = mediator.avbrytBehandling(avbrytBehandlingHendelse)
-                            when (oppgave) {
-                                null ->
+                            mediator.avbrytBehandling(avbrytBehandlingHendelse)
+                                .onSuccess { call.respond(HttpStatusCode.NoContent) }
+                                .onFailure { e ->
                                     call.respond(
                                         status = HttpStatusCode.NotFound,
-                                        message = "Fant ingen oppgave med UUID $oppgaveId",
+                                        message = e.message.toString(),
                                     )
-
-                                else -> call.respond(HttpStatusCode.NoContent)
-                            }
+                                }
                         }
                     }
                 }

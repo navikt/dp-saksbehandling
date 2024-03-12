@@ -72,37 +72,31 @@ internal class Mediator(
         }
     }
 
-    suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Oppgave? {
+    suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Result<Unit> {
         val oppgave = repository.hentOppgave(hendelse.oppgaveId)
         when (oppgave) {
-            null -> return null
+            null -> return Result.failure(NoSuchElementException("Oppgave finnes ikke med id ${hendelse.oppgaveId}"))
             else -> {
-                val behandling = hentBehandlingFra(oppgave.oppgaveId)
                 kotlin.runCatching {
                     behandlingKlient.bekreftBehandling(
-                        behandlingId = behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         saksbehandlerToken = hendelse.saksbehandlerSignatur,
                     )
                 }
                 oppgave.tilstand = FERDIG_BEHANDLET
-                sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${behandling.behandlingId}" }
+                lagre(oppgave)
+                sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
             }
         }
-        return oppgave
+        return Result.success(Unit)
     }
 
-    suspend fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Oppgave? {
-        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
-        when (oppgave) {
-            null -> return null
-            else -> {
-                // TODO kall behandlingKlient.avbrytBehandling
-
-                val behandling = hentBehandlingFra(oppgave.oppgaveId)
-                oppgave.tilstand = FERDIG_BEHANDLET
-                sikkerLogger.info { "Avbrutt oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${behandling.behandlingId}" }
-            }
-        }
-        return oppgave
-    }
+    fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Result<Unit> =
+        repository.hentOppgave(hendelse.oppgaveId)?.let { oppgave ->
+            // TODO kall behandlingKlient.avbrytBehandling
+            oppgave.tilstand = FERDIG_BEHANDLET
+            lagre(oppgave)
+            sikkerLogger.info { "Avbrutt oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
+            Result.success(Unit)
+        } ?: Result.failure(NoSuchElementException("Oppgave finnes ikke med id ${hendelse.oppgaveId}"))
 }

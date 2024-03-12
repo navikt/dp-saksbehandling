@@ -26,6 +26,10 @@ class InMemoryRepository : Repository {
         behandlinger[behandling.behandlingId] = behandling
     }
 
+    override fun lagre(oppgave: Oppgave) {
+        TODO("Not yet implemented")
+    }
+
     override fun hentBehandlingFra(oppgaveId: UUID): Behandling {
         return behandlinger.values.first { behandling ->
             behandling.oppgaver.any { it.oppgaveId == oppgaveId }

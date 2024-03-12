@@ -8,6 +8,7 @@ import java.util.UUID
 internal interface Repository {
     fun lagre(person: Person)
     fun lagre(behandling: Behandling)
+    fun lagre(oppgave: Oppgave)
     fun hentBehandlingFra(oppgaveId: UUID): Behandling
     fun hentBehandling(behandlingId: UUID): Behandling
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
