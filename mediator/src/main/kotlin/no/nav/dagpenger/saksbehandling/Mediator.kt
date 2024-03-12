@@ -34,12 +34,14 @@ internal class Mediator(
 
         behandling.håndter(søknadsbehandlingOpprettetHendelse)
         lagre(behandling)
+        sikkerLogger.info { "Mottatt søknadsbehandling med id ${behandling.behandlingId}: $søknadsbehandlingOpprettetHendelse" }
     }
 
     fun behandle(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         this.hentBehandling(forslagTilVedtakHendelse.behandlingId).let { behandling ->
             behandling.håndter(forslagTilVedtakHendelse)
             lagre(behandling)
+            sikkerLogger.info { "Mottatt forslag til vedtak for behandling med id ${behandling.behandlingId}: $forslagTilVedtakHendelse" }
         }
     }
 
