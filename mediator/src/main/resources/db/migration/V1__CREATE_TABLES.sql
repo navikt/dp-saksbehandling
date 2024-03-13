@@ -29,3 +29,4 @@ CREATE TABLE IF NOT EXISTS emneknagg_v1
     emneknagg  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS emneknagg_oppgave_id_index ON emneknagg_v1 (oppgave_id);
+ALTER TABLE emneknagg_v1 ADD CONSTRAINT emneknagg_oppgave_unique UNIQUE (oppgave_id, emneknagg);

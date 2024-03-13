@@ -27,7 +27,10 @@ internal class Mediator(
         )
 
         // TODO: mer elegant duplikatsjekk
-        if (repository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) return
+        if (repository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) {
+            sikkerLogger.info { "Behandling med id ${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede." }
+            return
+        }
 
         val behandling = Behandling(
             behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,

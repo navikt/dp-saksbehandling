@@ -25,8 +25,10 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement = """
-                     INSERT INTO person_v1 (id, ident) 
-                     VALUES (:id, :ident) 
+                     INSERT INTO person_v1
+                         (id, ident) 
+                     VALUES
+                         (:id, :ident) 
                      ON CONFLICT (id) DO UPDATE SET ident = :ident
                 """.trimIndent(),
                 paramMap = mapOf(
@@ -43,7 +45,9 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                    SELECT * FROM person_v1 WHERE ident = :ident
+                    SELECT * 
+                    FROM   person_v1
+                    WHERE  ident = :ident
                     """.trimIndent(),
                     paramMap = mapOf(
                         "ident" to ident,
@@ -86,9 +90,9 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement = """
                     SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
-                    FROM behandling_v1 beha
-                    JOIN person_v1 pers ON pers.id = beha.person_id
-                    WHERE beha.id = :behandling_id
+                    FROM   behandling_v1 beha
+                    JOIN   person_v1     pers ON pers.id = beha.person_id
+                    WHERE  beha.id = :behandling_id
                     """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
@@ -115,8 +119,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement = """
                     SELECT id, tilstand, opprettet
-                    FROM oppgave_v1
-                    WHERE behandling_id = :behandling_id
+                    FROM   oppgave_v1
+                    WHERE  behandling_id = :behandling_id
                     """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
@@ -141,8 +145,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement = """
                     SELECT emneknagg
-                    FROM emneknagg_v1
-                    WHERE oppgave_id = :oppgave_id
+                    FROM   emneknagg_v1
+                    WHERE  oppgave_id = :oppgave_id
                     """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
@@ -157,7 +161,10 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement = """
-                     INSERT INTO behandling_v1 (id, person_id, opprettet) VALUES (:id, :person_id, :opprettet) 
+                     INSERT INTO behandling_v1
+                         (id, person_id, opprettet)
+                     VALUES
+                         (:id, :person_id, :opprettet) 
                      ON CONFLICT DO NOTHING
                 """.trimIndent(),
                 paramMap = mapOf(
@@ -180,8 +187,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement = """
-                     INSERT INTO oppgave_v1 (id, behandling_id, tilstand, opprettet) VALUES (:id, :behandling_id, :tilstand, :opprettet) 
-                        ON CONFLICT(ID) DO UPDATE SET tilstand = :tilstand
+                     INSERT INTO oppgave_v1
+                         (id, behandling_id, tilstand, opprettet)
+                     VALUES
+                         (:id, :behandling_id, :tilstand, :opprettet) 
+                     ON CONFLICT(id) DO UPDATE SET tilstand = :tilstand
                 """.trimIndent(),
                 paramMap = mapOf(
                     "id" to oppgave.oppgaveId,
@@ -200,8 +210,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                        INSERT INTO emneknagg_v1(oppgave_id, emneknagg) 
-                        VALUES (:oppgave_id, :emneknagg)
+                        INSERT INTO emneknagg_v1
+                            (oppgave_id, emneknagg) 
+                        VALUES
+                            (:oppgave_id, :emneknagg)
+                        ON CONFLICT ON CONSTRAINT emneknagg_oppgave_unique DO NOTHING
                     """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId, "emneknagg" to emneknagg),
                 ).asUpdate,
@@ -216,10 +229,10 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement = """
                     SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
-                    FROM behandling_v1 beha
-                    JOIN person_v1 pers ON pers.id = beha.person_id
-                    JOIN oppgave_v1 oppg ON oppg.behandling_id = beha.id
-                    WHERE oppg.id = :oppgave_id
+                    FROM   behandling_v1 beha
+                    JOIN   person_v1     pers ON pers.id = beha.person_id
+                    JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
+                    WHERE  oppg.id = :oppgave_id
                     """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
@@ -242,10 +255,10 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement = """
                     SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id
-                    FROM oppgave_v1 oppg
-                    JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN person_v1 pers ON pers.id = beha.person_id
-                    WHERE oppg.tilstand = :tilstand
+                    FROM   oppgave_v1    oppg
+                    JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN   person_v1     pers ON pers.id = beha.person_id
+                    WHERE  oppg.tilstand = :tilstand
                     """.trimIndent(),
                     paramMap = mapOf(
                         "tilstand" to tilstand.name,
@@ -271,10 +284,10 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement = """
                     SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id
-                    FROM oppgave_v1 oppg
-                    JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN person_v1 pers ON pers.id = beha.person_id
-                    WHERE oppg.id = :oppgave_id
+                    FROM   oppgave_v1    oppg
+                    JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN   person_v1     pers ON pers.id = beha.person_id
+                    WHERE  oppg.id = :oppgave_id
                     """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
@@ -298,10 +311,10 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement = """
                     SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id
-                    FROM oppgave_v1 oppg
-                    JOIN behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN person_v1 pers ON pers.id = beha.person_id
-                    WHERE pers.ident = :ident
+                    FROM   oppgave_v1    oppg
+                    JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN   person_v1     pers ON pers.id = beha.person_id
+                    WHERE  pers.ident = :ident
                     """.trimIndent(),
                     paramMap = mapOf(
                         "ident" to ident,
