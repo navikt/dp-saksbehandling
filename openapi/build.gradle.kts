@@ -22,7 +22,7 @@ sourceSets {
 }
 
 dependencies {
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.1")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
 }
 
 openApiGenerate {
