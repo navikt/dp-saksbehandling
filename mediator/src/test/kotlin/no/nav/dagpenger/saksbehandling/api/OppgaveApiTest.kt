@@ -22,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
@@ -33,16 +34,27 @@ import java.util.UUID
 
 class OppgaveApiTest {
     val testIdent = "13083826694"
-    private val testToken by mockAzure {
-        claims = mapOf("NAVident" to "123")
+    val saksbehandlerADGruppe = "AD gruppe for saksbehandlere"
+    private val mockAzure = mockAzure(
+        verifierConfig = { this.claims = mapOf("groups" to saksbehandlerADGruppe) },
+    )
+    private val testToken = mockAzure.lagTokenMedClaims(mapOf("groups" to "bubba"))
+
+    @Test
+    fun `Skal avvise kall uten autoriserte AD grupper`() {
+        withOppgaveApi {
+            client.get("/oppgave") { autentisert() }.let { response ->
+                response.status shouldBe HttpStatusCode.Unauthorized
+            }
+        }
     }
 
     @Test
     fun `Skal kunne hente ut alle oppgaver`() {
         val mediatorMock = mockk<Mediator>().also {
             every { it.hentOppgaverKlarTilBehandling() } returns listOf(
-                lagTestOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
-                lagTestOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
             )
         }
 
@@ -169,6 +181,22 @@ class OppgaveApiTest {
         }
     }
 
+    /*
+    @Test
+    fun `kall uten saksbehandlingsADgruppe i claims returnerer 401`() {
+        medSikretBehandlingApi {
+            val tokenUtenSaksbehandlerGruppe = testAzureAdToken(ADGrupper = emptyList())
+
+            val response =
+                autentisert(
+                    token = tokenUtenSaksbehandlerGruppe,
+                    endepunkt = "/behandling",
+                    body = """{"ident":"$ident"}""",
+                )
+            response.status shouldBe HttpStatusCode.Unauthorized
+        }
+    }*/
+
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
@@ -180,7 +208,7 @@ class OppgaveApiTest {
     }
 
     private fun HttpRequestBuilder.autentisert() {
-        header(HttpHeaders.Authorization, "Bearer $testToken")
+        header(HttpHeaders.Authorization, "Bearer $mockAzure")
     }
 
     private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type): Oppgave {

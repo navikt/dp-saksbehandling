@@ -34,6 +34,7 @@ internal object Configuration {
 
     val behandlingUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
     val behandlingScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
+    val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
 
     val azureAdClient by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)

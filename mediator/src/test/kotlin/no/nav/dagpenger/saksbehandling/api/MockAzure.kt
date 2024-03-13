@@ -1,10 +1,9 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.security.mock.oauth2.MockOAuth2Server
-import kotlin.reflect.KProperty
 
 class MockAzure(private val config: MockConfig) {
-    private companion object {
+    companion object {
         private const val AZURE_APP_CLIENT_ID = "test_client_id"
         private const val AZURE_OPENID_CONFIG_ISSUER = "test_issuer"
         private val mockOAuth2Server: MockOAuth2Server by lazy {
@@ -20,19 +19,17 @@ class MockAzure(private val config: MockConfig) {
         System.setProperty("AZURE_OPENID_CONFIG_JWKS_URI", "${mockOAuth2Server.jwksUrl(AZURE_OPENID_CONFIG_ISSUER)}")
     }
 
-    operator fun getValue(
-        thisRef: Any?,
-        property: KProperty<*>,
-    ): Any =
-        mockOAuth2Server.issueToken(
+    fun lagTokenMedClaims(claims: Map<String, String>): String {
+        return mockOAuth2Server.issueToken(
             audience = AZURE_APP_CLIENT_ID,
             issuerId = AZURE_OPENID_CONFIG_ISSUER,
-            claims = config.claims,
+            claims = claims,
         ).serialize()
+    }
 }
 
-fun mockAzure(init: MockConfig.() -> Unit): MockAzure {
-    val config = MockConfig().apply { init() }
+fun mockAzure(verifierConfig: MockConfig.() -> Unit = {}): MockAzure {
+    val config = MockConfig().apply { verifierConfig() }
     return MockAzure(config)
 }
 
