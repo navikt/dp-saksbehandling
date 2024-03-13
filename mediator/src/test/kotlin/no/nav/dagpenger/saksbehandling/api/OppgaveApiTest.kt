@@ -208,7 +208,7 @@ class OppgaveApiTest {
     }
 
     private fun HttpRequestBuilder.autentisert() {
-        header(HttpHeaders.Authorization, "Bearer $mockAzure")
+        header(HttpHeaders.Authorization, "Bearer $testToken")
     }
 
     private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type): Oppgave {
