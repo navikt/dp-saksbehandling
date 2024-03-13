@@ -35,17 +35,15 @@ import java.util.UUID
 class OppgaveApiTest {
     val testIdent = "13083826694"
     val saksbehandlerADGruppe = "AD gruppe for saksbehandlere"
-    private val mockAzure = mockAzure(
-        verifierConfig = { this.claims = mapOf("groups" to saksbehandlerADGruppe) },
-    )
-    private val testToken = mockAzure.lagTokenMedClaims(mapOf("groups" to "bubba"))
+    private val mockAzure = mockAzure()
+
+    private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to "SaksbehandlerADGruppe"))
 
     @Test
     fun `Skal avvise kall uten autoriserte AD grupper`() {
         withOppgaveApi {
-            client.get("/oppgave") { autentisert() }.let { response ->
-                response.status shouldBe HttpStatusCode.Unauthorized
-            }
+            client.get("/oppgave") { autentisert(token = mockAzure.lagTokenMedClaims(mapOf("groups" to "UgyldigADGruppe"))) }
+                .status shouldBe HttpStatusCode.Unauthorized
         }
     }
 
@@ -207,8 +205,8 @@ class OppgaveApiTest {
         }
     }
 
-    private fun HttpRequestBuilder.autentisert() {
-        header(HttpHeaders.Authorization, "Bearer $testToken")
+    private fun HttpRequestBuilder.autentisert(token: String = gyldigToken) {
+        header(HttpHeaders.Authorization, "Bearer $token")
     }
 
     private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type): Oppgave {

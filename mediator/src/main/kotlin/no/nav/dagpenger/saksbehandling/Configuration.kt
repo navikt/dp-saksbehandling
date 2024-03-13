@@ -20,7 +20,7 @@ internal object Configuration {
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
                 "KAFKA_RESET_POLICY" to "latest",
                 "GRUPPE_BESLUTTER" to "123",
-                "GRUPPE_SAKSBEHANDLER" to "456",
+                "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
                 "DP_BEHANDLING_API_URL" to "http://dp-behandling",
             ),
         )
