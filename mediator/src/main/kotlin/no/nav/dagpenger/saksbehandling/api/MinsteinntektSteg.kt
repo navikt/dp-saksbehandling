@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.api
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.Steg
 
-const val MINSTEINNTEKT_OPPLYSNING_NAVN = "Minsteinntekt"
+const val MINSTEINNTEKT_OPPLYSNING_NAVN = "Krav til minsteinntekt"
 
 fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     val minsteinntektOpplysningTre = minsteinntektOpplysningFra(behandlingDTO)
@@ -11,7 +11,7 @@ fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     return when {
         minsteinntektOpplysningTre != null ->
             Steg(
-                navn = "Minsteinntekt",
+                navn = "Krav til minsteinntekt",
                 opplysninger = hentAlleUnikeOpplysningerFra(minsteinntektOpplysningTre),
             )
 

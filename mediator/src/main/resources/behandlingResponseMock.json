@@ -1267,7 +1267,7 @@
     },
     {
       "id": "018dc0e6-14ab-7b49-8f76-e5499dd81bd6",
-      "opplysningstype": "Minsteinntekt",
+      "opplysningstype": "Krav til minsteinntekt",
       "verdi": "false",
       "status": "Hypotese",
       "gyldigFraOgMed": "-9999-01-01T00:00:00+02:00",
