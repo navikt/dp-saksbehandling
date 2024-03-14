@@ -4,7 +4,7 @@ import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.Steg
 
 const val ALDERSKRAV_OPPLYSNING_NAVN = "Oppfyller kravet til alder"
-val alderBeskrivendeId = "steg-alder"
+val alderBeskrivendeId = "steg.alder"
 
 fun alderskravStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     val alderskravOpplysningsTre = alderskravOpplysningFra(behandlingDTO)

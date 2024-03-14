@@ -4,7 +4,7 @@ import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.Steg
 
 const val MINSTEINNTEKT_OPPLYSNING_NAVN = "Krav til minsteinntekt"
-private val minsteinntektBeskrivendeId = "steg-minsteinntekt"
+private val minsteinntektBeskrivendeId = "steg.minsteinntekt"
 
 fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     val minsteinntektOpplysningTre = minsteinntektOpplysningFra(behandlingDTO)
