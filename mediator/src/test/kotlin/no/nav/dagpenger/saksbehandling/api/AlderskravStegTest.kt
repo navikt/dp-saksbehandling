@@ -12,7 +12,7 @@ class AlderskravStegTest {
 
         val steg = alderskravStegFra(behandlingDto)
         requireNotNull(steg)
-        steg.navn shouldBe "Alder"
+        steg.urn shouldBe alderStegUrn
     }
 }
 

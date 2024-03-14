@@ -1,3 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-data class Steg(val navn: String, val opplysninger: List<Opplysning>)
+import de.slub.urn.URN
+
+data class Steg(val urn: URN, val opplysninger: List<Opplysning>)
