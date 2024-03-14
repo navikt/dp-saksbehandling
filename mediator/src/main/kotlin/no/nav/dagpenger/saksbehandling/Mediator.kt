@@ -68,6 +68,7 @@ internal class Mediator(
                         saksbehandlerToken = hendelse.saksbehandlerSignatur,
                     )
                 }.getOrNull()
+                sikkerLogger.info { "Hentet BehandlingDTO: $behandlingDTO" }
 
                 val nyeSteg = mutableListOf<Steg>()
                 minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }

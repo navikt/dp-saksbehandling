@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.dp.biblioteker.oauth2.klient)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
+    implementation("de.slub-dresden:urnlib:2.0.1")
     api("com.fasterxml.uuid:java-uuid-generator:5.0.0")
 
     testImplementation(libs.mockk)

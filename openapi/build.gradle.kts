@@ -1,5 +1,5 @@
 plugins {
-    id("org.openapi.generator") version "7.3.0"
+    id("org.openapi.generator") version "7.4.0"
     id("common")
     `java-library`
 }
@@ -22,7 +22,7 @@ sourceSets {
 }
 
 dependencies {
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.16.1")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.0")
 }
 
 openApiGenerate {

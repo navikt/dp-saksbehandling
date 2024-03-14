@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.maskinell.PartialBehandlingKlientMock
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -29,6 +30,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 this.oppgaveApi(mediator)
             }.build().also { rapidsConnection ->
                 BehandlingOpprettetMottak(rapidsConnection, mediator)
+                ForslagTilVedtakMottak(rapidsConnection, mediator)
             }
 
     init {

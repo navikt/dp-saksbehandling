@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import com.fasterxml.jackson.core.type.TypeReference
+import de.slub.urn.URN
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -34,7 +35,7 @@ import java.util.UUID
 
 class OppgaveApiTest {
     val testIdent = "13083826694"
-    val saksbehandlerADGruppe = "AD gruppe for saksbehandlere"
+    val testStegUrn = URN.rfc8141().parse("urn:steg:teststeg")
     private val mockAzure = mockAzure()
 
     private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to "SaksbehandlerADGruppe"))
@@ -88,7 +89,7 @@ class OppgaveApiTest {
                         OppgaveDTO::class.java,
                     )
                 actualOppgave.steg.size shouldBe 1
-                actualOppgave.steg[0].stegNavn shouldBe "Teststeg"
+                actualOppgave.steg[0].urn shouldBe testStegUrn.toString()
             }
         }
     }
@@ -223,17 +224,19 @@ class OppgaveApiTest {
     private fun testOppgaveFerdigBehandlet(
         oppgaveId: UUID,
         opprettet: ZonedDateTime = ZonedDateTime.now(),
-    ) = Oppgave(
-        oppgaveId = oppgaveId,
-        ident = "12345612345",
-        emneknagger = setOf("Søknadsbehandling"),
-        opprettet = opprettet,
-        behandlingId = UUIDv7.ny(),
-        tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
-    ).also {
-        it.steg.add(
-            Steg("Teststeg", emptyList()),
-        )
+    ): Oppgave {
+        return Oppgave(
+            oppgaveId = oppgaveId,
+            ident = "12345612345",
+            emneknagger = setOf("Søknadsbehandling"),
+            opprettet = opprettet,
+            behandlingId = UUIDv7.ny(),
+            tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
+        ).also {
+            it.steg.add(
+                Steg(testStegUrn, emptyList()),
+            )
+        }
     }
 
     private infix fun OppgaveDTO.sammenlign(expected: OppgaveDTO) {

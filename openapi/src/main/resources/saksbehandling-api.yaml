@@ -161,14 +161,14 @@ components:
     Steg:
       type: object
       properties:
-        stegNavn:
+        urn:
           type: string
         opplysninger:
           $ref: '#/components/schemas/Opplysninger'
         tilstand:
           $ref: '#/components/schemas/StegTilstand'
       required:
-        - stegNavn
+        - urn
         - opplysninger
 
     Opplysninger:
