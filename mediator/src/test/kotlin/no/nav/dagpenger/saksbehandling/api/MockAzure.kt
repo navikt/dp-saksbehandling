@@ -19,7 +19,7 @@ class MockAzure(private val config: MockConfig) {
         System.setProperty("AZURE_OPENID_CONFIG_JWKS_URI", "${mockOAuth2Server.jwksUrl(AZURE_OPENID_CONFIG_ISSUER)}")
     }
 
-    fun lagTokenMedClaims(claims: Map<String, String>): String {
+    fun lagTokenMedClaims(claims: Map<String, Any>): String {
         return mockOAuth2Server.issueToken(
             audience = AZURE_APP_CLIENT_ID,
             issuerId = AZURE_OPENID_CONFIG_ISSUER,

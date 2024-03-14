@@ -38,7 +38,7 @@ class OppgaveApiTest {
     val testStegUrn = URN.rfc8141().parse("urn:steg:teststeg")
     private val mockAzure = mockAzure()
 
-    private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to "SaksbehandlerADGruppe"))
+    private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to listOf("SaksbehandlerADGruppe")))
 
     @Test
     fun `Skal avvise kall uten autoriserte AD grupper`() {
