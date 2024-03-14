@@ -145,24 +145,24 @@ internal fun Steg.tilStegDTO(): StegDTO {
         beskrivendeId = this.beskrivendeId,
         opplysninger = this.opplysninger.map { opplysning -> opplysning.tilOpplysningDTO() },
         // @TODO: Hent stegtilstand fra steg?
-        tilstand = StegTilstandDTO.Groenn,
+        tilstand = StegTilstandDTO.OPPFYLT,
     )
 }
 
 private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
     val datatype: DataTypeDTO =
         when (this.dataType) {
-            "boolean" -> DataTypeDTO.Boolean
-            "LocalDate" -> DataTypeDTO.LocalDate
-            "int" -> DataTypeDTO.Int
-            "double" -> DataTypeDTO.Double
-            else -> DataTypeDTO.String
+            "boolean" -> DataTypeDTO.BOOLEAN
+            "LocalDate" -> DataTypeDTO.LOCALDATE
+            "int" -> DataTypeDTO.INT
+            "double" -> DataTypeDTO.DOUBLE
+            else -> DataTypeDTO.STRING
         }
     return OpplysningDTO(
         opplysningNavn = this.navn,
         status = when (this.status) {
-            OpplysningStatus.Hypotese -> OpplysningStatusDTO.Hypotese
-            OpplysningStatus.Faktum -> OpplysningStatusDTO.Faktum
+            OpplysningStatus.Hypotese -> OpplysningStatusDTO.HYPOTESE
+            OpplysningStatus.Faktum -> OpplysningStatusDTO.FAKTUM
         },
         dataType = datatype,
         svar = SvarDTO(this.verdi),

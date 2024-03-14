@@ -200,16 +200,16 @@ components:
     DataType:
       type: string
       enum:
-        - String
-        - LocalDate
-        - Int
-        - Boolean
-        - Double
+        - STRING
+        - LOCALDATE
+        - INT
+        - BOOLEAN
+        - DOUBLE
     OpplysningStatus:
       type: string
       enum:
-        - Hypotese
-        - Faktum
+        - HYPOTESE
+        - FAKTUM
     Sok:
       type: object
       properties:
@@ -220,6 +220,6 @@ components:
     StegTilstand:
       type: string
       enum:
-        - Groenn
-        - Roed
-        - Gul
+        - OPPFYLT
+        - IKKE_OPPFYLT
+        - MANUELL_BEHANDLING
