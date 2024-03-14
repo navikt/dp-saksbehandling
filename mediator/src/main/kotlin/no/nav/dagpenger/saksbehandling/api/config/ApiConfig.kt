@@ -6,14 +6,9 @@ import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.jwt.JWTCredential
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.api.config.auth.AzureAd
-import no.nav.dagpenger.saksbehandling.api.config.auth.verifier
+import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 
 fun Application.apiConfig() {
     install(CallLogging) {
@@ -27,18 +22,6 @@ fun Application.apiConfig() {
     }
 
     install(Authentication) {
-        jwt("azureAd") {
-            verifier(AzureAd)
-            validate { credentials ->
-                JWTPrincipal(credentials.payload)
-            }
-            validate { jwtClaims ->
-                jwtClaims.måInneholde(autorisertADGruppe = Configuration.saksbehandlerADGruppe)
-                JWTPrincipal(jwtClaims.payload)
-            }
-        }
+        jwt("azureAd")
     }
 }
-
-private fun JWTCredential.måInneholde(autorisertADGruppe: String) =
-    require(this.payload.claims["groups"]?.asList(String::class.java)?.contains(autorisertADGruppe) ?: false)
