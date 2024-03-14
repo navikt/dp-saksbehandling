@@ -11,6 +11,5 @@ dependencies {
     api(libs.dp.aktivitetslogg)
     implementation(libs.jackson.kotlin)
     implementation("com.fasterxml.uuid:java-uuid-generator:5.0.0")
-    implementation("de.slub-dresden:urnlib:2.0.1")
     testImplementation(libs.bundles.kotest.assertions)
 }

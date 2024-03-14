@@ -1,11 +1,10 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import de.slub.urn.URN
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.Steg
 
 const val MINSTEINNTEKT_OPPLYSNING_NAVN = "Krav til minsteinntekt"
-private val minsteinntektStegUrn = URN.rfc8141().parse("urn:steg:minsteinntekt")
+private val minsteinntektBeskrivendeId = "steg-minsteinntekt"
 
 fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     val minsteinntektOpplysningTre = minsteinntektOpplysningFra(behandlingDTO)
@@ -13,7 +12,7 @@ fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     return when {
         minsteinntektOpplysningTre != null ->
             Steg(
-                urn = minsteinntektStegUrn,
+                beskrivendeId = minsteinntektBeskrivendeId,
                 opplysninger = hentAlleUnikeOpplysningerFra(minsteinntektOpplysningTre),
             )
 

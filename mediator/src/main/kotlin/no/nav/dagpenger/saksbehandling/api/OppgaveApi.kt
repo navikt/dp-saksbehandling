@@ -142,7 +142,7 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
 
 internal fun Steg.tilStegDTO(): StegDTO {
     return StegDTO(
-        urn = this.urn.toString(),
+        beskrivendeId = this.beskrivendeId,
         opplysninger = this.opplysninger.map { opplysning -> opplysning.tilOpplysningDTO() },
         // @TODO: Hent stegtilstand fra steg?
         tilstand = StegTilstandDTO.Groenn,
