@@ -6,7 +6,7 @@ import no.nav.dagpenger.saksbehandling.AlderskravSteg.Companion.ALDER_BESKRIVEND
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import org.junit.jupiter.api.Test
 
-class AlderskravStegTest {
+class StegByggerTest {
     @Test
     fun `Skal hente ut opplysningsdeltreet som omhandler aldersvilkåret`() {
         val behandlingDto = objectMapper.readValue(testdata, BehandlingDTO::class.java)
