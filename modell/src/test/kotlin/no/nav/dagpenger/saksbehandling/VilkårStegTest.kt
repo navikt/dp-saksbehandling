@@ -3,66 +3,64 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-class VilkårStegTest(beskrivendeId: String) {
+class VilkårStegTest {
 
     @Test
     fun `Tilstand oppfylt`() {
-        val steg = object : VilkårSteg(
-            "steg.testvilkaar",
-            listOf(
-                Opplysning(
-                    navn = "Testvilkår",
-                    verdi = "true",
-                    dataType = "boolean",
-                    status = OpplysningStatus.Faktum
-                )
-            )
-            {
+        val opplysninger = listOf(
+            Opplysning(
+                navn = "Testvilkår",
+                verdi = "true",
+                dataType = "boolean",
+                status = OpplysningStatus.Faktum,
+            ),
+        )
 
-            }
+        TestVilkår(opplysninger).tilstand shouldBe Steg.Tilstand.OPPFYLT
     }
 
     @Test
     fun `Tilstand ikke oppfylt`() {
-        val steg = Steg(
-            beskrivendeId = "steg.testvilkaar",
-            opplysninger = listOf(
-                Opplysning(
-                    navn = "Testvilkår",
-                    verdi = "false",
-                    dataType = "boolean",
-                    status = OpplysningStatus.Faktum
-                )
+        val opplysninger = listOf(
+            Opplysning(
+                navn = "Testvilkår",
+                verdi = "false",
+                dataType = "boolean",
+                status = OpplysningStatus.Faktum,
             ),
         )
-        steg.tilstand shouldBe Steg.Tilstand.IKKE_OPPFYLT
+
+        TestVilkår(opplysninger).tilstand shouldBe Steg.Tilstand.IKKE_OPPFYLT
     }
 
     @Test
     fun `Tilstand manuell behandling`() {
-        val steg = Steg(
-            beskrivendeId = "steg.testvilkaar",
-            opplysninger = listOf(
-                Opplysning(
-                    navn = "Testvilkår",
-                    verdi = "true",
-                    dataType = "boolean",
-                    status = OpplysningStatus.Hypotese
-                )
+        val opplysninger1 = listOf(
+            Opplysning(
+                navn = "Testvilkår",
+                verdi = "false",
+                dataType = "boolean",
+                status = OpplysningStatus.Hypotese,
             ),
         )
-        steg.tilstand shouldBe Steg.Tilstand.MANUELL_BEHANDLING
-        val steg2 = Steg(
-            beskrivendeId = "steg.testvilkaar",
-            opplysninger = listOf(
-                Opplysning(
-                    navn = "Testvilkår",
-                    verdi = "false",
-                    dataType = "boolean",
-                    status = OpplysningStatus.Hypotese
-                )
+        TestVilkår(opplysninger1).tilstand shouldBe Steg.Tilstand.MANUELL_BEHANDLING
+
+        val opplysninger2 = listOf(
+            Opplysning(
+                navn = "Testvilkår",
+                verdi = "true",
+                dataType = "boolean",
+                status = OpplysningStatus.Hypotese,
             ),
         )
-        steg2.tilstand shouldBe Steg.Tilstand.MANUELL_BEHANDLING
+
+        TestVilkår(opplysninger2).tilstand shouldBe Steg.Tilstand.MANUELL_BEHANDLING
+    }
+
+    private class TestVilkår(opplysninger: List<Opplysning>) : VilkårSteg(
+        beskrivendeId = "steg.testvilkaar",
+        opplysninger = opplysninger,
+    ) {
+        override val rotNodeNavn: String = "Testvilkår"
     }
 }
