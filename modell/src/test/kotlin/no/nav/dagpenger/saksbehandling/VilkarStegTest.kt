@@ -93,6 +93,6 @@ class VilkarStegTest {
     private class TestVilkårSteg(opplysninger: List<Opplysning>) : VilkårSteg(
         beskrivendeId = "steg.testvilkaar",
         opplysninger = opplysninger,
-        toppNodeNavn = "Testvilkår",
+        toppnodeNavn = "Testvilkår",
     )
 }
