@@ -166,6 +166,7 @@ private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
         },
         dataType = datatype,
         svar = SvarDTO(this.verdi),
+        redigerbar = this.redigerbar,
     )
 }
 

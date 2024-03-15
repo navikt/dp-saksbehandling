@@ -5,6 +5,7 @@ data class Opplysning(
     val verdi: String? = null,
     val dataType: String,
     val status: OpplysningStatus,
+    val redigerbar: Boolean,
 //    private val gyldigFraOgMed: ZonedDate,
 //    private val gyldigTilOgMed: ZonedDate,
 //    val kilde: String,

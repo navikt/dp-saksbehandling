@@ -247,6 +247,7 @@ components:
         - status
         - gyldigFraOgMed
         - gyldigTilOgMed
+        - redigerbar
       properties:
         id:
           $ref: '#/components/schemas/OpplysningsId'

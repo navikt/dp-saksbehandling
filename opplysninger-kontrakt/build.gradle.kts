@@ -33,7 +33,7 @@ val schema = "behandling-api.yaml"
 tasks.register<Download>("downloadOpenApi") {
     src("https://raw.githubusercontent.com/navikt/dp-behandling/main/openapi/src/main/resources/$schema")
     dest("$projectDir/src/main/resources/$schema")
-    overwrite(false)
+    overwrite(true)
 }
 
 tasks.named("openApiGenerate") {
