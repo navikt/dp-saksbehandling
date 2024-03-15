@@ -12,7 +12,7 @@ fun hentAlleUnikeOpplysningerFra(opplysningstre: OpplysningDTO): List<Opplysning
         opplysninger = listOf(opplysningstre),
         aggregerteOpplysninger = aggregerteOpplysninger,
     )
-    return aggregerteOpplysninger.entries.map { it.value.toOpplysning() }
+    return aggregerteOpplysninger.entries.map { it.value.tilOpplysning() }
 }
 
 private fun traverserOpplysningstre(
@@ -25,7 +25,7 @@ private fun traverserOpplysningstre(
     }
 }
 
-private fun OpplysningDTO.toOpplysning() =
+private fun OpplysningDTO.tilOpplysning() =
     Opplysning(
         navn = this.opplysningstype,
         verdi = this.verdi,

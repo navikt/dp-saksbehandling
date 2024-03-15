@@ -121,7 +121,7 @@ private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveDTO() }
 }
 
-private fun Oppgave.Tilstand.Type.toOppgaveTilstandDTO() =
+private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
     when (this) {
         Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
         Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
@@ -136,7 +136,7 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
         tidspunktOpprettet = this.opprettet,
         journalpostIder = emptyList(),
         emneknagger = this.emneknagger.toList(),
-        tilstand = this.tilstand.toOppgaveTilstandDTO(),
+        tilstand = this.tilstand.tilOppgaveTilstandDTO(),
         steg = this.steg.map { steg -> steg.tilStegDTO() },
     )
 }
@@ -158,21 +158,19 @@ private fun Steg.Tilstand.tilTilstandDTO(): StegTilstandDTO {
 }
 
 private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
-    val datatype: DataTypeDTO =
-        when (this.dataType) {
-            DataType.Boolean -> DataTypeDTO.BOOLEAN
-            DataType.LocalDate -> DataTypeDTO.LOCALDATE
-            DataType.Int -> DataTypeDTO.INT
-            DataType.Double -> DataTypeDTO.DOUBLE
-            DataType.String -> DataTypeDTO.STRING
-        }
     return OpplysningDTO(
         opplysningNavn = this.navn,
         status = when (this.status) {
             OpplysningStatus.Hypotese -> OpplysningStatusDTO.HYPOTESE
             OpplysningStatus.Faktum -> OpplysningStatusDTO.FAKTUM
         },
-        dataType = datatype,
+        dataType = when (this.dataType) {
+            DataType.Boolean -> DataTypeDTO.BOOLEAN
+            DataType.LocalDate -> DataTypeDTO.LOCALDATE
+            DataType.Int -> DataTypeDTO.INT
+            DataType.Double -> DataTypeDTO.DOUBLE
+            DataType.String -> DataTypeDTO.STRING
+        },
         svar = SvarDTO(this.verdi),
     )
 }
