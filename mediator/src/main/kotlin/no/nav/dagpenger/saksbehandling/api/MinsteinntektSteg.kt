@@ -13,7 +13,6 @@ fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     return when {
         minsteinntektOpplysningTre != null ->
             MinsteInntektSteg(
-                beskrivendeId = minsteinntektBeskrivendeId,
                 opplysninger = hentAlleUnikeOpplysningerFra(minsteinntektOpplysningTre),
             )
 

@@ -91,7 +91,7 @@ class OppgaveApiTest {
                         OppgaveDTO::class.java,
                     )
                 actualOppgave.steg.size shouldBe 1
-                actualOppgave.steg[0].beskrivendeId shouldBe testBeskrivendeId
+                actualOppgave.steg[0].beskrivendeId shouldBe MinsteInntektSteg.MINSTEINNTEKT_BESKRIVENDE_ID
                 actualOppgave.steg[0].tilstand shouldBe StegTilstandDTO.OPPFYLT
             }
         }
@@ -245,7 +245,7 @@ class OppgaveApiTest {
             tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
         ).also {
             it.steg.add(
-                MinsteInntektSteg(testBeskrivendeId, opplysninger),
+                MinsteInntektSteg(opplysninger),
             )
         }
     }

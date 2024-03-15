@@ -13,7 +13,6 @@ fun alderskravStegFra(behandlingDTO: BehandlingDTO?): Steg? {
     return when {
         alderskravOpplysningsTre != null ->
             AlderskravSteg(
-                beskrivendeId = alderBeskrivendeId,
                 opplysninger = hentAlleUnikeOpplysningerFra(alderskravOpplysningsTre),
             )
 

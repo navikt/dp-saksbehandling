@@ -16,7 +16,7 @@ class AlderskravStegTest {
         )
 
         shouldThrow<IllegalStateException> {
-            AlderskravSteg("hubba", opplysninger)
+            AlderskravSteg(opplysninger)
         }
     }
 }
