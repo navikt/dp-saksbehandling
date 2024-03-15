@@ -60,7 +60,6 @@ class VilkarStegTest {
     private class TestVilkår(opplysninger: List<Opplysning>) : VilkårSteg(
         beskrivendeId = "steg.testvilkaar",
         opplysninger = opplysninger,
-    ) {
-        override val toppNodeNavn: String = "Testvilkår"
-    }
+        toppNodeNavn = "Testvilkår",
+    )
 }

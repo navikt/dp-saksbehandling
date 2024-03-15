@@ -3,8 +3,7 @@ package no.nav.dagpenger.saksbehandling
 sealed class Steg(val beskrivendeId: String, val opplysninger: List<Opplysning>) {
     abstract val tilstand: Tilstand
     abstract val toppNodeNavn: String
-    protected open val toppnode: Opplysning
-        get() = opplysninger.single { it.navn == toppNodeNavn }
+    abstract val toppnode: Opplysning
 
     enum class Tilstand {
         OPPFYLT,
@@ -13,15 +12,14 @@ sealed class Steg(val beskrivendeId: String, val opplysninger: List<Opplysning>)
     }
 }
 
-abstract class VilkårSteg(beskrivendeId: String, opplysninger: List<Opplysning>) : Steg(
-    beskrivendeId = beskrivendeId,
-    opplysninger = opplysninger,
-) {
-    override val toppnode: Opplysning
-        get() {
-            require(super.toppnode.dataType == "boolean") { "Vilkår må være av type boolean" }
-            return super.toppnode
-        }
+abstract class VilkårSteg(beskrivendeId: String, opplysninger: List<Opplysning>, override val toppNodeNavn: String) :
+    Steg(
+        beskrivendeId = beskrivendeId,
+        opplysninger = opplysninger,
+    ) {
+    override val toppnode: Opplysning =
+        opplysninger.singleOrNull { it.navn == toppNodeNavn && it.dataType == "boolean" }
+            ?: throw IllegalStateException("Mangler toppnode med navn $toppNodeNavn og dataType boolean")
 
     override val tilstand: Tilstand
         get() {
@@ -31,7 +29,7 @@ abstract class VilkårSteg(beskrivendeId: String, opplysninger: List<Opplysning>
                 when (toppnode.verdi) {
                     "true" -> Tilstand.OPPFYLT
                     "false" -> Tilstand.IKKE_OPPFYLT
-                    else -> throw IllegalStateException("Ugyldig verdi for vilkårsSteg2: ${toppnode.verdi}")
+                    else -> throw IllegalStateException("Ugyldig verdi for vilkårsSteg: ${toppnode.verdi}")
                 }
             }
         }
