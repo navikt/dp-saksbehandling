@@ -17,6 +17,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.DataType
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Opplysning
@@ -120,7 +121,7 @@ private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveDTO() }
 }
 
-private fun Oppgave.Tilstand.Type.toOppgaveTilstandDTO() =
+private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
     when (this) {
         Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
         Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
@@ -135,36 +136,41 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
         tidspunktOpprettet = this.opprettet,
         journalpostIder = emptyList(),
         emneknagger = this.emneknagger.toList(),
-        tilstand = this.tilstand.toOppgaveTilstandDTO(),
+        tilstand = this.tilstand.tilOppgaveTilstandDTO(),
         steg = this.steg.map { steg -> steg.tilStegDTO() },
     )
 }
 
 internal fun Steg.tilStegDTO(): StegDTO {
     return StegDTO(
-        urn = this.urn.toString(),
+        beskrivendeId = this.beskrivendeId,
         opplysninger = this.opplysninger.map { opplysning -> opplysning.tilOpplysningDTO() },
-        // @TODO: Hent stegtilstand fra steg?
-        tilstand = StegTilstandDTO.Groenn,
+        tilstand = this.tilstand.tilTilstandDTO(),
     )
 }
 
+private fun Steg.Tilstand.tilTilstandDTO(): StegTilstandDTO {
+    return when (this) {
+        Steg.Tilstand.OPPFYLT -> StegTilstandDTO.OPPFYLT
+        Steg.Tilstand.IKKE_OPPFYLT -> StegTilstandDTO.IKKE_OPPFYLT
+        Steg.Tilstand.MANUELL_BEHANDLING -> StegTilstandDTO.MANUELL_BEHANDLING
+    }
+}
+
 private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
-    val datatype: DataTypeDTO =
-        when (this.dataType) {
-            "boolean" -> DataTypeDTO.Boolean
-            "LocalDate" -> DataTypeDTO.LocalDate
-            "int" -> DataTypeDTO.Int
-            "double" -> DataTypeDTO.Double
-            else -> DataTypeDTO.String
-        }
     return OpplysningDTO(
         opplysningNavn = this.navn,
         status = when (this.status) {
-            OpplysningStatus.Hypotese -> OpplysningStatusDTO.Hypotese
-            OpplysningStatus.Faktum -> OpplysningStatusDTO.Faktum
+            OpplysningStatus.Hypotese -> OpplysningStatusDTO.HYPOTESE
+            OpplysningStatus.Faktum -> OpplysningStatusDTO.FAKTUM
         },
-        dataType = datatype,
+        dataType = when (this.dataType) {
+            DataType.Boolean -> DataTypeDTO.BOOLEAN
+            DataType.LocalDate -> DataTypeDTO.LOCALDATE
+            DataType.Int -> DataTypeDTO.INT
+            DataType.Double -> DataTypeDTO.DOUBLE
+            DataType.String -> DataTypeDTO.STRING
+        },
         svar = SvarDTO(this.verdi),
         redigerbar = this.redigerbar,
     )

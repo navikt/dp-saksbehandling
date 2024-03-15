@@ -20,7 +20,7 @@ internal object Configuration {
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
                 "KAFKA_RESET_POLICY" to "latest",
                 "GRUPPE_BESLUTTER" to "123",
-                "GRUPPE_SAKSBEHANDLER" to "456",
+                "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
                 "DP_BEHANDLING_API_URL" to "http://dp-behandling",
             ),
         )
@@ -34,6 +34,7 @@ internal object Configuration {
 
     val behandlingUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
     val behandlingScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
+    val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
 
     val azureAdClient by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)

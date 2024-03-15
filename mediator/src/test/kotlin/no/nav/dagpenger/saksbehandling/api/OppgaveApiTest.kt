@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import com.fasterxml.jackson.core.type.TypeReference
-import de.slub.urn.URN
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -21,12 +20,18 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.DataType
 import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.MinsteInntektSteg
+import no.nav.dagpenger.saksbehandling.MinsteInntektSteg.Companion.MINSTEINNTEKT_OPPLYSNING_NAVN
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Steg
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Opplysning
+import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
@@ -34,17 +39,25 @@ import java.util.UUID
 
 class OppgaveApiTest {
     val testIdent = "13083826694"
-    val testStegUrn = URN.rfc8141().parse("urn:steg:teststeg")
-    private val testToken by mockAzure {
-        claims = mapOf("NAVident" to "123")
+    val testBeskrivendeId = "steg-test"
+    private val mockAzure = mockAzure()
+
+    private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to listOf("SaksbehandlerADGruppe")))
+
+    @Test
+    fun `Skal avvise kall uten autoriserte AD grupper`() {
+        withOppgaveApi {
+            client.get("/oppgave") { autentisert(token = mockAzure.lagTokenMedClaims(mapOf("groups" to "UgyldigADGruppe"))) }
+                .status shouldBe HttpStatusCode.Unauthorized
+        }
     }
 
     @Test
     fun `Skal kunne hente ut alle oppgaver`() {
         val mediatorMock = mockk<Mediator>().also {
             every { it.hentOppgaverKlarTilBehandling() } returns listOf(
-                lagTestOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
-                lagTestOppgaveMedTilstand(Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING),
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
             )
         }
 
@@ -80,7 +93,8 @@ class OppgaveApiTest {
                         OppgaveDTO::class.java,
                     )
                 actualOppgave.steg.size shouldBe 1
-                actualOppgave.steg[0].urn shouldBe testStegUrn.toString()
+                actualOppgave.steg[0].beskrivendeId shouldBe MinsteInntektSteg.MINSTEINNTEKT_BESKRIVENDE_ID
+                actualOppgave.steg[0].tilstand shouldBe StegTilstandDTO.OPPFYLT
             }
         }
     }
@@ -171,6 +185,22 @@ class OppgaveApiTest {
         }
     }
 
+    /*
+    @Test
+    fun `kall uten saksbehandlingsADgruppe i claims returnerer 401`() {
+        medSikretBehandlingApi {
+            val tokenUtenSaksbehandlerGruppe = testAzureAdToken(ADGrupper = emptyList())
+
+            val response =
+                autentisert(
+                    token = tokenUtenSaksbehandlerGruppe,
+                    endepunkt = "/behandling",
+                    body = """{"ident":"$ident"}""",
+                )
+            response.status shouldBe HttpStatusCode.Unauthorized
+        }
+    }*/
+
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
@@ -181,8 +211,8 @@ class OppgaveApiTest {
         }
     }
 
-    private fun HttpRequestBuilder.autentisert() {
-        header(HttpHeaders.Authorization, "Bearer $testToken")
+    private fun HttpRequestBuilder.autentisert(token: String = gyldigToken) {
+        header(HttpHeaders.Authorization, "Bearer $token")
     }
 
     private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type): Oppgave {
@@ -200,6 +230,14 @@ class OppgaveApiTest {
         oppgaveId: UUID,
         opprettet: ZonedDateTime = ZonedDateTime.now(),
     ): Oppgave {
+        val opplysninger = listOf(
+            Opplysning(
+                navn = MINSTEINNTEKT_OPPLYSNING_NAVN,
+                verdi = "true",
+                dataType = DataType.Boolean,
+                status = OpplysningStatus.Faktum,
+            ),
+        )
         return Oppgave(
             oppgaveId = oppgaveId,
             ident = "12345612345",
@@ -209,7 +247,7 @@ class OppgaveApiTest {
             tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
         ).also {
             it.steg.add(
-                Steg(testStegUrn, emptyList()),
+                MinsteInntektSteg(opplysninger),
             )
         }
     }
