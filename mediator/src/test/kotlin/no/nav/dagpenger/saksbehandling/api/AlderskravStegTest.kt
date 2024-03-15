@@ -2,17 +2,18 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.AlderskravSteg.Companion.ALDER_BESKRIVENDE_ID
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import org.junit.jupiter.api.Test
 
-class AlderskravSteg2Test {
+class AlderskravStegTest {
     @Test
     fun `Skal hente ut opplysningsdeltreet som omhandler aldersvilkåret`() {
         val behandlingDto = objectMapper.readValue(testdata, BehandlingDTO::class.java)
 
         val steg = alderskravStegFra(behandlingDto)
         requireNotNull(steg)
-        steg.beskrivendeId shouldBe alderBeskrivendeId
+        steg.beskrivendeId shouldBe ALDER_BESKRIVENDE_ID
     }
 }
 

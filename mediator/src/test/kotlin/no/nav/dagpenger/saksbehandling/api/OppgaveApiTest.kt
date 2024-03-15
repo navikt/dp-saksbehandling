@@ -22,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.MinsteInntektSteg
+import no.nav.dagpenger.saksbehandling.MinsteInntektSteg.Companion.MINSTEINNTEKT_OPPLYSNING_NAVN
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Opplysning
