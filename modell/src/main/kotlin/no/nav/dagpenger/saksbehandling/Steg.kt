@@ -18,7 +18,7 @@ abstract class VilkårSteg(beskrivendeId: String, opplysninger: List<Opplysning>
         opplysninger = opplysninger,
     ) {
     override val toppnode: Opplysning =
-        opplysninger.singleOrNull { it.navn == toppnodeNavn && it.dataType == "boolean" }
+        opplysninger.singleOrNull { it.navn == toppnodeNavn && it.dataType == DataType.Boolean }
             ?: throw IllegalStateException("Mangler toppnode med navn $toppnodeNavn og dataType boolean")
 
     override val tilstand: Tilstand

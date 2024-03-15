@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.behandling.opplysninger.api.models.OpplysningDTO
+import no.nav.dagpenger.saksbehandling.DataType
 import no.nav.dagpenger.saksbehandling.Opplysning
 import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import java.util.UUID
@@ -28,7 +29,13 @@ private fun OpplysningDTO.toOpplysning() =
     Opplysning(
         navn = this.opplysningstype,
         verdi = this.verdi,
-        dataType = this.datatype,
+        dataType = when (this.datatype) {
+            "boolean" -> DataType.Boolean
+            "LocalDate" -> DataType.LocalDate
+            "int" -> DataType.Int
+            "double" -> DataType.Double
+            else -> DataType.String
+        },
         status = when (this.status) {
             OpplysningDTO.Status.Hypotese -> OpplysningStatus.Hypotese
             OpplysningDTO.Status.Faktum -> OpplysningStatus.Faktum

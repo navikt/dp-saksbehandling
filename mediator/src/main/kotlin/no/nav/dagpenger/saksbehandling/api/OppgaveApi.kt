@@ -17,6 +17,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.DataType
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Opplysning
@@ -159,11 +160,11 @@ private fun Steg.Tilstand.tilTilstandDTO(): StegTilstandDTO {
 private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
     val datatype: DataTypeDTO =
         when (this.dataType) {
-            "boolean" -> DataTypeDTO.BOOLEAN
-            "LocalDate" -> DataTypeDTO.LOCALDATE
-            "int" -> DataTypeDTO.INT
-            "double" -> DataTypeDTO.DOUBLE
-            else -> DataTypeDTO.STRING
+            DataType.Boolean -> DataTypeDTO.BOOLEAN
+            DataType.LocalDate -> DataTypeDTO.LOCALDATE
+            DataType.Int -> DataTypeDTO.INT
+            DataType.Double -> DataTypeDTO.DOUBLE
+            DataType.String -> DataTypeDTO.STRING
         }
     return OpplysningDTO(
         opplysningNavn = this.navn,

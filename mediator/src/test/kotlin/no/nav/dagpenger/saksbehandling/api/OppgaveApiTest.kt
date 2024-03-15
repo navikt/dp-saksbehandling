@@ -20,6 +20,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.DataType
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.MinsteInntektSteg
 import no.nav.dagpenger.saksbehandling.MinsteInntektSteg.Companion.MINSTEINNTEKT_OPPLYSNING_NAVN
@@ -233,7 +234,7 @@ class OppgaveApiTest {
             Opplysning(
                 navn = MINSTEINNTEKT_OPPLYSNING_NAVN,
                 verdi = "true",
-                dataType = "boolean",
+                dataType = DataType.Boolean,
                 status = OpplysningStatus.Faktum,
             ),
         )
