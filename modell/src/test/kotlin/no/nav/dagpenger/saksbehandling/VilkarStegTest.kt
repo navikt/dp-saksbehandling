@@ -1,9 +1,42 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
 class VilkarStegTest {
+
+    @Test
+    fun `VilkårSteg må ha en toppnode med boolsk verdi`() {
+        val stringOpplysning = Opplysning(
+            navn = "Testvilkår",
+            verdi = "true",
+            dataType = "string",
+            status = OpplysningStatus.Faktum,
+        )
+        val booleanOpplysning = Opplysning(
+            navn = "Testvilkår",
+            verdi = "true",
+            dataType = "boolean",
+            status = OpplysningStatus.Faktum,
+        )
+
+        val ukjentOpplysning = Opplysning(
+            navn = "Ukjent",
+            verdi = "true",
+            dataType = "boolean",
+            status = OpplysningStatus.Faktum,
+        )
+
+        shouldThrow<IllegalStateException> {
+            TestVilkårSteg(opplysninger = listOf(stringOpplysning, ukjentOpplysning))
+        }
+
+        shouldNotThrowAny {
+            TestVilkårSteg(opplysninger = listOf(booleanOpplysning, stringOpplysning))
+        }.toppnode shouldBe booleanOpplysning
+    }
 
     @Test
     fun `Tilstand oppfylt`() {
@@ -16,7 +49,7 @@ class VilkarStegTest {
             ),
         )
 
-        TestVilkår(opplysninger).tilstand shouldBe Steg.Tilstand.OPPFYLT
+        TestVilkårSteg(opplysninger).tilstand shouldBe Steg.Tilstand.OPPFYLT
     }
 
     @Test
@@ -30,7 +63,7 @@ class VilkarStegTest {
             ),
         )
 
-        TestVilkår(opplysninger).tilstand shouldBe Steg.Tilstand.IKKE_OPPFYLT
+        TestVilkårSteg(opplysninger).tilstand shouldBe Steg.Tilstand.IKKE_OPPFYLT
     }
 
     @Test
@@ -43,7 +76,7 @@ class VilkarStegTest {
                 status = OpplysningStatus.Hypotese,
             ),
         )
-        TestVilkår(opplysninger1).tilstand shouldBe Steg.Tilstand.MANUELL_BEHANDLING
+        TestVilkårSteg(opplysninger1).tilstand shouldBe Steg.Tilstand.MANUELL_BEHANDLING
 
         val opplysninger2 = listOf(
             Opplysning(
@@ -54,10 +87,10 @@ class VilkarStegTest {
             ),
         )
 
-        TestVilkår(opplysninger2).tilstand shouldBe Steg.Tilstand.MANUELL_BEHANDLING
+        TestVilkårSteg(opplysninger2).tilstand shouldBe Steg.Tilstand.MANUELL_BEHANDLING
     }
 
-    private class TestVilkår(opplysninger: List<Opplysning>) : VilkårSteg(
+    private class TestVilkårSteg(opplysninger: List<Opplysning>) : VilkårSteg(
         beskrivendeId = "steg.testvilkaar",
         opplysninger = opplysninger,
         toppNodeNavn = "Testvilkår",
