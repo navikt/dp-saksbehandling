@@ -236,6 +236,7 @@ class OppgaveApiTest {
                 verdi = "true",
                 dataType = DataType.Boolean,
                 status = OpplysningStatus.Faktum,
+                redigerbar = true,
             ),
         )
         return Oppgave(

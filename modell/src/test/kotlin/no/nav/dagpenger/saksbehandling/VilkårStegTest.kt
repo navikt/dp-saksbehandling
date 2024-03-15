@@ -54,30 +54,35 @@ class VilkårStegTest {
         verdi = "true",
         dataType = DataType.Boolean,
         status = OpplysningStatus.Faktum,
+        redigerbar = true,
     )
     private val testvilkårIkkeOppfyltFaktum = Opplysning(
         navn = testvilkårToppnodeNavn,
         verdi = "false",
         dataType = DataType.Boolean,
         status = OpplysningStatus.Faktum,
+        redigerbar = true,
     )
     private val testvilkårOppfyltHypotese = Opplysning(
         navn = testvilkårToppnodeNavn,
         verdi = "true",
         dataType = DataType.Boolean,
         status = OpplysningStatus.Hypotese,
+        redigerbar = true,
     )
     private val testvilkårIkkeOppfyltHypotese = Opplysning(
         navn = testvilkårToppnodeNavn,
         verdi = "false",
         dataType = DataType.Boolean,
         status = OpplysningStatus.Hypotese,
+        redigerbar = true,
     )
     private val stringFaktum = Opplysning(
         navn = "String opplysning",
         verdi = "Dette er en fin tekst",
         dataType = DataType.String,
         status = OpplysningStatus.Faktum,
+        redigerbar = true,
     )
 
     private val bolskFaktum = Opplysning(
@@ -85,5 +90,6 @@ class VilkårStegTest {
         verdi = "true",
         dataType = DataType.Boolean,
         status = OpplysningStatus.Faktum,
+        redigerbar = true,
     )
 }
