@@ -18,9 +18,9 @@ private fun traverserOpplysningstre(
     opplysninger: List<OpplysningDTO>,
     aggregerteOpplysninger: MutableMap<UUID, OpplysningDTO>,
 ) {
-    opplysninger.forEach { opplysning ->
-        aggregerteOpplysninger[opplysning.id] = opplysning
-        opplysning.utledetAv?.opplysninger?.let { traverserOpplysningstre(it, aggregerteOpplysninger) }
+    opplysninger.forEach { opplysningDTO ->
+        aggregerteOpplysninger[opplysningDTO.id] = opplysningDTO
+        opplysningDTO.utledetAv?.opplysninger?.let { traverserOpplysningstre(it, aggregerteOpplysninger) }
     }
 }
 

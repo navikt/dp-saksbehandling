@@ -5,7 +5,7 @@ import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import org.junit.jupiter.api.Test
 
-class AlderskravStegTest {
+class AlderskravSteg2Test {
     @Test
     fun `Skal hente ut opplysningsdeltreet som omhandler aldersvilkåret`() {
         val behandlingDto = objectMapper.readValue(testdata, BehandlingDTO::class.java)
