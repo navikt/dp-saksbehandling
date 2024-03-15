@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: Vedtak API
+  title: Behandling API
   version: 1.0.0
-  description: API for å hente alle vedtak knyttet til en person.
+  description: API for å hente alle behandlinger.
   contact:
     name: '#team-dagpenger'
 servers:
@@ -267,6 +267,9 @@ components:
           type: string
           description: |
             Hvilken datatype opplysningen har, f.eks.: "string", "number", "date"
+        redigerbar:
+          type: boolean
+          description: Indikerer om opplysningen kan redigeres
         kilde:
           oneOf:
             - $ref: '#/components/schemas/Systemkilde'
@@ -362,7 +365,7 @@ components:
       bearerFormat: JWT
       description: |
         Bruker [AzureAD](https://docs.nais.io/security/auth/azure-ad) til autentisering. 
-        Token må ha `audience` satt til `[cluster]:teamdagpenger:dp-rapportering`.
+        Token må ha `audience` satt til `[cluster].teamdagpenger.dp-behandling`.
         
         For å teste APIet kan du lage et gyldig OBO-token ved å bruke wonderwalled:
-        - [dev-gcp](https://wonderwalled-idporten.intern.dev.nav.no/api/obo?aud=dev-gcp:teamdagpenger:dp-rapportering)
+        - [dev-gcp](https://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp.teamdagpenger.dp-behandling)
