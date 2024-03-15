@@ -21,11 +21,11 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.MinsteInntektSteg
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Opplysning
 import no.nav.dagpenger.saksbehandling.OpplysningStatus
-import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -228,7 +228,14 @@ class OppgaveApiTest {
         oppgaveId: UUID,
         opprettet: ZonedDateTime = ZonedDateTime.now(),
     ): Oppgave {
-        val opplysninger = listOf(Opplysning(navn = "Testvilkår", verdi = "true", dataType = "boolean", status = OpplysningStatus.Faktum))
+        val opplysninger = listOf(
+            Opplysning(
+                navn = MINSTEINNTEKT_OPPLYSNING_NAVN,
+                verdi = "true",
+                dataType = "boolean",
+                status = OpplysningStatus.Faktum,
+            ),
+        )
         return Oppgave(
             oppgaveId = oppgaveId,
             ident = "12345612345",
@@ -238,7 +245,7 @@ class OppgaveApiTest {
             tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
         ).also {
             it.steg.add(
-                Steg(testBeskrivendeId, opplysninger),
+                MinsteInntektSteg(testBeskrivendeId, opplysninger),
             )
         }
     }

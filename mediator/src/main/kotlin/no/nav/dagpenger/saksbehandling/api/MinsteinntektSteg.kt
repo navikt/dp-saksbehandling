@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.MinsteInntektSteg
 import no.nav.dagpenger.saksbehandling.Steg
 
 const val MINSTEINNTEKT_OPPLYSNING_NAVN = "Krav til minsteinntekt"
@@ -11,7 +12,7 @@ fun minsteinntektStegFra(behandlingDTO: BehandlingDTO?): Steg? {
 
     return when {
         minsteinntektOpplysningTre != null ->
-            Steg(
+            MinsteInntektSteg(
                 beskrivendeId = minsteinntektBeskrivendeId,
                 opplysninger = hentAlleUnikeOpplysningerFra(minsteinntektOpplysningTre),
             )

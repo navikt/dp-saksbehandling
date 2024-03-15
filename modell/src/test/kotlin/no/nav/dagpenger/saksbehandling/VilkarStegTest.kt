@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-class VilkårStegTest {
+class VilkarStegTest {
 
     @Test
     fun `Tilstand oppfylt`() {
@@ -61,6 +61,6 @@ class VilkårStegTest {
         beskrivendeId = "steg.testvilkaar",
         opplysninger = opplysninger,
     ) {
-        override val rotNodeNavn: String = "Testvilkår"
+        override val toppNodeNavn: String = "Testvilkår"
     }
 }
