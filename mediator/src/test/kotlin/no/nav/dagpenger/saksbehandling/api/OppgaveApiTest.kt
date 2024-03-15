@@ -23,10 +23,13 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Opplysning
+import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
@@ -89,6 +92,7 @@ class OppgaveApiTest {
                     )
                 actualOppgave.steg.size shouldBe 1
                 actualOppgave.steg[0].beskrivendeId shouldBe testBeskrivendeId
+                actualOppgave.steg[0].tilstand shouldBe StegTilstandDTO.OPPFYLT
             }
         }
     }
@@ -224,6 +228,7 @@ class OppgaveApiTest {
         oppgaveId: UUID,
         opprettet: ZonedDateTime = ZonedDateTime.now(),
     ): Oppgave {
+        val opplysninger = listOf(Opplysning(navn = "Testvilkår", verdi = "true", dataType = "boolean", status = OpplysningStatus.Faktum))
         return Oppgave(
             oppgaveId = oppgaveId,
             ident = "12345612345",
@@ -233,7 +238,7 @@ class OppgaveApiTest {
             tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
         ).also {
             it.steg.add(
-                Steg(testBeskrivendeId, emptyList()),
+                Steg(testBeskrivendeId, opplysninger),
             )
         }
     }

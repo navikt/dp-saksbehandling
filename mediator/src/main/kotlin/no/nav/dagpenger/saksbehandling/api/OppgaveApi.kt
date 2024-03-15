@@ -144,9 +144,16 @@ internal fun Steg.tilStegDTO(): StegDTO {
     return StegDTO(
         beskrivendeId = this.beskrivendeId,
         opplysninger = this.opplysninger.map { opplysning -> opplysning.tilOpplysningDTO() },
-        // @TODO: Hent stegtilstand fra steg?
-        tilstand = StegTilstandDTO.OPPFYLT,
+        tilstand = this.tilstand.tilTilstandDTO(),
     )
+}
+
+private fun Steg.Tilstand.tilTilstandDTO(): StegTilstandDTO {
+    return when (this) {
+        Steg.Tilstand.OPPFYLT -> StegTilstandDTO.OPPFYLT
+        Steg.Tilstand.IKKE_OPPFYLT -> StegTilstandDTO.IKKE_OPPFYLT
+        Steg.Tilstand.MANUELL_BEHANDLING -> StegTilstandDTO.MANUELL_BEHANDLING
+    }
 }
 
 private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
