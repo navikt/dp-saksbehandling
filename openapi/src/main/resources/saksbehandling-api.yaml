@@ -187,10 +187,13 @@ components:
           $ref: '#/components/schemas/DataType'
         svar:
           $ref: '#/components/schemas/Svar'
+        redigerbar:
+          type: boolean
       required:
         - opplysningNavn
         - status
         - dataType
+        - redigerbar
     Svar:
       type: object
       properties:

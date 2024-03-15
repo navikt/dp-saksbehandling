@@ -40,4 +40,5 @@ private fun OpplysningDTO.tilOpplysning() =
             OpplysningDTO.Status.Hypotese -> OpplysningStatus.Hypotese
             OpplysningDTO.Status.Faktum -> OpplysningStatus.Faktum
         },
+        redigerbar = this.redigerbar,
     )

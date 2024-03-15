@@ -172,6 +172,7 @@ private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
             DataType.String -> DataTypeDTO.STRING
         },
         svar = SvarDTO(this.verdi),
+        redigerbar = this.redigerbar,
     )
 }
 
