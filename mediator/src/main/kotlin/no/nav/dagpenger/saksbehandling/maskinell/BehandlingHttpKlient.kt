@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.createHttpClient
 import java.util.UUID
 
 class BehandlingHttpKlient(

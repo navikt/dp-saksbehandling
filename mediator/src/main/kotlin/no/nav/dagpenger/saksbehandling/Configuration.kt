@@ -22,6 +22,8 @@ internal object Configuration {
                 "GRUPPE_BESLUTTER" to "123",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
                 "DP_BEHANDLING_API_URL" to "http://dp-behandling",
+                "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
+                "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
             ),
         )
     val properties =
@@ -32,8 +34,10 @@ internal object Configuration {
             map + pair.second
         }
 
-    val behandlingUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
-    val behandlingScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
+    val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
+    val skjermingApiScope: String = properties[Key("SKJERMING_API_URL", stringType)]
+    val behandlingApiUrl: String = properties[Key("SKJERMING_API_SCOPE", stringType)]
+    val behandlingApiScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
 
     val azureAdClient by lazy {
@@ -46,4 +50,6 @@ internal object Configuration {
     val tilOboToken = { token: String, scope: String ->
         azureAdClient.onBehalfOf(token, scope).accessToken
     }
+
+    val skjermingTokenProvider = { azureAdClient.clientCredentials(skjermingApiScope) }
 }

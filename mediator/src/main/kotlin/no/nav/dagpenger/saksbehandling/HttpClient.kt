@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.maskinell
+package no.nav.dagpenger.saksbehandling
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature

@@ -16,8 +16,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val repository = PostgresRepository(PostgresDataSourceBuilder.dataSource)
     private val behandlingHttpKlient: BehandlingHttpKlient =
         BehandlingHttpKlient(
-            behandlingUrl = Configuration.behandlingUrl,
-            behandlingScope = Configuration.behandlingScope,
+            behandlingUrl = Configuration.behandlingApiUrl,
+            behandlingScope = Configuration.behandlingApiScope,
             tokenProvider = Configuration.tilOboToken,
         )
     private val partialBehandlingKlientMock = PartialBehandlingKlientMock(behandlingHttpKlient)
