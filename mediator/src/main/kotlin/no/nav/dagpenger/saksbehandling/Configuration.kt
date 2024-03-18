@@ -36,8 +36,10 @@ internal object Configuration {
 
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingApiScope: String = properties[Key("SKJERMING_API_URL", stringType)]
-    val behandlingApiUrl: String = properties[Key("SKJERMING_API_SCOPE", stringType)]
+
+    val behandlingApiUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
     val behandlingApiScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
+
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
 
     val azureAdClient by lazy {
