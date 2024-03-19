@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling.maskinell
 
-import io.ktor.client.call.body
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.accept
@@ -8,6 +8,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.URLBuilder
@@ -16,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.createHttpClient
 import java.util.UUID
 
@@ -30,7 +32,7 @@ class BehandlingHttpKlient(
     override suspend fun hentBehandling(
         behandlingId: UUID,
         saksbehandlerToken: String,
-    ): BehandlingDTO =
+    ): Pair<BehandlingDTO, Any> =
         withContext(Dispatchers.IO) {
             val url = URLBuilder(behandlingUrl).appendEncodedPathSegments("behandling", behandlingId.toString()).build()
             try {
@@ -41,7 +43,9 @@ class BehandlingHttpKlient(
                     }
 
                 sikkerLogger.info { "Response fra dp-behandling ved GET behandlingId $behandlingId: $response" }
-                return@withContext response.body<BehandlingDTO>()
+                val rawBehandlingResponse = response.bodyAsText()
+                val behandlingDto = objectMapper.readValue<BehandlingDTO>(rawBehandlingResponse)
+                return@withContext Pair(behandlingDto, rawBehandlingResponse)
             } catch (e: Exception) {
                 logger.warn("GET kall til dp-behandling feilet for behandlingId $behandlingId", e)
                 throw e

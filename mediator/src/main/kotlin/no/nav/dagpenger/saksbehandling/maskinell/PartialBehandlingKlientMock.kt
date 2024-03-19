@@ -1,15 +1,16 @@
 package no.nav.dagpenger.saksbehandling.maskinell
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import java.io.FileNotFoundException
 import java.util.UUID
 
 class PartialBehandlingKlientMock(private val behandlingKlient: BehandlingKlient) : BehandlingKlient {
-    override suspend fun hentBehandling(behandlingId: UUID, saksbehandlerToken: String): BehandlingDTO {
+    override suspend fun hentBehandling(behandlingId: UUID, saksbehandlerToken: String): Pair<BehandlingDTO, Any> {
         return kotlin.runCatching {
             behandlingKlient.hentBehandling(behandlingId, saksbehandlerToken)
-        }.getOrDefault(behandlingResponseMock(behandlingId))
+        }.getOrDefault(behandlingResponseMock())
     }
 
     override suspend fun bekreftBehandling(behandlingId: UUID, saksbehandlerToken: String) {
@@ -21,10 +22,11 @@ class PartialBehandlingKlientMock(private val behandlingKlient: BehandlingKlient
             ?: throw FileNotFoundException()
     }
 
-    private fun behandlingResponseMock(behandlingId: UUID) = templateBehandlingDTO.copy(behandlingId = behandlingId)
-
-    private val templateBehandlingDTO = objectMapper.readValue(
-        "/behandlingResponseMock.json".fileAsText(),
-        BehandlingDTO::class.java,
-    )
+    private fun behandlingResponseMock(): Pair<BehandlingDTO, Any> {
+        val fileAsText = "/behandlingResponseMock.json".fileAsText()
+        return Pair(
+            objectMapper.readValue<BehandlingDTO>(fileAsText),
+            fileAsText,
+        )
+    }
 }

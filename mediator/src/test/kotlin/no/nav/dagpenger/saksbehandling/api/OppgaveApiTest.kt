@@ -76,12 +76,30 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Skal returnere en oppgave med en json behandling`() {
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.hentOppgaverKlarTilBehandling() } returns listOf(
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+            )
+        }
+
+        withOppgaveApi(mediatorMock) {
+            client.get("/oppgave") { autentisert() }.let { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText() shouldBe "{}"
+            }
+        }
+    }
+
+    @Test
     fun `Når saksbehandler henter en oppgave, oppdater den med steg og opplysninger`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
 
-        coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns oppgave
+        coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns Pair(oppgave, "{}")
 
         withOppgaveApi(mediator = mediatorMock) {
             client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
@@ -184,22 +202,6 @@ class OppgaveApiTest {
             }
         }
     }
-
-    /*
-    @Test
-    fun `kall uten saksbehandlingsADgruppe i claims returnerer 401`() {
-        medSikretBehandlingApi {
-            val tokenUtenSaksbehandlerGruppe = testAzureAdToken(ADGrupper = emptyList())
-
-            val response =
-                autentisert(
-                    token = tokenUtenSaksbehandlerGruppe,
-                    endepunkt = "/behandling",
-                    body = """{"ident":"$ident"}""",
-                )
-            response.status shouldBe HttpStatusCode.Unauthorized
-        }
-    }*/
 
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(relaxed = true),

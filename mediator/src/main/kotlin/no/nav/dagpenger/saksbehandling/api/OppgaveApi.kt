@@ -63,16 +63,16 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val saksbehandlerSignatur = call.request.jwt()
                         val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
-                        val oppgave = mediator.oppdaterOppgaveMedSteg(oppdaterOppgaveHendelse)
-                        when (oppgave) {
+                        val oppgaveMedBehandlingResponse = mediator.oppdaterOppgaveMedSteg(oppdaterOppgaveHendelse)
+                        when (oppgaveMedBehandlingResponse) {
                             null -> call.respond(
                                 status = HttpStatusCode.NotFound,
                                 message = "Fant ingen oppgave med UUID $oppgaveId",
                             )
 
                             else -> {
-                                val message = oppgave.tilOppgaveDTO()
-                                sikkerLogger.info { "Oppgave $oppgaveId skal gjøres om til OppgaveDTO: $oppgave" }
+                                val message = oppgaveMedBehandlingResponse.tilOppgaveDTO()
+                                sikkerLogger.info { "Oppgave $oppgaveId skal gjøres om til OppgaveDTO: $oppgaveMedBehandlingResponse" }
                                 sikkerLogger.info { "OppgaveDTO $oppgaveId hentes: $message" }
                                 call.respond(HttpStatusCode.OK, message)
                             }
@@ -132,12 +132,28 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
     return OppgaveDTO(
         oppgaveId = this.oppgaveId,
         personIdent = this.ident,
+        behandling = Any(),
         behandlingId = this.behandlingId,
         tidspunktOpprettet = this.opprettet,
         journalpostIder = emptyList(),
         emneknagger = this.emneknagger.toList(),
         tilstand = this.tilstand.tilOppgaveTilstandDTO(),
         steg = this.steg.map { steg -> steg.tilStegDTO() },
+    )
+}
+
+internal fun Pair<Oppgave, Any>.tilOppgaveDTO(): OppgaveDTO {
+    val (oppgave, behandling) = this
+    return OppgaveDTO(
+        oppgaveId = oppgave.oppgaveId,
+        personIdent = oppgave.ident,
+        behandling = behandling,
+        behandlingId = oppgave.behandlingId,
+        tidspunktOpprettet = oppgave.opprettet,
+        journalpostIder = emptyList(),
+        emneknagger = oppgave.emneknagger.toList(),
+        tilstand = oppgave.tilstand.tilOppgaveTilstandDTO(),
+        steg = oppgave.steg.map { steg -> steg.tilStegDTO() },
     )
 }
 

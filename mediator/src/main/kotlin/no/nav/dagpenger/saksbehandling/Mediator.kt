@@ -55,20 +55,22 @@ internal class Mediator(
         return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
-    suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Oppgave? {
+    suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Pair<Oppgave, Any>? {
         val oppgave = repository.hentOppgave(hendelse.oppgaveId)
         return when (oppgave) {
             null -> null
             else -> {
                 val behandling = hentBehandlingFra(oppgave.oppgaveId)
 
-                val behandlingDTO = kotlin.runCatching {
+                val behandlingResponse = kotlin.runCatching {
                     behandlingKlient.hentBehandling(
                         behandlingId = behandling.behandlingId,
                         saksbehandlerToken = hendelse.saksbehandlerSignatur,
                     )
                 }.getOrNull()
-                sikkerLogger.info { "Hentet BehandlingDTO: $behandlingDTO" }
+                val behandlingDTO = behandlingResponse?.first
+
+                sikkerLogger.info { "Hentet BehandlingDTO: $behandlingResponse" }
 
                 val nyeSteg = mutableListOf<Steg>()
                 minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
@@ -76,7 +78,7 @@ internal class Mediator(
 
                 val oppdatertOppgave = oppgave.copy(steg = nyeSteg)
                 sikkerLogger.info { "Oppdatert oppgave: $oppdatertOppgave" }
-                return oppdatertOppgave
+                return Pair(oppdatertOppgave, behandlingResponse!!.second)
             }
         }
     }
