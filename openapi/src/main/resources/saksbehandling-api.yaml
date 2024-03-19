@@ -124,6 +124,7 @@ components:
           format: uuid
         behandling:
           type: object
+          additionalProperties: true
         behandlingId:
           type: string
           format: uuid

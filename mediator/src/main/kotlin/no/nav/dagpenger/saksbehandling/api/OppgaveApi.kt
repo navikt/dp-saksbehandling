@@ -132,7 +132,7 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
     return OppgaveDTO(
         oppgaveId = this.oppgaveId,
         personIdent = this.ident,
-        behandling = Any(),
+        behandling = emptyMap<String, Any>(),
         behandlingId = this.behandlingId,
         tidspunktOpprettet = this.opprettet,
         journalpostIder = emptyList(),
@@ -142,7 +142,7 @@ internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
     )
 }
 
-internal fun Pair<Oppgave, Any>.tilOppgaveDTO(): OppgaveDTO {
+internal fun Pair<Oppgave, Map<String, Any>>.tilOppgaveDTO(): OppgaveDTO {
     val (oppgave, behandling) = this
     return OppgaveDTO(
         oppgaveId = oppgave.oppgaveId,

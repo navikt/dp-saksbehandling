@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import com.fasterxml.jackson.core.type.TypeReference
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -76,30 +77,15 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal returnere en oppgave med en json behandling`() {
-        val mediatorMock = mockk<Mediator>().also {
-            every { it.hentOppgaverKlarTilBehandling() } returns listOf(
-                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-            )
-        }
-
-        withOppgaveApi(mediatorMock) {
-            client.get("/oppgave") { autentisert() }.let { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                response.bodyAsText() shouldBe "{}"
-            }
-        }
-    }
-
-    @Test
     fun `Når saksbehandler henter en oppgave, oppdater den med steg og opplysninger`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
 
-        coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns Pair(oppgave, "{}")
+        coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns Pair(
+            oppgave,
+            mapOf(),
+        )
 
         withOppgaveApi(mediator = mediatorMock) {
             client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
@@ -113,6 +99,44 @@ class OppgaveApiTest {
                 actualOppgave.steg.size shouldBe 1
                 actualOppgave.steg[0].beskrivendeId shouldBe MinsteInntektSteg.MINSTEINNTEKT_BESKRIVENDE_ID
                 actualOppgave.steg[0].tilstand shouldBe StegTilstandDTO.OPPFYLT
+            }
+        }
+    }
+
+    @Test
+    fun `Henter ut raw behandling hson`() {
+        val mediatorMock = mockk<Mediator>()
+        val oppgaveId = UUIDv7.ny()
+        val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
+
+        coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns Pair(
+            oppgave,
+            mapOf(
+                "behandlingId" to "behandlingId",
+                "opplysninger" to listOf(
+                    mapOf(
+                        "navn" to "minsteInntekt",
+                    ),
+                ),
+            ),
+        )
+
+        withOppgaveApi(mediator = mediatorMock) {
+            client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                json shouldEqualSpecifiedJsonIgnoringOrder """ {
+                       "behandling": {
+                           "behandlingId": "behandlingId",
+                           "opplysninger": [
+                           {
+                             "navn": "minsteInntekt"
+                           }
+                         ]
+                       }
+                     }
+                """.trimIndent()
             }
         }
     }

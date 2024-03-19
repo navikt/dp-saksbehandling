@@ -32,20 +32,24 @@ class BehandlingHttpKlient(
     override suspend fun hentBehandling(
         behandlingId: UUID,
         saksbehandlerToken: String,
-    ): Pair<BehandlingDTO, Any> =
+    ): Pair<BehandlingDTO, Map<String, Any>> =
         withContext(Dispatchers.IO) {
             val url = URLBuilder(behandlingUrl).appendEncodedPathSegments("behandling", behandlingId.toString()).build()
             try {
                 val response: HttpResponse =
                     client.get(url) {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}")
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}",
+                        )
                         accept(ContentType.Application.Json)
                     }
 
                 sikkerLogger.info { "Response fra dp-behandling ved GET behandlingId $behandlingId: $response" }
                 val rawBehandlingResponse = response.bodyAsText()
                 val behandlingDto = objectMapper.readValue<BehandlingDTO>(rawBehandlingResponse)
-                return@withContext Pair(behandlingDto, rawBehandlingResponse)
+                val behandlingAsMap = objectMapper.readValue<Map<String, Any>>(rawBehandlingResponse)
+                return@withContext Pair(behandlingDto, behandlingAsMap)
             } catch (e: Exception) {
                 logger.warn("GET kall til dp-behandling feilet for behandlingId $behandlingId", e)
                 throw e
@@ -67,7 +71,10 @@ class BehandlingHttpKlient(
             try {
                 val response: HttpResponse =
                     client.post(url) {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}")
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}",
+                        )
                         accept(ContentType.Application.Json)
                     }
 

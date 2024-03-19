@@ -55,7 +55,7 @@ internal class Mediator(
         return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
-    suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Pair<Oppgave, Any>? {
+    suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Pair<Oppgave, Map<String, Any>>? {
         val oppgave = repository.hentOppgave(hendelse.oppgaveId)
         return when (oppgave) {
             null -> null
