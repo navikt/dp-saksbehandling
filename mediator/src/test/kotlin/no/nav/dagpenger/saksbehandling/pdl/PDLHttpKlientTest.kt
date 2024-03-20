@@ -11,7 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import java.io.FileNotFoundException
 
-class PDLOppslagTest {
+class PDLHttpKlientTest {
     @ParameterizedTest
     @CsvSource(
         "UGRADERT, false",
@@ -28,7 +28,7 @@ class PDLOppslagTest {
         }
 
         runBlocking {
-            PDLOppslag(
+            PDLHttpKlient(
                 url = "http://localhost:8080",
                 tokenSupplier = { "token" },
                 httpClient = defaultHttpClient(
@@ -48,7 +48,7 @@ class PDLOppslagTest {
         }
 
         runBlocking {
-            PDLOppslag(
+            PDLHttpKlient(
                 url = "http://localhost:8080",
                 tokenSupplier = { "token" },
                 httpClient = defaultHttpClient(
@@ -65,7 +65,7 @@ class PDLOppslagTest {
         }
 
         runBlocking {
-            PDLOppslag(
+            PDLHttpKlient(
                 url = "http://localhost:8080",
                 tokenSupplier = { "token" },
                 httpClient = defaultHttpClient(

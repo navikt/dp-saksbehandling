@@ -19,18 +19,18 @@ import no.nav.dagpenger.pdl.createPersonOppslag
 
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
-internal class PDLOppslag(
+internal class PDLHttpKlient(
     url: String,
     private val tokenSupplier: () -> String,
     httpClient: HttpClient = defaultHttpClient(),
-) {
+) : PDLKlient {
     private val hentPersonClient =
         createPersonOppslag(
             url = "$url/graphql",
             httpClient = httpClient,
         )
 
-    internal suspend fun erAdressebeskyttet(ident: String): Result<Boolean> {
+    override suspend fun erAdressebeskyttet(ident: String): Result<Boolean> {
         try {
             val invoke = tokenSupplier.invoke()
             val adresseBeskyttelse = hentPersonClient.hentPerson(
