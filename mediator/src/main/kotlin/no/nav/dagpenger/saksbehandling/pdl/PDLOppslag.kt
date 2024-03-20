@@ -40,7 +40,7 @@ internal fun defaultHttpClient(engine: HttpClientEngine = CIO.create {}) =
         }
     }
 
-internal class PdlPerson(
+internal class PDLOppslag(
     url: String,
     private val tokenSupplier: () -> String,
     httpClient: HttpClient = defaultHttpClient(),
