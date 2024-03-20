@@ -11,7 +11,7 @@ import no.nav.dagpenger.saksbehandling.createHttpClient
 import org.junit.jupiter.api.Test
 
 class SkjermingKlientTest {
-    private val testTokenProvider: () -> String = { -> "token" }
+    private val testTokenProvider: () -> String = { "token" }
     private val baseUrl = "http://baseUrl"
 
     @Test
@@ -28,7 +28,7 @@ class SkjermingKlientTest {
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
-                skjermingHttpKlient.egenAnsatt("12345612345")
+                skjermingHttpKlient.erSkjermetPerson("12345612345")
             }
         skjermingResultat shouldBe Result.success(true)
     }
@@ -47,7 +47,7 @@ class SkjermingKlientTest {
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
-                skjermingHttpKlient.egenAnsatt("12345612345")
+                skjermingHttpKlient.erSkjermetPerson("12345612345")
             }
         skjermingResultat shouldBe Result.success(false)
     }
@@ -70,7 +70,7 @@ class SkjermingKlientTest {
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
-                skjermingHttpKlient.egenAnsatt("12345612345")
+                skjermingHttpKlient.erSkjermetPerson("12345612345")
             }
         skjermingResultat.isFailure shouldBe true
     }

@@ -55,5 +55,4 @@ internal object Configuration {
     val tilOboToken = { token: String, scope: String ->
         azureAdClient.onBehalfOf(token, scope).accessToken
     }
-
 }

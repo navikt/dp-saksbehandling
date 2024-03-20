@@ -1,9 +1,11 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
+import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
@@ -13,43 +15,59 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 class BehandligOpprettetMottakTest {
-    private val testRapid = TestRapid()
-    private val mediator = mockk<Mediator>(relaxed = true)
+    val testIdent = "12345678901"
     val søknadId = UUID.randomUUID()
     val behandlingId = UUID.randomUUID()
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
-    val ident = "12345678901"
     private val søknadsbehandlingOpprettetHendelse =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
             behandlingId = behandlingId,
-            ident = ident,
+            ident = testIdent,
             opprettet = ZonedDateTime.of(opprettet, ZoneId.systemDefault()),
         )
 
+    private val testRapid = TestRapid()
+    private val mediatorMock = mockk<Mediator>(relaxed = true)
+    val skjermetKlientMock = mockk<SkjermingKlient>().also {
+        coEvery { it.erSkjermetPerson(testIdent) }.returns(Result.success(false))
+    }
+
     init {
-        BehandlingOpprettetMottak(testRapid, mediator)
+        BehandlingOpprettetMottak(testRapid, mediatorMock, skjermetKlientMock)
     }
 
     @Test
     fun `Skal behandle behandling_opprettet hendelse`() {
-        testRapid.sendTestMessage(behandlingOpprettetMelding)
+        testRapid.sendTestMessage(behandlingOpprettetMelding())
         verify(exactly = 1) {
-            mediator.behandle(søknadsbehandlingOpprettetHendelse)
+            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
         }
     }
 
     @Test
     fun `Skal ignorere duplikate behandling_opprettet hendelser`() {
-        testRapid.sendTestMessage(behandlingOpprettetMelding)
+        testRapid.sendTestMessage(behandlingOpprettetMelding())
         verify(exactly = 1) {
-            mediator.behandle(søknadsbehandlingOpprettetHendelse)
-            mediator.behandle(søknadsbehandlingOpprettetHendelse)
+            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
+            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal ikke lage oppgave for behandlinger som gjelder skjermede personer`() {
+        val skjermetPersonIdent = "12345123451"
+        coEvery { skjermetKlientMock.erSkjermetPerson(skjermetPersonIdent) }.returns(Result.success(true))
+
+        testRapid.sendTestMessage(behandlingOpprettetMelding(skjermetPersonIdent))
+
+        verify(exactly = 0) {
+            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
         }
     }
 
     @Language("JSON")
-    private val behandlingOpprettetMelding =
+    private fun behandlingOpprettetMelding(ident: String = testIdent) =
         """
         {
             "@event_name": "behandling_opprettet",

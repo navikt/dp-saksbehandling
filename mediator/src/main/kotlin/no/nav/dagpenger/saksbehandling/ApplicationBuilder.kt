@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.maskinell.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.maskinell.PartialBehandlingKlientMock
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
+import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -21,6 +22,10 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.tilOboToken,
         )
     private val partialBehandlingKlientMock = PartialBehandlingKlientMock(behandlingHttpKlient)
+    private val skjermingHttpKlient = SkjermingHttpKlient(
+        skjermingApiUrl = Configuration.skjermingApiUrl,
+        tokenProvider = Configuration.skjermingTokenProvider,
+    )
 
     private val mediator = Mediator(repository, partialBehandlingKlientMock)
 
@@ -29,7 +34,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             .withKtorModule {
                 this.oppgaveApi(mediator)
             }.build().also { rapidsConnection ->
-                BehandlingOpprettetMottak(rapidsConnection, mediator)
+                BehandlingOpprettetMottak(rapidsConnection, mediator, skjermingHttpKlient)
                 ForslagTilVedtakMottak(rapidsConnection, mediator)
             }
 

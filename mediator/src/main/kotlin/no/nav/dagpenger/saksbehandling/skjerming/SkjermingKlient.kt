@@ -1,5 +1,5 @@
 package no.nav.dagpenger.saksbehandling.skjerming
 
 interface SkjermingKlient {
-    suspend fun egenAnsatt(id: String): Result<Boolean>
+    suspend fun erSkjermetPerson(ident: String): Result<Boolean>
 }

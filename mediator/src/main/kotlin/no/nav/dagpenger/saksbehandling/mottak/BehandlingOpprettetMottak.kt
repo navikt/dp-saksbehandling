@@ -1,10 +1,12 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import com.fasterxml.jackson.databind.JsonNode
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.MessageProblems
@@ -17,6 +19,7 @@ import java.time.ZonedDateTime
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
     private val mediator: Mediator,
+    private val skjermingKlient: SkjermingKlient,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -40,6 +43,14 @@ internal class BehandlingOpprettetMottak(
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
         logger.info { "Mottok behandling opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+
+        runBlocking {
+            val erSkjermetPerson = skjermingKlient.erSkjermetPerson(ident).getOrThrow()
+            if (erSkjermetPerson) {
+                // TODO: API kall for å si ifra om avbrutt behandling, eller kafka melding?
+                return@runBlocking
+            }
+        }
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             mediator.behandle(
