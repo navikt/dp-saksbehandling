@@ -37,12 +37,12 @@ internal object Configuration {
         }
 
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
-    val skjermingApiScope: String = properties[Key("SKJERMING_API_URL", stringType)]
+    val skjermingApiScope: String = properties[Key("SKJERMING_API_SCOPE", stringType)]
     val skjermingTokenProvider = {
         azureAdClient.clientCredentials(skjermingApiScope).accessToken
     }
 
-    val pdlUrl: String = "https://" + properties[Key("PDL_API_HOST", stringType)]
+    val pdlUrl: String = properties[Key("PDL_API_URL", stringType)]
     val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
     val pdlTokenProvider = {
         azureAdClient.clientCredentials(pdlApiScope).accessToken
