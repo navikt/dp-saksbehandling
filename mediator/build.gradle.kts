@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.dp.biblioteker.pdl.klient)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.logging.jvm)
 
     api("com.fasterxml.uuid:java-uuid-generator:5.0.0")
 

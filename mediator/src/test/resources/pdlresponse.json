@@ -1,0 +1,81 @@
+{
+  "data": {
+    "hentPerson": {
+      "adressebeskyttelse": [
+        {
+          "gradering": "FORTROLIG"
+        }
+      ],
+      "bostedsadresse": [
+        {
+          "angittFlyttedato": "1984-03-01",
+          "gyldigFraOgMed": "1984-03-01T00:00",
+          "gyldigTilOgMed": null,
+          "coAdressenavn": null,
+          "vegadresse": {
+            "matrikkelId": 275433480,
+            "husnummer": "45",
+            "husbokstav": null,
+            "bruksenhetsnummer": null,
+            "adressenavn": "Finnesveien",
+            "kommunenummer": "5614",
+            "bydelsnummer": null,
+            "tilleggsnavn": null,
+            "postnummer": "9552"
+          },
+          "matrikkeladresse": null,
+          "utenlandskAdresse": null,
+          "ukjentBosted": null,
+          "metadata": {
+            "master": "FREG"
+          }
+        }
+      ],
+      "doedsfall": [],
+      "foedsel": [
+        {
+          "foedselsdato": "1984-03-01"
+        }
+      ],
+      "folkeregisteridentifikator": [
+        {
+          "identifikasjonsnummer": "12345678910",
+          "status": "I_BRUK",
+          "type": "FNR"
+        }
+      ],
+      "forelderBarnRelasjon": [],
+      "kjoenn": [
+        {
+          "kjoenn": "KVINNE"
+        }
+      ],
+      "kontaktadresse": [],
+      "navn": [
+        {
+          "fornavn": "ÅPENHJERTIG",
+          "mellomnavn": null,
+          "etternavn": "GYNGEHEST",
+          "gyldigFraOgMed": "2022-03-11"
+        }
+      ],
+      "oppholdsadresse": [],
+      "statsborgerskap": [
+        {
+          "land": "NOR"
+        }
+      ]
+    }
+  },
+  "extensions": {
+    "warnings": [
+      {
+        "query": "hentPerson",
+        "id": "tilgangsstyring",
+        "code": "behandlingsnummer_header_missing",
+        "message": "header for 'behandlingsnummer' mangler",
+        "details": null
+      }
+    ]
+  }
+}
