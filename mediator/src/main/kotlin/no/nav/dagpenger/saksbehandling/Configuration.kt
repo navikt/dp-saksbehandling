@@ -22,8 +22,10 @@ internal object Configuration {
                 "GRUPPE_BESLUTTER" to "123",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
                 "DP_BEHANDLING_API_URL" to "http://dp-behandling",
-                "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
+                "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
+                "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
+                "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",
             ),
         )
     val properties =
@@ -38,6 +40,12 @@ internal object Configuration {
     val skjermingApiScope: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingTokenProvider = {
         azureAdClient.clientCredentials(skjermingApiScope).accessToken
+    }
+
+    val pdlUrl: String = "https://" + properties[Key("PDL_API_HOST", stringType)]
+    val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
+    val pdlTokenProvider = {
+        azureAdClient.clientCredentials(pdlApiScope).accessToken
     }
 
     val behandlingApiUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]

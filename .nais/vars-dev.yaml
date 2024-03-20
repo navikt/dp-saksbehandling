@@ -18,3 +18,12 @@ db:
   highAvailability: false
   pointInTimeRecovery: false
   tier: db-custom-1-3840
+
+pdl:
+  url: "https://pdl-api.dev-fss-pub.nais.io"
+  scope: "api://dev-fss.pdl.pdl-api/.default"
+
+skjerming:
+  url: "http://skjermede-personer-pip.nom/skjermet"
+  scope: "api://dev-gcp.nom.skjermede-personer-pip/.default"
+

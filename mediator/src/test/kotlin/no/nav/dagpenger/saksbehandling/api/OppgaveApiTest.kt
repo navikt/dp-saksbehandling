@@ -104,7 +104,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Henter ut raw behandling hson`() {
+    fun `Henter ut raw behandling json`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)

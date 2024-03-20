@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -28,7 +29,8 @@ class MediatorTest {
                 behandlingKlient = mockk(),
             )
             val skjermingKlientMock = mockk<SkjermingKlient>(relaxed = true)
-            BehandlingOpprettetMottak(TestRapid(), mediator, skjermingKlientMock)
+            val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
+            BehandlingOpprettetMottak(TestRapid(), mediator, skjermingKlientMock, pdlKlientMock)
 
             val førsteSøknadId = UUIDv7.ny()
             val førsteBehandlingId = UUIDv7.ny()
