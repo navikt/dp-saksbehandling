@@ -126,6 +126,7 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
+                //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder """ {
                        "behandling": {
                            "behandlingId": "behandlingId",

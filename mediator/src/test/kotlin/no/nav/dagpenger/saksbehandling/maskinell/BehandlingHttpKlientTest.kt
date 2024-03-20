@@ -12,7 +12,8 @@ import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 
 internal class BehandlingHttpKlientTest {
-    private val testTokenProvider: (String, String) -> String = { _, _ ->
+    private val testTokenProvider: (String, String) -> String = {
+            _, _ ->
         "token"
     }
     private val baseUrl = "http://baseUrl"
@@ -31,13 +32,16 @@ internal class BehandlingHttpKlientTest {
                 tokenProvider = testTokenProvider,
                 engine = mockEngine,
             )
-        val behandling =
-            runBlocking {
-                behandlingHttpKlient.hentBehandling(UUIDv7.ny(), saksbehandlerToken)
-            }.first
-        behandling shouldNotBe null
-        behandling.opplysning.shouldNotBeEmpty()
-        behandling.behandlingId shouldNotBe null
+        val (behandlingDto, rawBehandlingMap) = runBlocking {
+            behandlingHttpKlient.hentBehandling(UUIDv7.ny(), saksbehandlerToken)
+        }
+
+        behandlingDto shouldNotBe null
+        behandlingDto.opplysning.shouldNotBeEmpty()
+        behandlingDto.behandlingId shouldNotBe null
+
+        rawBehandlingMap["behandlingId"] shouldNotBe null
+        rawBehandlingMap["opplysning"] shouldNotBe null
     }
 
     @Test
