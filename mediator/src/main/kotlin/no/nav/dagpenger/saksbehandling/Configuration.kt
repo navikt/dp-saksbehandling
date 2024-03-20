@@ -36,6 +36,9 @@ internal object Configuration {
 
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingApiScope: String = properties[Key("SKJERMING_API_URL", stringType)]
+    val skjermingTokenProvider = {
+        azureAdClient.clientCredentials(skjermingApiScope).accessToken
+    }
 
     val behandlingApiUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
     val behandlingApiScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
@@ -53,5 +56,4 @@ internal object Configuration {
         azureAdClient.onBehalfOf(token, scope).accessToken
     }
 
-    val skjermingTokenProvider = { azureAdClient.clientCredentials(skjermingApiScope) }
 }
