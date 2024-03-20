@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":modell"))
     implementation(project(":openapi"))
     implementation(project(":opplysninger-kontrakt"))
+
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
@@ -22,8 +23,10 @@ dependencies {
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
     implementation(libs.bundles.postgres)
     implementation(libs.dp.biblioteker.oauth2.klient)
+    implementation(libs.dp.biblioteker.pdl.klient)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
+
     api("com.fasterxml.uuid:java-uuid-generator:5.0.0")
 
     testImplementation(libs.mockk)
