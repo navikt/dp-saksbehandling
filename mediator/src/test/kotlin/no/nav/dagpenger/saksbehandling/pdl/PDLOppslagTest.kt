@@ -12,14 +12,14 @@ import org.junit.jupiter.params.provider.CsvSource
 import java.io.FileNotFoundException
 
 class PDLOppslagTest {
-    @ParameterizedTest()
+    @ParameterizedTest
     @CsvSource(
         "UGRADERT, false",
         "FORTROLIG, true",
         "STRENGT_FORTROLIG, true",
         "STRENGT_FORTROLIG_UTLAND, true",
     )
-    fun `Adressebeskyttelse`(gradering: String, forventet: Boolean) {
+    fun adressebeskyttelse(gradering: String, forventet: Boolean) {
         val mockEngine = MockEngine { request ->
             respond(
                 pdlResponse(gradering),

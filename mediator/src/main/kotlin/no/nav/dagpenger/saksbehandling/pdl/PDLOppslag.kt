@@ -19,27 +19,6 @@ import no.nav.dagpenger.pdl.createPersonOppslag
 
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
-internal fun defaultHttpClient(engine: HttpClientEngine = CIO.create {}) =
-    HttpClient(engine) {
-        expectSuccess = true
-
-        install(ContentNegotiation) {
-            jackson {
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                registerModules(JavaTimeModule())
-            }
-        }
-
-        install(HttpRequestRetry) {
-            retryOnException(maxRetries = 5)
-            this.constantDelay(
-                millis = 100,
-                randomizationMs = 0,
-            )
-        }
-    }
-
 internal class PDLOppslag(
     url: String,
     private val tokenSupplier: () -> String,
@@ -77,3 +56,24 @@ internal class PDLOppslag(
         }
     }
 }
+
+internal fun defaultHttpClient(engine: HttpClientEngine = CIO.create {}) =
+    HttpClient(engine) {
+        expectSuccess = true
+
+        install(ContentNegotiation) {
+            jackson {
+                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                registerModules(JavaTimeModule())
+            }
+        }
+
+        install(HttpRequestRetry) {
+            retryOnException(maxRetries = 5)
+            this.constantDelay(
+                millis = 100,
+                randomizationMs = 0,
+            )
+        }
+    }
