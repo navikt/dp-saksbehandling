@@ -45,39 +45,39 @@ internal class BehandlingOpprettetMottak(
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
-        logger.info { "Mottok behandling opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
-
-        runBlocking {
-            val erSkjermetPerson = async {
-                skjermingKlient.erSkjermetPerson(ident)
-                    .onFailure { t ->
-                        logger.error(t) { "Feil ved oppslag mot skjerming" }
-                    }
-                    .getOrThrow()
-            }
-
-            val erAdressebeskyttetPerson = async {
-                pdlKlient.erAdressebeskyttet(ident)
-                    .onFailure { t ->
-                        logger.error(t) { "Feil ved oppslag mot pdl" }
-                    }
-                    .getOrThrow()
-            }
-            if (erSkjermetPerson.await() || erAdressebeskyttetPerson.await()) {
-                // TODO: API kall for å si ifra om avbrutt behandling, eller kafka melding?
-                return@runBlocking
-            }
-        }
-
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            mediator.behandle(
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = ident,
-                    opprettet = ZonedDateTime.of(opprettet, ZoneId.systemDefault()),
-                ),
-            )
+            logger.info { "Mottok behandling opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+
+            val erSkjermetPerson = runBlocking {
+                val erSkjermetPerson = async {
+                    skjermingKlient.erSkjermetPerson(ident)
+                        .onFailure { t ->
+                            logger.error(t) { "Feil ved oppslag mot skjerming" }
+                        }
+                        .getOrThrow()
+                }
+
+                val erAdressebeskyttetPerson = async {
+                    pdlKlient.erAdressebeskyttet(ident)
+                        .onFailure { t ->
+                            logger.error(t) { "Feil ved oppslag mot pdl" }
+                        }
+                        .getOrThrow()
+                }
+
+                erSkjermetPerson.await() || erAdressebeskyttetPerson.await()
+            }
+
+            if (!erSkjermetPerson) {
+                mediator.behandle(
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = ident,
+                        opprettet = ZonedDateTime.of(opprettet, ZoneId.systemDefault()),
+                    ),
+                )
+            }
         }
     }
 

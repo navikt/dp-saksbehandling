@@ -67,7 +67,7 @@ class BehandligOpprettetMottakTest {
         testRapid.sendTestMessage(behandlingOpprettetMelding(skjermetIdent))
 
         verify(exactly = 0) {
-            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
+            mediatorMock.behandle(any<SøknadsbehandlingOpprettetHendelse>())
         }
     }
 
@@ -81,7 +81,7 @@ class BehandligOpprettetMottakTest {
         testRapid.sendTestMessage(behandlingOpprettetMelding(adressebeskyttetIdent))
 
         verify(exactly = 0) {
-            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
+            mediatorMock.behandle(any<SøknadsbehandlingOpprettetHendelse>())
         }
     }
 
