@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
-import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -50,19 +49,11 @@ internal class BehandlingOpprettetMottak(
 
             val erBeskyttetPerson = runBlocking {
                 val erSkjermetPerson = async {
-                    skjermingKlient.erSkjermetPerson(ident)
-                        .onFailure { t ->
-                            logger.error(t) { "Feil ved oppslag mot skjerming" }
-                        }
-                        .getOrThrow()
+                    skjermingKlient.erSkjermetPerson(ident).getOrThrow()
                 }
 
                 val erAdressebeskyttetPerson = async {
-                    pdlKlient.erAdressebeskyttet(ident)
-                        .onFailure { t ->
-                            logger.error(t) { "Feil ved oppslag mot pdl" }
-                        }
-                        .getOrThrow()
+                    pdlKlient.erAdressebeskyttet(ident).getOrThrow()
                 }
 
                 erSkjermetPerson.await() || erAdressebeskyttetPerson.await()
@@ -88,5 +79,3 @@ internal class BehandlingOpprettetMottak(
         logger.error { "Forstod ikke behandling opprettet hendelse. \n $problems" }
     }
 }
-
-private fun JsonNode.asZonedDateTime() = ZonedDateTime.parse(this.asText())

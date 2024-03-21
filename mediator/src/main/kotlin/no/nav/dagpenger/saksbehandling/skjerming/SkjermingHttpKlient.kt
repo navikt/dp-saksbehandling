@@ -10,7 +10,10 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.createHttpClient
+
+private val logger = KotlinLogging.logger { }
 
 internal class SkjermingHttpKlient(
     private val skjermingApiUrl: String,
@@ -27,6 +30,8 @@ internal class SkjermingHttpKlient(
                 setBody(SkjermingRequest(ident))
             }.bodyAsText().toBoolean()
         }
+            .onSuccess { logger.info("Kall til skjerming gikk OK") }
+            .onFailure { throwable -> logger.error(throwable) { "Kall til skjerming feilet" } }
     }
 
     private data class SkjermingRequest(val personident: String)
