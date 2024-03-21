@@ -9,6 +9,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.contentType
 import no.nav.dagpenger.saksbehandling.createHttpClient
 
 internal class SkjermingHttpKlient(
@@ -21,10 +22,12 @@ internal class SkjermingHttpKlient(
         return kotlin.runCatching {
             httpClient.post(urlString = skjermingApiUrl) {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
-                header(HttpHeaders.ContentType, "application/json")
+                contentType(ContentType.Application.Json)
                 accept(ContentType.Application.Json)
-                setBody("""{"personident":"$ident"}""")
+                setBody(SkjermingRequest(ident))
             }.bodyAsText().toBoolean()
         }
     }
+
+    private data class SkjermingRequest(val personident: String)
 }

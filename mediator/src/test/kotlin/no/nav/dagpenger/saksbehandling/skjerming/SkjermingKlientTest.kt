@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
@@ -35,23 +36,22 @@ class SkjermingKlientTest {
 
     @Test
     fun `Skal sende rikitg headers`() {
+        var actualContentType: ContentType? = null
+
         val mockEngine =
             MockEngine { request ->
-
-                request.headers["Content-Type"] shouldBe "application/json"
-
+                actualContentType = request.body.contentType
                 respond("true", headers = headersOf("Content-Type", "application/json"))
             }
-        val skjermingHttpKlient =
+        runBlocking {
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
                 httpClient = createHttpClient(engine = mockEngine),
-            )
-        val skjermingResultat: Result<Boolean> =
-            runBlocking {
-                skjermingHttpKlient.erSkjermetPerson("12345612345")
-            }
+            ).erSkjermetPerson("12345612345")
+        }
+
+        actualContentType shouldBe ContentType.Application.Json
     }
 
     @Test
