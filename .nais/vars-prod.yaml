@@ -16,7 +16,7 @@ db:
   tier: db-custom-4-15360
 
 pdl:
-  url: "https://pdl-api.prod-fss-pub.nais.io"
+  host: "pdl-api.prod-fss-pub.nais.io"
   scope: "api://prod-fss.pdl.pdl-api/.default"
 
 skjerming:

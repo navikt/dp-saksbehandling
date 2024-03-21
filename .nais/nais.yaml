@@ -43,7 +43,7 @@ spec:
     - name: DP_BEHANDLING_API_SCOPE
       value: {{dp-behandling.scope}}
     - name: PDL_API_URL
-      value: {{pdl.url}}
+      value: https://{{pdl.host}}
     - name: PDL_API_SCOPE
       value: {{pdl.scope}}
     - name: SKJERMING_API_URL
@@ -75,6 +75,8 @@ spec:
         - application: dp-behandling
         - application: skjermede-personer-pip
           namespace: nom
+      external:
+        - host: {{pdl.host}}
   gcp:
     sqlInstances:
       - collation: nb_NO.UTF8
