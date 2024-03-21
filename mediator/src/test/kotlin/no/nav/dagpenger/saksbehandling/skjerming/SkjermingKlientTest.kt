@@ -34,6 +34,27 @@ class SkjermingKlientTest {
     }
 
     @Test
+    fun `Skal sende rikitg headers`() {
+        val mockEngine =
+            MockEngine { request ->
+
+                request.headers["Content-Type"] shouldBe "application/json"
+
+                respond("true", headers = headersOf("Content-Type", "application/json"))
+            }
+        val skjermingHttpKlient =
+            SkjermingHttpKlient(
+                skjermingApiUrl = baseUrl,
+                tokenProvider = testTokenProvider,
+                httpClient = createHttpClient(engine = mockEngine),
+            )
+        val skjermingResultat: Result<Boolean> =
+            runBlocking {
+                skjermingHttpKlient.erSkjermetPerson("12345612345")
+            }
+    }
+
+    @Test
     fun `Skal returnere success og skjermet false`() {
         val mockEngine =
             MockEngine { request ->

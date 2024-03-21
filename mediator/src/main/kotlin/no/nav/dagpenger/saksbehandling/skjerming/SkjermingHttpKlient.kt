@@ -21,6 +21,7 @@ internal class SkjermingHttpKlient(
         return kotlin.runCatching {
             httpClient.post(urlString = skjermingApiUrl) {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                header(HttpHeaders.ContentType, "application/json")
                 accept(ContentType.Application.Json)
                 setBody("""{"personident":"$ident"}""")
             }.bodyAsText().toBoolean()
