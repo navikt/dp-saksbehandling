@@ -73,6 +73,8 @@ spec:
     outbound:
       rules:
         - application: dp-behandling
+        - application: skjermede-personer-pip
+          namespace: nom
   gcp:
     sqlInstances:
       - collation: nb_NO.UTF8
