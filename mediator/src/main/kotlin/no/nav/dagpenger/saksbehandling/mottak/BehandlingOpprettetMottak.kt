@@ -48,7 +48,7 @@ internal class BehandlingOpprettetMottak(
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
 
-            val erSkjermetPerson = runBlocking {
+            val erBeskyttetPerson = runBlocking {
                 val erSkjermetPerson = async {
                     skjermingKlient.erSkjermetPerson(ident)
                         .onFailure { t ->
@@ -68,7 +68,7 @@ internal class BehandlingOpprettetMottak(
                 erSkjermetPerson.await() || erAdressebeskyttetPerson.await()
             }
 
-            if (!erSkjermetPerson) {
+            if (!erBeskyttetPerson) {
                 mediator.behandle(
                     SøknadsbehandlingOpprettetHendelse(
                         søknadId = søknadId,
