@@ -23,7 +23,7 @@ internal class SkjermingHttpKlient(
             httpClient.post(urlString = skjermingApiUrl) {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 contentType(ContentType.Application.Json)
-                accept(ContentType.Application.Json)
+                accept(ContentType.Text.Plain)
                 setBody(SkjermingRequest(ident))
             }.bodyAsText().toBoolean()
         }
