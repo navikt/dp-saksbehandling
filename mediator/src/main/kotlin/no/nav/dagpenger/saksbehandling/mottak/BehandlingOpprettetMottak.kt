@@ -68,6 +68,18 @@ internal class BehandlingOpprettetMottak(
                         opprettet = ZonedDateTime.of(opprettet, ZoneId.systemDefault()),
                     ),
                 )
+            } else {
+                context.publish(
+                    key = ident,
+                    JsonMessage.newMessage(
+                        eventName = "avbryt_behandling",
+                        map = mapOf(
+                            "behandlingId" to behandlingId,
+                            "søknadId" to søknadId,
+                            "ident" to ident,
+                        ),
+                    ).toJson(),
+                )
             }
         }
     }

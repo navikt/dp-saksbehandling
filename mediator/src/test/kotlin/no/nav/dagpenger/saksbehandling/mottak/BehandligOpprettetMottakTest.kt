@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
@@ -59,7 +60,7 @@ class BehandligOpprettetMottakTest {
     }
 
     @Test
-    fun `Skal ikke lage oppgave for behandlinger som gjelder skjermede personer`() {
+    fun `Avbryt behandling og ikke lag oppgave som gjelder skjermede personer`() {
         val skjermetIdent = "12345123451"
         coEvery { pdlKlientMock.erAdressebeskyttet(skjermetIdent) }.returns(Result.success(false))
         coEvery { skjermetKlientMock.erSkjermetPerson(skjermetIdent) }.returns(Result.success(true))
@@ -69,10 +70,17 @@ class BehandligOpprettetMottakTest {
         verify(exactly = 0) {
             mediatorMock.behandle(any<SøknadsbehandlingOpprettetHendelse>())
         }
+
+        testRapid.inspektør.size shouldBe 1
+        val message = testRapid.inspektør.message(0)
+        message["@event_name"].asText() shouldBe "avbryt_behandling"
+        message["behandlingId"].asUUID() shouldBe behandlingId
+        message["søknadId"].asUUID() shouldBe søknadId
+        message["ident"].asText() shouldBe skjermetIdent
     }
 
     @Test
-    fun `Skal ikke lage oppgave for behandlinger som gjelder adressebeskyttede personer`() {
+    fun `Avbryt behandling og ikke lag oppgave som gjelder adressebeskyttede personer`() {
         val adressebeskyttetIdent = "11111222222"
 
         coEvery { skjermetKlientMock.erSkjermetPerson(adressebeskyttetIdent) }.returns(Result.success(false))
@@ -83,6 +91,13 @@ class BehandligOpprettetMottakTest {
         verify(exactly = 0) {
             mediatorMock.behandle(any<SøknadsbehandlingOpprettetHendelse>())
         }
+
+        testRapid.inspektør.size shouldBe 1
+        val message = testRapid.inspektør.message(0)
+        message["@event_name"].asText() shouldBe "avbryt_behandling"
+        message["behandlingId"].asUUID() shouldBe behandlingId
+        message["søknadId"].asUUID() shouldBe søknadId
+        message["ident"].asText() shouldBe adressebeskyttetIdent
     }
 
     @Language("JSON")
