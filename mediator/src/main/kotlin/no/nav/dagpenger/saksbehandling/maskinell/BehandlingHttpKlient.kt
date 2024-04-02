@@ -88,19 +88,18 @@ class BehandlingHttpKlient(
         }
     }
 
-    override suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String) {
-        withContext(Dispatchers.IO) {
+    override suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String): Int {
+        return withContext(Dispatchers.IO) {
             val url = "$behandlingUrl/behandling/$behandlingId/godkjenn"
             try {
-                val response: HttpResponse =
-                    client.post(urlString = url) {
-                        header(
-                            HttpHeaders.Authorization,
-                            "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}",
-                        )
-                        setBody("""{"ident": "$ident"}""")
-                        contentType(ContentType.Application.Json)
-                    }
+                client.post(urlString = url) {
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}",
+                    )
+                    setBody("""{"ident": "$ident"}""")
+                    contentType(ContentType.Application.Json)
+                }.status.value
             } catch (e: Exception) {
                 logger.warn("POST kall til dp-behandling feilet for godkjenning av behandlingId $behandlingId", e)
                 throw e

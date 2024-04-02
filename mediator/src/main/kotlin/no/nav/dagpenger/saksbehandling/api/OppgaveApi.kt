@@ -83,7 +83,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         put {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandlerSignatur = call.request.jwt()
-                            val godkjennBehandlingHendelse = GodkjennBehandlingHendelse(oppgaveId, saksbehandlerSignatur)
+                            val godkjennBehandlingHendelse = GodkjennBehandlingHendelse(oppgaveId = oppgaveId, saksbehandlerSignatur)
 
                             mediator.godkjennBehandling(godkjennBehandlingHendelse)
                                 .onSuccess { httpStatusCode: Int ->

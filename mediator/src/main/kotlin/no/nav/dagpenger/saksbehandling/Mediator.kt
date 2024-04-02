@@ -104,7 +104,26 @@ internal class Mediator(
     }
 
     suspend fun godkjennBehandling(hendelse: GodkjennBehandlingHendelse): Result<Int> {
-        throw NotImplementedError()
+        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
+
+        return when (oppgave) {
+            null -> Result.failure(NoSuchElementException("Oppgave finnes ikke med id ${hendelse.oppgaveId}"))
+            else -> {
+                kotlin.runCatching {
+                    behandlingKlient.godkjennBehandling(
+                        behandlingId = oppgave.behandlingId,
+                        ident = oppgave.ident,
+                        saksbehandlerToken = hendelse.saksbehandlerSignatur,
+                    )
+                }.onSuccess {
+                    oppgave.tilstand = FERDIG_BEHANDLET
+                    lagre(oppgave)
+                    sikkerLogger.info { "Godkjente behandling med id: ${oppgave.behandlingId}, oppgaveId: ${oppgave.oppgaveId}" }
+                }.onFailure { e ->
+                    sikkerLogger.error(e) { "Feilet godkjenning av behandling med id: ${oppgave.behandlingId}, oppgaveId: ${oppgave.oppgaveId}" }
+                }
+            }
+        }
     }
 
     fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Result<Unit> =

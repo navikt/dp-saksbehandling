@@ -21,7 +21,7 @@ class PartialBehandlingKlientMock(private val behandlingKlient: BehandlingKlient
         behandlingKlient.bekreftBehandling(behandlingId, saksbehandlerToken)
     }
 
-    override suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String) {
+    override suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String): Int {
         TODO("Not yet implemented")
     }
 

@@ -1,16 +1,18 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.api.GodkjennBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
@@ -24,9 +26,12 @@ class MediatorTest {
     fun `Tester endring av oppgavens tilstand etter hvert som behandling skjer`() {
         withMigratedDb { datasource ->
             val testIdent = "12345612345"
+            val behandlingKlient = mockk<BehandlingKlient>().also {
+                coEvery { it.godkjennBehandling(any(), testIdent, any()) } returns 204
+            }
             val mediator = Mediator(
                 repository = PostgresRepository(datasource),
-                behandlingKlient = mockk(),
+                behandlingKlient = behandlingKlient,
             )
             val skjermingKlientMock = mockk<SkjermingKlient>(relaxed = true)
             val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
@@ -69,7 +74,7 @@ class MediatorTest {
             oppgave.behandlingId shouldBe førsteBehandlingId
 
             runBlocking {
-                mediator.bekreftOppgavensOpplysninger(BekreftOppgaveHendelse(oppgave.oppgaveId, saksbehandlerSignatur = ""))
+                mediator.godkjennBehandling(GodkjennBehandlingHendelse(oppgave.oppgaveId, saksbehandlerSignatur = ""))
             }
 
             mediator.hentOppgaverKlarTilBehandling().size shouldBe 0

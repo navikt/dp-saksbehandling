@@ -8,5 +8,5 @@ interface BehandlingKlient {
 
     suspend fun bekreftBehandling(behandlingId: UUID, saksbehandlerToken: String)
 
-    suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String)
+    suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String): Int
 }
