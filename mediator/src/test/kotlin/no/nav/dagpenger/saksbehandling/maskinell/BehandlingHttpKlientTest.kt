@@ -45,28 +45,6 @@ internal class BehandlingHttpKlientTest {
     }
 
     @Test
-    fun `Skal bekrefte behandling`() {
-        val mockEngine =
-            MockEngine { request ->
-                respond(
-                    content = emptyJsonResponse,
-                    status = HttpStatusCode.Created,
-                    headers = headersOf("Content-Type", "application/json"),
-                )
-            }
-        val behandlingHttpKlient =
-            BehandlingHttpKlient(
-                behandlingUrl = baseUrl,
-                behandlingScope = "scope",
-                tokenProvider = testTokenProvider,
-                engine = mockEngine,
-            )
-        runBlocking {
-            behandlingHttpKlient.bekreftBehandling(UUIDv7.ny(), saksbehandlerToken)
-        }
-    }
-
-    @Test
     fun `Skal godkjenne behandling`() {
         val testIdent = "12345678901"
         val behandlingId = UUIDv7.ny()
@@ -87,10 +65,6 @@ internal class BehandlingHttpKlientTest {
             behandlingHttpKlient.godkjennBehandling(behandlingId, ident = testIdent, saksbehandlerToken)
         }
     }
-
-    // language=json
-    private val emptyJsonResponse =
-        """{}"""
 
     // language=json
     private val behandlingJsonResponse =

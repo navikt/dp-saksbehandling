@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.GodkjennBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
@@ -82,25 +81,6 @@ internal class Mediator(
                 return Pair(oppdatertOppgave, behandlingResponse!!.second)
             }
         }
-    }
-
-    suspend fun bekreftOppgavensOpplysninger(hendelse: BekreftOppgaveHendelse): Result<Unit> {
-        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
-        when (oppgave) {
-            null -> return Result.failure(NoSuchElementException("Oppgave finnes ikke med id ${hendelse.oppgaveId}"))
-            else -> {
-                kotlin.runCatching {
-                    behandlingKlient.bekreftBehandling(
-                        behandlingId = oppgave.behandlingId,
-                        saksbehandlerToken = hendelse.saksbehandlerSignatur,
-                    )
-                }
-                oppgave.tilstand = FERDIG_BEHANDLET
-                lagre(oppgave)
-                sikkerLogger.info { "Bekreftet oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
-            }
-        }
-        return Result.success(Unit)
     }
 
     suspend fun godkjennBehandling(hendelse: GodkjennBehandlingHendelse): Result<Int> {

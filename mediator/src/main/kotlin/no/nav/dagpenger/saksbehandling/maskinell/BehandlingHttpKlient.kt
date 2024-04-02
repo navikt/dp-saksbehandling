@@ -58,36 +58,6 @@ class BehandlingHttpKlient(
             }
         }
 
-    override suspend fun bekreftBehandling(
-        behandlingId: UUID,
-        saksbehandlerToken: String,
-    ) {
-        withContext(Dispatchers.IO) {
-            val url =
-                URLBuilder(behandlingUrl).appendEncodedPathSegments(
-                    "behandling",
-                    behandlingId.toString(),
-                    "oppplysning",
-                    "bekreftelse",
-                ).build()
-            try {
-                val response: HttpResponse =
-                    client.post(url) {
-                        header(
-                            HttpHeaders.Authorization,
-                            "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}",
-                        )
-                        accept(ContentType.Application.Json)
-                    }
-
-                sikkerLogger.info { "Response fra dp-behandling ved POST bekreftelse av behandlingId $behandlingId: $response" }
-            } catch (e: Exception) {
-                logger.warn("POST kall til dp-behandling feilet for bekreftelse av behandlingId $behandlingId", e)
-                throw e
-            }
-        }
-    }
-
     override suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String): Int {
         return withContext(Dispatchers.IO) {
             val url = "$behandlingUrl/behandling/$behandlingId/godkjenn"

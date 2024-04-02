@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingHttpKlient
-import no.nav.dagpenger.saksbehandling.maskinell.PartialBehandlingKlientMock
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
@@ -22,7 +21,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             behandlingScope = Configuration.behandlingApiScope,
             tokenProvider = Configuration.tilOboToken,
         )
-    private val partialBehandlingKlientMock = PartialBehandlingKlientMock(behandlingHttpKlient)
     private val skjermingHttpKlient = SkjermingHttpKlient(
         skjermingApiUrl = Configuration.skjermingApiUrl,
         tokenProvider = Configuration.skjermingTokenProvider,
@@ -32,7 +30,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         tokenSupplier = Configuration.pdlTokenProvider,
     )
 
-    private val mediator = Mediator(repository, partialBehandlingKlientMock)
+    private val mediator = Mediator(repository, behandlingHttpKlient)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
