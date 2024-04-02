@@ -33,14 +33,12 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 import java.util.UUID
 
 class OppgaveApiTest {
     val testIdent = "13083826694"
-    val testBeskrivendeId = "steg-test"
     private val mockAzure = mockAzure()
 
     private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to listOf("SaksbehandlerADGruppe")))
@@ -143,38 +141,6 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Når saksbehandler bekrefter opplysninger i en oppgave skal behandlingen bekreftes og oppgavens tilstand bli ferdigbehandlet`() {
-        val mediatorMock = mockk<Mediator>(relaxed = true)
-        val oppgaveId = UUIDv7.ny()
-        val ferdigbehandletOppgave = testOppgaveFerdigBehandlet(oppgaveId)
-
-        coEvery { mediatorMock.bekreftOppgavensOpplysninger(any()) } returns Result.success(Unit)
-
-        withOppgaveApi(mediator = mediatorMock) {
-            client.put("/oppgave/$oppgaveId/avslag") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
-        }
-        ferdigbehandletOppgave.tilstand shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
-    }
-
-    @Test
-    @Disabled("Venter på endepunkt i dp-behandling")
-    fun `Når saksbehandler avbryter en oppgave skal behandlingen avbrytes og oppgavens tilstand bli ferdigbehandlet`() {
-        val mediatorMock = mockk<Mediator>()
-        val oppgaveId = UUIDv7.ny()
-        val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
-
-        coEvery { mediatorMock.avbrytBehandling(any()) } returns Result.success(Unit)
-        withOppgaveApi {
-            client.put("/oppgave/$oppgaveId/lukk") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
-        }
-        oppgave.tilstand shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
-    }
-
-    @Test
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val mediator =
@@ -185,6 +151,19 @@ class OppgaveApiTest {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
                 response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $ikkeEksisterendeOppgaveId"
+            }
+        }
+    }
+
+    @Test
+    fun `Skal godkjenne behandling`() {
+        val oppgaveId = UUIDv7.ny()
+        val mediator = mockk<Mediator>().also {
+            coEvery { it.godkjennBehandling(any()) } returns Result.success(HttpStatusCode.NoContent.value)
+        }
+        withOppgaveApi(mediator) {
+            client.put("/oppgave/$oppgaveId/avslag") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
             }
         }
     }

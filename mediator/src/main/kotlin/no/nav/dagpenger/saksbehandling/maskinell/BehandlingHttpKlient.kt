@@ -7,12 +7,14 @@ import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.URLBuilder
 import io.ktor.http.appendEncodedPathSegments
+import io.ktor.http.contentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -81,6 +83,26 @@ class BehandlingHttpKlient(
                 sikkerLogger.info { "Response fra dp-behandling ved POST bekreftelse av behandlingId $behandlingId: $response" }
             } catch (e: Exception) {
                 logger.warn("POST kall til dp-behandling feilet for bekreftelse av behandlingId $behandlingId", e)
+                throw e
+            }
+        }
+    }
+
+    override suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String) {
+        withContext(Dispatchers.IO) {
+            val url = "$behandlingUrl/behandling/$behandlingId/godkjenn"
+            try {
+                val response: HttpResponse =
+                    client.post(urlString = url) {
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}",
+                        )
+                        setBody("""{"ident": "$ident"}""")
+                        contentType(ContentType.Application.Json)
+                    }
+            } catch (e: Exception) {
+                logger.warn("POST kall til dp-behandling feilet for godkjenning av behandlingId $behandlingId", e)
                 throw e
             }
         }

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.maskinell
 
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -12,8 +13,7 @@ import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 
 internal class BehandlingHttpKlientTest {
-    private val testTokenProvider: (String, String) -> String = {
-            _, _ ->
+    private val testTokenProvider: (String, String) -> String = { _, _ ->
         "token"
     }
     private val baseUrl = "http://baseUrl"
@@ -63,6 +63,28 @@ internal class BehandlingHttpKlientTest {
             )
         runBlocking {
             behandlingHttpKlient.bekreftBehandling(UUIDv7.ny(), saksbehandlerToken)
+        }
+    }
+
+    @Test
+    fun `Skal godkjenne behandling`() {
+        val testIdent = "12345678901"
+        val behandlingId = UUIDv7.ny()
+        val mockEngine = MockEngine { request ->
+            request.url.toString() shouldBe "$baseUrl/behandling/$behandlingId/godkjenn"
+            respond(content = "", status = HttpStatusCode.NoContent)
+        }
+
+        val behandlingHttpKlient =
+            BehandlingHttpKlient(
+                behandlingUrl = baseUrl,
+                behandlingScope = "scope",
+                tokenProvider = testTokenProvider,
+                engine = mockEngine,
+            )
+
+        runBlocking {
+            behandlingHttpKlient.godkjennBehandling(behandlingId, ident = testIdent, saksbehandlerToken)
         }
     }
 

@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.BekreftOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.api.GodkjennBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
@@ -100,6 +101,10 @@ internal class Mediator(
             }
         }
         return Result.success(Unit)
+    }
+
+    suspend fun godkjennBehandling(hendelse: GodkjennBehandlingHendelse): Result<Int> {
+        throw NotImplementedError()
     }
 
     fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Result<Unit> =

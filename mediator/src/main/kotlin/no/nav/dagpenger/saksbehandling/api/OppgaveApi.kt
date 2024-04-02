@@ -83,10 +83,12 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         put {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandlerSignatur = call.request.jwt()
-                            val bekreftOppgaveHendelse = BekreftOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
+                            val godkjennBehandlingHendelse = GodkjennBehandlingHendelse(oppgaveId, saksbehandlerSignatur)
 
-                            mediator.bekreftOppgavensOpplysninger(bekreftOppgaveHendelse)
-                                .onSuccess { call.respond(HttpStatusCode.NoContent) }
+                            mediator.godkjennBehandling(godkjennBehandlingHendelse)
+                                .onSuccess { httpStatusCode: Int ->
+                                    call.respond(status = HttpStatusCode.fromValue(httpStatusCode), message = "")
+                                }
                                 .onFailure { e ->
                                     call.respond(
                                         status = HttpStatusCode.NotFound,

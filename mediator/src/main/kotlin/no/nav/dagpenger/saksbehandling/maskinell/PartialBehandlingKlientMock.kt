@@ -21,6 +21,10 @@ class PartialBehandlingKlientMock(private val behandlingKlient: BehandlingKlient
         behandlingKlient.bekreftBehandling(behandlingId, saksbehandlerToken)
     }
 
+    override suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String) {
+        TODO("Not yet implemented")
+    }
+
     private fun String.fileAsText(): String {
         return object {}.javaClass.getResource(this)?.readText()
             ?: throw FileNotFoundException()
