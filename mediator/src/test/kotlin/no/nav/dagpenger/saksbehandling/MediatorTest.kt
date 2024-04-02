@@ -28,6 +28,7 @@ class MediatorTest {
             val testIdent = "12345612345"
             val behandlingKlient = mockk<BehandlingKlient>().also {
                 coEvery { it.godkjennBehandling(any(), testIdent, any()) } returns 204
+                coEvery { it.avbrytBehandling(any(), any(), any()) } returns 204
             }
             val mediator = Mediator(
                 repository = PostgresRepository(datasource),

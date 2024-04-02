@@ -106,12 +106,26 @@ internal class Mediator(
         }
     }
 
-    fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Result<Unit> =
-        repository.hentOppgave(hendelse.oppgaveId)?.let { oppgave ->
-            // TODO kall behandlingKlient.avbrytBehandling
-            oppgave.tilstand = FERDIG_BEHANDLET
-            lagre(oppgave)
-            sikkerLogger.info { "Avbrutt oppgaveId: ${oppgave.oppgaveId}, behandlingId: ${oppgave.behandlingId}" }
-            Result.success(Unit)
-        } ?: Result.failure(NoSuchElementException("Oppgave finnes ikke med id ${hendelse.oppgaveId}"))
+    suspend fun avbrytBehandling(hendelse: AvbrytBehandlingHendelse): Result<Int> {
+        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
+
+        return when (oppgave) {
+            null -> Result.failure(NoSuchElementException("Oppgave finnes ikke med id ${hendelse.oppgaveId}"))
+            else -> {
+                kotlin.runCatching {
+                    behandlingKlient.avbrytBehandling(
+                        behandlingId = oppgave.behandlingId,
+                        ident = oppgave.ident,
+                        saksbehandlerToken = hendelse.saksbehandlerSignatur,
+                    )
+                }.onSuccess {
+                    oppgave.tilstand = FERDIG_BEHANDLET
+                    lagre(oppgave)
+                    sikkerLogger.info { "Avbrutt behandling med id: ${oppgave.behandlingId}, oppgaveId: ${oppgave.oppgaveId}" }
+                }.onFailure { e ->
+                    sikkerLogger.error(e) { "Feilet avbryting av behandling med id: ${oppgave.behandlingId}, oppgaveId: ${oppgave.oppgaveId}" }
+                }
+            }
+        }
+    }
 }
