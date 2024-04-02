@@ -66,6 +66,28 @@ internal class BehandlingHttpKlientTest {
         }
     }
 
+    @Test
+    fun `Skal avbryte behandling`() {
+        val testIdent = "12345678901"
+        val behandlingId = UUIDv7.ny()
+        val mockEngine = MockEngine { request ->
+            request.url.toString() shouldBe "$baseUrl/behandling/$behandlingId/avbryt"
+            respond(content = "", status = HttpStatusCode.NoContent)
+        }
+
+        val behandlingHttpKlient =
+            BehandlingHttpKlient(
+                behandlingUrl = baseUrl,
+                behandlingScope = "scope",
+                tokenProvider = testTokenProvider,
+                engine = mockEngine,
+            )
+
+        runBlocking {
+            behandlingHttpKlient.avbrytBehandling(behandlingId, ident = testIdent, saksbehandlerToken)
+        }
+    }
+
     // language=json
     private val behandlingJsonResponse =
         """
