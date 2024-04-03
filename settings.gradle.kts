@@ -17,4 +17,3 @@ rootProject.name = "dp-saksbehandling"
 include("modell")
 include("openapi")
 include("mediator")
-include("opplysninger-kontrakt")
