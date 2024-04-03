@@ -31,7 +31,7 @@ import no.nav.dagpenger.saksbehandling.Opplysning
 import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
-import no.nav.dagpenger.saksbehandling.api.models.KjoennDTO
+import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
@@ -86,7 +86,7 @@ class OppgaveApiTest {
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
         val fødselsdato = LocalDate.of(2000, 1, 1)
 
-        coEvery { mediatorMock.oppdaterOppgaveMedSteg2(any()) } returns OppgaveDTO(
+        coEvery { mediatorMock.lagOppgaveDTO(any()) } returns OppgaveDTO(
             oppgaveId = oppgaveId,
             behandling = mapOf(
                 "behandlingId" to "behandlingId",
@@ -103,10 +103,10 @@ class OppgaveApiTest {
                 ident = oppgave.ident,
                 fornavn = "PETTER",
                 etternavn = "SMART",
-                foedselsdato = fødselsdato,
+                fodselsdato = fødselsdato,
                 alder = ChronoUnit.YEARS.between(fødselsdato, LocalDate.now()).toInt(),
                 statsborgerskap = "NOR",
-                kjoenn = KjoennDTO.UKJENT,
+                kjonn = KjonnDTO.UKJENT,
             ),
             tidspunktOpprettet = oppgave.opprettet,
             emneknagger = emptyList(),
@@ -136,8 +136,8 @@ class OppgaveApiTest {
                         "ident": "12345612345",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
-                        "foedselsdato": "2000-01-01",
-                        "kjoenn": "UKJENT",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
                         "statsborgerskap": "NOR"
                       },
                       "emneknagger": [],
@@ -153,7 +153,7 @@ class OppgaveApiTest {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val mediator =
             mockk<Mediator>().also {
-                coEvery { it.oppdaterOppgaveMedSteg2(any()) } returns null
+                coEvery { it.lagOppgaveDTO(any()) } returns null
             }
         withOppgaveApi(mediator) {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->

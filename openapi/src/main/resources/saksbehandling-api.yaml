@@ -127,21 +127,21 @@ components:
           type: string
         mellomnavn:
           type: string
-        foedselsdato:
+        fodselsdato:
           type: date
         alder:
           type: integer
         statsborgerskap:
           type: string
-        kjoenn:
-          $ref: '#/components/schemas/Kjoenn'
+        kjonn:
+          $ref: '#/components/schemas/Kjonn'
       required:
         - ident
         - fornavn
         - etternavn
-        - foedselsdato
+        - fodselsdato
         - alder
-        - kjoenn
+        - kjonn
 
     OppgaveOversikt:
       type: object
@@ -215,7 +215,7 @@ components:
         - steg
         - emneknagger
 
-    Kjoenn:
+    Kjonn:
       type: string
       enum:
         - MANN

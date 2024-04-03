@@ -7,7 +7,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.GodkjennBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.api.models.KjoennDTO
+import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
@@ -17,7 +17,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 
-private val logger = KotlinLogging.logger {}
 val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
 internal class Mediator(
@@ -60,7 +59,7 @@ internal class Mediator(
         return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
-    suspend fun oppdaterOppgaveMedSteg2(hendelse: OppdaterOppgaveHendelse): OppgaveDTO? {
+    suspend fun lagOppgaveDTO(hendelse: OppdaterOppgaveHendelse): OppgaveDTO? {
         val oppgave = repository.hentOppgave(hendelse.oppgaveId)
         return when (oppgave) {
             null -> null
@@ -84,12 +83,12 @@ internal class Mediator(
                         fornavn = person.fornavn,
                         etternavn = person.etternavn,
                         mellomnavn = person.mellomnavn,
-                        foedselsdato = person.fødselsdato,
+                        fodselsdato = person.fødselsdato,
                         alder = person.alder,
-                        kjoenn = when (person.kjønn) {
-                            PDLPerson.Kjonn.MANN -> KjoennDTO.MANN
-                            PDLPerson.Kjonn.KVINNE -> KjoennDTO.KVINNE
-                            PDLPerson.Kjonn.UKJENT -> KjoennDTO.UKJENT
+                        kjonn = when (person.kjønn) {
+                            PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
+                            PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
+                            PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
                         },
                         statsborgerskap = person.statsborgerskap,
                     ),

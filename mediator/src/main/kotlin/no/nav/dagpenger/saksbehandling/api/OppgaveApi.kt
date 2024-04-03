@@ -62,7 +62,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val saksbehandlerSignatur = call.request.jwt()
                         val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
-                        val oppgaveMedBehandlingResponse = mediator.oppdaterOppgaveMedSteg2(oppdaterOppgaveHendelse)
+                        val oppgaveMedBehandlingResponse = mediator.lagOppgaveDTO(oppdaterOppgaveHendelse)
                         when (oppgaveMedBehandlingResponse) {
                             null -> call.respond(
                                 status = HttpStatusCode.NotFound,
