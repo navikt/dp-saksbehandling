@@ -55,6 +55,25 @@ internal class PDLHttpKlient(
             return Result.failure(e)
         }
     }
+
+    override suspend fun person(ident: String): Result<PDLPersonInfo> {
+        return kotlin.runCatching {
+            val invoke = tokenSupplier.invoke()
+            hentPersonClient.hentPerson(
+                ident,
+                mapOf(
+                    HttpHeaders.Authorization to "Bearer $invoke",
+//                    HttpHeaders.XRequestId to MDC.get("behovId"),
+//                    "Nav-Call-Id" to MDC.get("behovId"),
+                    // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
+                    "behandlingsnummer" to "B286",
+                    "TEMA" to "DAG",
+                ),
+            )
+        }
+            .map { person -> PDLPersonInfo(person.fodselnummer, person.fornavn, person.etternavn, person.mellomnavn) }
+            .onFailure { e -> sikkerLogg.error(e) { "Feil i adressebeskyttelse-oppslag for person med id $ident" } }
+    }
 }
 
 internal fun defaultHttpClient(engine: HttpClientEngine = CIO.create {}) =

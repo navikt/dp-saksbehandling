@@ -12,6 +12,30 @@ import org.junit.jupiter.params.provider.CsvSource
 import java.io.FileNotFoundException
 
 class PDLHttpKlientTest {
+
+    @Test
+    fun `Skal hente persondata fra PDL`() {
+        val mockEngine = MockEngine { request ->
+            respond(
+                pdlResponse("UGRADERT"),
+                headers = headersOf("Content-Type", "application/json"),
+            )
+        }
+
+        val person = runBlocking {
+            PDLHttpKlient(
+                url = "http://localhost:8080",
+                tokenSupplier = { "token" },
+                httpClient = defaultHttpClient(
+                    mockEngine,
+                ),
+            ).person("12345612345").getOrThrow()
+        }
+        person.fornavn shouldBe "ÅPENHJERTIG"
+        person.etternavn shouldBe "GYNGEHEST"
+        person.mellomnavn shouldBe null
+    }
+
     @ParameterizedTest
     @CsvSource(
         "UGRADERT, false",
