@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.DataTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningStatusDTO
@@ -47,14 +48,14 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    val oppgaver = mediator.hentOppgaverKlarTilBehandling().tilOppgaverDTO()
+                    val oppgaver = mediator.hentOppgaverKlarTilBehandling().tilOppgaverOversiktDTO()
                     sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
 
                 route("sok") {
                     post {
-                        val oppgaver = mediator.finnOppgaverFor(call.receive<SokDTO>().fnr).tilOppgaverDTO()
+                        val oppgaver = mediator.finnOppgaverFor(call.receive<SokDTO>().fnr).tilOppgaverOversiktDTO()
                         call.respond(status = HttpStatusCode.OK, oppgaver)
                     }
                 }
@@ -84,7 +85,8 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         put {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandlerSignatur = call.request.jwt()
-                            val godkjennBehandlingHendelse = GodkjennBehandlingHendelse(oppgaveId = oppgaveId, saksbehandlerSignatur)
+                            val godkjennBehandlingHendelse =
+                                GodkjennBehandlingHendelse(oppgaveId = oppgaveId, saksbehandlerSignatur)
 
                             mediator.godkjennBehandling(godkjennBehandlingHendelse)
                                 .onSuccess { httpStatusCode: Int ->
@@ -120,8 +122,8 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
     }
 }
 
-private fun List<Oppgave>.tilOppgaverDTO(): List<OppgaveDTO> {
-    return this.map { oppgave -> oppgave.tilOppgaveDTO() }
+private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
+    return this.map { oppgave -> oppgave.tilOppgaveOvresiktDTO() }
 }
 
 private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
@@ -131,17 +133,14 @@ private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
         Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
     }
 
-internal fun Oppgave.tilOppgaveDTO(): OppgaveDTO {
-    return OppgaveDTO(
+internal fun Oppgave.tilOppgaveOvresiktDTO(): OppgaveOversiktDTO {
+    return OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
         personIdent = this.ident,
-        behandling = emptyMap<String, Any>(),
         behandlingId = this.behandlingId,
         tidspunktOpprettet = this.opprettet,
-        journalpostIder = emptyList(),
         emneknagger = this.emneknagger.toList(),
         tilstand = this.tilstand.tilOppgaveTilstandDTO(),
-        steg = this.steg.map { steg -> steg.tilStegDTO() },
     )
 }
 
