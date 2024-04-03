@@ -158,7 +158,6 @@ components:
         - tidspunktOpprettet
         - tilstand
         - emneknagger
-
     Oppgave:
       type: object
       properties:

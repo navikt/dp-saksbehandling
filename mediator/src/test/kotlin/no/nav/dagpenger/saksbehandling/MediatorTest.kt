@@ -30,12 +30,16 @@ class MediatorTest {
                 coEvery { it.godkjennBehandling(any(), testIdent, any()) } returns 204
                 coEvery { it.avbrytBehandling(any(), any(), any()) } returns 204
             }
+
+            val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
+
             val mediator = Mediator(
                 repository = PostgresRepository(datasource),
                 behandlingKlient = behandlingKlient,
+                pdlKlient = pdlKlientMock,
             )
+
             val skjermingKlientMock = mockk<SkjermingKlient>(relaxed = true)
-            val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
             BehandlingOpprettetMottak(TestRapid(), mediator, skjermingKlientMock, pdlKlientMock)
 
             val førsteSøknadId = UUIDv7.ny()
@@ -67,7 +71,11 @@ class MediatorTest {
 
             // Behandling av første søknad
             mediator.behandle(
-                ForslagTilVedtakHendelse(ident = testIdent, søknadId = førsteSøknadId, behandlingId = førsteBehandlingId),
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = førsteSøknadId,
+                    behandlingId = førsteBehandlingId,
+                ),
             )
 
             mediator.hentOppgaverKlarTilBehandling().size shouldBe 1

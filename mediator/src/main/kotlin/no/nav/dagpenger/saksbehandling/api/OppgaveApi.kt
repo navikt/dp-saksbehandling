@@ -25,14 +25,11 @@ import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.DataTypeDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpplysningStatusDTO
-import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
-import no.nav.dagpenger.saksbehandling.api.models.StegDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import java.util.UUID
@@ -65,7 +62,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val saksbehandlerSignatur = call.request.jwt()
                         val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
-                        val oppgaveMedBehandlingResponse = mediator.oppdaterOppgaveMedSteg(oppdaterOppgaveHendelse)
+                        val oppgaveMedBehandlingResponse = mediator.oppdaterOppgaveMedSteg2(oppdaterOppgaveHendelse)
                         when (oppgaveMedBehandlingResponse) {
                             null -> call.respond(
                                 status = HttpStatusCode.NotFound,
@@ -73,7 +70,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             )
 
                             else -> {
-                                val message = oppgaveMedBehandlingResponse.tilOppgaveDTO()
+                                val message = oppgaveMedBehandlingResponse
                                 sikkerLogger.info { "Oppgave $oppgaveId skal gjøres om til OppgaveDTO: $oppgaveMedBehandlingResponse" }
                                 sikkerLogger.info { "OppgaveDTO $oppgaveId hentes: $message" }
                                 call.respond(HttpStatusCode.OK, message)
@@ -141,29 +138,6 @@ internal fun Oppgave.tilOppgaveOvresiktDTO(): OppgaveOversiktDTO {
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
         tilstand = this.tilstand.tilOppgaveTilstandDTO(),
-    )
-}
-
-internal fun Pair<Oppgave, Map<String, Any>>.tilOppgaveDTO(): OppgaveDTO {
-    val (oppgave, behandling) = this
-    return OppgaveDTO(
-        oppgaveId = oppgave.oppgaveId,
-        personIdent = oppgave.ident,
-        behandling = behandling,
-        behandlingId = oppgave.behandlingId,
-        tidspunktOpprettet = oppgave.opprettet,
-        journalpostIder = emptyList(),
-        emneknagger = oppgave.emneknagger.toList(),
-        tilstand = oppgave.tilstand.tilOppgaveTilstandDTO(),
-        steg = oppgave.steg.map { steg -> steg.tilStegDTO() },
-    )
-}
-
-internal fun Steg.tilStegDTO(): StegDTO {
-    return StegDTO(
-        beskrivendeId = this.beskrivendeId,
-        opplysninger = this.opplysninger.map { opplysning -> opplysning.tilOpplysningDTO() },
-        tilstand = this.tilstand.tilTilstandDTO(),
     )
 }
 

@@ -33,7 +33,8 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
-import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -76,48 +77,35 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Når saksbehandler henter en oppgave, oppdater den med steg og opplysninger`() {
+    fun `Henter ut beriket oppgave`() {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
 
-        coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns Pair(
-            oppgave,
-            mapOf(),
-        )
-
-        withOppgaveApi(mediator = mediatorMock) {
-            client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val actualOppgave =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        OppgaveDTO::class.java,
-                    )
-                actualOppgave.steg.size shouldBe 1
-                actualOppgave.steg[0].beskrivendeId shouldBe MinsteInntektSteg.MINSTEINNTEKT_BESKRIVENDE_ID
-                actualOppgave.steg[0].tilstand shouldBe StegTilstandDTO.OPPFYLT
-            }
-        }
-    }
-
-    @Test
-    fun `Henter ut raw behandling json`() {
-        val mediatorMock = mockk<Mediator>()
-        val oppgaveId = UUIDv7.ny()
-        val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
-
-        coEvery { mediatorMock.oppdaterOppgaveMedSteg(any()) } returns Pair(
-            oppgave,
-            mapOf(
+        coEvery { mediatorMock.oppdaterOppgaveMedSteg2(any()) } returns OppgaveDTO(
+            oppgaveId = oppgaveId,
+            behandling = mapOf(
                 "behandlingId" to "behandlingId",
                 "opplysninger" to listOf(
                     mapOf(
                         "navn" to "minsteInntekt",
                     ),
                 ),
+
             ),
+            behandlingId = oppgave.behandlingId,
+            personIdent = oppgave.ident,
+            person = PersonDTO(
+                ident = oppgave.ident,
+                fornavn = "",
+                etternavn = "",
+            ),
+            tidspunktOpprettet = oppgave.opprettet,
+            emneknagger = emptyList(),
+            tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
+            steg = emptyList(),
+            journalpostIder = emptyList(),
+
         )
 
         withOppgaveApi(mediator = mediatorMock) {
@@ -127,15 +115,23 @@ class OppgaveApiTest {
                 val json = response.bodyAsText()
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder """ {
-                       "behandling": {
-                           "behandlingId": "behandlingId",
-                           "opplysninger": [
-                           {
-                             "navn": "minsteInntekt"
-                           }
-                         ]
-                       }
-                     }
+                      "behandling": {
+                        "behandlingId": "behandlingId",
+                        "opplysninger": [
+                          {
+                            "navn": "minsteInntekt"
+                          }
+                        ]
+                      },
+                      "personIdent": "12345612345",
+                      "person": {
+                        "ident": "12345612345",
+                        "fornavn": "",
+                        "etternavn": ""
+                      },
+                      "emneknagger": [],
+                      "tilstand": "FERDIG_BEHANDLET"
+                      }
                 """.trimIndent()
             }
         }
@@ -146,7 +142,7 @@ class OppgaveApiTest {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val mediator =
             mockk<Mediator>().also {
-                coEvery { it.oppdaterOppgaveMedSteg(any()) } returns null
+                coEvery { it.oppdaterOppgaveMedSteg2(any()) } returns null
             }
         withOppgaveApi(mediator) {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->

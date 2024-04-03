@@ -8,10 +8,14 @@ import no.nav.dagpenger.saksbehandling.api.GodkjennBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
 import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.db.Repository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 
 private val logger = KotlinLogging.logger {}
 val sikkerLogger = KotlinLogging.logger("tjenestekall")
@@ -19,6 +23,7 @@ val sikkerLogger = KotlinLogging.logger("tjenestekall")
 internal class Mediator(
     private val repository: Repository,
     private val behandlingKlient: BehandlingKlient,
+    private val pdlKlient: PDLKlient,
 ) : Repository by repository {
 
     fun behandle(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
@@ -53,6 +58,41 @@ internal class Mediator(
 
     fun hentOppgaverKlarTilBehandling(): List<Oppgave> {
         return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+    }
+
+    suspend fun oppdaterOppgaveMedSteg2(hendelse: OppdaterOppgaveHendelse): OppgaveDTO? {
+        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
+        return when (oppgave) {
+            null -> null
+            else -> {
+                val behandlingResponse = behandlingKlient.hentBehandling(
+                    behandlingId = oppgave.behandlingId,
+                    saksbehandlerToken = hendelse.saksbehandlerSignatur,
+                )
+
+                sikkerLogger.info { "Hentet BehandlingDTO: $behandlingResponse" }
+
+                val person = pdlKlient.person(oppgave.ident).getOrThrow()
+
+                OppgaveDTO(
+                    oppgaveId = oppgave.oppgaveId,
+                    behandling = behandlingResponse.second,
+                    behandlingId = oppgave.behandlingId,
+                    personIdent = oppgave.ident,
+                    person = PersonDTO(
+                        ident = person.ident,
+                        fornavn = person.fornavn,
+                        etternavn = person.etternavn,
+                        mellomnavn = person.mellomnavn,
+                    ),
+                    tidspunktOpprettet = oppgave.opprettet,
+                    emneknagger = oppgave.emneknagger.toList(),
+                    tilstand = oppgave.tilstand.tilOppgaveTilstandDTO(),
+                    steg = emptyList(),
+                    journalpostIder = listOf(),
+                )
+            }
+        }
     }
 
     suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Pair<Oppgave, Map<String, Any>>? {
@@ -128,4 +168,11 @@ internal class Mediator(
             }
         }
     }
+
+    private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
+        when (this) {
+            Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
+            Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+            Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        }
 }

@@ -30,7 +30,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         tokenSupplier = Configuration.pdlTokenProvider,
     )
 
-    private val mediator = Mediator(repository, behandlingHttpKlient)
+    private val mediator = Mediator(repository, behandlingHttpKlient, pdlKlient)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
