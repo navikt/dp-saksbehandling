@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
 import org.junit.jupiter.api.Test
 import java.time.ZonedDateTime
@@ -67,7 +68,7 @@ class OppgaveApiTest {
                 val oppgaver =
                     objectMapper.readValue(
                         response.bodyAsText(),
-                        object : TypeReference<List<OppgaveDTO>>() {},
+                        object : TypeReference<List<OppgaveOversiktDTO>>() {},
                     )
                 oppgaver.size shouldBe 2
             }
@@ -200,7 +201,7 @@ class OppgaveApiTest {
                 val oppgaver =
                     objectMapper.readValue(
                         response.bodyAsText(),
-                        object : TypeReference<List<OppgaveDTO>>() {},
+                        object : TypeReference<List<OppgaveOversiktDTO>>() {},
                     )
                 oppgaver.size shouldBe 2
             }
