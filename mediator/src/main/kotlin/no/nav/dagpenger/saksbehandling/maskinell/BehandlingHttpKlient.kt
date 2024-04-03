@@ -8,17 +8,13 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.URLBuilder
-import io.ktor.http.appendEncodedPathSegments
 import io.ktor.http.contentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
-import no.nav.dagpenger.behandling.opplysninger.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.createHttpClient
 import java.util.UUID
@@ -31,32 +27,23 @@ class BehandlingHttpKlient(
 ) : BehandlingKlient {
     private val client = createHttpClient(engine)
 
-    override suspend fun hentBehandling(
-        behandlingId: UUID,
-        saksbehandlerToken: String,
-    ): Pair<BehandlingDTO, Map<String, Any>> =
-        withContext(Dispatchers.IO) {
-            val url = URLBuilder(behandlingUrl).appendEncodedPathSegments("behandling", behandlingId.toString()).build()
-            try {
-                val response: HttpResponse =
-                    client.get(url) {
-                        header(
-                            HttpHeaders.Authorization,
-                            "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}",
-                        )
-                        accept(ContentType.Application.Json)
-                    }
-
-                sikkerLogger.info { "Response fra dp-behandling ved GET behandlingId $behandlingId: $response" }
-                val rawBehandlingResponse = response.bodyAsText()
-                val behandlingDto = objectMapper.readValue<BehandlingDTO>(rawBehandlingResponse)
-                val behandlingAsMap = objectMapper.readValue<Map<String, Any>>(rawBehandlingResponse)
-                return@withContext Pair(behandlingDto, behandlingAsMap)
-            } catch (e: Exception) {
-                logger.warn("GET kall til dp-behandling feilet for behandlingId $behandlingId", e)
-                throw e
+    override suspend fun hentBehandling(behandlingId: UUID, saksbehandlerToken: String): Map<String, Any> {
+        val urlString = "$behandlingUrl/behandling/$behandlingId"
+        return kotlin.runCatching {
+            client.get(urlString = urlString) {
+                header(
+                    HttpHeaders.Authorization,
+                    "Bearer ${tokenProvider.invoke(saksbehandlerToken, behandlingScope)}",
+                )
+                accept(ContentType.Application.Json)
             }
+        }.map {
+            objectMapper.readValue<Map<String, Any>>(it.bodyAsText())
+        }.getOrElse {
+            logger.warn("GET kall til $urlString feilet. BehandlingId $behandlingId", it)
+            throw it
         }
+    }
 
     override suspend fun godkjennBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String): Int {
         return oppdaterBehandling(behandlingId, ident, saksbehandlerToken, "godkjenn")
@@ -66,7 +53,12 @@ class BehandlingHttpKlient(
         return oppdaterBehandling(behandlingId, ident, saksbehandlerToken, "avbryt")
     }
 
-    private suspend fun oppdaterBehandling(behandlingId: UUID, ident: String, saksbehandlerToken: String, endepunkt: String): Int {
+    private suspend fun oppdaterBehandling(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String,
+        endepunkt: String,
+    ): Int {
         return withContext(Dispatchers.IO) {
             val url = "$behandlingUrl/behandling/$behandlingId/$endepunkt"
             try {

@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.maskinell
 
-import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.ktor.client.engine.mock.MockEngine
@@ -22,7 +21,7 @@ internal class BehandlingHttpKlientTest {
     @Test
     fun `Skal hente json fra behandling`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respond(behandlingJsonResponse, headers = headersOf("Content-Type", "application/json"))
             }
         val behandlingHttpKlient =
@@ -32,13 +31,9 @@ internal class BehandlingHttpKlientTest {
                 tokenProvider = testTokenProvider,
                 engine = mockEngine,
             )
-        val (behandlingDto, rawBehandlingMap) = runBlocking {
+        val rawBehandlingMap = runBlocking {
             behandlingHttpKlient.hentBehandling(UUIDv7.ny(), saksbehandlerToken)
         }
-
-        behandlingDto shouldNotBe null
-        behandlingDto.opplysning.shouldNotBeEmpty()
-        behandlingDto.behandlingId shouldNotBe null
 
         rawBehandlingMap["behandlingId"] shouldNotBe null
         rawBehandlingMap["opplysning"] shouldNotBe null

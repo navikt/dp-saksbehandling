@@ -6,8 +6,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.GodkjennBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.api.alderskravStegFra
-import no.nav.dagpenger.saksbehandling.api.minsteinntektStegFra
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
@@ -76,7 +74,7 @@ internal class Mediator(
 
                 OppgaveDTO(
                     oppgaveId = oppgave.oppgaveId,
-                    behandling = behandlingResponse.second,
+                    behandling = behandlingResponse,
                     behandlingId = oppgave.behandlingId,
                     personIdent = oppgave.ident,
                     person = PersonDTO(
@@ -91,34 +89,6 @@ internal class Mediator(
                     steg = emptyList(),
                     journalpostIder = listOf(),
                 )
-            }
-        }
-    }
-
-    suspend fun oppdaterOppgaveMedSteg(hendelse: OppdaterOppgaveHendelse): Pair<Oppgave, Map<String, Any>>? {
-        val oppgave = repository.hentOppgave(hendelse.oppgaveId)
-        return when (oppgave) {
-            null -> null
-            else -> {
-                val behandling = hentBehandlingFra(oppgave.oppgaveId)
-
-                val behandlingResponse = kotlin.runCatching {
-                    behandlingKlient.hentBehandling(
-                        behandlingId = behandling.behandlingId,
-                        saksbehandlerToken = hendelse.saksbehandlerSignatur,
-                    )
-                }.getOrNull()
-                val behandlingDTO = behandlingResponse?.first
-
-                sikkerLogger.info { "Hentet BehandlingDTO: $behandlingResponse" }
-
-                val nyeSteg = mutableListOf<Steg>()
-                minsteinntektStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
-                alderskravStegFra(behandlingDTO)?.let { nyeSteg.add(it) }
-
-                val oppdatertOppgave = oppgave.copy(steg = nyeSteg)
-                sikkerLogger.info { "Oppdatert oppgave: $oppdatertOppgave" }
-                return Pair(oppdatertOppgave, behandlingResponse!!.second)
             }
         }
     }
