@@ -6,10 +6,13 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondBadRequest
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.pdl.PDLPerson
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import java.io.FileNotFoundException
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 class PDLHttpKlientTest {
 
@@ -34,6 +37,10 @@ class PDLHttpKlientTest {
         person.fornavn shouldBe "ÅPENHJERTIG"
         person.etternavn shouldBe "GYNGEHEST"
         person.mellomnavn shouldBe null
+        person.kjønn shouldBe PDLPerson.Kjonn.KVINNE
+        person.fødselsdato shouldBe LocalDate.of(1984, 3, 1)
+        person.statsborgerskap shouldBe "NOR"
+        person.alder shouldBe ChronoUnit.YEARS.between(person.fødselsdato, LocalDate.now())
     }
 
     @ParameterizedTest

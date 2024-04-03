@@ -1,11 +1,13 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.GodkjennBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.api.models.KjoennDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
@@ -82,6 +84,14 @@ internal class Mediator(
                         fornavn = person.fornavn,
                         etternavn = person.etternavn,
                         mellomnavn = person.mellomnavn,
+                        foedselsdato = person.fødselsdato,
+                        alder = person.alder,
+                        kjoenn = when (person.kjønn) {
+                            PDLPerson.Kjonn.MANN -> KjoennDTO.MANN
+                            PDLPerson.Kjonn.KVINNE -> KjoennDTO.KVINNE
+                            PDLPerson.Kjonn.UKJENT -> KjoennDTO.UKJENT
+                        },
+                        statsborgerskap = person.statsborgerskap,
                     ),
                     tidspunktOpprettet = oppgave.opprettet,
                     emneknagger = oppgave.emneknagger.toList(),

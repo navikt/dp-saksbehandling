@@ -31,12 +31,15 @@ import no.nav.dagpenger.saksbehandling.Opplysning
 import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
+import no.nav.dagpenger.saksbehandling.api.models.KjoennDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class OppgaveApiTest {
@@ -81,6 +84,7 @@ class OppgaveApiTest {
         val mediatorMock = mockk<Mediator>()
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
+        val fødselsdato = LocalDate.of(2000, 1, 1)
 
         coEvery { mediatorMock.oppdaterOppgaveMedSteg2(any()) } returns OppgaveDTO(
             oppgaveId = oppgaveId,
@@ -97,8 +101,12 @@ class OppgaveApiTest {
             personIdent = oppgave.ident,
             person = PersonDTO(
                 ident = oppgave.ident,
-                fornavn = "",
-                etternavn = "",
+                fornavn = "PETTER",
+                etternavn = "SMART",
+                foedselsdato = fødselsdato,
+                alder = ChronoUnit.YEARS.between(fødselsdato, LocalDate.now()).toInt(),
+                statsborgerskap = "NOR",
+                kjoenn = KjoennDTO.UKJENT,
             ),
             tidspunktOpprettet = oppgave.opprettet,
             emneknagger = emptyList(),
@@ -126,8 +134,11 @@ class OppgaveApiTest {
                       "personIdent": "12345612345",
                       "person": {
                         "ident": "12345612345",
-                        "fornavn": "",
-                        "etternavn": ""
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "foedselsdato": "2000-01-01",
+                        "kjoenn": "UKJENT",
+                        "statsborgerskap": "NOR"
                       },
                       "emneknagger": [],
                       "tilstand": "FERDIG_BEHANDLET"
