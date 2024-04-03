@@ -20,7 +20,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Oppgave'
+                  $ref: '#/components/schemas/OppgaveOversikt'
   /oppgave/sok:
     post:
       summary: Søk etter oppgaver ved hjelp av fødselsnummer (FNR)
@@ -38,7 +38,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Oppgave'
+                  $ref: '#/components/schemas/OppgaveOversikt'
   /oppgave/{oppgaveId}:
     get:
       summary: Hent en oppgave ved hjelp av dens ID
