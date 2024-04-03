@@ -116,6 +116,21 @@ paths:
 
 components:
   schemas:
+    Person:
+      type: object
+      properties:
+        ident:
+          type: string
+        fornavn:
+          type: string
+        etternavn:
+          type: string
+        mellomnavn:
+          type: string
+      required:
+        - ident
+        - fornavn
+        - etternavn
     Oppgave:
       type: object
       properties:
@@ -130,6 +145,8 @@ components:
           format: uuid
         personIdent:
           type: string
+        person:
+          $ref: '#/components/schemas/Person'
         tidspunktOpprettet:
           type: string
           format: date-time
@@ -152,6 +169,7 @@ components:
         - behandling
         - behandlingId
         - personIdent
+        - person
         - tidspunktOpprettet
         - tilstand
         - steg

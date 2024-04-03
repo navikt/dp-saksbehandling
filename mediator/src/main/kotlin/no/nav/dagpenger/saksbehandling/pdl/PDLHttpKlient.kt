@@ -56,7 +56,7 @@ internal class PDLHttpKlient(
         }
     }
 
-    override suspend fun person(ident: String): Result<PDLPersonInfo> {
+    override suspend fun person(ident: String): Result<PDLPerson> {
         return kotlin.runCatching {
             val invoke = tokenSupplier.invoke()
             hentPersonClient.hentPerson(
@@ -71,7 +71,7 @@ internal class PDLHttpKlient(
                 ),
             )
         }
-            .map { person -> PDLPersonInfo(person.fodselnummer, person.fornavn, person.etternavn, person.mellomnavn) }
+            .map { person -> PDLPerson(person.fodselnummer, person.fornavn, person.etternavn, person.mellomnavn) }
             .onFailure { e -> sikkerLogg.error(e) { "Feil i adressebeskyttelse-oppslag for person med id $ident" } }
     }
 }
