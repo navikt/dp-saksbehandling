@@ -6,6 +6,7 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import io.ktor.client.engine.cio.CIO
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config
 
@@ -58,6 +59,7 @@ internal object Configuration {
         CachedOauth2Client(
             tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
             authType = azureAdConfig.clientSecret(),
+            httpClient = createHttpClient(CIO.create { })
         )
     }
     val tilOboToken = { token: String, scope: String ->
