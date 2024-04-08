@@ -39,13 +39,13 @@ internal object Configuration {
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingApiScope: String = properties[Key("SKJERMING_API_SCOPE", stringType)]
     val skjermingTokenProvider = {
-        azureAdClient.clientCredentials(skjermingApiScope).accessToken
+        azureAdClient().clientCredentials(skjermingApiScope).accessToken
     }
 
     val pdlUrl: String = properties[Key("PDL_API_URL", stringType)]
     val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
     val pdlTokenProvider = {
-        azureAdClient.clientCredentials(pdlApiScope).accessToken
+        azureAdClient().clientCredentials(pdlApiScope).accessToken
     }
 
     val behandlingApiUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
@@ -53,14 +53,14 @@ internal object Configuration {
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
 
-    val azureAdClient by lazy {
+    fun azureAdClient(): CachedOauth2Client {
         val azureAdConfig = OAuth2Config.AzureAd(properties)
-        CachedOauth2Client(
+        return CachedOauth2Client(
             tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
             authType = azureAdConfig.clientSecret(),
         )
     }
     val tilOboToken = { token: String, scope: String ->
-        azureAdClient.onBehalfOf(token, scope).accessToken
+        azureAdClient().onBehalfOf(token, scope).accessToken
     }
 }
