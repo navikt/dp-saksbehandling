@@ -1,23 +1,24 @@
-kafka_pool: nav-dev
-ingresses: |
-  ingresses:
-    - https://dp-saksbehandling.intern.dev.nav.no
-
-wonderwalled: true
 azure:
   tenant: trygdeetaten.no
   grupper:
     saksbehandler: "3e28466f-c53d-46da-8b44-a4abc2ad4593" # 0000-GA-Dagpenger-Saksbehandler
     beslutter: "11b8475a-fb12-41aa-b1f6-8497c1b5385b" # 0000-GA-Dagpenger-Beslutter
 
-dp-behandling:
-  url: "http://dp-behandling"
-  scope: "api://dev-gcp.teamdagpenger.dp-behandling/.default"
-
 db:
   highAvailability: false
   pointInTimeRecovery: false
   tier: db-custom-1-3840
+  type: POSTGRES_15
+
+dp-behandling:
+  url: "http://dp-behandling"
+  scope: "api://dev-gcp.teamdagpenger.dp-behandling/.default"
+
+ingresses: |
+  ingresses:
+    - https://dp-saksbehandling.intern.dev.nav.no
+
+kafka_pool: nav-dev
 
 pdl:
   host: "pdl-api.dev-fss-pub.nais.io"
@@ -26,4 +27,9 @@ pdl:
 skjerming:
   url: "http://skjermede-personer-pip.nom/skjermet"
   scope: "api://dev-gcp.nom.skjermede-personer-pip/.default"
+
+wonderwalled: true
+
+
+
 
