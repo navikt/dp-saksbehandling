@@ -6,7 +6,6 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
-import io.ktor.client.engine.cio.CIO
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config
 
@@ -46,13 +45,7 @@ internal object Configuration {
     val pdlUrl: String = properties[Key("PDL_API_URL", stringType)]
     val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
     val pdlTokenProvider = {
-        val azureAdConfig = OAuth2Config.AzureAd(properties)
-        val client = CachedOauth2Client(
-            tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
-            authType = azureAdConfig.clientSecret(),
-            httpClient = createHttpClient(CIO.create { }),
-        )
-        client.clientCredentials(pdlApiScope).accessToken
+        azureAdClient.clientCredentials(pdlApiScope).accessToken
     }
 
     val behandlingApiUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
@@ -65,7 +58,6 @@ internal object Configuration {
         CachedOauth2Client(
             tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
             authType = azureAdConfig.clientSecret(),
-            httpClient = createHttpClient(CIO.create { }),
         )
     }
     val tilOboToken = { token: String, scope: String ->
