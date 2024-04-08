@@ -59,29 +59,6 @@ paths:
         '404':
           description: Oppgaven ble ikke funnet
 
-    put:
-      summary: Besvar opplysninger i en oppgave.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Opplysninger'
-      parameters:
-        - in: path
-          name: oppgaveId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Vellykket oppdatering av opplysninger i en oppgave
-        '400':
-          description: Kunne ikke lagre opplysninger.
-        '404':
-          description: Oppgaven ble ikke funnet
-
   /oppgave/{oppgaveId}/avslag:
     put:
       summary: Avslå søknad om dagpenger. Fungerer kun for avslag på minsteinntekt.
@@ -200,10 +177,6 @@ components:
             type: string
         tilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
-        steg:
-          type: array
-          items:
-            $ref: '#/components/schemas/Steg'
       required:
         - oppgaveId
         - behandling
@@ -212,7 +185,6 @@ components:
         - person
         - tidspunktOpprettet
         - tilstand
-        - steg
         - emneknagger
 
     Kjonn:
@@ -229,65 +201,6 @@ components:
         - KLAR_TIL_BEHANDLING
         - FERDIG_BEHANDLET
 
-    Steg:
-      type: object
-      properties:
-        beskrivendeId:
-          type: string
-        opplysninger:
-          $ref: '#/components/schemas/Opplysninger'
-        tilstand:
-          $ref: '#/components/schemas/StegTilstand'
-      required:
-        - beskrivendeId
-        - opplysninger
-
-    Opplysninger:
-      type: array
-      items:
-        $ref: '#/components/schemas/Opplysning'
-
-    Opplysning:
-      type: object
-      properties:
-        opplysningNavn:
-          type: string
-        status:
-          $ref: '#/components/schemas/OpplysningStatus'
-        dataType:
-          $ref: '#/components/schemas/DataType'
-        svar:
-          $ref: '#/components/schemas/Svar'
-        redigerbar:
-          type: boolean
-      required:
-        - opplysningNavn
-        - status
-        - dataType
-        - redigerbar
-
-    Svar:
-      type: object
-      properties:
-        verdi:
-          type: string
-          nullable: false
-
-    DataType:
-      type: string
-      enum:
-        - STRING
-        - LOCALDATE
-        - INT
-        - BOOLEAN
-        - DOUBLE
-
-    OpplysningStatus:
-      type: string
-      enum:
-        - HYPOTESE
-        - FAKTUM
-
     Sok:
       type: object
       properties:
@@ -295,10 +208,3 @@ components:
           type: string
       required:
         - fnr
-
-    StegTilstand:
-      type: string
-      enum:
-        - OPPFYLT
-        - IKKE_OPPFYLT
-        - MANUELL_BEHANDLING

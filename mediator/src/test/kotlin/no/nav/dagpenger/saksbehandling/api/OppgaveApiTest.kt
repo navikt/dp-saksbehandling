@@ -106,7 +106,6 @@ class OppgaveApiTest {
             tidspunktOpprettet = oppgave.opprettet,
             emneknagger = emptyList(),
             tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
-            steg = emptyList(),
             journalpostIder = emptyList(),
 
         )

@@ -95,7 +95,6 @@ internal class Mediator(
                     tidspunktOpprettet = oppgave.opprettet,
                     emneknagger = oppgave.emneknagger.toList(),
                     tilstand = oppgave.tilstand.tilOppgaveTilstandDTO(),
-                    steg = emptyList(),
                     journalpostIder = listOf(),
                 )
             }
