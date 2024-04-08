@@ -10,7 +10,6 @@ data class Oppgave private constructor(
     val ident: String,
     val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
-    val steg: MutableList<Steg>,
     var tilstand: Tilstand.Type,
 ) {
     constructor(
@@ -25,7 +24,6 @@ data class Oppgave private constructor(
         ident = ident,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
-        steg = mutableListOf(),
         behandlingId = behandlingId,
         tilstand = tilstand,
     )
@@ -45,7 +43,6 @@ data class Oppgave private constructor(
                 ident = ident,
                 behandlingId = behandlingId,
                 _emneknagger = emneknagger.toMutableSet(),
-                steg = mutableListOf(),
                 tilstand = tilstand,
             )
         }

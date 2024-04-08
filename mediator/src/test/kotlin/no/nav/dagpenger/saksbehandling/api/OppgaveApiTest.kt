@@ -21,14 +21,9 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.DataType
 import no.nav.dagpenger.saksbehandling.Mediator
-import no.nav.dagpenger.saksbehandling.MinsteInntektSteg
-import no.nav.dagpenger.saksbehandling.MinsteInntektSteg.Companion.MINSTEINNTEKT_OPPLYSNING_NAVN
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Opplysning
-import no.nav.dagpenger.saksbehandling.OpplysningStatus
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -244,15 +239,6 @@ class OppgaveApiTest {
         oppgaveId: UUID,
         opprettet: ZonedDateTime = ZonedDateTime.now(),
     ): Oppgave {
-        val opplysninger = listOf(
-            Opplysning(
-                navn = MINSTEINNTEKT_OPPLYSNING_NAVN,
-                verdi = "true",
-                dataType = DataType.Boolean,
-                status = OpplysningStatus.Faktum,
-                redigerbar = true,
-            ),
-        )
         return Oppgave(
             oppgaveId = oppgaveId,
             ident = "12345612345",
@@ -260,22 +246,6 @@ class OppgaveApiTest {
             opprettet = opprettet,
             behandlingId = UUIDv7.ny(),
             tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
-        ).also {
-            it.steg.add(
-                MinsteInntektSteg(opplysninger),
-            )
-        }
-    }
-
-    private infix fun OppgaveDTO.sammenlign(expected: OppgaveDTO) {
-        this.oppgaveId shouldBe expected.oppgaveId
-        this.behandlingId shouldBe expected.behandlingId
-        this.personIdent shouldBe expected.personIdent
-        // Vi er kun interresert i at tidspunktet er lik, uavhengig av tidssone
-        this.tidspunktOpprettet.isEqual(expected.tidspunktOpprettet) shouldBe true
-        this.emneknagger shouldBe expected.emneknagger
-        this.tilstand shouldBe expected.tilstand
-        this.steg shouldBe expected.steg
-        this.journalpostIder shouldBe expected.journalpostIder
+        )
     }
 }

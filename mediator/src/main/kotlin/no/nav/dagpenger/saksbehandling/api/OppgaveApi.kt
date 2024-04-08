@@ -17,21 +17,12 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.DataType
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Opplysning
-import no.nav.dagpenger.saksbehandling.OpplysningStatus
-import no.nav.dagpenger.saksbehandling.Steg
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
-import no.nav.dagpenger.saksbehandling.api.models.DataTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.saksbehandling.api.models.OpplysningDTO
-import no.nav.dagpenger.saksbehandling.api.models.OpplysningStatusDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
-import no.nav.dagpenger.saksbehandling.api.models.StegTilstandDTO
-import no.nav.dagpenger.saksbehandling.api.models.SvarDTO
 import java.util.UUID
 
 internal fun Application.oppgaveApi(mediator: Mediator) {
@@ -138,33 +129,6 @@ internal fun Oppgave.tilOppgaveOvresiktDTO(): OppgaveOversiktDTO {
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
         tilstand = this.tilstand.tilOppgaveTilstandDTO(),
-    )
-}
-
-private fun Steg.Tilstand.tilTilstandDTO(): StegTilstandDTO {
-    return when (this) {
-        Steg.Tilstand.OPPFYLT -> StegTilstandDTO.OPPFYLT
-        Steg.Tilstand.IKKE_OPPFYLT -> StegTilstandDTO.IKKE_OPPFYLT
-        Steg.Tilstand.MANUELL_BEHANDLING -> StegTilstandDTO.MANUELL_BEHANDLING
-    }
-}
-
-private fun Opplysning.tilOpplysningDTO(): OpplysningDTO {
-    return OpplysningDTO(
-        opplysningNavn = this.navn,
-        status = when (this.status) {
-            OpplysningStatus.Hypotese -> OpplysningStatusDTO.HYPOTESE
-            OpplysningStatus.Faktum -> OpplysningStatusDTO.FAKTUM
-        },
-        dataType = when (this.dataType) {
-            DataType.Boolean -> DataTypeDTO.BOOLEAN
-            DataType.LocalDate -> DataTypeDTO.LOCALDATE
-            DataType.Int -> DataTypeDTO.INT
-            DataType.Double -> DataTypeDTO.DOUBLE
-            DataType.String -> DataTypeDTO.STRING
-        },
-        svar = SvarDTO(this.verdi),
-        redigerbar = this.redigerbar,
     )
 }
 
