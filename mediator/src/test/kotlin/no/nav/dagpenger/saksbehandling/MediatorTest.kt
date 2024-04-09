@@ -7,11 +7,11 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.api.AvbrytBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.api.GodkjennBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -83,7 +83,13 @@ class MediatorTest {
             oppgave.behandlingId shouldBe førsteBehandlingId
 
             runBlocking {
-                mediator.godkjennBehandling(GodkjennBehandlingHendelse(oppgave.oppgaveId, saksbehandlerSignatur = ""))
+                mediator.avsluttBehandling(
+                    VedtakFattetHendelse(
+                        behandlingId = førsteBehandlingId,
+                        søknadId = førsteSøknadId,
+                        ident = testIdent,
+                    ),
+                )
             }
 
             mediator.hentOppgaverKlarTilBehandling().size shouldBe 0

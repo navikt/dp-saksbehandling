@@ -14,8 +14,8 @@ import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.db.Repository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
-import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 
 val sikkerLogger = KotlinLogging.logger("tjenestekall")
@@ -102,6 +102,14 @@ internal class Mediator(
         }
     }
 
+    fun avsluttBehandling(hendelse: VedtakFattetHendelse) {
+        repository.hentBehandling(hendelse.behandlingId).let { behandling ->
+            behandling.håndter(hendelse)
+            lagre(behandling)
+            sikkerLogger.info { "Mottatt vedtak fattet   for behandling med id ${behandling.behandlingId}: $hendelse" }
+        }
+    }
+
     suspend fun godkjennBehandling(hendelse: GodkjennBehandlingHendelse): Result<Int> {
         val oppgave = repository.hentOppgave(hendelse.oppgaveId)
 
@@ -154,8 +162,4 @@ internal class Mediator(
             Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
             Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
         }
-
-    fun avsluttBehandling(vedtakFattetHendelse: VedtakFattetHendelse) {
-        TODO("Not yet implemented")
-    }
 }

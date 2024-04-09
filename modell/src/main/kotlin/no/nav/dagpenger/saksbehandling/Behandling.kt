@@ -1,8 +1,10 @@
 package no.nav.dagpenger.saksbehandling
 
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -33,6 +35,12 @@ data class Behandling(
         this.oppgaver.single {
             it.tilstand == OPPRETTET && it.emneknagger.contains("Søknadsbehandling")
         }.håndter(forslagTilVedtakHendelse)
+    }
+
+    fun håndter(hendelse: VedtakFattetHendelse) {
+        this.oppgaver.single {
+            it.tilstand == KLAR_TIL_BEHANDLING && it.emneknagger.contains("Søknadsbehandling")
+        }.håndter(hendelse)
     }
 
     fun håndter(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
