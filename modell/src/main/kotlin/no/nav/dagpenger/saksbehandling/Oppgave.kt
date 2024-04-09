@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.ZonedDateTime
@@ -70,20 +69,11 @@ data class Oppgave private constructor(
         }
     }
 
-    fun håndter(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
-        if (tilstand == Tilstand.Type.KLAR_TIL_BEHANDLING) {
-            tilstand = Tilstand.Type.AVBRUTT
-        } else {
-            throw IllegalStateException("Kan ikke håndtere hendelse om behandling avbrutt i tilstand $tilstand")
-        }
-    }
-
     interface Tilstand {
         enum class Type {
             OPPRETTET,
             FERDIG_BEHANDLET,
             KLAR_TIL_BEHANDLING,
-            AVBRUTT,
         }
     }
 }

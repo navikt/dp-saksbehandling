@@ -65,6 +65,44 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     override fun hentPerson(ident: String) =
         finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
 
+    override fun slettBehandling(behandlingId: UUID) {
+        sessionOf(dataSource).use { session ->
+            val behandling = hentBehandling(behandlingId)
+            session.transaction { tx ->
+                val oppgaveIder = behandling.oppgaver.map { it.oppgaveId }
+                tx.slettEmneknaggerFor(oppgaveIder)
+                tx.slettOppgaver(oppgaveIder)
+                tx.slettBehandling(behandlingId)
+            }
+        }
+    }
+
+    private fun TransactionalSession.slettEmneknaggerFor(oppgaveIder: List<UUID>) {
+        this.batchPreparedStatement(
+            //language=PostgreSQL
+            statement = "DELETE FROM emneknagg_v1 WHERE oppgave_id =?",
+            params = listOf(oppgaveIder),
+        )
+    }
+
+    private fun TransactionalSession.slettOppgaver(oppgaveIder: List<UUID>) {
+        this.batchPreparedStatement(
+            //language=PostgreSQL
+            statement = "DELETE FROM oppgave_v1 WHERE id =?",
+            params = listOf(oppgaveIder),
+        )
+    }
+
+    private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement = "DELETE FROM behandling_v1 WHERE id=:behandling_id",
+                paramMap = mapOf("behandling_id" to behandlingId),
+            ).asUpdate,
+        )
+    }
+
     override fun lagre(behandling: Behandling) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->

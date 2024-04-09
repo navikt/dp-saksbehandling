@@ -111,7 +111,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 }
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
-    return this.map { oppgave -> oppgave.tilOppgaveOvresiktDTO() }
+    return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 }
 
 private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
@@ -119,19 +119,16 @@ private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
         Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
         Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
         Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
-        Oppgave.Tilstand.Type.AVBRUTT -> OppgaveTilstandDTO.AVBRUTT
     }
 
-internal fun Oppgave.tilOppgaveOvresiktDTO(): OppgaveOversiktDTO {
-    return OppgaveOversiktDTO(
-        oppgaveId = this.oppgaveId,
-        personIdent = this.ident,
-        behandlingId = this.behandlingId,
-        tidspunktOpprettet = this.opprettet,
-        emneknagger = this.emneknagger.toList(),
-        tilstand = this.tilstand.tilOppgaveTilstandDTO(),
-    )
-}
+internal fun Oppgave.tilOppgaveOversiktDTO() = OppgaveOversiktDTO(
+    oppgaveId = this.oppgaveId,
+    personIdent = this.ident,
+    behandlingId = this.behandlingId,
+    tidspunktOpprettet = this.opprettet,
+    emneknagger = this.emneknagger.toList(),
+    tilstand = this.tilstand.tilOppgaveTilstandDTO(),
+)
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {

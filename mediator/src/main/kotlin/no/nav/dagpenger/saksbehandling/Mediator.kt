@@ -112,11 +112,8 @@ internal class Mediator(
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
-        repository.hentBehandling(hendelse.behandlingId).let { behandling ->
-            behandling.håndter(hendelse)
-            lagre(behandling)
-            sikkerLogger.info { "Mottatt behandling avbrutt for behandling med id ${behandling.behandlingId}: $hendelse" }
-        }
+        repository.slettBehandling(hendelse.behandlingId)
+        sikkerLogger.info { "Mottatt behandling avbrutt for behandling med id ${hendelse.behandlingId}. Behandling slettet. Hendelsen: $hendelse" }
     }
 
     suspend fun godkjennBehandling(hendelse: GodkjennBehandlingHendelse): Result<Int> {
@@ -170,6 +167,5 @@ internal class Mediator(
             Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
             Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
             Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
-            Oppgave.Tilstand.Type.AVBRUTT -> OppgaveTilstandDTO.AVBRUTT
         }
 }
