@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.db.Repository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -106,7 +107,15 @@ internal class Mediator(
         repository.hentBehandling(hendelse.behandlingId).let { behandling ->
             behandling.håndter(hendelse)
             lagre(behandling)
-            sikkerLogger.info { "Mottatt vedtak fattet   for behandling med id ${behandling.behandlingId}: $hendelse" }
+            sikkerLogger.info { "Mottatt vedtak fattet for behandling med id ${behandling.behandlingId}: $hendelse" }
+        }
+    }
+
+    fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
+        repository.hentBehandling(hendelse.behandlingId).let { behandling ->
+            behandling.håndter(hendelse)
+            lagre(behandling)
+            sikkerLogger.info { "Mottatt behandling avbrutt for behandling med id ${behandling.behandlingId}: $hendelse" }
         }
     }
 
@@ -161,5 +170,6 @@ internal class Mediator(
             Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
             Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
             Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+            Oppgave.Tilstand.Type.AVBRUTT -> OppgaveTilstandDTO.AVBRUTT
         }
 }

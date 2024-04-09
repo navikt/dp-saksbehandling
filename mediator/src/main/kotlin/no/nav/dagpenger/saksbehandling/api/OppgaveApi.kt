@@ -119,6 +119,7 @@ private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
         Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
         Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
         Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        Oppgave.Tilstand.Type.AVBRUTT -> OppgaveTilstandDTO.AVBRUTT
     }
 
 internal fun Oppgave.tilOppgaveOvresiktDTO(): OppgaveOversiktDTO {

@@ -200,6 +200,7 @@ components:
         - OPPRETTET
         - KLAR_TIL_BEHANDLING
         - FERDIG_BEHANDLET
+        - AVBRUTT
 
     Sok:
       type: object
