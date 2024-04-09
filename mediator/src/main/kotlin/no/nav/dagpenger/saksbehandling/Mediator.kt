@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.db.Repository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 
 val sikkerLogger = KotlinLogging.logger("tjenestekall")
@@ -153,4 +154,8 @@ internal class Mediator(
             Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
             Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
         }
+
+    fun avsluttBehandling(vedtakFattetHendelse: VedtakFattetHendelse) {
+        TODO("Not yet implemented")
+    }
 }
