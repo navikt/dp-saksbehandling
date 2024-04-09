@@ -75,8 +75,11 @@ class PostgresRepositoryTest {
             repo.lagre(testBehandling)
             repo.hentBehandling(testBehandling.behandlingId) shouldNotBe null
             repo.slettBehandling(testBehandling.behandlingId)
+
             assertThrows<DataNotFoundException> {
                 repo.hentBehandling(testBehandling.behandlingId)
+                repo.hentPerson(testPerson.ident)
+                repo.hentOppgave(oppgaveId)
             }
         }
     }

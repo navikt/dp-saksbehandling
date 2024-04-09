@@ -73,8 +73,27 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 tx.slettEmneknaggerFor(oppgaveIder)
                 tx.slettOppgaver(oppgaveIder)
                 tx.slettBehandling(behandlingId)
+                tx.slettPersonUtenBehandlinger(behandling.person.ident)
             }
         }
+    }
+
+    private fun TransactionalSession.slettPersonUtenBehandlinger(ident: String) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    DELETE FROM person_v1 pers 
+                    WHERE pers.ident = :ident
+                    AND NOT EXISTS(
+                        SELECT 1 
+                        FROM behandling_v1 beha 
+                        WHERE beha.person_id = pers.id
+                    )
+                """.trimMargin(),
+                paramMap = mapOf("ident" to ident),
+            ).asUpdate,
+        )
     }
 
     private fun TransactionalSession.slettEmneknaggerFor(oppgaveIder: List<UUID>) {
