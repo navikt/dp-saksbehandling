@@ -4,7 +4,6 @@ import kotliquery.Session
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
@@ -15,9 +14,6 @@ import javax.sql.DataSource
 class DataNotFoundException(message: String) : RuntimeException(message)
 
 class PostgresRepository(private val dataSource: DataSource) : Repository {
-    private companion object {
-        private val logger = KotlinLogging.logger {}
-    }
 
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
