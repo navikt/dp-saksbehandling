@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-internal class AvsluttBehandlingMottakTest {
+internal class VedtakFattetMottakTest {
     val testIdent = "12345678901"
     val søknadId = UUID.randomUUID()
     val behandlingId = UUID.randomUUID()
@@ -20,7 +20,7 @@ internal class AvsluttBehandlingMottakTest {
     private val mediatorMock = mockk<Mediator>(relaxed = true)
 
     init {
-        AvsluttBehandlingMottak(testRapid, mediatorMock)
+        VedtakFattetMottak(testRapid, mediatorMock)
     }
 
     @Test

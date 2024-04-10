@@ -11,7 +11,7 @@ import no.nav.helse.rapids_rivers.River
 
 private val logger = KotlinLogging.logger {}
 
-internal class AvsluttBehandlingMottak(
+internal class VedtakFattetMottak(
     rapidsConnection: RapidsConnection,
     private val mediator: Mediator,
 ) : River.PacketListener {

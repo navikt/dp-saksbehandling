@@ -6,8 +6,10 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.maskinell.BehandlingHttpKlient
+import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
+import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -37,7 +39,9 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             .withKtorModule {
                 this.oppgaveApi(mediator)
             }.build().also { rapidsConnection ->
+                VedtakFattetMottak(rapidsConnection, mediator)
                 BehandlingOpprettetMottak(rapidsConnection, mediator, skjermingHttpKlient, pdlKlient)
+                BehandlingAvbruttMottak(rapidsConnection, mediator)
                 ForslagTilVedtakMottak(rapidsConnection, mediator)
             }
 

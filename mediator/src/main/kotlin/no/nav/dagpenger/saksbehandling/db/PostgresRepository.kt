@@ -18,6 +18,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
+
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.lagre(person)
@@ -73,17 +74,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         sessionOf(dataSource).use { session ->
             val behandling = hentBehandling(behandlingId)
             session.transaction { tx ->
-                logger.info { "Start sletting av behandling med id $behandlingId" }
                 val oppgaveIder = behandling.oppgaver.map { it.oppgaveId }
-                logger.info { "Oppgave id'er: $oppgaveIder" }
-                val slettedeEmneknagger = tx.slettEmneknaggerFor(oppgaveIder)
-                logger.info { "Emneknagger slettet: $slettedeEmneknagger" }
-                val slettedeOppgaver = tx.slettOppgaver(oppgaveIder)
-                logger.info { "Oppgaver slettet: $slettedeOppgaver" }
+                tx.slettEmneknaggerFor(oppgaveIder)
+                tx.slettOppgaver(oppgaveIder)
                 tx.slettBehandling(behandlingId)
-                logger.info { "Etter sletting av behandling" }
                 tx.slettPersonUtenBehandlinger(behandling.person.ident)
-                logger.info { "Etter sletting av person" }
             }
         }
     }
@@ -114,12 +109,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
     }
 
-    private fun TransactionalSession.slettOppgaver(oppgaveIder: List<UUID>) =
+    private fun TransactionalSession.slettOppgaver(oppgaveIder: List<UUID>) {
         this.batchPreparedStatement(
             //language=PostgreSQL
             statement = "DELETE FROM oppgave_v1 WHERE id =?",
             params = listOf(oppgaveIder),
         )
+    }
 
     private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
         run(
