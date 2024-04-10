@@ -4,6 +4,7 @@ import kotliquery.Session
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
@@ -14,6 +15,9 @@ import javax.sql.DataSource
 class DataNotFoundException(message: String) : RuntimeException(message)
 
 class PostgresRepository(private val dataSource: DataSource) : Repository {
+    private companion object {
+        private val logger = KotlinLogging.logger {}
+    }
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.lagre(person)
@@ -70,10 +74,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             val behandling = hentBehandling(behandlingId)
             session.transaction { tx ->
                 val oppgaveIder = behandling.oppgaver.map { it.oppgaveId }
-                tx.slettEmneknaggerFor(oppgaveIder)
-                tx.slettOppgaver(oppgaveIder)
+                logger.info { "Oppgave id'er: $oppgaveIder" }
+                val slettedeEmneknagger = tx.slettEmneknaggerFor(oppgaveIder)
+                logger.info { "Emneknagger slettet: $slettedeEmneknagger" }
+                val slettedeOppgaver = tx.slettOppgaver(oppgaveIder)
+                logger.info { "Oppgaver slettet: $slettedeOppgaver" }
                 tx.slettBehandling(behandlingId)
+                logger.info { "Etter sletting av behandling" }
                 tx.slettPersonUtenBehandlinger(behandling.person.ident)
+                logger.info { "Etter sletting av person" }
             }
         }
     }
@@ -104,13 +113,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
     }
 
-    private fun TransactionalSession.slettOppgaver(oppgaveIder: List<UUID>) {
+    private fun TransactionalSession.slettOppgaver(oppgaveIder: List<UUID>) =
         this.batchPreparedStatement(
             //language=PostgreSQL
             statement = "DELETE FROM oppgave_v1 WHERE id =?",
             params = listOf(oppgaveIder),
         )
-    }
 
     private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
         run(
