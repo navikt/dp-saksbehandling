@@ -83,15 +83,6 @@ class OppgaveApiTest {
 
         coEvery { mediatorMock.lagOppgaveDTO(any()) } returns OppgaveDTO(
             oppgaveId = oppgaveId,
-            behandling = mapOf(
-                "behandlingId" to "behandlingId",
-                "opplysninger" to listOf(
-                    mapOf(
-                        "navn" to "minsteInntekt",
-                    ),
-                ),
-
-            ),
             behandlingId = oppgave.behandlingId,
             personIdent = oppgave.ident,
             person = PersonDTO(
@@ -117,14 +108,7 @@ class OppgaveApiTest {
                 val json = response.bodyAsText()
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder """ {
-                      "behandling": {
-                        "behandlingId": "behandlingId",
-                        "opplysninger": [
-                          {
-                            "navn": "minsteInntekt"
-                          }
-                        ]
-                      },
+                      "behandlingId": "${oppgave.behandlingId}",
                       "personIdent": "12345612345",
                       "person": {
                         "ident": "12345612345",

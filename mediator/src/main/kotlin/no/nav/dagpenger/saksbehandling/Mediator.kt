@@ -66,18 +66,9 @@ internal class Mediator(
         return when (oppgave) {
             null -> null
             else -> {
-                val behandlingResponse = behandlingKlient.hentBehandling(
-                    behandlingId = oppgave.behandlingId,
-                    saksbehandlerToken = hendelse.saksbehandlerSignatur,
-                )
-
-                sikkerLogger.info { "Hentet BehandlingDTO: $behandlingResponse" }
-
                 val person = pdlKlient.person(oppgave.ident).getOrThrow()
-
                 OppgaveDTO(
                     oppgaveId = oppgave.oppgaveId,
-                    behandling = behandlingResponse,
                     behandlingId = oppgave.behandlingId,
                     personIdent = oppgave.ident,
                     person = PersonDTO(

@@ -59,38 +59,6 @@ paths:
         '404':
           description: Oppgaven ble ikke funnet
 
-  /oppgave/{oppgaveId}/avslag:
-    put:
-      summary: Avslå søknad om dagpenger. Fungerer kun for avslag på minsteinntekt.
-      parameters:
-        - in: path
-          name: oppgaveId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Vellykket respons
-        '404':
-          description: Oppgaven ble ikke funnet
-
-  /oppgave/{oppgaveId}/lukk:
-    put:
-      summary: Lukk en oppgave ved hjelp av dens ID
-      parameters:
-        - in: path
-          name: oppgaveId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Vellykket respons
-        '404':
-          description: Oppgaven ble ikke funnet
-
 components:
   schemas:
     Person:
@@ -154,9 +122,6 @@ components:
         oppgaveId:
           type: string
           format: uuid
-        behandling:
-          type: object
-          additionalProperties: true
         behandlingId:
           type: string
           format: uuid
@@ -179,7 +144,6 @@ components:
           $ref: '#/components/schemas/OppgaveTilstand'
       required:
         - oppgaveId
-        - behandling
         - behandlingId
         - personIdent
         - person
