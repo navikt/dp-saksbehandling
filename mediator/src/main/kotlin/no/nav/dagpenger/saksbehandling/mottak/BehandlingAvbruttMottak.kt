@@ -15,7 +15,6 @@ internal class BehandlingAvbruttMottak(
 ) : River.PacketListener {
 
     companion object {
-        val sikkerlogg = KotlinLogging.logger("tjenestekall")
         private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "behandling_avbrutt") }

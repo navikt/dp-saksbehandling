@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 
-val sikkerLogger = KotlinLogging.logger("tjenestekall")
+val logger = KotlinLogging.logger {}
 
 internal class Mediator(
     private val repository: Repository,
@@ -27,9 +27,8 @@ internal class Mediator(
             ident = søknadsbehandlingOpprettetHendelse.ident,
         )
 
-        // TODO: mer elegant duplikatsjekk
         if (repository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) {
-            sikkerLogger.info { "Behandling med id ${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede." }
+            logger.info { "Behandling med id ${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede." }
             return
         }
 
@@ -41,14 +40,14 @@ internal class Mediator(
 
         behandling.håndter(søknadsbehandlingOpprettetHendelse)
         lagre(behandling)
-        sikkerLogger.info { "Mottatt søknadsbehandling med id ${behandling.behandlingId}: $søknadsbehandlingOpprettetHendelse" }
+        logger.info { "Mottatt søknadsbehandling med id ${behandling.behandlingId}" }
     }
 
     fun behandle(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         this.hentBehandling(forslagTilVedtakHendelse.behandlingId).let { behandling ->
             behandling.håndter(forslagTilVedtakHendelse)
             lagre(behandling)
-            sikkerLogger.info { "Mottatt forslag til vedtak for behandling med id ${behandling.behandlingId}: $forslagTilVedtakHendelse" }
+            logger.info { "Mottatt forslag til vedtak hendelse for behandling med id ${behandling.behandlingId}" }
         }
     }
 
@@ -62,6 +61,7 @@ internal class Mediator(
             null -> null
             else -> {
                 val person = pdlKlient.person(oppgave.ident).getOrThrow()
+
                 OppgaveDTO(
                     oppgaveId = oppgave.oppgaveId,
                     behandlingId = oppgave.behandlingId,
@@ -93,13 +93,13 @@ internal class Mediator(
         repository.hentBehandling(hendelse.behandlingId).let { behandling ->
             behandling.håndter(hendelse)
             lagre(behandling)
-            sikkerLogger.info { "Mottatt vedtak fattet for behandling med id ${behandling.behandlingId}: $hendelse" }
+            logger.info { "Mottatt vedtak fattet hendelse for behandling med id ${behandling.behandlingId}. Behandling avsluttet." }
         }
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
         repository.slettBehandling(hendelse.behandlingId)
-        sikkerLogger.info { "Mottatt behandling avbrutt hendelse for behandling med id ${hendelse.behandlingId}. Behandling slettet. Hendelse: $hendelse" }
+        logger.info { "Mottatt behandling avbrutt hendelse for behandling med id ${hendelse.behandlingId}. Behandling slettet." }
     }
 
     private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
