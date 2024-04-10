@@ -16,6 +16,7 @@ internal class BehandlingAvbruttMottak(
 
     companion object {
         val sikkerlogg = KotlinLogging.logger("tjenestekall")
+        private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "behandling_avbrutt") }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
@@ -30,8 +31,8 @@ internal class BehandlingAvbruttMottak(
         val ident = packet["ident"].asText()
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
-
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+            logger.info { "Mottok behandling avbrutt hendelse for søknadId $søknadId og behandlingId $behandlingId" }
             mediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,
@@ -39,7 +40,7 @@ internal class BehandlingAvbruttMottak(
                     ident = ident,
                 ),
             )
-            sikkerlogg.info { "Mottok hendelse " }
+            logger.info { "Behandling avbrutt for søknadId $søknadId og behandlingId $behandlingId" }
         }
     }
 }

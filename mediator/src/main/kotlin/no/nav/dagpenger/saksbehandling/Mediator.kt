@@ -113,7 +113,7 @@ internal class Mediator(
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
         repository.slettBehandling(hendelse.behandlingId)
-        sikkerLogger.info { "Mottatt behandling avbrutt for behandling med id ${hendelse.behandlingId}. Behandling slettet. Hendelsen: $hendelse" }
+        sikkerLogger.info { "Mottatt behandling avbrutt hendelse for behandling med id ${hendelse.behandlingId}. Behandling slettet. Hendelse: $hendelse" }
     }
 
     suspend fun godkjennBehandling(hendelse: GodkjennBehandlingHendelse): Result<Int> {

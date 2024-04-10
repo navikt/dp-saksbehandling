@@ -73,6 +73,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         sessionOf(dataSource).use { session ->
             val behandling = hentBehandling(behandlingId)
             session.transaction { tx ->
+                logger.info { "Start sletting av behandling med id $behandlingId" }
                 val oppgaveIder = behandling.oppgaver.map { it.oppgaveId }
                 logger.info { "Oppgave id'er: $oppgaveIder" }
                 val slettedeEmneknagger = tx.slettEmneknaggerFor(oppgaveIder)
