@@ -38,10 +38,6 @@ spec:
       value: {{azure.grupper.saksbehandler}}
     - name: GRUPPE_BESLUTTER
       value: {{azure.grupper.beslutter}}
-    - name: DP_BEHANDLING_API_URL
-      value: {{dp-behandling.url}}
-    - name: DP_BEHANDLING_API_SCOPE
-      value: {{dp-behandling.scope}}
     - name: PDL_API_URL
       value: https://{{pdl.host}}
     - name: PDL_API_SCOPE
@@ -72,7 +68,6 @@ spec:
         {{/if}}
     outbound:
       rules:
-        - application: dp-behandling
         - application: skjermede-personer-pip
           namespace: nom
       external:

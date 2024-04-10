@@ -13,7 +13,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
@@ -66,42 +65,6 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                                 sikkerLogger.info { "OppgaveDTO $oppgaveId hentes: $message" }
                                 call.respond(HttpStatusCode.OK, message)
                             }
-                        }
-                    }
-
-                    route("avslag") {
-                        put {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val saksbehandlerSignatur = call.request.jwt()
-                            val godkjennBehandlingHendelse =
-                                GodkjennBehandlingHendelse(oppgaveId = oppgaveId, saksbehandlerSignatur)
-
-                            mediator.godkjennBehandling(godkjennBehandlingHendelse)
-                                .onSuccess { httpStatusCode: Int ->
-                                    call.respond(status = HttpStatusCode.fromValue(httpStatusCode), message = "")
-                                }
-                                .onFailure { e ->
-                                    call.respond(
-                                        status = HttpStatusCode.NotFound,
-                                        message = e.message.toString(),
-                                    )
-                                }
-                        }
-                    }
-
-                    route("lukk") {
-                        put {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val saksbehandlerSignatur = call.request.jwt()
-                            val avbrytBehandlingHendelse = AvbrytBehandlingHendelse(oppgaveId, saksbehandlerSignatur)
-                            mediator.avbrytBehandling(avbrytBehandlingHendelse)
-                                .onSuccess { call.respond(HttpStatusCode.NoContent) }
-                                .onFailure { e ->
-                                    call.respond(
-                                        status = HttpStatusCode.NotFound,
-                                        message = e.message.toString(),
-                                    )
-                                }
                         }
                     }
                 }

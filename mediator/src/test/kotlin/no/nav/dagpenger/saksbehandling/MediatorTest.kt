@@ -1,9 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -14,7 +12,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.maskinell.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
@@ -29,17 +26,12 @@ class MediatorTest {
     private val testRapid = TestRapid()
     private val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
     private val skjermingKlientMock = mockk<SkjermingKlient>(relaxed = true)
-    private val behandlingKlient = mockk<BehandlingKlient>().also {
-        coEvery { it.godkjennBehandling(any(), testIdent, any()) } returns 204
-        coEvery { it.avbrytBehandling(any(), any(), any()) } returns 204
-    }
 
     @Test
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
             val mediator = Mediator(
                 repository = PostgresRepository(datasource),
-                behandlingKlient = behandlingKlient,
                 pdlKlient = pdlKlientMock,
             )
 
@@ -70,15 +62,13 @@ class MediatorTest {
             oppgaverKlarTilBehandling.size shouldBe 1
             oppgaverKlarTilBehandling.single().behandlingId shouldBe behandlingId
 
-            runBlocking {
-                mediator.avsluttBehandling(
-                    VedtakFattetHendelse(
-                        behandlingId = behandlingId,
-                        søknadId = søknadId,
-                        ident = testIdent,
-                    ),
-                )
-            }
+            mediator.avsluttBehandling(
+                VedtakFattetHendelse(
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                    ident = testIdent,
+                ),
+            )
 
             mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
         }
@@ -89,7 +79,6 @@ class MediatorTest {
         withMigratedDb { datasource ->
             val mediator = Mediator(
                 repository = PostgresRepository(datasource),
-                behandlingKlient = behandlingKlient,
                 pdlKlient = pdlKlientMock,
             )
 

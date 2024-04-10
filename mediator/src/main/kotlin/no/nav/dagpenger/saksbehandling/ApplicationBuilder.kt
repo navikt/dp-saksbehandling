@@ -5,7 +5,6 @@ import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
-import no.nav.dagpenger.saksbehandling.maskinell.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
@@ -17,12 +16,6 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val repository = PostgresRepository(PostgresDataSourceBuilder.dataSource)
-    private val behandlingHttpKlient: BehandlingHttpKlient =
-        BehandlingHttpKlient(
-            behandlingUrl = Configuration.behandlingApiUrl,
-            behandlingScope = Configuration.behandlingApiScope,
-            tokenProvider = Configuration.tilOboToken,
-        )
     private val skjermingHttpKlient = SkjermingHttpKlient(
         skjermingApiUrl = Configuration.skjermingApiUrl,
         tokenProvider = Configuration.skjermingTokenProvider,
@@ -32,7 +25,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         tokenSupplier = Configuration.pdlTokenProvider,
     )
 
-    private val mediator = Mediator(repository, behandlingHttpKlient, pdlKlient)
+    private val mediator = Mediator(repository, pdlKlient)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
