@@ -317,6 +317,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN   person_v1     pers ON pers.id = beha.person_id
                     WHERE  oppg.tilstand = :tilstand
+                    ORDER BY oppg.opprettet
                     """.trimIndent(),
                     paramMap = mapOf(
                         "tilstand" to tilstand.name,
