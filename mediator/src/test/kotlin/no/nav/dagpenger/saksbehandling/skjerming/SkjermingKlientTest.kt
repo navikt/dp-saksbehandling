@@ -35,7 +35,7 @@ class SkjermingKlientTest {
     }
 
     @Test
-    fun `Skal sende rikitg headers`() {
+    fun `Skal sende riktige headers`() {
         var actualContentType: ContentType? = null
 
         val mockEngine =

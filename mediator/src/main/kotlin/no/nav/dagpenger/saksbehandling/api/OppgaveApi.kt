@@ -13,7 +13,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
@@ -68,42 +67,6 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                             }
                         }
                     }
-
-                    route("avslag") {
-                        put {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val saksbehandlerSignatur = call.request.jwt()
-                            val godkjennBehandlingHendelse =
-                                GodkjennBehandlingHendelse(oppgaveId = oppgaveId, saksbehandlerSignatur)
-
-                            mediator.godkjennBehandling(godkjennBehandlingHendelse)
-                                .onSuccess { httpStatusCode: Int ->
-                                    call.respond(status = HttpStatusCode.fromValue(httpStatusCode), message = "")
-                                }
-                                .onFailure { e ->
-                                    call.respond(
-                                        status = HttpStatusCode.NotFound,
-                                        message = e.message.toString(),
-                                    )
-                                }
-                        }
-                    }
-
-                    route("lukk") {
-                        put {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val saksbehandlerSignatur = call.request.jwt()
-                            val avbrytBehandlingHendelse = AvbrytBehandlingHendelse(oppgaveId, saksbehandlerSignatur)
-                            mediator.avbrytBehandling(avbrytBehandlingHendelse)
-                                .onSuccess { call.respond(HttpStatusCode.NoContent) }
-                                .onFailure { e ->
-                                    call.respond(
-                                        status = HttpStatusCode.NotFound,
-                                        message = e.message.toString(),
-                                    )
-                                }
-                        }
-                    }
                 }
             }
         }
@@ -111,7 +74,7 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
 }
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
-    return this.map { oppgave -> oppgave.tilOppgaveOvresiktDTO() }
+    return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 }
 
 private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
@@ -121,16 +84,14 @@ private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
         Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
     }
 
-internal fun Oppgave.tilOppgaveOvresiktDTO(): OppgaveOversiktDTO {
-    return OppgaveOversiktDTO(
-        oppgaveId = this.oppgaveId,
-        personIdent = this.ident,
-        behandlingId = this.behandlingId,
-        tidspunktOpprettet = this.opprettet,
-        emneknagger = this.emneknagger.toList(),
-        tilstand = this.tilstand.tilOppgaveTilstandDTO(),
-    )
-}
+internal fun Oppgave.tilOppgaveOversiktDTO() = OppgaveOversiktDTO(
+    oppgaveId = this.oppgaveId,
+    personIdent = this.ident,
+    behandlingId = this.behandlingId,
+    tidspunktOpprettet = this.opprettet,
+    emneknagger = this.emneknagger.toList(),
+    tilstand = this.tilstand.tilOppgaveTilstandDTO(),
+)
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {

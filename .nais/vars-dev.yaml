@@ -10,10 +10,6 @@ db:
   tier: db-custom-1-3840
   type: POSTGRES_15
 
-dp-behandling:
-  url: "http://dp-behandling"
-  scope: "api://dev-gcp.teamdagpenger.dp-behandling/.default"
-
 ingresses: |
   ingresses:
     - https://dp-saksbehandling.intern.dev.nav.no

@@ -14,6 +14,7 @@ import javax.sql.DataSource
 class DataNotFoundException(message: String) : RuntimeException(message)
 
 class PostgresRepository(private val dataSource: DataSource) : Repository {
+
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.lagre(person)
@@ -64,6 +65,63 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
 
     override fun hentPerson(ident: String) =
         finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
+
+    override fun slettBehandling(behandlingId: UUID) {
+        sessionOf(dataSource).use { session ->
+            val behandling = hentBehandling(behandlingId)
+            session.transaction { tx ->
+                val oppgaveIder = behandling.oppgaver.map { it.oppgaveId }
+                tx.slettEmneknaggerFor(oppgaveIder)
+                tx.slettOppgaver(oppgaveIder)
+                tx.slettBehandling(behandlingId)
+                tx.slettPersonUtenBehandlinger(behandling.person.ident)
+            }
+        }
+    }
+
+    private fun TransactionalSession.slettPersonUtenBehandlinger(ident: String) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement = """
+                    DELETE FROM person_v1 pers 
+                    WHERE pers.ident = :ident
+                    AND NOT EXISTS(
+                        SELECT 1 
+                        FROM behandling_v1 beha 
+                        WHERE beha.person_id = pers.id
+                    )
+                """.trimMargin(),
+                paramMap = mapOf("ident" to ident),
+            ).asUpdate,
+        )
+    }
+
+    private fun TransactionalSession.slettEmneknaggerFor(oppgaveIder: List<UUID>) {
+        this.batchPreparedStatement(
+            //language=PostgreSQL
+            statement = "DELETE FROM emneknagg_v1 WHERE oppgave_id =?",
+            params = listOf(oppgaveIder),
+        )
+    }
+
+    private fun TransactionalSession.slettOppgaver(oppgaveIder: List<UUID>) {
+        this.batchPreparedStatement(
+            //language=PostgreSQL
+            statement = "DELETE FROM oppgave_v1 WHERE id =?",
+            params = listOf(oppgaveIder),
+        )
+    }
+
+    private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement = "DELETE FROM behandling_v1 WHERE id=:behandling_id",
+                paramMap = mapOf("behandling_id" to behandlingId),
+            ).asUpdate,
+        )
+    }
 
     override fun lagre(behandling: Behandling) {
         sessionOf(dataSource).use { session ->

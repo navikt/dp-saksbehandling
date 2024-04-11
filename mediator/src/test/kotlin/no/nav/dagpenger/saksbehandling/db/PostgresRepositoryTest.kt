@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -11,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -63,6 +65,22 @@ class PostgresRepositoryTest {
 
             val personFraDatabase = repo.finnPerson(testPerson.ident)
             personFraDatabase shouldBe testPerson
+        }
+    }
+
+    @Test
+    fun `Skal kunne slette behandling`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testBehandling)
+            repo.hentBehandling(testBehandling.behandlingId) shouldNotBe null
+            repo.slettBehandling(testBehandling.behandlingId)
+
+            assertThrows<DataNotFoundException> {
+                repo.hentBehandling(testBehandling.behandlingId)
+                repo.hentPerson(testPerson.ident)
+                repo.hentOppgave(oppgaveId)
+            }
         }
     }
 

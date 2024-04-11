@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -57,6 +58,14 @@ data class Oppgave private constructor(
             tilstand = Tilstand.Type.KLAR_TIL_BEHANDLING
         } else {
             throw IllegalStateException("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $tilstand")
+        }
+    }
+
+    fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
+        if (tilstand == Tilstand.Type.KLAR_TIL_BEHANDLING) {
+            tilstand = Tilstand.Type.FERDIG_BEHANDLET
+        } else {
+            throw IllegalStateException("Kan ikke håndtere hendelse om vedtak fattet i tilstand $tilstand")
         }
     }
 

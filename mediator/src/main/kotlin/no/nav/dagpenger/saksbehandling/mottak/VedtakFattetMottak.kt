@@ -3,21 +3,21 @@ package no.nav.dagpenger.saksbehandling.mottak
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Mediator
-import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
-internal class ForslagTilVedtakMottak(
+private val logger = KotlinLogging.logger {}
+
+internal class VedtakFattetMottak(
     rapidsConnection: RapidsConnection,
     private val mediator: Mediator,
 ) : River.PacketListener {
-
     companion object {
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "forslag_til_vedtak") }
+            validate { it.demandValue("@event_name", "vedtak_fattet") }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
         }
     }
@@ -32,13 +32,14 @@ internal class ForslagTilVedtakMottak(
         val ident = packet["ident"].asText()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            val forslagTilVedtakHendelse = ForslagTilVedtakHendelse(
-                ident = ident,
-                søknadId = søknadId,
-                behandlingId = behandlingId,
+            logger.info { "Mottok vedtak fattet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+            mediator.avsluttBehandling(
+                VedtakFattetHendelse(
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                    ident = ident,
+                ),
             )
-            sikkerlogg.info { "Mottok hendelse om forslag til vedtak $forslagTilVedtakHendelse" }
-            mediator.behandle(forslagTilVedtakHendelse)
         }
     }
 }

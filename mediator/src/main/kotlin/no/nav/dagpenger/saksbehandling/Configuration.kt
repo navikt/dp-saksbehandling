@@ -21,7 +21,6 @@ internal object Configuration {
                 "KAFKA_RESET_POLICY" to "latest",
                 "GRUPPE_BESLUTTER" to "123",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
-                "DP_BEHANDLING_API_URL" to "http://dp-behandling",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
@@ -48,9 +47,6 @@ internal object Configuration {
         azureAdClient().clientCredentials(pdlApiScope).accessToken
     }
 
-    val behandlingApiUrl: String = properties[Key("DP_BEHANDLING_API_URL", stringType)]
-    val behandlingApiScope by lazy { properties[Key("DP_BEHANDLING_API_SCOPE", stringType)] }
-
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
 
     fun azureAdClient(): CachedOauth2Client {
@@ -59,8 +55,5 @@ internal object Configuration {
             tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
             authType = azureAdConfig.clientSecret(),
         )
-    }
-    val tilOboToken = { token: String, scope: String ->
-        azureAdClient().onBehalfOf(token, scope).accessToken
     }
 }

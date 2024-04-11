@@ -3,21 +3,21 @@ package no.nav.dagpenger.saksbehandling.mottak
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Mediator
-import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
-internal class ForslagTilVedtakMottak(
+internal class BehandlingAvbruttMottak(
     rapidsConnection: RapidsConnection,
     private val mediator: Mediator,
 ) : River.PacketListener {
 
     companion object {
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+        private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "forslag_til_vedtak") }
+            validate { it.demandValue("@event_name", "behandling_avbrutt") }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
         }
     }
@@ -27,18 +27,19 @@ internal class ForslagTilVedtakMottak(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
+        val ident = packet["ident"].asText()
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
-        val ident = packet["ident"].asText()
-
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            val forslagTilVedtakHendelse = ForslagTilVedtakHendelse(
-                ident = ident,
-                søknadId = søknadId,
-                behandlingId = behandlingId,
+            logger.info { "Mottok behandling avbrutt hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+            mediator.avbrytOppgave(
+                BehandlingAvbruttHendelse(
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                    ident = ident,
+                ),
             )
-            sikkerlogg.info { "Mottok hendelse om forslag til vedtak $forslagTilVedtakHendelse" }
-            mediator.behandle(forslagTilVedtakHendelse)
+            logger.info { "Behandling avbrutt for søknadId $søknadId og behandlingId $behandlingId" }
         }
     }
 }
