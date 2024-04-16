@@ -21,6 +21,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OppgaveOversikt'
+  /oppgave/mine:
+    get:
+      summary: Hent alle saksbehandlers oppgaver under behandling
+      responses:
+        '200':
+          description: Vellykket respons med en liste over oppgaver som saksbehandler har under behandling
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OppgaveOversikt'
   /oppgave/sok:
     post:
       summary: Søk etter oppgaver ved hjelp av fødselsnummer (FNR)
@@ -58,7 +70,27 @@ paths:
                 $ref: '#/components/schemas/Oppgave'
         '404':
           description: Oppgaven ble ikke funnet
-
+  /oppgave/{oppgaveId}/behandle:
+    put:
+      summary: Setter en oppgave under behandling
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med detaljer om oppgaven
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oppgave'
+        '404':
+          description: Oppgaven ble ikke funnet
+        '423':
+          description: Oppgaven er allerede tatt til behandling
 components:
   schemas:
     Person:
@@ -163,6 +195,7 @@ components:
       enum:
         - OPPRETTET
         - KLAR_TIL_BEHANDLING
+        - UNDER_BEHANDLING
         - FERDIG_BEHANDLET
 
     Sok:
