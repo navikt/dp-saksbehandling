@@ -89,6 +89,10 @@ internal class Mediator(
         }
     }
 
+    fun behandleOppgave(hendelse: OppdaterOppgaveHendelse): Oppgave? {
+        TODO("Not yet implemented")
+    }
+
     fun avsluttBehandling(hendelse: VedtakFattetHendelse) {
         repository.hentBehandling(hendelse.behandlingId).let { behandling ->
             behandling.håndter(hendelse)

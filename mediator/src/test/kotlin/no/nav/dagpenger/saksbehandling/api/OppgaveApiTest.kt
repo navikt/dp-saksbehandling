@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.api
 
 import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.HttpRequestBuilder
@@ -20,20 +19,19 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
-import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
-import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
+import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class OppgaveApiTest {
@@ -74,33 +72,36 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Skal kunne ta en oppgave til behandling`() {
+        val mediatorMock = mockk<Mediator>()
+        val oppgaveId = UUIDv7.ny()
+        val testOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
+
+        coEvery { mediatorMock.behandleOppgave(any<OppdaterOppgaveHendelse>()) } returns testOppgave
+    }
+
+    @Test
     fun `Henter ut beriket oppgave`() {
         val mediatorMock = mockk<Mediator>()
+        val pdlMock = mockk<PDLKlient>()
         val oppgaveId = UUIDv7.ny()
         val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
         val fødselsdato = LocalDate.of(2000, 1, 1)
 
-        coEvery { mediatorMock.lagOppgaveDTO(any()) } returns OppgaveDTO(
-            oppgaveId = oppgaveId,
-            behandlingId = oppgave.behandlingId,
-            personIdent = oppgave.ident,
-            person = PersonDTO(
-                ident = oppgave.ident,
+        coEvery { mediatorMock.hentOppgave(any()) } returns oppgave
+        coEvery { pdlMock.person(any()) } returns Result.success(
+            PDLPersonIntern(
+                ident = "12345612345",
                 fornavn = "PETTER",
                 etternavn = "SMART",
-                fodselsdato = fødselsdato,
-                alder = ChronoUnit.YEARS.between(fødselsdato, LocalDate.now()).toInt(),
+                mellomnavn = null,
+                fødselsdato = fødselsdato,
+                alder = 0,
                 statsborgerskap = "NOR",
-                kjonn = KjonnDTO.UKJENT,
+                kjønn = PDLPerson.Kjonn.UKJENT,
             ),
-            tidspunktOpprettet = oppgave.opprettet,
-            emneknagger = emptyList(),
-            tilstand = OppgaveTilstandDTO.FERDIG_BEHANDLET,
-            journalpostIder = emptyList(),
-
         )
-
-        withOppgaveApi(mediator = mediatorMock) {
+        withOppgaveApi(mediator = mediatorMock, pdlKlient = pdlMock) {
             client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -117,7 +118,7 @@ class OppgaveApiTest {
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR"
                       },
-                      "emneknagger": [],
+                      "emneknagger": ["Søknadsbehandling"],
                       "tilstand": "FERDIG_BEHANDLET"
                       }
                 """.trimIndent()
@@ -130,12 +131,11 @@ class OppgaveApiTest {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val mediator =
             mockk<Mediator>().also {
-                coEvery { it.lagOppgaveDTO(any()) } returns null
+                coEvery { it.hentOppgave(any()) } throws DataNotFoundException("Fant ikke testoppgave")
             }
         withOppgaveApi(mediator) {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
-                response.bodyAsText() shouldBe "Fant ingen oppgave med UUID $ikkeEksisterendeOppgaveId"
             }
         }
     }
@@ -144,9 +144,7 @@ class OppgaveApiTest {
     fun `Får feil ved ugyldig oppgaveId`() {
         val ugyldigId = "noeSomIkkeKanParsesTilUUID"
         withOppgaveApi {
-            shouldThrow<IllegalArgumentException> {
-                client.get("/oppgave/$ugyldigId") { autentisert() }
-            }
+            client.get("/oppgave/$ugyldigId") { autentisert() }.status shouldBe HttpStatusCode.BadRequest
         }
     }
 
@@ -181,10 +179,11 @@ class OppgaveApiTest {
 
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(relaxed = true),
+        pdlKlient: PDLKlient = mockk(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
-            application { oppgaveApi(mediator) }
+            application { oppgaveApi(mediator, pdlKlient) }
             test()
         }
     }

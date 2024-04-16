@@ -30,7 +30,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
-                this.oppgaveApi(mediator)
+                this.oppgaveApi(mediator, pdlKlient)
             }.build().also { rapidsConnection ->
                 VedtakFattetMottak(rapidsConnection, mediator)
                 BehandlingOpprettetMottak(rapidsConnection, mediator, skjermingHttpKlient, pdlKlient)

@@ -16,15 +16,21 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
+import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
+import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
+import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
+import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
 
-internal fun Application.oppgaveApi(mediator: Mediator) {
+internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
     val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
     apiConfig()
@@ -50,28 +56,41 @@ internal fun Application.oppgaveApi(mediator: Mediator) {
                 route("{oppgaveId}") {
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        val saksbehandlerSignatur = call.request.jwt()
-                        val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
-                        val oppgaveMedBehandlingResponse = mediator.lagOppgaveDTO(oppdaterOppgaveHendelse)
-                        when (oppgaveMedBehandlingResponse) {
-                            null -> call.respond(
-                                status = HttpStatusCode.NotFound,
-                                message = "Fant ingen oppgave med UUID $oppgaveId",
-                            )
-
-                            else -> {
-                                val message = oppgaveMedBehandlingResponse
-                                sikkerLogger.info { "Oppgave $oppgaveId skal gjøres om til OppgaveDTO: $oppgaveMedBehandlingResponse" }
-                                sikkerLogger.info { "OppgaveDTO $oppgaveId hentes: $message" }
-                                call.respond(HttpStatusCode.OK, message)
-                            }
-                        }
+                        val oppgave = mediator.hentOppgave(oppgaveId)
+                        val person: PDLPersonIntern = pdlKlient.person(oppgave.ident).getOrThrow()
+                        val oppgaveDTO = lagOppgaveDTO(oppgave, person)
+                        call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
                 }
             }
         }
     }
 }
+
+fun lagOppgaveDTO(oppgave: Oppgave, person: PDLPersonIntern): OppgaveDTO =
+    OppgaveDTO(
+        oppgaveId = oppgave.oppgaveId,
+        behandlingId = oppgave.behandlingId,
+        personIdent = oppgave.ident,
+        person = PersonDTO(
+            ident = person.ident,
+            fornavn = person.fornavn,
+            etternavn = person.etternavn,
+            mellomnavn = person.mellomnavn,
+            fodselsdato = person.fødselsdato,
+            alder = person.alder,
+            kjonn = when (person.kjønn) {
+                PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
+                PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
+                PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
+            },
+            statsborgerskap = person.statsborgerskap,
+        ),
+        tidspunktOpprettet = oppgave.opprettet,
+        emneknagger = oppgave.emneknagger.toList(),
+        tilstand = oppgave.tilstand.tilOppgaveTilstandDTO(),
+        journalpostIder = listOf(),
+    )
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
