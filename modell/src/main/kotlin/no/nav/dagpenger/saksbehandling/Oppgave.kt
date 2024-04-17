@@ -72,8 +72,9 @@ data class Oppgave private constructor(
     interface Tilstand {
         enum class Type {
             OPPRETTET,
-            FERDIG_BEHANDLET,
             KLAR_TIL_BEHANDLING,
+            UNDER_BEHANDLING,
+            FERDIG_BEHANDLET,
         }
     }
 }

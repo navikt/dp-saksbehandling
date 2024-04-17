@@ -13,6 +13,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
@@ -61,6 +62,16 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                         val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
+                    route("behandle") {
+                        put {
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            // todo
+                            val oppgave = mediator.tildelOppgave(TildelOppgaveHendelse(oppgaveId = oppgaveId, saksbehandlerSignatur = ""))
+                            val person: PDLPersonIntern = pdlKlient.person(oppgave.ident).getOrThrow()
+                            val oppgaveDTO = lagOppgaveDTO(oppgave, person)
+                            call.respond(HttpStatusCode.OK, oppgaveDTO)
+                        }
+                    }
                 }
             }
         }
@@ -99,8 +110,9 @@ private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
 private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
     when (this) {
         Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
-        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        Oppgave.Tilstand.Type.UNDER_BEHANDLING -> OppgaveTilstandDTO.UNDER_BEHANDLING
         Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
     }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() = OppgaveOversiktDTO(

@@ -8,6 +8,7 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
@@ -22,7 +23,9 @@ import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
@@ -32,12 +35,10 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZonedDateTime
-import java.util.UUID
 
 class OppgaveApiTest {
-    val testIdent = "13083826694"
+    private val testIdent = "12345612345"
     private val mockAzure = mockAzure()
-
     private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to listOf("SaksbehandlerADGruppe")))
 
     @Test
@@ -74,21 +75,57 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne ta en oppgave til behandling`() {
         val mediatorMock = mockk<Mediator>()
-        val oppgaveId = UUIDv7.ny()
-        val testOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
+        val pdlMock = mockk<PDLKlient>()
+        val fødselsdato = LocalDate.of(2000, 1, 1)
+        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
-        coEvery { mediatorMock.behandleOppgave(any<OppdaterOppgaveHendelse>()) } returns testOppgave
+        // coEvery { mediatorMock.tildelOppgave(any<TildelOppgaveHendelse>()) } returns testOppgave
+        coEvery { pdlMock.person(any()) } returns Result.success(
+            PDLPersonIntern(
+                ident = "12345612345",
+                fornavn = "PETTER",
+                etternavn = "SMART",
+                mellomnavn = null,
+                fødselsdato = fødselsdato,
+                alder = 0,
+                statsborgerskap = "NOR",
+                kjønn = PDLPerson.Kjonn.UKJENT,
+            ),
+        )
+
+        withOppgaveApi(mediator = mediatorMock, pdlKlient = pdlMock) {
+            client.put("/oppgave/${testOppgave.oppgaveId}/behandle") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                //language=JSON
+                json shouldEqualSpecifiedJsonIgnoringOrder """ {
+                      "behandlingId": "${testOppgave.behandlingId}",
+                      "personIdent": "$testIdent",
+                      "person": {
+                        "ident": "$testIdent",
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
+                        "statsborgerskap": "NOR"
+                      },
+                      "emneknagger": ["Søknadsbehandling"],
+                      "tilstand": "UNDER_BEHANDLING"
+                      }
+                """.trimIndent()
+            }
+        }
     }
 
     @Test
-    fun `Henter ut beriket oppgave`() {
+    fun `Henter en spesifikk oppgave med tilhørende personinfo`() {
         val mediatorMock = mockk<Mediator>()
         val pdlMock = mockk<PDLKlient>()
-        val oppgaveId = UUIDv7.ny()
-        val oppgave = testOppgaveFerdigBehandlet(oppgaveId)
+        val testOppgave = lagTestOppgaveMedTilstand(FERDIG_BEHANDLET)
         val fødselsdato = LocalDate.of(2000, 1, 1)
 
-        coEvery { mediatorMock.hentOppgave(any()) } returns oppgave
+        coEvery { mediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery { pdlMock.person(any()) } returns Result.success(
             PDLPersonIntern(
                 ident = "12345612345",
@@ -102,13 +139,13 @@ class OppgaveApiTest {
             ),
         )
         withOppgaveApi(mediator = mediatorMock, pdlKlient = pdlMock) {
-            client.get("/oppgave/$oppgaveId") { autentisert() }.also { response ->
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder """ {
-                      "behandlingId": "${oppgave.behandlingId}",
+                      "behandlingId": "${testOppgave.behandlingId}",
                       "personIdent": "12345612345",
                       "person": {
                         "ident": "12345612345",
@@ -152,8 +189,8 @@ class OppgaveApiTest {
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
         val mediatorMock = mockk<Mediator>().also {
             every { it.finnOppgaverFor(testIdent) } returns listOf(
-                testOppgaveFerdigBehandlet(UUIDv7.ny()),
-                testOppgaveFerdigBehandlet(UUIDv7.ny()),
+                lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
+                lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
             )
         }
         withOppgaveApi(mediatorMock) {
@@ -195,25 +232,11 @@ class OppgaveApiTest {
     private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type): Oppgave {
         return Oppgave(
             oppgaveId = UUIDv7.ny(),
-            ident = "12345612345",
+            ident = testIdent,
             emneknagger = setOf("Søknadsbehandling"),
             opprettet = ZonedDateTime.now(),
             behandlingId = UUIDv7.ny(),
             tilstand = tilstand,
-        )
-    }
-
-    private fun testOppgaveFerdigBehandlet(
-        oppgaveId: UUID,
-        opprettet: ZonedDateTime = ZonedDateTime.now(),
-    ): Oppgave {
-        return Oppgave(
-            oppgaveId = oppgaveId,
-            ident = "12345612345",
-            emneknagger = setOf("Søknadsbehandling"),
-            opprettet = opprettet,
-            behandlingId = UUIDv7.ny(),
-            tilstand = Oppgave.Tilstand.Type.FERDIG_BEHANDLET,
         )
     }
 }

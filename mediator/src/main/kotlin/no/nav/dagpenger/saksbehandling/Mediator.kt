@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.api.OppdaterOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.api.TildelOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.db.Repository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -48,7 +48,7 @@ internal class Mediator(
         return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
-    fun behandleOppgave(hendelse: OppdaterOppgaveHendelse): Oppgave? {
+    fun tildelOppgave(hendelse: TildelOppgaveHendelse): Oppgave {
         TODO("Not yet implemented")
     }
 
