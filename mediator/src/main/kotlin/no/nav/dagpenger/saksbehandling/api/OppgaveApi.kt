@@ -63,12 +63,16 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                         val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
+
                     route("behandle") {
                         put {
                             val oppgaveId = call.finnUUID("oppgaveId")
+                            val navIdent = call.navIdent()
                             // todo
-                            val oppgave = mediator.tildelOppgave(TildelOppgaveHendelse(oppgaveId = oppgaveId, navIdent = ""))
-                            val person: PDLPersonIntern = pdlKlient.person(oppgave.ident).getOrThrow()
+                            val oppgave = mediator.tildelOppgave(
+                                TildelOppgaveHendelse(oppgaveId, navIdent),
+                            )
+                            val person = pdlKlient.person(oppgave.ident).getOrThrow()
                             val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }

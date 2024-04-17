@@ -48,8 +48,18 @@ internal class Mediator(
         return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
-    fun tildelOppgave(hendelse: TildelOppgaveHendelse): Oppgave {
-        TODO("Not yet implemented")
+    fun tildelOppgave(tildelOppgaveHendelse: TildelOppgaveHendelse): Oppgave {
+        val oppgave = repository.hentOppgave(tildelOppgaveHendelse.oppgaveId)
+        val saksbehandler = repository.finnSaksbehandler(navIdent = tildelOppgaveHendelse.navIdent) ?: Saksbehandler(
+            navIdent = tildelOppgaveHendelse.navIdent,
+        )
+        saksbehandler.leggTilOppgave(tildelOppgaveHendelse.oppgaveId)
+        oppgave.settTilstandUnderBehandling()
+
+        // TODO: Lagre begge i en transaksjon
+        repository.lagre(saksbehandler)
+        repository.lagre(oppgave)
+        return oppgave
     }
 
     fun avsluttBehandling(hendelse: VedtakFattetHendelse) {
