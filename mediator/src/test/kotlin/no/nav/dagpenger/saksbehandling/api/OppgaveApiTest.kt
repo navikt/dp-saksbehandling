@@ -98,7 +98,7 @@ class OppgaveApiTest {
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
         withOppgaveApi(mediatorMock, pdlMock) {
-            client.put("/oppgave/${testOppgave.oppgaveId}/behandle") { autentisert() }.also { response ->
+            client.put("/oppgave/${testOppgave.oppgaveId}/ansvarlig") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()

@@ -65,11 +65,10 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
 
-                    route("behandle") {
+                    route("ansvarlig") {
                         put {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val navIdent = call.navIdent()
-                            // todo
                             val oppgave = mediator.tildelOppgave(
                                 TildelOppgaveHendelse(oppgaveId, navIdent),
                             )
@@ -77,14 +76,6 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                             val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }
-                    }
-                }
-
-                route("{oppgaveId}/behandle") {
-                    put {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        val saksbehandlerSignatur = call.navIdent()
-                        val oppdaterOppgaveHendelse = TildelOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
                     }
                 }
             }
