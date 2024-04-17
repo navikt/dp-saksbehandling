@@ -167,7 +167,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     override fun hentBehandling(behandlingId: UUID): Behandling {
-        return finnBehandling(behandlingId) ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
+        return finnBehandling(behandlingId)
+            ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
     private fun hentOppgaverFraBehandling(behandlingId: UUID, ident: String): List<Oppgave> {
@@ -176,7 +177,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                    SELECT id, tilstand, opprettet
+                    SELECT id, tilstand, opprettet, saksbehandler_ident
                     FROM   oppgave_v1
                     WHERE  behandling_id = :behandling_id
                     """.trimIndent(),
@@ -187,6 +188,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         oppgaveId = oppgaveId,
                         ident = ident,
                         behandlingId = behandlingId,
+                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
                         tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
@@ -246,16 +248,20 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 //language=PostgreSQL
                 statement = """
                      INSERT INTO oppgave_v1
-                         (id, behandling_id, tilstand, opprettet)
+                         (id, behandling_id, tilstand, opprettet, saksbehandler_ident)
                      VALUES
-                         (:id, :behandling_id, :tilstand, :opprettet) 
-                     ON CONFLICT(id) DO UPDATE SET tilstand = :tilstand
+                         (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident) 
+                     ON CONFLICT(id) DO UPDATE SET
+                      tilstand = :tilstand,
+                      saksbehandler_ident = :saksbehandler_ident
+                     
                 """.trimIndent(),
                 paramMap = mapOf(
                     "id" to oppgave.oppgaveId,
                     "behandling_id" to oppgave.behandlingId,
                     "tilstand" to oppgave.tilstand.name,
                     "opprettet" to oppgave.opprettet,
+                    "saksbehandler_ident" to oppgave.saksbehandlerIdent,
                 ),
             ).asUpdate,
         )
@@ -312,7 +318,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id
+                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id, oppg.saksbehandler_ident
                     FROM   oppgave_v1    oppg
                     JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN   person_v1     pers ON pers.id = beha.person_id
@@ -326,6 +332,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     Oppgave.rehydrer(
                         oppgaveId = it.uuid("id"),
                         ident = it.string("ident"),
+                        saksbehandlerIdent = it.stringOrNull("saksbehandler_ident"),
                         behandlingId = it.uuid("behandling_id"),
                         opprettet = it.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
@@ -342,7 +349,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id
+                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
                     FROM   oppgave_v1    oppg
                     JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN   person_v1     pers ON pers.id = beha.person_id
@@ -354,6 +361,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     Oppgave.rehydrer(
                         oppgaveId = oppgaveId,
                         ident = row.string("ident"),
+                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
@@ -369,7 +377,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement = """
-                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id
+                    SELECT pers.ident,oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
                     FROM   oppgave_v1    oppg
                     JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN   person_v1     pers ON pers.id = beha.person_id
@@ -382,6 +390,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     Oppgave.rehydrer(
                         oppgaveId = it.uuid("id"),
                         ident = it.string("ident"),
+                        saksbehandlerIdent = it.stringOrNull("saksbehandler_ident"),
                         behandlingId = it.uuid("behandling_id"),
                         opprettet = it.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),

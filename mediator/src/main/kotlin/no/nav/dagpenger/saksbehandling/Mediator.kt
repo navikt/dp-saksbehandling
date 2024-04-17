@@ -2,11 +2,11 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.api.TildelOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.db.Repository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 
 val logger = KotlinLogging.logger {}
@@ -50,14 +50,7 @@ internal class Mediator(
 
     fun tildelOppgave(tildelOppgaveHendelse: TildelOppgaveHendelse): Oppgave {
         val oppgave = repository.hentOppgave(tildelOppgaveHendelse.oppgaveId)
-        val saksbehandler = repository.finnSaksbehandler(navIdent = tildelOppgaveHendelse.navIdent) ?: Saksbehandler(
-            navIdent = tildelOppgaveHendelse.navIdent,
-        )
-        saksbehandler.leggTilOppgave(tildelOppgaveHendelse.oppgaveId)
-        oppgave.settTilstandUnderBehandling()
-
-        // TODO: Lagre begge i en transaksjon
-        repository.lagre(saksbehandler)
+        oppgave.tildel(tildelOppgaveHendelse)
         repository.lagre(oppgave)
         return oppgave
     }

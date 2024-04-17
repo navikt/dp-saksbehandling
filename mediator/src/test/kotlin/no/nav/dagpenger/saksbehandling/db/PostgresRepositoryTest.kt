@@ -8,9 +8,11 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.ZoneId
@@ -21,7 +23,8 @@ class PostgresRepositoryTest {
     private val testPerson = Person(ident = "12345678901")
     private val behandlingId1 = UUIDv7.ny()
     private val oppgaveId = UUIDv7.ny()
-    private val opprettetTidspunkt = ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).truncatedTo(ChronoUnit.SECONDS)
+    private val opprettetTidspunkt =
+        ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).truncatedTo(ChronoUnit.SECONDS)
     private val oppgaveKlarTilBehandling = Oppgave(
         oppgaveId = oppgaveId,
         ident = testPerson.ident,
@@ -29,6 +32,7 @@ class PostgresRepositoryTest {
         opprettet = opprettetTidspunkt,
         behandlingId = behandlingId1,
         tilstand = KLAR_TIL_BEHANDLING,
+
     )
     private val testBehandling = Behandling(
         behandlingId = behandlingId1,
@@ -125,6 +129,19 @@ class PostgresRepositoryTest {
                 repo.lagre(testBehandling)
                 repo.lagre(testBehandling)
             }
+        }
+    }
+
+    @Test
+    fun `Skal kunne lagre og hente endring av ansvarlig saksbehandler`() {
+        val navIdent = "Z999999"
+        oppgaveKlarTilBehandling.tildel(TildelOppgaveHendelse(oppgaveId, navIdent))
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testBehandling)
+            val oppgaveFraDatabase = repo.hentOppgave(oppgaveId)
+            oppgaveFraDatabase.saksbehandlerIdent shouldBe navIdent
+            oppgaveFraDatabase.tilstand shouldBe UNDER_BEHANDLING
         }
     }
 

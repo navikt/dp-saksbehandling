@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -10,7 +11,7 @@ data class Oppgave private constructor(
     val opprettet: ZonedDateTime,
     // TODO: Bedre navn ala brukerIdent
     val ident: String,
-    val saksbehandlerIdent: String?,
+    var saksbehandlerIdent: String? = null,
     val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
     var tilstand: Tilstand.Type,
@@ -36,7 +37,7 @@ data class Oppgave private constructor(
         fun rehydrer(
             oppgaveId: UUID,
             ident: String,
-            saksbehandlerIdent: String,
+            saksbehandlerIdent: String?,
             behandlingId: UUID,
             opprettet: ZonedDateTime,
             emneknagger: Set<String>,
@@ -74,12 +75,13 @@ data class Oppgave private constructor(
         }
     }
 
-    fun settTilstandUnderBehandling() {
+    fun tildel(tildelOppgaveHendelse: TildelOppgaveHendelse) {
         if (tilstand == Tilstand.Type.KLAR_TIL_BEHANDLING) {
             tilstand = Tilstand.Type.UNDER_BEHANDLING
         } else {
             throw IllegalStateException("Kan ikke håndtere hendelse om vedtak fattet i tilstand $tilstand")
         }
+        saksbehandlerIdent = tildelOppgaveHendelse.navIdent
     }
 
     interface Tilstand {
