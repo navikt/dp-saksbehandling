@@ -35,7 +35,6 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZonedDateTime
-import java.util.UUID
 
 class OppgaveApiTest {
     private val testIdent = "12345612345"
