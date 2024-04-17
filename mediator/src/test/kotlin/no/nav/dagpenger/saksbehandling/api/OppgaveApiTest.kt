@@ -40,9 +40,15 @@ import java.time.ZonedDateTime
 
 class OppgaveApiTest {
     private val testIdent = "12345612345"
+    private val testNAVIdent = "Z999999"
     private val fødselsdato = LocalDate.of(2000, 1, 1)
     private val mockAzure = mockAzure()
-    private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to listOf("SaksbehandlerADGruppe")))
+    private val gyldigToken = mockAzure.lagTokenMedClaims(
+        mapOf(
+            "groups" to listOf("SaksbehandlerADGruppe"),
+            "NAVident" to testNAVIdent,
+        ),
+    )
 
     @Test
     fun `Skal avvise kall uten autoriserte AD grupper`() {
@@ -79,7 +85,15 @@ class OppgaveApiTest {
     fun `Saksbehandler skal kunne ta en oppgave`() {
         val mediatorMock = mockk<Mediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
-        coEvery { mediatorMock.tildelOppgave(any<TildelOppgaveHendelse>()) } returns testOppgave
+
+        coEvery {
+            mediatorMock.tildelOppgave(
+                TildelOppgaveHendelse(
+                    oppgaveId = testOppgave.oppgaveId,
+                    navIdent = testNAVIdent,
+                ),
+            )
+        } returns testOppgave
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
