@@ -13,6 +13,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
@@ -26,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
+import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
@@ -60,6 +62,14 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                         val person: PDLPersonIntern = pdlKlient.person(oppgave.ident).getOrThrow()
                         val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
+                    }
+                }
+
+                route("{oppgaveId}/behandle") {
+                    put {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        val saksbehandlerSignatur = call.navIdent()
+                        val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
                     }
                 }
             }
