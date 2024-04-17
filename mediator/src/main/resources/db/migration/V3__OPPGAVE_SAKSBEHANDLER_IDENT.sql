@@ -1,0 +1,1 @@
+ALTER TABLE oppgave_v1 ADD COLUMN saksbehandler_ident TEXT

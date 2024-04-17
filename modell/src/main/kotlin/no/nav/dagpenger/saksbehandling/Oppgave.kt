@@ -8,7 +8,9 @@ import java.util.UUID
 data class Oppgave private constructor(
     val oppgaveId: UUID,
     val opprettet: ZonedDateTime,
+    // TODO: Bedre navn ala brukerIdent
     val ident: String,
+    val saksbehandlerIdent: String?,
     val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
     var tilstand: Tilstand.Type,
@@ -23,6 +25,7 @@ data class Oppgave private constructor(
     ) : this(
         oppgaveId = oppgaveId,
         ident = ident,
+        saksbehandlerIdent = null,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         behandlingId = behandlingId,
@@ -33,6 +36,7 @@ data class Oppgave private constructor(
         fun rehydrer(
             oppgaveId: UUID,
             ident: String,
+            saksbehandlerIdent: String,
             behandlingId: UUID,
             opprettet: ZonedDateTime,
             emneknagger: Set<String>,
@@ -42,6 +46,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
                 ident = ident,
+                saksbehandlerIdent = saksbehandlerIdent,
                 behandlingId = behandlingId,
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,

@@ -5,6 +5,7 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.api.TildelOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
@@ -59,7 +60,16 @@ class MediatorTest {
 
             val oppgaverKlarTilBehandling = mediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
             oppgaverKlarTilBehandling.size shouldBe 1
-            oppgaverKlarTilBehandling.single().behandlingId shouldBe behandlingId
+            val oppgave = oppgaverKlarTilBehandling.single()
+            oppgave.behandlingId shouldBe behandlingId
+
+            mediator.tildelOppgave(
+                TildelOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    navIdent = "NAVIdent",
+                ),
+            )
+            oppgave.saksbehandlerIdent shouldBe "NAVIdent"
 
             mediator.avsluttBehandling(
                 VedtakFattetHendelse(

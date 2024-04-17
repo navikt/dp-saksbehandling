@@ -67,7 +67,7 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                         put {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             // todo
-                            val oppgave = mediator.tildelOppgave(TildelOppgaveHendelse(oppgaveId = oppgaveId, saksbehandlerSignatur = ""))
+                            val oppgave = mediator.tildelOppgave(TildelOppgaveHendelse(oppgaveId = oppgaveId, navIdent = ""))
                             val person: PDLPersonIntern = pdlKlient.person(oppgave.ident).getOrThrow()
                             val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
