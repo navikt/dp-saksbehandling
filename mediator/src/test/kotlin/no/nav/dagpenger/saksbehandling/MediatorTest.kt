@@ -32,7 +32,6 @@ class MediatorTest {
         withMigratedDb { datasource ->
             val mediator = Mediator(
                 repository = PostgresRepository(datasource),
-                pdlKlient = pdlKlientMock,
             )
 
             BehandlingOpprettetMottak(testRapid, mediator, skjermingKlientMock, pdlKlientMock)
@@ -79,7 +78,6 @@ class MediatorTest {
         withMigratedDb { datasource ->
             val mediator = Mediator(
                 repository = PostgresRepository(datasource),
-                pdlKlient = pdlKlientMock,
             )
 
             BehandlingOpprettetMottak(testRapid, mediator, skjermingKlientMock, pdlKlientMock)
