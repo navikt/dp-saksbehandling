@@ -20,7 +20,7 @@ class ForslagTilVedtakMottakTest {
     fun `Skal kunne motta forslag til vedtak events`() {
         testRapid.sendTestMessage(forslagTilVedtakJson)
         verify(exactly = 1) {
-            mediator.behandle(any<ForslagTilVedtakHendelse>())
+            mediator.settOppgaveKlarTilBehandling(any<ForslagTilVedtakHendelse>())
         }
     }
 

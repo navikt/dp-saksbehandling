@@ -15,7 +15,7 @@ internal class Mediator(
     private val repository: Repository,
 ) : Repository by repository {
 
-    fun behandle(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
+    fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person = repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
             ident = søknadsbehandlingOpprettetHendelse.ident,
         )
@@ -36,7 +36,7 @@ internal class Mediator(
         logger.info { "Mottatt søknadsbehandling med id ${behandling.behandlingId}" }
     }
 
-    fun behandle(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+    fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         this.hentBehandling(forslagTilVedtakHendelse.behandlingId).let { behandling ->
             behandling.håndter(forslagTilVedtakHendelse)
             lagre(behandling)

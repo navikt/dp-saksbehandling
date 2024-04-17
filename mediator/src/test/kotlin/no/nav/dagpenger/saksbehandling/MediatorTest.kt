@@ -45,11 +45,11 @@ class MediatorTest {
                 opprettet = ZonedDateTime.now(),
             )
 
-            mediator.behandle(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
-            mediator.behandle(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
+            mediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
+            mediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
             mediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
-            mediator.behandle(
+            mediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -85,7 +85,7 @@ class MediatorTest {
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
 
-            mediator.behandle(
+            mediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId,
                     behandlingId = behandlingId,
@@ -95,7 +95,7 @@ class MediatorTest {
             )
             mediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
-            mediator.behandle(
+            mediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
             )
             val oppgaver = mediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)

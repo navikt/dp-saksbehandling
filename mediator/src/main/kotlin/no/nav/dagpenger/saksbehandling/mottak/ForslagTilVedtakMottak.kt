@@ -38,7 +38,7 @@ internal class ForslagTilVedtakMottak(
                 behandlingId = behandlingId,
             )
             sikkerlogg.info { "Mottok hendelse om forslag til vedtak $forslagTilVedtakHendelse" }
-            mediator.behandle(forslagTilVedtakHendelse)
+            mediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
     }
 }

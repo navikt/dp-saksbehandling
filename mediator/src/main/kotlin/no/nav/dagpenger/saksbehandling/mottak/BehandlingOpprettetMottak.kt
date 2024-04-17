@@ -60,7 +60,7 @@ internal class BehandlingOpprettetMottak(
             }
 
             if (!erBeskyttetPerson) {
-                mediator.behandle(
+                mediator.opprettOppgaveForBehandling(
                     SøknadsbehandlingOpprettetHendelse(
                         søknadId = søknadId,
                         behandlingId = behandlingId,

@@ -46,7 +46,7 @@ class BehandligOpprettetMottakTest {
     fun `Skal behandle behandling_opprettet hendelse`() {
         testRapid.sendTestMessage(behandlingOpprettetMelding())
         verify(exactly = 1) {
-            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
+            mediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
         }
     }
 
@@ -54,8 +54,8 @@ class BehandligOpprettetMottakTest {
     fun `Skal ignorere duplikate behandling_opprettet hendelser`() {
         testRapid.sendTestMessage(behandlingOpprettetMelding())
         verify(exactly = 1) {
-            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
-            mediatorMock.behandle(søknadsbehandlingOpprettetHendelse)
+            mediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            mediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
         }
     }
 
@@ -68,7 +68,7 @@ class BehandligOpprettetMottakTest {
         testRapid.sendTestMessage(behandlingOpprettetMelding(skjermetIdent))
 
         verify(exactly = 0) {
-            mediatorMock.behandle(any<SøknadsbehandlingOpprettetHendelse>())
+            mediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
         }
 
         testRapid.inspektør.size shouldBe 1
@@ -89,7 +89,7 @@ class BehandligOpprettetMottakTest {
         testRapid.sendTestMessage(behandlingOpprettetMelding(adressebeskyttetIdent))
 
         verify(exactly = 0) {
-            mediatorMock.behandle(any<SøknadsbehandlingOpprettetHendelse>())
+            mediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
         }
 
         testRapid.inspektør.size shouldBe 1
