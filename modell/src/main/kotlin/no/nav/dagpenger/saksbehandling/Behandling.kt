@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -32,15 +31,11 @@ data class Behandling(
     }
 
     fun håndter(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        this.oppgaver.single {
-            it.tilstand == OPPRETTET && it.emneknagger.contains("Søknadsbehandling")
-        }.håndter(forslagTilVedtakHendelse)
+        this.oppgaver.single().håndter(forslagTilVedtakHendelse)
     }
 
-    fun håndter(hendelse: VedtakFattetHendelse) {
-        this.oppgaver.single {
-            it.tilstand == KLAR_TIL_BEHANDLING && it.emneknagger.contains("Søknadsbehandling")
-        }.håndter(hendelse)
+    fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
+        this.oppgaver.single().håndter(vedtakFattetHendelse)
     }
 
     fun håndter(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {

@@ -5,6 +5,7 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
@@ -70,8 +71,9 @@ class MediatorTest {
                 ),
             )
 
-            // saksbehandler.navIdent shouldBe "NAVIdent"
-            // saksbehandler.oppgaver.single() shouldBe oppgave.oppgaveId
+            val tildeltOppgave = mediator.hentOppgave(oppgave.oppgaveId)
+            tildeltOppgave.tilstand shouldBe UNDER_BEHANDLING
+            tildeltOppgave.saksbehandlerIdent shouldBe "NAVIdent"
 
             mediator.avsluttBehandling(
                 VedtakFattetHendelse(
