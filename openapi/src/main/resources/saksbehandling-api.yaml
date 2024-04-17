@@ -70,9 +70,10 @@ paths:
                 $ref: '#/components/schemas/Oppgave'
         '404':
           description: Oppgaven ble ikke funnet
-  /oppgave/{oppgaveId}/behandle:
+
+  /oppgave/{oppgaveId}/ansvarlig:
     put:
-      summary: Setter en oppgave under behandling
+      summary: Sett saksbehandler som ansvarlig for en oppgave
       parameters:
         - in: path
           name: oppgaveId
@@ -91,6 +92,18 @@ paths:
           description: Oppgaven ble ikke funnet
         '423':
           description: Oppgaven er allerede tatt til behandling
+    delete:
+      summary: Fjern saksbehandler som ansvarlig for en oppgave, hvis saksbehandler er ansvarlig for  oppgaven
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Fjernet saksbehandler som ansvarlig for oppgavenj
 components:
   schemas:
     Person:
