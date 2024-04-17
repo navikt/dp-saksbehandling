@@ -79,7 +79,7 @@ data class Oppgave private constructor(
         if (tilstand == Tilstand.Type.UNDER_BEHANDLING) {
             tilstand = Tilstand.Type.KLAR_TIL_BEHANDLING
         } else {
-            throw IllegalStateException("Kan ikke håndtere hendelse om vedtak fattet i tilstand $tilstand")
+            throw IllegalStateException("Kan ikke håndtere hendelse om å fjerne saksbehandler som ansvarlig i tilstand $tilstand")
         }
         saksbehandlerIdent = null
     }
@@ -88,7 +88,7 @@ data class Oppgave private constructor(
         if (tilstand == Tilstand.Type.KLAR_TIL_BEHANDLING) {
             tilstand = Tilstand.Type.UNDER_BEHANDLING
         } else {
-            throw IllegalStateException("Kan ikke håndtere hendelse om vedtak fattet i tilstand $tilstand")
+            throw IllegalStateException("Kan ikke håndtere hendelse om å sette saksbehandler som ansvarlig i tilstand $tilstand")
         }
         saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
     }

@@ -100,7 +100,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     private fun TransactionalSession.slettEmneknaggerFor(oppgaveIder: List<UUID>) {
         this.batchPreparedStatement(
             //language=PostgreSQL
-            statement = "DELETE FROM emneknagg_v1 WHERE oppgave_id =?",
+            statement = "DELETE FROM emneknagg_v1 WHERE oppgave_id = ?",
             params = listOf(oppgaveIder),
         )
     }
@@ -108,7 +108,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     private fun TransactionalSession.slettOppgaver(oppgaveIder: List<UUID>) {
         this.batchPreparedStatement(
             //language=PostgreSQL
-            statement = "DELETE FROM oppgave_v1 WHERE id =?",
+            statement = "DELETE FROM oppgave_v1 WHERE id = ?",
             params = listOf(oppgaveIder),
         )
     }
@@ -117,7 +117,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         run(
             queryOf(
                 //language=PostgreSQL
-                statement = "DELETE FROM behandling_v1 WHERE id=:behandling_id",
+                statement = "DELETE FROM behandling_v1 WHERE id = :behandling_id",
                 paramMap = mapOf("behandling_id" to behandlingId),
             ).asUpdate,
         )
