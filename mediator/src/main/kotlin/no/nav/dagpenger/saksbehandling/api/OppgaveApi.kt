@@ -11,6 +11,7 @@ import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -27,7 +28,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
-import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -67,14 +68,17 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
 
                     route("ansvarlig") {
                         put {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val navIdent = call.navIdent()
-                            val oppgave = mediator.tildelOppgave(
-                                TildelOppgaveHendelse(oppgaveId, navIdent),
-                            )
+                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                            val oppgave = mediator.taAnsvarForOppgave(oppgaveAnsvarHendelse)
                             val person = pdlKlient.person(oppgave.ident).getOrThrow()
                             val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
+                        }
+
+                        delete {
+                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                            mediator.fjernAnsvarForOppgave(oppgaveAnsvarHendelse)
+                            call.respond(HttpStatusCode.NoContent)
                         }
                     }
                 }
@@ -83,7 +87,11 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
     }
 }
 
+private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse =
+    OppgaveAnsvarHendelse(this.finnUUID("oppgaveId"), this.navIdent())
+
 fun lagOppgaveDTO(oppgave: Oppgave, person: PDLPersonIntern): OppgaveDTO =
+
     OppgaveDTO(
         oppgaveId = oppgave.oppgaveId,
         behandlingId = oppgave.behandlingId,

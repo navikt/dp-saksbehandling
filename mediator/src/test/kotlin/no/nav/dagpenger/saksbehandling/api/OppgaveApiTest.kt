@@ -5,6 +5,7 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -19,7 +20,10 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -31,7 +35,7 @@ import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
@@ -87,8 +91,8 @@ class OppgaveApiTest {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         coEvery {
-            mediatorMock.tildelOppgave(
-                TildelOppgaveHendelse(
+            mediatorMock.taAnsvarForOppgave(
+                OppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
                     navIdent = testNAVIdent,
                 ),
@@ -119,6 +123,37 @@ class OppgaveApiTest {
                       }
                 """.trimIndent()
             }
+        }
+    }
+
+    @Test
+    fun `Saksbehandler skal kunne gi fra seg ansvar for en oppgave`() {
+        val mediatorMock = mockk<Mediator>()
+        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
+
+        coEvery { mediatorMock.hentOppgave(any()) } returns testOppgave
+        coEvery {
+            mediatorMock.fjernAnsvarForOppgave(
+                OppgaveAnsvarHendelse(
+                    testOppgave.oppgaveId,
+                    testNAVIdent,
+                ),
+            )
+        } just runs
+
+        withOppgaveApi(mediator = mediatorMock) {
+            client.delete("oppgave/${testOppgave.oppgaveId}/ansvarlig") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+        }
+
+        verify(exactly = 1) {
+            mediatorMock.fjernAnsvarForOppgave(
+                OppgaveAnsvarHendelse(
+                    testOppgave.oppgaveId,
+                    testNAVIdent,
+                ),
+            )
         }
     }
 

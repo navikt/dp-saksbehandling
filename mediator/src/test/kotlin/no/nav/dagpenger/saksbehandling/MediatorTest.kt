@@ -11,8 +11,8 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -64,8 +64,8 @@ class MediatorTest {
             val oppgave = oppgaverKlarTilBehandling.single()
             oppgave.behandlingId shouldBe behandlingId
 
-            mediator.tildelOppgave(
-                TildelOppgaveHendelse(
+            mediator.taAnsvarForOppgave(
+                OppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",
                 ),

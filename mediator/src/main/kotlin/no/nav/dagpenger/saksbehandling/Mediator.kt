@@ -5,8 +5,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.db.Repository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 
 val logger = KotlinLogging.logger {}
@@ -48,9 +48,15 @@ internal class Mediator(
         return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
-    fun tildelOppgave(tildelOppgaveHendelse: TildelOppgaveHendelse): Oppgave {
-        val oppgave = repository.hentOppgave(tildelOppgaveHendelse.oppgaveId)
-        oppgave.tildel(tildelOppgaveHendelse)
+    fun fjernAnsvarForOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+        val oppgave = repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId)
+        oppgave.fjernAnsvar(oppgaveAnsvarHendelse)
+        repository.lagre(oppgave)
+    }
+
+    fun taAnsvarForOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse): Oppgave {
+        val oppgave = repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId)
+        oppgave.giAnsvar(oppgaveAnsvarHendelse)
         repository.lagre(oppgave)
         return oppgave
     }

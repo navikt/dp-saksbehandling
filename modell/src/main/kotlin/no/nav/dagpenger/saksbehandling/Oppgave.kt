@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -75,13 +75,22 @@ data class Oppgave private constructor(
         }
     }
 
-    fun tildel(tildelOppgaveHendelse: TildelOppgaveHendelse) {
+    fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+        if (tilstand == Tilstand.Type.UNDER_BEHANDLING) {
+            tilstand = Tilstand.Type.KLAR_TIL_BEHANDLING
+        } else {
+            throw IllegalStateException("Kan ikke håndtere hendelse om vedtak fattet i tilstand $tilstand")
+        }
+        saksbehandlerIdent = null
+    }
+
+    fun giAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
         if (tilstand == Tilstand.Type.KLAR_TIL_BEHANDLING) {
             tilstand = Tilstand.Type.UNDER_BEHANDLING
         } else {
             throw IllegalStateException("Kan ikke håndtere hendelse om vedtak fattet i tilstand $tilstand")
         }
-        saksbehandlerIdent = tildelOppgaveHendelse.navIdent
+        saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
     }
 
     interface Tilstand {

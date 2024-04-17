@@ -12,7 +12,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.hendelser.TildelOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.ZoneId
@@ -135,7 +135,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente endring av ansvarlig saksbehandler`() {
         val navIdent = "Z999999"
-        oppgaveKlarTilBehandling.tildel(TildelOppgaveHendelse(oppgaveId, navIdent))
+        oppgaveKlarTilBehandling.giAnsvar(OppgaveAnsvarHendelse(oppgaveId, navIdent))
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
