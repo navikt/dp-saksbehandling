@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
+import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
@@ -71,6 +72,14 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                             val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }
+                    }
+                }
+
+                route("{oppgaveId}/behandle") {
+                    put {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        val saksbehandlerSignatur = call.navIdent()
+                        val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
                     }
                 }
             }

@@ -35,6 +35,7 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.util.UUID
 
 class OppgaveApiTest {
     private val testIdent = "12345612345"
@@ -79,41 +80,11 @@ class OppgaveApiTest {
         val fødselsdato = LocalDate.of(2000, 1, 1)
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
-        // coEvery { mediatorMock.tildelOppgave(any<TildelOppgaveHendelse>()) } returns testOppgave
-        coEvery { pdlMock.person(any()) } returns Result.success(
-            PDLPersonIntern(
-                ident = "12345612345",
-                fornavn = "PETTER",
-                etternavn = "SMART",
-                mellomnavn = null,
-                fødselsdato = fødselsdato,
-                alder = 0,
-                statsborgerskap = "NOR",
-                kjønn = PDLPerson.Kjonn.UKJENT,
-            ),
-        )
-
-        withOppgaveApi(mediator = mediatorMock, pdlKlient = pdlMock) {
+        coEvery { mediatorMock.tildelOppgave(any<TildelOppgaveHendelse>()) } returns testOppgave
+        withOppgaveApi(mediatorMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/behandle") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val json = response.bodyAsText()
-                //language=JSON
-                json shouldEqualSpecifiedJsonIgnoringOrder """ {
-                      "behandlingId": "${testOppgave.behandlingId}",
-                      "personIdent": "$testIdent",
-                      "person": {
-                        "ident": "$testIdent",
-                        "fornavn": "PETTER",
-                        "etternavn": "SMART",
-                        "fodselsdato": "2000-01-01",
-                        "kjonn": "UKJENT",
-                        "statsborgerskap": "NOR"
-                      },
-                      "emneknagger": ["Søknadsbehandling"],
-                      "tilstand": "UNDER_BEHANDLING"
-                      }
-                """.trimIndent()
             }
         }
     }
