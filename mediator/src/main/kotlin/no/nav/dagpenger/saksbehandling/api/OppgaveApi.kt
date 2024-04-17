@@ -79,7 +79,7 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                     put {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val saksbehandlerSignatur = call.navIdent()
-                        val oppdaterOppgaveHendelse = OppdaterOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
+                        val oppdaterOppgaveHendelse = TildelOppgaveHendelse(oppgaveId, saksbehandlerSignatur)
                     }
                 }
             }

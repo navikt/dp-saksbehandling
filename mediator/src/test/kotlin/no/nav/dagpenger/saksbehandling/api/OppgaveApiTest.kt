@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -38,6 +39,7 @@ import java.time.ZonedDateTime
 
 class OppgaveApiTest {
     private val testIdent = "12345612345"
+    private val fødselsdato = LocalDate.of(2000, 1, 1)
     private val mockAzure = mockAzure()
     private val gyldigToken = mockAzure.lagTokenMedClaims(mapOf("groups" to listOf("SaksbehandlerADGruppe")))
 
@@ -73,41 +75,47 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ta en oppgave til behandling`() {
+    fun `Saksbehandler skal kunne ta en oppgave`() {
         val mediatorMock = mockk<Mediator>()
-        val pdlMock = mockk<PDLKlient>()
-        val fødselsdato = LocalDate.of(2000, 1, 1)
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
-
         coEvery { mediatorMock.tildelOppgave(any<TildelOppgaveHendelse>()) } returns testOppgave
-        withOppgaveApi(mediatorMock) {
+        val pdlMock = mockk<PDLKlient>()
+        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+
+        withOppgaveApi(mediatorMock, pdlMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/behandle") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                //language=JSON
+                json shouldEqualSpecifiedJsonIgnoringOrder """ {
+                      "behandlingId": "${testOppgave.behandlingId}",
+                      "personIdent": "12345612345",
+                      "person": {
+                        "ident": "12345612345",
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
+                        "statsborgerskap": "NOR"
+                      },
+                      "emneknagger": ["Søknadsbehandling"],
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                      }
+                """.trimIndent()
             }
         }
     }
 
     @Test
-    fun `Henter en spesifikk oppgave med tilhørende personinfo`() {
+    fun `Hent oppgave med tilhørende personinfo`() {
         val mediatorMock = mockk<Mediator>()
         val pdlMock = mockk<PDLKlient>()
         val testOppgave = lagTestOppgaveMedTilstand(FERDIG_BEHANDLET)
-        val fødselsdato = LocalDate.of(2000, 1, 1)
 
         coEvery { mediatorMock.hentOppgave(any()) } returns testOppgave
-        coEvery { pdlMock.person(any()) } returns Result.success(
-            PDLPersonIntern(
-                ident = "12345612345",
-                fornavn = "PETTER",
-                etternavn = "SMART",
-                mellomnavn = null,
-                fødselsdato = fødselsdato,
-                alder = 0,
-                statsborgerskap = "NOR",
-                kjønn = PDLPerson.Kjonn.UKJENT,
-            ),
-        )
+        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+
         withOppgaveApi(mediator = mediatorMock, pdlKlient = pdlMock) {
             client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
@@ -126,7 +134,7 @@ class OppgaveApiTest {
                         "statsborgerskap": "NOR"
                       },
                       "emneknagger": ["Søknadsbehandling"],
-                      "tilstand": "FERDIG_BEHANDLET"
+                      "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}"
                       }
                 """.trimIndent()
             }
@@ -209,4 +217,15 @@ class OppgaveApiTest {
             tilstand = tilstand,
         )
     }
+
+    private val testPerson = PDLPersonIntern(
+        ident = testIdent,
+        fornavn = "PETTER",
+        etternavn = "SMART",
+        mellomnavn = null,
+        fødselsdato = fødselsdato,
+        alder = 0,
+        statsborgerskap = "NOR",
+        kjønn = PDLPerson.Kjonn.UKJENT,
+    )
 }
