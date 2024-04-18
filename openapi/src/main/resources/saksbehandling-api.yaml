@@ -23,10 +23,10 @@ paths:
                   $ref: '#/components/schemas/OppgaveOversikt'
   /oppgave/mine:
     get:
-      summary: Hent alle saksbehandlers oppgaver under behandling
+      summary: Hent alle saksbehandlers oppgaver, uavhengig av tilstand
       responses:
         '200':
-          description: Vellykket respons med en liste over oppgaver som saksbehandler har under behandling
+          description: Vellykket respons med en liste over saksbehandlers oppgaver, uavhengig av tilstand
           content:
             application/json:
               schema:
