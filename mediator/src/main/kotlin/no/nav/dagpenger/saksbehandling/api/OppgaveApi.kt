@@ -11,7 +11,6 @@ import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -66,18 +65,19 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
 
-                    route("ansvarlig") {
+                    route("tildel") {
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            val oppgave = mediator.taAnsvarForOppgave(oppgaveAnsvarHendelse)
+                            val oppgave = mediator.tildelOppgave(oppgaveAnsvarHendelse)
                             val person = pdlKlient.person(oppgave.ident).getOrThrow()
                             val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }
-
-                        delete {
+                    }
+                    route("leggTilbake") {
+                        put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            mediator.fjernAnsvarForOppgave(oppgaveAnsvarHendelse)
+                            mediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }

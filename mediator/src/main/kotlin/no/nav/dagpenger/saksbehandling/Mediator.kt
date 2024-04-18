@@ -48,15 +48,15 @@ internal class Mediator(
         return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
-    fun fjernAnsvarForOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+    fun fristillOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
         val oppgave = repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId)
         oppgave.fjernAnsvar(oppgaveAnsvarHendelse)
         repository.lagre(oppgave)
     }
 
-    fun taAnsvarForOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse): Oppgave {
+    fun tildelOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse): Oppgave {
         val oppgave = repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId)
-        oppgave.giAnsvar(oppgaveAnsvarHendelse)
+        oppgave.tildel(oppgaveAnsvarHendelse)
         repository.lagre(oppgave)
         return oppgave
     }
