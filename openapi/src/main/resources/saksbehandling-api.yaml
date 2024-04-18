@@ -71,9 +71,9 @@ paths:
         '404':
           description: Oppgaven ble ikke funnet
 
-  /oppgave/{oppgaveId}/ansvarlig:
+  /oppgave/{oppgaveId}/tildel:
     put:
-      summary: Sett saksbehandler som ansvarlig for en oppgave
+      summary: Saksbehandler blir tildelt ansvaret for oppgaven
       parameters:
         - in: path
           name: oppgaveId
@@ -92,8 +92,9 @@ paths:
           description: Oppgaven ble ikke funnet
         '423':
           description: Oppgaven er allerede tatt til behandling
-    delete:
-      summary: Fjern saksbehandler som ansvarlig for en oppgave, hvis saksbehandler er ansvarlig for  oppgaven
+  /oppgave/{oppgaveId}/leggTilbake:
+    put:
+      summary: Saksbehandler fjernes som ansvarlig for oppgaven, og oppgaven går tilbake til oppgavelisten
       parameters:
         - in: path
           name: oppgaveId
@@ -103,7 +104,7 @@ paths:
             format: uuid
       responses:
         '204':
-          description: Fjernet saksbehandler som ansvarlig for oppgaven
+          description: Fjernet saksbehandler som ansvarlig for oppgaven, og oppgaven gjøres klar til behandling
 components:
   schemas:
     Person:
