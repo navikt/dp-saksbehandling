@@ -5,7 +5,6 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -102,7 +101,7 @@ class OppgaveApiTest {
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
         withOppgaveApi(mediatorMock, pdlMock) {
-            client.put("/oppgave/${testOppgave.oppgaveId}/ansvarlig") { autentisert() }.also { response ->
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
@@ -142,7 +141,7 @@ class OppgaveApiTest {
         } just runs
 
         withOppgaveApi(mediator = mediatorMock) {
-            client.delete("oppgave/${testOppgave.oppgaveId}/ansvarlig") { autentisert() }.also { response ->
+            client.put("oppgave/${testOppgave.oppgaveId}/leggTilbake") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }
