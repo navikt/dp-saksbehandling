@@ -28,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SaksbehandlerHendelse
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -52,6 +53,12 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                 route("sok") {
                     post {
                         val oppgaver = mediator.finnOppgaverFor(call.receive<SokDTO>().fnr).tilOppgaverOversiktDTO()
+                        call.respond(status = HttpStatusCode.OK, oppgaver)
+                    }
+                }
+                route("mine") {
+                    get {
+                        val oppgaver = mediator.finnSaksbehandlersOppgaver(call.navIdent()).tilOppgaverOversiktDTO()
                         call.respond(status = HttpStatusCode.OK, oppgaver)
                     }
                 }
@@ -89,6 +96,9 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
 
 private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse =
     OppgaveAnsvarHendelse(this.finnUUID("oppgaveId"), this.navIdent())
+
+private fun ApplicationCall.saksbehandlerHendelse(): SaksbehandlerHendelse =
+    SaksbehandlerHendelse(this.navIdent())
 
 fun lagOppgaveDTO(oppgave: Oppgave, person: PDLPersonIntern): OppgaveDTO =
 

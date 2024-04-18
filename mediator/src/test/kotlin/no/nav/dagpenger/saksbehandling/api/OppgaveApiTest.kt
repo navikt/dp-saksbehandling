@@ -241,6 +241,29 @@ class OppgaveApiTest {
         }
     }
 
+    @Test
+    fun `Skal kunne hente ut alle oppgaver for en saksbehandler`() {
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.finnSaksbehandlersOppgaver(testNAVIdent) } returns listOf(
+                lagTestOppgaveMedTilstand(FERDIG_BEHANDLET, testNAVIdent),
+                lagTestOppgaveMedTilstand(FERDIG_BEHANDLET, testNAVIdent),
+                lagTestOppgaveMedTilstand(UNDER_BEHANDLING, testNAVIdent),
+            )
+        }
+        withOppgaveApi(mediatorMock) {
+            client.get("/oppgave/mine") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val oppgaver =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                    )
+                oppgaver.size shouldBe 3
+            }
+        }
+    }
+
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(relaxed = true),
         pdlKlient: PDLKlient = mockk(relaxed = true),
@@ -256,14 +279,15 @@ class OppgaveApiTest {
         header(HttpHeaders.Authorization, "Bearer $token")
     }
 
-    private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type): Oppgave {
-        return Oppgave(
+    private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type, saksbehandlerIdent: String? = null): Oppgave {
+        return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = testIdent,
             emneknagger = setOf("Søknadsbehandling"),
             opprettet = ZonedDateTime.now(),
             behandlingId = UUIDv7.ny(),
             tilstand = tilstand,
+            saksbehandlerIdent = saksbehandlerIdent,
         )
     }
 

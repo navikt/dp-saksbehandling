@@ -20,5 +20,6 @@ internal interface Repository {
     fun lagre(oppgave: Oppgave)
 
     fun finnOppgaverFor(ident: String): List<Oppgave>
+    fun finnSaksbehandlersOppgaver(saksbehandlerIdent: String): List<Oppgave>
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
 }
