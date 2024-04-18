@@ -68,7 +68,7 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                     route("tildel") {
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            val oppgave = mediator.taAnsvarForOppgave(oppgaveAnsvarHendelse)
+                            val oppgave = mediator.tildelOppgave(oppgaveAnsvarHendelse)
                             val person = pdlKlient.person(oppgave.ident).getOrThrow()
                             val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
@@ -77,7 +77,7 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                     route("leggTilbake") {
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            mediator.fjernAnsvarForOppgave(oppgaveAnsvarHendelse)
+                            mediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }

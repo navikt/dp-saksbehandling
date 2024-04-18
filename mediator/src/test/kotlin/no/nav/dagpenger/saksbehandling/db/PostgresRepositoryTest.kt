@@ -135,7 +135,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente endring av ansvarlig saksbehandler`() {
         val navIdent = "Z999999"
-        oppgaveKlarTilBehandling.giAnsvar(OppgaveAnsvarHendelse(oppgaveId, navIdent))
+        oppgaveKlarTilBehandling.tildel(OppgaveAnsvarHendelse(oppgaveId, navIdent))
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)

@@ -64,7 +64,7 @@ class MediatorTest {
             val oppgave = oppgaverKlarTilBehandling.single()
             oppgave.behandlingId shouldBe behandlingId
 
-            mediator.taAnsvarForOppgave(
+            mediator.tildelOppgave(
                 OppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",

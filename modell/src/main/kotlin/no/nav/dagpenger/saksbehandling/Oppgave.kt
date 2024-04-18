@@ -84,7 +84,7 @@ data class Oppgave private constructor(
         saksbehandlerIdent = null
     }
 
-    fun giAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+    fun tildel(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
         if (tilstand == Tilstand.Type.KLAR_TIL_BEHANDLING) {
             tilstand = Tilstand.Type.UNDER_BEHANDLING
         } else {

@@ -90,7 +90,7 @@ class OppgaveApiTest {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         coEvery {
-            mediatorMock.taAnsvarForOppgave(
+            mediatorMock.tildelOppgave(
                 OppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
                     navIdent = testNAVIdent,
@@ -132,7 +132,7 @@ class OppgaveApiTest {
 
         coEvery { mediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery {
-            mediatorMock.fjernAnsvarForOppgave(
+            mediatorMock.fristillOppgave(
                 OppgaveAnsvarHendelse(
                     testOppgave.oppgaveId,
                     testNAVIdent,
@@ -147,7 +147,7 @@ class OppgaveApiTest {
         }
 
         verify(exactly = 1) {
-            mediatorMock.fjernAnsvarForOppgave(
+            mediatorMock.fristillOppgave(
                 OppgaveAnsvarHendelse(
                     testOppgave.oppgaveId,
                     testNAVIdent,
