@@ -210,4 +210,11 @@ class PostgresRepositoryTest {
             oppgaverTilPerson2.map { it.oppgaveId } shouldBe listOf(oppgaveId2, oppgaveId3)
         }
     }
+
+    @Test
+    fun `Skal kunne hente alle oppgaver for pålogget saksbehandler`() {
+        withMigratedDb { ds ->
+           // TODO
+        }
+    }
 }
