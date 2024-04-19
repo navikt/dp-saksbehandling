@@ -76,6 +76,22 @@ class PostgresRepositoryTest {
     }
 
     @Test
+    fun `Det finnes ikke flere ledige oppgaver`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+
+            repo.lagre(
+                lagBehandlingOgOppgaveMedTilstand(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    saksbehandlerIdent = "NAVIdent",
+                    opprettet = opprettetTidspunkt,
+                )
+            )
+            repo.hentNesteOppgavenTil("NAVIdent2") shouldBe null
+        }
+    }
+
+    @Test
     fun `Skal hente eldste oppgave som ikke er tatt av saksbehandler og er klar til behandling`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)

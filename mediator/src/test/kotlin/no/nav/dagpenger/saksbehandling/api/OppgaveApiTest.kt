@@ -89,17 +89,8 @@ class OppgaveApiTest {
         val førsteOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
         førsteOppgave.tilstand = UNDER_BEHANDLING
         førsteOppgave.saksbehandlerIdent = testNAVIdent
-        val andreOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
         val mediatorMock = mockk<Mediator>().also {
-            every { it.hentOppgaverKlarTilBehandling() } returns listOf(førsteOppgave, andreOppgave)
-            every {
-                it.tildelOppgave(
-                    OppgaveAnsvarHendelse(
-                        oppgaveId = førsteOppgave.oppgaveId,
-                        navIdent = testNAVIdent,
-                    ),
-                )
-            } returns førsteOppgave
+            every { it.hentNesteOppgavenTil(testNAVIdent) } returns førsteOppgave
         }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
