@@ -332,6 +332,16 @@ class PostgresRepositoryTest {
         }
     }
 
+    @Test
+    fun `Skal hente oppgaveId fra behandlingId`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            repo.lagre(testBehandling)
+            repo.hentOppgaveIdFor(behandlingId = testBehandling.behandlingId) shouldBe testBehandling.oppgaver.first().oppgaveId
+            repo.hentOppgaveIdFor(behandlingId = UUIDv7.ny()) shouldBe null
+        }
+    }
+
     private fun lagBehandlingOgOppgaveMedTilstand(
         tilstand: Oppgave.Tilstand.Type,
         saksbehandlerIdent: String?,

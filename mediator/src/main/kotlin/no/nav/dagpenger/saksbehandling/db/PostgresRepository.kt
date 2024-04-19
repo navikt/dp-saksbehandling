@@ -373,7 +373,21 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
-        TODO("Not yet implemented")
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        SELECT id 
+                        FROM oppgave_v1 
+                        WHERE behandling_id = :behandling_id
+                    """.trimIndent(),
+                    paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row ->
+                    row.uuidOrNull("id")
+                }.asSingle,
+            )
+        }
     }
 
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
