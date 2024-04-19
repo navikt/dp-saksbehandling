@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
@@ -11,6 +12,7 @@ import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -102,6 +104,20 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                             mediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
+                    }
+                }
+            }
+            route("behandling/{behandlingId}/oppgaveId") {
+                get {
+                    val behandlingId = call.finnUUID("behandlingId")
+                    val oppgaveId: UUID? = mediator.hentOppgaveIdFor(behandlingId = behandlingId)
+                    when (oppgaveId) {
+                        null -> call.respond(HttpStatusCode.NotFound)
+                        else -> call.respondText(
+                            contentType = ContentType.Text.Plain,
+                            status = HttpStatusCode.OK,
+                            text = oppgaveId.toString(),
+                        )
                     }
                 }
             }

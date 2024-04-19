@@ -316,6 +316,29 @@ class OppgaveApiTest {
         }
     }
 
+    @Test
+    fun `Skal hente oppgaveId basert på behandlingId`() {
+        val behandlingIdSomFinnes = UUIDv7.ny()
+        val behandlingIdSomIkkeFinnes = UUIDv7.ny()
+
+        val oppgaveId = UUIDv7.ny()
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.hentOppgaveIdFor(behandlingIdSomFinnes) } returns oppgaveId
+            every { it.hentOppgaveIdFor(behandlingIdSomIkkeFinnes) } returns null
+        }
+        withOppgaveApi(mediator = mediatorMock) {
+            client.get("/behandling/$behandlingIdSomFinnes/oppgaveId") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "text/plain"
+                response.bodyAsText() shouldBe "$oppgaveId"
+            }
+
+            client.get("/behandling/$behandlingIdSomIkkeFinnes/oppgaveId") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+            }
+        }
+    }
+
     private fun withOppgaveApi(
         mediator: Mediator = mockk<Mediator>(relaxed = true),
         pdlKlient: PDLKlient = mockk(relaxed = true),

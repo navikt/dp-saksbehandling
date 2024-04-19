@@ -117,6 +117,27 @@ paths:
       responses:
         '204':
           description: Fjernet saksbehandler som ansvarlig for oppgaven, og oppgaven gjøres klar til behandling
+  /behandling/{behandlingId}/oppgaveId:
+    get:
+      summary: Henter oppgaveId basert på en behandlingId
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Fant oppgaveId for behandlingId
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: uuid
+        '404':
+          description: Fant ikke oppgaveId for behandlingId
+
 components:
   schemas:
     Person:
