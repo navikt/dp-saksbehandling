@@ -18,6 +18,7 @@ import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -118,6 +119,21 @@ class OppgaveApiTest {
                 """.trimIndent()
             }
         }
+    }
+
+    @Test
+    fun `404 når det ikke finnes noen neste oppgave for saksbehandler`() {
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.hentNesteOppgavenTil(testNAVIdent) } returns null
+        }
+        val pdlMock = mockk<PDLKlient>()
+
+        withOppgaveApi(mediatorMock, pdlMock) {
+            client.put("/oppgave/neste") { autentisert() }.let { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+            }
+        }
+        coVerify(exactly = 0) { pdlMock.person(any()) }
     }
 
     @Test
