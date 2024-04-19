@@ -86,11 +86,11 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente og få tildelt neste oppgave`() {
-        val førsteOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
-        førsteOppgave.tilstand = UNDER_BEHANDLING
-        førsteOppgave.saksbehandlerIdent = testNAVIdent
+        val oppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
+        oppgave.tilstand = UNDER_BEHANDLING
+        oppgave.saksbehandlerIdent = testNAVIdent
         val mediatorMock = mockk<Mediator>().also {
-            every { it.hentNesteOppgavenTil(testNAVIdent) } returns førsteOppgave
+            every { it.hentNesteOppgavenTil(testNAVIdent) } returns oppgave
         }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -102,7 +102,7 @@ class OppgaveApiTest {
                 val json = response.bodyAsText()
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder """ {
-                      "behandlingId": "${førsteOppgave.behandlingId}",
+                      "behandlingId": "${oppgave.behandlingId}",
                       "personIdent": "$testIdent",
                       "person": {
                         "ident": "$testIdent",

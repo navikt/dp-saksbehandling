@@ -27,7 +27,6 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
-import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SaksbehandlerHendelse
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
@@ -60,15 +59,14 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
 
                 route("neste") {
                     put {
-                        val oppgaver = mediator.hentOppgaverKlarTilBehandling()
-                        if (oppgaver.size == 0) {
-                            throw DataNotFoundException("Ingen flere oppgaver å behandle akkurat nå")
-                        } else {
-                            val oppgaveAnsvarHendelse = call.nesteOppgaveHendelse(oppgaver.first().oppgaveId)
-                            val tildeltOppgave = mediator.tildelOppgave(oppgaveAnsvarHendelse)
-                            val person = pdlKlient.person(tildeltOppgave.ident).getOrThrow()
-                            val oppgaveDTO = lagOppgaveDTO(tildeltOppgave, person)
-                            call.respond(HttpStatusCode.OK, oppgaveDTO)
+                        val oppgave = mediator.hentNesteOppgavenTil(call.navIdent())
+                        when (oppgave) {
+                            null -> call.respond(HttpStatusCode.NotFound)
+                            else -> {
+                                val person = pdlKlient.person(oppgave.ident).getOrThrow()
+                                val oppgaveDTO = lagOppgaveDTO(oppgave, person)
+                                call.respond(HttpStatusCode.OK, oppgaveDTO)
+                            }
                         }
                     }
                 }

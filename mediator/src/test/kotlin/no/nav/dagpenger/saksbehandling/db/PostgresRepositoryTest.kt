@@ -85,7 +85,7 @@ class PostgresRepositoryTest {
                     tilstand = KLAR_TIL_BEHANDLING,
                     saksbehandlerIdent = "NAVIdent",
                     opprettet = opprettetTidspunkt,
-                )
+                ),
             )
             repo.hentNesteOppgavenTil("NAVIdent2") shouldBe null
         }
