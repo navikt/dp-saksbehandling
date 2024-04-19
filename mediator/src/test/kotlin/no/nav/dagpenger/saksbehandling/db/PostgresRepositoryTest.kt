@@ -104,6 +104,62 @@ class PostgresRepositoryTest {
     }
 
     @Test
+    fun `Eldste ledige oppgave er neste oppgave for saksbehandler`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+
+            val ledigBehandling = lagBehandlingOgOppgaveMedTilstand(
+                tilstand = KLAR_TIL_BEHANDLING,
+                saksbehandlerIdent = null,
+                opprettet = opprettetTidspunkt,
+            )
+
+            val saksbehandlerIdent = "NAVIdent"
+            val tildeltBehandling = lagBehandlingOgOppgaveMedTilstand(
+                tilstand = KLAR_TIL_BEHANDLING,
+                saksbehandlerIdent = saksbehandlerIdent,
+                opprettet = opprettetTidspunkt.minusDays(10),
+            )
+
+            repo.lagre(ledigBehandling)
+            repo.lagre(tildeltBehandling)
+
+            val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
+            nesteOppgave!!.oppgaveId shouldBe ledigBehandling.oppgaver.first().oppgaveId
+            nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+            nesteOppgave.tilstand shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+        }
+    }
+
+    @Test
+    fun `Eldste oppgave som er klar til behandling er neste oppgave for saksbehandler`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+
+            val ledigBehandling = lagBehandlingOgOppgaveMedTilstand(
+                tilstand = KLAR_TIL_BEHANDLING,
+                saksbehandlerIdent = null,
+                opprettet = opprettetTidspunkt,
+            )
+
+            val tildeltBehandling = lagBehandlingOgOppgaveMedTilstand(
+                tilstand = UNDER_BEHANDLING,
+                saksbehandlerIdent = null,
+                opprettet = opprettetTidspunkt.minusDays(10),
+            )
+
+            repo.lagre(ledigBehandling)
+            repo.lagre(tildeltBehandling)
+
+            val saksbehandlerIdent = "NAVIdent"
+            val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
+            nesteOppgave!!.oppgaveId shouldBe ledigBehandling.oppgaver.first().oppgaveId
+            nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+            nesteOppgave.tilstand shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+        }
+    }
+
+    @Test
     fun `Skal kunne slette behandling`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
