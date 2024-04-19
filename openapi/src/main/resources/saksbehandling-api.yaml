@@ -11,7 +11,7 @@ servers:
 paths:
   /oppgave:
     get:
-      summary: Hent alle oppgaver
+      summary: Hent alle oppgaver med status Klar til behandling
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver
@@ -51,6 +51,18 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OppgaveOversikt'
+  /oppgave/neste:
+    put:
+      summary: Hent neste oppgave og tildel denne til saksbehandler
+      responses:
+        '200':
+          description: Vellykket respons med detaljer om oppgaven som tildeles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oppgave'
+        '404':
+          description: Ingen flere oppgaver å behandle akkurat nå
   /oppgave/{oppgaveId}:
     get:
       summary: Hent en oppgave ved hjelp av dens ID

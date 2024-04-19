@@ -85,6 +85,51 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Skal kunne hente og få tildelt neste oppgave`() {
+        val førsteOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
+        førsteOppgave.tilstand = UNDER_BEHANDLING
+        førsteOppgave.saksbehandlerIdent = testNAVIdent
+        val andreOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.hentOppgaverKlarTilBehandling() } returns listOf(førsteOppgave, andreOppgave)
+            every {
+                it.tildelOppgave(
+                    OppgaveAnsvarHendelse(
+                        oppgaveId = førsteOppgave.oppgaveId,
+                        navIdent = testNAVIdent,
+                    ),
+                )
+            } returns førsteOppgave
+        }
+        val pdlMock = mockk<PDLKlient>()
+        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+
+        withOppgaveApi(mediatorMock, pdlMock) {
+            client.put("/oppgave/neste") { autentisert() }.let { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                //language=JSON
+                json shouldEqualSpecifiedJsonIgnoringOrder """ {
+                      "behandlingId": "${førsteOppgave.behandlingId}",
+                      "personIdent": "$testIdent",
+                      "person": {
+                        "ident": "$testIdent",
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
+                        "statsborgerskap": "NOR"
+                      },
+                      "emneknagger": ["Søknadsbehandling"],
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                      }
+                """.trimIndent()
+            }
+        }
+    }
+
+    @Test
     fun `Saksbehandler skal kunne ta en oppgave`() {
         val mediatorMock = mockk<Mediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
@@ -108,9 +153,9 @@ class OppgaveApiTest {
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder """ {
                       "behandlingId": "${testOppgave.behandlingId}",
-                      "personIdent": "12345612345",
+                      "personIdent": "$testIdent",
                       "person": {
-                        "ident": "12345612345",
+                        "ident": "$testIdent",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
