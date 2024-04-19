@@ -76,6 +76,34 @@ class PostgresRepositoryTest {
     }
 
     @Test
+    fun `Skal hente eldste oppgave som ikke er tatt av saksbehandler og er klar til behandling`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+
+            val yngsteBehandling = lagBehandlingOgOppgaveMedTilstand(
+                tilstand = KLAR_TIL_BEHANDLING,
+                saksbehandlerIdent = null,
+                opprettet = opprettetTidspunkt,
+            )
+
+            val eldsteBehandling = lagBehandlingOgOppgaveMedTilstand(
+                tilstand = KLAR_TIL_BEHANDLING,
+                saksbehandlerIdent = null,
+                opprettet = opprettetTidspunkt.minusDays(10),
+            )
+
+            repo.lagre(yngsteBehandling)
+            repo.lagre(eldsteBehandling)
+
+            val saksbehandlerIdent = "NAVIdent"
+            val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
+            nesteOppgave!!.oppgaveId shouldBe eldsteBehandling.oppgaver.first().oppgaveId
+            nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+            nesteOppgave.tilstand shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+        }
+    }
+
+    @Test
     fun `Skal kunne slette behandling`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
@@ -231,13 +259,18 @@ class PostgresRepositoryTest {
             repo.finnSaksbehandlersOppgaver(saksbehandlerIdent2).size shouldBe 1
         }
     }
-    private fun lagBehandlingOgOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type, saksbehandlerIdent: String?): Behandling {
+
+    private fun lagBehandlingOgOppgaveMedTilstand(
+        tilstand: Oppgave.Tilstand.Type,
+        saksbehandlerIdent: String?,
+        opprettet: ZonedDateTime = opprettetTidspunkt,
+    ): Behandling {
         val behandlingId = UUIDv7.ny()
         val oppgave = Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = testPerson.ident,
             emneknagger = setOf("Søknadsbehandling"),
-            opprettet = opprettetTidspunkt,
+            opprettet = opprettet,
             behandlingId = behandlingId,
             tilstand = tilstand,
             saksbehandlerIdent = saksbehandlerIdent,
@@ -245,7 +278,7 @@ class PostgresRepositoryTest {
         return Behandling(
             behandlingId = behandlingId,
             person = testPerson,
-            opprettet = opprettetTidspunkt,
+            opprettet = opprettet,
             oppgaver = mutableListOf(oppgave),
         )
     }
