@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -339,6 +340,56 @@ class PostgresRepositoryTest {
             repo.lagre(testBehandling)
             repo.hentOppgaveIdFor(behandlingId = testBehandling.behandlingId) shouldBe testBehandling.oppgaver.first().oppgaveId
             repo.hentOppgaveIdFor(behandlingId = UUIDv7.ny()) shouldBe null
+        }
+    }
+
+    @Test
+    fun `Skal kunne søke etter oppgaver`() {
+        val opprettet = ZonedDateTime.parse("2024-01-01T00:00:00Z")
+
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            val behandling1 = lagBehandlingOgOppgaveMedTilstand(
+                tilstand = UNDER_BEHANDLING,
+                opprettet = opprettet,
+                saksbehandlerIdent = saksbehandlerIdent1,
+            )
+            val behandling2 = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent1)
+            val behandling3 = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent1)
+            val behandling4 = lagBehandlingOgOppgaveMedTilstand(OPPRETTET, saksbehandlerIdent1)
+
+            repo.lagre(behandling1)
+            repo.lagre(behandling2)
+            repo.lagre(behandling3)
+            repo.lagre(behandling4)
+
+            repo.søk(Søkefilter(tilstand = UNDER_BEHANDLING, periode = Søkefilter.Periode.TOM_PERIODE))
+                .single().oppgaveId shouldBe behandling1.oppgaver.single().oppgaveId
+
+            repo.søk(Søkefilter.DEFAULT_SØKEFILTER).let {
+                it.size shouldBe 2
+                it.all { oppgave -> oppgave.tilstand == KLAR_TIL_BEHANDLING } shouldBe true
+            }
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    periode = Søkefilter.Periode(
+                        fom = opprettet.plusDays(1).toLocalDate(),
+                        tom = opprettet.plusDays(2).toLocalDate(),
+                    ),
+                ),
+            ).size shouldBe 0
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = UNDER_BEHANDLING,
+                    periode = Søkefilter.Periode(
+                        fom = opprettet.minusDays(1).toLocalDate(),
+                        tom = opprettet.plusDays(2).toLocalDate(),
+                    ),
+                ),
+            ).size shouldBe 1
         }
     }
 

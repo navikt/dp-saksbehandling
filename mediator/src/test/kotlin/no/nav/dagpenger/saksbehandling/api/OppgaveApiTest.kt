@@ -35,9 +35,11 @@ import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -65,7 +67,7 @@ class OppgaveApiTest {
     @Test
     fun `Hent alle oppgaver klar til behandling hvis ingen query parametere er gitt`() {
         val mediatorMock = mockk<Mediator>().also {
-            every { it.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING) } returns listOf(
+            every { it.søk(Søkefilter.DEFAULT_SØKEFILTER) } returns listOf(
                 lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
                 lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
             )
@@ -88,7 +90,14 @@ class OppgaveApiTest {
     @Test
     fun `Hent alle oppgaver med tilstand KLAR_TIL_BEHANDLING basert på query parameter`() {
         val mediatorMock = mockk<Mediator>().also {
-            every { it.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING) } returns listOf(
+            every {
+                it.søk(
+                    Søkefilter(
+                        periode = Søkefilter.Periode.TOM_PERIODE,
+                        tilstand = KLAR_TIL_BEHANDLING,
+                    ),
+                )
+            } returns listOf(
                 lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
                 lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
             )
@@ -105,6 +114,38 @@ class OppgaveApiTest {
                     )
                 oppgaver.size shouldBe 2
             }
+        }
+    }
+
+    @Test
+    @Disabled
+    fun `Hent alle oppgaver fom, tom og tilstand`() {
+        val mediatorMock = mockk<Mediator>().also {
+            every {
+                it.søk(
+                    Søkefilter(
+                        periode = Søkefilter.Periode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now(),
+                        ),
+                        tilstand = KLAR_TIL_BEHANDLING,
+                    ),
+                )
+            }
+        }
+
+        withOppgaveApi(mediatorMock) {
+            client.get("/oppgave?tilstand=$KLAR_TIL_BEHANDLING?fom=1-1-2021&tom=1-1-2023") { autentisert() }
+                .let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    val oppgaver =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                        )
+                    oppgaver.size shouldBe 2
+                }
         }
     }
 
@@ -377,7 +418,10 @@ class OppgaveApiTest {
         header(HttpHeaders.Authorization, "Bearer $token")
     }
 
-    private fun lagTestOppgaveMedTilstand(tilstand: Oppgave.Tilstand.Type, saksbehandlerIdent: String? = null): Oppgave {
+    private fun lagTestOppgaveMedTilstand(
+        tilstand: Oppgave.Tilstand.Type,
+        saksbehandlerIdent: String? = null,
+    ): Oppgave {
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = testIdent,

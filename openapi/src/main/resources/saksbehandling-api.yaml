@@ -18,6 +18,18 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/OppgaveTilstand'
+        - in: query
+          name: fom
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: tom
+          required: false
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver

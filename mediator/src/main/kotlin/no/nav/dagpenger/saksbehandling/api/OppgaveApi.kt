@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
+import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SaksbehandlerHendelse
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
@@ -49,10 +50,9 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    val tilstand = call.parameters["tilstand"]?.let { tilstand ->
-                        Type.valueOf(tilstand)
-                    } ?: KLAR_TIL_BEHANDLING
-                    val oppgaver = mediator.hentAlleOppgaverMedTilstand(tilstand).tilOppgaverOversiktDTO()
+                    val søkefilter = Søkefilter.fra(call.request.queryParameters)
+
+                    val oppgaver = mediator.søk(søkefilter).tilOppgaverOversiktDTO()
                     sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }

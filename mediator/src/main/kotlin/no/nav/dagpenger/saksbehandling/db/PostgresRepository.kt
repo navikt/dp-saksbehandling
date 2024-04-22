@@ -448,6 +448,40 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
+    override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                    SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
+                    FROM   oppgave_v1    oppg
+                    JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN   person_v1     pers ON pers.id = beha.person_id
+                    WHERE  oppg.tilstand = :tilstand
+                    AND    oppg.opprettet <= :tom
+                    AND    oppg.opprettet >= :fom
+                    """.trimIndent(),
+                    paramMap = mapOf(
+                        "tilstand" to søkeFilter.tilstand.name,
+                        "fom" to søkeFilter.periode.fom,
+                        "tom" to søkeFilter.periode.tom,
+                    ),
+                ).map {
+                    Oppgave.rehydrer(
+                        oppgaveId = it.uuid("id"),
+                        ident = it.string("ident"),
+                        saksbehandlerIdent = it.stringOrNull("saksbehandler_ident"),
+                        behandlingId = it.uuid("behandling_id"),
+                        opprettet = it.norskZonedDateTime("opprettet"),
+                        emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
+                        tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                    )
+                }.asList,
+            )
+        }
+    }
+
     override fun finnSaksbehandlersOppgaver(saksbehandlerIdent: String): List<Oppgave> {
         return sessionOf(dataSource).use { session ->
             session.run(
