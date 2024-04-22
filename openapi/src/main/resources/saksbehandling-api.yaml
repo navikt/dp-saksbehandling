@@ -12,6 +12,12 @@ paths:
   /oppgave:
     get:
       summary: Hent alle oppgaver med status Klar til behandling
+      parameters:
+        - in: query
+          name: tilstand
+          required: false
+          schema:
+            $ref: '#/components/schemas/OppgaveTilstand'
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver

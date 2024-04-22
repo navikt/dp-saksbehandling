@@ -63,7 +63,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne hente ut alle oppgaver`() {
+    fun `Hent alle oppgaver klar til behandling hvis ingen query parametere er gitt`() {
         val mediatorMock = mockk<Mediator>().also {
             every { it.hentOppgaverKlarTilBehandling() } returns listOf(
                 lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
@@ -73,6 +73,29 @@ class OppgaveApiTest {
 
         withOppgaveApi(mediatorMock) {
             client.get("/oppgave") { autentisert() }.let { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val oppgaver =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                    )
+                oppgaver.size shouldBe 2
+            }
+        }
+    }
+
+    @Test
+    fun `Hent alle oppgaver med tilstand KLAR_TIL_BEHANDLING basert på query parameter`() {
+        val mediatorMock = mockk<Mediator>().also {
+            every { it.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING) } returns listOf(
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+            )
+        }
+
+        withOppgaveApi(mediatorMock) {
+            client.get("/oppgave?tilstand=$KLAR_TIL_BEHANDLING") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val oppgaver =

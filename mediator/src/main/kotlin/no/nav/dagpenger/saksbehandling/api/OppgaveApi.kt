@@ -22,6 +22,8 @@ import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -47,7 +49,10 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    val oppgaver = mediator.hentOppgaverKlarTilBehandling().tilOppgaverOversiktDTO()
+                    val tilstand = call.parameters["tilstand"]?.let { tilstand ->
+                        Type.valueOf(tilstand)
+                    } ?: KLAR_TIL_BEHANDLING
+                    val oppgaver = mediator.hentAlleOppgaverMedTilstand(tilstand).tilOppgaverOversiktDTO()
                     sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
@@ -164,12 +169,12 @@ private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 }
 
-private fun Oppgave.Tilstand.Type.tilOppgaveTilstandDTO() =
+private fun Type.tilOppgaveTilstandDTO() =
     when (this) {
-        Oppgave.Tilstand.Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
-        Oppgave.Tilstand.Type.UNDER_BEHANDLING -> OppgaveTilstandDTO.UNDER_BEHANDLING
-        Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
-        Oppgave.Tilstand.Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
+        Type.UNDER_BEHANDLING -> OppgaveTilstandDTO.UNDER_BEHANDLING
+        KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
     }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() = OppgaveOversiktDTO(
