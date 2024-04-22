@@ -50,7 +50,7 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    val søkefilter = Søkefilter.fra(call.request.queryParameters)
+                    val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
 
                     val oppgaver = mediator.søk(søkefilter).tilOppgaverOversiktDTO()
                     sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }

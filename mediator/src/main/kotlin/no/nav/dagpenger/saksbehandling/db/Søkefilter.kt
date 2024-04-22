@@ -8,19 +8,28 @@ import java.time.LocalDate
 data class Søkefilter(
     val periode: Periode,
     val tilstand: Oppgave.Tilstand.Type,
+    val saksbehandlerIdent: String? = null,
 ) {
     companion object {
         val DEFAULT_SØKEFILTER = Søkefilter(
             periode = Periode.TOM_PERIODE,
             tilstand = KLAR_TIL_BEHANDLING,
+            saksbehandlerIdent = null,
         )
 
-        fun fra(queryParamaters: Parameters): Søkefilter {
+        fun fra(queryParamaters: Parameters, saksbehandlerIdent: String): Søkefilter {
             val tilstand =
                 queryParamaters["tilstand"]?.let { Oppgave.Tilstand.Type.valueOf(it) } ?: KLAR_TIL_BEHANDLING
+
+            val mine = queryParamaters["mine"]?.toBoolean() ?: false
+
             return Søkefilter(
                 periode = Periode.fra(queryParamaters),
                 tilstand = tilstand,
+                saksbehandlerIdent = when {
+                    mine -> saksbehandlerIdent
+                    else -> null
+                },
             )
         }
     }

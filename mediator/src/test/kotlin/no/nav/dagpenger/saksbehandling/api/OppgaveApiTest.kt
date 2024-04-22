@@ -39,7 +39,6 @@ import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -118,24 +117,27 @@ class OppgaveApiTest {
     }
 
     @Test
-    @Disabled
-    fun `Hent alle oppgaver fom, tom og tilstand`() {
+    fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
         val mediatorMock = mockk<Mediator>().also {
             every {
                 it.søk(
                     Søkefilter(
                         periode = Søkefilter.Periode(
-                            fom = LocalDate.now(),
-                            tom = LocalDate.now(),
+                            fom = LocalDate.parse("2021-01-01"),
+                            tom = LocalDate.parse("2023-01-01"),
                         ),
-                        tilstand = KLAR_TIL_BEHANDLING,
+                        tilstand = UNDER_BEHANDLING,
+                        saksbehandlerIdent = testNAVIdent,
                     ),
                 )
-            }
+            } returns listOf(
+                lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
+                lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
+            )
         }
 
         withOppgaveApi(mediatorMock) {
-            client.get("/oppgave?tilstand=$KLAR_TIL_BEHANDLING?fom=1-1-2021&tom=1-1-2023") { autentisert() }
+            client.get("/oppgave?tilstand=$UNDER_BEHANDLING&fom=2021-01-01&tom=2023-01-01&mine=true") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"

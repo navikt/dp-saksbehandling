@@ -30,6 +30,11 @@ paths:
           schema:
             type: string
             format: date
+        - in: query
+          name: mine
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver
