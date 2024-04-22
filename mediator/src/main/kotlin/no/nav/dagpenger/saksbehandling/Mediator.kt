@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.db.Repository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -42,10 +41,6 @@ internal class Mediator(
             lagre(behandling)
             logger.info { "Mottatt forslag til vedtak hendelse for behandling med id ${behandling.behandlingId}" }
         }
-    }
-
-    fun hentOppgaverKlarTilBehandling(): List<Oppgave> {
-        return repository.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
     }
 
     fun fristillOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {

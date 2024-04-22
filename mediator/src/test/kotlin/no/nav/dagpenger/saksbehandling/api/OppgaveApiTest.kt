@@ -65,7 +65,7 @@ class OppgaveApiTest {
     @Test
     fun `Hent alle oppgaver klar til behandling hvis ingen query parametere er gitt`() {
         val mediatorMock = mockk<Mediator>().also {
-            every { it.hentOppgaverKlarTilBehandling() } returns listOf(
+            every { it.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING) } returns listOf(
                 lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
                 lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
             )
