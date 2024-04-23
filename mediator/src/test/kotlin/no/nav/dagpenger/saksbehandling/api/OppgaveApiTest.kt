@@ -360,29 +360,6 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne hente ut alle oppgaver for en saksbehandler`() {
-        val mediatorMock = mockk<Mediator>().also {
-            every { it.finnSaksbehandlersOppgaver(testNAVIdent) } returns listOf(
-                lagTestOppgaveMedTilstand(FERDIG_BEHANDLET, testNAVIdent),
-                lagTestOppgaveMedTilstand(FERDIG_BEHANDLET, testNAVIdent),
-                lagTestOppgaveMedTilstand(UNDER_BEHANDLING, testNAVIdent),
-            )
-        }
-        withOppgaveApi(mediatorMock) {
-            client.get("/oppgave/mine") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val oppgaver =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<List<OppgaveOversiktDTO>>() {},
-                    )
-                oppgaver.size shouldBe 3
-            }
-        }
-    }
-
-    @Test
     fun `Skal hente oppgaveId basert på behandlingId`() {
         val behandlingIdSomFinnes = UUIDv7.ny()
         val behandlingIdSomIkkeFinnes = UUIDv7.ny()

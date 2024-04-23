@@ -21,7 +21,6 @@ internal interface Repository {
 
     fun finnOppgaverFor(ident: String): List<Oppgave>
     fun søk(søkeFilter: Søkefilter): List<Oppgave>
-    fun finnSaksbehandlersOppgaver(saksbehandlerIdent: String): List<Oppgave>
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
     fun hentNesteOppgavenTil(saksbehandlerIdent: String): Oppgave?
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?

@@ -25,7 +25,6 @@ class PostgresRepositoryTest {
     private val behandlingId1 = UUIDv7.ny()
     private val oppgaveId = UUIDv7.ny()
     private val saksbehandlerIdent1 = "saksbehandler1"
-    private val saksbehandlerIdent2 = "saksbehandler2"
     private val opprettetTidspunkt =
         ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).truncatedTo(ChronoUnit.SECONDS)
 
@@ -312,24 +311,6 @@ class PostgresRepositoryTest {
             val oppgaverTilPerson2 = repo.finnOppgaverFor(testPerson2.ident)
             oppgaverTilPerson2.size shouldBe 2
             oppgaverTilPerson2.map { it.oppgaveId } shouldBe listOf(oppgaveId2, oppgaveId3)
-        }
-    }
-
-    @Test
-    fun `Skal kunne hente alle oppgaver for saksbehandler`() {
-        withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
-            val behandling1 = lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, saksbehandlerIdent1)
-            val behandling2 = lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, saksbehandlerIdent1)
-            val behandling3 = lagBehandlingOgOppgaveMedTilstand(FERDIG_BEHANDLET, saksbehandlerIdent1)
-            val behandling4 = lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, saksbehandlerIdent2)
-            repo.lagre(behandling1)
-            repo.lagre(behandling2)
-            repo.lagre(behandling3)
-            repo.lagre(behandling4)
-
-            repo.finnSaksbehandlersOppgaver(saksbehandlerIdent1).size shouldBe 3
-            repo.finnSaksbehandlersOppgaver(saksbehandlerIdent2).size shouldBe 1
         }
     }
 
