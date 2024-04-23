@@ -36,17 +36,15 @@ class SøkefilterTest {
     }
 
     @Test
-    fun `Fom for en periode må være før tom`() {
+    fun `Fom for en periode må være før eller lik tom`() {
         shouldThrow<IllegalArgumentException> {
-            Søkefilter.Periode(fom = LocalDate.MAX, tom = LocalDate.MIN)
+            Søkefilter.Periode(fom = LocalDate.MIN.plusDays(1), tom = LocalDate.MIN)
         }
-
-        shouldThrow<IllegalArgumentException> {
-            Søkefilter.Periode(fom = LocalDate.MIN, tom = LocalDate.MIN)
-        }
-
         shouldNotThrowAnyUnit {
             Søkefilter.Periode(fom = LocalDate.MIN, tom = LocalDate.MAX)
+        }
+        shouldNotThrowAnyUnit {
+            Søkefilter.Periode(fom = LocalDate.MIN, tom = LocalDate.MIN)
         }
     }
 }

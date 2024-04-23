@@ -40,7 +40,7 @@ data class Søkefilter(
         val tom: LocalDate,
     ) {
         init {
-            require(fom.isBefore(tom)) { "Fom må være før tom" }
+            require(fom.isBefore(tom) || fom.equals(tom)) { "Fom må være før eller lik tom" }
         }
 
         companion object {
