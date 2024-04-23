@@ -21,48 +21,13 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 class PostgresRepositoryTest {
+    private val saksbehandlerIdent = "Z123456"
     private val testPerson = Person(ident = "12345678901")
-    private val behandlingId1 = UUIDv7.ny()
-    private val oppgaveId = UUIDv7.ny()
-    private val saksbehandlerIdent1 = "saksbehandler1"
-    private val opprettetTidspunkt =
+    private val opprettetNå =
         ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).truncatedTo(ChronoUnit.SECONDS)
-
-    private val oppgaveKlarTilBehandling = Oppgave(
-        oppgaveId = oppgaveId,
-        ident = testPerson.ident,
-        emneknagger = setOf("Søknadsbehandling"),
-        opprettet = opprettetTidspunkt,
-        behandlingId = behandlingId1,
-        tilstand = KLAR_TIL_BEHANDLING,
-
-    )
-    private val testBehandling = Behandling(
-        behandlingId = behandlingId1,
-        person = testPerson,
-        opprettet = opprettetTidspunkt,
-        oppgaver = mutableListOf(oppgaveKlarTilBehandling),
-    )
-
-    private val testPerson2 = Person(ident = "12345678902")
-    private val behandlingId2 = UUIDv7.ny()
-    private val oppgaveId2 = UUIDv7.ny()
-    private val oppgaveId3 = UUIDv7.ny()
-    private val oppgave2 = Oppgave(
-        oppgaveId = oppgaveId2,
-        ident = testPerson2.ident,
-        emneknagger = setOf("Søknadsbehandling, Utland"),
-        opprettet = opprettetTidspunkt,
-        behandlingId = behandlingId2,
-        tilstand = KLAR_TIL_BEHANDLING,
-    )
-
-    private val testBehandling2 = Behandling(
-        behandlingId = behandlingId2,
-        person = testPerson2,
-        opprettet = opprettetTidspunkt,
-        oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = FERDIG_BEHANDLET)),
-    )
+    private val testBehandling = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
+    private val behandlingIdTest = testBehandling.behandlingId
+    private val oppgaveIdTest = testBehandling.oppgaver.first().oppgaveId
 
     @Test
     fun `Skal kunne lagre og hente person`() {
@@ -84,7 +49,7 @@ class PostgresRepositoryTest {
                 lagBehandlingOgOppgaveMedTilstand(
                     tilstand = KLAR_TIL_BEHANDLING,
                     saksbehandlerIdent = "NAVIdent",
-                    opprettet = opprettetTidspunkt,
+                    opprettet = opprettetNå,
                 ),
             )
             repo.hentNesteOppgavenTil("NAVIdent2") shouldBe null
@@ -98,14 +63,12 @@ class PostgresRepositoryTest {
 
             val yngsteBehandling = lagBehandlingOgOppgaveMedTilstand(
                 tilstand = KLAR_TIL_BEHANDLING,
-                saksbehandlerIdent = null,
-                opprettet = opprettetTidspunkt,
+                opprettet = opprettetNå,
             )
 
             val eldsteBehandling = lagBehandlingOgOppgaveMedTilstand(
                 tilstand = KLAR_TIL_BEHANDLING,
-                saksbehandlerIdent = null,
-                opprettet = opprettetTidspunkt.minusDays(10),
+                opprettet = opprettetNå.minusDays(10),
             )
 
             repo.lagre(yngsteBehandling)
@@ -126,15 +89,14 @@ class PostgresRepositoryTest {
 
             val ledigBehandling = lagBehandlingOgOppgaveMedTilstand(
                 tilstand = KLAR_TIL_BEHANDLING,
-                saksbehandlerIdent = null,
-                opprettet = opprettetTidspunkt,
+                opprettet = opprettetNå,
             )
 
             val saksbehandlerIdent = "NAVIdent"
             val tildeltBehandling = lagBehandlingOgOppgaveMedTilstand(
                 tilstand = KLAR_TIL_BEHANDLING,
+                opprettet = opprettetNå.minusDays(10),
                 saksbehandlerIdent = saksbehandlerIdent,
-                opprettet = opprettetTidspunkt.minusDays(10),
             )
 
             repo.lagre(ledigBehandling)
@@ -154,14 +116,12 @@ class PostgresRepositoryTest {
 
             val ledigBehandling = lagBehandlingOgOppgaveMedTilstand(
                 tilstand = KLAR_TIL_BEHANDLING,
-                saksbehandlerIdent = null,
-                opprettet = opprettetTidspunkt,
+                opprettet = opprettetNå,
             )
 
             val tildeltBehandling = lagBehandlingOgOppgaveMedTilstand(
                 tilstand = UNDER_BEHANDLING,
-                saksbehandlerIdent = null,
-                opprettet = opprettetTidspunkt.minusDays(10),
+                opprettet = opprettetNå.minusDays(10),
             )
 
             repo.lagre(ledigBehandling)
@@ -186,7 +146,7 @@ class PostgresRepositoryTest {
             assertThrows<DataNotFoundException> {
                 repo.hentBehandling(testBehandling.behandlingId)
                 repo.hentPerson(testPerson.ident)
-                repo.hentOppgave(oppgaveId)
+                repo.hentOppgave(oppgaveIdTest)
             }
         }
     }
@@ -208,7 +168,7 @@ class PostgresRepositoryTest {
             val repo = PostgresRepository(ds)
 
             shouldThrow<DataNotFoundException> {
-                repo.hentBehandling(behandlingId1)
+                repo.hentBehandling(UUIDv7.ny())
             }
         }
     }
@@ -218,7 +178,7 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
-            val behandlingFraDatabase = repo.hentBehandling(behandlingId1)
+            val behandlingFraDatabase = repo.hentBehandling(behandlingIdTest)
             behandlingFraDatabase shouldBe testBehandling
         }
     }
@@ -238,11 +198,12 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente endring av ansvarlig saksbehandler`() {
         val navIdent = "Z999999"
-        oppgaveKlarTilBehandling.tildel(OppgaveAnsvarHendelse(oppgaveId, navIdent))
+        // oppgaveKlarTilBehandling.tildel(OppgaveAnsvarHendelse(oppgaveId, navIdent))
+        testBehandling.oppgaver.first().tildel(OppgaveAnsvarHendelse(oppgaveIdTest, navIdent))
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
-            val oppgaveFraDatabase = repo.hentOppgave(oppgaveId)
+            val oppgaveFraDatabase = repo.hentOppgave(oppgaveIdTest)
             oppgaveFraDatabase.saksbehandlerIdent shouldBe navIdent
             oppgaveFraDatabase.tilstand shouldBe UNDER_BEHANDLING
         }
@@ -253,8 +214,8 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
-            val oppgaveFraDatabase = repo.hentOppgave(oppgaveId)
-            oppgaveFraDatabase shouldBe oppgaveKlarTilBehandling
+            val oppgaveFraDatabase = repo.hentOppgave(oppgaveIdTest)
+            oppgaveFraDatabase shouldBe testBehandling.oppgaver.first()
         }
     }
 
@@ -262,11 +223,12 @@ class PostgresRepositoryTest {
     fun `Skal kunne endre tilstand på en oppgave`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
-            repo.lagre(testBehandling)
-            repo.hentOppgave(oppgaveId).tilstand shouldBe KLAR_TIL_BEHANDLING
 
-            repo.lagre(testBehandling.copy(oppgaver = mutableListOf(oppgaveKlarTilBehandling.copy(tilstand = FERDIG_BEHANDLET))))
-            repo.hentOppgave(oppgaveId).tilstand shouldBe FERDIG_BEHANDLET
+            repo.lagre(testBehandling)
+            repo.hentOppgave(oppgaveIdTest).tilstand shouldBe KLAR_TIL_BEHANDLING
+
+            repo.lagre(testBehandling.copy(oppgaver = mutableListOf(testBehandling.oppgaver.first().copy(tilstand = FERDIG_BEHANDLET))))
+            repo.hentOppgave(oppgaveIdTest).tilstand shouldBe FERDIG_BEHANDLET
         }
     }
 
@@ -275,13 +237,32 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
-            val behandlingFraDatabase = repo.hentBehandlingFra(oppgaveId)
+            val behandlingFraDatabase = repo.hentBehandlingFra(oppgaveIdTest)
             behandlingFraDatabase shouldBe testBehandling
         }
     }
 
     @Test
     fun `Skal kunne hente oppgaver basert på tilstand`() {
+        val oppgaveId3 = UUIDv7.ny()
+        val testPerson2 = Person(ident = "02020288888")
+        val behandlingId2 = UUIDv7.ny()
+        val oppgaveId2 = UUIDv7.ny()
+        val oppgave2 = Oppgave(
+            oppgaveId = oppgaveId2,
+            ident = testPerson2.ident,
+            emneknagger = setOf("Søknadsbehandling, Utland"),
+            opprettet = opprettetNå,
+            behandlingId = behandlingId2,
+            tilstand = KLAR_TIL_BEHANDLING,
+        )
+        val testBehandling2 = Behandling(
+            behandlingId = behandlingId2,
+            person = testPerson2,
+            opprettet = opprettetNå,
+            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = FERDIG_BEHANDLET)),
+        )
+
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
@@ -293,12 +274,31 @@ class PostgresRepositoryTest {
 
             val oppgaverTilBehandling = repo.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
             oppgaverTilBehandling.size shouldBe 2
-            oppgaverTilBehandling.map { it.oppgaveId } shouldBe listOf(oppgaveId, oppgaveId2)
+            oppgaverTilBehandling.map { it.oppgaveId } shouldBe listOf(oppgaveIdTest, oppgaveId2)
         }
     }
 
     @Test
     fun `Skal kunne hente alle oppgaver for en gitt person`() {
+        val oppgaveId3 = UUIDv7.ny()
+        val testPerson2 = Person(ident = "02020288888")
+        val behandlingId2 = UUIDv7.ny()
+        val oppgaveId2 = UUIDv7.ny()
+        val oppgave2 = Oppgave(
+            oppgaveId = oppgaveId2,
+            ident = testPerson2.ident,
+            emneknagger = setOf("Søknadsbehandling, Utland"),
+            opprettet = opprettetNå,
+            behandlingId = behandlingId2,
+            tilstand = KLAR_TIL_BEHANDLING,
+        )
+        val testBehandling2 = Behandling(
+            behandlingId = behandlingId2,
+            person = testPerson2,
+            opprettet = opprettetNå,
+            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = FERDIG_BEHANDLET)),
+        )
+
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
@@ -306,7 +306,7 @@ class PostgresRepositoryTest {
 
             val oppgaverTilPerson1 = repo.finnOppgaverFor(testPerson.ident)
             oppgaverTilPerson1.size shouldBe 1
-            oppgaverTilPerson1.single().oppgaveId shouldBe oppgaveId
+            oppgaverTilPerson1.single().oppgaveId shouldBe oppgaveIdTest
 
             val oppgaverTilPerson2 = repo.finnOppgaverFor(testPerson2.ident)
             oppgaverTilPerson2.size shouldBe 2
@@ -319,26 +319,21 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
-            repo.hentOppgaveIdFor(behandlingId = testBehandling.behandlingId) shouldBe testBehandling.oppgaver.first().oppgaveId
+            repo.hentOppgaveIdFor(behandlingId = testBehandling.behandlingId) shouldBe oppgaveIdTest
             repo.hentOppgaveIdFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
 
     @Test
     fun `Skal kunne søke etter oppgaver`() {
-        val opprettet = ZonedDateTime.parse("2024-01-01T00:00:00Z")
+        val enUkeSiden = opprettetNå.minusDays(7)
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
-            val behandling1 = lagBehandlingOgOppgaveMedTilstand(
-                tilstand = UNDER_BEHANDLING,
-                opprettet = opprettet,
-                saksbehandlerIdent = saksbehandlerIdent1,
-            )
-            val behandling2 = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent1)
-            val behandling3 = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent1)
-            val behandling4 = lagBehandlingOgOppgaveMedTilstand(OPPRETTET, saksbehandlerIdent1)
-
+            val behandling1 = lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, enUkeSiden, saksbehandlerIdent)
+            val behandling2 = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
+            val behandling3 = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
+            val behandling4 = lagBehandlingOgOppgaveMedTilstand(OPPRETTET, saksbehandlerIdent = saksbehandlerIdent)
             repo.lagre(behandling1)
             repo.lagre(behandling2)
             repo.lagre(behandling3)
@@ -367,8 +362,8 @@ class PostgresRepositoryTest {
                 Søkefilter(
                     tilstand = setOf(KLAR_TIL_BEHANDLING),
                     periode = Søkefilter.Periode(
-                        fom = opprettet.plusDays(1).toLocalDate(),
-                        tom = opprettet.plusDays(2).toLocalDate(),
+                        fom = enUkeSiden.plusDays(1).toLocalDate(),
+                        tom = enUkeSiden.plusDays(2).toLocalDate(),
                     ),
                 ),
             ).size shouldBe 0
@@ -377,18 +372,28 @@ class PostgresRepositoryTest {
                 Søkefilter(
                     tilstand = setOf(UNDER_BEHANDLING),
                     periode = Søkefilter.Periode(
-                        fom = opprettet.minusDays(1).toLocalDate(),
-                        tom = opprettet.plusDays(2).toLocalDate(),
+                        fom = enUkeSiden.minusDays(1).toLocalDate(),
+                        tom = enUkeSiden.plusDays(2).toLocalDate(),
                     ),
                 ),
             ).size shouldBe 1
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = setOf(KLAR_TIL_BEHANDLING),
+                    periode = Søkefilter.Periode(
+                        fom = opprettetNå.toLocalDate(),
+                        tom = opprettetNå.toLocalDate(),
+                    ),
+                ),
+            ).size shouldBe 2
         }
     }
 
     private fun lagBehandlingOgOppgaveMedTilstand(
         tilstand: Oppgave.Tilstand.Type,
-        saksbehandlerIdent: String?,
-        opprettet: ZonedDateTime = opprettetTidspunkt,
+        opprettet: ZonedDateTime = opprettetNå,
+        saksbehandlerIdent: String? = null,
     ): Behandling {
         val behandlingId = UUIDv7.ny()
         val oppgave = Oppgave.rehydrer(
