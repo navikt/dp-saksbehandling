@@ -344,8 +344,19 @@ class PostgresRepositoryTest {
             repo.lagre(behandling3)
             repo.lagre(behandling4)
 
-            repo.søk(Søkefilter(tilstand = UNDER_BEHANDLING, periode = Søkefilter.Periode.UBEGRENSET_PERIODE))
-                .single().oppgaveId shouldBe behandling1.oppgaver.single().oppgaveId
+            repo.søk(
+                Søkefilter(
+                    tilstand = setOf(UNDER_BEHANDLING),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                ),
+            ).single().oppgaveId shouldBe behandling1.oppgaver.single().oppgaveId
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                ),
+            ).size shouldBe 3
 
             repo.søk(Søkefilter.DEFAULT_SØKEFILTER).let {
                 it.size shouldBe 2
@@ -354,7 +365,7 @@ class PostgresRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = KLAR_TIL_BEHANDLING,
+                    tilstand = setOf(KLAR_TIL_BEHANDLING),
                     periode = Søkefilter.Periode(
                         fom = opprettet.plusDays(1).toLocalDate(),
                         tom = opprettet.plusDays(2).toLocalDate(),
@@ -364,7 +375,7 @@ class PostgresRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = UNDER_BEHANDLING,
+                    tilstand = setOf(UNDER_BEHANDLING),
                     periode = Søkefilter.Periode(
                         fom = opprettet.minusDays(1).toLocalDate(),
                         tom = opprettet.plusDays(2).toLocalDate(),

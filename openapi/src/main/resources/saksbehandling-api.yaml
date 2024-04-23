@@ -16,8 +16,12 @@ paths:
         - in: query
           name: tilstand
           required: false
+          style: form
+          explode: true
           schema:
-            $ref: '#/components/schemas/OppgaveTilstand'
+            type: array
+            items:
+              $ref: '#/components/schemas/OppgaveTilstand'
         - in: query
           name: fom
           required: false

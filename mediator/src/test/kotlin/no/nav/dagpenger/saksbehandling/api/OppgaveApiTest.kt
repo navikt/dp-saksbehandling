@@ -87,13 +87,13 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Hent alle oppgaver med tilstand KLAR_TIL_BEHANDLING basert på query parameter`() {
+    fun `Hent alle oppgaver med tilstander basert på query parameter`() {
         val mediatorMock = mockk<Mediator>().also {
             every {
                 it.søk(
                     Søkefilter(
                         periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
-                        tilstand = KLAR_TIL_BEHANDLING,
+                        tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                     ),
                 )
             } returns listOf(
@@ -103,16 +103,17 @@ class OppgaveApiTest {
         }
 
         withOppgaveApi(mediatorMock) {
-            client.get("/oppgave?tilstand=$KLAR_TIL_BEHANDLING") { autentisert() }.let { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val oppgaver =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<List<OppgaveOversiktDTO>>() {},
-                    )
-                oppgaver.size shouldBe 2
-            }
+            client.get("/oppgave?tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING") { autentisert() }
+                .let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    val oppgaver =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                        )
+                    oppgaver.size shouldBe 2
+                }
         }
     }
 
@@ -126,7 +127,7 @@ class OppgaveApiTest {
                             fom = LocalDate.parse("2021-01-01"),
                             tom = LocalDate.parse("2023-01-01"),
                         ),
-                        tilstand = UNDER_BEHANDLING,
+                        tilstand = setOf(UNDER_BEHANDLING),
                         saksbehandlerIdent = testNAVIdent,
                     ),
                 )
@@ -195,9 +196,7 @@ class OppgaveApiTest {
         val pdlMock = mockk<PDLKlient>()
 
         withOppgaveApi(mediatorMock, pdlMock) {
-            client.put("/oppgave/neste") { autentisert() }.let { response ->
-                response.status shouldBe HttpStatusCode.NotFound
-            }
+            client.put("/oppgave/neste") { autentisert() }.status shouldBe HttpStatusCode.NotFound
         }
         coVerify(exactly = 0) { pdlMock.person(any()) }
     }

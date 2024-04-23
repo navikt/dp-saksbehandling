@@ -7,19 +7,20 @@ import java.time.LocalDate
 
 data class Søkefilter(
     val periode: Periode,
-    val tilstand: Oppgave.Tilstand.Type,
+    val tilstand: Set<Oppgave.Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
 ) {
     companion object {
         val DEFAULT_SØKEFILTER = Søkefilter(
             periode = Periode.UBEGRENSET_PERIODE,
-            tilstand = KLAR_TIL_BEHANDLING,
+            tilstand = setOf(KLAR_TIL_BEHANDLING),
             saksbehandlerIdent = null,
         )
 
         fun fra(queryParameters: Parameters, saksbehandlerIdent: String): Søkefilter {
             val tilstand =
-                queryParameters["tilstand"]?.let { Oppgave.Tilstand.Type.valueOf(it) } ?: KLAR_TIL_BEHANDLING
+                queryParameters.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
+                    ?: setOf(KLAR_TIL_BEHANDLING)
 
             val mine = queryParameters["mineOppgaver"]?.toBoolean() ?: false
 

@@ -4,7 +4,8 @@ import io.kotest.assertions.throwables.shouldNotThrowAnyUnit
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Parameters
-import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -13,7 +14,7 @@ class SøkefilterTest {
     @Test
     fun `Skal kunne initialisere et søkefilter fra Ktor sin QueryParameters`() {
         Parameters.build {
-            this["tilstand"] = "KLAR_TIL_BEHANDLING"
+            this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
             this["fom"] = "2021-01-01"
             this["tom"] = "2023-01-01"
             this["mineOppgaver"] = "true"
@@ -23,7 +24,7 @@ class SøkefilterTest {
                     fom = LocalDate.of(2021, 1, 1),
                     tom = LocalDate.of(2023, 1, 1),
                 ),
-                tilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                 saksbehandlerIdent = "testIdent",
             )
         }
