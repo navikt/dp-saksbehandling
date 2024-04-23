@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DBUtils.norskZonedDateTime
+import no.nav.dagpenger.saksbehandling.logger
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -67,8 +68,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
 
     override fun slettBehandling(behandlingId: UUID) {
+        val behandling = try {
+            hentBehandling(behandlingId)
+        } catch (e: DataNotFoundException) {
+            logger.warn("Behandling med id $behandlingId finnes ikke, sletter ikke noe")
+            return
+        }
         sessionOf(dataSource).use { session ->
-            val behandling = hentBehandling(behandlingId)
             session.transaction { tx ->
                 val oppgaveIder = behandling.oppgaver.map { it.oppgaveId }
                 tx.slettEmneknaggerFor(oppgaveIder)
