@@ -363,7 +363,7 @@ class PostgresRepositoryTest {
             repo.lagre(behandling3)
             repo.lagre(behandling4)
 
-            repo.søk(Søkefilter(tilstand = UNDER_BEHANDLING, periode = Søkefilter.Periode.TOM_PERIODE))
+            repo.søk(Søkefilter(tilstand = UNDER_BEHANDLING, periode = Søkefilter.Periode.UBEGRENSET_PERIODE))
                 .single().oppgaveId shouldBe behandling1.oppgaver.single().oppgaveId
 
             repo.søk(Søkefilter.DEFAULT_SØKEFILTER).let {

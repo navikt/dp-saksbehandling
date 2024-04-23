@@ -92,7 +92,7 @@ class OppgaveApiTest {
             every {
                 it.søk(
                     Søkefilter(
-                        periode = Søkefilter.Periode.TOM_PERIODE,
+                        periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
                         tilstand = KLAR_TIL_BEHANDLING,
                     ),
                 )

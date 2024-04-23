@@ -12,7 +12,7 @@ data class Søkefilter(
 ) {
     companion object {
         val DEFAULT_SØKEFILTER = Søkefilter(
-            periode = Periode.TOM_PERIODE,
+            periode = Periode.UBEGRENSET_PERIODE,
             tilstand = KLAR_TIL_BEHANDLING,
             saksbehandlerIdent = null,
         )
@@ -45,7 +45,7 @@ data class Søkefilter(
         companion object {
             val MIN = LocalDate.of(1000, 1, 1)
             val MAX = LocalDate.of(3000, 1, 1)
-            val TOM_PERIODE = Periode(
+            val UBEGRENSET_PERIODE = Periode(
                 fom = MIN,
                 tom = MAX,
             )
