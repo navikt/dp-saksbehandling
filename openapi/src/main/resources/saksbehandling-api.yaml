@@ -16,23 +16,32 @@ paths:
         - in: query
           name: tilstand
           required: false
+          style: form
+          explode: true
           schema:
-            $ref: '#/components/schemas/OppgaveTilstand'
+            type: array
+            items:
+              $ref: '#/components/schemas/OppgaveTilstand'
+        - in: query
+          name: fom
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: tom
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: mineOppgaver
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OppgaveOversikt'
-  /oppgave/mine:
-    get:
-      summary: Hent alle saksbehandlers oppgaver, uavhengig av tilstand
-      responses:
-        '200':
-          description: Vellykket respons med en liste over saksbehandlers oppgaver, uavhengig av tilstand
           content:
             application/json:
               schema:
@@ -50,7 +59,7 @@ paths:
               $ref: '#/components/schemas/Sok'
       responses:
         '200':
-          description: Vellykket respons med en liste over oppgaver som samsvarer med FNR-en
+          description: Vellykket respons med en liste over oppgaver som samsvarer med FNR
           content:
             application/json:
               schema:

@@ -68,11 +68,7 @@ data class Oppgave private constructor(
     }
 
     fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
-        if (tilstand == Tilstand.Type.KLAR_TIL_BEHANDLING || tilstand == Tilstand.Type.UNDER_BEHANDLING) {
-            tilstand = Tilstand.Type.FERDIG_BEHANDLET
-        } else {
-            throw IllegalStateException("Kan ikke håndtere hendelse om vedtak fattet i tilstand $tilstand")
-        }
+        tilstand = Tilstand.Type.FERDIG_BEHANDLET
     }
 
     fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {

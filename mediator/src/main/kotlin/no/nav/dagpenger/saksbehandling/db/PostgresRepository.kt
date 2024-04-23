@@ -448,26 +448,32 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
-    override fun finnSaksbehandlersOppgaver(saksbehandlerIdent: String): List<Oppgave> {
+    override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
         return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """
-                    SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id
+            val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
+            val queryOf = queryOf(
+                //language=PostgreSQL
+                statement = """
+                    SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
                     FROM   oppgave_v1    oppg
                     JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
                     JOIN   person_v1     pers ON pers.id = beha.person_id
-                    WHERE  oppg.saksbehandler_ident = :saksbehandler_ident
-                    """.trimIndent(),
-                    paramMap = mapOf(
-                        "saksbehandler_ident" to saksbehandlerIdent,
-                    ),
-                ).map {
+                    WHERE  oppg.tilstand IN ($tilstander)
+                    AND    oppg.opprettet <= :tom
+                    AND    oppg.opprettet >= :fom
+                """.trimIndent(),
+                paramMap = mapOf(
+                    "tilstander" to tilstander,
+                    "fom" to søkeFilter.periode.fom,
+                    "tom" to søkeFilter.periode.tom,
+                ),
+            )
+            session.run(
+                queryOf.map {
                     Oppgave.rehydrer(
                         oppgaveId = it.uuid("id"),
                         ident = it.string("ident"),
-                        saksbehandlerIdent = saksbehandlerIdent,
+                        saksbehandlerIdent = it.stringOrNull("saksbehandler_ident"),
                         behandlingId = it.uuid("behandling_id"),
                         opprettet = it.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),

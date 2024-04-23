@@ -31,8 +31,8 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
+import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SaksbehandlerHendelse
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -49,10 +49,9 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
         authenticate("azureAd") {
             route("oppgave") {
                 get {
-                    val tilstand = call.parameters["tilstand"]?.let { tilstand ->
-                        Type.valueOf(tilstand)
-                    } ?: KLAR_TIL_BEHANDLING
-                    val oppgaver = mediator.hentAlleOppgaverMedTilstand(tilstand).tilOppgaverOversiktDTO()
+                    val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
+
+                    val oppgaver = mediator.søk(søkefilter).tilOppgaverOversiktDTO()
                     sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
@@ -75,13 +74,6 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                                 call.respond(HttpStatusCode.OK, oppgaveDTO)
                             }
                         }
-                    }
-                }
-
-                route("mine") {
-                    get {
-                        val oppgaver = mediator.finnSaksbehandlersOppgaver(call.navIdent()).tilOppgaverOversiktDTO()
-                        call.respond(status = HttpStatusCode.OK, oppgaver)
                     }
                 }
 
@@ -132,12 +124,6 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
 
 private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse =
     OppgaveAnsvarHendelse(this.finnUUID("oppgaveId"), this.navIdent())
-
-private fun ApplicationCall.nesteOppgaveHendelse(oppgaveId: UUID): OppgaveAnsvarHendelse =
-    OppgaveAnsvarHendelse(oppgaveId, this.navIdent())
-
-private fun ApplicationCall.saksbehandlerHendelse(): SaksbehandlerHendelse =
-    SaksbehandlerHendelse(this.navIdent())
 
 fun lagOppgaveDTO(oppgave: Oppgave, person: PDLPersonIntern): OppgaveDTO =
 
