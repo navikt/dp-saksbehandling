@@ -16,7 +16,7 @@ class SøkefilterTest {
             this["tilstand"] = "KLAR_TIL_BEHANDLING"
             this["fom"] = "2021-01-01"
             this["tom"] = "2023-01-01"
-            this["mine"] = "true"
+            this["mineOppgaver"] = "true"
         }.let {
             Søkefilter.fra(it, "testIdent") shouldBe Søkefilter(
                 periode = Søkefilter.Periode(

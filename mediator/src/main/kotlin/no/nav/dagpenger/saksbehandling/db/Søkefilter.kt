@@ -17,14 +17,14 @@ data class Søkefilter(
             saksbehandlerIdent = null,
         )
 
-        fun fra(queryParamaters: Parameters, saksbehandlerIdent: String): Søkefilter {
+        fun fra(queryParameters: Parameters, saksbehandlerIdent: String): Søkefilter {
             val tilstand =
-                queryParamaters["tilstand"]?.let { Oppgave.Tilstand.Type.valueOf(it) } ?: KLAR_TIL_BEHANDLING
+                queryParameters["tilstand"]?.let { Oppgave.Tilstand.Type.valueOf(it) } ?: KLAR_TIL_BEHANDLING
 
-            val mine = queryParamaters["mine"]?.toBoolean() ?: false
+            val mine = queryParameters["mineOppgaver"]?.toBoolean() ?: false
 
             return Søkefilter(
-                periode = Periode.fra(queryParamaters),
+                periode = Periode.fra(queryParameters),
                 tilstand = tilstand,
                 saksbehandlerIdent = when {
                     mine -> saksbehandlerIdent

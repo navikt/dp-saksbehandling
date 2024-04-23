@@ -31,7 +31,7 @@ paths:
             type: string
             format: date
         - in: query
-          name: mine
+          name: mineOppgaver
           required: false
           schema:
             type: boolean
