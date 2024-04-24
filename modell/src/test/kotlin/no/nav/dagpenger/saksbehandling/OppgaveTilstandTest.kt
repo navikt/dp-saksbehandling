@@ -89,6 +89,28 @@ class OppgaveTilstandTest {
         }
     }
 
+    @Test
+    fun `Skal ikke endre tilstand på en oppgave når den er ferdigbehandlet`() {
+        val oppgave = lagOppgave(FERDIG_BEHANDLET)
+
+        shouldThrow<IllegalStateException> {
+            oppgave.oppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = UUIDv7.ny(),
+                ),
+            )
+        }
+        shouldThrow<IllegalStateException> {
+            oppgave.fjernAnsvar(OppgaveAnsvarHendelse(UUIDv7.ny(), "Z080808"))
+        }
+
+        shouldThrow<IllegalStateException> {
+            oppgave.tildel(OppgaveAnsvarHendelse(UUIDv7.ny(), "Z080808"))
+        }
+    }
+
     private fun lagOppgave(type: Type): Oppgave {
         val tilstand = when (type) {
             OPPRETTET -> Oppgave.Opprettet
