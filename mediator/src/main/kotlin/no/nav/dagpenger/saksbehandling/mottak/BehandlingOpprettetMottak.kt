@@ -77,11 +77,11 @@ internal class BehandlingOpprettetMottak(
                     JsonMessage.newMessage(
                         eventName = "avbryt_behandling",
                         map =
-                        mapOf(
-                            "behandlingId" to behandlingId,
-                            "søknadId" to søknadId,
-                            "ident" to ident,
-                        ),
+                            mapOf(
+                                "behandlingId" to behandlingId,
+                                "søknadId" to søknadId,
+                                "ident" to ident,
+                            ),
                     ).toJson(),
                 )
             }

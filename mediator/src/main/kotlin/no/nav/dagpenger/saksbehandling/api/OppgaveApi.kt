@@ -142,21 +142,21 @@ fun lagOppgaveDTO(
         behandlingId = oppgave.behandlingId,
         personIdent = oppgave.ident,
         person =
-        PersonDTO(
-            ident = person.ident,
-            fornavn = person.fornavn,
-            etternavn = person.etternavn,
-            mellomnavn = person.mellomnavn,
-            fodselsdato = person.fødselsdato,
-            alder = person.alder,
-            kjonn =
-            when (person.kjønn) {
-                PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
-                PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
-                PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
-            },
-            statsborgerskap = person.statsborgerskap,
-        ),
+            PersonDTO(
+                ident = person.ident,
+                fornavn = person.fornavn,
+                etternavn = person.etternavn,
+                mellomnavn = person.mellomnavn,
+                fodselsdato = person.fødselsdato,
+                alder = person.alder,
+                kjonn =
+                    when (person.kjønn) {
+                        PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
+                        PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
+                        PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
+                    },
+                statsborgerskap = person.statsborgerskap,
+            ),
         saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),

@@ -236,9 +236,9 @@ class PostgresRepositoryTest {
             repo.lagre(
                 testBehandling.copy(
                     oppgaver =
-                    mutableListOf(
-                        testBehandling.oppgaver.first().copy(tilstand = Oppgave.FerdigBehandlet),
-                    ),
+                        mutableListOf(
+                            testBehandling.oppgaver.first().copy(tilstand = Oppgave.FerdigBehandlet),
+                        ),
                 ),
             )
             repo.hentOppgave(oppgaveIdTest).tilstand() shouldBe FERDIG_BEHANDLET
@@ -277,10 +277,10 @@ class PostgresRepositoryTest {
                 person = testPerson,
                 opprettet = opprettetNå,
                 oppgaver =
-                mutableListOf(
-                    oppgave2,
-                    oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
-                ),
+                    mutableListOf(
+                        oppgave2,
+                        oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
+                    ),
             )
 
         withMigratedDb { ds ->
@@ -319,10 +319,10 @@ class PostgresRepositoryTest {
                 person = testPerson2,
                 opprettet = opprettetNå,
                 oppgaver =
-                mutableListOf(
-                    oppgave2,
-                    oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
-                ),
+                    mutableListOf(
+                        oppgave2,
+                        oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
+                    ),
             )
 
         withMigratedDb { ds ->
@@ -434,10 +434,10 @@ class PostgresRepositoryTest {
                 Søkefilter(
                     tilstand = setOf(KLAR_TIL_BEHANDLING),
                     periode =
-                    Søkefilter.Periode(
-                        fom = enUkeSiden.plusDays(1).toLocalDate(),
-                        tom = enUkeSiden.plusDays(2).toLocalDate(),
-                    ),
+                        Søkefilter.Periode(
+                            fom = enUkeSiden.plusDays(1).toLocalDate(),
+                            tom = enUkeSiden.plusDays(2).toLocalDate(),
+                        ),
                 ),
             ).size shouldBe 0
 
@@ -445,10 +445,10 @@ class PostgresRepositoryTest {
                 Søkefilter(
                     tilstand = setOf(UNDER_BEHANDLING),
                     periode =
-                    Søkefilter.Periode(
-                        fom = enUkeSiden.minusDays(1).toLocalDate(),
-                        tom = enUkeSiden.plusDays(2).toLocalDate(),
-                    ),
+                        Søkefilter.Periode(
+                            fom = enUkeSiden.minusDays(1).toLocalDate(),
+                            tom = enUkeSiden.plusDays(2).toLocalDate(),
+                        ),
                 ),
             ).size shouldBe 1
 
@@ -456,10 +456,10 @@ class PostgresRepositoryTest {
                 Søkefilter(
                     tilstand = setOf(KLAR_TIL_BEHANDLING),
                     periode =
-                    Søkefilter.Periode(
-                        fom = opprettetNå.toLocalDate(),
-                        tom = opprettetNå.toLocalDate(),
-                    ),
+                        Søkefilter.Periode(
+                            fom = opprettetNå.toLocalDate(),
+                            tom = opprettetNå.toLocalDate(),
+                        ),
                 ),
             ).size shouldBe 2
         }
@@ -480,12 +480,12 @@ class PostgresRepositoryTest {
                 opprettet = opprettet,
                 emneknagger = setOf("Søknadsbehandling"),
                 tilstand =
-                when (tilstand) {
-                    OPPRETTET -> Oppgave.Opprettet
-                    KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
-                    UNDER_BEHANDLING -> Oppgave.UnderBehandling
-                    FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
-                },
+                    when (tilstand) {
+                        OPPRETTET -> Oppgave.Opprettet
+                        KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
+                        UNDER_BEHANDLING -> Oppgave.UnderBehandling
+                        FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
+                    },
             )
         return Behandling(
             behandlingId = behandlingId,

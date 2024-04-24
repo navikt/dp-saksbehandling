@@ -30,18 +30,18 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     INSERT INTO person_v1
                         (id, ident) 
                     VALUES
                         (:id, :ident) 
                     ON CONFLICT (id) DO UPDATE SET ident = :ident
-                """.trimIndent(),
+                    """.trimIndent(),
                 paramMap =
-                mapOf(
-                    "id" to person.id,
-                    "ident" to person.ident,
-                ),
+                    mapOf(
+                        "id" to person.id,
+                        "ident" to person.ident,
+                    ),
             ).asUpdate,
         )
     }
@@ -52,15 +52,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT * 
                         FROM   person_v1
                         WHERE  ident = :ident
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap =
-                    mapOf(
-                        "ident" to ident,
-                    ),
+                        mapOf(
+                            "ident" to ident,
+                        ),
                 ).map { row ->
                     Person(
                         id = row.uuid("id"),
@@ -97,7 +97,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     DELETE FROM person_v1 pers 
                     WHERE pers.ident = :ident
                     AND NOT EXISTS(
@@ -105,7 +105,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         FROM behandling_v1 beha 
                         WHERE beha.person_id = pers.id
                     )
-                """.trimMargin(),
+                    """.trimMargin(),
                 paramMap = mapOf("ident" to ident),
             ).asUpdate,
         )
@@ -161,12 +161,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
                         FROM   behandling_v1 beha
                         JOIN   person_v1     pers ON pers.id = beha.person_id
                         WHERE  beha.id = :behandling_id
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
                     val ident = row.string("ident")
@@ -195,11 +195,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT id, tilstand, opprettet, saksbehandler_ident
                         FROM   oppgave_v1
                         WHERE  behandling_id = :behandling_id
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
                     val oppgaveId = row.uuid("id")
@@ -211,15 +211,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
                         tilstand =
-                        row.string("tilstand").let { tilstand ->
-                            when (tilstand) {
-                                OPPRETTET.name -> Oppgave.Opprettet
-                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                            }
-                        },
+                            row.string("tilstand").let { tilstand ->
+                                when (tilstand) {
+                                    OPPRETTET.name -> Oppgave.Opprettet
+                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                }
+                            },
                     )
                 }.asList,
             )
@@ -232,11 +232,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT emneknagg
                         FROM   emneknagg_v1
                         WHERE  oppgave_id = :oppgave_id
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
                     row.string("emneknagg")
@@ -250,19 +250,19 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     INSERT INTO behandling_v1
                         (id, person_id, opprettet)
                     VALUES
                         (:id, :person_id, :opprettet) 
                     ON CONFLICT DO NOTHING
-                """.trimIndent(),
+                    """.trimIndent(),
                 paramMap =
-                mapOf(
-                    "id" to behandling.behandlingId,
-                    "person_id" to behandling.person.id,
-                    "opprettet" to behandling.opprettet,
-                ),
+                    mapOf(
+                        "id" to behandling.behandlingId,
+                        "person_id" to behandling.person.id,
+                        "opprettet" to behandling.opprettet,
+                    ),
             ).asUpdate,
         )
     }
@@ -278,7 +278,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     INSERT INTO oppgave_v1
                         (id, behandling_id, tilstand, opprettet, saksbehandler_ident)
                     VALUES
@@ -287,15 +287,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                      tilstand = :tilstand,
                      saksbehandler_ident = :saksbehandler_ident
                     
-                """.trimIndent(),
+                    """.trimIndent(),
                 paramMap =
-                mapOf(
-                    "id" to oppgave.oppgaveId,
-                    "behandling_id" to oppgave.behandlingId,
-                    "tilstand" to oppgave.tilstand().name,
-                    "opprettet" to oppgave.opprettet,
-                    "saksbehandler_ident" to oppgave.saksbehandlerIdent,
-                ),
+                    mapOf(
+                        "id" to oppgave.oppgaveId,
+                        "behandling_id" to oppgave.behandlingId,
+                        "tilstand" to oppgave.tilstand().name,
+                        "opprettet" to oppgave.opprettet,
+                        "saksbehandler_ident" to oppgave.saksbehandlerIdent,
+                    ),
             ).asUpdate,
         )
         lagre(oppgave.oppgaveId, oppgave.emneknagger)
@@ -310,13 +310,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         INSERT INTO emneknagg_v1
                             (oppgave_id, emneknagg) 
                         VALUES
                             (:oppgave_id, :emneknagg)
                         ON CONFLICT ON CONSTRAINT emneknagg_oppgave_unique DO NOTHING
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId, "emneknagg" to emneknagg),
                 ).asUpdate,
             )
@@ -329,13 +329,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
                         FROM   behandling_v1 beha
                         JOIN   person_v1     pers ON pers.id = beha.person_id
                         JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
                         WHERE  oppg.id = :oppgave_id
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
                     val ident = row.string("ident")
@@ -356,18 +356,18 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id, oppg.saksbehandler_ident
                         FROM   oppgave_v1    oppg
                         JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
                         JOIN   person_v1     pers ON pers.id = beha.person_id
                         WHERE  oppg.tilstand = :tilstand
                         ORDER BY oppg.opprettet
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap =
-                    mapOf(
-                        "tilstand" to tilstand.name,
-                    ),
+                        mapOf(
+                            "tilstand" to tilstand.name,
+                        ),
                 ).map { row ->
                     Oppgave.rehydrer(
                         oppgaveId = row.uuid("id"),
@@ -377,15 +377,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
                         tilstand =
-                        row.string("tilstand").let { tilstand ->
-                            when (tilstand) {
-                                OPPRETTET.name -> Oppgave.Opprettet
-                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                            }
-                        },
+                            row.string("tilstand").let { tilstand ->
+                                when (tilstand) {
+                                    OPPRETTET.name -> Oppgave.Opprettet
+                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                }
+                            },
                     )
                 }.asList,
             )
@@ -399,7 +399,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     queryOf(
                         //language=PostgreSQL
                         statement =
-                        """
+                            """
                             UPDATE oppgave_v1
                             SET saksbehandler_ident = :saksbehandler_ident
                               , tilstand            = 'UNDER_BEHANDLING'
@@ -411,7 +411,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                                             FETCH FIRST 1 ROWS ONLY)
                             RETURNING *;
                             
-                        """.trimIndent(),
+                            """.trimIndent(),
                         paramMap = mapOf("saksbehandler_ident" to saksbehandlerIdent),
                     ).map { row ->
                         row.uuidOrNull("id")
@@ -429,11 +429,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT id 
                         FROM oppgave_v1 
                         WHERE behandling_id = :behandling_id
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
                     row.uuidOrNull("id")
@@ -448,13 +448,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
                         FROM   oppgave_v1    oppg
                         JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
                         JOIN   person_v1     pers ON pers.id = beha.person_id
                         WHERE  oppg.id = :oppgave_id
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
 
@@ -466,15 +466,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
                         tilstand =
-                        row.string("tilstand").let { tilstand ->
-                            when (tilstand) {
-                                OPPRETTET.name -> Oppgave.Opprettet
-                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                            }
-                        },
+                            row.string("tilstand").let { tilstand ->
+                                when (tilstand) {
+                                    OPPRETTET.name -> Oppgave.Opprettet
+                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                }
+                            },
                     )
                 }.asSingle,
             )
@@ -486,17 +486,17 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
                         FROM   oppgave_v1    oppg
                         JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
                         JOIN   person_v1     pers ON pers.id = beha.person_id
                         WHERE  pers.ident = :ident
-                    """.trimIndent(),
+                        """.trimIndent(),
                     paramMap =
-                    mapOf(
-                        "ident" to ident,
-                    ),
+                        mapOf(
+                            "ident" to ident,
+                        ),
                 ).map { row ->
                     Oppgave.rehydrer(
                         oppgaveId = row.uuid("id"),
@@ -506,15 +506,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
                         tilstand =
-                        row.string("tilstand").let { tilstand ->
-                            when (tilstand) {
-                                OPPRETTET.name -> Oppgave.Opprettet
-                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                            }
-                        },
+                            row.string("tilstand").let { tilstand ->
+                                when (tilstand) {
+                                    OPPRETTET.name -> Oppgave.Opprettet
+                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                }
+                            },
                     )
                 }.asList,
             )
@@ -544,12 +544,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     statement = sql.trimIndent(),
                     paramMap =
-                    mapOf(
-                        "tilstander" to tilstander,
-                        "fom" to søkeFilter.periode.fom,
-                        "tom" to søkeFilter.periode.tom,
-                        "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                    ),
+                        mapOf(
+                            "tilstander" to tilstander,
+                            "fom" to søkeFilter.periode.fom,
+                            "tom" to søkeFilter.periode.tom,
+                            "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                        ),
                 )
             session.run(
                 queryOf.map { row ->
@@ -561,15 +561,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
                         tilstand =
-                        row.string("tilstand").let { tilstand ->
-                            when (tilstand) {
-                                OPPRETTET.name -> Oppgave.Opprettet
-                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                            }
-                        },
+                            row.string("tilstand").let { tilstand ->
+                                when (tilstand) {
+                                    OPPRETTET.name -> Oppgave.Opprettet
+                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                }
+                            },
                     )
                 }.asList,
             )

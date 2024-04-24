@@ -32,10 +32,10 @@ data class Søkefilter(
                 periode = Periode.fra(queryParameters),
                 tilstand = tilstand,
                 saksbehandlerIdent =
-                when {
-                    mine -> saksbehandlerIdent
-                    else -> null
-                },
+                    when {
+                        mine -> saksbehandlerIdent
+                        else -> null
+                    },
             )
         }
     }

@@ -31,9 +31,9 @@ class PDLHttpKlientTest {
                     url = "http://localhost:8080",
                     tokenSupplier = { "token" },
                     httpClient =
-                    defaultHttpClient(
-                        mockEngine,
-                    ),
+                        defaultHttpClient(
+                            mockEngine,
+                        ),
                 ).person("12345612345").getOrThrow()
             }
         person.fornavn shouldBe "ÅPENHJERTIG"
@@ -69,9 +69,9 @@ class PDLHttpKlientTest {
                 url = "http://localhost:8080",
                 tokenSupplier = { "token" },
                 httpClient =
-                defaultHttpClient(
-                    mockEngine,
-                ),
+                    defaultHttpClient(
+                        mockEngine,
+                    ),
             ).erAdressebeskyttet("12345612345").getOrThrow() shouldBe forventet
         }
     }
@@ -91,9 +91,9 @@ class PDLHttpKlientTest {
                 url = "http://localhost:8080",
                 tokenSupplier = { "token" },
                 httpClient =
-                defaultHttpClient(
-                    mockEngine,
-                ),
+                    defaultHttpClient(
+                        mockEngine,
+                    ),
             ).erAdressebeskyttet("12345612345").isFailure shouldBe true
         }
     }
@@ -110,9 +110,9 @@ class PDLHttpKlientTest {
                 url = "http://localhost:8080",
                 tokenSupplier = { "token" },
                 httpClient =
-                defaultHttpClient(
-                    mockEngine,
-                ),
+                    defaultHttpClient(
+                        mockEngine,
+                    ),
             ).erAdressebeskyttet("12345612345").isFailure shouldBe true
         }
     }

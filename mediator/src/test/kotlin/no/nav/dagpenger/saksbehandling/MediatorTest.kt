@@ -104,12 +104,12 @@ class MediatorTest {
 
             mediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = ZonedDateTime.now(),
-                ),
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = ZonedDateTime.now(),
+                    ),
             )
             mediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 

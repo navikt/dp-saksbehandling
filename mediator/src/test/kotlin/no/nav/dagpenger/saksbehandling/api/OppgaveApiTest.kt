@@ -147,10 +147,10 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode =
-                            Søkefilter.Periode(
-                                fom = LocalDate.parse("2021-01-01"),
-                                tom = LocalDate.parse("2023-01-01"),
-                            ),
+                                Søkefilter.Periode(
+                                    fom = LocalDate.parse("2021-01-01"),
+                                    tom = LocalDate.parse("2023-01-01"),
+                                ),
                             tilstand = setOf(UNDER_BEHANDLING),
                             saksbehandlerIdent = testNAVIdent,
                         ),
@@ -443,12 +443,12 @@ class OppgaveApiTest {
             opprettet = ZonedDateTime.now(),
             emneknagger = setOf("Søknadsbehandling"),
             tilstand =
-            when (tilstand) {
-                OPPRETTET -> Oppgave.Opprettet
-                KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
-                UNDER_BEHANDLING -> Oppgave.UnderBehandling
-                FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
-            },
+                when (tilstand) {
+                    OPPRETTET -> Oppgave.Opprettet
+                    KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
+                    UNDER_BEHANDLING -> Oppgave.UnderBehandling
+                    FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
+                },
         )
     }
 

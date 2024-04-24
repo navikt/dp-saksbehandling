@@ -33,11 +33,11 @@ private fun DataSource.hentEndretTidspunkt(personId: UUID): Timestamp {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     SELECT endret_tidspunkt
                     FROM   person_v1
                     WHERE  id = :id
-                """.trimIndent(),
+                    """.trimIndent(),
                 paramMap = mapOf("id" to personId),
             ).map { row ->
                 row.sqlTimestamp("endret_tidspunkt")
