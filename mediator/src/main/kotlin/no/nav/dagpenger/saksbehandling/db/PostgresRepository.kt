@@ -6,6 +6,10 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DBUtils.norskZonedDateTime
 import no.nav.dagpenger.saksbehandling.logger
@@ -198,6 +202,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
                         tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                        tilstand2 = row.string("tilstand").let { tilstand ->
+                            when (tilstand) {
+                                OPPRETTET.name -> Oppgave.Opprettet
+                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                            }
+                        },
                     )
                 }.asList,
             )
@@ -265,7 +278,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 paramMap = mapOf(
                     "id" to oppgave.oppgaveId,
                     "behandling_id" to oppgave.behandlingId,
-                    "tilstand" to oppgave.tilstand.name,
+                    "tilstand" to oppgave.tilstand().type.name,
                     "opprettet" to oppgave.opprettet,
                     "saksbehandler_ident" to oppgave.saksbehandlerIdent,
                 ),
@@ -334,15 +347,24 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     paramMap = mapOf(
                         "tilstand" to tilstand.name,
                     ),
-                ).map {
+                ).map { row ->
                     Oppgave.rehydrer(
-                        oppgaveId = it.uuid("id"),
-                        ident = it.string("ident"),
-                        saksbehandlerIdent = it.stringOrNull("saksbehandler_ident"),
-                        behandlingId = it.uuid("behandling_id"),
-                        opprettet = it.norskZonedDateTime("opprettet"),
-                        emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
-                        tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                        oppgaveId = row.uuid("id"),
+                        ident = row.string("ident"),
+                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
+                        behandlingId = row.uuid("behandling_id"),
+                        opprettet = row.norskZonedDateTime("opprettet"),
+                        emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
+                        tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                        tilstand2 = row.string("tilstand").let { tilstand ->
+                            when (tilstand) {
+                                OPPRETTET.name -> Oppgave.Opprettet
+                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                            }
+                        },
                     )
                 }.asList,
             )
@@ -419,6 +441,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
                         tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                        tilstand2 = row.string("tilstand").let { tilstand ->
+                            when (tilstand) {
+                                OPPRETTET.name -> Oppgave.Opprettet
+                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                            }
+                        },
                     )
                 }.asSingle,
             )
@@ -439,15 +470,24 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     paramMap = mapOf(
                         "ident" to ident,
                     ),
-                ).map {
+                ).map { row ->
                     Oppgave.rehydrer(
-                        oppgaveId = it.uuid("id"),
-                        ident = it.string("ident"),
-                        saksbehandlerIdent = it.stringOrNull("saksbehandler_ident"),
-                        behandlingId = it.uuid("behandling_id"),
-                        opprettet = it.norskZonedDateTime("opprettet"),
-                        emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
-                        tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                        oppgaveId = row.uuid("id"),
+                        ident = row.string("ident"),
+                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
+                        behandlingId = row.uuid("behandling_id"),
+                        opprettet = row.norskZonedDateTime("opprettet"),
+                        emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
+                        tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                        tilstand2 = row.string("tilstand").let { tilstand ->
+                            when (tilstand) {
+                                OPPRETTET.name -> Oppgave.Opprettet
+                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                            }
+                        },
                     )
                 }.asList,
             )
@@ -475,15 +515,24 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 ),
             )
             session.run(
-                queryOf.map {
+                queryOf.map { row ->
                     Oppgave.rehydrer(
-                        oppgaveId = it.uuid("id"),
-                        ident = it.string("ident"),
-                        saksbehandlerIdent = it.stringOrNull("saksbehandler_ident"),
-                        behandlingId = it.uuid("behandling_id"),
-                        opprettet = it.norskZonedDateTime("opprettet"),
-                        emneknagger = hentEmneknaggerForOppgave(it.uuid("id")),
-                        tilstand = it.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                        oppgaveId = row.uuid("id"),
+                        ident = row.string("ident"),
+                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
+                        behandlingId = row.uuid("behandling_id"),
+                        opprettet = row.norskZonedDateTime("opprettet"),
+                        emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
+                        tilstand = row.string("tilstand").let { Oppgave.Tilstand.Type.valueOf(it) },
+                        tilstand2 = row.string("tilstand").let { tilstand ->
+                            when (tilstand) {
+                                OPPRETTET.name -> Oppgave.Opprettet
+                                KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                                UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                                FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                                else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                            }
+                        },
                     )
                 }.asList,
             )

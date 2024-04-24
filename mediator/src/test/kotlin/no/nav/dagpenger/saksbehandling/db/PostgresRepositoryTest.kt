@@ -227,7 +227,7 @@ class PostgresRepositoryTest {
             repo.lagre(testBehandling)
             repo.hentOppgave(oppgaveIdTest).tilstand shouldBe KLAR_TIL_BEHANDLING
 
-            repo.lagre(testBehandling.copy(oppgaver = mutableListOf(testBehandling.oppgaver.first().copy(tilstand = FERDIG_BEHANDLET))))
+            repo.lagre(testBehandling.copy(oppgaver = mutableListOf(testBehandling.oppgaver.first().copy(tilstand2 = Oppgave.FerdigBehandlet))))
             repo.hentOppgave(oppgaveIdTest).tilstand shouldBe FERDIG_BEHANDLET
         }
     }
@@ -244,23 +244,25 @@ class PostgresRepositoryTest {
 
     @Test
     fun `Skal kunne hente oppgaver basert på tilstand`() {
-        val oppgaveId3 = UUIDv7.ny()
-        val testPerson2 = Person(ident = "02020288888")
         val behandlingId2 = UUIDv7.ny()
         val oppgaveId2 = UUIDv7.ny()
-        val oppgave2 = Oppgave(
+        val oppgave2 = Oppgave.rehydrer(
             oppgaveId = oppgaveId2,
-            ident = testPerson2.ident,
+            ident = testPerson.ident,
             emneknagger = setOf("Søknadsbehandling, Utland"),
             opprettet = opprettetNå,
             behandlingId = behandlingId2,
             tilstand = KLAR_TIL_BEHANDLING,
+            tilstand2 = Oppgave.KlarTilBehandling,
+            saksbehandlerIdent = null,
         )
+
+        val oppgaveId3 = UUIDv7.ny()
         val testBehandling2 = Behandling(
             behandlingId = behandlingId2,
-            person = testPerson2,
+            person = testPerson,
             opprettet = opprettetNå,
-            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = FERDIG_BEHANDLET)),
+            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand2 = Oppgave.FerdigBehandlet)),
         )
 
         withMigratedDb { ds ->
@@ -404,6 +406,12 @@ class PostgresRepositoryTest {
             behandlingId = behandlingId,
             tilstand = tilstand,
             saksbehandlerIdent = saksbehandlerIdent,
+            tilstand2 = when (tilstand) {
+                OPPRETTET -> Oppgave.Opprettet
+                KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
+                UNDER_BEHANDLING -> Oppgave.UnderBehandling
+                FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
+            },
         )
         return Behandling(
             behandlingId = behandlingId,

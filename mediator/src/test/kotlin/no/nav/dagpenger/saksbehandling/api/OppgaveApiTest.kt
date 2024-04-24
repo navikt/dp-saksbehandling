@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
@@ -424,6 +425,12 @@ class OppgaveApiTest {
             behandlingId = UUIDv7.ny(),
             tilstand = tilstand,
             saksbehandlerIdent = saksbehandlerIdent,
+            tilstand2 = when (tilstand) {
+                OPPRETTET -> Oppgave.Opprettet
+                KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
+                UNDER_BEHANDLING -> Oppgave.UnderBehandling
+                FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
+            },
         )
     }
 

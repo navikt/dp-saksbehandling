@@ -60,6 +60,7 @@ class MediatorTest {
             )
 
             val oppgaverKlarTilBehandling = mediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+
             oppgaverKlarTilBehandling.size shouldBe 1
             val oppgave = oppgaverKlarTilBehandling.single()
             oppgave.behandlingId shouldBe behandlingId
