@@ -227,7 +227,7 @@ class PostgresRepositoryTest {
             repo.lagre(testBehandling)
             repo.hentOppgave(oppgaveIdTest).tilstand() shouldBe KLAR_TIL_BEHANDLING
 
-            repo.lagre(testBehandling.copy(oppgaver = mutableListOf(testBehandling.oppgaver.first().copy(tilstand2 = Oppgave.FerdigBehandlet))))
+            repo.lagre(testBehandling.copy(oppgaver = mutableListOf(testBehandling.oppgaver.first().copy(tilstand = Oppgave.FerdigBehandlet))))
             repo.hentOppgave(oppgaveIdTest).tilstand() shouldBe FERDIG_BEHANDLET
         }
     }
@@ -249,12 +249,11 @@ class PostgresRepositoryTest {
         val oppgave2 = Oppgave.rehydrer(
             oppgaveId = oppgaveId2,
             ident = testPerson.ident,
-            emneknagger = setOf("Søknadsbehandling, Utland"),
-            opprettet = opprettetNå,
-            behandlingId = behandlingId2,
-            tilstand = KLAR_TIL_BEHANDLING,
-            tilstand2 = Oppgave.KlarTilBehandling,
             saksbehandlerIdent = null,
+            behandlingId = behandlingId2,
+            opprettet = opprettetNå,
+            emneknagger = setOf("Søknadsbehandling, Utland"),
+            tilstand2 = Oppgave.KlarTilBehandling,
         )
 
         val oppgaveId3 = UUIDv7.ny()
@@ -262,7 +261,7 @@ class PostgresRepositoryTest {
             behandlingId = behandlingId2,
             person = testPerson,
             opprettet = opprettetNå,
-            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand2 = Oppgave.FerdigBehandlet)),
+            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet)),
         )
 
         withMigratedDb { ds ->
@@ -292,13 +291,13 @@ class PostgresRepositoryTest {
             emneknagger = setOf("Søknadsbehandling, Utland"),
             opprettet = opprettetNå,
             behandlingId = behandlingId2,
-            tilstand = KLAR_TIL_BEHANDLING,
+            tilstand2 = Oppgave.KlarTilBehandling,
         )
         val testBehandling2 = Behandling(
             behandlingId = behandlingId2,
             person = testPerson2,
             opprettet = opprettetNå,
-            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand2 = Oppgave.FerdigBehandlet)),
+            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet)),
         )
 
         withMigratedDb { ds ->
@@ -401,11 +400,10 @@ class PostgresRepositoryTest {
         val oppgave = Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = testPerson.ident,
-            emneknagger = setOf("Søknadsbehandling"),
-            opprettet = opprettet,
-            behandlingId = behandlingId,
-            tilstand = tilstand,
             saksbehandlerIdent = saksbehandlerIdent,
+            behandlingId = behandlingId,
+            opprettet = opprettet,
+            emneknagger = setOf("Søknadsbehandling"),
             tilstand2 = when (tilstand) {
                 OPPRETTET -> Oppgave.Opprettet
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling

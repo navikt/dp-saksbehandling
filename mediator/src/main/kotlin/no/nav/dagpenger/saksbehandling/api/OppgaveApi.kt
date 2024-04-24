@@ -151,7 +151,7 @@ fun lagOppgaveDTO(oppgave: Oppgave, person: PDLPersonIntern): OppgaveDTO =
         saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
-        tilstand = oppgave.tilstand.tilOppgaveTilstandDTO(),
+        tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
         journalpostIder = listOf(),
     )
 
@@ -173,7 +173,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() = OppgaveOversiktDTO(
     behandlingId = this.behandlingId,
     tidspunktOpprettet = this.opprettet,
     emneknagger = this.emneknagger.toList(),
-    tilstand = this.tilstand.tilOppgaveTilstandDTO(),
+    tilstand = this.tilstand().tilOppgaveTilstandDTO(),
     saksbehandlerIdent = this.saksbehandlerIdent,
 )
 

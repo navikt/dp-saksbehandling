@@ -418,11 +418,10 @@ class OppgaveApiTest {
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = testIdent,
-            emneknagger = setOf("Søknadsbehandling"),
-            opprettet = ZonedDateTime.now(),
-            behandlingId = UUIDv7.ny(),
-            tilstand = tilstand,
             saksbehandlerIdent = saksbehandlerIdent,
+            behandlingId = UUIDv7.ny(),
+            opprettet = ZonedDateTime.now(),
+            emneknagger = setOf("Søknadsbehandling"),
             tilstand2 = when (tilstand) {
                 OPPRETTET -> Oppgave.Opprettet
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling

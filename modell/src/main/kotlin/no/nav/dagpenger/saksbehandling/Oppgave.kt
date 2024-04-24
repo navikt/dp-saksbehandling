@@ -18,8 +18,7 @@ data class Oppgave private constructor(
     var saksbehandlerIdent: String? = null,
     val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
-    var tilstand: Tilstand.Type,
-    private var tilstand2: Tilstand = Opprettet,
+    private var tilstand: Tilstand = Opprettet,
 ) {
     constructor(
         oppgaveId: UUID,
@@ -27,7 +26,7 @@ data class Oppgave private constructor(
         behandlingId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: ZonedDateTime,
-        tilstand: Tilstand.Type = OPPRETTET,
+        tilstand2: Tilstand = Opprettet,
     ) : this(
         oppgaveId = oppgaveId,
         ident = ident,
@@ -35,7 +34,7 @@ data class Oppgave private constructor(
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         behandlingId = behandlingId,
-        tilstand = tilstand,
+        tilstand = tilstand2,
     )
 
     companion object {
@@ -46,7 +45,6 @@ data class Oppgave private constructor(
             behandlingId: UUID,
             opprettet: ZonedDateTime,
             emneknagger: Set<String>,
-            tilstand: Tilstand.Type,
             tilstand2: Tilstand,
         ): Oppgave {
             return Oppgave(
@@ -56,8 +54,7 @@ data class Oppgave private constructor(
                 saksbehandlerIdent = saksbehandlerIdent,
                 behandlingId = behandlingId,
                 _emneknagger = emneknagger.toMutableSet(),
-                tilstand = tilstand,
-                tilstand2 = tilstand2,
+                tilstand = tilstand2,
             )
         }
     }
@@ -65,37 +62,35 @@ data class Oppgave private constructor(
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
 
-    fun tilstand() = this.tilstand2.type
+    fun tilstand() = this.tilstand.type
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        tilstand2.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
+        tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
     fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
-        tilstand2.håndter(this, vedtakFattetHendelse)
+        tilstand.håndter(this, vedtakFattetHendelse)
     }
 
     fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        tilstand2.fjernAnsvar(this, oppgaveAnsvarHendelse)
+        tilstand.fjernAnsvar(this, oppgaveAnsvarHendelse)
     }
 
     fun tildel(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        tilstand2.tildel(this, oppgaveAnsvarHendelse)
+        tilstand.tildel(this, oppgaveAnsvarHendelse)
     }
 
     object Opprettet : Tilstand {
         override val type: Tilstand.Type = OPPRETTET
         override fun oppgaveKlarTilBehandling(oppgave: Oppgave, forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-            oppgave.tilstand2 = KlarTilBehandling
-            oppgave.tilstand = KLAR_TIL_BEHANDLING
+            oppgave.tilstand = KlarTilBehandling
         }
     }
 
     object KlarTilBehandling : Tilstand {
         override val type: Tilstand.Type = KLAR_TIL_BEHANDLING
         override fun tildel(oppgave: Oppgave, oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-            oppgave.tilstand2 = UnderBehandling
-            oppgave.tilstand = UNDER_BEHANDLING
+            oppgave.tilstand = UnderBehandling
             oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
         }
     }
@@ -103,8 +98,7 @@ data class Oppgave private constructor(
     object UnderBehandling : Tilstand {
         override val type: Tilstand.Type = UNDER_BEHANDLING
         override fun fjernAnsvar(oppgave: Oppgave, oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-            oppgave.tilstand2 = KlarTilBehandling
-            oppgave.tilstand = KLAR_TIL_BEHANDLING
+            oppgave.tilstand = KlarTilBehandling
             oppgave.saksbehandlerIdent = null
         }
     }
@@ -127,8 +121,7 @@ data class Oppgave private constructor(
         }
 
         fun håndter(oppgave: Oppgave, vedtakFattetHendelse: VedtakFattetHendelse) {
-            oppgave.tilstand2 = FerdigBehandlet
-            oppgave.tilstand = FERDIG_BEHANDLET
+            oppgave.tilstand = FerdigBehandlet
         }
 
         fun fjernAnsvar(oppgave: Oppgave, oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {

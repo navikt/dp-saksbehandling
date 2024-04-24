@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -44,7 +43,7 @@ data class Behandling(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = setOf("Søknadsbehandling"),
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                tilstand = OPPRETTET,
+                tilstand2 = Oppgave.Opprettet,
                 ident = person.ident,
                 behandlingId = behandlingId,
             ),
