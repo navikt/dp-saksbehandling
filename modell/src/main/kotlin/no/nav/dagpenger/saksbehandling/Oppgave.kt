@@ -26,7 +26,7 @@ data class Oppgave private constructor(
         behandlingId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: ZonedDateTime,
-        tilstand2: Tilstand = Opprettet,
+        tilstand: Tilstand = Opprettet,
     ) : this(
         oppgaveId = oppgaveId,
         ident = ident,
@@ -34,7 +34,7 @@ data class Oppgave private constructor(
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         behandlingId = behandlingId,
-        tilstand = tilstand2,
+        tilstand = tilstand,
     )
 
     companion object {
@@ -45,7 +45,7 @@ data class Oppgave private constructor(
             behandlingId: UUID,
             opprettet: ZonedDateTime,
             emneknagger: Set<String>,
-            tilstand2: Tilstand,
+            tilstand: Tilstand,
         ): Oppgave {
             return Oppgave(
                 oppgaveId = oppgaveId,
@@ -54,7 +54,7 @@ data class Oppgave private constructor(
                 saksbehandlerIdent = saksbehandlerIdent,
                 behandlingId = behandlingId,
                 _emneknagger = emneknagger.toMutableSet(),
-                tilstand = tilstand2,
+                tilstand = tilstand,
             )
         }
     }

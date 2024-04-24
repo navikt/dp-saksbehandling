@@ -422,7 +422,7 @@ class OppgaveApiTest {
             behandlingId = UUIDv7.ny(),
             opprettet = ZonedDateTime.now(),
             emneknagger = setOf("Søknadsbehandling"),
-            tilstand2 = when (tilstand) {
+            tilstand = when (tilstand) {
                 OPPRETTET -> Oppgave.Opprettet
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling

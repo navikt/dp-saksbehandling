@@ -43,7 +43,7 @@ data class Behandling(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = setOf("Søknadsbehandling"),
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                tilstand2 = Oppgave.Opprettet,
+                tilstand = Oppgave.Opprettet,
                 ident = person.ident,
                 behandlingId = behandlingId,
             ),

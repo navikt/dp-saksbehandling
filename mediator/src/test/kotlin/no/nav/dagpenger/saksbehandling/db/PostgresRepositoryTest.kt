@@ -253,7 +253,7 @@ class PostgresRepositoryTest {
             behandlingId = behandlingId2,
             opprettet = opprettetNå,
             emneknagger = setOf("Søknadsbehandling, Utland"),
-            tilstand2 = Oppgave.KlarTilBehandling,
+            tilstand = Oppgave.KlarTilBehandling,
         )
 
         val oppgaveId3 = UUIDv7.ny()
@@ -291,7 +291,7 @@ class PostgresRepositoryTest {
             emneknagger = setOf("Søknadsbehandling, Utland"),
             opprettet = opprettetNå,
             behandlingId = behandlingId2,
-            tilstand2 = Oppgave.KlarTilBehandling,
+            tilstand = Oppgave.KlarTilBehandling,
         )
         val testBehandling2 = Behandling(
             behandlingId = behandlingId2,
@@ -404,7 +404,7 @@ class PostgresRepositoryTest {
             behandlingId = behandlingId,
             opprettet = opprettet,
             emneknagger = setOf("Søknadsbehandling"),
-            tilstand2 = when (tilstand) {
+            tilstand = when (tilstand) {
                 OPPRETTET -> Oppgave.Opprettet
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling

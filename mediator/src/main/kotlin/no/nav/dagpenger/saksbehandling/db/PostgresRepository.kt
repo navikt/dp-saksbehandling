@@ -201,7 +201,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = behandlingId,
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-                        tilstand2 = row.string("tilstand").let { tilstand ->
+                        tilstand = row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
@@ -354,7 +354,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand2 = row.string("tilstand").let { tilstand ->
+                        tilstand = row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
@@ -438,7 +438,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-                        tilstand2 = row.string("tilstand").let { tilstand ->
+                        tilstand = row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
@@ -475,7 +475,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand2 = row.string("tilstand").let { tilstand ->
+                        tilstand = row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
@@ -519,7 +519,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand2 = row.string("tilstand").let { tilstand ->
+                        tilstand = row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
