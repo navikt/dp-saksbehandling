@@ -68,8 +68,8 @@ data class Oppgave private constructor(
         tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
-    fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
-        tilstand.håndter(this, vedtakFattetHendelse)
+    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse) {
+        tilstand.ferdigstill(this, vedtakFattetHendelse)
     }
 
     fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
@@ -120,7 +120,7 @@ data class Oppgave private constructor(
             throw IllegalStateException("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type")
         }
 
-        fun håndter(oppgave: Oppgave, vedtakFattetHendelse: VedtakFattetHendelse) {
+        fun ferdigstill(oppgave: Oppgave, vedtakFattetHendelse: VedtakFattetHendelse) {
             oppgave.tilstand = FerdigBehandlet
         }
 

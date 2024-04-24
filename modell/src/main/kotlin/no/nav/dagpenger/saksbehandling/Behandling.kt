@@ -34,7 +34,7 @@ data class Behandling(
     }
 
     fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
-        this.oppgaver.single().håndter(vedtakFattetHendelse)
+        this.oppgaver.single().ferdigstill(vedtakFattetHendelse)
     }
 
     fun håndter(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {

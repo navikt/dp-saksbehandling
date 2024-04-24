@@ -12,4 +12,5 @@ dependencies {
     implementation(libs.jackson.kotlin)
     implementation("com.fasterxml.uuid:java-uuid-generator:5.0.0")
     testImplementation(libs.bundles.kotest.assertions)
+    testImplementation("org.junit.jupiter:junit-jupiter-params:${libs.versions.junit.get()}")
 }
