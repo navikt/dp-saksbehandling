@@ -61,15 +61,17 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
-            val yngsteBehandling = lagBehandlingOgOppgaveMedTilstand(
-                tilstand = KLAR_TIL_BEHANDLING,
-                opprettet = opprettetNå,
-            )
+            val yngsteBehandling =
+                lagBehandlingOgOppgaveMedTilstand(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    opprettet = opprettetNå,
+                )
 
-            val eldsteBehandling = lagBehandlingOgOppgaveMedTilstand(
-                tilstand = KLAR_TIL_BEHANDLING,
-                opprettet = opprettetNå.minusDays(10),
-            )
+            val eldsteBehandling =
+                lagBehandlingOgOppgaveMedTilstand(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    opprettet = opprettetNå.minusDays(10),
+                )
 
             repo.lagre(yngsteBehandling)
             repo.lagre(eldsteBehandling)
@@ -87,17 +89,19 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
-            val ledigBehandling = lagBehandlingOgOppgaveMedTilstand(
-                tilstand = KLAR_TIL_BEHANDLING,
-                opprettet = opprettetNå,
-            )
+            val ledigBehandling =
+                lagBehandlingOgOppgaveMedTilstand(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    opprettet = opprettetNå,
+                )
 
             val saksbehandlerIdent = "NAVIdent"
-            val tildeltBehandling = lagBehandlingOgOppgaveMedTilstand(
-                tilstand = KLAR_TIL_BEHANDLING,
-                opprettet = opprettetNå.minusDays(10),
-                saksbehandlerIdent = saksbehandlerIdent,
-            )
+            val tildeltBehandling =
+                lagBehandlingOgOppgaveMedTilstand(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    opprettet = opprettetNå.minusDays(10),
+                    saksbehandlerIdent = saksbehandlerIdent,
+                )
 
             repo.lagre(ledigBehandling)
             repo.lagre(tildeltBehandling)
@@ -114,15 +118,17 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
-            val ledigBehandling = lagBehandlingOgOppgaveMedTilstand(
-                tilstand = KLAR_TIL_BEHANDLING,
-                opprettet = opprettetNå,
-            )
+            val ledigBehandling =
+                lagBehandlingOgOppgaveMedTilstand(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    opprettet = opprettetNå,
+                )
 
-            val tildeltBehandling = lagBehandlingOgOppgaveMedTilstand(
-                tilstand = UNDER_BEHANDLING,
-                opprettet = opprettetNå.minusDays(10),
-            )
+            val tildeltBehandling =
+                lagBehandlingOgOppgaveMedTilstand(
+                    tilstand = UNDER_BEHANDLING,
+                    opprettet = opprettetNå.minusDays(10),
+                )
 
             repo.lagre(ledigBehandling)
             repo.lagre(tildeltBehandling)
@@ -229,7 +235,8 @@ class PostgresRepositoryTest {
 
             repo.lagre(
                 testBehandling.copy(
-                    oppgaver = mutableListOf(
+                    oppgaver =
+                    mutableListOf(
                         testBehandling.oppgaver.first().copy(tilstand = Oppgave.FerdigBehandlet),
                     ),
                 ),
@@ -252,26 +259,29 @@ class PostgresRepositoryTest {
     fun `Skal kunne hente oppgaver basert på tilstand`() {
         val behandlingId2 = UUIDv7.ny()
         val oppgaveId2 = UUIDv7.ny()
-        val oppgave2 = Oppgave.rehydrer(
-            oppgaveId = oppgaveId2,
-            ident = testPerson.ident,
-            saksbehandlerIdent = null,
-            behandlingId = behandlingId2,
-            opprettet = opprettetNå,
-            emneknagger = setOf("Søknadsbehandling, Utland"),
-            tilstand = Oppgave.KlarTilBehandling,
-        )
+        val oppgave2 =
+            Oppgave.rehydrer(
+                oppgaveId = oppgaveId2,
+                ident = testPerson.ident,
+                saksbehandlerIdent = null,
+                behandlingId = behandlingId2,
+                opprettet = opprettetNå,
+                emneknagger = setOf("Søknadsbehandling, Utland"),
+                tilstand = Oppgave.KlarTilBehandling,
+            )
 
         val oppgaveId3 = UUIDv7.ny()
-        val testBehandling2 = Behandling(
-            behandlingId = behandlingId2,
-            person = testPerson,
-            opprettet = opprettetNå,
-            oppgaver = mutableListOf(
-                oppgave2,
-                oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
-            ),
-        )
+        val testBehandling2 =
+            Behandling(
+                behandlingId = behandlingId2,
+                person = testPerson,
+                opprettet = opprettetNå,
+                oppgaver =
+                mutableListOf(
+                    oppgave2,
+                    oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
+                ),
+            )
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
@@ -294,23 +304,26 @@ class PostgresRepositoryTest {
         val testPerson2 = Person(ident = "02020288888")
         val behandlingId2 = UUIDv7.ny()
         val oppgaveId2 = UUIDv7.ny()
-        val oppgave2 = Oppgave(
-            oppgaveId = oppgaveId2,
-            ident = testPerson2.ident,
-            emneknagger = setOf("Søknadsbehandling, Utland"),
-            opprettet = opprettetNå,
-            behandlingId = behandlingId2,
-            tilstand = Oppgave.KlarTilBehandling,
-        )
-        val testBehandling2 = Behandling(
-            behandlingId = behandlingId2,
-            person = testPerson2,
-            opprettet = opprettetNå,
-            oppgaver = mutableListOf(
-                oppgave2,
-                oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
-            ),
-        )
+        val oppgave2 =
+            Oppgave(
+                oppgaveId = oppgaveId2,
+                ident = testPerson2.ident,
+                emneknagger = setOf("Søknadsbehandling, Utland"),
+                opprettet = opprettetNå,
+                behandlingId = behandlingId2,
+                tilstand = Oppgave.KlarTilBehandling,
+            )
+        val testBehandling2 =
+            Behandling(
+                behandlingId = behandlingId2,
+                person = testPerson2,
+                opprettet = opprettetNå,
+                oppgaver =
+                mutableListOf(
+                    oppgave2,
+                    oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
+                ),
+            )
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
@@ -420,7 +433,8 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = setOf(KLAR_TIL_BEHANDLING),
-                    periode = Søkefilter.Periode(
+                    periode =
+                    Søkefilter.Periode(
                         fom = enUkeSiden.plusDays(1).toLocalDate(),
                         tom = enUkeSiden.plusDays(2).toLocalDate(),
                     ),
@@ -430,7 +444,8 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = setOf(UNDER_BEHANDLING),
-                    periode = Søkefilter.Periode(
+                    periode =
+                    Søkefilter.Periode(
                         fom = enUkeSiden.minusDays(1).toLocalDate(),
                         tom = enUkeSiden.plusDays(2).toLocalDate(),
                     ),
@@ -440,7 +455,8 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = setOf(KLAR_TIL_BEHANDLING),
-                    periode = Søkefilter.Periode(
+                    periode =
+                    Søkefilter.Periode(
                         fom = opprettetNå.toLocalDate(),
                         tom = opprettetNå.toLocalDate(),
                     ),
@@ -455,20 +471,22 @@ class PostgresRepositoryTest {
         saksbehandlerIdent: String? = null,
     ): Behandling {
         val behandlingId = UUIDv7.ny()
-        val oppgave = Oppgave.rehydrer(
-            oppgaveId = UUIDv7.ny(),
-            ident = testPerson.ident,
-            saksbehandlerIdent = saksbehandlerIdent,
-            behandlingId = behandlingId,
-            opprettet = opprettet,
-            emneknagger = setOf("Søknadsbehandling"),
-            tilstand = when (tilstand) {
-                OPPRETTET -> Oppgave.Opprettet
-                KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
-                UNDER_BEHANDLING -> Oppgave.UnderBehandling
-                FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
-            },
-        )
+        val oppgave =
+            Oppgave.rehydrer(
+                oppgaveId = UUIDv7.ny(),
+                ident = testPerson.ident,
+                saksbehandlerIdent = saksbehandlerIdent,
+                behandlingId = behandlingId,
+                opprettet = opprettet,
+                emneknagger = setOf("Søknadsbehandling"),
+                tilstand =
+                when (tilstand) {
+                    OPPRETTET -> Oppgave.Opprettet
+                    KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
+                    UNDER_BEHANDLING -> Oppgave.UnderBehandling
+                    FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
+                },
+            )
         return Behandling(
             behandlingId = behandlingId,
             person = testPerson,

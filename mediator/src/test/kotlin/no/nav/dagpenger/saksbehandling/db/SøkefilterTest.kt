@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class SøkefilterTest {
-
     @Test
     fun `Skal kunne initialisere et søkefilter fra Ktor sin QueryParameters`() {
         Parameters.build {
@@ -19,14 +18,16 @@ class SøkefilterTest {
             this["tom"] = "2023-01-01"
             this["mineOppgaver"] = "true"
         }.let {
-            Søkefilter.fra(it, "testIdent") shouldBe Søkefilter(
-                periode = Søkefilter.Periode(
-                    fom = LocalDate.of(2021, 1, 1),
-                    tom = LocalDate.of(2023, 1, 1),
-                ),
-                tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
-                saksbehandlerIdent = "testIdent",
-            )
+            Søkefilter.fra(it, "testIdent") shouldBe
+                Søkefilter(
+                    periode =
+                    Søkefilter.Periode(
+                        fom = LocalDate.of(2021, 1, 1),
+                        tom = LocalDate.of(2023, 1, 1),
+                    ),
+                    tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                    saksbehandlerIdent = "testIdent",
+                )
         }
     }
 

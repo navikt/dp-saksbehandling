@@ -47,17 +47,20 @@ internal class BehandlingOpprettetMottak(
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
 
-            val erBeskyttetPerson = runBlocking {
-                val erSkjermetPerson = async {
-                    skjermingKlient.erSkjermetPerson(ident).getOrThrow()
-                }
+            val erBeskyttetPerson =
+                runBlocking {
+                    val erSkjermetPerson =
+                        async {
+                            skjermingKlient.erSkjermetPerson(ident).getOrThrow()
+                        }
 
-                val erAdressebeskyttetPerson = async {
-                    pdlKlient.erAdressebeskyttet(ident).getOrThrow()
-                }
+                    val erAdressebeskyttetPerson =
+                        async {
+                            pdlKlient.erAdressebeskyttet(ident).getOrThrow()
+                        }
 
-                erSkjermetPerson.await() || erAdressebeskyttetPerson.await()
-            }
+                    erSkjermetPerson.await() || erAdressebeskyttetPerson.await()
+                }
 
             if (!erBeskyttetPerson) {
                 mediator.opprettOppgaveForBehandling(
@@ -73,7 +76,8 @@ internal class BehandlingOpprettetMottak(
                     key = ident,
                     JsonMessage.newMessage(
                         eventName = "avbryt_behandling",
-                        map = mapOf(
+                        map =
+                        mapOf(
                             "behandlingId" to behandlingId,
                             "søknadId" to søknadId,
                             "ident" to ident,

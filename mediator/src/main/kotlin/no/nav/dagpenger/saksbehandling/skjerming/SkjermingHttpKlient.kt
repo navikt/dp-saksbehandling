@@ -20,7 +20,6 @@ internal class SkjermingHttpKlient(
     private val tokenProvider: () -> String,
     private val httpClient: HttpClient = createHttpClient(engine = CIO.create { }),
 ) : SkjermingKlient {
-
     override suspend fun erSkjermetPerson(ident: String): Result<Boolean> {
         return kotlin.runCatching {
             httpClient.post(urlString = skjermingApiUrl) {

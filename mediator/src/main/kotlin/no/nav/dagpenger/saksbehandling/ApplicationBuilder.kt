@@ -16,14 +16,16 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val repository = PostgresRepository(PostgresDataSourceBuilder.dataSource)
-    private val skjermingHttpKlient = SkjermingHttpKlient(
-        skjermingApiUrl = Configuration.skjermingApiUrl,
-        tokenProvider = Configuration.skjermingTokenProvider,
-    )
-    private val pdlKlient = PDLHttpKlient(
-        url = Configuration.pdlUrl,
-        tokenSupplier = Configuration.pdlTokenProvider,
-    )
+    private val skjermingHttpKlient =
+        SkjermingHttpKlient(
+            skjermingApiUrl = Configuration.skjermingApiUrl,
+            tokenProvider = Configuration.skjermingTokenProvider,
+        )
+    private val pdlKlient =
+        PDLHttpKlient(
+            url = Configuration.pdlUrl,
+            tokenSupplier = Configuration.pdlTokenProvider,
+        )
 
     private val mediator = Mediator(repository)
 

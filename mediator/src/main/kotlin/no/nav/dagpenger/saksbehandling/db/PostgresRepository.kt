@@ -19,7 +19,6 @@ import javax.sql.DataSource
 class DataNotFoundException(message: String) : RuntimeException(message)
 
 class PostgresRepository(private val dataSource: DataSource) : Repository {
-
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.lagre(person)
@@ -30,14 +29,16 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         run(
             queryOf(
                 //language=PostgreSQL
-                statement = """
-                     INSERT INTO person_v1
-                         (id, ident) 
-                     VALUES
-                         (:id, :ident) 
-                     ON CONFLICT (id) DO UPDATE SET ident = :ident
+                statement =
+                """
+                    INSERT INTO person_v1
+                        (id, ident) 
+                    VALUES
+                        (:id, :ident) 
+                    ON CONFLICT (id) DO UPDATE SET ident = :ident
                 """.trimIndent(),
-                paramMap = mapOf(
+                paramMap =
+                mapOf(
                     "id" to person.id,
                     "ident" to person.ident,
                 ),
@@ -50,12 +51,14 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             return session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                    SELECT * 
-                    FROM   person_v1
-                    WHERE  ident = :ident
+                    statement =
+                    """
+                        SELECT * 
+                        FROM   person_v1
+                        WHERE  ident = :ident
                     """.trimIndent(),
-                    paramMap = mapOf(
+                    paramMap =
+                    mapOf(
                         "ident" to ident,
                     ),
                 ).map { row ->
@@ -68,16 +71,16 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
-    override fun hentPerson(ident: String) =
-        finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
+    override fun hentPerson(ident: String) = finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
 
     override fun slettBehandling(behandlingId: UUID) {
-        val behandling = try {
-            hentBehandling(behandlingId)
-        } catch (e: DataNotFoundException) {
-            logger.warn("Behandling med id $behandlingId finnes ikke, sletter ikke noe")
-            return
-        }
+        val behandling =
+            try {
+                hentBehandling(behandlingId)
+            } catch (e: DataNotFoundException) {
+                logger.warn("Behandling med id $behandlingId finnes ikke, sletter ikke noe")
+                return
+            }
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val oppgaveIder = behandling.oppgaver.map { it.oppgaveId }
@@ -93,7 +96,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         run(
             queryOf(
                 //language=PostgreSQL
-                statement = """
+                statement =
+                """
                     DELETE FROM person_v1 pers 
                     WHERE pers.ident = :ident
                     AND NOT EXISTS(
@@ -156,11 +160,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                    SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
-                    FROM   behandling_v1 beha
-                    JOIN   person_v1     pers ON pers.id = beha.person_id
-                    WHERE  beha.id = :behandling_id
+                    statement =
+                    """
+                        SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
+                        FROM   behandling_v1 beha
+                        JOIN   person_v1     pers ON pers.id = beha.person_id
+                        WHERE  beha.id = :behandling_id
                     """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
@@ -181,15 +186,19 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
-    private fun hentOppgaverFraBehandling(behandlingId: UUID, ident: String): List<Oppgave> {
+    private fun hentOppgaverFraBehandling(
+        behandlingId: UUID,
+        ident: String,
+    ): List<Oppgave> {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                    SELECT id, tilstand, opprettet, saksbehandler_ident
-                    FROM   oppgave_v1
-                    WHERE  behandling_id = :behandling_id
+                    statement =
+                    """
+                        SELECT id, tilstand, opprettet, saksbehandler_ident
+                        FROM   oppgave_v1
+                        WHERE  behandling_id = :behandling_id
                     """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
@@ -201,7 +210,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = behandlingId,
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-                        tilstand = row.string("tilstand").let { tilstand ->
+                        tilstand =
+                        row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
@@ -221,10 +231,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                    SELECT emneknagg
-                    FROM   emneknagg_v1
-                    WHERE  oppgave_id = :oppgave_id
+                    statement =
+                    """
+                        SELECT emneknagg
+                        FROM   emneknagg_v1
+                        WHERE  oppgave_id = :oppgave_id
                     """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
@@ -238,14 +249,16 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         run(
             queryOf(
                 //language=PostgreSQL
-                statement = """
-                     INSERT INTO behandling_v1
-                         (id, person_id, opprettet)
-                     VALUES
-                         (:id, :person_id, :opprettet) 
-                     ON CONFLICT DO NOTHING
+                statement =
+                """
+                    INSERT INTO behandling_v1
+                        (id, person_id, opprettet)
+                    VALUES
+                        (:id, :person_id, :opprettet) 
+                    ON CONFLICT DO NOTHING
                 """.trimIndent(),
-                paramMap = mapOf(
+                paramMap =
+                mapOf(
                     "id" to behandling.behandlingId,
                     "person_id" to behandling.person.id,
                     "opprettet" to behandling.opprettet,
@@ -264,17 +277,19 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         run(
             queryOf(
                 //language=PostgreSQL
-                statement = """
-                     INSERT INTO oppgave_v1
-                         (id, behandling_id, tilstand, opprettet, saksbehandler_ident)
-                     VALUES
-                         (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident) 
-                     ON CONFLICT(id) DO UPDATE SET
-                      tilstand = :tilstand,
-                      saksbehandler_ident = :saksbehandler_ident
-                     
+                statement =
+                """
+                    INSERT INTO oppgave_v1
+                        (id, behandling_id, tilstand, opprettet, saksbehandler_ident)
+                    VALUES
+                        (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident) 
+                    ON CONFLICT(id) DO UPDATE SET
+                     tilstand = :tilstand,
+                     saksbehandler_ident = :saksbehandler_ident
+                    
                 """.trimIndent(),
-                paramMap = mapOf(
+                paramMap =
+                mapOf(
                     "id" to oppgave.oppgaveId,
                     "behandling_id" to oppgave.behandlingId,
                     "tilstand" to oppgave.tilstand().name,
@@ -286,12 +301,16 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         lagre(oppgave.oppgaveId, oppgave.emneknagger)
     }
 
-    private fun TransactionalSession.lagre(oppgaveId: UUID, emneknagger: Set<String>) {
+    private fun TransactionalSession.lagre(
+        oppgaveId: UUID,
+        emneknagger: Set<String>,
+    ) {
         emneknagger.forEach { emneknagg ->
             run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
+                    statement =
+                    """
                         INSERT INTO emneknagg_v1
                             (oppgave_id, emneknagg) 
                         VALUES
@@ -309,12 +328,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                    SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
-                    FROM   behandling_v1 beha
-                    JOIN   person_v1     pers ON pers.id = beha.person_id
-                    JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
-                    WHERE  oppg.id = :oppgave_id
+                    statement =
+                    """
+                        SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
+                        FROM   behandling_v1 beha
+                        JOIN   person_v1     pers ON pers.id = beha.person_id
+                        JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
+                        WHERE  oppg.id = :oppgave_id
                     """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
@@ -335,15 +355,17 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id, oppg.saksbehandler_ident
-                    FROM   oppgave_v1    oppg
-                    JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN   person_v1     pers ON pers.id = beha.person_id
-                    WHERE  oppg.tilstand = :tilstand
-                    ORDER BY oppg.opprettet
+                    statement =
+                    """
+                        SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id, oppg.saksbehandler_ident
+                        FROM   oppgave_v1    oppg
+                        JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
+                        JOIN   person_v1     pers ON pers.id = beha.person_id
+                        WHERE  oppg.tilstand = :tilstand
+                        ORDER BY oppg.opprettet
                     """.trimIndent(),
-                    paramMap = mapOf(
+                    paramMap =
+                    mapOf(
                         "tilstand" to tilstand.name,
                     ),
                 ).map { row ->
@@ -354,7 +376,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand = row.string("tilstand").let { tilstand ->
+                        tilstand =
+                        row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
@@ -371,27 +394,29 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
 
     override fun hentNesteOppgavenTil(saksbehandlerIdent: String): Oppgave? {
         sessionOf(dataSource).use { session ->
-            val oppgaveId = session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """
-                        UPDATE oppgave_v1
-                        SET saksbehandler_ident = :saksbehandler_ident
-                          , tilstand            = 'UNDER_BEHANDLING'
-                        WHERE id = (SELECT id
-                                    FROM  oppgave_v1
-                                    WHERE tilstand = 'KLAR_TIL_BEHANDLING'
-                                    AND   saksbehandler_ident IS NULL
-                                    ORDER BY opprettet
-                                        FETCH FIRST 1 ROWS ONLY)
-                        RETURNING *;
-                        
-                    """.trimIndent(),
-                    paramMap = mapOf("saksbehandler_ident" to saksbehandlerIdent),
-                ).map { row ->
-                    row.uuidOrNull("id")
-                }.asSingle,
-            )
+            val oppgaveId =
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                        """
+                            UPDATE oppgave_v1
+                            SET saksbehandler_ident = :saksbehandler_ident
+                              , tilstand            = 'UNDER_BEHANDLING'
+                            WHERE id = (SELECT id
+                                        FROM  oppgave_v1
+                                        WHERE tilstand = 'KLAR_TIL_BEHANDLING'
+                                        AND   saksbehandler_ident IS NULL
+                                        ORDER BY opprettet
+                                            FETCH FIRST 1 ROWS ONLY)
+                            RETURNING *;
+                            
+                        """.trimIndent(),
+                        paramMap = mapOf("saksbehandler_ident" to saksbehandlerIdent),
+                    ).map { row ->
+                        row.uuidOrNull("id")
+                    }.asSingle,
+                )
             return oppgaveId?.let {
                 hentOppgave(it)
             }
@@ -403,7 +428,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
+                    statement =
+                    """
                         SELECT id 
                         FROM oppgave_v1 
                         WHERE behandling_id = :behandling_id
@@ -421,12 +447,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                    SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
-                    FROM   oppgave_v1    oppg
-                    JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN   person_v1     pers ON pers.id = beha.person_id
-                    WHERE  oppg.id = :oppgave_id
+                    statement =
+                    """
+                        SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
+                        FROM   oppgave_v1    oppg
+                        JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
+                        JOIN   person_v1     pers ON pers.id = beha.person_id
+                        WHERE  oppg.id = :oppgave_id
                     """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
@@ -438,7 +465,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-                        tilstand = row.string("tilstand").let { tilstand ->
+                        tilstand =
+                        row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
@@ -457,14 +485,16 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """
-                    SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
-                    FROM   oppgave_v1    oppg
-                    JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN   person_v1     pers ON pers.id = beha.person_id
-                    WHERE  pers.ident = :ident
+                    statement =
+                    """
+                        SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
+                        FROM   oppgave_v1    oppg
+                        JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
+                        JOIN   person_v1     pers ON pers.id = beha.person_id
+                        WHERE  pers.ident = :ident
                     """.trimIndent(),
-                    paramMap = mapOf(
+                    paramMap =
+                    mapOf(
                         "ident" to ident,
                     ),
                 ).map { row ->
@@ -475,7 +505,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand = row.string("tilstand").let { tilstand ->
+                        tilstand =
+                        row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
@@ -498,7 +529,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
 
             //language=PostgreSQL
-            val sql = """
+            val sql =
+                """
                     SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
                     FROM   oppgave_v1    oppg
                     JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
@@ -508,15 +540,17 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     AND    date_trunc('day', oppg.opprettet) >= :fom
                 """ + saksBehandlerClause
 
-            val queryOf = queryOf(
-                statement = sql.trimIndent(),
-                paramMap = mapOf(
-                    "tilstander" to tilstander,
-                    "fom" to søkeFilter.periode.fom,
-                    "tom" to søkeFilter.periode.tom,
-                    "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                ),
-            )
+            val queryOf =
+                queryOf(
+                    statement = sql.trimIndent(),
+                    paramMap =
+                    mapOf(
+                        "tilstander" to tilstander,
+                        "fom" to søkeFilter.periode.fom,
+                        "tom" to søkeFilter.periode.tom,
+                        "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                    ),
+                )
             session.run(
                 queryOf.map { row ->
                     Oppgave.rehydrer(
@@ -526,7 +560,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         opprettet = row.norskZonedDateTime("opprettet"),
                         emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand = row.string("tilstand").let { tilstand ->
+                        tilstand =
+                        row.string("tilstand").let { tilstand ->
                             when (tilstand) {
                                 OPPRETTET.name -> Oppgave.Opprettet
                                 KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling

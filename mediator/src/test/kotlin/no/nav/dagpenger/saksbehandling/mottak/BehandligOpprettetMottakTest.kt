@@ -31,12 +31,14 @@ class BehandligOpprettetMottakTest {
 
     private val testRapid = TestRapid()
     private val mediatorMock = mockk<Mediator>(relaxed = true)
-    val skjermetKlientMock = mockk<SkjermingKlient>().also {
-        coEvery { it.erSkjermetPerson(testIdent) }.returns(Result.success(false))
-    }
-    val pdlKlientMock = mockk<PDLKlient>().also {
-        coEvery { it.erAdressebeskyttet(testIdent) }.returns(Result.success(false))
-    }
+    val skjermetKlientMock =
+        mockk<SkjermingKlient>().also {
+            coEvery { it.erSkjermetPerson(testIdent) }.returns(Result.success(false))
+        }
+    val pdlKlientMock =
+        mockk<PDLKlient>().also {
+            coEvery { it.erAdressebeskyttet(testIdent) }.returns(Result.success(false))
+        }
 
     init {
         BehandlingOpprettetMottak(testRapid, mediatorMock, skjermetKlientMock, pdlKlientMock)

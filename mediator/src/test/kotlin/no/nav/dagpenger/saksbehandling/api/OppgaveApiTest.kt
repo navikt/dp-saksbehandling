@@ -49,12 +49,13 @@ class OppgaveApiTest {
     private val testNAVIdent = "Z999999"
     private val fødselsdato = LocalDate.of(2000, 1, 1)
     private val mockAzure = mockAzure()
-    private val gyldigToken = mockAzure.lagTokenMedClaims(
-        mapOf(
-            "groups" to listOf("SaksbehandlerADGruppe"),
-            "NAVident" to testNAVIdent,
-        ),
-    )
+    private val gyldigToken =
+        mockAzure.lagTokenMedClaims(
+            mapOf(
+                "groups" to listOf("SaksbehandlerADGruppe"),
+                "NAVident" to testNAVIdent,
+            ),
+        )
 
     @Test
     fun `Skal avvise kall uten autoriserte AD grupper`() {
@@ -68,9 +69,10 @@ class OppgaveApiTest {
     fun `Hent alle oppgaver klar til behandling hvis ingen query parametere er gitt`() {
         val oppgave1 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = testNAVIdent)
         val oppgave2 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = null)
-        val mediatorMock = mockk<Mediator>().also {
-            every { it.søk(Søkefilter.DEFAULT_SØKEFILTER) } returns listOf(oppgave1, oppgave2)
-        }
+        val mediatorMock =
+            mockk<Mediator>().also {
+                every { it.søk(Søkefilter.DEFAULT_SØKEFILTER) } returns listOf(oppgave1, oppgave2)
+            }
 
         withOppgaveApi(mediatorMock) {
             client.get("/oppgave") { autentisert() }.let { response ->
@@ -78,45 +80,49 @@ class OppgaveApiTest {
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
                 //language=JSON
-                json shouldEqualSpecifiedJsonIgnoringOrder """ [{
-                   "oppgaveId": "${oppgave1.oppgaveId}",
-                   "behandlingId": "${oppgave1.behandlingId}",
-                   "personIdent": "${oppgave1.ident}",
-                   "emneknagger": [
-                     "Søknadsbehandling"
-                   ],
-                   "tilstand": "KLAR_TIL_BEHANDLING",    
-                   "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
-                 },
-                 {
-                 "oppgaveId": "${oppgave2.oppgaveId}",
-                 "behandlingId": "${oppgave2.behandlingId}",
-                 "personIdent": "${oppgave2.ident}",
-                 "emneknagger": [
-                 "Søknadsbehandling"
-                 ],
-                 "tilstand": "KLAR_TIL_BEHANDLING"
-                 }]
-                """.trimIndent()
+                json shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                     [{
+                      "oppgaveId": "${oppgave1.oppgaveId}",
+                      "behandlingId": "${oppgave1.behandlingId}",
+                      "personIdent": "${oppgave1.ident}",
+                      "emneknagger": [
+                        "Søknadsbehandling"
+                      ],
+                      "tilstand": "KLAR_TIL_BEHANDLING",    
+                      "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
+                    },
+                    {
+                    "oppgaveId": "${oppgave2.oppgaveId}",
+                    "behandlingId": "${oppgave2.behandlingId}",
+                    "personIdent": "${oppgave2.ident}",
+                    "emneknagger": [
+                    "Søknadsbehandling"
+                    ],
+                    "tilstand": "KLAR_TIL_BEHANDLING"
+                    }]
+                    """.trimIndent()
             }
         }
     }
 
     @Test
     fun `Hent alle oppgaver med tilstander basert på query parameter`() {
-        val mediatorMock = mockk<Mediator>().also {
-            every {
-                it.søk(
-                    Søkefilter(
-                        periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
-                        tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
-                    ),
-                )
-            } returns listOf(
-                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-            )
-        }
+        val mediatorMock =
+            mockk<Mediator>().also {
+                every {
+                    it.søk(
+                        Søkefilter(
+                            periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                            tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                        ),
+                    )
+                } returns
+                    listOf(
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                    )
+            }
 
         withOppgaveApi(mediatorMock) {
             client.get("/oppgave?tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING") { autentisert() }
@@ -135,23 +141,26 @@ class OppgaveApiTest {
 
     @Test
     fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
-        val mediatorMock = mockk<Mediator>().also {
-            every {
-                it.søk(
-                    Søkefilter(
-                        periode = Søkefilter.Periode(
-                            fom = LocalDate.parse("2021-01-01"),
-                            tom = LocalDate.parse("2023-01-01"),
+        val mediatorMock =
+            mockk<Mediator>().also {
+                every {
+                    it.søk(
+                        Søkefilter(
+                            periode =
+                            Søkefilter.Periode(
+                                fom = LocalDate.parse("2021-01-01"),
+                                tom = LocalDate.parse("2023-01-01"),
+                            ),
+                            tilstand = setOf(UNDER_BEHANDLING),
+                            saksbehandlerIdent = testNAVIdent,
                         ),
-                        tilstand = setOf(UNDER_BEHANDLING),
-                        saksbehandlerIdent = testNAVIdent,
-                    ),
-                )
-            } returns listOf(
-                lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
-                lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
-            )
-        }
+                    )
+                } returns
+                    listOf(
+                        lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
+                        lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
+                    )
+            }
 
         withOppgaveApi(mediatorMock) {
             client.get("/oppgave?tilstand=$UNDER_BEHANDLING&fom=2021-01-01&tom=2023-01-01&mineOppgaver=true") { autentisert() }
@@ -171,9 +180,10 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne hente og få tildelt neste oppgave`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, testNAVIdent)
-        val mediatorMock = mockk<Mediator>().also {
-            every { it.hentNesteOppgavenTil(testNAVIdent) } returns oppgave
-        }
+        val mediatorMock =
+            mockk<Mediator>().also {
+                every { it.hentNesteOppgavenTil(testNAVIdent) } returns oppgave
+            }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
@@ -183,31 +193,34 @@ class OppgaveApiTest {
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
                 //language=JSON
-                json shouldEqualSpecifiedJsonIgnoringOrder """ {
-                      "behandlingId": "${oppgave.behandlingId}",
-                      "personIdent": "$testIdent",
-                      "person": {
-                        "ident": "$testIdent",
-                        "fornavn": "PETTER",
-                        "etternavn": "SMART",
-                        "fodselsdato": "2000-01-01",
-                        "kjonn": "UKJENT",
-                        "statsborgerskap": "NOR"
-                      },
-                      "saksbehandlerIdent": "$testNAVIdent",
-                      "emneknagger": ["Søknadsbehandling"],
-                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
-                      }
-                """.trimIndent()
+                json shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                     {
+                    "behandlingId": "${oppgave.behandlingId}",
+                    "personIdent": "$testIdent",
+                    "person": {
+                      "ident": "$testIdent",
+                      "fornavn": "PETTER",
+                      "etternavn": "SMART",
+                      "fodselsdato": "2000-01-01",
+                      "kjonn": "UKJENT",
+                      "statsborgerskap": "NOR"
+                    },
+                    "saksbehandlerIdent": "$testNAVIdent",
+                    "emneknagger": ["Søknadsbehandling"],
+                    "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                    }
+                    """.trimIndent()
             }
         }
     }
 
     @Test
     fun `404 når det ikke finnes noen neste oppgave for saksbehandler`() {
-        val mediatorMock = mockk<Mediator>().also {
-            every { it.hentNesteOppgavenTil(testNAVIdent) } returns null
-        }
+        val mediatorMock =
+            mockk<Mediator>().also {
+                every { it.hentNesteOppgavenTil(testNAVIdent) } returns null
+            }
         val pdlMock = mockk<PDLKlient>()
 
         withOppgaveApi(mediatorMock, pdlMock) {
@@ -238,21 +251,23 @@ class OppgaveApiTest {
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
                 //language=JSON
-                json shouldEqualSpecifiedJsonIgnoringOrder """ {
-                      "behandlingId": "${testOppgave.behandlingId}",
-                      "personIdent": "$testIdent",
-                      "person": {
-                        "ident": "$testIdent",
-                        "fornavn": "PETTER",
-                        "etternavn": "SMART",
-                        "fodselsdato": "2000-01-01",
-                        "kjonn": "UKJENT",
-                        "statsborgerskap": "NOR"
-                      },
-                      "emneknagger": ["Søknadsbehandling"],
-                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
-                      }
-                """.trimIndent()
+                json shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                     {
+                    "behandlingId": "${testOppgave.behandlingId}",
+                    "personIdent": "$testIdent",
+                    "person": {
+                      "ident": "$testIdent",
+                      "fornavn": "PETTER",
+                      "etternavn": "SMART",
+                      "fodselsdato": "2000-01-01",
+                      "kjonn": "UKJENT",
+                      "statsborgerskap": "NOR"
+                    },
+                    "emneknagger": ["Søknadsbehandling"],
+                    "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                    }
+                    """.trimIndent()
             }
         }
     }
@@ -303,21 +318,23 @@ class OppgaveApiTest {
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
                 //language=JSON
-                json shouldEqualSpecifiedJsonIgnoringOrder """ {
-                      "behandlingId": "${testOppgave.behandlingId}",
-                      "personIdent": "12345612345",
-                      "person": {
-                        "ident": "12345612345",
-                        "fornavn": "PETTER",
-                        "etternavn": "SMART",
-                        "fodselsdato": "2000-01-01",
-                        "kjonn": "UKJENT",
-                        "statsborgerskap": "NOR"
-                      },
-                      "emneknagger": ["Søknadsbehandling"],
-                      "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}"
-                      }
-                """.trimIndent()
+                json shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                     {
+                    "behandlingId": "${testOppgave.behandlingId}",
+                    "personIdent": "12345612345",
+                    "person": {
+                      "ident": "12345612345",
+                      "fornavn": "PETTER",
+                      "etternavn": "SMART",
+                      "fodselsdato": "2000-01-01",
+                      "kjonn": "UKJENT",
+                      "statsborgerskap": "NOR"
+                    },
+                    "emneknagger": ["Søknadsbehandling"],
+                    "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}"
+                    }
+                    """.trimIndent()
             }
         }
     }
@@ -346,12 +363,14 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
-        val mediatorMock = mockk<Mediator>().also {
-            every { it.finnOppgaverFor(testIdent) } returns listOf(
-                lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
-                lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
-            )
-        }
+        val mediatorMock =
+            mockk<Mediator>().also {
+                every { it.finnOppgaverFor(testIdent) } returns
+                    listOf(
+                        lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
+                        lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
+                    )
+            }
         withOppgaveApi(mediatorMock) {
             client.post("/oppgave/sok") {
                 autentisert()
@@ -379,10 +398,11 @@ class OppgaveApiTest {
         val behandlingIdSomIkkeFinnes = UUIDv7.ny()
 
         val oppgaveId = UUIDv7.ny()
-        val mediatorMock = mockk<Mediator>().also {
-            every { it.hentOppgaveIdFor(behandlingIdSomFinnes) } returns oppgaveId
-            every { it.hentOppgaveIdFor(behandlingIdSomIkkeFinnes) } returns null
-        }
+        val mediatorMock =
+            mockk<Mediator>().also {
+                every { it.hentOppgaveIdFor(behandlingIdSomFinnes) } returns oppgaveId
+                every { it.hentOppgaveIdFor(behandlingIdSomIkkeFinnes) } returns null
+            }
         withOppgaveApi(mediator = mediatorMock) {
             client.get("/behandling/$behandlingIdSomFinnes/oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
@@ -422,7 +442,8 @@ class OppgaveApiTest {
             behandlingId = UUIDv7.ny(),
             opprettet = ZonedDateTime.now(),
             emneknagger = setOf("Søknadsbehandling"),
-            tilstand = when (tilstand) {
+            tilstand =
+            when (tilstand) {
                 OPPRETTET -> Oppgave.Opprettet
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
@@ -431,14 +452,15 @@ class OppgaveApiTest {
         )
     }
 
-    private val testPerson = PDLPersonIntern(
-        ident = testIdent,
-        fornavn = "PETTER",
-        etternavn = "SMART",
-        mellomnavn = null,
-        fødselsdato = fødselsdato,
-        alder = 0,
-        statsborgerskap = "NOR",
-        kjønn = PDLPerson.Kjonn.UKJENT,
-    )
+    private val testPerson =
+        PDLPersonIntern(
+            ident = testIdent,
+            fornavn = "PETTER",
+            etternavn = "SMART",
+            mellomnavn = null,
+            fødselsdato = fødselsdato,
+            alder = 0,
+            statsborgerskap = "NOR",
+            kjønn = PDLPerson.Kjonn.UKJENT,
+        )
 }

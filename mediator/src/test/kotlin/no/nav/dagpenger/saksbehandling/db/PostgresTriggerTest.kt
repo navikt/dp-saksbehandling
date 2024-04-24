@@ -10,7 +10,6 @@ import java.util.UUID
 import javax.sql.DataSource
 
 class PostgresTriggerTest {
-
     @Test
     fun `Når en person endres så skal sist_endret_tidspunkt oppdateres`() {
         val testPerson = Person(ident = "12345678901")
@@ -33,10 +32,11 @@ private fun DataSource.hentEndretTidspunkt(personId: UUID): Timestamp {
         session.run(
             queryOf(
                 //language=PostgreSQL
-                statement = """
-                SELECT endret_tidspunkt
-                FROM   person_v1
-                WHERE  id = :id
+                statement =
+                """
+                    SELECT endret_tidspunkt
+                    FROM   person_v1
+                    WHERE  id = :id
                 """.trimIndent(),
                 paramMap = mapOf("id" to personId),
             ).map { row ->

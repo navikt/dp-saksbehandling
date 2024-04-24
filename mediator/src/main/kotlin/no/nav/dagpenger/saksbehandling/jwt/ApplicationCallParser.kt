@@ -16,6 +16,7 @@ private fun requireNavIdent(credential: JWTPayloadHolder): String =
 internal fun ApplicationCall.navIdent(): String =
     requireNotNull(this.authentication.principal<JWTPrincipal>()) { "Ikke autentisert" }.navIdent
 
-internal fun ApplicationRequest.jwt(): String = this.parseAuthorizationHeader().let { authHeader ->
-    (authHeader as? HttpAuthHeader.Single)?.blob ?: throw IllegalArgumentException("JWT not found")
-}
+internal fun ApplicationRequest.jwt(): String =
+    this.parseAuthorizationHeader().let { authHeader ->
+        (authHeader as? HttpAuthHeader.Single)?.blob ?: throw IllegalArgumentException("JWT not found")
+    }

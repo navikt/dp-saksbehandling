@@ -23,7 +23,6 @@ import org.junit.jupiter.api.assertThrows
 import java.time.ZonedDateTime
 
 class MediatorTest {
-
     private val testIdent = "12345612345"
     private val testRapid = TestRapid()
     private val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
@@ -32,20 +31,22 @@ class MediatorTest {
     @Test
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
-            val mediator = Mediator(
-                repository = PostgresRepository(datasource),
-            )
+            val mediator =
+                Mediator(
+                    repository = PostgresRepository(datasource),
+                )
 
             BehandlingOpprettetMottak(testRapid, mediator, skjermingKlientMock, pdlKlientMock)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
-                søknadId = søknadId,
-                behandlingId = behandlingId,
-                ident = testIdent,
-                opprettet = ZonedDateTime.now(),
-            )
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = ZonedDateTime.now(),
+                )
 
             mediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
             mediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
@@ -91,9 +92,10 @@ class MediatorTest {
     @Test
     fun `Livssyklus for søknadsbehandling som blir avbrutt`() {
         withMigratedDb { datasource ->
-            val mediator = Mediator(
-                repository = PostgresRepository(datasource),
-            )
+            val mediator =
+                Mediator(
+                    repository = PostgresRepository(datasource),
+                )
 
             BehandlingOpprettetMottak(testRapid, mediator, skjermingKlientMock, pdlKlientMock)
 
@@ -101,7 +103,8 @@ class MediatorTest {
             val behandlingId = UUIDv7.ny()
 
             mediator.opprettOppgaveForBehandling(
-                søknadsbehandlingOpprettetHendelse = SøknadsbehandlingOpprettetHendelse(
+                søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     ident = testIdent,

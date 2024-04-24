@@ -11,13 +11,17 @@ data class Søkefilter(
     val saksbehandlerIdent: String? = null,
 ) {
     companion object {
-        val DEFAULT_SØKEFILTER = Søkefilter(
-            periode = Periode.UBEGRENSET_PERIODE,
-            tilstand = setOf(KLAR_TIL_BEHANDLING),
-            saksbehandlerIdent = null,
-        )
+        val DEFAULT_SØKEFILTER =
+            Søkefilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                tilstand = setOf(KLAR_TIL_BEHANDLING),
+                saksbehandlerIdent = null,
+            )
 
-        fun fra(queryParameters: Parameters, saksbehandlerIdent: String): Søkefilter {
+        fun fra(
+            queryParameters: Parameters,
+            saksbehandlerIdent: String,
+        ): Søkefilter {
             val tilstand =
                 queryParameters.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
                     ?: setOf(KLAR_TIL_BEHANDLING)
@@ -27,7 +31,8 @@ data class Søkefilter(
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
                 tilstand = tilstand,
-                saksbehandlerIdent = when {
+                saksbehandlerIdent =
+                when {
                     mine -> saksbehandlerIdent
                     else -> null
                 },
@@ -46,10 +51,11 @@ data class Søkefilter(
         companion object {
             val MIN = LocalDate.of(1000, 1, 1)
             val MAX = LocalDate.of(3000, 1, 1)
-            val UBEGRENSET_PERIODE = Periode(
-                fom = MIN,
-                tom = MAX,
-            )
+            val UBEGRENSET_PERIODE =
+                Periode(
+                    fom = MIN,
+                    tom = MAX,
+                )
 
             fun fra(queryParamaters: Parameters): Periode {
                 val fom = queryParamaters["fom"]?.let { LocalDate.parse(it) } ?: MIN

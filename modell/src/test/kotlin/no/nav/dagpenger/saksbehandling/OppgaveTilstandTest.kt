@@ -68,15 +68,16 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå til KlarTilBehandling fra UnderBehandling`() {
-        val oppgave = Oppgave.rehydrer(
-            oppgaveId = UUIDv7.ny(),
-            ident = "ident",
-            saksbehandlerIdent = "saksbehandlerIdent",
-            behandlingId = UUIDv7.ny(),
-            opprettet = ZonedDateTime.now(),
-            emneknagger = setOf(),
-            tilstand = Oppgave.UnderBehandling,
-        )
+        val oppgave =
+            Oppgave.rehydrer(
+                oppgaveId = UUIDv7.ny(),
+                ident = "ident",
+                saksbehandlerIdent = "saksbehandlerIdent",
+                behandlingId = UUIDv7.ny(),
+                opprettet = ZonedDateTime.now(),
+                emneknagger = setOf(),
+                tilstand = Oppgave.UnderBehandling,
+            )
 
         shouldNotThrowAny {
             oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
@@ -126,13 +127,17 @@ class OppgaveTilstandTest {
         }
     }
 
-    private fun lagOppgave(type: Type, saksbehandlerIdent: String? = null): Oppgave {
-        val tilstand = when (type) {
-            OPPRETTET -> Oppgave.Opprettet
-            KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
-            FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
-            UNDER_BEHANDLING -> Oppgave.UnderBehandling
-        }
+    private fun lagOppgave(
+        type: Type,
+        saksbehandlerIdent: String? = null,
+    ): Oppgave {
+        val tilstand =
+            when (type) {
+                OPPRETTET -> Oppgave.Opprettet
+                KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
+                FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
+                UNDER_BEHANDLING -> Oppgave.UnderBehandling
+            }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = "ident",

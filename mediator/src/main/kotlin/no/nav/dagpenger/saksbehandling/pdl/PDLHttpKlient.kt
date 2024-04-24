@@ -33,17 +33,18 @@ internal class PDLHttpKlient(
     override suspend fun erAdressebeskyttet(ident: String): Result<Boolean> {
         try {
             val invoke = tokenSupplier.invoke()
-            val adresseBeskyttelse = hentPersonClient.hentPerson(
-                ident,
-                mapOf(
-                    HttpHeaders.Authorization to "Bearer $invoke",
+            val adresseBeskyttelse =
+                hentPersonClient.hentPerson(
+                    ident,
+                    mapOf(
+                        HttpHeaders.Authorization to "Bearer $invoke",
 //                    HttpHeaders.XRequestId to MDC.get("behovId"),
 //                    "Nav-Call-Id" to MDC.get("behovId"),
-                    // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
-                    "behandlingsnummer" to "B286",
-                    "TEMA" to "DAG",
-                ),
-            ).adresseBeskyttelse
+                        // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
+                        "behandlingsnummer" to "B286",
+                        "TEMA" to "DAG",
+                    ),
+                ).adresseBeskyttelse
             return when (adresseBeskyttelse) {
                 FORTROLIG -> Result.success(true)
                 STRENGT_FORTROLIG -> Result.success(true)

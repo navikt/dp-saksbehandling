@@ -41,7 +41,10 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
 
-internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
+internal fun Application.oppgaveApi(
+    mediator: Mediator,
+    pdlKlient: PDLKlient,
+) {
     val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
     apiConfig()
@@ -113,11 +116,12 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                     val oppgaveId: UUID? = mediator.hentOppgaveIdFor(behandlingId = behandlingId)
                     when (oppgaveId) {
                         null -> call.respond(HttpStatusCode.NotFound)
-                        else -> call.respondText(
-                            contentType = ContentType.Text.Plain,
-                            status = HttpStatusCode.OK,
-                            text = oppgaveId.toString(),
-                        )
+                        else ->
+                            call.respondText(
+                                contentType = ContentType.Text.Plain,
+                                status = HttpStatusCode.OK,
+                                text = oppgaveId.toString(),
+                            )
                     }
                 }
             }
@@ -128,20 +132,25 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
 private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse =
     OppgaveAnsvarHendelse(this.finnUUID("oppgaveId"), this.navIdent())
 
-fun lagOppgaveDTO(oppgave: Oppgave, person: PDLPersonIntern): OppgaveDTO =
+fun lagOppgaveDTO(
+    oppgave: Oppgave,
+    person: PDLPersonIntern,
+): OppgaveDTO =
 
     OppgaveDTO(
         oppgaveId = oppgave.oppgaveId,
         behandlingId = oppgave.behandlingId,
         personIdent = oppgave.ident,
-        person = PersonDTO(
+        person =
+        PersonDTO(
             ident = person.ident,
             fornavn = person.fornavn,
             etternavn = person.etternavn,
             mellomnavn = person.mellomnavn,
             fodselsdato = person.fødselsdato,
             alder = person.alder,
-            kjonn = when (person.kjønn) {
+            kjonn =
+            when (person.kjønn) {
                 PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
                 PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
                 PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
@@ -167,15 +176,16 @@ private fun Type.tilOppgaveTilstandDTO() =
         FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
     }
 
-internal fun Oppgave.tilOppgaveOversiktDTO() = OppgaveOversiktDTO(
-    oppgaveId = this.oppgaveId,
-    personIdent = this.ident,
-    behandlingId = this.behandlingId,
-    tidspunktOpprettet = this.opprettet,
-    emneknagger = this.emneknagger.toList(),
-    tilstand = this.tilstand().tilOppgaveTilstandDTO(),
-    saksbehandlerIdent = this.saksbehandlerIdent,
-)
+internal fun Oppgave.tilOppgaveOversiktDTO() =
+    OppgaveOversiktDTO(
+        oppgaveId = this.oppgaveId,
+        personIdent = this.ident,
+        behandlingId = this.behandlingId,
+        tidspunktOpprettet = this.opprettet,
+        emneknagger = this.emneknagger.toList(),
+        tilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        saksbehandlerIdent = this.saksbehandlerIdent,
+    )
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {

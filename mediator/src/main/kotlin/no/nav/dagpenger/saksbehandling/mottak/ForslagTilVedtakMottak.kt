@@ -13,7 +13,6 @@ internal class ForslagTilVedtakMottak(
     rapidsConnection: RapidsConnection,
     private val mediator: Mediator,
 ) : River.PacketListener {
-
     companion object {
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
         val rapidFilter: River.() -> Unit = {
@@ -26,17 +25,21 @@ internal class ForslagTilVedtakMottak(
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
-    override fun onPacket(packet: JsonMessage, context: MessageContext) {
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+    ) {
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            val forslagTilVedtakHendelse = ForslagTilVedtakHendelse(
-                ident = ident,
-                søknadId = søknadId,
-                behandlingId = behandlingId,
-            )
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                )
             sikkerlogg.info { "Mottok hendelse om forslag til vedtak $forslagTilVedtakHendelse" }
             mediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }

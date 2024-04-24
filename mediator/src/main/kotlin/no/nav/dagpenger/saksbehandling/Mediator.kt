@@ -13,22 +13,23 @@ val logger = KotlinLogging.logger {}
 internal class Mediator(
     private val repository: Repository,
 ) : Repository by repository {
-
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        val person = repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
-            ident = søknadsbehandlingOpprettetHendelse.ident,
-        )
+        val person =
+            repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
+                ident = søknadsbehandlingOpprettetHendelse.ident,
+            )
 
         if (repository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) {
             logger.info { "Behandling med id ${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede." }
             return
         }
 
-        val behandling = Behandling(
-            behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-            person = person,
-            opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-        )
+        val behandling =
+            Behandling(
+                behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                person = person,
+                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+            )
 
         behandling.håndter(søknadsbehandlingOpprettetHendelse)
         lagre(behandling)

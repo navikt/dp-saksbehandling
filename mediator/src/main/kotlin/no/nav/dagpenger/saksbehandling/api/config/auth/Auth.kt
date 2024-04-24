@@ -8,6 +8,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration
 
 private val logger = KotlinLogging.logger {}
+
 fun AuthenticationConfig.jwt(name: String) {
     jwt(name) {
         verifier(AzureAd)

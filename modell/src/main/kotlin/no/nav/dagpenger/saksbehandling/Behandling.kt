@@ -11,7 +11,6 @@ data class Behandling(
     val person: Person,
     val opprettet: ZonedDateTime,
     val oppgaver: MutableList<Oppgave> = mutableListOf(),
-
 ) {
     companion object {
         fun rehydrer(
