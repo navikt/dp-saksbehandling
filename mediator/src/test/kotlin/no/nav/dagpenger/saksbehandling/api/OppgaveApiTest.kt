@@ -170,9 +170,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente og få tildelt neste oppgave`() {
-        val oppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
-        oppgave.tilstand = UNDER_BEHANDLING
-        oppgave.saksbehandlerIdent = testNAVIdent
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, testNAVIdent)
         val mediatorMock = mockk<Mediator>().also {
             every { it.hentNesteOppgavenTil(testNAVIdent) } returns oppgave
         }

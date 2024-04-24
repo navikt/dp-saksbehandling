@@ -78,7 +78,7 @@ class PostgresRepositoryTest {
             val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
             nesteOppgave!!.oppgaveId shouldBe eldsteBehandling.oppgaver.first().oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
-            nesteOppgave.tilstand shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
         }
     }
 
@@ -105,7 +105,7 @@ class PostgresRepositoryTest {
             val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
             nesteOppgave!!.oppgaveId shouldBe ledigBehandling.oppgaver.first().oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
-            nesteOppgave.tilstand shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
         }
     }
 
@@ -131,7 +131,7 @@ class PostgresRepositoryTest {
             val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
             nesteOppgave!!.oppgaveId shouldBe ledigBehandling.oppgaver.first().oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
-            nesteOppgave.tilstand shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
         }
     }
 
@@ -205,7 +205,7 @@ class PostgresRepositoryTest {
             repo.lagre(testBehandling)
             val oppgaveFraDatabase = repo.hentOppgave(oppgaveIdTest)
             oppgaveFraDatabase.saksbehandlerIdent shouldBe navIdent
-            oppgaveFraDatabase.tilstand shouldBe UNDER_BEHANDLING
+            oppgaveFraDatabase.tilstand() shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -225,10 +225,10 @@ class PostgresRepositoryTest {
             val repo = PostgresRepository(ds)
 
             repo.lagre(testBehandling)
-            repo.hentOppgave(oppgaveIdTest).tilstand shouldBe KLAR_TIL_BEHANDLING
+            repo.hentOppgave(oppgaveIdTest).tilstand() shouldBe KLAR_TIL_BEHANDLING
 
             repo.lagre(testBehandling.copy(oppgaver = mutableListOf(testBehandling.oppgaver.first().copy(tilstand2 = Oppgave.FerdigBehandlet))))
-            repo.hentOppgave(oppgaveIdTest).tilstand shouldBe FERDIG_BEHANDLET
+            repo.hentOppgave(oppgaveIdTest).tilstand() shouldBe FERDIG_BEHANDLET
         }
     }
 
@@ -298,7 +298,7 @@ class PostgresRepositoryTest {
             behandlingId = behandlingId2,
             person = testPerson2,
             opprettet = opprettetNå,
-            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = FERDIG_BEHANDLET)),
+            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand2 = Oppgave.FerdigBehandlet)),
         )
 
         withMigratedDb { ds ->
@@ -357,7 +357,7 @@ class PostgresRepositoryTest {
 
             repo.søk(Søkefilter.DEFAULT_SØKEFILTER).let {
                 it.size shouldBe 2
-                it.all { oppgave -> oppgave.tilstand == KLAR_TIL_BEHANDLING } shouldBe true
+                it.all { oppgave -> oppgave.tilstand() == KLAR_TIL_BEHANDLING } shouldBe true
             }
 
             repo.søk(

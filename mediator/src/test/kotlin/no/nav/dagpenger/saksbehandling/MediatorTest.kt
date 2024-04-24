@@ -73,7 +73,7 @@ class MediatorTest {
             )
 
             val tildeltOppgave = mediator.hentOppgave(oppgave.oppgaveId)
-            tildeltOppgave.tilstand shouldBe UNDER_BEHANDLING
+            tildeltOppgave.tilstand() shouldBe UNDER_BEHANDLING
             tildeltOppgave.saksbehandlerIdent shouldBe "NAVIdent"
 
             mediator.avsluttBehandling(
