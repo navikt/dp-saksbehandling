@@ -148,6 +148,7 @@ fun lagOppgaveDTO(oppgave: Oppgave, person: PDLPersonIntern): OppgaveDTO =
             },
             statsborgerskap = person.statsborgerskap,
         ),
+        saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
         tilstand = oppgave.tilstand.tilOppgaveTilstandDTO(),
@@ -173,6 +174,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() = OppgaveOversiktDTO(
     tidspunktOpprettet = this.opprettet,
     emneknagger = this.emneknagger.toList(),
     tilstand = this.tilstand.tilOppgaveTilstandDTO(),
+    saksbehandlerIdent = this.saksbehandlerIdent,
 )
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =

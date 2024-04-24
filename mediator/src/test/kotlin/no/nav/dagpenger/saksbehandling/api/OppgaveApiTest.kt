@@ -65,23 +65,38 @@ class OppgaveApiTest {
 
     @Test
     fun `Hent alle oppgaver klar til behandling hvis ingen query parametere er gitt`() {
+        val oppgave1 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = testNAVIdent)
+        val oppgave2 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = null)
         val mediatorMock = mockk<Mediator>().also {
-            every { it.søk(Søkefilter.DEFAULT_SØKEFILTER) } returns listOf(
-                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-            )
+            every { it.søk(Søkefilter.DEFAULT_SØKEFILTER) } returns listOf(oppgave1, oppgave2)
         }
 
         withOppgaveApi(mediatorMock) {
             client.get("/oppgave") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val oppgaver =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<List<OppgaveOversiktDTO>>() {},
-                    )
-                oppgaver.size shouldBe 2
+                val json = response.bodyAsText()
+                //language=JSON
+                json shouldEqualSpecifiedJsonIgnoringOrder """ [{
+                   "oppgaveId": "${oppgave1.oppgaveId}",
+                   "behandlingId": "${oppgave1.behandlingId}",
+                   "personIdent": "${oppgave1.ident}",
+                   "emneknagger": [
+                     "Søknadsbehandling"
+                   ],
+                   "tilstand": "KLAR_TIL_BEHANDLING",    
+                   "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
+                 },
+                 {
+                 "oppgaveId": "${oppgave2.oppgaveId}",
+                 "behandlingId": "${oppgave2.behandlingId}",
+                 "personIdent": "${oppgave2.ident}",
+                 "emneknagger": [
+                 "Søknadsbehandling"
+                 ],
+                 "tilstand": "KLAR_TIL_BEHANDLING"
+                 }]
+                """.trimIndent()
             }
         }
     }
@@ -180,6 +195,7 @@ class OppgaveApiTest {
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR"
                       },
+                      "saksbehandlerIdent": "$testNAVIdent",
                       "emneknagger": ["Søknadsbehandling"],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                       }

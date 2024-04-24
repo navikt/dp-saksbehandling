@@ -197,6 +197,8 @@ components:
           format: uuid
         personIdent:
           type: string
+        saksbehandlerIdent:
+          type: string
         tidspunktOpprettet:
           type: string
           format: date-time
@@ -224,6 +226,8 @@ components:
           type: string
           format: uuid
         personIdent:
+          type: string
+        saksbehandlerIdent:
           type: string
         person:
           $ref: '#/components/schemas/Person'
