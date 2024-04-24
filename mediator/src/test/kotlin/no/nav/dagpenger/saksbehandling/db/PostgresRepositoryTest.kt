@@ -227,7 +227,13 @@ class PostgresRepositoryTest {
             repo.lagre(testBehandling)
             repo.hentOppgave(oppgaveIdTest).tilstand() shouldBe KLAR_TIL_BEHANDLING
 
-            repo.lagre(testBehandling.copy(oppgaver = mutableListOf(testBehandling.oppgaver.first().copy(tilstand = Oppgave.FerdigBehandlet))))
+            repo.lagre(
+                testBehandling.copy(
+                    oppgaver = mutableListOf(
+                        testBehandling.oppgaver.first().copy(tilstand = Oppgave.FerdigBehandlet),
+                    ),
+                ),
+            )
             repo.hentOppgave(oppgaveIdTest).tilstand() shouldBe FERDIG_BEHANDLET
         }
     }
@@ -261,7 +267,10 @@ class PostgresRepositoryTest {
             behandlingId = behandlingId2,
             person = testPerson,
             opprettet = opprettetNå,
-            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet)),
+            oppgaver = mutableListOf(
+                oppgave2,
+                oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
+            ),
         )
 
         withMigratedDb { ds ->
@@ -297,7 +306,10 @@ class PostgresRepositoryTest {
             behandlingId = behandlingId2,
             person = testPerson2,
             opprettet = opprettetNå,
-            oppgaver = mutableListOf(oppgave2, oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet)),
+            oppgaver = mutableListOf(
+                oppgave2,
+                oppgave2.copy(oppgaveId = oppgaveId3, tilstand = Oppgave.FerdigBehandlet),
+            ),
         )
 
         withMigratedDb { ds ->
@@ -326,14 +338,60 @@ class PostgresRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne søke etter mine oppgaver`() {
+        val enUkeSiden = opprettetNå.minusDays(7)
+        val saksbehandler1 = "saksbehandler1"
+        val saksbehandler2 = "saksbehandler2"
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            val behandling1 = lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, enUkeSiden, saksbehandler1)
+            val behandling2 =
+                lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler2)
+            val behandling3 =
+                lagBehandlingOgOppgaveMedTilstand(FERDIG_BEHANDLET, saksbehandlerIdent = saksbehandler2)
+            val behandling4 = lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, saksbehandlerIdent = null)
+            repo.lagre(behandling1)
+            repo.lagre(behandling2)
+            repo.lagre(behandling3)
+            repo.lagre(behandling4)
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                    saksbehandlerIdent = saksbehandler2,
+                ),
+            ).size shouldBe 2
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                    saksbehandlerIdent = saksbehandler1,
+                ),
+            ).size shouldBe 1
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                    saksbehandlerIdent = null,
+                ),
+            ).size shouldBe 4
+        }
+    }
+
+    @Test
     fun `Skal kunne søke etter oppgaver`() {
         val enUkeSiden = opprettetNå.minusDays(7)
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
-            val behandling1 = lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, enUkeSiden, saksbehandlerIdent)
-            val behandling2 = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
-            val behandling3 = lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
+            val behandling1 = lagBehandlingOgOppgaveMedTilstand(UNDER_BEHANDLING, enUkeSiden)
+            val behandling2 =
+                lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
+            val behandling3 =
+                lagBehandlingOgOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
             val behandling4 = lagBehandlingOgOppgaveMedTilstand(OPPRETTET, saksbehandlerIdent = saksbehandlerIdent)
             repo.lagre(behandling1)
             repo.lagre(behandling2)

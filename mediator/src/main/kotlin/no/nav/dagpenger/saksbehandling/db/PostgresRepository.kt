@@ -493,9 +493,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
         return sessionOf(dataSource).use { session ->
             val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
-            val queryOf = queryOf(
-                //language=PostgreSQL
-                statement = """
+
+            val saksBehandlerClause =
+                søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
+
+            //language=PostgreSQL
+            val sql = """
                     SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
                     FROM   oppgave_v1    oppg
                     JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
@@ -503,11 +506,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     WHERE  oppg.tilstand IN ($tilstander)
                     AND    date_trunc('day', oppg.opprettet) <= :tom
                     AND    date_trunc('day', oppg.opprettet) >= :fom
-                """.trimIndent(),
+                """ + saksBehandlerClause
+
+            val queryOf = queryOf(
+                statement = sql.trimIndent(),
                 paramMap = mapOf(
                     "tilstander" to tilstander,
                     "fom" to søkeFilter.periode.fom,
                     "tom" to søkeFilter.periode.tom,
+                    "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
                 ),
             )
             session.run(
