@@ -1,5 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -15,6 +19,7 @@ data class Oppgave private constructor(
     val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
     var tilstand: Tilstand.Type,
+    private var tilstand2: Tilstand = Opprettet,
 ) {
     constructor(
         oppgaveId: UUID,
@@ -22,7 +27,7 @@ data class Oppgave private constructor(
         behandlingId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: ZonedDateTime,
-        tilstand: Tilstand.Type = Tilstand.Type.OPPRETTET,
+        tilstand: Tilstand.Type = OPPRETTET,
     ) : this(
         oppgaveId = oppgaveId,
         ident = ident,
@@ -58,9 +63,9 @@ data class Oppgave private constructor(
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
 
-    fun håndter(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+    fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         // todo Utvide og putt denne logikken inn i tilsand
-        if (tilstand == Tilstand.Type.OPPRETTET) {
+        if (tilstand == OPPRETTET) {
             tilstand = Tilstand.Type.KLAR_TIL_BEHANDLING
         } else {
             throw IllegalStateException("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $tilstand")
@@ -72,29 +77,65 @@ data class Oppgave private constructor(
     }
 
     fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        if (tilstand == Tilstand.Type.UNDER_BEHANDLING) {
-            tilstand = Tilstand.Type.KLAR_TIL_BEHANDLING
-        } else {
-            throw IllegalStateException("Kan ikke håndtere hendelse om å fjerne saksbehandler som ansvarlig i tilstand $tilstand")
-        }
-        saksbehandlerIdent = null
+        tilstand2.fjernAnsvar(this, oppgaveAnsvarHendelse)
     }
 
     fun tildel(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        if (tilstand == Tilstand.Type.KLAR_TIL_BEHANDLING) {
-            tilstand = Tilstand.Type.UNDER_BEHANDLING
-        } else {
-            throw IllegalStateException("Kan ikke håndtere hendelse om å sette saksbehandler som ansvarlig i tilstand $tilstand")
+        tilstand2.tildel(this, oppgaveAnsvarHendelse)
+    }
+
+    fun hentTilstand() = this.tilstand2
+
+    object Opprettet : Tilstand {
+        override val tilstandType: Tilstand.Type = OPPRETTET
+        override fun oppgaveKlarTilBehandling(oppgave: Oppgave, forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+            oppgave.tilstand2 = KlarTilBehandling
         }
-        saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
+    }
+
+    object KlarTilBehandling : Tilstand {
+        override val tilstandType: Tilstand.Type = KLAR_TIL_BEHANDLING
+        override fun tildel(oppgave: Oppgave, oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+            oppgave.tilstand2 = UnderBehandling
+            oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
+        }
+    }
+
+    object UnderBehandling : Tilstand {
+        override val tilstandType: Tilstand.Type = UNDER_BEHANDLING
+        override fun fjernAnsvar(oppgave: Oppgave, oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+            oppgave.tilstand2 = KlarTilBehandling
+            oppgave.saksbehandlerIdent = null
+        }
+    }
+
+    object FerdigBehandlet : Tilstand {
+        override val tilstandType: Tilstand.Type = FERDIG_BEHANDLET
     }
 
     interface Tilstand {
+        val tilstandType: Type
         enum class Type {
             OPPRETTET,
             KLAR_TIL_BEHANDLING,
             UNDER_BEHANDLING,
             FERDIG_BEHANDLET,
+        }
+
+        fun oppgaveKlarTilBehandling(oppgave: Oppgave, forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+            throw IllegalStateException("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $tilstandType")
+        }
+
+        fun håndter(oppgave: Oppgave, vedtakFattetHendelse: VedtakFattetHendelse) {
+            oppgave.tilstand2 = FerdigBehandlet
+        }
+
+        fun fjernAnsvar(oppgave: Oppgave, oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+            throw IllegalStateException("Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $tilstandType")
+        }
+
+        fun tildel(oppgave: Oppgave, oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+            throw IllegalStateException("Kan ikke håndtere hendelse om tildele oppgave i tilstand $tilstandType")
         }
     }
 }

@@ -31,7 +31,7 @@ data class Behandling(
     }
 
     fun håndter(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        this.oppgaver.single().håndter(forslagTilVedtakHendelse)
+        this.oppgaver.single().oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
     }
 
     fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
