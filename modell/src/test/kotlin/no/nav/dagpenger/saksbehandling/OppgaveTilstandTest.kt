@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -19,6 +20,20 @@ import java.time.ZonedDateTime
 class OppgaveTilstandTest {
     private val oppgaveId = UUIDv7.ny()
     private val testIdent = "12345699999"
+
+    @Test
+    fun `Skal på nytt kunne tildele en tildelt oppgave til samme saksbehandler`() {
+        val saksbehandlerIdent = "Z080808"
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+
+        shouldNotThrow<IllegalStateException> {
+            oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerIdent))
+        }
+
+        shouldThrow<IllegalStateException> {
+            oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, "enAnnenSaksbehandler"))
+        }
+    }
 
     @Test
     fun `Skal ikke kunne tildele oppgave i tilstand Opprettet`() {
@@ -111,20 +126,21 @@ class OppgaveTilstandTest {
         }
     }
 
-    private fun lagOppgave(type: Type): Oppgave {
+    private fun lagOppgave(type: Type, saksbehandlerIdent: String? = null): Oppgave {
         val tilstand = when (type) {
             OPPRETTET -> Oppgave.Opprettet
             KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
             FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
             UNDER_BEHANDLING -> Oppgave.UnderBehandling
         }
-        return Oppgave(
+        return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = "ident",
             behandlingId = UUIDv7.ny(),
             emneknagger = setOf(),
             opprettet = ZonedDateTime.now(),
             tilstand = tilstand,
+            saksbehandlerIdent = saksbehandlerIdent,
         )
     }
 }

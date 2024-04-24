@@ -101,6 +101,12 @@ data class Oppgave private constructor(
             oppgave.tilstand = KlarTilBehandling
             oppgave.saksbehandlerIdent = null
         }
+
+        override fun tildel(oppgave: Oppgave, oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+            if (oppgave.saksbehandlerIdent != oppgaveAnsvarHendelse.navIdent) {
+                throw IllegalStateException("Kan ikke tildele oppgave til annen saksbehandler")
+            }
+        }
     }
 
     object FerdigBehandlet : Tilstand {
@@ -109,6 +115,7 @@ data class Oppgave private constructor(
 
     interface Tilstand {
         val type: Type
+
         enum class Type {
             OPPRETTET,
             KLAR_TIL_BEHANDLING,
