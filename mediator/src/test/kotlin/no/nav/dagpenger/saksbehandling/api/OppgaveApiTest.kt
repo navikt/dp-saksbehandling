@@ -258,7 +258,7 @@ class OppgaveApiTest {
         } just runs
 
         withOppgaveApi(mediator = mediatorMock) {
-            client.put("oppgave/${testOppgave.oppgaveId}/leggTilbake") { autentisert() }.also { response ->
+            client.put("oppgave/${testOppgave.oppgaveId}/legg-tilbake") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }

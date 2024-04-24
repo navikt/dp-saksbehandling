@@ -117,9 +117,9 @@ paths:
                 $ref: '#/components/schemas/Oppgave'
         '404':
           description: Oppgaven ble ikke funnet
-        '423':
+        '409':
           description: Oppgaven er allerede tatt til behandling
-  /oppgave/{oppgaveId}/leggTilbake:
+  /oppgave/{oppgaveId}/legg-tilbake:
     put:
       summary: Saksbehandler fjernes som ansvarlig for oppgaven, og oppgaven går tilbake til oppgavelisten
       parameters:
@@ -132,6 +132,10 @@ paths:
       responses:
         '204':
           description: Fjernet saksbehandler som ansvarlig for oppgaven, og oppgaven gjøres klar til behandling
+        '404':
+          description: Oppgaven ble ikke funnet
+        '409':
+          description: Oppgaven kan ikke settes klar til behandling igjen
   /behandling/{behandlingId}/oppgaveId:
     get:
       summary: Henter oppgaveId basert på en behandlingId

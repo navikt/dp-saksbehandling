@@ -23,7 +23,10 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -95,7 +98,7 @@ internal fun Application.oppgaveApi(mediator: Mediator, pdlKlient: PDLKlient) {
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }
                     }
-                    route("leggTilbake") {
+                    route("legg-tilbake") {
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
                             mediator.fristillOppgave(oppgaveAnsvarHendelse)
@@ -157,10 +160,10 @@ private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
 
 private fun Type.tilOppgaveTilstandDTO() =
     when (this) {
-        Type.OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
-        Type.UNDER_BEHANDLING -> OppgaveTilstandDTO.UNDER_BEHANDLING
+        OPPRETTET -> OppgaveTilstandDTO.OPPRETTET
+        UNDER_BEHANDLING -> OppgaveTilstandDTO.UNDER_BEHANDLING
         KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
-        Type.FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
     }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() = OppgaveOversiktDTO(

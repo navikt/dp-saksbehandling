@@ -48,6 +48,7 @@ fun Application.apiConfig() {
                 is DataNotFoundException -> call.respond(HttpStatusCode.NotFound) { cause.message.toString() }
                 is IllegalArgumentException -> call.respond(HttpStatusCode.BadRequest)
                 is DateTimeParseException -> call.respond(HttpStatusCode.BadRequest) { cause.message.toString() }
+                is IllegalStateException -> call.respond(HttpStatusCode.Conflict) { cause.message.toString() }
                 else -> {
                     sikkerLogger.error(cause) { "Uhåndtert feil: ${cause.message}" }
                     call.respond(HttpStatusCode.InternalServerError)
