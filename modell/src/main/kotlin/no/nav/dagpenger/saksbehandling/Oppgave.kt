@@ -65,7 +65,7 @@ data class Oppgave private constructor(
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
 
-    fun tilstand() = this.tilstand2
+    fun tilstand() = this.tilstand2.type
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         tilstand2.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)

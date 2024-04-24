@@ -17,7 +17,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal ikke kunne tildele oppgave i tilstand Opprettet`() {
         val oppgave = lagOppgave(oppgaveId = oppgaveId, ident = testIdent)
-        oppgave.tilstand().type shouldBe OPPRETTET
+        oppgave.tilstand() shouldBe OPPRETTET
         shouldThrow<IllegalStateException> {
             oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
         }
@@ -26,17 +26,17 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal kunne sette oppgave klar til behandling i tilstand opprettet`() {
         val oppgave = lagOppgave(oppgaveId = oppgaveId, ident = testIdent)
-        oppgave.tilstand().type shouldBe OPPRETTET
+        oppgave.tilstand() shouldBe OPPRETTET
         oppgave.oppgaveKlarTilBehandling(ForslagTilVedtakHendelse(ident = testIdent, søknadId = UUIDv7.ny(), behandlingId = UUIDv7.ny()))
-        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+        oppgave.tilstand() shouldBe KLAR_TIL_BEHANDLING
     }
 
     @Test
     fun `Skal ikke kunne fjerne oppgaveansvar i tilstand Klar til behandling`() {
         val oppgave = lagOppgave(oppgaveId = oppgaveId, ident = testIdent)
-        oppgave.tilstand().type shouldBe OPPRETTET
+        oppgave.tilstand() shouldBe OPPRETTET
         oppgave.oppgaveKlarTilBehandling(ForslagTilVedtakHendelse(ident = testIdent, søknadId = UUIDv7.ny(), behandlingId = UUIDv7.ny()))
-        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+        oppgave.tilstand() shouldBe KLAR_TIL_BEHANDLING
 
         shouldThrow<IllegalStateException> {
             oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
