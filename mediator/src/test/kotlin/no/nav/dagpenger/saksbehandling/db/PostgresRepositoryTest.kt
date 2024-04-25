@@ -3,7 +3,8 @@ package no.nav.dagpenger.saksbehandling.db
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Companion.fra
@@ -136,15 +137,14 @@ class PostgresRepositoryTest {
 
     @Test
     fun `Skal kunne slette behandling`() {
-        val testBehandling = lagBehandling()
+        val testOppgave = lagOppgave(emneknagger = setOf("hugga", "bugga"))
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
-            repo.lagre(testBehandling)
-            repo.hentBehandling(testBehandling.behandlingId) shouldNotBe null
-            repo.slettBehandling(testBehandling.behandlingId)
+            repo.lagre(testOppgave)
+            repo.slettBehandling(testOppgave.behandlingId)
 
             assertThrows<DataNotFoundException> {
-                repo.hentBehandling(testBehandling.behandlingId)
+                repo.hentBehandling(testOppgave.behandlingId)
             }
 
             assertThrows<DataNotFoundException> {
@@ -154,6 +154,17 @@ class PostgresRepositoryTest {
             assertThrows<DataNotFoundException> {
                 repo.hentOppgave(oppgaveIdTest)
             }
+
+            sessionOf(ds).use { session ->
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement = """SELECT COUNT(*) FROM emneknagg_v1 WHERE oppgave_id = '${testOppgave.oppgaveId}'""",
+                    ).map { row ->
+                        row.int(1)
+                    }.asSingle,
+                )
+            } shouldBe 0
         }
     }
 
@@ -414,6 +425,7 @@ class PostgresRepositoryTest {
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,
         behandling: Behandling = lagBehandling(person = person),
+        emneknagger: Set<String> = emptySet(),
     ): Oppgave {
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
@@ -421,7 +433,7 @@ class PostgresRepositoryTest {
             saksbehandlerIdent = saksbehandlerIdent,
             behandlingId = behandling.behandlingId,
             opprettet = opprettet,
-            emneknagger = setOf(),
+            emneknagger = emneknagger,
             tilstand = fra(tilstand),
             behandling = behandling,
         )
