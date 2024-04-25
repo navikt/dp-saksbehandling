@@ -442,7 +442,6 @@ class OppgaveApiTest {
                 behandlingId = UUIDv7.ny(),
                 person = Person(id = UUIDv7.ny(), ident = testIdent),
                 opprettet = ZonedDateTime.now(),
-                oppgaver = mutableListOf(),
             )
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),

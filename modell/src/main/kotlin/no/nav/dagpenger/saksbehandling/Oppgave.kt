@@ -153,6 +153,23 @@ data class Oppgave private constructor(
 
         class UkjentTilstandException(message: String) : RuntimeException(message)
 
+        companion object {
+            fun fra(type: Type) =
+                when (type) {
+                    OPPRETTET -> Opprettet
+                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                    UNDER_BEHANDLING -> UnderBehandling
+                    FERDIG_BEHANDLET -> FerdigBehandlet
+                }
+
+            fun fra(type: String) =
+                kotlin.runCatching {
+                    fra(Type.valueOf(type))
+                }.getOrElse {
+                    throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $type")
+                }
+        }
+
         enum class Type {
             OPPRETTET,
             KLAR_TIL_BEHANDLING,

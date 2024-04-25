@@ -1,18 +1,12 @@
 package no.nav.dagpenger.saksbehandling.db
 
 import kotliquery.Row
-import kotliquery.Session
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UkjentTilstandException
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DBUtils.norskZonedDateTime
 import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode.Companion.UBEGRENSET_PERIODE
@@ -25,11 +19,13 @@ class DataNotFoundException(message: String) : RuntimeException(message)
 class PostgresRepository(private val dataSource: DataSource) : Repository {
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
-            session.lagre(person)
+            session.transaction { tx ->
+                tx.lagre(person)
+            }
         }
     }
 
-    private fun Session.lagre(person: Person) {
+    private fun TransactionalSession.lagre(person: Person) {
         run(
             queryOf(
                 //language=PostgreSQL
@@ -112,22 +108,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
     }
 
-    private fun TransactionalSession.slettEmneknaggerFor(oppgaveIder: List<UUID>) {
-        this.batchPreparedStatement(
-            //language=PostgreSQL
-            statement = "DELETE FROM emneknagg_v1 WHERE oppgave_id = ?",
-            params = listOf(oppgaveIder),
-        )
-    }
-
-    private fun TransactionalSession.slettOppgaver(oppgaveIder: List<UUID>) {
-        this.batchPreparedStatement(
-            //language=PostgreSQL
-            statement = "DELETE FROM oppgave_v1 WHERE id = ?",
-            params = listOf(oppgaveIder),
-        )
-    }
-
     private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
         run(
             queryOf(
@@ -141,7 +121,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     override fun lagre(behandling: Behandling) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
-                tx.lagre(behandling.person)
                 tx.lagre(behandling)
             }
         }
@@ -223,7 +202,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }.toSet()
     }
 
-    private fun Session.lagre(behandling: Behandling) {
+    private fun TransactionalSession.lagre(behandling: Behandling) {
+        this.lagre(behandling.person)
         run(
             queryOf(
                 //language=PostgreSQL
@@ -252,6 +232,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     private fun TransactionalSession.lagre(oppgave: Oppgave) {
+        this.lagre(oppgave.behandling)
         run(
             queryOf(
                 //language=PostgreSQL
@@ -418,16 +399,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             behandlingId = behandlingId,
             opprettet = this.norskZonedDateTime("oppgave_opprettet"),
             emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-            tilstand =
-                this.string("tilstand").let { tilstand ->
-                    when (tilstand) {
-                        OPPRETTET.name -> Oppgave.Opprettet
-                        KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                        UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                        FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                        else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                    }
-                },
+            tilstand = this.string("tilstand").let { tilstand -> Oppgave.Tilstand.fra(tilstand) },
             behandling = behandling,
         )
     }
