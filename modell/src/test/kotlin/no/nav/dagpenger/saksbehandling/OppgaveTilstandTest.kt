@@ -26,11 +26,11 @@ class OppgaveTilstandTest {
         val saksbehandlerIdent = "Z080808"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
 
-        shouldNotThrow<IllegalStateException> {
+        shouldNotThrow<Oppgave.AlleredeTildeltException> {
             oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerIdent))
         }
 
-        shouldThrow<IllegalStateException> {
+        shouldThrow<Oppgave.AlleredeTildeltException> {
             oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, "enAnnenSaksbehandler"))
         }
     }

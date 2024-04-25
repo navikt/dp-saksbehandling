@@ -61,14 +61,12 @@ internal fun Application.oppgaveApi(
                     sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
-
                 route("sok") {
                     post {
                         val oppgaver = mediator.finnOppgaverFor(call.receive<SokDTO>().fnr).tilOppgaverOversiktDTO()
                         call.respond(status = HttpStatusCode.OK, oppgaver)
                     }
                 }
-
                 route("neste") {
                     put {
                         val oppgave = mediator.hentNesteOppgavenTil(call.navIdent())
@@ -91,14 +89,17 @@ internal fun Application.oppgaveApi(
                         val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
-
                     route("tildel") {
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            val oppgave = mediator.tildelOppgave(oppgaveAnsvarHendelse)
-                            val person = pdlKlient.person(oppgave.ident).getOrThrow()
-                            val oppgaveDTO = lagOppgaveDTO(oppgave, person)
-                            call.respond(HttpStatusCode.OK, oppgaveDTO)
+                            try {
+                                val oppgave = mediator.tildelOppgave(oppgaveAnsvarHendelse)
+                                val person = pdlKlient.person(oppgave.ident).getOrThrow()
+                                val oppgaveDTO = lagOppgaveDTO(oppgave, person)
+                                call.respond(HttpStatusCode.OK, oppgaveDTO)
+                            } catch (e: Oppgave.AlleredeTildeltException) {
+                                call.respond(HttpStatusCode.Conflict) { e.message.toString() }
+                            }
                         }
                     }
                     route("legg-tilbake") {

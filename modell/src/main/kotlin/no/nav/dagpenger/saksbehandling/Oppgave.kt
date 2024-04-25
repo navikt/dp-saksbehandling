@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -38,6 +39,7 @@ data class Oppgave private constructor(
     )
 
     companion object {
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
         fun rehydrer(
             oppgaveId: UUID,
             ident: String,
@@ -119,10 +121,13 @@ data class Oppgave private constructor(
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
             if (oppgave.saksbehandlerIdent != oppgaveAnsvarHendelse.navIdent) {
-                throw IllegalStateException("Kan ikke tildele oppgave til annen saksbehandler")
+                sikkerlogg.warn { "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${oppgaveAnsvarHendelse.navIdent}. Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}." }
+                throw AlleredeTildeltException("Kan ikke tildele oppgave til annen saksbehandler. Oppgave er allerede tildelt.")
             }
         }
     }
+
+    class AlleredeTildeltException(message: String) : RuntimeException(message)
 
     object FerdigBehandlet : Tilstand {
         override val type: Tilstand.Type = FERDIG_BEHANDLET
@@ -163,7 +168,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            throw IllegalStateException("Kan ikke håndtere hendelse om tildele oppgave i tilstand $type")
+            throw IllegalStateException("Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type")
         }
     }
 }
