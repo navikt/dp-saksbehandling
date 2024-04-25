@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -38,7 +39,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal ikke kunne tildele oppgave i tilstand Opprettet`() {
         val oppgave = lagOppgave(OPPRETTET)
-        shouldThrow<IllegalStateException> {
+        shouldThrow<UlovligTilstandsendringException> {
             oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
         }
     }
@@ -100,7 +101,7 @@ class OppgaveTilstandTest {
         )
         oppgave.tilstand() shouldBe KLAR_TIL_BEHANDLING
 
-        shouldThrow<IllegalStateException> {
+        shouldThrow<UlovligTilstandsendringException> {
             oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
         }
     }
@@ -109,7 +110,7 @@ class OppgaveTilstandTest {
     fun `Skal ikke endre tilstand på en oppgave når den er ferdigbehandlet`() {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
-        shouldThrow<IllegalStateException> {
+        shouldThrow<UlovligTilstandsendringException> {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
@@ -118,11 +119,11 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        shouldThrow<IllegalStateException> {
+        shouldThrow<UlovligTilstandsendringException> {
             oppgave.fjernAnsvar(OppgaveAnsvarHendelse(UUIDv7.ny(), "Z080808"))
         }
 
-        shouldThrow<IllegalStateException> {
+        shouldThrow<UlovligTilstandsendringException> {
             oppgave.tildel(OppgaveAnsvarHendelse(UUIDv7.ny(), "Z080808"))
         }
     }

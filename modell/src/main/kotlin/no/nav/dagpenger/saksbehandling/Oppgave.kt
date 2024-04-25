@@ -40,6 +40,7 @@ data class Oppgave private constructor(
 
     companion object {
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+
         fun rehydrer(
             oppgaveId: UUID,
             ident: String,
@@ -121,8 +122,15 @@ data class Oppgave private constructor(
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
             if (oppgave.saksbehandlerIdent != oppgaveAnsvarHendelse.navIdent) {
-                sikkerlogg.warn { "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${oppgaveAnsvarHendelse.navIdent}. Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}." }
-                throw AlleredeTildeltException("Kan ikke tildele oppgave til annen saksbehandler. Oppgave er allerede tildelt.")
+                sikkerlogg.warn {
+                    "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til " +
+                        "${oppgaveAnsvarHendelse.navIdent}. Oppgave er allerede tildelt " +
+                        "${oppgave.saksbehandlerIdent}."
+                }
+                throw AlleredeTildeltException(
+                    "Kan ikke tildele oppgave til annen saksbehandler. " +
+                        "Oppgave er allerede tildelt.",
+                )
             }
         }
     }
@@ -136,6 +144,8 @@ data class Oppgave private constructor(
     interface Tilstand {
         val type: Type
 
+        class UlovligTilstandsendringException(message: String) : RuntimeException(message)
+
         enum class Type {
             OPPRETTET,
             KLAR_TIL_BEHANDLING,
@@ -147,7 +157,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ) {
-            throw IllegalStateException("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type")
+            throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type")
         }
 
         fun ferdigstill(
@@ -161,14 +171,14 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            throw IllegalStateException("Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $type")
+            throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $type")
         }
 
         fun tildel(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            throw IllegalStateException("Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type")
+            throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type")
         }
     }
 }
