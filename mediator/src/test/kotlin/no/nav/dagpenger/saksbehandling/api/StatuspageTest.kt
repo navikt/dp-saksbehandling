@@ -6,6 +6,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
@@ -25,7 +26,7 @@ class StatuspageTest {
                     get("/IllegalArgumentException") { throw IllegalArgumentException() }
                     get("/DataNotFoundException") { throw DataNotFoundException("test") }
                     get("/DateTimeParseException") { throw DateTimeParseException("test", "test", 1) }
-                    get("/IllegalStateException") { throw IllegalStateException() }
+                    get("/UkjentTilstandException") { throw Tilstand.UkjentTilstandException("test") }
                     get("/UlovligTilstandsendringException") { throw UlovligTilstandsendringException("test") }
                 }
             }
@@ -33,7 +34,7 @@ class StatuspageTest {
             client.get("/IllegalArgumentException").status shouldBe HttpStatusCode.BadRequest
             client.get("/DataNotFoundException").status shouldBe HttpStatusCode.NotFound
             client.get("/DateTimeParseException").status shouldBe HttpStatusCode.BadRequest
-            client.get("/IllegalStateException").status shouldBe HttpStatusCode.Conflict
+            client.get("/UkjentTilstandException").status shouldBe HttpStatusCode.InternalServerError
             client.get("/UlovligTilstandsendringException").status shouldBe HttpStatusCode.Conflict
         }
     }

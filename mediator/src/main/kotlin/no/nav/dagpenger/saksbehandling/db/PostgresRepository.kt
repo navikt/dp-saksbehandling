@@ -6,10 +6,12 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UkjentTilstandException
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DBUtils.norskZonedDateTime
 import no.nav.dagpenger.saksbehandling.logger
@@ -217,7 +219,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                                     KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
                                     UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
                                     FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
                                 }
                             },
                     )
@@ -350,7 +352,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         } ?: throw DataNotFoundException("Kunne ikke finne behandling med for oppgave-id: $oppgaveId")
     }
 
-    override fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
+    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -383,7 +385,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                                     KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
                                     UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
                                     FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
                                 }
                             },
                     )
@@ -472,7 +474,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                                     KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
                                     UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
                                     FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
                                 }
                             },
                     )
@@ -512,7 +514,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                                     KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
                                     UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
                                     FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
                                 }
                             },
                     )
@@ -567,7 +569,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                                     KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
                                     UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
                                     FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw IllegalStateException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
                                 }
                             },
                     )

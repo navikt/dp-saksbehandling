@@ -146,6 +146,8 @@ data class Oppgave private constructor(
 
         class UlovligTilstandsendringException(message: String) : RuntimeException(message)
 
+        class UkjentTilstandException(message: String) : RuntimeException(message)
+
         enum class Type {
             OPPRETTET,
             KLAR_TIL_BEHANDLING,
