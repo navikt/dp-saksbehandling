@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db
 
+import kotliquery.Row
 import kotliquery.Session
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -14,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UkjentTilstandException
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.DBUtils.norskZonedDateTime
+import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.logger
 import java.util.UUID
 import javax.sql.DataSource
@@ -85,9 +87,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             }
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
-                val oppgaveIder = behandling.oppgaver.map { it.oppgaveId }
-                tx.slettEmneknaggerFor(oppgaveIder)
-                tx.slettOppgaver(oppgaveIder)
                 tx.slettBehandling(behandlingId)
                 tx.slettPersonUtenBehandlinger(behandling.person.ident)
             }
@@ -133,7 +132,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         run(
             queryOf(
                 //language=PostgreSQL
-                statement = "DELETE FROM behandling_v1 WHERE id = :behandling_id",
+                statement = "DELETE  FROM behandling_v1 WHERE id = :behandling_id",
                 paramMap = mapOf("behandling_id" to behandlingId),
             ).asUpdate,
         )
@@ -144,7 +143,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.transaction { tx ->
                 tx.lagre(behandling.person)
                 tx.lagre(behandling)
-                tx.lagre(behandling.oppgaver)
             }
         }
     }
@@ -176,7 +174,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = behandlingId,
                         person = finnPerson(ident)!!,
                         opprettet = row.norskZonedDateTime("opprettet"),
-                        oppgaver = hentOppgaverFraBehandling(behandlingId, ident),
                     )
                 }.asSingle,
             )
@@ -198,32 +195,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT id, tilstand, opprettet, saksbehandler_ident
-                        FROM   oppgave_v1
+                        $hubba
                         WHERE  behandling_id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
-                ).map { row ->
-                    val oppgaveId = row.uuid("id")
-                    Oppgave.rehydrer(
-                        oppgaveId = oppgaveId,
-                        ident = ident,
-                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
-                        behandlingId = behandlingId,
-                        opprettet = row.norskZonedDateTime("opprettet"),
-                        emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-                        tilstand =
-                            row.string("tilstand").let { tilstand ->
-                                when (tilstand) {
-                                    OPPRETTET.name -> Oppgave.Opprettet
-                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                                }
-                            },
-                    )
-                }.asList,
+                ).map { row -> row.rehydrerOppgave() }.asList,
             )
         }
     }
@@ -345,54 +321,20 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = row.uuid("behandling_id"),
                         person = hentPerson(ident),
                         opprettet = row.norskZonedDateTime("opprettet"),
-                        oppgaver = hentOppgaverFraBehandling(row.uuid("behandling_id"), ident),
                     )
                 }.asSingle,
             )
         } ?: throw DataNotFoundException("Kunne ikke finne behandling med for oppgave-id: $oppgaveId")
     }
 
-    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.id, oppg.saksbehandler_ident
-                        FROM   oppgave_v1    oppg
-                        JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
-                        JOIN   person_v1     pers ON pers.id = beha.person_id
-                        WHERE  oppg.tilstand = :tilstand
-                        ORDER BY oppg.opprettet
-                        """.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "tilstand" to tilstand.name,
-                        ),
-                ).map { row ->
-                    Oppgave.rehydrer(
-                        oppgaveId = row.uuid("id"),
-                        ident = row.string("ident"),
-                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
-                        behandlingId = row.uuid("behandling_id"),
-                        opprettet = row.norskZonedDateTime("opprettet"),
-                        emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand =
-                            row.string("tilstand").let { tilstand ->
-                                when (tilstand) {
-                                    OPPRETTET.name -> Oppgave.Opprettet
-                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                                }
-                            },
-                    )
-                }.asList,
-            )
-        }
-    }
+    override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
+        søk(
+            Søkefilter(
+                tilstand = setOf(tilstand),
+                periode = UBEGRENSET_PERIODE,
+                saksbehandlerIdent = null,
+            ),
+        )
 
     override fun hentNesteOppgavenTil(saksbehandlerIdent: String): Oppgave? {
         sessionOf(dataSource).use { session ->
@@ -444,41 +386,60 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
+    //language=PostgreSQL
+    val hubba =
+        """
+        SELECT  pers.id AS person_id, pers.ident AS person_ident, 
+                oppg.id AS oppgave_id, oppg.tilstand, oppg.opprettet AS oppgave_opprettet, oppg.behandling_id, oppg.saksbehandler_ident,
+                beha.opprettet as behandling_opprettet
+        FROM    oppgave_v1    oppg
+        JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+        JOIN    person_v1     pers ON pers.id = beha.person_id
+        """.trimIndent()
+
+    private fun Row.rehydrerOppgave(): Oppgave {
+        val behandlingId = this.uuid("behandling_id")
+        val oppgaveId = this.uuid("oppgave_id")
+        val behandling =
+            Behandling.rehydrer(
+                behandlingId = behandlingId,
+                person =
+                    Person(
+                        id = this.uuid("person_id"),
+                        ident = this.string("person_ident"),
+                    ),
+                opprettet = this.norskZonedDateTime("behandling_opprettet"),
+            )
+
+        return Oppgave.rehydrer(
+            oppgaveId = oppgaveId,
+            ident = this.string("person_ident"),
+            saksbehandlerIdent = this.stringOrNull("saksbehandler_ident"),
+            behandlingId = behandlingId,
+            opprettet = this.norskZonedDateTime("oppgave_opprettet"),
+            emneknagger = hentEmneknaggerForOppgave(oppgaveId),
+            tilstand =
+                this.string("tilstand").let { tilstand ->
+                    when (tilstand) {
+                        OPPRETTET.name -> Oppgave.Opprettet
+                        KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
+                        UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
+                        FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
+                        else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
+                    }
+                },
+            behandling = behandling,
+        )
+    }
+
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT pers.ident, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
-                        FROM   oppgave_v1    oppg
-                        JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
-                        JOIN   person_v1     pers ON pers.id = beha.person_id
-                        WHERE  oppg.id = :oppgave_id
-                        """.trimIndent(),
+                    statement = """ $hubba WHERE  oppg.id = :oppgave_id """,
                     paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-
-                    Oppgave.rehydrer(
-                        oppgaveId = oppgaveId,
-                        ident = row.string("ident"),
-                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
-                        behandlingId = row.uuid("behandling_id"),
-                        opprettet = row.norskZonedDateTime("opprettet"),
-                        emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-                        tilstand =
-                            row.string("tilstand").let { tilstand ->
-                                when (tilstand) {
-                                    OPPRETTET.name -> Oppgave.Opprettet
-                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                                }
-                            },
-                    )
-                }.asSingle,
+                ).map { row -> row.rehydrerOppgave() }.asSingle,
             )
         } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
@@ -488,37 +449,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """
-                        SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
-                        FROM   oppgave_v1    oppg
-                        JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
-                        JOIN   person_v1     pers ON pers.id = beha.person_id
-                        WHERE  pers.ident = :ident
-                        """.trimIndent(),
+                        """ $hubba WHERE  pers.ident = :ident """,
                     paramMap =
                         mapOf(
                             "ident" to ident,
                         ),
-                ).map { row ->
-                    Oppgave.rehydrer(
-                        oppgaveId = row.uuid("id"),
-                        ident = row.string("ident"),
-                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
-                        behandlingId = row.uuid("behandling_id"),
-                        opprettet = row.norskZonedDateTime("opprettet"),
-                        emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand =
-                            row.string("tilstand").let { tilstand ->
-                                when (tilstand) {
-                                    OPPRETTET.name -> Oppgave.Opprettet
-                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                                }
-                            },
-                    )
-                }.asList,
+                ).map { row -> row.rehydrerOppgave() }.asList,
             )
         }
     }
@@ -533,10 +469,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             //language=PostgreSQL
             val sql =
                 """
-                    SELECT pers.ident, oppg.id, oppg.tilstand, oppg.opprettet, oppg.behandling_id, oppg.saksbehandler_ident
-                    FROM   oppgave_v1    oppg
-                    JOIN   behandling_v1 beha ON beha.id = oppg.behandling_id
-                    JOIN   person_v1     pers ON pers.id = beha.person_id
+                    $hubba
                     WHERE  oppg.tilstand IN ($tilstander)
                     AND    date_trunc('day', oppg.opprettet) <= :tom
                     AND    date_trunc('day', oppg.opprettet) >= :fom
@@ -555,24 +488,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 )
             session.run(
                 queryOf.map { row ->
-                    Oppgave.rehydrer(
-                        oppgaveId = row.uuid("id"),
-                        ident = row.string("ident"),
-                        saksbehandlerIdent = row.stringOrNull("saksbehandler_ident"),
-                        behandlingId = row.uuid("behandling_id"),
-                        opprettet = row.norskZonedDateTime("opprettet"),
-                        emneknagger = hentEmneknaggerForOppgave(row.uuid("id")),
-                        tilstand =
-                            row.string("tilstand").let { tilstand ->
-                                when (tilstand) {
-                                    OPPRETTET.name -> Oppgave.Opprettet
-                                    KLAR_TIL_BEHANDLING.name -> Oppgave.KlarTilBehandling
-                                    UNDER_BEHANDLING.name -> Oppgave.UnderBehandling
-                                    FERDIG_BEHANDLET.name -> Oppgave.FerdigBehandlet
-                                    else -> throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $tilstand")
-                                }
-                            },
-                    )
+                    row.rehydrerOppgave()
                 }.asList,
             )
         }

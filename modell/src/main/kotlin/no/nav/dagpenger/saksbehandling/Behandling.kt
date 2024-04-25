@@ -10,42 +10,40 @@ data class Behandling(
     val behandlingId: UUID,
     val person: Person,
     val opprettet: ZonedDateTime,
-    val oppgaver: MutableList<Oppgave> = mutableListOf(),
 ) {
     companion object {
         fun rehydrer(
             behandlingId: UUID,
             person: Person,
             opprettet: ZonedDateTime,
-            oppgaver: List<Oppgave>,
         ): Behandling {
             return Behandling(
                 behandlingId = behandlingId,
                 person = person,
                 opprettet = opprettet,
-                oppgaver = oppgaver.toMutableList(),
             )
         }
     }
 
     fun håndter(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        this.oppgaver.single().oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+//        this.oppgaver.single().oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
     }
 
     fun håndter(vedtakFattetHendelse: VedtakFattetHendelse) {
-        this.oppgaver.single().ferdigstill(vedtakFattetHendelse)
+//        this.oppgaver.single().ferdigstill(vedtakFattetHendelse)
     }
 
     fun håndter(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        this.oppgaver.add(
-            Oppgave(
-                oppgaveId = UUIDv7.ny(),
-                emneknagger = setOf("Søknadsbehandling"),
-                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                tilstand = Oppgave.Opprettet,
-                ident = person.ident,
-                behandlingId = behandlingId,
-            ),
-        )
+//        this.oppgaver.add(
+//            Oppgave(
+//                oppgaveId = UUIDv7.ny(),
+//                emneknagger = setOf("Søknadsbehandling"),
+//                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+//                tilstand = Oppgave.Opprettet,
+//                ident = person.ident,
+//                behandlingId = behandlingId,
+//                behandling = this,
+//            ),
+//        )
     }
 }

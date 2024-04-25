@@ -25,12 +25,14 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Mediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
@@ -435,11 +437,18 @@ class OppgaveApiTest {
         tilstand: Oppgave.Tilstand.Type,
         saksbehandlerIdent: String? = null,
     ): Oppgave {
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                person = Person(id = UUIDv7.ny(), ident = testIdent),
+                opprettet = ZonedDateTime.now(),
+                oppgaver = mutableListOf(),
+            )
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = testIdent,
             saksbehandlerIdent = saksbehandlerIdent,
-            behandlingId = UUIDv7.ny(),
+            behandlingId = behandling.behandlingId,
             opprettet = ZonedDateTime.now(),
             emneknagger = setOf("Søknadsbehandling"),
             tilstand =
@@ -449,6 +458,7 @@ class OppgaveApiTest {
                     UNDER_BEHANDLING -> Oppgave.UnderBehandling
                     FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 },
+            behandling = behandling,
         )
     }
 

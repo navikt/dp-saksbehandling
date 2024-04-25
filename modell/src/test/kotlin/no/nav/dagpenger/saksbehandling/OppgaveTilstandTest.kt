@@ -78,6 +78,7 @@ class OppgaveTilstandTest {
                 opprettet = ZonedDateTime.now(),
                 emneknagger = setOf(),
                 tilstand = Oppgave.UnderBehandling,
+                behandling = behandling,
             )
 
         shouldNotThrowAny {
@@ -128,6 +129,13 @@ class OppgaveTilstandTest {
         }
     }
 
+    private val behandling =
+        Behandling(
+            behandlingId = UUIDv7.ny(),
+            person = Person(id = UUIDv7.ny(), ident = "12345678910"),
+            opprettet = ZonedDateTime.now(),
+        )
+
     private fun lagOppgave(
         type: Type,
         saksbehandlerIdent: String? = null,
@@ -147,6 +155,7 @@ class OppgaveTilstandTest {
             opprettet = ZonedDateTime.now(),
             tilstand = tilstand,
             saksbehandlerIdent = saksbehandlerIdent,
+            behandling = behandling,
         )
     }
 }
