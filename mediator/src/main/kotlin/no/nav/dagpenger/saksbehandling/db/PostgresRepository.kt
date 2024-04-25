@@ -174,7 +174,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     //language=PostgreSQL
                     statement =
                         """
-                        $hubba
+                        $oppgaveSøkSql
                         WHERE  behandling_id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
@@ -367,8 +367,19 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
+    override fun hentOppgaveFor(behandlingId: UUID): Oppgave =
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """ $oppgaveSøkSql WHERE  oppg.behandling_id = :behandling_id """,
+                    paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row -> row.rehydrerOppgave() }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
+
     //language=PostgreSQL
-    val hubba =
+    val oppgaveSøkSql =
         """
         SELECT  pers.id AS person_id, pers.ident AS person_ident, 
                 oppg.id AS oppgave_id, oppg.tilstand, oppg.opprettet AS oppgave_opprettet, oppg.behandling_id, oppg.saksbehandler_ident,
@@ -409,7 +420,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """ $hubba WHERE  oppg.id = :oppgave_id """,
+                    statement = """ $oppgaveSøkSql WHERE  oppg.id = :oppgave_id """,
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row -> row.rehydrerOppgave() }.asSingle,
             )
@@ -421,7 +432,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """ $hubba WHERE  pers.ident = :ident """,
+                        """ $oppgaveSøkSql WHERE  pers.ident = :ident """,
                     paramMap =
                         mapOf(
                             "ident" to ident,
@@ -441,7 +452,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             //language=PostgreSQL
             val sql =
                 """
-                    $hubba
+                    $oppgaveSøkSql
                     WHERE  oppg.tilstand IN ($tilstander)
                     AND    date_trunc('day', oppg.opprettet) <= :tom
                     AND    date_trunc('day', oppg.opprettet) >= :fom

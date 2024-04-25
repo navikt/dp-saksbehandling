@@ -35,4 +35,6 @@ internal interface Repository {
     fun hentNesteOppgavenTil(saksbehandlerIdent: String): Oppgave?
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?
+
+    fun hentOppgaveFor(behandlingId: UUID): Oppgave
 }

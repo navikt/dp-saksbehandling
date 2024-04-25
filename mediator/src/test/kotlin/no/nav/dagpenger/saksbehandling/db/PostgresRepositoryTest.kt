@@ -398,6 +398,16 @@ class PostgresRepositoryTest {
         }
     }
 
+    @Test
+    fun `Skal hente en oppgave basert på behandlingId`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            val oppgave = lagOppgave()
+            repo.lagre(oppgave)
+            repo.hentOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+        }
+    }
+
     private fun lagOppgave(
         tilstand: Oppgave.Tilstand.Type = KLAR_TIL_BEHANDLING,
         opprettet: ZonedDateTime = opprettetNå,

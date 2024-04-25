@@ -32,9 +32,7 @@ class MediatorTest {
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
             val mediator =
-                Mediator(
-                    repository = PostgresRepository(datasource),
-                )
+                Mediator(repository = PostgresRepository(datasource))
 
             BehandlingOpprettetMottak(testRapid, mediator, skjermingKlientMock, pdlKlientMock)
 
@@ -77,7 +75,7 @@ class MediatorTest {
             tildeltOppgave.tilstand() shouldBe UNDER_BEHANDLING
             tildeltOppgave.saksbehandlerIdent shouldBe "NAVIdent"
 
-            mediator.avsluttBehandling(
+            mediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,

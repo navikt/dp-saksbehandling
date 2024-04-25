@@ -27,7 +27,7 @@ internal class VedtakFattetMottakTest {
     fun `Skal behandle vedtak fattet hendelse`() {
         testRapid.sendTestMessage(vedtakFattetHendelse())
         verify(exactly = 1) {
-            mediatorMock.avsluttBehandling(
+            mediatorMock.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,

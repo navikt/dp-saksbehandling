@@ -31,37 +31,47 @@ internal class Mediator(
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
             )
 
-        behandling.håndter(søknadsbehandlingOpprettetHendelse)
-        lagre(behandling)
+        val oppgave =
+            Oppgave(
+                oppgaveId = UUIDv7.ny(),
+                emneknagger = setOf("Søknadsbehandling"),
+                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                ident = person.ident,
+                behandlingId = behandling.behandlingId,
+                behandling = behandling,
+            )
+
+        lagre(oppgave)
         logger.info { "Mottatt søknadsbehandling med id ${behandling.behandlingId}" }
     }
 
     fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        this.hentBehandling(forslagTilVedtakHendelse.behandlingId).let { behandling ->
-            behandling.håndter(forslagTilVedtakHendelse)
-            lagre(behandling)
-            logger.info { "Mottatt forslag til vedtak hendelse for behandling med id ${behandling.behandlingId}" }
+        logger.info { "Mottatt forslag til vedtak hendelse for behandling med id ${forslagTilVedtakHendelse.behandlingId}" }
+        hentOppgaveFor(forslagTilVedtakHendelse.behandlingId).let { oppgave ->
+            oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            lagre(oppgave)
         }
     }
 
     fun fristillOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        val oppgave = repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId)
-        oppgave.fjernAnsvar(oppgaveAnsvarHendelse)
-        repository.lagre(oppgave)
+        repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId).let { oppgave ->
+            oppgave.fjernAnsvar(oppgaveAnsvarHendelse)
+            repository.lagre(oppgave)
+        }
     }
 
     fun tildelOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse): Oppgave {
-        val oppgave = repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId)
-        oppgave.tildel(oppgaveAnsvarHendelse)
-        repository.lagre(oppgave)
-        return oppgave
+        return repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
+            oppgave.tildel(oppgaveAnsvarHendelse)
+            repository.lagre(oppgave)
+        }
     }
 
-    fun avsluttBehandling(hendelse: VedtakFattetHendelse) {
-        repository.hentBehandling(hendelse.behandlingId).let { behandling ->
-            behandling.håndter(hendelse)
-            lagre(behandling)
-            logger.info { "Mottatt vedtak fattet hendelse for behandling med id ${behandling.behandlingId}. Behandling avsluttet." }
+    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse) {
+        logger.info { "Mottatt vedtak fattet hendelse for behandling med id ${vedtakFattetHendelse.behandlingId}. Behandling avsluttes." }
+        hentOppgaveFor(vedtakFattetHendelse.behandlingId).let { oppgave ->
+            oppgave.ferdigstill(vedtakFattetHendelse)
+            lagre(oppgave)
         }
     }
 
