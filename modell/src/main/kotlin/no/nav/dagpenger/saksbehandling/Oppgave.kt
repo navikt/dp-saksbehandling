@@ -173,6 +173,12 @@ data class Oppgave private constructor(
             KLAR_TIL_BEHANDLING,
             UNDER_BEHANDLING,
             FERDIG_BEHANDLET,
+            ;
+
+            companion object {
+                val values
+                    get() = Type.entries.toSet()
+            }
         }
 
         fun oppgaveKlarTilBehandling(

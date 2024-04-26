@@ -9,6 +9,7 @@ data class Søkefilter(
     val periode: Periode,
     val tilstand: Set<Oppgave.Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
+    val personIdent: String? = null,
 ) {
     companion object {
         val DEFAULT_SØKEFILTER =
@@ -16,6 +17,7 @@ data class Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
                 tilstand = setOf(KLAR_TIL_BEHANDLING),
                 saksbehandlerIdent = null,
+                personIdent = null,
             )
 
         fun fra(

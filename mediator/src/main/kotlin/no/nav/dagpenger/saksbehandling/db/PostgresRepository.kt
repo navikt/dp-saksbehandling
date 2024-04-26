@@ -196,21 +196,15 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             )
         } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
-    override fun finnOppgaverFor(ident: String): List<Oppgave> {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """ $oppgaveSelectSql WHERE  pers.ident = :ident """,
-                    paramMap =
-                        mapOf(
-                            "ident" to ident,
-                        ),
-                ).map { row -> row.rehydrerOppgave() }.asList,
-            )
-        }
-    }
+    override fun finnOppgaverFor(ident: String): List<Oppgave> =
+        søk(
+            Søkefilter(
+                periode = UBEGRENSET_PERIODE,
+                tilstand = Type.Companion.values,
+                saksbehandlerIdent = null,
+                personIdent = ident,
+            ),
+        )
 
     override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
         return sessionOf(dataSource).use { session ->
@@ -219,6 +213,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             val saksBehandlerClause =
                 søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
 
+            val personIdentClause: String = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
+
             //language=PostgreSQL
             val sql =
                 """
@@ -226,7 +222,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     WHERE  oppg.tilstand IN ($tilstander)
                     AND    date_trunc('day', oppg.opprettet) <= :tom
                     AND    date_trunc('day', oppg.opprettet) >= :fom
-                """ + saksBehandlerClause
+                """ + saksBehandlerClause + personIdentClause
 
             val queryOf =
                 queryOf(
@@ -237,6 +233,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                             "fom" to søkeFilter.periode.fom,
                             "tom" to søkeFilter.periode.tom,
                             "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                            "person_ident" to søkeFilter.personIdent,
                         ),
                 )
             session.run(
