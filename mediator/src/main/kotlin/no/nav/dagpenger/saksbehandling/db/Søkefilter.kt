@@ -12,6 +12,7 @@ data class Søkefilter(
     val saksbehandlerIdent: String? = null,
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
+    val behandlingId: UUID? = null,
 ) {
     companion object {
         val DEFAULT_SØKEFILTER =
@@ -21,6 +22,7 @@ data class Søkefilter(
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,
+                behandlingId = null,
             )
 
         fun fra(

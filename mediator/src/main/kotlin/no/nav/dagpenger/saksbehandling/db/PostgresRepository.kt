@@ -174,15 +174,14 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     override fun hentOppgaveFor(behandlingId: UUID): Oppgave =
-        sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """ $oppgaveSelectSql WHERE  oppg.behandling_id = :behandling_id """,
-                    paramMap = mapOf("behandling_id" to behandlingId),
-                ).map { row -> row.rehydrerOppgave() }.asSingle,
-            )
-        } ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
+        søk(
+            søkeFilter =
+                Søkefilter(
+                    periode = UBEGRENSET_PERIODE,
+                    tilstand = Type.Companion.values,
+                    behandlingId = behandlingId,
+                ),
+        ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
@@ -190,10 +189,9 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
                 tilstand = Type.Companion.values,
-                saksbehandlerIdent = null,
                 oppgaveId = oppgaveId,
             ),
-        ).firstOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+        ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
     override fun finnOppgaverFor(ident: String): List<Oppgave> =
         søk(
@@ -216,17 +214,28 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
 
             val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id" } ?: ""
 
+            val behandlingIdClause = søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
+
             //language=PostgreSQL
             val sql =
                 StringBuilder(
                     """
-                    $oppgaveSelectSql
+                    ${
+                        """
+                        SELECT  pers.id AS person_id, pers.ident AS person_ident, 
+                                oppg.id AS oppgave_id, oppg.tilstand, oppg.opprettet AS oppgave_opprettet, oppg.behandling_id, oppg.saksbehandler_ident,
+                                beha.opprettet as behandling_opprettet
+                        FROM    oppgave_v1    oppg
+                        JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                        JOIN    person_v1     pers ON pers.id = beha.person_id
+                        """.trimIndent()
+                    }
                     WHERE  oppg.tilstand IN ($tilstander)
                     AND    date_trunc('day', oppg.opprettet) <= :tom
                     AND    date_trunc('day', oppg.opprettet) >= :fom
                 """,
                 )
-                    .append(saksBehandlerClause, personIdentClause, oppgaveIdClause)
+                    .append(saksBehandlerClause, personIdentClause, oppgaveIdClause, behandlingIdClause)
                     .toString()
 
             val queryOf =
@@ -240,6 +249,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                             "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
                             "person_ident" to søkeFilter.personIdent,
                             "oppgave_id" to søkeFilter.oppgaveId,
+                            "behandling_id" to søkeFilter.behandlingId,
                         ),
                 )
             session.run(
@@ -249,16 +259,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             )
         }
     }
-
-    private val oppgaveSelectSql =
-        """
-        SELECT  pers.id AS person_id, pers.ident AS person_ident, 
-                oppg.id AS oppgave_id, oppg.tilstand, oppg.opprettet AS oppgave_opprettet, oppg.behandling_id, oppg.saksbehandler_ident,
-                beha.opprettet as behandling_opprettet
-        FROM    oppgave_v1    oppg
-        JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-        JOIN    person_v1     pers ON pers.id = beha.person_id
-        """.trimIndent()
 
     private fun TransactionalSession.lagre(person: Person) {
         run(
