@@ -164,24 +164,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
-    private fun hentOppgaverFraBehandling(
-        behandlingId: UUID,
-        ident: String,
-    ): List<Oppgave> {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        $oppgaveSøkSql
-                        WHERE  behandling_id = :behandling_id
-                        """.trimIndent(),
-                    paramMap = mapOf("behandling_id" to behandlingId),
-                ).map { row -> row.rehydrerOppgave() }.asList,
-            )
-        }
-    }
 
     private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
         return sessionOf(dataSource).use { session ->
@@ -223,12 +205,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     ),
             ).asUpdate,
         )
-    }
-
-    private fun TransactionalSession.lagre(oppgaver: List<Oppgave>) {
-        oppgaver.forEach { oppgave ->
-            lagre(oppgave)
-        }
     }
 
     private fun TransactionalSession.lagre(oppgave: Oppgave) {
