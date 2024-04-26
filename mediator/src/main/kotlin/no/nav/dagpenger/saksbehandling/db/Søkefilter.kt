@@ -4,12 +4,14 @@ import io.ktor.http.Parameters
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import java.time.LocalDate
+import java.util.UUID
 
 data class Søkefilter(
     val periode: Periode,
     val tilstand: Set<Oppgave.Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
     val personIdent: String? = null,
+    val oppgaveId: UUID? = null,
 ) {
     companion object {
         val DEFAULT_SØKEFILTER =
@@ -18,6 +20,7 @@ data class Søkefilter(
                 tilstand = setOf(KLAR_TIL_BEHANDLING),
                 saksbehandlerIdent = null,
                 personIdent = null,
+                oppgaveId = null,
             )
 
         fun fra(

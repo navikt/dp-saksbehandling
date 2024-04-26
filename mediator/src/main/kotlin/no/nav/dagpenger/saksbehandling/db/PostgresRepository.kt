@@ -186,15 +186,14 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
 
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
-        sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """ $oppgaveSelectSql WHERE  oppg.id = :oppgave_id """,
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row -> row.rehydrerOppgave() }.asSingle,
-            )
-        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+        søk(
+            Søkefilter(
+                periode = UBEGRENSET_PERIODE,
+                tilstand = Type.Companion.values,
+                saksbehandlerIdent = null,
+                oppgaveId = oppgaveId,
+            ),
+        ).firstOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
     override fun finnOppgaverFor(ident: String): List<Oppgave> =
         søk(
@@ -213,20 +212,26 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             val saksBehandlerClause =
                 søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
 
-            val personIdentClause: String = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
+            val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
+
+            val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id" } ?: ""
 
             //language=PostgreSQL
             val sql =
-                """
+                StringBuilder(
+                    """
                     $oppgaveSelectSql
                     WHERE  oppg.tilstand IN ($tilstander)
                     AND    date_trunc('day', oppg.opprettet) <= :tom
                     AND    date_trunc('day', oppg.opprettet) >= :fom
-                """ + saksBehandlerClause + personIdentClause
+                """,
+                )
+                    .append(saksBehandlerClause, personIdentClause, oppgaveIdClause)
+                    .toString()
 
             val queryOf =
                 queryOf(
-                    statement = sql.trimIndent(),
+                    statement = sql,
                     paramMap =
                         mapOf(
                             "tilstander" to tilstander,
@@ -234,6 +239,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                             "tom" to søkeFilter.periode.tom,
                             "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
                             "person_ident" to søkeFilter.personIdent,
+                            "oppgave_id" to søkeFilter.oppgaveId,
                         ),
                 )
             session.run(
