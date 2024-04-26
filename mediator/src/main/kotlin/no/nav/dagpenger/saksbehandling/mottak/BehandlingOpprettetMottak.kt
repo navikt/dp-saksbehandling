@@ -68,7 +68,7 @@ internal class BehandlingOpprettetMottak(
                         søknadId = søknadId,
                         behandlingId = behandlingId,
                         ident = ident,
-                        opprettet = ZonedDateTime.of(opprettet, ZoneId.systemDefault()),
+                        opprettet = ZonedDateTime.of(opprettet, ZoneId.of("Europe/Oslo")),
                     ),
                 )
             } else {
