@@ -15,14 +15,15 @@ data class Søkefilter(
     val behandlingId: UUID? = null,
 ) {
     companion object {
-        val DEFAULT_SØKEFILTER = Søkefilter(
-            periode = Periode.UBEGRENSET_PERIODE,
-            tilstand = setOf(KLAR_TIL_BEHANDLING),
-            saksbehandlerIdent = null,
-            personIdent = null,
-            oppgaveId = null,
-            behandlingId = null,
-        )
+        val DEFAULT_SØKEFILTER =
+            Søkefilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                tilstand = setOf(KLAR_TIL_BEHANDLING),
+                saksbehandlerIdent = null,
+                personIdent = null,
+                oppgaveId = null,
+                behandlingId = null,
+            )
 
         fun fra(
             queryParameters: Parameters,
@@ -38,10 +39,10 @@ data class Søkefilter(
                 periode = Periode.fra(queryParameters),
                 tilstand = tilstand,
                 saksbehandlerIdent =
-                when {
-                    mine -> saksbehandlerIdent
-                    else -> null
-                },
+                    when {
+                        mine -> saksbehandlerIdent
+                        else -> null
+                    },
             )
         }
     }
