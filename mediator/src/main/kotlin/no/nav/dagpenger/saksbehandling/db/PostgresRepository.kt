@@ -25,7 +25,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
-
     override fun finnPerson(ident: String): Person? {
         sessionOf(dataSource).use { session ->
             return session.run(
@@ -115,7 +114,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
-
     override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
         søk(
             Søkefilter(
@@ -204,11 +202,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """ $oppgaveSelectSql WHERE  pers.ident = :ident """,
+                        """ $oppgaveSelectSql WHERE  pers.ident = :ident """,
                     paramMap =
-                    mapOf(
-                        "ident" to ident,
-                    ),
+                        mapOf(
+                            "ident" to ident,
+                        ),
                 ).map { row -> row.rehydrerOppgave() }.asList,
             )
         }
@@ -234,12 +232,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     statement = sql.trimIndent(),
                     paramMap =
-                    mapOf(
-                        "tilstander" to tilstander,
-                        "fom" to søkeFilter.periode.fom,
-                        "tom" to søkeFilter.periode.tom,
-                        "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                    ),
+                        mapOf(
+                            "tilstander" to tilstander,
+                            "fom" to søkeFilter.periode.fom,
+                            "tom" to søkeFilter.periode.tom,
+                            "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                        ),
                 )
             session.run(
                 queryOf.map { row ->
@@ -264,7 +262,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     INSERT INTO person_v1
                         (id, ident) 
                     VALUES
@@ -272,19 +270,20 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     ON CONFLICT (id) DO UPDATE SET ident = :ident
                     """.trimIndent(),
                 paramMap =
-                mapOf(
-                    "id" to person.id,
-                    "ident" to person.ident,
-                ),
+                    mapOf(
+                        "id" to person.id,
+                        "ident" to person.ident,
+                    ),
             ).asUpdate,
         )
     }
+
     private fun TransactionalSession.slettPersonUtenBehandlinger(ident: String) {
         run(
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     DELETE FROM person_v1 pers 
                     WHERE pers.ident = :ident
                     AND NOT EXISTS(
@@ -314,7 +313,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         SELECT emneknagg
                         FROM   emneknagg_v1
                         WHERE  oppgave_id = :oppgave_id
@@ -333,7 +332,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     INSERT INTO behandling_v1
                         (id, person_id, opprettet)
                     VALUES
@@ -341,11 +340,11 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     ON CONFLICT DO NOTHING
                     """.trimIndent(),
                 paramMap =
-                mapOf(
-                    "id" to behandling.behandlingId,
-                    "person_id" to behandling.person.id,
-                    "opprettet" to behandling.opprettet,
-                ),
+                    mapOf(
+                        "id" to behandling.behandlingId,
+                        "person_id" to behandling.person.id,
+                        "opprettet" to behandling.opprettet,
+                    ),
             ).asUpdate,
         )
     }
@@ -356,7 +355,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                """
+                    """
                     INSERT INTO oppgave_v1
                         (id, behandling_id, tilstand, opprettet, saksbehandler_ident)
                     VALUES
@@ -367,13 +366,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     
                     """.trimIndent(),
                 paramMap =
-                mapOf(
-                    "id" to oppgave.oppgaveId,
-                    "behandling_id" to oppgave.behandlingId,
-                    "tilstand" to oppgave.tilstand().name,
-                    "opprettet" to oppgave.opprettet,
-                    "saksbehandler_ident" to oppgave.saksbehandlerIdent,
-                ),
+                    mapOf(
+                        "id" to oppgave.oppgaveId,
+                        "behandling_id" to oppgave.behandlingId,
+                        "tilstand" to oppgave.tilstand().name,
+                        "opprettet" to oppgave.opprettet,
+                        "saksbehandler_ident" to oppgave.saksbehandlerIdent,
+                    ),
             ).asUpdate,
         )
         lagre(oppgave.oppgaveId, oppgave.emneknagger)
@@ -388,7 +387,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
+                        """
                         INSERT INTO emneknagg_v1
                             (oppgave_id, emneknagg) 
                         VALUES
@@ -400,6 +399,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             )
         }
     }
+
     private fun Row.rehydrerOppgave(): Oppgave {
         val behandlingId = this.uuid("behandling_id")
         val oppgaveId = this.uuid("oppgave_id")
@@ -425,5 +425,4 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             behandling = behandling,
         )
     }
-
 }
