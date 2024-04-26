@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import java.time.format.DateTimeParseException
 
-private val logger = KotlinLogging.logger { }
 private val sikkerLogger = KotlinLogging.logger("tjenestekall")
 
 fun Application.apiConfig() {
