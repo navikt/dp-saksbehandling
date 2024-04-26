@@ -164,7 +164,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
-
     private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
         return sessionOf(dataSource).use { session ->
             session.run(
