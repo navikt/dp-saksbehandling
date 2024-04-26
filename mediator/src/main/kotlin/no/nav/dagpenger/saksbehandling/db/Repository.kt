@@ -16,8 +16,6 @@ internal interface Repository {
 
     fun hentBehandling(behandlingId: UUID): Behandling
 
-    fun hentBehandlingFra(oppgaveId: UUID): Behandling
-
     fun lagre(behandling: Behandling)
 
     fun slettBehandling(behandlingId: UUID)

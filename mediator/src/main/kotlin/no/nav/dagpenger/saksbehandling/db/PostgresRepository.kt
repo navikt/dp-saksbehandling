@@ -257,32 +257,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
-    override fun hentBehandlingFra(oppgaveId: UUID): Behandling {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
-                        FROM   behandling_v1 beha
-                        JOIN   person_v1     pers ON pers.id = beha.person_id
-                        JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
-                        WHERE  oppg.id = :oppgave_id
-                        """.trimIndent(),
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-                    val ident = row.string("ident")
-                    Behandling.rehydrer(
-                        behandlingId = row.uuid("behandling_id"),
-                        person = hentPerson(ident),
-                        opprettet = row.norskZonedDateTime("opprettet"),
-                    )
-                }.asSingle,
-            )
-        } ?: throw DataNotFoundException("Kunne ikke finne behandling med for oppgave-id: $oppgaveId")
-    }
-
     override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
         søk(
             Søkefilter(
