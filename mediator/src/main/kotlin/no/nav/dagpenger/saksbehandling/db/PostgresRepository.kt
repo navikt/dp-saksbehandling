@@ -25,26 +25,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         }
     }
 
-    private fun TransactionalSession.lagre(person: Person) {
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO person_v1
-                        (id, ident) 
-                    VALUES
-                        (:id, :ident) 
-                    ON CONFLICT (id) DO UPDATE SET ident = :ident
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "id" to person.id,
-                        "ident" to person.ident,
-                    ),
-            ).asUpdate,
-        )
-    }
 
     override fun finnPerson(ident: String): Person? {
         sessionOf(dataSource).use { session ->
@@ -87,35 +67,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 tx.slettPersonUtenBehandlinger(behandling.person.ident)
             }
         }
-    }
-
-    private fun TransactionalSession.slettPersonUtenBehandlinger(ident: String) {
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    DELETE FROM person_v1 pers 
-                    WHERE pers.ident = :ident
-                    AND NOT EXISTS(
-                        SELECT 1 
-                        FROM behandling_v1 beha 
-                        WHERE beha.person_id = pers.id
-                    )
-                    """.trimMargin(),
-                paramMap = mapOf("ident" to ident),
-            ).asUpdate,
-        )
-    }
-
-    private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement = "DELETE  FROM behandling_v1 WHERE id = :behandling_id",
-                paramMap = mapOf("behandling_id" to behandlingId),
-            ).asUpdate,
-        )
     }
 
     override fun lagre(behandling: Behandling) {
@@ -164,98 +115,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
-    private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT emneknagg
-                        FROM   emneknagg_v1
-                        WHERE  oppgave_id = :oppgave_id
-                        """.trimIndent(),
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-                    row.string("emneknagg")
-                }.asList,
-            )
-        }.toSet()
-    }
-
-    private fun TransactionalSession.lagre(behandling: Behandling) {
-        this.lagre(behandling.person)
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO behandling_v1
-                        (id, person_id, opprettet)
-                    VALUES
-                        (:id, :person_id, :opprettet) 
-                    ON CONFLICT DO NOTHING
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "id" to behandling.behandlingId,
-                        "person_id" to behandling.person.id,
-                        "opprettet" to behandling.opprettet,
-                    ),
-            ).asUpdate,
-        )
-    }
-
-    private fun TransactionalSession.lagre(oppgave: Oppgave) {
-        this.lagre(oppgave.behandling)
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO oppgave_v1
-                        (id, behandling_id, tilstand, opprettet, saksbehandler_ident)
-                    VALUES
-                        (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident) 
-                    ON CONFLICT(id) DO UPDATE SET
-                     tilstand = :tilstand,
-                     saksbehandler_ident = :saksbehandler_ident
-                    
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "id" to oppgave.oppgaveId,
-                        "behandling_id" to oppgave.behandlingId,
-                        "tilstand" to oppgave.tilstand().name,
-                        "opprettet" to oppgave.opprettet,
-                        "saksbehandler_ident" to oppgave.saksbehandlerIdent,
-                    ),
-            ).asUpdate,
-        )
-        lagre(oppgave.oppgaveId, oppgave.emneknagger)
-    }
-
-    private fun TransactionalSession.lagre(
-        oppgaveId: UUID,
-        emneknagger: Set<String>,
-    ) {
-        emneknagger.forEach { emneknagg ->
-            run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        INSERT INTO emneknagg_v1
-                            (oppgave_id, emneknagg) 
-                        VALUES
-                            (:oppgave_id, :emneknagg)
-                        ON CONFLICT ON CONSTRAINT emneknagg_oppgave_unique DO NOTHING
-                        """.trimIndent(),
-                    paramMap = mapOf("oppgave_id" to oppgaveId, "emneknagg" to emneknagg),
-                ).asUpdate,
-            )
-        }
-    }
 
     override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
         søk(
@@ -321,14 +180,76 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             session.run(
                 queryOf(
                     //language=PostgreSQL
-                    statement = """ $oppgaveSøkSql WHERE  oppg.behandling_id = :behandling_id """,
+                    statement = """ $oppgaveSelectSql WHERE  oppg.behandling_id = :behandling_id """,
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row -> row.rehydrerOppgave() }.asSingle,
             )
         } ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
     //language=PostgreSQL
-    val oppgaveSøkSql =
+    override fun hentOppgave(oppgaveId: UUID): Oppgave =
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """ $oppgaveSelectSql WHERE  oppg.id = :oppgave_id """,
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row -> row.rehydrerOppgave() }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+
+    override fun finnOppgaverFor(ident: String): List<Oppgave> {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                    """ $oppgaveSelectSql WHERE  pers.ident = :ident """,
+                    paramMap =
+                    mapOf(
+                        "ident" to ident,
+                    ),
+                ).map { row -> row.rehydrerOppgave() }.asList,
+            )
+        }
+    }
+
+    override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
+        return sessionOf(dataSource).use { session ->
+            val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
+
+            val saksBehandlerClause =
+                søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
+
+            //language=PostgreSQL
+            val sql =
+                """
+                    $oppgaveSelectSql
+                    WHERE  oppg.tilstand IN ($tilstander)
+                    AND    date_trunc('day', oppg.opprettet) <= :tom
+                    AND    date_trunc('day', oppg.opprettet) >= :fom
+                """ + saksBehandlerClause
+
+            val queryOf =
+                queryOf(
+                    statement = sql.trimIndent(),
+                    paramMap =
+                    mapOf(
+                        "tilstander" to tilstander,
+                        "fom" to søkeFilter.periode.fom,
+                        "tom" to søkeFilter.periode.tom,
+                        "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                    ),
+                )
+            session.run(
+                queryOf.map { row ->
+                    row.rehydrerOppgave()
+                }.asList,
+            )
+        }
+    }
+
+    private val oppgaveSelectSql =
         """
         SELECT  pers.id AS person_id, pers.ident AS person_ident, 
                 oppg.id AS oppgave_id, oppg.tilstand, oppg.opprettet AS oppgave_opprettet, oppg.behandling_id, oppg.saksbehandler_ident,
@@ -338,6 +259,147 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         JOIN    person_v1     pers ON pers.id = beha.person_id
         """.trimIndent()
 
+    private fun TransactionalSession.lagre(person: Person) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                """
+                    INSERT INTO person_v1
+                        (id, ident) 
+                    VALUES
+                        (:id, :ident) 
+                    ON CONFLICT (id) DO UPDATE SET ident = :ident
+                    """.trimIndent(),
+                paramMap =
+                mapOf(
+                    "id" to person.id,
+                    "ident" to person.ident,
+                ),
+            ).asUpdate,
+        )
+    }
+    private fun TransactionalSession.slettPersonUtenBehandlinger(ident: String) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                """
+                    DELETE FROM person_v1 pers 
+                    WHERE pers.ident = :ident
+                    AND NOT EXISTS(
+                        SELECT 1 
+                        FROM behandling_v1 beha 
+                        WHERE beha.person_id = pers.id
+                    )
+                    """.trimMargin(),
+                paramMap = mapOf("ident" to ident),
+            ).asUpdate,
+        )
+    }
+
+    private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement = "DELETE  FROM behandling_v1 WHERE id = :behandling_id",
+                paramMap = mapOf("behandling_id" to behandlingId),
+            ).asUpdate,
+        )
+    }
+
+    private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                    """
+                        SELECT emneknagg
+                        FROM   emneknagg_v1
+                        WHERE  oppgave_id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.string("emneknagg")
+                }.asList,
+            )
+        }.toSet()
+    }
+
+    private fun TransactionalSession.lagre(behandling: Behandling) {
+        this.lagre(behandling.person)
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                """
+                    INSERT INTO behandling_v1
+                        (id, person_id, opprettet)
+                    VALUES
+                        (:id, :person_id, :opprettet) 
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                paramMap =
+                mapOf(
+                    "id" to behandling.behandlingId,
+                    "person_id" to behandling.person.id,
+                    "opprettet" to behandling.opprettet,
+                ),
+            ).asUpdate,
+        )
+    }
+
+    private fun TransactionalSession.lagre(oppgave: Oppgave) {
+        this.lagre(oppgave.behandling)
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                """
+                    INSERT INTO oppgave_v1
+                        (id, behandling_id, tilstand, opprettet, saksbehandler_ident)
+                    VALUES
+                        (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident) 
+                    ON CONFLICT(id) DO UPDATE SET
+                     tilstand = :tilstand,
+                     saksbehandler_ident = :saksbehandler_ident
+                    
+                    """.trimIndent(),
+                paramMap =
+                mapOf(
+                    "id" to oppgave.oppgaveId,
+                    "behandling_id" to oppgave.behandlingId,
+                    "tilstand" to oppgave.tilstand().name,
+                    "opprettet" to oppgave.opprettet,
+                    "saksbehandler_ident" to oppgave.saksbehandlerIdent,
+                ),
+            ).asUpdate,
+        )
+        lagre(oppgave.oppgaveId, oppgave.emneknagger)
+    }
+
+    private fun TransactionalSession.lagre(
+        oppgaveId: UUID,
+        emneknagger: Set<String>,
+    ) {
+        emneknagger.forEach { emneknagg ->
+            run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                    """
+                        INSERT INTO emneknagg_v1
+                            (oppgave_id, emneknagg) 
+                        VALUES
+                            (:oppgave_id, :emneknagg)
+                        ON CONFLICT ON CONSTRAINT emneknagg_oppgave_unique DO NOTHING
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId, "emneknagg" to emneknagg),
+                ).asUpdate,
+            )
+        }
+    }
     private fun Row.rehydrerOppgave(): Oppgave {
         val behandlingId = this.uuid("behandling_id")
         val oppgaveId = this.uuid("oppgave_id")
@@ -364,65 +426,4 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
     }
 
-    override fun hentOppgave(oppgaveId: UUID): Oppgave =
-        sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = """ $oppgaveSøkSql WHERE  oppg.id = :oppgave_id """,
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row -> row.rehydrerOppgave() }.asSingle,
-            )
-        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
-
-    override fun finnOppgaverFor(ident: String): List<Oppgave> {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """ $oppgaveSøkSql WHERE  pers.ident = :ident """,
-                    paramMap =
-                        mapOf(
-                            "ident" to ident,
-                        ),
-                ).map { row -> row.rehydrerOppgave() }.asList,
-            )
-        }
-    }
-
-    override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
-        return sessionOf(dataSource).use { session ->
-            val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
-
-            val saksBehandlerClause =
-                søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
-
-            //language=PostgreSQL
-            val sql =
-                """
-                    $oppgaveSøkSql
-                    WHERE  oppg.tilstand IN ($tilstander)
-                    AND    date_trunc('day', oppg.opprettet) <= :tom
-                    AND    date_trunc('day', oppg.opprettet) >= :fom
-                """ + saksBehandlerClause
-
-            val queryOf =
-                queryOf(
-                    statement = sql.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "tilstander" to tilstander,
-                            "fom" to søkeFilter.periode.fom,
-                            "tom" to søkeFilter.periode.tom,
-                            "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                        ),
-                )
-            session.run(
-                queryOf.map { row ->
-                    row.rehydrerOppgave()
-                }.asList,
-            )
-        }
-    }
 }
