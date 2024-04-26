@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 
 val logger = KotlinLogging.logger {}
 
-internal class Mediator(
+internal class OppgaveMediator(
     private val repository: Repository,
 ) : Repository by repository {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {

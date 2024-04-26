@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
@@ -11,7 +11,7 @@ import no.nav.helse.rapids_rivers.River
 
 internal class BehandlingAvbruttMottak(
     rapidsConnection: RapidsConnection,
-    private val mediator: Mediator,
+    private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -34,7 +34,7 @@ internal class BehandlingAvbruttMottak(
         val behandlingId = packet["behandlingId"].asUUID()
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling avbrutt hendelse for søknadId $søknadId og behandlingId $behandlingId" }
-            mediator.avbrytOppgave(
+            oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,

@@ -2,24 +2,24 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 
 class BehandlingAvbruttMottakTest {
     private val testRapid = TestRapid()
-    private val mediatorMock = mockk<Mediator>(relaxed = true)
+    private val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
 
     init {
-        BehandlingAvbruttMottak(rapidsConnection = testRapid, mediator = mediatorMock)
+        BehandlingAvbruttMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediatorMock)
     }
 
     @Test
     fun `Skal behandle BehandlingAvbruttHendelse`() {
         testRapid.sendTestMessage(behandlingAvbruttHendelse)
         verify(exactly = 1) {
-            mediatorMock.avbrytOppgave(any<BehandlingAvbruttHendelse>())
+            oppgaveMediatorMock.avbrytOppgave(any<BehandlingAvbruttHendelse>())
         }
     }
 

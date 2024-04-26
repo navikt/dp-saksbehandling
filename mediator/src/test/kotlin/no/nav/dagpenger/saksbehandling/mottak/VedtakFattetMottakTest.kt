@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
@@ -17,17 +17,17 @@ internal class VedtakFattetMottakTest {
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
 
     private val testRapid = TestRapid()
-    private val mediatorMock = mockk<Mediator>(relaxed = true)
+    private val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
 
     init {
-        VedtakFattetMottak(testRapid, mediatorMock)
+        VedtakFattetMottak(testRapid, oppgaveMediatorMock)
     }
 
     @Test
     fun `Skal behandle vedtak fattet hendelse`() {
         testRapid.sendTestMessage(vedtakFattetHendelse())
         verify(exactly = 1) {
-            mediatorMock.ferdigstillOppgave(
+            oppgaveMediatorMock.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,

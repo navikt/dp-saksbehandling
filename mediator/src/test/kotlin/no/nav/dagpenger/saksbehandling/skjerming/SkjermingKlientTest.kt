@@ -8,7 +8,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.createHttpClient
 import org.junit.jupiter.api.Test
 
 class SkjermingKlientTest {

@@ -11,7 +11,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.createHttpClient
 
 private val logger = KotlinLogging.logger { }
 

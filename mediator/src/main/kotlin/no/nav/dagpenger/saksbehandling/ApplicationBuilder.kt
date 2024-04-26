@@ -27,17 +27,17 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenSupplier = Configuration.pdlTokenProvider,
         )
 
-    private val mediator = Mediator(repository)
+    private val oppgaveMediator = OppgaveMediator(repository)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
-                this.oppgaveApi(mediator, pdlKlient)
+                this.oppgaveApi(oppgaveMediator, pdlKlient)
             }.build().also { rapidsConnection ->
-                VedtakFattetMottak(rapidsConnection, mediator)
-                BehandlingOpprettetMottak(rapidsConnection, mediator, skjermingHttpKlient, pdlKlient)
-                BehandlingAvbruttMottak(rapidsConnection, mediator)
-                ForslagTilVedtakMottak(rapidsConnection, mediator)
+                VedtakFattetMottak(rapidsConnection, oppgaveMediator)
+                BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, skjermingHttpKlient, pdlKlient)
+                BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
+                ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
             }
 
     init {

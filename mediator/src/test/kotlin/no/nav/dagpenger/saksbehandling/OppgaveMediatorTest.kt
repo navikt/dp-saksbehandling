@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.ZonedDateTime
 
-class MediatorTest {
+class OppgaveMediatorTest {
     private val testIdent = "12345612345"
     private val testRapid = TestRapid()
     private val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
@@ -31,10 +31,10 @@ class MediatorTest {
     @Test
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
-            val mediator =
-                Mediator(repository = PostgresRepository(datasource))
+            val oppgaveMediator =
+                OppgaveMediator(repository = PostgresRepository(datasource))
 
-            BehandlingOpprettetMottak(testRapid, mediator, skjermingKlientMock, pdlKlientMock)
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
@@ -46,11 +46,11 @@ class MediatorTest {
                     opprettet = ZonedDateTime.now(),
                 )
 
-            mediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
-            mediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
-            mediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
-            mediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -58,24 +58,24 @@ class MediatorTest {
                 ),
             )
 
-            val oppgaverKlarTilBehandling = mediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+            val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
 
             oppgaverKlarTilBehandling.size shouldBe 1
             val oppgave = oppgaverKlarTilBehandling.single()
             oppgave.behandlingId shouldBe behandlingId
 
-            mediator.tildelOppgave(
+            oppgaveMediator.tildelOppgave(
                 OppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",
                 ),
             )
 
-            val tildeltOppgave = mediator.hentOppgave(oppgave.oppgaveId)
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             tildeltOppgave.tilstand() shouldBe UNDER_BEHANDLING
             tildeltOppgave.saksbehandlerIdent shouldBe "NAVIdent"
 
-            mediator.ferdigstillOppgave(
+            oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,
@@ -83,24 +83,24 @@ class MediatorTest {
                 ),
             )
 
-            mediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
+            oppgaveMediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
         }
     }
 
     @Test
     fun `Livssyklus for søknadsbehandling som blir avbrutt`() {
         withMigratedDb { datasource ->
-            val mediator =
-                Mediator(
+            val oppgaveMediator =
+                OppgaveMediator(
                     repository = PostgresRepository(datasource),
                 )
 
-            BehandlingOpprettetMottak(testRapid, mediator, skjermingKlientMock, pdlKlientMock)
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
 
-            mediator.opprettOppgaveForBehandling(
+            oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
                     SøknadsbehandlingOpprettetHendelse(
                         søknadId = søknadId,
@@ -109,16 +109,16 @@ class MediatorTest {
                         opprettet = ZonedDateTime.now(),
                     ),
             )
-            mediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
+            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
-            mediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
             )
-            val oppgaver = mediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+            val oppgaver = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
             oppgaver.size shouldBe 1
             oppgaver.single().behandlingId shouldBe behandlingId
 
-            mediator.avbrytOppgave(
+            oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,
@@ -127,7 +127,7 @@ class MediatorTest {
             )
 
             assertThrows<DataNotFoundException> {
-                mediator.hentOppgave(oppgaver.single().oppgaveId)
+                oppgaveMediator.hentOppgave(oppgaver.single().oppgaveId)
             }
         }
     }

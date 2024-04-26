@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
@@ -30,7 +30,7 @@ class BehandligOpprettetMottakTest {
         )
 
     private val testRapid = TestRapid()
-    private val mediatorMock = mockk<Mediator>(relaxed = true)
+    private val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
     val skjermetKlientMock =
         mockk<SkjermingKlient>().also {
             coEvery { it.erSkjermetPerson(testIdent) }.returns(Result.success(false))
@@ -41,14 +41,14 @@ class BehandligOpprettetMottakTest {
         }
 
     init {
-        BehandlingOpprettetMottak(testRapid, mediatorMock, skjermetKlientMock, pdlKlientMock)
+        BehandlingOpprettetMottak(testRapid, oppgaveMediatorMock, skjermetKlientMock, pdlKlientMock)
     }
 
     @Test
     fun `Skal behandle behandling_opprettet hendelse`() {
         testRapid.sendTestMessage(behandlingOpprettetMelding())
         verify(exactly = 1) {
-            mediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
         }
     }
 
@@ -56,8 +56,8 @@ class BehandligOpprettetMottakTest {
     fun `Skal ignorere duplikate behandling_opprettet hendelser`() {
         testRapid.sendTestMessage(behandlingOpprettetMelding())
         verify(exactly = 1) {
-            mediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            mediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
         }
     }
 
@@ -70,7 +70,7 @@ class BehandligOpprettetMottakTest {
         testRapid.sendTestMessage(behandlingOpprettetMelding(skjermetIdent))
 
         verify(exactly = 0) {
-            mediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
+            oppgaveMediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
         }
 
         testRapid.inspektør.size shouldBe 1
@@ -91,7 +91,7 @@ class BehandligOpprettetMottakTest {
         testRapid.sendTestMessage(behandlingOpprettetMelding(adressebeskyttetIdent))
 
         verify(exactly = 0) {
-            mediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
+            oppgaveMediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
         }
 
         testRapid.inspektør.size shouldBe 1

@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
@@ -13,7 +13,7 @@ private val logger = KotlinLogging.logger {}
 
 internal class VedtakFattetMottak(
     rapidsConnection: RapidsConnection,
-    private val mediator: Mediator,
+    private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -36,7 +36,7 @@ internal class VedtakFattetMottak(
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak fattet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
-            mediator.ferdigstillOppgave(
+            oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,

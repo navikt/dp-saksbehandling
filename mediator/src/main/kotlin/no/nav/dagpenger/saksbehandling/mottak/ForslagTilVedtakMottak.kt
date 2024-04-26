@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
@@ -11,7 +11,7 @@ import no.nav.helse.rapids_rivers.River
 
 internal class ForslagTilVedtakMottak(
     rapidsConnection: RapidsConnection,
-    private val mediator: Mediator,
+    private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -41,7 +41,7 @@ internal class ForslagTilVedtakMottak(
                     behandlingId = behandlingId,
                 )
             sikkerlogg.info { "Mottok hendelse om forslag til vedtak $forslagTilVedtakHendelse" }
-            mediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
     }
 }

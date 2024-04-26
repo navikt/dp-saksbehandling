@@ -26,7 +26,7 @@ import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -71,12 +71,12 @@ class OppgaveApiTest {
     fun `Hent alle oppgaver klar til behandling hvis ingen query parametere er gitt`() {
         val oppgave1 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = testNAVIdent)
         val oppgave2 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = null)
-        val mediatorMock =
-            mockk<Mediator>().also {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
                 every { it.søk(Søkefilter.DEFAULT_SØKEFILTER) } returns listOf(oppgave1, oppgave2)
             }
 
-        withOppgaveApi(mediatorMock) {
+        withOppgaveApi(oppgaveMediatorMock) {
             client.get("/oppgave") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -110,8 +110,8 @@ class OppgaveApiTest {
 
     @Test
     fun `Hent alle oppgaver med tilstander basert på query parameter`() {
-        val mediatorMock =
-            mockk<Mediator>().also {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
                 every {
                     it.søk(
                         Søkefilter(
@@ -126,7 +126,7 @@ class OppgaveApiTest {
                     )
             }
 
-        withOppgaveApi(mediatorMock) {
+        withOppgaveApi(oppgaveMediatorMock) {
             client.get("/oppgave?tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
@@ -143,8 +143,8 @@ class OppgaveApiTest {
 
     @Test
     fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
-        val mediatorMock =
-            mockk<Mediator>().also {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
                 every {
                     it.søk(
                         Søkefilter(
@@ -164,7 +164,7 @@ class OppgaveApiTest {
                     )
             }
 
-        withOppgaveApi(mediatorMock) {
+        withOppgaveApi(oppgaveMediatorMock) {
             client.get("/oppgave?tilstand=$UNDER_BEHANDLING&fom=2021-01-01&tom=2023-01-01&mineOppgaver=true") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
@@ -182,14 +182,14 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne hente og få tildelt neste oppgave`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, testNAVIdent)
-        val mediatorMock =
-            mockk<Mediator>().also {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
                 every { it.hentNesteOppgavenTil(testNAVIdent) } returns oppgave
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
-        withOppgaveApi(mediatorMock, pdlMock) {
+        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
             client.put("/oppgave/neste") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -219,13 +219,13 @@ class OppgaveApiTest {
 
     @Test
     fun `404 når det ikke finnes noen neste oppgave for saksbehandler`() {
-        val mediatorMock =
-            mockk<Mediator>().also {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
                 every { it.hentNesteOppgavenTil(testNAVIdent) } returns null
             }
         val pdlMock = mockk<PDLKlient>()
 
-        withOppgaveApi(mediatorMock, pdlMock) {
+        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
             client.put("/oppgave/neste") { autentisert() }.status shouldBe HttpStatusCode.NotFound
         }
         coVerify(exactly = 0) { pdlMock.person(any()) }
@@ -233,11 +233,11 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne ta en oppgave`() {
-        val mediatorMock = mockk<Mediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         coEvery {
-            mediatorMock.tildelOppgave(
+            oppgaveMediatorMock.tildelOppgave(
                 OppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
                     navIdent = testNAVIdent,
@@ -247,7 +247,7 @@ class OppgaveApiTest {
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
-        withOppgaveApi(mediatorMock, pdlMock) {
+        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -276,12 +276,12 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne gi fra seg ansvar for en oppgave`() {
-        val mediatorMock = mockk<Mediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
-        coEvery { mediatorMock.hentOppgave(any()) } returns testOppgave
+        coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery {
-            mediatorMock.fristillOppgave(
+            oppgaveMediatorMock.fristillOppgave(
                 OppgaveAnsvarHendelse(
                     testOppgave.oppgaveId,
                     testNAVIdent,
@@ -289,14 +289,14 @@ class OppgaveApiTest {
             )
         } just runs
 
-        withOppgaveApi(mediator = mediatorMock) {
+        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
             client.put("oppgave/${testOppgave.oppgaveId}/legg-tilbake") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
         }
 
         verify(exactly = 1) {
-            mediatorMock.fristillOppgave(
+            oppgaveMediatorMock.fristillOppgave(
                 OppgaveAnsvarHendelse(
                     testOppgave.oppgaveId,
                     testNAVIdent,
@@ -307,14 +307,14 @@ class OppgaveApiTest {
 
     @Test
     fun `Hent oppgave med tilhørende personinfo`() {
-        val mediatorMock = mockk<Mediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val pdlMock = mockk<PDLKlient>()
         val testOppgave = lagTestOppgaveMedTilstand(FERDIG_BEHANDLET)
 
-        coEvery { mediatorMock.hentOppgave(any()) } returns testOppgave
+        coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
-        withOppgaveApi(mediator = mediatorMock, pdlKlient = pdlMock) {
+        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock, pdlKlient = pdlMock) {
             client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -344,11 +344,11 @@ class OppgaveApiTest {
     @Test
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
-        val mediator =
-            mockk<Mediator>().also {
+        val oppgaveMediator =
+            mockk<OppgaveMediator>().also {
                 coEvery { it.hentOppgave(any()) } throws DataNotFoundException("Fant ikke testoppgave")
             }
-        withOppgaveApi(mediator) {
+        withOppgaveApi(oppgaveMediator) {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
             }
@@ -365,15 +365,15 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
-        val mediatorMock =
-            mockk<Mediator>().also {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
                 every { it.finnOppgaverFor(testIdent) } returns
                     listOf(
                         lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
                         lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
                     )
             }
-        withOppgaveApi(mediatorMock) {
+        withOppgaveApi(oppgaveMediatorMock) {
             client.post("/oppgave/sok") {
                 autentisert()
                 contentType(ContentType.Application.Json)
@@ -400,12 +400,12 @@ class OppgaveApiTest {
         val behandlingIdSomIkkeFinnes = UUIDv7.ny()
 
         val oppgaveId = UUIDv7.ny()
-        val mediatorMock =
-            mockk<Mediator>().also {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
                 every { it.hentOppgaveIdFor(behandlingIdSomFinnes) } returns oppgaveId
                 every { it.hentOppgaveIdFor(behandlingIdSomIkkeFinnes) } returns null
             }
-        withOppgaveApi(mediator = mediatorMock) {
+        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
             client.get("/behandling/$behandlingIdSomFinnes/oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "text/plain"
@@ -419,12 +419,12 @@ class OppgaveApiTest {
     }
 
     private fun withOppgaveApi(
-        mediator: Mediator = mockk<Mediator>(relaxed = true),
+        oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         pdlKlient: PDLKlient = mockk(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
-            application { oppgaveApi(mediator, pdlKlient) }
+            application { oppgaveApi(oppgaveMediator, pdlKlient) }
             test()
         }
     }

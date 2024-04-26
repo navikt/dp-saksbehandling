@@ -20,7 +20,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -42,7 +42,7 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
 
 internal fun Application.oppgaveApi(
-    mediator: Mediator,
+    oppgaveMediator: OppgaveMediator,
     pdlKlient: PDLKlient,
 ) {
     val sikkerLogger = KotlinLogging.logger("tjenestekall")
@@ -57,19 +57,19 @@ internal fun Application.oppgaveApi(
                 get {
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
 
-                    val oppgaver = mediator.søk(søkefilter).tilOppgaverOversiktDTO()
+                    val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktDTO()
                     sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
                 route("sok") {
                     post {
-                        val oppgaver = mediator.finnOppgaverFor(call.receive<SokDTO>().fnr).tilOppgaverOversiktDTO()
+                        val oppgaver = oppgaveMediator.finnOppgaverFor(call.receive<SokDTO>().fnr).tilOppgaverOversiktDTO()
                         call.respond(status = HttpStatusCode.OK, oppgaver)
                     }
                 }
                 route("neste") {
                     put {
-                        val oppgave = mediator.hentNesteOppgavenTil(call.navIdent())
+                        val oppgave = oppgaveMediator.hentNesteOppgavenTil(call.navIdent())
                         when (oppgave) {
                             null -> call.respond(HttpStatusCode.NotFound)
                             else -> {
@@ -84,7 +84,7 @@ internal fun Application.oppgaveApi(
                 route("{oppgaveId}") {
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        val oppgave = mediator.hentOppgave(oppgaveId)
+                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
                         val person: PDLPersonIntern = pdlKlient.person(oppgave.ident).getOrThrow()
                         val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
@@ -93,7 +93,7 @@ internal fun Application.oppgaveApi(
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
                             try {
-                                val oppgave = mediator.tildelOppgave(oppgaveAnsvarHendelse)
+                                val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
                                 val person = pdlKlient.person(oppgave.ident).getOrThrow()
                                 val oppgaveDTO = lagOppgaveDTO(oppgave, person)
                                 call.respond(HttpStatusCode.OK, oppgaveDTO)
@@ -105,7 +105,7 @@ internal fun Application.oppgaveApi(
                     route("legg-tilbake") {
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            mediator.fristillOppgave(oppgaveAnsvarHendelse)
+                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
@@ -114,7 +114,7 @@ internal fun Application.oppgaveApi(
             route("behandling/{behandlingId}/oppgaveId") {
                 get {
                     val behandlingId = call.finnUUID("behandlingId")
-                    val oppgaveId: UUID? = mediator.hentOppgaveIdFor(behandlingId = behandlingId)
+                    val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)
                     when (oppgaveId) {
                         null -> call.respond(HttpStatusCode.NotFound)
                         else ->

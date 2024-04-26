@@ -2,24 +2,24 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 
 class ForslagTilVedtakMottakTest {
     private val testRapid = TestRapid()
-    private val mediator = mockk<Mediator>(relaxed = true)
+    private val oppgaveMediator = mockk<OppgaveMediator>(relaxed = true)
 
     init {
-        ForslagTilVedtakMottak(testRapid, mediator)
+        ForslagTilVedtakMottak(testRapid, oppgaveMediator)
     }
 
     @Test
     fun `Skal kunne motta forslag til vedtak events`() {
         testRapid.sendTestMessage(forslagTilVedtakJson)
         verify(exactly = 1) {
-            mediator.settOppgaveKlarTilBehandling(any<ForslagTilVedtakHendelse>())
+            oppgaveMediator.settOppgaveKlarTilBehandling(any<ForslagTilVedtakHendelse>())
         }
     }
 

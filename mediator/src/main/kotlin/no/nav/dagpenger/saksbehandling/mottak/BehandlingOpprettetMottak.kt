@@ -4,7 +4,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Mediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
@@ -19,7 +19,7 @@ import java.time.ZonedDateTime
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
-    private val mediator: Mediator,
+    private val oppgaveMediator: OppgaveMediator,
     private val skjermingKlient: SkjermingKlient,
     private val pdlKlient: PDLKlient,
 ) : River.PacketListener {
@@ -63,7 +63,7 @@ internal class BehandlingOpprettetMottak(
                 }
 
             if (!erBeskyttetPerson) {
-                mediator.opprettOppgaveForBehandling(
+                oppgaveMediator.opprettOppgaveForBehandling(
                     SøknadsbehandlingOpprettetHendelse(
                         søknadId = søknadId,
                         behandlingId = behandlingId,
