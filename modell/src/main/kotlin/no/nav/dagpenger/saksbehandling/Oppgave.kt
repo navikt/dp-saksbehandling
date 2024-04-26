@@ -128,13 +128,11 @@ data class Oppgave private constructor(
         ) {
             if (oppgave.saksbehandlerIdent != oppgaveAnsvarHendelse.navIdent) {
                 sikkerlogg.warn {
-                    "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til " +
-                        "${oppgaveAnsvarHendelse.navIdent}. Oppgave er allerede tildelt " +
-                        "${oppgave.saksbehandlerIdent}."
+                    "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${oppgaveAnsvarHendelse.navIdent}. " +
+                        "Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}."
                 }
                 throw AlleredeTildeltException(
-                    "Kan ikke tildele oppgave til annen saksbehandler. " +
-                        "Oppgave er allerede tildelt.",
+                    "Kan ikke tildele oppgave til annen saksbehandler.Oppgave er allerede tildelt.",
                 )
             }
         }
