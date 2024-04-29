@@ -26,7 +26,7 @@ class BehandligOpprettetMottakTest {
             søknadId = søknadId,
             behandlingId = behandlingId,
             ident = testIdent,
-            opprettet = ZonedDateTime.of(opprettet, ZoneId.systemDefault()),
+            opprettet = ZonedDateTime.of(opprettet, ZoneId.of("Europe/Oslo")),
         )
 
     private val testRapid = TestRapid()
@@ -48,15 +48,6 @@ class BehandligOpprettetMottakTest {
     fun `Skal behandle behandling_opprettet hendelse`() {
         testRapid.sendTestMessage(behandlingOpprettetMelding())
         verify(exactly = 1) {
-            oppgaveMediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-        }
-    }
-
-    @Test
-    fun `Skal ignorere duplikate behandling_opprettet hendelser`() {
-        testRapid.sendTestMessage(behandlingOpprettetMelding())
-        verify(exactly = 1) {
-            oppgaveMediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
             oppgaveMediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
         }
     }
