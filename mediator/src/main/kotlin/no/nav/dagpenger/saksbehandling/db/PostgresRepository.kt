@@ -219,6 +219,21 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
 
             val behandlingIdClause = søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
 
+            val emneknagger = søkeFilter.emneknagg.joinToString { "'$it'" }
+            val emneknaggClause =
+                if (søkeFilter.emneknagg.isNotEmpty()) {
+                    """
+                    AND EXISTS(
+                        SELECT 1
+                        FROM   emneknagg_v1 emne
+                        WHERE  emne.oppgave_id = oppg.id
+                        AND    emne.emneknagg IN ($emneknagger)
+                    )
+                    """.trimIndent()
+                } else {
+                    ""
+                }
+
             //language=PostgreSQL
             val sql =
                 StringBuilder(
@@ -238,7 +253,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     AND    date_trunc('day', oppg.opprettet) >= :fom
                 """,
                 )
-                    .append(saksBehandlerClause, personIdentClause, oppgaveIdClause, behandlingIdClause)
+                    .append(saksBehandlerClause, personIdentClause, oppgaveIdClause, behandlingIdClause, emneknaggClause)
                     .toString()
 
             val queryOf =
@@ -253,6 +268,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                             "person_ident" to søkeFilter.personIdent,
                             "oppgave_id" to søkeFilter.oppgaveId,
                             "behandling_id" to søkeFilter.behandlingId,
+                            "emneknagger" to emneknagger,
                         ),
                 )
             session.run(

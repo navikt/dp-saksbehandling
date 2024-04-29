@@ -297,6 +297,52 @@ class PostgresRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne søke etter oppgave med emneknagg`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            val oppgave1 = lagOppgave(emneknagger = setOf("hubba", "bubba"))
+            val oppgave2 = lagOppgave(emneknagger = setOf("hubba"))
+            val oppgave3 = lagOppgave(emneknagger = emptySet())
+
+            repo.lagre(oppgave1)
+            repo.lagre(oppgave2)
+            repo.lagre(oppgave3)
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                    emneknagg = emptySet(),
+                ),
+            ) shouldBe listOf(oppgave1, oppgave2, oppgave3)
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                    emneknagg = setOf("hubba"),
+                ),
+            ) shouldBe listOf(oppgave1, oppgave2)
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                    emneknagg = setOf("bubba"),
+                ),
+            ) shouldBe listOf(oppgave1)
+
+            repo.søk(
+                Søkefilter(
+                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                    emneknagg = setOf("bubba", "hubba"),
+                ),
+            ) shouldBe listOf(oppgave1, oppgave2)
+        }
+    }
+
+    @Test
     fun `Skal kunne søke etter mine oppgaver`() {
         val enUkeSiden = opprettetNå.minusDays(7)
         val saksbehandler1 = "saksbehandler1"
@@ -341,7 +387,7 @@ class PostgresRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter oppgaver`() {
+    fun `Skal kunne søke etter oppgaver med basert på oppgavens tilstand og periode`() {
         val enUkeSiden = opprettetNå.minusDays(7)
 
         withMigratedDb { ds ->
