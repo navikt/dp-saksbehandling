@@ -416,6 +416,21 @@ class PostgresRepositoryTest {
             val oppgave = lagOppgave()
             repo.lagre(oppgave)
             repo.hentOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+
+            assertThrows<DataNotFoundException> {
+                repo.hentOppgaveFor(behandlingId = UUIDv7.ny())
+            }
+        }
+    }
+
+    @Test
+    fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+            val oppgave = lagOppgave()
+            repo.lagre(oppgave)
+            repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+            repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
 

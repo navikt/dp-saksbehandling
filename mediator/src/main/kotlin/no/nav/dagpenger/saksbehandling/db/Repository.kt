@@ -35,4 +35,6 @@ internal interface Repository {
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?
 
     fun hentOppgaveFor(behandlingId: UUID): Oppgave
+
+    fun finnOppgaveFor(behandlingId: UUID): Oppgave?
 }

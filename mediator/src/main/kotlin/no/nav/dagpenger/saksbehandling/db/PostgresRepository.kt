@@ -183,6 +183,16 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 ),
         ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
+    override fun finnOppgaveFor(behandlingId: UUID): Oppgave? =
+        søk(
+            søkeFilter =
+                Søkefilter(
+                    periode = UBEGRENSET_PERIODE,
+                    tilstand = Type.Companion.values,
+                    behandlingId = behandlingId,
+                ),
+        ).singleOrNull()
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(
