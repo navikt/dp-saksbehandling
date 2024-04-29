@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -27,6 +28,24 @@ class OppgaveMediatorTest {
     private val testRapid = TestRapid()
     private val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
     private val skjermingKlientMock = mockk<SkjermingKlient>(relaxed = true)
+
+    @Test
+    fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
+        withMigratedDb { datasource ->
+            val repo = PostgresRepository(datasource)
+            val oppgaveMediator = OppgaveMediator(repo)
+            ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
+
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = "ad",
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = UUIDv7.ny(),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).size shouldBe 0
+        }
+    }
 
     @Test
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {

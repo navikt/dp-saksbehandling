@@ -84,6 +84,7 @@ internal class BehandlingOpprettetMottak(
                             ),
                     ).toJson(),
                 )
+                logger.info { "Avbryt behandling med id: $behandlingId" }
             }
         }
     }

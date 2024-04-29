@@ -174,14 +174,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
     }
 
     override fun hentOppgaveFor(behandlingId: UUID): Oppgave =
-        søk(
-            søkeFilter =
-                Søkefilter(
-                    periode = UBEGRENSET_PERIODE,
-                    tilstand = Type.Companion.values,
-                    behandlingId = behandlingId,
-                ),
-        ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
+        finnOppgaveFor(behandlingId) ?: throw DataNotFoundException("Fant ikke oppgave for behandlingId $behandlingId")
 
     override fun finnOppgaveFor(behandlingId: UUID): Oppgave? =
         søk(

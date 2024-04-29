@@ -47,9 +47,18 @@ internal class OppgaveMediator(
 
     fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         logger.info { "Mottatt forslag til vedtak hendelse for behandling med id ${forslagTilVedtakHendelse.behandlingId}" }
-        hentOppgaveFor(forslagTilVedtakHendelse.behandlingId).let { oppgave ->
-            oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
-            lagre(oppgave)
+        val oppgave = finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
+        when (oppgave) {
+            null -> {
+                logger.warn {
+                    "Fant ikke oppgave for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
+                        "Gjør derfor ingenting med hendelsen"
+                }
+            }
+            else -> {
+                oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+                lagre(oppgave)
+            }
         }
     }
 
