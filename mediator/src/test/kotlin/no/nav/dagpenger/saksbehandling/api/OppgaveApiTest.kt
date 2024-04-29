@@ -142,6 +142,40 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Hent alle oppgaver basert på emneknagg`() {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every {
+                    it.søk(
+                        Søkefilter(
+                            periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                            tilstand = setOf(KLAR_TIL_BEHANDLING),
+                            emneknagg = setOf("SØKNADSBEHANDLING", "KLAGE"),
+                        ),
+                    )
+                } returns
+                    listOf(
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                    )
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.get("/oppgave?tilstand=${KLAR_TIL_BEHANDLING}&emneknagg=SØKNADSBEHANDLING&emneknagg=KLAGE") { autentisert() }
+                .let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    val oppgaver =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                        )
+                    oppgaver.size shouldBe 2
+                }
+        }
+    }
+
+    @Test
     fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {

@@ -13,6 +13,7 @@ data class Søkefilter(
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
+    val emneknagg: Set<String> = emptySet(),
 ) {
     companion object {
         val DEFAULT_SØKEFILTER =
@@ -34,6 +35,7 @@ data class Søkefilter(
                     ?: setOf(KLAR_TIL_BEHANDLING)
 
             val mine = queryParameters["mineOppgaver"]?.toBoolean() ?: false
+            val emneknagg = queryParameters.getAll("emneknagg")?.toSet() ?: emptySet()
 
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
@@ -43,6 +45,7 @@ data class Søkefilter(
                         mine -> saksbehandlerIdent
                         else -> null
                     },
+                emneknagg = emneknagg,
             )
         }
     }

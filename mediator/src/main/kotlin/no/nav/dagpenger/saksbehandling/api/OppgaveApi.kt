@@ -58,7 +58,6 @@ internal fun Application.oppgaveApi(
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
 
                     val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktDTO()
-                    sikkerLogger.info { "Alle oppgaver hentes: $oppgaver" }
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
                 route("sok") {

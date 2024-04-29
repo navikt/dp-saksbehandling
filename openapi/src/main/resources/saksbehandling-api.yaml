@@ -14,6 +14,15 @@ paths:
       summary: Hent alle oppgaver med status Klar til behandling
       parameters:
         - in: query
+          name: emneknagg
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
           name: tilstand
           required: false
           style: form
