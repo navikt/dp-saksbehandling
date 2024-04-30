@@ -87,6 +87,11 @@ paths:
                 $ref: '#/components/schemas/Oppgave'
         '404':
           description: Ingen flere oppgaver å behandle akkurat nå
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}:
     get:
       summary: Hent en oppgave ved hjelp av dens ID
@@ -106,6 +111,10 @@ paths:
                 $ref: '#/components/schemas/Oppgave'
         '404':
           description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /oppgave/{oppgaveId}/tildel:
     put:
@@ -126,8 +135,16 @@ paths:
                 $ref: '#/components/schemas/Oppgave'
         '404':
           description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         '409':
           description: Oppgaven er allerede tatt til behandling
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
   /oppgave/{oppgaveId}/legg-tilbake:
     put:
       summary: Saksbehandler fjernes som ansvarlig for oppgaven, og oppgaven går tilbake til oppgavelisten
@@ -143,8 +160,16 @@ paths:
           description: Fjernet saksbehandler som ansvarlig for oppgaven, og oppgaven gjøres klar til behandling
         '404':
           description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         '409':
           description: Oppgaven kan ikke settes klar til behandling igjen
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
   /behandling/{behandlingId}/oppgaveId:
     get:
       summary: Henter oppgaveId basert på en behandlingId
@@ -165,6 +190,10 @@ paths:
                 format: uuid
         '404':
           description: Fant ikke oppgaveId for behandlingId
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
 components:
   schemas:
@@ -284,3 +313,29 @@ components:
           type: string
       required:
         - fnr
+
+    HttpProblem:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+
+
+
+
+        #val type: URI = URI.create("about:blank"),
+      #    val title: String,
+      #    val status: Int? = 500,
+      #    val detail: String? = null,
+      #    val instance: URI = URI.create("about:blank"),
+      #    val errorType: String? = null,
+
