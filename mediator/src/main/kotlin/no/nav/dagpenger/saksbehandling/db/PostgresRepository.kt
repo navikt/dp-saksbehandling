@@ -94,7 +94,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
                         FROM   behandling_v1 beha
                         JOIN   person_v1     pers ON pers.id = beha.person_id
-                        WHERE  beha.id = :behandling_id
+                        WHERE  beha.id     = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
@@ -123,7 +123,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             ),
         )
 
-    override fun hentNesteOppgavenTil(saksbehandlerIdent: String): Oppgave? {
+    override fun tildelNesteOppgaveTil(saksbehandlerIdent: String): Oppgave? {
         sessionOf(dataSource).use { session ->
             val oppgaveId =
                 session.run(
@@ -134,12 +134,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                             UPDATE oppgave_v1
                             SET saksbehandler_ident = :saksbehandler_ident
                               , tilstand            = 'UNDER_BEHANDLING'
-                            WHERE id = (SELECT id
-                                        FROM  oppgave_v1
-                                        WHERE tilstand = 'KLAR_TIL_BEHANDLING'
-                                        AND   saksbehandler_ident IS NULL
+                            WHERE id = (SELECT   id
+                                        FROM     oppgave_v1
+                                        WHERE    tilstand = 'KLAR_TIL_BEHANDLING'
+                                        AND      saksbehandler_ident IS NULL
                                         ORDER BY opprettet
-                                            FETCH FIRST 1 ROWS ONLY)
+                                        FETCH FIRST 1 ROWS ONLY)
                             RETURNING *;
                             
                             """.trimIndent(),
@@ -162,8 +162,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     statement =
                         """
                         SELECT id 
-                        FROM oppgave_v1 
-                        WHERE behandling_id = :behandling_id
+                        FROM   oppgave_v1 
+                        WHERE  behandling_id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
@@ -234,23 +234,30 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     ""
                 }
 
+            // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
+            //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
             //language=PostgreSQL
             val sql =
                 StringBuilder(
                     """
                     ${
                         """
-                        SELECT  pers.id AS person_id, pers.ident AS person_ident, 
-                                oppg.id AS oppgave_id, oppg.tilstand, oppg.opprettet AS oppgave_opprettet, oppg.behandling_id, oppg.saksbehandler_ident,
-                                beha.opprettet as behandling_opprettet
+                        SELECT  pers.id AS person_id, 
+                                pers.ident AS person_ident, 
+                                oppg.id AS oppgave_id, 
+                                oppg.tilstand, 
+                                oppg.opprettet AS oppgave_opprettet, 
+                                oppg.behandling_id, 
+                                oppg.saksbehandler_ident,
+                                beha.opprettet AS behandling_opprettet
                         FROM    oppgave_v1    oppg
                         JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                         JOIN    person_v1     pers ON pers.id = beha.person_id
                         """.trimIndent()
                     }
                     WHERE  oppg.tilstand IN ($tilstander)
-                    AND    date_trunc('day', oppg.opprettet) <= :tom
-                    AND    date_trunc('day', oppg.opprettet) >= :fom
+                    AND    oppg.opprettet >= :fom
+                    AND    oppg.opprettet <  :tom_pluss_1_dag
                 """,
                 )
                     .append(saksBehandlerClause, personIdentClause, oppgaveIdClause, behandlingIdClause, emneknaggClause)
@@ -263,7 +270,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         mapOf(
                             "tilstander" to tilstander,
                             "fom" to søkeFilter.periode.fom,
-                            "tom" to søkeFilter.periode.tom,
+                            "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
                             "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
                             "person_ident" to søkeFilter.personIdent,
                             "oppgave_id" to søkeFilter.oppgaveId,

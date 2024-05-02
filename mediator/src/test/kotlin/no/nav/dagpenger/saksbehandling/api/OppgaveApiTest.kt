@@ -218,7 +218,7 @@ class OppgaveApiTest {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, testNAVIdent)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.hentNesteOppgavenTil(testNAVIdent) } returns oppgave
+                every { it.tildelNesteOppgaveTil(testNAVIdent) } returns oppgave
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -255,7 +255,7 @@ class OppgaveApiTest {
     fun `404 når det ikke finnes noen neste oppgave for saksbehandler`() {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.hentNesteOppgavenTil(testNAVIdent) } returns null
+                every { it.tildelNesteOppgaveTil(testNAVIdent) } returns null
             }
         val pdlMock = mockk<PDLKlient>()
 

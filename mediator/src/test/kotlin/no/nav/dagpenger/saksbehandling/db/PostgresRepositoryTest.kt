@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -46,12 +47,12 @@ class PostgresRepositoryTest {
             val repo = PostgresRepository(ds)
 
             repo.lagre(lagOppgave(tilstand = FERDIG_BEHANDLET))
-            repo.hentNesteOppgavenTil("NAVIdent2") shouldBe null
+            repo.tildelNesteOppgaveTil("NAVIdent2") shouldBe null
         }
     }
 
     @Test
-    fun `Skal hente eldste oppgave som ikke er tatt av saksbehandler og er klar til behandling`() {
+    fun `Ved tildeling av neste oppgave, skal man finne eldste oppgave klar til behandling og oppdatere den`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
@@ -71,7 +72,7 @@ class PostgresRepositoryTest {
             repo.lagre(eldsteOppgave)
 
             val saksbehandlerIdent = "NAVIdent"
-            val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
+            val nesteOppgave = repo.tildelNesteOppgaveTil(saksbehandlerIdent)
             nesteOppgave!!.oppgaveId shouldBe eldsteOppgave.oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
             nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -100,7 +101,7 @@ class PostgresRepositoryTest {
             repo.lagre(ledigOppgave)
             repo.lagre(tildeltOppgave)
 
-            val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
+            val nesteOppgave = repo.tildelNesteOppgaveTil(saksbehandlerIdent)
             nesteOppgave!!.oppgaveId shouldBe ledigOppgave.oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
             nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -128,7 +129,7 @@ class PostgresRepositoryTest {
             repo.lagre(tildeltBehandling)
 
             val saksbehandlerIdent = "NAVIdent"
-            val nesteOppgave = repo.hentNesteOppgavenTil(saksbehandlerIdent)
+            val nesteOppgave = repo.tildelNesteOppgaveTil(saksbehandlerIdent)
             nesteOppgave!!.oppgaveId shouldBe ledigOppgave.oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
             nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -240,7 +241,7 @@ class PostgresRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne hente oppgaver basert på tilstand`() {
+    fun `Skal kunne søke etter oppgaver filtrert på tilstand`() {
         val oppgaveKlarTilBehandling = lagOppgave(tilstand = KLAR_TIL_BEHANDLING)
         val oppgaveFerdigBehandlet = lagOppgave(tilstand = FERDIG_BEHANDLET)
 
@@ -297,7 +298,7 @@ class PostgresRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter oppgave med emneknagg`() {
+    fun `Skal kunne søke etter oppgaver filtrert på emneknagger`() {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             val oppgave1 = lagOppgave(emneknagger = setOf("hubba", "bubba"))
@@ -387,12 +388,12 @@ class PostgresRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter oppgaver med basert på oppgavens tilstand og periode`() {
+    fun `Skal kunne søke etter oppgaver filtrert på tilstand og opprettet`() {
         val enUkeSiden = opprettetNå.minusDays(7)
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
-            val oppgave1 = lagOppgave(UNDER_BEHANDLING, enUkeSiden)
+            val oppgave1 = lagOppgave(UNDER_BEHANDLING, opprettet = enUkeSiden)
             val oppgave2 = lagOppgave(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
             val oppgave3 = lagOppgave(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
             val oppgave4 = lagOppgave(OPPRETTET, saksbehandlerIdent = saksbehandlerIdent)
@@ -452,6 +453,43 @@ class PostgresRepositoryTest {
                         ),
                 ),
             ).size shouldBe 2
+        }
+    }
+
+    @Test
+    fun `Skal kunne søke etter oppgaver som er opprettet på en bestemt dato`() {
+        withMigratedDb { ds ->
+            val iDag = LocalDate.now()
+            val iGår = iDag.minusDays(1)
+            val iForgårsSåSeintPåDagenSomMulig: ZonedDateTime =
+                ZonedDateTime.of(
+                    iGår.atStartOfDay().minusNanos(1),
+                    ZoneId.of("Europe/Oslo"),
+                )
+            val iGårSåTidligPåDagenSomMulig: ZonedDateTime = ZonedDateTime.of(iGår.atStartOfDay(), ZoneId.of("Europe/Oslo"))
+            val iGårSåSeintPåDagenSomMulig: ZonedDateTime = ZonedDateTime.of(iDag.atStartOfDay().minusNanos(1), ZoneId.of("Europe/Oslo"))
+            val iDagSåTidligPåDagenSomMulig: ZonedDateTime = ZonedDateTime.of(iDag.atStartOfDay(), ZoneId.of("Europe/Oslo"))
+            val repo = PostgresRepository(ds)
+            val oppgaveOpprettetSeintForgårs = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iForgårsSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetTidligIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iGårSåTidligPåDagenSomMulig)
+            val oppgaveOpprettetSeintIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iGårSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetTidligIDag = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iDagSåTidligPåDagenSomMulig)
+
+            repo.lagre(oppgaveOpprettetSeintForgårs)
+            repo.lagre(oppgaveOpprettetTidligIGår)
+            repo.lagre(oppgaveOpprettetSeintIGår)
+            repo.lagre(oppgaveOpprettetTidligIDag)
+
+            val oppgaver =
+                repo.søk(
+                    Søkefilter(
+                        tilstand = setOf(KLAR_TIL_BEHANDLING),
+                        periode = Søkefilter.Periode(fom = iGår, tom = iGår),
+                    ),
+                )
+            oppgaver.size shouldBe 2
+            oppgaver.contains(oppgaveOpprettetTidligIGår)
+            oppgaver.contains(oppgaveOpprettetSeintIGår)
         }
     }
 

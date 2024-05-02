@@ -30,7 +30,7 @@ internal interface Repository {
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
 
-    fun hentNesteOppgavenTil(saksbehandlerIdent: String): Oppgave?
+    fun tildelNesteOppgaveTil(saksbehandlerIdent: String): Oppgave?
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?
 

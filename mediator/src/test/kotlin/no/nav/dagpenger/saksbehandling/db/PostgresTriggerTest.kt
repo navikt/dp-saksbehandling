@@ -11,7 +11,7 @@ import javax.sql.DataSource
 
 class PostgresTriggerTest {
     @Test
-    fun `Når en person endres så skal sist_endret_tidspunkt oppdateres`() {
+    fun `Når en person endres så skal endret_tidspunkt oppdateres`() {
         val testPerson = Person(ident = "12345678901")
         Postgres.withMigratedDb { ds ->
             val repo = PostgresRepository(ds)

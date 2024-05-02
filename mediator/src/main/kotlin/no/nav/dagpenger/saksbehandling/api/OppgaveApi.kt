@@ -68,7 +68,7 @@ internal fun Application.oppgaveApi(
                 }
                 route("neste") {
                     put {
-                        val oppgave = oppgaveMediator.hentNesteOppgavenTil(call.navIdent())
+                        val oppgave = oppgaveMediator.tildelNesteOppgaveTil(call.navIdent())
                         when (oppgave) {
                             null -> call.respond(HttpStatusCode.NotFound)
                             else -> {
