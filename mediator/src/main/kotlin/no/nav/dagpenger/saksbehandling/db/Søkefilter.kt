@@ -25,6 +25,16 @@ data class Søkefilter(
                 oppgaveId = null,
                 behandlingId = null,
             )
+        fun hubba(queryString: String, navIdent : String): Søkefilter {
+            return Søkefilter(
+                periode = Periode.fra(queryString),
+                tilstand = setOf(KLAR_TIL_BEHANDLING),
+                saksbehandlerIdent = null,
+                personIdent = null,
+                oppgaveId = null,
+                behandlingId = null,
+            )
+        }
 
         fun fra(
             queryParameters: Parameters,

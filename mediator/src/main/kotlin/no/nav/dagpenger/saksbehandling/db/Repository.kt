@@ -32,6 +32,8 @@ internal interface Repository {
 
     fun tildelNesteOppgaveTil(saksbehandlerIdent: String): Oppgave?
 
+    fun tildelNesteOppgaveTil(saksbehandlerIdent: String, filter: Søkefilter): Oppgave?
+
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?
 
     fun hentOppgaveFor(behandlingId: UUID): Oppgave

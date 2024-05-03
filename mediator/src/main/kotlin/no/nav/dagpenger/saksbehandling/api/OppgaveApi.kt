@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
+import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
@@ -68,7 +69,11 @@ internal fun Application.oppgaveApi(
                 }
                 route("neste") {
                     put {
-                        val oppgave = oppgaveMediator.tildelNesteOppgaveTil(call.navIdent())
+//                        val oppgave = oppgaveMediator.tildelNesteOppgaveTil(call.navIdent())
+                        val dto = call.receive<NesteOppgaveDTO>()
+                        val søkefilter = Søkefilter.hubba(dto.queryString, call.navIdent())
+
+                        val oppgave = oppgaveMediator.tildelNesteOppgaveTil(call.navIdent(),søkefilter)
                         when (oppgave) {
                             null -> call.respond(HttpStatusCode.NotFound)
                             else -> {
