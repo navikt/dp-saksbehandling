@@ -12,8 +12,6 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.util.UUID
 
 class BehandligOpprettetMottakTest {
@@ -26,7 +24,7 @@ class BehandligOpprettetMottakTest {
             søknadId = søknadId,
             behandlingId = behandlingId,
             ident = testIdent,
-            opprettet = ZonedDateTime.of(opprettet, ZoneId.of("Europe/Oslo")),
+            opprettet = opprettet,
         )
 
     private val testRapid = TestRapid()

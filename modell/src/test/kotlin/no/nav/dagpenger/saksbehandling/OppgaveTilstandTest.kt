@@ -16,7 +16,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 
 class OppgaveTilstandTest {
     private val oppgaveId = UUIDv7.ny()
@@ -75,7 +75,7 @@ class OppgaveTilstandTest {
                 ident = "ident",
                 saksbehandlerIdent = "saksbehandlerIdent",
                 behandlingId = UUIDv7.ny(),
-                opprettet = ZonedDateTime.now(),
+                opprettet = LocalDateTime.now(),
                 emneknagger = setOf(),
                 tilstand = Oppgave.UnderBehandling,
                 behandling = behandling,
@@ -133,7 +133,7 @@ class OppgaveTilstandTest {
         Behandling(
             behandlingId = UUIDv7.ny(),
             person = Person(id = UUIDv7.ny(), ident = "12345678910"),
-            opprettet = ZonedDateTime.now(),
+            opprettet = LocalDateTime.now(),
         )
 
     private fun lagOppgave(
@@ -152,7 +152,7 @@ class OppgaveTilstandTest {
             ident = "ident",
             behandlingId = UUIDv7.ny(),
             emneknagger = setOf(),
-            opprettet = ZonedDateTime.now(),
+            opprettet = LocalDateTime.now(),
             tilstand = tilstand,
             saksbehandlerIdent = saksbehandlerIdent,
             behandling = behandling,

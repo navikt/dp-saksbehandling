@@ -48,13 +48,13 @@ openApiGenerate {
     )
     typeMappings.set(
         mapOf(
-            "DateTime" to "ZonedDateTime",
+            "DateTime" to "LocalDateTime",
         ),
     )
 
     importMappings.set(
         mapOf(
-            "ZonedDateTime" to "java.time.ZonedDateTime",
+            "LocalDateTime" to "java.time.LocalDateTime",
         ),
     )
 }

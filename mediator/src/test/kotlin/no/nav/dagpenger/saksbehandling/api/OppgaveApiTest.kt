@@ -44,7 +44,7 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 
 class OppgaveApiTest {
     private val testIdent = "12345612345"
@@ -475,14 +475,14 @@ class OppgaveApiTest {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 person = Person(id = UUIDv7.ny(), ident = testIdent),
-                opprettet = ZonedDateTime.now(),
+                opprettet = LocalDateTime.now(),
             )
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = testIdent,
             saksbehandlerIdent = saksbehandlerIdent,
             behandlingId = behandling.behandlingId,
-            opprettet = ZonedDateTime.now(),
+            opprettet = LocalDateTime.now(),
             emneknagger = setOf("Søknadsbehandling"),
             tilstand =
                 when (tilstand) {

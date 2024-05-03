@@ -21,7 +21,7 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
@@ -62,7 +62,7 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     ident = testIdent,
-                    opprettet = ZonedDateTime.now(),
+                    opprettet = LocalDateTime.now(),
                 )
 
             oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
@@ -125,7 +125,7 @@ class OppgaveMediatorTest {
                         søknadId = søknadId,
                         behandlingId = behandlingId,
                         ident = testIdent,
-                        opprettet = ZonedDateTime.now(),
+                        opprettet = LocalDateTime.now(),
                     ),
             )
             oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1

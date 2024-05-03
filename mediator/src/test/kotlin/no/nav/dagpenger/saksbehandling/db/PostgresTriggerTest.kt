@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import org.junit.jupiter.api.Test
 import java.sql.Timestamp
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -18,7 +18,7 @@ class PostgresTriggerTest {
     @Test
     fun `Når en oppgave endres så skal endret_tidspunkt oppdateres`() {
         val testPerson = Person(ident = "12345678901")
-        val opprettet = ZonedDateTime.now()
+        val opprettet = LocalDateTime.now()
         val testBehandling = Behandling(behandlingId = UUIDv7.ny(), testPerson, opprettet = opprettet)
         val testOppgave =
             Oppgave(

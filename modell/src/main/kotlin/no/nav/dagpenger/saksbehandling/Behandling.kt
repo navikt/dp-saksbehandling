@@ -1,18 +1,18 @@
 package no.nav.dagpenger.saksbehandling
 
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 import java.util.UUID
 
 data class Behandling(
     val behandlingId: UUID,
     val person: Person,
-    val opprettet: ZonedDateTime,
+    val opprettet: LocalDateTime,
 ) {
     companion object {
         fun rehydrer(
             behandlingId: UUID,
             person: Person,
-            opprettet: ZonedDateTime,
+            opprettet: LocalDateTime,
         ) = Behandling(
             behandlingId = behandlingId,
             person = person,

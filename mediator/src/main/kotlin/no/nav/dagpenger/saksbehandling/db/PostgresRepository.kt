@@ -8,7 +8,6 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.db.DBUtils.norskZonedDateTime
 import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.logger
 import java.util.UUID
@@ -102,7 +101,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     Behandling.rehydrer(
                         behandlingId = behandlingId,
                         person = finnPerson(ident)!!,
-                        opprettet = row.norskZonedDateTime("opprettet"),
+                        opprettet = row.localDateTime("opprettet"),
                     )
                 }.asSingle,
             )
@@ -440,7 +439,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         id = this.uuid("person_id"),
                         ident = this.string("person_ident"),
                     ),
-                opprettet = this.norskZonedDateTime("behandling_opprettet"),
+                opprettet = this.localDateTime("behandling_opprettet"),
             )
 
         return Oppgave.rehydrer(
@@ -448,7 +447,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             ident = this.string("person_ident"),
             saksbehandlerIdent = this.stringOrNull("saksbehandler_ident"),
             behandlingId = behandlingId,
-            opprettet = this.norskZonedDateTime("oppgave_opprettet"),
+            opprettet = this.localDateTime("oppgave_opprettet"),
             emneknagger = hentEmneknaggerForOppgave(oppgaveId),
             tilstand = this.string("tilstand").let { tilstand -> Oppgave.Tilstand.fra(tilstand) },
             behandling = behandling,

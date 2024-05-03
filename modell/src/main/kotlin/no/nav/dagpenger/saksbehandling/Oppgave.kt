@@ -8,12 +8,12 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
 import java.util.UUID
 
 data class Oppgave private constructor(
     val oppgaveId: UUID,
-    val opprettet: ZonedDateTime,
+    val opprettet: LocalDateTime,
     // TODO: Bedre navn ala brukerIdent
     val ident: String,
     var saksbehandlerIdent: String? = null,
@@ -27,7 +27,7 @@ data class Oppgave private constructor(
         ident: String,
         behandlingId: UUID,
         emneknagger: Set<String> = emptySet(),
-        opprettet: ZonedDateTime,
+        opprettet: LocalDateTime,
         tilstand: Tilstand = Opprettet,
         behandling: Behandling,
     ) : this(
@@ -49,7 +49,7 @@ data class Oppgave private constructor(
             ident: String,
             saksbehandlerIdent: String?,
             behandlingId: UUID,
-            opprettet: ZonedDateTime,
+            opprettet: LocalDateTime,
             emneknagger: Set<String>,
             tilstand: Tilstand,
             behandling: Behandling,

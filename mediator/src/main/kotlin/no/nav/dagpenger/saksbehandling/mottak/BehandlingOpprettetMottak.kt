@@ -14,8 +14,6 @@ import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
@@ -68,7 +66,7 @@ internal class BehandlingOpprettetMottak(
                         søknadId = søknadId,
                         behandlingId = behandlingId,
                         ident = ident,
-                        opprettet = ZonedDateTime.of(opprettet, ZoneId.of("Europe/Oslo")),
+                        opprettet = opprettet,
                     ),
                 )
             } else {

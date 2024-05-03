@@ -18,16 +18,15 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZonedDateTime
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class PostgresRepositoryTest {
     private val saksbehandlerIdent = "Z123456"
     private val testPerson = Person(ident = "12345678901")
-    private val opprettetNå =
-        ZonedDateTime.now().withZoneSameInstant(ZoneId.of("Europe/Oslo")).truncatedTo(ChronoUnit.SECONDS)
+    private val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val oppgaveIdTest = UUIDv7.ny()
 
     @Test
@@ -427,15 +426,12 @@ class PostgresRepositoryTest {
     fun `Skal kunne søke etter oppgaver opprettet en bestemt dato, uavhengig av tid på døgnet`() {
         withMigratedDb { ds ->
             val iDag = LocalDate.now()
-            val iGår = iDag.minusDays(1)
-            val iForgårsSåSeintPåDagenSomMulig: ZonedDateTime =
-                ZonedDateTime.of(
-                    iGår.atStartOfDay().minusNanos(1),
-                    ZoneId.of("Europe/Oslo"),
-                )
-            val iGårSåTidligPåDagenSomMulig: ZonedDateTime = ZonedDateTime.of(iGår.atStartOfDay(), ZoneId.of("Europe/Oslo"))
-            val iGårSåSeintPåDagenSomMulig: ZonedDateTime = ZonedDateTime.of(iDag.atStartOfDay().minusNanos(1), ZoneId.of("Europe/Oslo"))
-            val iDagSåTidligPåDagenSomMulig: ZonedDateTime = ZonedDateTime.of(iDag.atStartOfDay(), ZoneId.of("Europe/Oslo"))
+            val iGår: LocalDate = iDag.minusDays(1)
+            val iForgårs = iDag.minusDays(2)
+            val iForgårsSåSeintPåDagenSomMulig = LocalDateTime.of(iForgårs, LocalTime.MAX)
+            val iGårSåTidligPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MIN)
+            val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX)
+            val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
             val repo = PostgresRepository(ds)
             val oppgaveOpprettetSeintForgårs = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iForgårsSåSeintPåDagenSomMulig)
             val oppgaveOpprettetTidligIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iGårSåTidligPåDagenSomMulig)
@@ -487,7 +483,7 @@ class PostgresRepositoryTest {
 
     private fun lagOppgave(
         tilstand: Oppgave.Tilstand.Type = KLAR_TIL_BEHANDLING,
-        opprettet: ZonedDateTime = opprettetNå,
+        opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,
         behandling: Behandling = lagBehandling(person = person),
@@ -507,7 +503,7 @@ class PostgresRepositoryTest {
 
     private fun lagBehandling(
         behandlingId: UUID = UUIDv7.ny(),
-        opprettet: ZonedDateTime = opprettetNå,
+        opprettet: LocalDateTime = opprettetNå,
         person: Person = testPerson,
     ): Behandling {
         return Behandling(
