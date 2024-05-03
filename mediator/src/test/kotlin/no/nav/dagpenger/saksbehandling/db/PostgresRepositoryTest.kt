@@ -52,86 +52,52 @@ class PostgresRepositoryTest {
     }
 
     @Test
-    fun `Ved tildeling av neste oppgave, skal man finne eldste oppgave klar til behandling og oppdatere den`() {
+    fun `Ved tildeling av neste oppgave, skal man finne eldste ledige oppgave klar til behandling og oppdatere den`() {
         withMigratedDb { ds ->
+            val testSaksbehandler = "NAVIdent"
             val repo = PostgresRepository(ds)
 
-            val yngsteOppgave =
+            val yngsteLedigeOppgave =
                 lagOppgave(
                     tilstand = KLAR_TIL_BEHANDLING,
                     opprettet = opprettetNå,
                 )
 
-            val eldsteOppgave =
+            val eldsteLedigeOppgave =
                 lagOppgave(
                     tilstand = KLAR_TIL_BEHANDLING,
                     opprettet = opprettetNå.minusDays(10),
                 )
 
-            repo.lagre(yngsteOppgave)
-            repo.lagre(eldsteOppgave)
-
-            val saksbehandlerIdent = "NAVIdent"
-            val nesteOppgave = repo.tildelNesteOppgaveTil(saksbehandlerIdent)
-            nesteOppgave!!.oppgaveId shouldBe eldsteOppgave.oppgaveId
-            nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
-            nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
-        }
-    }
-
-    @Test
-    fun `Eldste ledige oppgave er neste oppgave for saksbehandler`() {
-        withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
-
-            val ledigOppgave =
+            val endaEldreTildeltOppgave =
                 lagOppgave(
                     tilstand = KLAR_TIL_BEHANDLING,
-                    opprettet = opprettetNå,
-                )
-
-            val saksbehandlerIdent = "NAVIdent"
-            val tildeltOppgave =
-                lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
-                    opprettet = opprettetNå.minusDays(10),
+                    opprettet = opprettetNå.minusDays(11),
                     saksbehandlerIdent = saksbehandlerIdent,
                 )
 
-            repo.lagre(ledigOppgave)
-            repo.lagre(tildeltOppgave)
-
-            val nesteOppgave = repo.tildelNesteOppgaveTil(saksbehandlerIdent)
-            nesteOppgave!!.oppgaveId shouldBe ledigOppgave.oppgaveId
-            nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
-            nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
-        }
-    }
-
-    @Test
-    fun `Eldste oppgave som er klar til behandling er neste oppgave for saksbehandler`() {
-        withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
-
-            val ledigOppgave =
+            val endaEldreFerdigOppgave =
                 lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
-                    opprettet = opprettetNå,
+                    tilstand = FERDIG_BEHANDLET,
+                    opprettet = opprettetNå.minusDays(12),
+                    saksbehandlerIdent = testSaksbehandler,
                 )
 
-            val tildeltBehandling =
+            val endaEldreOpprettetOppgave =
                 lagOppgave(
-                    tilstand = UNDER_BEHANDLING,
-                    opprettet = opprettetNå.minusDays(10),
+                    tilstand = OPPRETTET,
+                    opprettet = opprettetNå.minusDays(13),
                 )
 
-            repo.lagre(ledigOppgave)
-            repo.lagre(tildeltBehandling)
+            repo.lagre(yngsteLedigeOppgave)
+            repo.lagre(eldsteLedigeOppgave)
+            repo.lagre(endaEldreTildeltOppgave)
+            repo.lagre(endaEldreFerdigOppgave)
+            repo.lagre(endaEldreOpprettetOppgave)
 
-            val saksbehandlerIdent = "NAVIdent"
-            val nesteOppgave = repo.tildelNesteOppgaveTil(saksbehandlerIdent)
-            nesteOppgave!!.oppgaveId shouldBe ledigOppgave.oppgaveId
-            nesteOppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+            val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler)
+            nesteOppgave!!.oppgaveId shouldBe eldsteLedigeOppgave.oppgaveId
+            nesteOppgave.saksbehandlerIdent shouldBe testSaksbehandler
             nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
         }
     }
@@ -344,7 +310,7 @@ class PostgresRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter mine oppgaver`() {
+    fun `Skal kunne søke etter oppgaver tildel en gitt saksbehandler`() {
         val enUkeSiden = opprettetNå.minusDays(7)
         val saksbehandler1 = "saksbehandler1"
         val saksbehandler2 = "saksbehandler2"
@@ -365,17 +331,17 @@ class PostgresRepositoryTest {
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
-                    saksbehandlerIdent = saksbehandler2,
+                    saksbehandlerIdent = saksbehandler1,
                 ),
-            ).size shouldBe 2
+            ).size shouldBe 1
 
             repo.søk(
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
-                    saksbehandlerIdent = saksbehandler1,
+                    saksbehandlerIdent = saksbehandler2,
                 ),
-            ).size shouldBe 1
+            ).size shouldBe 2
 
             repo.søk(
                 Søkefilter(
@@ -393,21 +359,22 @@ class PostgresRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
-            val oppgave1 = lagOppgave(UNDER_BEHANDLING, opprettet = enUkeSiden)
-            val oppgave2 = lagOppgave(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
-            val oppgave3 = lagOppgave(KLAR_TIL_BEHANDLING, saksbehandlerIdent = saksbehandlerIdent)
-            val oppgave4 = lagOppgave(OPPRETTET, saksbehandlerIdent = saksbehandlerIdent)
-            repo.lagre(oppgave1)
-            repo.lagre(oppgave2)
-            repo.lagre(oppgave3)
-            repo.lagre(oppgave4)
+            val oppgaveUnderBehandlingEnUkeGammel =
+                lagOppgave(UNDER_BEHANDLING, opprettet = enUkeSiden, saksbehandlerIdent = saksbehandlerIdent)
+            val oppgaveKlarTilBehandlingIDag = lagOppgave(KLAR_TIL_BEHANDLING)
+            val oppgaveKlarTilBehandlingIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = opprettetNå.minusDays(1))
+            val oppgaveOpprettetIDag = lagOppgave(OPPRETTET)
+            repo.lagre(oppgaveUnderBehandlingEnUkeGammel)
+            repo.lagre(oppgaveKlarTilBehandlingIDag)
+            repo.lagre(oppgaveKlarTilBehandlingIGår)
+            repo.lagre(oppgaveOpprettetIDag)
 
             repo.søk(
                 Søkefilter(
                     tilstand = setOf(UNDER_BEHANDLING),
                     periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
                 ),
-            ).single() shouldBe oppgave1
+            ).single() shouldBe oppgaveUnderBehandlingEnUkeGammel
 
             repo.søk(
                 Søkefilter(
@@ -452,12 +419,12 @@ class PostgresRepositoryTest {
                             tom = opprettetNå.toLocalDate(),
                         ),
                 ),
-            ).size shouldBe 2
+            ).size shouldBe 1
         }
     }
 
     @Test
-    fun `Skal kunne søke etter oppgaver som er opprettet på en bestemt dato`() {
+    fun `Skal kunne søke etter oppgaver opprettet en bestemt dato, uavhengig av tid på døgnet`() {
         withMigratedDb { ds ->
             val iDag = LocalDate.now()
             val iGår = iDag.minusDays(1)
