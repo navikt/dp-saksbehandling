@@ -78,6 +78,13 @@ paths:
   /oppgave/neste:
     put:
       summary: Hent neste oppgave og tildel denne til saksbehandler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NesteOppgave'
+
       responses:
         '200':
           description: Vellykket respons med detaljer om oppgaven som tildeles
@@ -314,6 +321,14 @@ components:
       required:
         - fnr
 
+    NesteOppgave:
+      type: object
+      properties:
+        queryParam:
+          type: string
+      required:
+        - queryParam
+
     HttpProblem:
       type: object
       properties:
@@ -328,14 +343,3 @@ components:
           type: string
         instance:
           type: string
-
-
-
-
-        #val type: URI = URI.create("about:blank"),
-      #    val title: String,
-      #    val status: Int? = 500,
-      #    val detail: String? = null,
-      #    val instance: URI = URI.create("about:blank"),
-      #    val errorType: String? = null,
-
