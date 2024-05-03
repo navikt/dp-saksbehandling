@@ -296,7 +296,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         (id, ident) 
                     VALUES
                         (:id, :ident) 
-                    ON CONFLICT (id) DO UPDATE SET ident = :ident
+                    ON CONFLICT (id) DO NOTHING
                     """.trimIndent(),
                 paramMap =
                     mapOf(
