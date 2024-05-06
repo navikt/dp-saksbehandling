@@ -119,6 +119,14 @@ class PostgresRepositoryTest {
             nesteOppgave!!.oppgaveId shouldBe nestEldsteLedigeOppgave.oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe testSaksbehandler
             nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+
+            val filter2 =
+                TildelNesteOppgaveFilter(
+                    periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
+                    emneknagg = emptySet(),
+                )
+            val nesteOppgave2 = repo.tildelNesteOppgaveTil(testSaksbehandler, filter2)
+            nesteOppgave2!!.oppgaveId shouldBe yngsteLedigeOppgave.oppgaveId
         }
     }
 
