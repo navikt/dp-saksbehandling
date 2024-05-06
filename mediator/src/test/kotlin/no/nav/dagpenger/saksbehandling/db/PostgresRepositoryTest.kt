@@ -448,8 +448,13 @@ class PostgresRepositoryTest {
             ).size shouldBe 3
 
             repo.søk(Søkefilter.DEFAULT_SØKEFILTER).let {
-                it.size shouldBe 2
-                it.all { oppgave -> oppgave.tilstand() == KLAR_TIL_BEHANDLING } shouldBe true
+                it.size shouldBe 4
+                it.map { oppgave -> oppgave.tilstand() }.toSet() shouldBe
+                    setOf(
+                        UNDER_BEHANDLING,
+                        KLAR_TIL_BEHANDLING,
+                        OPPRETTET,
+                    )
             }
 
             repo.søk(
@@ -498,7 +503,8 @@ class PostgresRepositoryTest {
             val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX)
             val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
             val repo = PostgresRepository(ds)
-            val oppgaveOpprettetSeintForgårs = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iForgårsSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetSeintForgårs =
+                lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iForgårsSåSeintPåDagenSomMulig)
             val oppgaveOpprettetTidligIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iGårSåTidligPåDagenSomMulig)
             val oppgaveOpprettetSeintIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iGårSåSeintPåDagenSomMulig)
             val oppgaveOpprettetTidligIDag = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iDagSåTidligPåDagenSomMulig)

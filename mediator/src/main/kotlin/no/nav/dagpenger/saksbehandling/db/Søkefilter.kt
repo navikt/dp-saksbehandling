@@ -4,7 +4,6 @@ import io.ktor.http.Parameters
 import io.ktor.util.StringValues
 import io.ktor.util.StringValuesBuilderImpl
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import java.time.LocalDate
 import java.util.UUID
 
@@ -37,7 +36,7 @@ data class TildelNesteOppgaveFilter(
 
 data class Søkefilter(
     val periode: Periode,
-    val tilstand: Set<Oppgave.Tilstand.Type> = setOf(KLAR_TIL_BEHANDLING),
+    val tilstand: Set<Oppgave.Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
@@ -48,7 +47,7 @@ data class Søkefilter(
         val DEFAULT_SØKEFILTER =
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                tilstand = setOf(KLAR_TIL_BEHANDLING),
+                tilstand = Oppgave.Tilstand.Type.values,
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,
@@ -56,18 +55,18 @@ data class Søkefilter(
             )
 
         fun fra(
-            parameters: Parameters,
+            queryParameters: Parameters,
             saksbehandlerIdent: String,
         ): Søkefilter {
             val tilstand =
-                parameters.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
-                    ?: setOf(KLAR_TIL_BEHANDLING)
+                queryParameters.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
+                    ?: Oppgave.Tilstand.Type.values
 
-            val mine = parameters["mineOppgaver"]?.toBoolean() ?: false
-            val emneknagg = parameters.getAll("emneknagg")?.toSet() ?: emptySet()
+            val mine = queryParameters["mineOppgaver"]?.toBoolean() ?: false
+            val emneknagg = queryParameters.getAll("emneknagg")?.toSet() ?: emptySet()
 
             return Søkefilter(
-                periode = Periode.fra(parameters),
+                periode = Periode.fra(queryParameters),
                 tilstand = tilstand,
                 saksbehandlerIdent =
                     when {
