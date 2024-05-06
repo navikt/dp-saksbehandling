@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.db.Periode
 import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -115,7 +116,7 @@ class OppgaveApiTest {
                 every {
                     it.søk(
                         Søkefilter(
-                            periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                         ),
                     )
@@ -148,7 +149,7 @@ class OppgaveApiTest {
                 every {
                     it.søk(
                         Søkefilter(
-                            periode = Søkefilter.Periode.UBEGRENSET_PERIODE,
+                            periode = Periode.UBEGRENSET_PERIODE,
                             tilstand = setOf(KLAR_TIL_BEHANDLING),
                             emneknagg = setOf("SØKNADSBEHANDLING", "KLAGE"),
                         ),
@@ -183,7 +184,7 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode =
-                                Søkefilter.Periode(
+                                Periode(
                                     fom = LocalDate.parse("2021-01-01"),
                                     tom = LocalDate.parse("2023-01-01"),
                                 ),
@@ -218,13 +219,22 @@ class OppgaveApiTest {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, testNAVIdent)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.tildelNesteOppgaveTil(testNAVIdent) } returns oppgave
+                every { it.tildelNesteOppgaveTil(testNAVIdent, any()) } returns oppgave
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
-            client.put("/oppgave/neste") { autentisert() }.let { response ->
+            client.put("/oppgave/neste") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """
+                        {"queryParam":"emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"}
+                    """.trimMargin(),
+                )
+            }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
@@ -255,12 +265,21 @@ class OppgaveApiTest {
     fun `404 når det ikke finnes noen neste oppgave for saksbehandler`() {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.tildelNesteOppgaveTil(testNAVIdent) } returns null
+                every { it.tildelNesteOppgaveTil(testNAVIdent, any()) } returns null
             }
         val pdlMock = mockk<PDLKlient>()
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
-            client.put("/oppgave/neste") { autentisert() }.status shouldBe HttpStatusCode.NotFound
+            client.put("/oppgave/neste") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """
+                        {"queryParam":"emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"}
+                    """.trimMargin(),
+                )
+            }.status shouldBe HttpStatusCode.NotFound
         }
         coVerify(exactly = 0) { pdlMock.person(any()) }
     }

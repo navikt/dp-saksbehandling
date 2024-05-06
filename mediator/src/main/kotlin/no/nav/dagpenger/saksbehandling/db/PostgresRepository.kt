@@ -8,7 +8,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode.Companion.UBEGRENSET_PERIODE
+import no.nav.dagpenger.saksbehandling.db.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.logger
 import java.util.UUID
 import javax.sql.DataSource
@@ -155,7 +155,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
 
     override fun tildelNesteOppgaveTil(
         saksbehandlerIdent: String,
-        filter: Søkefilter,
+        filter: TildelNesteOppgaveFilter,
     ): Oppgave? {
         sessionOf(dataSource).use { session ->
             val emneknagger = filter.emneknagg.joinToString { "'$it'" }
@@ -189,8 +189,8 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                             WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
                             AND      oppg.saksbehandler_ident IS NULL
                             AND      oppg.opprettet >= :fom
-                            AND      oppg.opprettet <  :tom_pluss_1_dag
-                """.trimIndent() + emneknaggClause + orderByReturningStatement
+                            AND      oppg.opprettet <  :tom_pluss_1_dag 
+                """ + emneknaggClause + orderByReturningStatement
 
             val oppgaveId =
                 session.run(

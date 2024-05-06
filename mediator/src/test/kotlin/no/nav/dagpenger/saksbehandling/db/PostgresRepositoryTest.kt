@@ -14,9 +14,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode
-import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode.Companion.UBEGRENSET_PERIODE
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
@@ -156,8 +155,7 @@ class PostgresRepositoryTest {
             repo.lagre(endaEldreOpprettetOppgave)
 
             val filter =
-                Søkefilter(
-                    tilstand = setOf(KLAR_TIL_BEHANDLING),
+                TildelNesteOppgaveFilter(
                     periode = Periode.UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
                 )

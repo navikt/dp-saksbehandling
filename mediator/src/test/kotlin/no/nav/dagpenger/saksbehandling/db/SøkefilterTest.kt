@@ -21,7 +21,7 @@ class SøkefilterTest {
             Søkefilter.fra(it, "testIdent") shouldBe
                 Søkefilter(
                     periode =
-                        Søkefilter.Periode(
+                        Periode(
                             fom = LocalDate.of(2021, 1, 1),
                             tom = LocalDate.of(2023, 1, 1),
                         ),
@@ -39,30 +39,28 @@ class SøkefilterTest {
     @Test
     fun `Fom for en periode må være før eller lik tom`() {
         shouldThrow<IllegalArgumentException> {
-            Søkefilter.Periode(fom = LocalDate.MIN.plusDays(1), tom = LocalDate.MIN)
+            Periode(fom = LocalDate.MIN.plusDays(1), tom = LocalDate.MIN)
         }
         shouldNotThrowAnyUnit {
-            Søkefilter.Periode(fom = LocalDate.MIN, tom = LocalDate.MAX)
+            Periode(fom = LocalDate.MIN, tom = LocalDate.MAX)
         }
         shouldNotThrowAnyUnit {
-            Søkefilter.Periode(fom = LocalDate.MIN, tom = LocalDate.MIN)
+            Periode(fom = LocalDate.MIN, tom = LocalDate.MIN)
         }
     }
 
     @Test
     fun `Parsing av query parameters`() {
         val queryString =
-            """tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING&fom=2021-01-01&tom=2023-01-01&mineOppgaver=true"""
-        val navIdent = "testident"
-        Søkefilter.fra(queryString, navIdent) shouldBe
-            Søkefilter(
+            """emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"""
+        TildelNesteOppgaveFilter.fra(queryString) shouldBe
+            TildelNesteOppgaveFilter(
                 periode =
-                    Søkefilter.Periode(
+                    Periode(
                         fom = LocalDate.of(2021, 1, 1),
                         tom = LocalDate.of(2023, 1, 1),
                     ),
-                tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
-                saksbehandlerIdent = navIdent,
+                emneknagg = setOf("knagg1", "knagg2"),
             )
     }
 }
