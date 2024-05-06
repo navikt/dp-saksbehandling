@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db
 
-import io.ktor.http.Parameters
+import io.ktor.util.StringValues
+import io.ktor.util.StringValuesBuilderImpl
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import java.time.LocalDate
@@ -26,22 +27,25 @@ data class Søkefilter(
                 behandlingId = null,
             )
 
-        fun hubba(
-            queryString: Parameters,
+        fun fra(
+            queryString: String,
             navIdent: String,
         ): Søkefilter {
-            return Søkefilter(
-                periode = Periode.fra(queryString),
-                tilstand = setOf(KLAR_TIL_BEHANDLING),
-                saksbehandlerIdent = null,
-                personIdent = null,
-                oppgaveId = null,
-                behandlingId = null,
-            )
+            return fra(parseQueryString(queryString), navIdent)
+        }
+
+        fun parseQueryString(queryString: String): StringValues {
+            val builder = StringValuesBuilderImpl()
+
+            queryString
+                .split("&")
+                .map { it.split("=") }
+                .map { it: List<String> -> builder.append(it[0], it[1]) }
+            return builder.build()
         }
 
         fun fra(
-            queryParameters: Parameters,
+            queryParameters: StringValues,
             saksbehandlerIdent: String,
         ): Søkefilter {
             val tilstand =
@@ -63,53 +67,33 @@ data class Søkefilter(
             )
         }
     }
-}
 
-data class TildelNesteOppgaveFilter(
-    val periode: Periode,
-    val emneknagg: Set<String> = emptySet(),
-) {
-    companion object {
-        val DEFAULT_SØKEFILTER = TildelNesteOppgaveFilter(periode = Periode.UBEGRENSET_PERIODE)
-
-        fun fra(
-            queryParameters: Parameters,
-            saksbehandlerIdent: String,
-        ): TildelNesteOppgaveFilter {
-            val emneknagg = queryParameters.getAll("emneknagg")?.toSet() ?: emptySet()
-            return TildelNesteOppgaveFilter(
-                periode = Periode.fra(queryParameters),
-                emneknagg = emneknagg,
-            )
+    data class Periode(
+        val fom: LocalDate,
+        val tom: LocalDate,
+    ) {
+        init {
+            require(fom.isBefore(tom) || fom.equals(tom)) { "Fom må være før eller lik tom" }
         }
-    }
-}
 
-data class Periode(
-    val fom: LocalDate,
-    val tom: LocalDate,
-) {
-    init {
-        require(fom.isBefore(tom) || fom.equals(tom)) { "Fom må være før eller lik tom" }
-    }
+        companion object {
+            val MIN = LocalDate.of(1000, 1, 1)
+            val MAX = LocalDate.of(3000, 1, 1)
+            val UBEGRENSET_PERIODE =
+                Periode(
+                    fom = MIN,
+                    tom = MAX,
+                )
 
-    companion object {
-        val MIN = LocalDate.of(1000, 1, 1)
-        val MAX = LocalDate.of(3000, 1, 1)
-        val UBEGRENSET_PERIODE =
-            Periode(
-                fom = MIN,
-                tom = MAX,
-            )
+            fun fra(queryParamaters: StringValues): Periode {
+                val fom = queryParamaters["fom"]?.let { LocalDate.parse(it) } ?: MIN
+                val tom = queryParamaters["tom"]?.let { LocalDate.parse(it) } ?: MAX
 
-        fun fra(queryParamaters: Parameters): Periode {
-            val fom = queryParamaters["fom"]?.let { LocalDate.parse(it) } ?: MIN
-            val tom = queryParamaters["tom"]?.let { LocalDate.parse(it) } ?: MAX
-
-            return Periode(
-                fom = fom,
-                tom = tom,
-            )
+                return Periode(
+                    fom = fom,
+                    tom = tom,
+                )
+            }
         }
     }
 }

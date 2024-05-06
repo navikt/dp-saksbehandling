@@ -34,7 +34,7 @@ internal interface Repository {
 
     fun tildelNesteOppgaveTil(
         saksbehandlerIdent: String,
-        filter: TildelNesteOppgaveFilter,
+        filter: Søkefilter,
     ): Oppgave?
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?

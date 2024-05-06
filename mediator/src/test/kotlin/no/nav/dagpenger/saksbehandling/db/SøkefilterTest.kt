@@ -48,4 +48,21 @@ class SøkefilterTest {
             Søkefilter.Periode(fom = LocalDate.MIN, tom = LocalDate.MIN)
         }
     }
+
+    @Test
+    fun `Parsing av query parameters`() {
+        val queryString =
+            """tilstand=KLAR_TIL_BEHANDLING&tilstand=UNDER_BEHANDLING&fom=2021-01-01&tom=2023-01-01&mineOppgaver=true"""
+        val navIdent = "testident"
+        Søkefilter.fra(queryString, navIdent) shouldBe
+            Søkefilter(
+                periode =
+                    Søkefilter.Periode(
+                        fom = LocalDate.of(2021, 1, 1),
+                        tom = LocalDate.of(2023, 1, 1),
+                    ),
+                tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                saksbehandlerIdent = navIdent,
+            )
+    }
 }

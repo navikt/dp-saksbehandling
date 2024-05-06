@@ -36,7 +36,6 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SokDTO
 import no.nav.dagpenger.saksbehandling.db.Søkefilter
-import no.nav.dagpenger.saksbehandling.db.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -72,10 +71,13 @@ internal fun Application.oppgaveApi(
                     put {
 //                        val oppgave = oppgaveMediator.tildelNesteOppgaveTil(call.navIdent())
                         val dto = call.receive<NesteOppgaveDTO>()
-//                        val søkefilter = Søkefilter.hubba(dto.queryString, call.navIdent())
-                        val filter = TildelNesteOppgaveFilter.fra(dto.queryString, call.navIdent())
+                        val søkefilter = Søkefilter.fra(dto.queryParam, call.navIdent())
 
-                        val oppgave = oppgaveMediator.tildelNesteOppgaveTil(call.navIdent(), filter)
+                        val oppgave =
+                            oppgaveMediator.tildelNesteOppgaveTil(
+                                saksbehandlerIdent = call.navIdent(),
+                                filter = søkefilter,
+                            )
                         when (oppgave) {
                             null -> call.respond(HttpStatusCode.NotFound)
                             else -> {

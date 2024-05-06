@@ -15,6 +15,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode
+import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode.Companion.UBEGRENSET_PERIODE
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
@@ -154,7 +156,8 @@ class PostgresRepositoryTest {
             repo.lagre(endaEldreOpprettetOppgave)
 
             val filter =
-                TildelNesteOppgaveFilter(
+                Søkefilter(
+                    tilstand = setOf(KLAR_TIL_BEHANDLING),
                     periode = Periode.UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
                 )
@@ -341,7 +344,7 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                     emneknagg = emptySet(),
                 ),
             ) shouldBe listOf(oppgave1, oppgave2, oppgave3)
@@ -349,7 +352,7 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("hubba"),
                 ),
             ) shouldBe listOf(oppgave1, oppgave2)
@@ -357,7 +360,7 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("bubba"),
                 ),
             ) shouldBe listOf(oppgave1)
@@ -365,7 +368,7 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("bubba", "hubba"),
                 ),
             ) shouldBe listOf(oppgave1, oppgave2)
@@ -393,7 +396,7 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler1,
                 ),
             ).size shouldBe 1
@@ -401,7 +404,7 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
                 ),
             ).size shouldBe 2
@@ -409,7 +412,7 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = Oppgave.Tilstand.Type.entries.toSet(),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = null,
                 ),
             ).size shouldBe 4
@@ -435,14 +438,14 @@ class PostgresRepositoryTest {
             repo.søk(
                 Søkefilter(
                     tilstand = setOf(UNDER_BEHANDLING),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                 ),
             ).single() shouldBe oppgaveUnderBehandlingEnUkeGammel
 
             repo.søk(
                 Søkefilter(
                     tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                 ),
             ).size shouldBe 3
 
