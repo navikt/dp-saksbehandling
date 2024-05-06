@@ -122,37 +122,6 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             ),
         )
 
-    override fun tildelNesteOppgaveTil(saksbehandlerIdent: String): Oppgave? {
-        sessionOf(dataSource).use { session ->
-            val oppgaveId =
-                session.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement =
-                            """
-                            UPDATE oppgave_v1
-                            SET saksbehandler_ident = :saksbehandler_ident
-                              , tilstand            = 'UNDER_BEHANDLING'
-                            WHERE id = (SELECT   id
-                                        FROM     oppgave_v1
-                                        WHERE    tilstand = 'KLAR_TIL_BEHANDLING'
-                                        AND      saksbehandler_ident IS NULL
-                                        ORDER BY opprettet
-                                        FETCH FIRST 1 ROWS ONLY)
-                            RETURNING *;
-                            
-                            """.trimIndent(),
-                        paramMap = mapOf("saksbehandler_ident" to saksbehandlerIdent),
-                    ).map { row ->
-                        row.uuidOrNull("id")
-                    }.asSingle,
-                )
-            return oppgaveId?.let {
-                hentOppgave(it)
-            }
-        }
-    }
-
     override fun tildelNesteOppgaveTil(
         saksbehandlerIdent: String,
         filter: TildelNesteOppgaveFilter,

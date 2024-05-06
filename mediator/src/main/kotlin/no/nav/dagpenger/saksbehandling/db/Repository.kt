@@ -30,8 +30,6 @@ internal interface Repository {
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
 
-    fun tildelNesteOppgaveTil(saksbehandlerIdent: String): Oppgave?
-
     fun tildelNesteOppgaveTil(
         saksbehandlerIdent: String,
         filter: TildelNesteOppgaveFilter,

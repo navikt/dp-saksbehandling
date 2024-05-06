@@ -47,58 +47,14 @@ class PostgresRepositoryTest {
             val repo = PostgresRepository(ds)
 
             repo.lagre(lagOppgave(tilstand = FERDIG_BEHANDLET))
-            repo.tildelNesteOppgaveTil("NAVIdent2") shouldBe null
-        }
-    }
-
-    @Test
-    fun `Ved tildeling av neste oppgave, skal man finne eldste ledige oppgave klar til behandling og oppdatere den`() {
-        withMigratedDb { ds ->
-            val testSaksbehandler = "NAVIdent"
-            val repo = PostgresRepository(ds)
-
-            val yngsteLedigeOppgave =
-                lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
-                    opprettet = opprettetNå,
-                )
-
-            val eldsteLedigeOppgave =
-                lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
-                    opprettet = opprettetNå.minusDays(10),
-                )
-
-            val endaEldreTildeltOppgave =
-                lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
-                    opprettet = opprettetNå.minusDays(11),
-                    saksbehandlerIdent = saksbehandlerIdent,
-                )
-
-            val endaEldreFerdigOppgave =
-                lagOppgave(
-                    tilstand = FERDIG_BEHANDLET,
-                    opprettet = opprettetNå.minusDays(12),
-                    saksbehandlerIdent = testSaksbehandler,
-                )
-
-            val endaEldreOpprettetOppgave =
-                lagOppgave(
-                    tilstand = OPPRETTET,
-                    opprettet = opprettetNå.minusDays(13),
-                )
-
-            repo.lagre(yngsteLedigeOppgave)
-            repo.lagre(eldsteLedigeOppgave)
-            repo.lagre(endaEldreTildeltOppgave)
-            repo.lagre(endaEldreFerdigOppgave)
-            repo.lagre(endaEldreOpprettetOppgave)
-
-            val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler)
-            nesteOppgave!!.oppgaveId shouldBe eldsteLedigeOppgave.oppgaveId
-            nesteOppgave.saksbehandlerIdent shouldBe testSaksbehandler
-            nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            repo.tildelNesteOppgaveTil(
+                saksbehandlerIdent = "NAVIdent2",
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                    ),
+            ) shouldBe null
         }
     }
 
@@ -156,7 +112,7 @@ class PostgresRepositoryTest {
 
             val filter =
                 TildelNesteOppgaveFilter(
-                    periode = Periode.UBEGRENSET_PERIODE,
+                    periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
                 )
             val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
