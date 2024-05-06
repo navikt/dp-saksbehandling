@@ -231,7 +231,7 @@ class OppgaveApiTest {
                 setBody(
                     //language=JSON
                     """
-                        {"queryParam":"emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"}
+                        {"queryParams":"emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"}
                     """.trimMargin(),
                 )
             }.let { response ->
@@ -276,7 +276,7 @@ class OppgaveApiTest {
                 setBody(
                     //language=JSON
                     """
-                        {"queryParam":"emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"}
+                        {"queryParams":"emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"}
                     """.trimMargin(),
                 )
             }.status shouldBe HttpStatusCode.NotFound

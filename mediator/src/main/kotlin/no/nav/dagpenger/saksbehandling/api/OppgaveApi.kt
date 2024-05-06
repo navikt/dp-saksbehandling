@@ -71,7 +71,7 @@ internal fun Application.oppgaveApi(
                 route("neste") {
                     put {
                         val dto = call.receive<NesteOppgaveDTO>()
-                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParam)
+                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams)
 
                         val oppgave =
                             oppgaveMediator.tildelNesteOppgaveTil(

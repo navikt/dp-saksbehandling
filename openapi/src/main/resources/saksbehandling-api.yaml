@@ -324,10 +324,10 @@ components:
     NesteOppgave:
       type: object
       properties:
-        queryParam:
+        queryParams:
           type: string
       required:
-        - queryParam
+        - queryParams
 
     HttpProblem:
       type: object
