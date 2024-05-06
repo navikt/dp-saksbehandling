@@ -308,7 +308,6 @@ components:
     OppgaveTilstand:
       type: string
       enum:
-        - OPPRETTET
         - KLAR_TIL_BEHANDLING
         - UNDER_BEHANDLING
         - FERDIG_BEHANDLET

@@ -70,7 +70,7 @@ data class Søkefilter(
         val DEFAULT_SØKEFILTER =
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                tilstand = Oppgave.Tilstand.Type.values,
+                tilstand = Oppgave.Tilstand.Type.søkbareTyper,
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,
@@ -83,7 +83,7 @@ data class Søkefilter(
         ): Søkefilter {
             val builder = FilterBuilder(queryParameters)
 
-            val tilstand = builder.tilstand() ?: Oppgave.Tilstand.Type.values.toSet()
+            val tilstand = builder.tilstand() ?: Oppgave.Tilstand.Type.søkbareTyper
             val mine = builder.mineOppgaver() ?: false
             val emneknagg = builder.emneknagg() ?: emptySet()
 

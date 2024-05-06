@@ -28,6 +28,7 @@ class StatuspageTest {
                     get("/DateTimeParseException") { throw DateTimeParseException("test", "test", 1) }
                     get("/UkjentTilstandException") { throw Tilstand.UkjentTilstandException("test") }
                     get("/UlovligTilstandsendringException") { throw UlovligTilstandsendringException("test") }
+                    get("/InternDataException") { throw InternDataException("test") }
                 }
             }
 
@@ -36,6 +37,7 @@ class StatuspageTest {
             client.get("/DateTimeParseException").status shouldBe HttpStatusCode.BadRequest
             client.get("/UkjentTilstandException").status shouldBe HttpStatusCode.InternalServerError
             client.get("/UlovligTilstandsendringException").status shouldBe HttpStatusCode.Conflict
+            client.get("/InternDataException").status shouldBe HttpStatusCode.InternalServerError
         }
     }
 }

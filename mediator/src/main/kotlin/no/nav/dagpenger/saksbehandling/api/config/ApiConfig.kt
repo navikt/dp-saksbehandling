@@ -15,6 +15,7 @@ import io.ktor.server.response.respond
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UkjentTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
+import no.nav.dagpenger.saksbehandling.api.InternDataException
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import java.time.format.DateTimeParseException
@@ -51,6 +52,7 @@ fun Application.apiConfig() {
                 is DateTimeParseException -> call.respond(HttpStatusCode.BadRequest) { cause.message.toString() }
                 is UkjentTilstandException -> call.respond(HttpStatusCode.InternalServerError) { cause.message.toString() }
                 is UlovligTilstandsendringException -> call.respond(HttpStatusCode.Conflict) { cause.message.toString() }
+                is InternDataException -> call.respond(HttpStatusCode.InternalServerError) { cause.message.toString() }
                 else -> {
                     sikkerLogger.error(cause) { "Uhåndtert feil: ${cause.message}" }
                     call.respond(HttpStatusCode.InternalServerError)

@@ -412,12 +412,11 @@ class PostgresRepositoryTest {
             ).size shouldBe 3
 
             repo.søk(Søkefilter.DEFAULT_SØKEFILTER).let {
-                it.size shouldBe 4
+                it.size shouldBe 3
                 it.map { oppgave -> oppgave.tilstand() }.toSet() shouldBe
                     setOf(
                         UNDER_BEHANDLING,
                         KLAR_TIL_BEHANDLING,
-                        OPPRETTET,
                     )
             }
 

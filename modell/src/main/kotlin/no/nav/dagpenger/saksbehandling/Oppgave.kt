@@ -178,6 +178,8 @@ data class Oppgave private constructor(
             companion object {
                 val values
                     get() = Type.entries.toSet()
+
+                val søkbareTyper = Type.entries.toSet().minus(OPPRETTET)
             }
         }
 
