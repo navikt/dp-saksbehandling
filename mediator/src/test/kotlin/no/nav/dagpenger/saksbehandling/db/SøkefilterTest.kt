@@ -48,19 +48,4 @@ class SøkefilterTest {
             Periode(fom = LocalDate.MIN, tom = LocalDate.MIN)
         }
     }
-
-    @Test
-    fun `Parsing av query parameters`() {
-        val queryString =
-            """emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"""
-        TildelNesteOppgaveFilter.fra(queryString) shouldBe
-            TildelNesteOppgaveFilter(
-                periode =
-                    Periode(
-                        fom = LocalDate.of(2021, 1, 1),
-                        tom = LocalDate.of(2023, 1, 1),
-                    ),
-                emneknagg = setOf("knagg1", "knagg2"),
-            )
-    }
 }

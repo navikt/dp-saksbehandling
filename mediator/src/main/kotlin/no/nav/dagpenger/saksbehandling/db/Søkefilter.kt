@@ -7,29 +7,52 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import java.time.LocalDate
 import java.util.UUID
 
+class FilterBuilder {
+    private val stringValues: StringValues
+
+    constructor(queryString: String) {
+        stringValues = parseQueryString(queryString)
+    }
+
+    constructor(stringValues: StringValues) {
+        this.stringValues = stringValues
+    }
+
+    fun fom(): LocalDate? = stringValues["fom"]?.let { LocalDate.parse(it) }
+
+    fun tom(): LocalDate? = stringValues["tom"]?.let { LocalDate.parse(it) }
+
+    fun emneknagg(): Set<String>? = stringValues.getAll("emneknagg")?.toSet()
+
+    fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
+
+    fun tilstand(): Set<Oppgave.Tilstand.Type>? {
+        return stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
+    }
+
+    private fun parseQueryString(queryString: String): StringValues {
+        val builder = StringValuesBuilderImpl()
+
+        queryString
+            .split("&")
+            .map { it.split("=") }
+            .map { it: List<String> -> builder.append(it[0], it[1]) }
+        return builder.build()
+    }
+}
+
 data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagg: Set<String>,
 ) {
     companion object {
         fun fra(queryString: String): TildelNesteOppgaveFilter {
-            val stringValues = parseQueryString(queryString)
-            val emneknagg = stringValues.getAll("emneknagg")?.toSet() ?: emptySet()
+            val builder = FilterBuilder(queryString)
 
             return TildelNesteOppgaveFilter(
-                periode = Periode.fra(stringValues),
-                emneknagg = emneknagg,
+                periode = Periode.fra(queryString),
+                emneknagg = builder.emneknagg() ?: emptySet(),
             )
-        }
-
-        fun parseQueryString(queryString: String): StringValues {
-            val builder = StringValuesBuilderImpl()
-
-            queryString
-                .split("&")
-                .map { it.split("=") }
-                .map { it: List<String> -> builder.append(it[0], it[1]) }
-            return builder.build()
         }
     }
 }
@@ -58,12 +81,11 @@ data class Søkefilter(
             queryParameters: Parameters,
             saksbehandlerIdent: String,
         ): Søkefilter {
-            val tilstand =
-                queryParameters.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
-                    ?: Oppgave.Tilstand.Type.values
+            val builder = FilterBuilder(queryParameters)
 
-            val mine = queryParameters["mineOppgaver"]?.toBoolean() ?: false
-            val emneknagg = queryParameters.getAll("emneknagg")?.toSet() ?: emptySet()
+            val tilstand = builder.tilstand() ?: Oppgave.Tilstand.Type.values.toSet()
+            val mine = builder.mineOppgaver() ?: false
+            val emneknagg = builder.emneknagg() ?: emptySet()
 
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
@@ -84,26 +106,26 @@ data class Periode(
     val tom: LocalDate,
 ) {
     init {
-        require(fom.isBefore(tom) || fom.equals(tom)) { "Fom må være før eller lik tom" }
+        require(fom.isBefore(tom) || fom == tom) { "Fom må være før eller lik tom" }
     }
 
     companion object {
-        val MIN = LocalDate.of(1000, 1, 1)
-        val MAX = LocalDate.of(3000, 1, 1)
+        val MIN: LocalDate = LocalDate.of(1000, 1, 1)
+        val MAX: LocalDate = LocalDate.of(3000, 1, 1)
         val UBEGRENSET_PERIODE =
             Periode(
                 fom = MIN,
                 tom = MAX,
             )
 
-        fun fra(queryParamaters: StringValues): Periode {
-            val fom = queryParamaters["fom"]?.let { LocalDate.parse(it) } ?: MIN
-            val tom = queryParamaters["tom"]?.let { LocalDate.parse(it) } ?: MAX
-
-            return Periode(
-                fom = fom,
-                tom = tom,
+        private fun fra(builder: FilterBuilder): Periode =
+            Periode(
+                fom = builder.fom() ?: MIN,
+                tom = builder.tom() ?: MAX,
             )
-        }
+
+        fun fra(queryString: String): Periode = fra(FilterBuilder(queryString))
+
+        fun fra(queryParamaters: StringValues): Periode = fra(FilterBuilder(queryParamaters))
     }
 }
