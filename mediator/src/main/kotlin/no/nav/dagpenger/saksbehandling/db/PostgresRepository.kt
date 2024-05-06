@@ -8,7 +8,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.db.Søkefilter.Periode.Companion.UBEGRENSET_PERIODE
+import no.nav.dagpenger.saksbehandling.db.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.logger
 import java.util.UUID
 import javax.sql.DataSource
@@ -143,6 +143,65 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                             
                             """.trimIndent(),
                         paramMap = mapOf("saksbehandler_ident" to saksbehandlerIdent),
+                    ).map { row ->
+                        row.uuidOrNull("id")
+                    }.asSingle,
+                )
+            return oppgaveId?.let {
+                hentOppgave(it)
+            }
+        }
+    }
+
+    override fun tildelNesteOppgaveTil(
+        saksbehandlerIdent: String,
+        filter: TildelNesteOppgaveFilter,
+    ): Oppgave? {
+        sessionOf(dataSource).use { session ->
+            val emneknagger = filter.emneknagg.joinToString { "'$it'" }
+            val emneknaggClause =
+                if (filter.emneknagg.isNotEmpty()) {
+                    """
+                    AND EXISTS(
+                        SELECT 1
+                        FROM   emneknagg_v1 emne
+                        WHERE  emne.oppgave_id = oppg.id
+                        AND    emne.emneknagg IN ($emneknagger)
+                    )
+                    """.trimIndent()
+                } else {
+                    ""
+                }
+            val orderByReturningStatement =
+                """
+                ORDER BY oppg.opprettet
+                FETCH FIRST 1 ROWS ONLY)
+                RETURNING *;
+                """.trimIndent()
+
+            val updateStatement =
+                """
+                UPDATE oppgave_v1
+                SET    saksbehandler_ident = :saksbehandler_ident
+                     , tilstand            = 'UNDER_BEHANDLING'
+                WHERE id = (SELECT   oppg.id
+                            FROM     oppgave_v1 oppg
+                            WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
+                            AND      oppg.saksbehandler_ident IS NULL
+                            AND      oppg.opprettet >= :fom
+                            AND      oppg.opprettet <  :tom_pluss_1_dag
+                """.trimIndent() + emneknaggClause + orderByReturningStatement
+
+            val oppgaveId =
+                session.run(
+                    queryOf(
+                        statement = updateStatement,
+                        paramMap =
+                            mapOf(
+                                "saksbehandler_ident" to saksbehandlerIdent,
+                                "fom" to filter.periode.fom,
+                                "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
+                            ),
                     ).map { row ->
                         row.uuidOrNull("id")
                     }.asSingle,

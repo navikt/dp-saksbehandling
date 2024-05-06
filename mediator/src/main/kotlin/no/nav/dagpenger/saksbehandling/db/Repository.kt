@@ -32,7 +32,10 @@ internal interface Repository {
 
     fun tildelNesteOppgaveTil(saksbehandlerIdent: String): Oppgave?
 
-    fun tildelNesteOppgaveTil(saksbehandlerIdent: String, filter: Søkefilter): Oppgave?
+    fun tildelNesteOppgaveTil(
+        saksbehandlerIdent: String,
+        filter: TildelNesteOppgaveFilter,
+    ): Oppgave?
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID?
 

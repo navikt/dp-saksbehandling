@@ -25,7 +25,11 @@ data class Søkefilter(
                 oppgaveId = null,
                 behandlingId = null,
             )
-        fun hubba(queryString: String, navIdent : String): Søkefilter {
+
+        fun hubba(
+            queryString: Parameters,
+            navIdent: String,
+        ): Søkefilter {
             return Søkefilter(
                 periode = Periode.fra(queryString),
                 tilstand = setOf(KLAR_TIL_BEHANDLING),
@@ -59,33 +63,53 @@ data class Søkefilter(
             )
         }
     }
+}
 
-    data class Periode(
-        val fom: LocalDate,
-        val tom: LocalDate,
-    ) {
-        init {
-            require(fom.isBefore(tom) || fom.equals(tom)) { "Fom må være før eller lik tom" }
+data class TildelNesteOppgaveFilter(
+    val periode: Periode,
+    val emneknagg: Set<String> = emptySet(),
+) {
+    companion object {
+        val DEFAULT_SØKEFILTER = TildelNesteOppgaveFilter(periode = Periode.UBEGRENSET_PERIODE)
+
+        fun fra(
+            queryParameters: Parameters,
+            saksbehandlerIdent: String,
+        ): TildelNesteOppgaveFilter {
+            val emneknagg = queryParameters.getAll("emneknagg")?.toSet() ?: emptySet()
+            return TildelNesteOppgaveFilter(
+                periode = Periode.fra(queryParameters),
+                emneknagg = emneknagg,
+            )
         }
+    }
+}
 
-        companion object {
-            val MIN = LocalDate.of(1000, 1, 1)
-            val MAX = LocalDate.of(3000, 1, 1)
-            val UBEGRENSET_PERIODE =
-                Periode(
-                    fom = MIN,
-                    tom = MAX,
-                )
+data class Periode(
+    val fom: LocalDate,
+    val tom: LocalDate,
+) {
+    init {
+        require(fom.isBefore(tom) || fom.equals(tom)) { "Fom må være før eller lik tom" }
+    }
 
-            fun fra(queryParamaters: Parameters): Periode {
-                val fom = queryParamaters["fom"]?.let { LocalDate.parse(it) } ?: MIN
-                val tom = queryParamaters["tom"]?.let { LocalDate.parse(it) } ?: MAX
+    companion object {
+        val MIN = LocalDate.of(1000, 1, 1)
+        val MAX = LocalDate.of(3000, 1, 1)
+        val UBEGRENSET_PERIODE =
+            Periode(
+                fom = MIN,
+                tom = MAX,
+            )
 
-                return Periode(
-                    fom = fom,
-                    tom = tom,
-                )
-            }
+        fun fra(queryParamaters: Parameters): Periode {
+            val fom = queryParamaters["fom"]?.let { LocalDate.parse(it) } ?: MIN
+            val tom = queryParamaters["tom"]?.let { LocalDate.parse(it) } ?: MAX
+
+            return Periode(
+                fom = fom,
+                tom = tom,
+            )
         }
     }
 }
