@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.db
 
 import io.ktor.http.Parameters
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import java.time.LocalDate
 import java.util.UUID
 
@@ -19,7 +18,7 @@ data class Søkefilter(
         val DEFAULT_SØKEFILTER =
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                tilstand = setOf(KLAR_TIL_BEHANDLING),
+                tilstand = Oppgave.Tilstand.Type.values,
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,
@@ -32,7 +31,7 @@ data class Søkefilter(
         ): Søkefilter {
             val tilstand =
                 queryParameters.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
-                    ?: setOf(KLAR_TIL_BEHANDLING)
+                    ?: Oppgave.Tilstand.Type.values
 
             val mine = queryParameters["mineOppgaver"]?.toBoolean() ?: false
             val emneknagg = queryParameters.getAll("emneknagg")?.toSet() ?: emptySet()
