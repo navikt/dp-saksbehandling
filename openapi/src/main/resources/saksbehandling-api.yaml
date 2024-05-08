@@ -57,24 +57,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OppgaveOversikt'
-  /oppgave/sok:
-    post:
-      summary: Søk etter oppgaver ved hjelp av fødselsnummer (FNR)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Sok'
-      responses:
-        '200':
-          description: Vellykket respons med en liste over oppgaver som samsvarer med FNR
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OppgaveOversikt'
   /oppgave/neste:
     put:
       summary: Hent neste oppgave og tildel denne til saksbehandler
@@ -177,6 +159,24 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+  /person/oppgaver:
+    post:
+      summary: Hent alle oppgaver til en person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonIdent'
+      responses:
+        '200':
+          description: Vellykket respons med en liste over oppgaver som samsvarer med ident
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OppgaveOversikt'
   /behandling/{behandlingId}/oppgaveId:
     get:
       summary: Henter oppgaveId basert på en behandlingId
@@ -312,13 +312,13 @@ components:
         - UNDER_BEHANDLING
         - FERDIG_BEHANDLET
 
-    Sok:
+    PersonIdent:
       type: object
       properties:
-        fnr:
+        ident:
           type: string
       required:
-        - fnr
+        - ident
 
     NesteOppgave:
       type: object
