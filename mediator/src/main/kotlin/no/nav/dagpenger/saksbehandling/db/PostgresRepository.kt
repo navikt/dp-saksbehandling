@@ -227,7 +227,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstand = Type.Companion.values,
+                tilstand = Type.Companion.søkbareTyper,
                 saksbehandlerIdent = null,
                 personIdent = ident,
             ),

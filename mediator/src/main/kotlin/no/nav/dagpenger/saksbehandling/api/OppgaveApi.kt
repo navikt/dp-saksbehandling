@@ -34,7 +34,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
-import no.nav.dagpenger.saksbehandling.api.models.SokDTO
+import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
@@ -55,18 +55,19 @@ internal fun Application.oppgaveApi(
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
 
         authenticate("azureAd") {
+            route("person/oppgaver") {
+                post {
+                    val oppgaver =
+                        oppgaveMediator.finnOppgaverFor(call.receive<PersonIdentDTO>().ident).tilOppgaverOversiktDTO()
+                    call.respond(status = HttpStatusCode.OK, oppgaver)
+                }
+            }
             route("oppgave") {
                 get {
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
 
                     val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktDTO()
                     call.respond(status = HttpStatusCode.OK, oppgaver)
-                }
-                route("sok") {
-                    post {
-                        val oppgaver = oppgaveMediator.finnOppgaverFor(call.receive<SokDTO>().fnr).tilOppgaverOversiktDTO()
-                        call.respond(status = HttpStatusCode.OK, oppgaver)
-                    }
                 }
                 route("neste") {
                     put {

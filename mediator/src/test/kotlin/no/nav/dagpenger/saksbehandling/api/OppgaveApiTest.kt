@@ -427,12 +427,12 @@ class OppgaveApiTest {
                     )
             }
         withOppgaveApi(oppgaveMediatorMock) {
-            client.post("/oppgave/sok") {
+            client.post("/person/oppgaver") {
                 autentisert()
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
-                    """{"fnr": $testIdent}""",
+                    """{"ident": $testIdent}""",
                 )
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
