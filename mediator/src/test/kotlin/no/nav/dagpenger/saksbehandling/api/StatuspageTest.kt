@@ -80,6 +80,35 @@ class StatuspageTest {
     }
 
     @Test
+    fun `Error håndtering av UlovligTilstandsendringException`() {
+        testApplication {
+            val message = "Kan ikke håndtere hendelsen i denne tilstanden"
+            val path = "/UlovligTilstandsendringException"
+            application {
+                apiConfig()
+                routing {
+                    get(path) { throw UlovligTilstandsendringException(message) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.Conflict
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:oppgave-ulovlig-tilstandsendring",
+                      "title": "Ulovlig tilstandsendring på oppgave",
+                      "detail": "$message",
+                      "status": 409,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
     fun `Skal mappe exceptions til riktig statuskode`() {
         testApplication {
             application {
@@ -87,13 +116,11 @@ class StatuspageTest {
                 routing {
                     get("/IllegalArgumentException") { throw IllegalArgumentException() }
                     get("/DateTimeParseException") { throw DateTimeParseException("test", "test", 1) }
-                    get("/UlovligTilstandsendringException") { throw UlovligTilstandsendringException("test") }
                 }
             }
 
             client.get("/IllegalArgumentException").status shouldBe HttpStatusCode.BadRequest
             client.get("/DateTimeParseException").status shouldBe HttpStatusCode.BadRequest
-            client.get("/UlovligTilstandsendringException").status shouldBe HttpStatusCode.Conflict
         }
     }
 }

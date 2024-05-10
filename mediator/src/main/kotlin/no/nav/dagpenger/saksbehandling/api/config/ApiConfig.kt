@@ -72,9 +72,21 @@ fun Application.apiConfig() {
                         )
                     call.respond(HttpStatusCode.InternalServerError, problem)
                 }
+
+                is UlovligTilstandsendringException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Ulovlig tilstandsendring på oppgave",
+                            detail = cause.message,
+                            status = HttpStatusCode.Conflict.value,
+                            instance = call.request.path(),
+                            type = URI.create("dagpenger.nav.no/saksbehandling:problem:oppgave-ulovlig-tilstandsendring").toString(),
+                        )
+                    call.respond(HttpStatusCode.Conflict, problem)
+                }
+
                 is IllegalArgumentException -> call.respond(HttpStatusCode.BadRequest)
                 is DateTimeParseException -> call.respond(HttpStatusCode.BadRequest) { cause.message.toString() }
-                is UlovligTilstandsendringException -> call.respond(HttpStatusCode.Conflict) { cause.message.toString() }
                 else -> {
                     sikkerLogger.error(cause) { "Uhåndtert feil: ${cause.message}" }
                     call.respond(HttpStatusCode.InternalServerError)
