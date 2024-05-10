@@ -68,7 +68,9 @@ fun Application.apiConfig() {
                             detail = cause.message,
                             status = HttpStatusCode.InternalServerError.value,
                             instance = call.request.path(),
-                            type = URI.create("dagpenger.nav.no/saksbehandling:problem:ugyldig-oppgavetilstand").toString(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:ugyldig-oppgavetilstand")
+                                    .toString(),
                         )
                     call.respond(HttpStatusCode.InternalServerError, problem)
                 }
@@ -80,12 +82,27 @@ fun Application.apiConfig() {
                             detail = cause.message,
                             status = HttpStatusCode.Conflict.value,
                             instance = call.request.path(),
-                            type = URI.create("dagpenger.nav.no/saksbehandling:problem:oppgave-ulovlig-tilstandsendring").toString(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:oppgave-ulovlig-tilstandsendring")
+                                    .toString(),
                         )
                     call.respond(HttpStatusCode.Conflict, problem)
                 }
 
-                is IllegalArgumentException -> call.respond(HttpStatusCode.BadRequest)
+                is IllegalArgumentException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Ugyldig verdi",
+                            detail = cause.message,
+                            status = HttpStatusCode.BadRequest.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.BadRequest, problem)
+                }
+
                 is DateTimeParseException -> call.respond(HttpStatusCode.BadRequest) { cause.message.toString() }
                 else -> {
                     sikkerLogger.error(cause) { "Uhåndtert feil: ${cause.message}" }

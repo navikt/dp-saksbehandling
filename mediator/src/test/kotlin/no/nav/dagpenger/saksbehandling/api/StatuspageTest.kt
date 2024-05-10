@@ -109,17 +109,44 @@ class StatuspageTest {
     }
 
     @Test
+    fun `Error håndtering av IllegalArgumentException`() {
+        testApplication {
+            val message = "Kunne ikke finne oppgaveId i path"
+            val path = "/IllegalArgumentException"
+            application {
+                apiConfig()
+                routing {
+                    get(path) { throw IllegalArgumentException(message) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.BadRequest
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi",
+                      "title": "Ugyldig verdi",
+                      "detail": "$message",
+                      "status": 400,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
     fun `Skal mappe exceptions til riktig statuskode`() {
         testApplication {
             application {
                 apiConfig()
                 routing {
-                    get("/IllegalArgumentException") { throw IllegalArgumentException() }
                     get("/DateTimeParseException") { throw DateTimeParseException("test", "test", 1) }
                 }
             }
 
-            client.get("/IllegalArgumentException").status shouldBe HttpStatusCode.BadRequest
             client.get("/DateTimeParseException").status shouldBe HttpStatusCode.BadRequest
         }
     }
