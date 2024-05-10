@@ -149,7 +149,7 @@ data class Oppgave private constructor(
 
         class UlovligTilstandsendringException(message: String) : RuntimeException(message)
 
-        class UkjentTilstandException(message: String) : RuntimeException(message)
+        class UgyldigTilstandException(message: String) : RuntimeException(message)
 
         companion object {
             fun fra(type: Type) =
@@ -164,7 +164,7 @@ data class Oppgave private constructor(
                 kotlin.runCatching {
                     fra(Type.valueOf(type))
                 }.getOrElse {
-                    throw UkjentTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $type")
+                    throw UgyldigTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $type")
                 }
         }
 

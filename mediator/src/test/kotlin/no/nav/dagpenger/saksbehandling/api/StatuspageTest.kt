@@ -33,7 +33,7 @@ class StatuspageTest {
                 }
             }
 
-            client.get("/v1/oppgave/id/DataNotFoundException").let { response ->
+            client.get(path).let { response ->
                 response.status shouldBe HttpStatusCode.NotFound
                 response.bodyAsText() shouldEqualSpecifiedJson
                     //language=JSON
@@ -51,6 +51,35 @@ class StatuspageTest {
     }
 
     @Test
+    fun `Error håndtering av UgyldigTilstandException`() {
+        testApplication {
+            val message = "Kunne ikke rehydrere med ugyldig tilstand"
+            val path = "/UkjentTilstandException"
+            application {
+                apiConfig()
+                routing {
+                    get(path) { throw Tilstand.UgyldigTilstandException(message) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.InternalServerError
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:ugyldig-oppgavetilstand",
+                      "title": "Ugyldig oppgavetilstand",
+                      "detail": "$message",
+                      "status": 500,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
     fun `Skal mappe exceptions til riktig statuskode`() {
         testApplication {
             application {
@@ -58,14 +87,12 @@ class StatuspageTest {
                 routing {
                     get("/IllegalArgumentException") { throw IllegalArgumentException() }
                     get("/DateTimeParseException") { throw DateTimeParseException("test", "test", 1) }
-                    get("/UkjentTilstandException") { throw Tilstand.UkjentTilstandException("test") }
                     get("/UlovligTilstandsendringException") { throw UlovligTilstandsendringException("test") }
                 }
             }
 
             client.get("/IllegalArgumentException").status shouldBe HttpStatusCode.BadRequest
             client.get("/DateTimeParseException").status shouldBe HttpStatusCode.BadRequest
-            client.get("/UkjentTilstandException").status shouldBe HttpStatusCode.InternalServerError
             client.get("/UlovligTilstandsendringException").status shouldBe HttpStatusCode.Conflict
         }
     }

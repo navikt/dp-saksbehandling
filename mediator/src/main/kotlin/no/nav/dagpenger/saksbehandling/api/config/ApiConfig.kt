@@ -14,7 +14,7 @@ import io.ktor.server.request.document
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UkjentTilstandException
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
@@ -61,9 +61,19 @@ fun Application.apiConfig() {
                     call.respond(HttpStatusCode.NotFound, problem)
                 }
 
+                is UgyldigTilstandException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Ugyldig oppgavetilstand",
+                            detail = cause.message,
+                            status = HttpStatusCode.InternalServerError.value,
+                            instance = call.request.path(),
+                            type = URI.create("dagpenger.nav.no/saksbehandling:problem:ugyldig-oppgavetilstand").toString(),
+                        )
+                    call.respond(HttpStatusCode.InternalServerError, problem)
+                }
                 is IllegalArgumentException -> call.respond(HttpStatusCode.BadRequest)
                 is DateTimeParseException -> call.respond(HttpStatusCode.BadRequest) { cause.message.toString() }
-                is UkjentTilstandException -> call.respond(HttpStatusCode.InternalServerError) { cause.message.toString() }
                 is UlovligTilstandsendringException -> call.respond(HttpStatusCode.Conflict) { cause.message.toString() }
                 else -> {
                     sikkerLogger.error(cause) { "Uhåndtert feil: ${cause.message}" }
