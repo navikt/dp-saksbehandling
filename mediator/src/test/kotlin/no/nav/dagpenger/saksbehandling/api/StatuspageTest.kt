@@ -138,16 +138,33 @@ class StatuspageTest {
     }
 
     @Test
-    fun `Skal mappe exceptions til riktig statuskode`() {
+    fun `Error håndtering av DateTimeParseException`() {
         testApplication {
+            val message = "Feil ved parsing av dato/tid"
+            val path = "/DateTimeParseException"
             application {
                 apiConfig()
                 routing {
-                    get("/DateTimeParseException") { throw DateTimeParseException("test", "test", 1) }
+                    get(path) {
+                        throw DateTimeParseException(message, "syttende mai 2024 klokka 19:43", 1)
+                    }
                 }
             }
 
-            client.get("/DateTimeParseException").status shouldBe HttpStatusCode.BadRequest
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.BadRequest
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:dato-tid-feil",
+                      "title": "Dato/tid feil",
+                      "detail": "$message",
+                      "status": 400,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
         }
     }
 }

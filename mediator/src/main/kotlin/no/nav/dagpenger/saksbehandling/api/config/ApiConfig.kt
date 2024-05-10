@@ -103,7 +103,19 @@ fun Application.apiConfig() {
                     call.respond(HttpStatusCode.BadRequest, problem)
                 }
 
-                is DateTimeParseException -> call.respond(HttpStatusCode.BadRequest) { cause.message.toString() }
+                is DateTimeParseException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Dato/tid feil",
+                            detail = cause.message,
+                            status = HttpStatusCode.BadRequest.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:dato-tid-feil")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.BadRequest, problem)
+                }
                 else -> {
                     sikkerLogger.error(cause) { "Uhåndtert feil: ${cause.message}" }
                     call.respond(HttpStatusCode.InternalServerError)
