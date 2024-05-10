@@ -26,18 +26,35 @@ class ForslagTilVedtakMottakTest {
     //language=json
     val forslagTilVedtakJson =
         """
-        {
-          "@event_name" : "forslag_til_vedtak",
-          "ident" : "11109233444",
-          "behandlingId" : "018e0ed1-f6ea-7257-a8d0-e5acb533fcb8",
-          "søknadId" : "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
-          "@id" : "81080541-8755-488b-ac1d-94169169e2a3",
-          "@opprettet" : "2024-03-05T14:33:45.191117",
-          "system_read_count" : 0,
-          "system_participating_services" : [ {
-            "id" : "81080541-8755-488b-ac1d-94169169e2a3",
-            "time" : "2024-03-05T14:33:45.191117"
-          } ]
+          {
+            "@event_name": "forslag_til_vedtak",
+            "utfall": false,
+            "harAvklart": "Krav på dagpenger",
+            "avklaringer": [
+              {
+                "type": "EØSArbeid",
+                "utfall": "Manuell",
+                "begrunnelse": "Personen har oppgitt arbeid fra EØS"
+              },
+              {
+                "type": "HarRapportertInntektNesteMåned",
+                "utfall": "Manuell",
+                "begrunnelse": "Personen har inntekter som tilhører neste inntektsperiode"
+              },
+              {
+                "type": "SykepengerSiste36Måneder",
+                "utfall": "Manuell",
+                "begrunnelse": "Personen har sykepenger som kan være svangerskapsrelaterte"
+              }
+            ],
+            "ident": "123456678912",
+            "behandlingId": "018f6195-5fb3-7116-884f-f5b3a8718560",
+            "gjelderDato": "2024-05-10",
+            "søknadId": "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
+            "søknad_uuid": "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
+            "opprettet": "2024-05-10T10:18:51.251369",
+            "@id": "3b0fab42-74af-423c-a04f-a0b7562d2d7b",
+            "@opprettet": "2024-05-10T10:18:51.29592"
         }
         """.trimIndent()
 }
