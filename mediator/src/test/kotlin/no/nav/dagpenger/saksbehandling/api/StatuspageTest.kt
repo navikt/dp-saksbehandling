@@ -167,4 +167,35 @@ class StatuspageTest {
             }
         }
     }
+
+    @Test
+    fun `Error håndtering ved uhåndterte feil`() {
+        testApplication {
+            val message = "Uhåndtert feil i koden"
+            val path = "/Exception"
+            application {
+                apiConfig()
+                routing {
+                    get(path) {
+                        throw RuntimeException(message)
+                    }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.InternalServerError
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:uhåndtert-feil",
+                      "title": "Uhåndtert feil",
+                      "detail": "$message",
+                      "status": 500,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
 }

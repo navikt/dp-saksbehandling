@@ -118,7 +118,17 @@ fun Application.apiConfig() {
                 }
                 else -> {
                     sikkerLogger.error(cause) { "Uhåndtert feil: ${cause.message}" }
-                    call.respond(HttpStatusCode.InternalServerError)
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Uhåndtert feil",
+                            detail = cause.message,
+                            status = HttpStatusCode.InternalServerError.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:uhåndtert-feil")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.InternalServerError, problem)
                 }
             }
         }
