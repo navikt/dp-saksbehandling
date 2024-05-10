@@ -1,7 +1,9 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -14,8 +16,39 @@ import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
 
 class StatuspageTest {
-    // required to setup jwt
-    private val mockAzure = mockAzure()
+    init {
+        // required to setup jwt
+        mockAzure()
+    }
+
+    @Test
+    fun `Error håndtering av DataNotFoundException`() {
+        testApplication {
+            val message = "Fant ikke oppgave med id"
+            val path = "/v1/oppgave/id/DataNotFoundException"
+            application {
+                apiConfig()
+                routing {
+                    get(path) { throw DataNotFoundException(message) }
+                }
+            }
+
+            client.get("/v1/oppgave/id/DataNotFoundException").let { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
+                      "title": "Ressurs ikke funnet",
+                      "detail": "$message",
+                      "status": 404,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
 
     @Test
     fun `Skal mappe exceptions til riktig statuskode`() {
@@ -24,20 +57,16 @@ class StatuspageTest {
                 apiConfig()
                 routing {
                     get("/IllegalArgumentException") { throw IllegalArgumentException() }
-                    get("/DataNotFoundException") { throw DataNotFoundException("test") }
                     get("/DateTimeParseException") { throw DateTimeParseException("test", "test", 1) }
                     get("/UkjentTilstandException") { throw Tilstand.UkjentTilstandException("test") }
                     get("/UlovligTilstandsendringException") { throw UlovligTilstandsendringException("test") }
-                    get("/InternDataException") { throw InternDataException("test") }
                 }
             }
 
             client.get("/IllegalArgumentException").status shouldBe HttpStatusCode.BadRequest
-            client.get("/DataNotFoundException").status shouldBe HttpStatusCode.NotFound
             client.get("/DateTimeParseException").status shouldBe HttpStatusCode.BadRequest
             client.get("/UkjentTilstandException").status shouldBe HttpStatusCode.InternalServerError
             client.get("/UlovligTilstandsendringException").status shouldBe HttpStatusCode.Conflict
-            client.get("/InternDataException").status shouldBe HttpStatusCode.InternalServerError
         }
     }
 }
