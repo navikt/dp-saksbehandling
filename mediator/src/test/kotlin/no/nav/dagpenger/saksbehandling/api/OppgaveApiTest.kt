@@ -92,7 +92,9 @@ class OppgaveApiTest {
                       "emneknagger": [
                         "Søknadsbehandling"
                       ],
-                      "tilstand": "KLAR_TIL_BEHANDLING",    
+                      "tilstand": {
+                         "tilstandType": "KLAR_TIL_BEHANDLING"
+                      },
                       "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
                     },
                     {
@@ -102,7 +104,9 @@ class OppgaveApiTest {
                     "emneknagger": [
                     "Søknadsbehandling"
                     ],
-                    "tilstand": "KLAR_TIL_BEHANDLING"
+                      "tilstand": {
+                         "tilstandType": "KLAR_TIL_BEHANDLING"
+                      }
                     }]
                     """.trimIndent()
             }
@@ -254,7 +258,9 @@ class OppgaveApiTest {
                     },
                     "saksbehandlerIdent": "$testNAVIdent",
                     "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                    "tilstand": {
+                         "tilstandType": "${OppgaveTilstandDTO.TilstandType.UNDER_BEHANDLING}"
+                      }
                     }
                     """.trimIndent()
             }
@@ -320,7 +326,9 @@ class OppgaveApiTest {
                       "statsborgerskap": "NOR"
                     },
                     "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                    "tilstand": {
+                      "tilstandType": "UNDER_BEHANDLING"
+                      }
                     }
                     """.trimIndent()
             }
@@ -387,7 +395,9 @@ class OppgaveApiTest {
                       "statsborgerskap": "NOR"
                     },
                     "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}"
+                    "tilstand": {
+                         "tilstandType": "${OppgaveTilstandDTO.TilstandType.FERDIG_BEHANDLET}"
+                      }
                     }
                     """.trimIndent()
             }

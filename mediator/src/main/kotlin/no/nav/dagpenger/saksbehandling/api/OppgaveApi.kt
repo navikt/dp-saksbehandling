@@ -170,7 +170,7 @@ fun lagOppgaveDTO(
         saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
-        tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
+        tilstand = oppgave.tilstand().tilOppgaveTilstandTypeDTO(),
         journalpostIder = listOf(),
     )
 
@@ -178,12 +178,12 @@ private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 }
 
-private fun Type.tilOppgaveTilstandDTO() =
+private fun Type.tilOppgaveTilstandTypeDTO() =
     when (this) {
         OPPRETTET -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
-        UNDER_BEHANDLING -> OppgaveTilstandDTO.UNDER_BEHANDLING
-        KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
-        FERDIG_BEHANDLET -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        UNDER_BEHANDLING -> OppgaveTilstandDTO(OppgaveTilstandDTO.TilstandType.UNDER_BEHANDLING, null)
+        KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO(OppgaveTilstandDTO.TilstandType.KLAR_TIL_BEHANDLING, null)
+        FERDIG_BEHANDLET -> OppgaveTilstandDTO(OppgaveTilstandDTO.TilstandType.FERDIG_BEHANDLET, null)
     }
 
 class InternDataException(message: String) : RuntimeException(message)
@@ -195,7 +195,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         behandlingId = this.behandlingId,
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
-        tilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        tilstand = this.tilstand().tilOppgaveTilstandTypeDTO(),
         saksbehandlerIdent = this.saksbehandlerIdent,
     )
 
