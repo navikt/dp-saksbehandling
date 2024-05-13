@@ -18,6 +18,7 @@ internal class ForslagTilVedtakMottak(
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "forslag_til_vedtak") }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
+            validate { it.interestedIn("avklaringer") }
         }
     }
 
@@ -32,6 +33,7 @@ internal class ForslagTilVedtakMottak(
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
+        val emneknagger = packet["avklaringer"].avklaringstyper()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             val forslagTilVedtakHendelse =
@@ -39,6 +41,7 @@ internal class ForslagTilVedtakMottak(
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
+                    emneknagger = emneknagger,
                 )
             sikkerlogg.info { "Mottok hendelse om forslag til vedtak $forslagTilVedtakHendelse" }
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)

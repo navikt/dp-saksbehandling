@@ -6,4 +6,5 @@ data class ForslagTilVedtakHendelse(
     val ident: String,
     val søknadId: UUID,
     val behandlingId: UUID,
+    val emneknagger: Set<String> = emptySet(),
 )

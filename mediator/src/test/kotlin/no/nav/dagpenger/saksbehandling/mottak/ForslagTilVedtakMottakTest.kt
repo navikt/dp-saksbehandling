@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -10,6 +11,9 @@ import org.junit.jupiter.api.Test
 class ForslagTilVedtakMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveMediator = mockk<OppgaveMediator>(relaxed = true)
+    private val behandlingId = UUIDv7.ny()
+    private val søknadId = UUIDv7.ny()
+    private val ident = "123456678912"
 
     init {
         ForslagTilVedtakMottak(testRapid, oppgaveMediator)
@@ -18,13 +22,21 @@ class ForslagTilVedtakMottakTest {
     @Test
     fun `Skal kunne motta forslag til vedtak events`() {
         testRapid.sendTestMessage(forslagTilVedtakJson)
+
         verify(exactly = 1) {
-            oppgaveMediator.settOppgaveKlarTilBehandling(any<ForslagTilVedtakHendelse>())
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = setOf("EØSArbeid", "HarRapportertInntektNesteMåned", "SykepengerSiste36Måneder"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
     }
 
     //language=json
-    val forslagTilVedtakJson =
+    private val forslagTilVedtakJson =
         """
           {
             "@event_name": "forslag_til_vedtak",
@@ -47,11 +59,11 @@ class ForslagTilVedtakMottakTest {
                 "begrunnelse": "Personen har sykepenger som kan være svangerskapsrelaterte"
               }
             ],
-            "ident": "123456678912",
-            "behandlingId": "018f6195-5fb3-7116-884f-f5b3a8718560",
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
             "gjelderDato": "2024-05-10",
-            "søknadId": "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
-            "søknad_uuid": "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId",
             "opprettet": "2024-05-10T10:18:51.251369",
             "@id": "3b0fab42-74af-423c-a04f-a0b7562d2d7b",
             "@opprettet": "2024-05-10T10:18:51.29592"
