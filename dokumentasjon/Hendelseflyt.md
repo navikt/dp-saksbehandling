@@ -1,12 +1,12 @@
 ### Flyt av events mellom dp-behandling og dp-saksbehandling
 
 
-### 1. Oppgave opprettes
+### 1. Oppgave opprettes eller si ifra at behandling må avbrytes
 ```mermaid
 graph RL
 
   A["dp-behandling"] --> |"behandling_opprettet"| B["dp-saksbehandling"]
-  A["dp-behandling"] --> |"Beskyttet person -> avbryt_behandling"| B["dp-saksbehandling"]
+  B["dp-saksbehandling"] --> |"Beskyttet person -> avbryt_behandling"| A["dp-behandling"]
 ```
 
 ### 2. Oppgave gjøres klar til behandling
