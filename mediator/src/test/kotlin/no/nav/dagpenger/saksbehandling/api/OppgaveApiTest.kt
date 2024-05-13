@@ -93,7 +93,7 @@ class OppgaveApiTest {
                         "Søknadsbehandling"
                       ],
                       "tilstand": {
-                         "tilstandType": "KLAR_TIL_BEHANDLING"
+                         "type": "${OppgaveTilstandDTO.Type.KLAR_TIL_BEHANDLING}"
                       },
                       "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
                     },
@@ -105,7 +105,7 @@ class OppgaveApiTest {
                     "Søknadsbehandling"
                     ],
                       "tilstand": {
-                         "tilstandType": "KLAR_TIL_BEHANDLING"
+                         "type": "${OppgaveTilstandDTO.Type.KLAR_TIL_BEHANDLING}"
                       }
                     }]
                     """.trimIndent()
@@ -259,7 +259,7 @@ class OppgaveApiTest {
                     "saksbehandlerIdent": "$testNAVIdent",
                     "emneknagger": ["Søknadsbehandling"],
                     "tilstand": {
-                         "tilstandType": "${OppgaveTilstandDTO.TilstandType.UNDER_BEHANDLING}"
+                         "type": "${OppgaveTilstandDTO.Type.UNDER_BEHANDLING}"
                       }
                     }
                     """.trimIndent()
@@ -327,7 +327,7 @@ class OppgaveApiTest {
                     },
                     "emneknagger": ["Søknadsbehandling"],
                     "tilstand": {
-                      "tilstandType": "UNDER_BEHANDLING"
+                      "type": "${OppgaveTilstandDTO.Type.UNDER_BEHANDLING}"
                       }
                     }
                     """.trimIndent()
@@ -396,7 +396,7 @@ class OppgaveApiTest {
                     },
                     "emneknagger": ["Søknadsbehandling"],
                     "tilstand": {
-                         "tilstandType": "${OppgaveTilstandDTO.TilstandType.FERDIG_BEHANDLET}"
+                         "type": "${OppgaveTilstandDTO.Type.FERDIG_BEHANDLET}"
                       }
                     }
                     """.trimIndent()

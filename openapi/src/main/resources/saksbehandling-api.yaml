@@ -340,7 +340,7 @@ components:
     OppgaveTilstand:
       type: object
       properties:
-        tilstandType:
+        type:
           enum:
             - KLAR_TIL_BEHANDLING
             - UNDER_BEHANDLING

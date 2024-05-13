@@ -181,9 +181,9 @@ private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
 private fun Type.tilOppgaveTilstandTypeDTO() =
     when (this) {
         OPPRETTET -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
-        UNDER_BEHANDLING -> OppgaveTilstandDTO(OppgaveTilstandDTO.TilstandType.UNDER_BEHANDLING, null)
-        KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO(OppgaveTilstandDTO.TilstandType.KLAR_TIL_BEHANDLING, null)
-        FERDIG_BEHANDLET -> OppgaveTilstandDTO(OppgaveTilstandDTO.TilstandType.FERDIG_BEHANDLET, null)
+        UNDER_BEHANDLING -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.UNDER_BEHANDLING, null)
+        KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.KLAR_TIL_BEHANDLING, null)
+        FERDIG_BEHANDLET -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.FERDIG_BEHANDLET, null)
     }
 
 class InternDataException(message: String) : RuntimeException(message)
