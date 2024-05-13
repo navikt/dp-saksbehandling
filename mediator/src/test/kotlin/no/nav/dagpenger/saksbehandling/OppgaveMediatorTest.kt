@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -28,6 +29,7 @@ class OppgaveMediatorTest {
     private val testRapid = TestRapid()
     private val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
     private val skjermingKlientMock = mockk<SkjermingKlient>(relaxed = true)
+    private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
 
     @Test
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
@@ -74,6 +76,7 @@ class OppgaveMediatorTest {
                     ident = testIdent,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
+                    emneknagger = emneknagger,
                 ),
             )
 
@@ -82,6 +85,7 @@ class OppgaveMediatorTest {
             oppgaverKlarTilBehandling.size shouldBe 1
             val oppgave = oppgaverKlarTilBehandling.single()
             oppgave.behandlingId shouldBe behandlingId
+            oppgave.emneknagger shouldContainAll emneknagger
 
             oppgaveMediator.tildelOppgave(
                 OppgaveAnsvarHendelse(

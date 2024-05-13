@@ -73,6 +73,7 @@ data class Oppgave private constructor(
     fun tilstand() = this.tilstand.type
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+        this._emneknagger += forslagTilVedtakHendelse.emneknagger
         tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 

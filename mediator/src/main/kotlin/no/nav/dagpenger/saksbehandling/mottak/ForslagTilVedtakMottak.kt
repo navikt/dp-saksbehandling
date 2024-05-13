@@ -15,10 +15,13 @@ internal class ForslagTilVedtakMottak(
 ) : River.PacketListener {
     companion object {
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+
+        const val AVKLARINGER = "avklaringer"
+
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "forslag_til_vedtak") }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
-            validate { it.interestedIn("avklaringer") }
+            validate { it.interestedIn(AVKLARINGER) }
         }
     }
 
@@ -33,7 +36,7 @@ internal class ForslagTilVedtakMottak(
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
-        val emneknagger = packet["avklaringer"].avklaringstyper()
+        val emneknagger = packet.emneknagger()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             val forslagTilVedtakHendelse =

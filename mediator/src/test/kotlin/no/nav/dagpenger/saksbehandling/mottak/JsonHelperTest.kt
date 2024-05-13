@@ -1,43 +1,33 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.api.config.objectMapper
+import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak.Companion.AVKLARINGER
+import no.nav.helse.rapids_rivers.JsonMessage
 import org.junit.jupiter.api.Test
 
 class JsonHelperTest {
     @Test
     fun `Parse avklaringstyper`() {
-        val newNode: JsonNode = objectMapper.readTree(avklaringsJson)
+        lagJsonMedFilter(
+            avklaringsMap,
+        ).emneknagger() shouldBe setOf("EØSArbeid", "HarRapportertInntektNesteMåned", "SykepengerSiste36Måneder")
 
-        newNode["avklaringer"].avklaringstyper() shouldBe setOf("EØSArbeid", "HarRapportertInntektNesteMåned", "SykepengerSiste36Måneder")
+        lagJsonMedFilter(mapOf("avklaringer" to emptyList<String>())).emneknagger() shouldBe emptySet()
 
-        objectMapper.readTree(tommeAvklaringerJson)["avklaringer"].avklaringstyper() shouldBe emptySet()
-
-        objectMapper.readTree("""{}""")["avklaringer"].avklaringstyper() shouldBe emptySet()
+        lagJsonMedFilter(emptyMap()).emneknagger() shouldBe emptySet()
     }
 
-    //language=JSON
-    private val tommeAvklaringerJson = """{"avklaringer":[]}"""
+    private fun lagJsonMedFilter(json: Map<String, Any>): JsonMessage {
+        return JsonMessage.newMessage(json).also { it.interestedIn(AVKLARINGER) }
+    }
 
-    //language=JSON
-    private val avklaringsJson = """{
-      "avklaringer": [
-        {
-          "type": "EØSArbeid",
-          "utfall": "Manuell",
-          "begrunnelse": "Personen har oppgitt arbeid fra EØS"
-        },
-        {
-          "type": "HarRapportertInntektNesteMåned",
-          "utfall": "Manuell",
-          "begrunnelse": "Personen har inntekter som tilhører neste inntektsperiode"
-        },
-        {
-          "type": "SykepengerSiste36Måneder",
-          "utfall": "Manuell",
-          "begrunnelse": "Personen har sykepenger som kan være svangerskapsrelaterte"
-        }
-      ]
-  }"""
+    private val avklaringsMap =
+        mapOf(
+            "avklaringer" to
+                listOf(
+                    mapOf("type" to "EØSArbeid"),
+                    mapOf("type" to "HarRapportertInntektNesteMåned"),
+                    mapOf("type" to "SykepengerSiste36Måneder"),
+                ),
+        )
 }
