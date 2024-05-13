@@ -105,6 +105,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /oppgave/{oppgaveId}/utsett:
+    put:
+      summary: Saksbehandler blir tildelt ansvaret for oppgaven
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UtsettOppgave'
+
+      responses:
+        '200':
+          description: Vellykket respons
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven er allerede tatt til behandling
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
   /oppgave/{oppgaveId}/tildel:
     put:
       summary: Saksbehandler blir tildelt ansvaret for oppgaven
@@ -328,6 +360,14 @@ components:
       required:
         - queryParams
 
+    UtsettOppgave:
+      type: object
+      properties:
+        utsettTil:
+          type: string
+          format: date
+      required:
+        - utsettTil
     HttpProblem:
       type: object
       properties:
