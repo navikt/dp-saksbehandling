@@ -95,7 +95,7 @@ class OppgaveMediatorTest {
             )
 
             val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
-            tildeltOppgave.tilstand() shouldBe UNDER_BEHANDLING
+            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.saksbehandlerIdent shouldBe "NAVIdent"
 
             oppgaveMediator.ferdigstillOppgave(

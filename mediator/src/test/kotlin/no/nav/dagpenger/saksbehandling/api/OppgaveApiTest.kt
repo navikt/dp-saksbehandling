@@ -519,6 +519,7 @@ class OppgaveApiTest {
                     KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                     UNDER_BEHANDLING -> Oppgave.UnderBehandling
                     FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
+                    Oppgave.Tilstand.Type.PAA_VENT -> TODO()
                 },
             behandling = behandling,
         )

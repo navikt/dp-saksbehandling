@@ -8,14 +8,17 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppgaveTilstandTest {
@@ -54,7 +57,7 @@ class OppgaveTilstandTest {
                 behandlingId = UUIDv7.ny(),
             ),
         )
-        oppgave.tilstand() shouldBe KLAR_TIL_BEHANDLING
+        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
     }
 
     @ParameterizedTest
@@ -64,7 +67,7 @@ class OppgaveTilstandTest {
         oppgave.ferdigstill(
             VedtakFattetHendelse(behandlingId = oppgave.behandlingId, søknadId = UUIDv7.ny(), ident = testIdent),
         )
-        oppgave.tilstand() shouldBe FERDIG_BEHANDLET
+        oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
     }
 
     @Test
@@ -85,14 +88,14 @@ class OppgaveTilstandTest {
             oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
         }
 
-        oppgave.tilstand() shouldBe KLAR_TIL_BEHANDLING
+        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
         oppgave.saksbehandlerIdent shouldBe null
     }
 
     @Test
     fun `Skal ikke kunne fjerne oppgaveansvar i tilstand Klar til behandling`() {
         val oppgave = lagOppgave(OPPRETTET)
-        oppgave.tilstand() shouldBe OPPRETTET
+        oppgave.tilstand().type shouldBe OPPRETTET
         oppgave.oppgaveKlarTilBehandling(
             ForslagTilVedtakHendelse(
                 ident = testIdent,
@@ -100,7 +103,7 @@ class OppgaveTilstandTest {
                 behandlingId = UUIDv7.ny(),
             ),
         )
-        oppgave.tilstand() shouldBe KLAR_TIL_BEHANDLING
+        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
         shouldThrow<UlovligTilstandsendringException> {
             oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
@@ -129,6 +132,25 @@ class OppgaveTilstandTest {
         }
     }
 
+    @Test
+    fun `Skal kunne utsette en opppgave`() {
+        val saksbehandlerIdent = "Z080808"
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+
+        oppgave.utsett(
+            UtsettOppgaveHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                navIdent = saksbehandlerIdent,
+                utSattTil = LocalDate.now().plusDays(1),
+            ),
+        )
+
+        oppgave.tilstand().let {
+            it.type shouldBe PAA_VENT
+            (it as Oppgave.PaaVent).utsattTil shouldBe LocalDate.now().plusDays(1)
+        }
+    }
+
     private val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
@@ -139,6 +161,7 @@ class OppgaveTilstandTest {
     private fun lagOppgave(
         type: Type,
         saksbehandlerIdent: String? = null,
+        utsettTil: LocalDate? = null,
     ): Oppgave {
         val tilstand =
             when (type) {
@@ -146,6 +169,7 @@ class OppgaveTilstandTest {
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
+                PAA_VENT -> Oppgave.PaaVent(utsettTil ?: LocalDate.now())
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),

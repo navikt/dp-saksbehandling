@@ -118,7 +118,7 @@ class PostgresRepositoryTest {
             val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
             nesteOppgave!!.oppgaveId shouldBe nestEldsteLedigeOppgave.oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe testSaksbehandler
-            nesteOppgave.tilstand() shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
 
             val filter2 =
                 TildelNesteOppgaveFilter(
@@ -227,10 +227,10 @@ class PostgresRepositoryTest {
             val repo = PostgresRepository(ds)
 
             repo.lagre(testOppgave)
-            repo.hentOppgave(testOppgave.oppgaveId).tilstand() shouldBe KLAR_TIL_BEHANDLING
+            repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
             repo.lagre(testOppgave.copy(tilstand = Oppgave.FerdigBehandlet))
-            repo.hentOppgave(testOppgave.oppgaveId).tilstand() shouldBe FERDIG_BEHANDLET
+            repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
 
@@ -413,7 +413,7 @@ class PostgresRepositoryTest {
 
             repo.søk(Søkefilter.DEFAULT_SØKEFILTER).let {
                 it.size shouldBe 3
-                it.map { oppgave -> oppgave.tilstand() }.toSet() shouldBe
+                it.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
                     setOf(
                         UNDER_BEHANDLING,
                         KLAR_TIL_BEHANDLING,
@@ -530,7 +530,8 @@ class PostgresRepositoryTest {
             behandlingId = behandling.behandlingId,
             opprettet = opprettet,
             emneknagger = emneknagger,
-            tilstand = fra(tilstand),
+            // todo wtf
+            tilstand = fra(type = tilstand.name),
             behandling = behandling,
         )
     }

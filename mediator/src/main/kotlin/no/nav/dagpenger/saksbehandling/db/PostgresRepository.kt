@@ -425,7 +425,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     mapOf(
                         "id" to oppgave.oppgaveId,
                         "behandling_id" to oppgave.behandlingId,
-                        "tilstand" to oppgave.tilstand().name,
+                        "tilstand" to oppgave.tilstand().type.name,
                         "opprettet" to oppgave.opprettet,
                         "saksbehandler_ident" to oppgave.saksbehandlerIdent,
                     ),

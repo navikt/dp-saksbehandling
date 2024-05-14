@@ -1,13 +1,16 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -70,7 +73,7 @@ data class Oppgave private constructor(
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
 
-    fun tilstand() = this.tilstand.type
+    fun tilstand() = this.tilstand
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         this._emneknagger += forslagTilVedtakHendelse.emneknagger
@@ -89,8 +92,12 @@ data class Oppgave private constructor(
         tilstand.tildel(this, oppgaveAnsvarHendelse)
     }
 
+    fun utsett(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
+        tilstand.utsett(this, utsettOppgaveHendelse)
+    }
+
     object Opprettet : Tilstand {
-        override val type: Tilstand.Type = OPPRETTET
+        override val type: Type = OPPRETTET
 
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
@@ -101,7 +108,7 @@ data class Oppgave private constructor(
     }
 
     object KlarTilBehandling : Tilstand {
-        override val type: Tilstand.Type = KLAR_TIL_BEHANDLING
+        override val type: Type = KLAR_TIL_BEHANDLING
 
         override fun tildel(
             oppgave: Oppgave,
@@ -113,7 +120,7 @@ data class Oppgave private constructor(
     }
 
     object UnderBehandling : Tilstand {
-        override val type: Tilstand.Type = UNDER_BEHANDLING
+        override val type: Type = UNDER_BEHANDLING
 
         override fun fjernAnsvar(
             oppgave: Oppgave,
@@ -137,12 +144,24 @@ data class Oppgave private constructor(
                 )
             }
         }
+
+        override fun utsett(
+            oppgave: Oppgave,
+            utsettOppgaveHendelse: UtsettOppgaveHendelse,
+        ) {
+            oppgave.tilstand = PaaVent(utsattTil = utsettOppgaveHendelse.utSattTil)
+            oppgave.saksbehandlerIdent = utsettOppgaveHendelse.navIdent
+        }
     }
 
     class AlleredeTildeltException(message: String) : RuntimeException(message)
 
     object FerdigBehandlet : Tilstand {
-        override val type: Tilstand.Type = FERDIG_BEHANDLET
+        override val type: Type = FERDIG_BEHANDLET
+    }
+
+    data class PaaVent(val utsattTil: LocalDate) : Tilstand {
+        override val type: Type = Type.PAA_VENT
     }
 
     interface Tilstand {
@@ -153,20 +172,28 @@ data class Oppgave private constructor(
         class UgyldigTilstandException(message: String) : RuntimeException(message)
 
         companion object {
-            fun fra(type: Type) =
-                when (type) {
-                    OPPRETTET -> Opprettet
-                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
-                    UNDER_BEHANDLING -> UnderBehandling
-                    FERDIG_BEHANDLET -> FerdigBehandlet
+            fun fra(
+                type: Type,
+                utsattTil: LocalDate?,
+            ) = when (type) {
+                OPPRETTET -> Opprettet
+                KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                UNDER_BEHANDLING -> UnderBehandling
+                FERDIG_BEHANDLET -> FerdigBehandlet
+                Type.PAA_VENT -> {
+                    requireNotNull(utsattTil) { "Utsatt til må være satt for tilstand PAA_VENT" }
+                    PaaVent(utsattTil)
                 }
+            }
 
-            fun fra(type: String) =
-                kotlin.runCatching {
-                    fra(Type.valueOf(type))
-                }.getOrElse {
-                    throw UgyldigTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $type")
-                }
+            fun fra(
+                type: String,
+                utsattTil: LocalDate? = null,
+            ) = kotlin.runCatching {
+                fra(Type.valueOf(type), utsattTil)
+            }.getOrElse {
+                throw UgyldigTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $type")
+            }
         }
 
         enum class Type {
@@ -174,6 +201,7 @@ data class Oppgave private constructor(
             KLAR_TIL_BEHANDLING,
             UNDER_BEHANDLING,
             FERDIG_BEHANDLET,
+            PAA_VENT,
             ;
 
             companion object {
@@ -210,6 +238,13 @@ data class Oppgave private constructor(
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
             throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type")
+        }
+
+        fun utsett(
+            oppgave: Oppgave,
+            utsettOppgaveHendelse: UtsettOppgaveHendelse,
+        ) {
+            throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
         }
     }
 }

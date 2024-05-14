@@ -21,11 +21,6 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -170,7 +165,7 @@ fun lagOppgaveDTO(
         saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
-        tilstand = oppgave.tilstand().tilOppgaveTilstandTypeDTO(),
+        tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
         journalpostIder = listOf(),
     )
 
@@ -178,13 +173,16 @@ private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 }
 
-private fun Type.tilOppgaveTilstandTypeDTO() =
-    when (this) {
-        OPPRETTET -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
-        UNDER_BEHANDLING -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.UNDER_BEHANDLING, null)
-        KLAR_TIL_BEHANDLING -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.KLAR_TIL_BEHANDLING, null)
-        FERDIG_BEHANDLET -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.FERDIG_BEHANDLET, null)
+private fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
+    return when (this) {
+        is Oppgave.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
+        is Oppgave.KlarTilBehandling -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.KLAR_TIL_BEHANDLING, null)
+        is Oppgave.UnderBehandling -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.UNDER_BEHANDLING, null)
+        is Oppgave.FerdigBehandlet -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.FERDIG_BEHANDLET, null)
+        is Oppgave.PaaVent -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.PAA_VENT, this.utsattTil)
+        else -> throw InternDataException("Ukjent tilstand: $this")
     }
+}
 
 class InternDataException(message: String) : RuntimeException(message)
 
@@ -195,7 +193,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         behandlingId = this.behandlingId,
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
-        tilstand = this.tilstand().tilOppgaveTilstandTypeDTO(),
+        tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         saksbehandlerIdent = this.saksbehandlerIdent,
     )
 
