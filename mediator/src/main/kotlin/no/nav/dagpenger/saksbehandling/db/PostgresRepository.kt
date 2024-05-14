@@ -276,6 +276,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                                 oppg.opprettet AS oppgave_opprettet, 
                                 oppg.behandling_id, 
                                 oppg.saksbehandler_ident,
+                                oppg.utsatt_til,
                                 beha.opprettet AS behandling_opprettet
                         FROM    oppgave_v1    oppg
                         JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
@@ -287,7 +288,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     AND    oppg.opprettet <  :tom_pluss_1_dag
                 """,
                 )
-                    .append(saksBehandlerClause, personIdentClause, oppgaveIdClause, behandlingIdClause, emneknaggClause)
+                    .append(
+                        saksBehandlerClause,
+                        personIdentClause,
+                        oppgaveIdClause,
+                        behandlingIdClause,
+                        emneknaggClause,
+                    )
                     .toString()
 
             val queryOf =
@@ -413,12 +420,13 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 statement =
                     """
                     INSERT INTO oppgave_v1
-                        (id, behandling_id, tilstand, opprettet, saksbehandler_ident)
+                        (id, behandling_id, tilstand, opprettet, saksbehandler_ident, utsatt_til)
                     VALUES
-                        (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident) 
+                        (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident, :utsatt_til) 
                     ON CONFLICT(id) DO UPDATE SET
                      tilstand = :tilstand,
-                     saksbehandler_ident = :saksbehandler_ident
+                     saksbehandler_ident = :saksbehandler_ident,
+                     utsatt_til = :utsatt_til
                     
                     """.trimIndent(),
                 paramMap =
@@ -428,6 +436,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         "tilstand" to oppgave.tilstand().type.name,
                         "opprettet" to oppgave.opprettet,
                         "saksbehandler_ident" to oppgave.saksbehandlerIdent,
+                        "utsatt_til" to oppgave.utsattTil,
                     ),
             ).asUpdate,
         )
@@ -470,6 +479,12 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 opprettet = this.localDateTime("behandling_opprettet"),
             )
 
+        val tilstand =
+            Oppgave.Tilstand.fra(
+                type = this.string("tilstand"),
+                utsattTil = this.localDateOrNull("utsatt_til"),
+            )
+
         return Oppgave.rehydrer(
             oppgaveId = oppgaveId,
             ident = this.string("person_ident"),
@@ -477,7 +492,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
             behandlingId = behandlingId,
             opprettet = this.localDateTime("oppgave_opprettet"),
             emneknagger = hentEmneknaggerForOppgave(oppgaveId),
-            tilstand = this.string("tilstand").let { tilstand -> Oppgave.Tilstand.fra(tilstand) },
+            tilstand = tilstand,
             behandling = behandling,
         )
     }

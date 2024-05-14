@@ -7,11 +7,13 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Companion.fra
+import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Periode.Companion.UBEGRENSET_PERIODE
@@ -46,7 +48,7 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
-            repo.lagre(lagOppgave(tilstand = FERDIG_BEHANDLET))
+            repo.lagre(lagOppgave(tilstand = FerdigBehandlet))
             repo.tildelNesteOppgaveTil(
                 saksbehandlerIdent = "NAVIdent2",
                 filter =
@@ -66,40 +68,40 @@ class PostgresRepositoryTest {
 
             val yngsteLedigeOppgave =
                 lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
+                    tilstand = KlarTilBehandling,
                     opprettet = opprettetNå,
                 )
 
             val nestEldsteLedigeOppgave =
                 lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
+                    tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     emneknagger = setOf("Testknagg"),
                 )
 
             val eldsteLedigeOppgave =
                 lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
+                    tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(10),
                 )
 
             val endaEldreTildeltOppgave =
                 lagOppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
+                    tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(11),
                     saksbehandlerIdent = saksbehandlerIdent,
                 )
 
             val endaEldreFerdigOppgave =
                 lagOppgave(
-                    tilstand = FERDIG_BEHANDLET,
+                    tilstand = FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(12),
                     saksbehandlerIdent = testSaksbehandler,
                 )
 
             val endaEldreOpprettetOppgave =
                 lagOppgave(
-                    tilstand = OPPRETTET,
+                    tilstand = Opprettet,
                     opprettet = opprettetNå.minusDays(13),
                 )
 
@@ -222,22 +224,38 @@ class PostgresRepositoryTest {
 
     @Test
     fun `Skal kunne endre tilstand på en oppgave`() {
-        val testOppgave = lagOppgave(tilstand = KLAR_TIL_BEHANDLING)
+        val testOppgave = lagOppgave(tilstand = KlarTilBehandling)
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
             repo.lagre(testOppgave)
             repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
-            repo.lagre(testOppgave.copy(tilstand = Oppgave.FerdigBehandlet))
+            repo.lagre(testOppgave.copy(tilstand = FerdigBehandlet))
             repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
 
     @Test
+    fun `CRUD på oppgave med PAAVENT tilstand`() {
+        val testOppgave = lagOppgave(tilstand = UnderBehandling)
+        val utsattTil = LocalDate.now().plusDays(1)
+        withMigratedDb { ds ->
+            val repo = PostgresRepository(ds)
+
+            repo.lagre(testOppgave.copy(tilstand = Oppgave.PaaVent(utsattTil = utsattTil)))
+            repo.hentOppgave(testOppgave.oppgaveId).tilstand().let { lagretTilstand ->
+                lagretTilstand.type shouldBe Oppgave.Tilstand.Type.PAA_VENT
+                require(lagretTilstand is Oppgave.PaaVent)
+                lagretTilstand.utsattTil shouldBe utsattTil
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne søke etter oppgaver filtrert på tilstand`() {
-        val oppgaveKlarTilBehandling = lagOppgave(tilstand = KLAR_TIL_BEHANDLING)
-        val oppgaveFerdigBehandlet = lagOppgave(tilstand = FERDIG_BEHANDLET)
+        val oppgaveKlarTilBehandling = lagOppgave(tilstand = KlarTilBehandling)
+        val oppgaveFerdigBehandlet = lagOppgave(tilstand = FerdigBehandlet)
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
@@ -261,9 +279,9 @@ class PostgresRepositoryTest {
         val ola = Person(ident = "12345678910")
         val kari = Person(ident = "10987654321")
 
-        val oppgave1TilOla = lagOppgave(person = ola, tilstand = KLAR_TIL_BEHANDLING)
-        val oppgave2TilOla = lagOppgave(person = ola, tilstand = FERDIG_BEHANDLET)
-        val oppgave1TilKari = lagOppgave(person = kari, tilstand = FERDIG_BEHANDLET)
+        val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling)
+        val oppgave2TilOla = lagOppgave(person = ola, tilstand = FerdigBehandlet)
+        val oppgave1TilKari = lagOppgave(person = kari, tilstand = FerdigBehandlet)
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
@@ -345,10 +363,10 @@ class PostgresRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
-            val oppgave1 = lagOppgave(UNDER_BEHANDLING, enUkeSiden, saksbehandler1)
-            val oppgave2 = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler2)
-            val oppgave3 = lagOppgave(FERDIG_BEHANDLET, saksbehandlerIdent = saksbehandler2)
-            val oppgave4 = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent = null)
+            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1)
+            val oppgave2 = lagOppgave(UnderBehandling, saksbehandlerIdent = saksbehandler2)
+            val oppgave3 = lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2)
+            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null)
 
             repo.lagre(oppgave1)
             repo.lagre(oppgave2)
@@ -388,10 +406,10 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             val oppgaveUnderBehandlingEnUkeGammel =
-                lagOppgave(UNDER_BEHANDLING, opprettet = enUkeSiden, saksbehandlerIdent = saksbehandlerIdent)
-            val oppgaveKlarTilBehandlingIDag = lagOppgave(KLAR_TIL_BEHANDLING)
-            val oppgaveKlarTilBehandlingIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = opprettetNå.minusDays(1))
-            val oppgaveOpprettetIDag = lagOppgave(OPPRETTET)
+                lagOppgave(UnderBehandling, opprettet = enUkeSiden, saksbehandlerIdent = saksbehandlerIdent)
+            val oppgaveKlarTilBehandlingIDag = lagOppgave(KlarTilBehandling)
+            val oppgaveKlarTilBehandlingIGår = lagOppgave(KlarTilBehandling, opprettet = opprettetNå.minusDays(1))
+            val oppgaveOpprettetIDag = lagOppgave(Opprettet)
             repo.lagre(oppgaveUnderBehandlingEnUkeGammel)
             repo.lagre(oppgaveKlarTilBehandlingIDag)
             repo.lagre(oppgaveKlarTilBehandlingIGår)
@@ -467,10 +485,10 @@ class PostgresRepositoryTest {
             val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
             val repo = PostgresRepository(ds)
             val oppgaveOpprettetSeintForgårs =
-                lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iForgårsSåSeintPåDagenSomMulig)
-            val oppgaveOpprettetTidligIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iGårSåTidligPåDagenSomMulig)
-            val oppgaveOpprettetSeintIGår = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iGårSåSeintPåDagenSomMulig)
-            val oppgaveOpprettetTidligIDag = lagOppgave(KLAR_TIL_BEHANDLING, opprettet = iDagSåTidligPåDagenSomMulig)
+                lagOppgave(KlarTilBehandling, opprettet = iForgårsSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetTidligIGår = lagOppgave(KlarTilBehandling, opprettet = iGårSåTidligPåDagenSomMulig)
+            val oppgaveOpprettetSeintIGår = lagOppgave(KlarTilBehandling, opprettet = iGårSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetTidligIDag = lagOppgave(KlarTilBehandling, opprettet = iDagSåTidligPåDagenSomMulig)
 
             repo.lagre(oppgaveOpprettetSeintForgårs)
             repo.lagre(oppgaveOpprettetTidligIGår)
@@ -516,7 +534,7 @@ class PostgresRepositoryTest {
     }
 
     private fun lagOppgave(
-        tilstand: Oppgave.Tilstand.Type = KLAR_TIL_BEHANDLING,
+        tilstand: Oppgave.Tilstand = KlarTilBehandling,
         opprettet: LocalDateTime = opprettetNå,
         saksbehandlerIdent: String? = null,
         person: Person = testPerson,
@@ -531,7 +549,7 @@ class PostgresRepositoryTest {
             opprettet = opprettet,
             emneknagger = emneknagger,
             // todo wtf
-            tilstand = fra(type = tilstand.name),
+            tilstand = tilstand,
             behandling = behandling,
         )
     }

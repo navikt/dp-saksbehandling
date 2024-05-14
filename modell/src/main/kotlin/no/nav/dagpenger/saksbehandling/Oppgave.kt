@@ -70,6 +70,13 @@ data class Oppgave private constructor(
         }
     }
 
+    val utsattTil: LocalDate?
+        get() =
+            when (tilstand) {
+                is PaaVent -> (tilstand as PaaVent).utsattTil
+                else -> null
+            }
+
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
 
@@ -181,7 +188,7 @@ data class Oppgave private constructor(
                 UNDER_BEHANDLING -> UnderBehandling
                 FERDIG_BEHANDLET -> FerdigBehandlet
                 Type.PAA_VENT -> {
-                    requireNotNull(utsattTil) { "Utsatt til må være satt for tilstand PAA_VENT" }
+                    requireNotNull(utsattTil) { "UtsattTil må være satt for tilstand PAA_VENT" }
                     PaaVent(utsattTil)
                 }
             }
@@ -191,8 +198,8 @@ data class Oppgave private constructor(
                 utsattTil: LocalDate? = null,
             ) = kotlin.runCatching {
                 fra(Type.valueOf(type), utsattTil)
-            }.getOrElse {
-                throw UgyldigTilstandException("Kunne ikke rehydrere med ugyldig tilstand: $type")
+            }.getOrElse { t ->
+                throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: $type ${t.message}")
             }
         }
 

@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 
 val logger = KotlinLogging.logger {}
@@ -55,6 +56,7 @@ internal class OppgaveMediator(
                         "Gjør derfor ingenting med hendelsen"
                 }
             }
+
             else -> {
                 oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
                 lagre(oppgave)
@@ -87,5 +89,12 @@ internal class OppgaveMediator(
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
         repository.slettBehandling(hendelse.behandlingId)
         logger.info { "Mottatt behandling avbrutt hendelse for behandling med id ${hendelse.behandlingId}. Behandling slettet." }
+    }
+
+    fun utsettOppgave(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
+        repository.hentOppgave(utsettOppgaveHendelse.oppgaveId).let { oppgave ->
+            oppgave.utsett(utsettOppgaveHendelse)
+            repository.lagre(oppgave)
+        }
     }
 }

@@ -6,6 +6,7 @@ import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
@@ -14,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
@@ -22,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppgaveMediatorTest {
@@ -152,6 +155,54 @@ class OppgaveMediatorTest {
             assertThrows<DataNotFoundException> {
                 oppgaveMediator.hentOppgave(oppgaver.single().oppgaveId)
             }
+        }
+    }
+
+    @Test
+    fun `Livssyklus for søknadsbehandling som blir satt på vent`() {
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresRepository(datasource),
+                )
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val behandlingId = UUIDv7.ny()
+
+            oppgaveMediator.opprettOppgaveForBehandling(
+                søknadsbehandlingOpprettetHendelse =
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
+            )
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
+            )
+
+            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+
+            oppgaveMediator.tildelOppgave(
+                OppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    navIdent = "NAVIdent",
+                ),
+            )
+
+            val utSattTil = LocalDate.now().plusDays(17)
+            oppgaveMediator.utsettOppgave(
+                UtsettOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    navIdent = "NAVIdent",
+                    utSattTil = utSattTil,
+                ),
+            )
+
+            oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT).size shouldBe 1
         }
     }
 }
