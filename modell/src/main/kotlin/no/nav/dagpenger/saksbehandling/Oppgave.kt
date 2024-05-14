@@ -70,13 +70,6 @@ data class Oppgave private constructor(
         }
     }
 
-    val utsattTil: LocalDate?
-        get() =
-            when (tilstand) {
-                is PaaVent -> (tilstand as PaaVent).utsattTil
-                else -> null
-            }
-
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
 
@@ -167,12 +160,14 @@ data class Oppgave private constructor(
         override val type: Type = FERDIG_BEHANDLET
     }
 
-    data class PaaVent(val utsattTil: LocalDate) : Tilstand {
+    data class PaaVent(override val utsattTil: LocalDate) : Tilstand {
         override val type: Type = Type.PAA_VENT
     }
 
     interface Tilstand {
         val type: Type
+        val utsattTil: LocalDate?
+            get() = null
 
         class UlovligTilstandsendringException(message: String) : RuntimeException(message)
 

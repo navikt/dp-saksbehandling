@@ -436,7 +436,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         "tilstand" to oppgave.tilstand().type.name,
                         "opprettet" to oppgave.opprettet,
                         "saksbehandler_ident" to oppgave.saksbehandlerIdent,
-                        "utsatt_til" to oppgave.utsattTil,
+                        "utsatt_til" to oppgave.tilstand().utsattTil,
                     ),
             ).asUpdate,
         )
