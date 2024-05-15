@@ -20,7 +20,7 @@ fun lagOppgave(
     person: Person = testPerson,
     behandling: Behandling = lagBehandling(person = person),
     emneknagger: Set<String> = emptySet(),
-    utsattTil: LocalDate? = null
+    utsattTil: LocalDate? = null,
 ): Oppgave {
     return Oppgave.rehydrer(
         oppgaveId = UUIDv7.ny(),

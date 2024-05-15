@@ -13,7 +13,7 @@ import kotlin.concurrent.fixedRateTimer
 private val logger = KotlinLogging.logger {}
 
 fun settOppgaverKlarTilBehandling() {
-    val vaktmester = no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob(dataSource)
+    // val vaktmester = no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob(dataSource)
 
     fixedRateTimer(
         name = "",
@@ -22,7 +22,7 @@ fun settOppgaverKlarTilBehandling() {
         period = 15.Minutt,
         action = {
             try {
-                vaktmester.settOppgaverMedUtgåttFristTilKlarTilBehandling()
+                // vaktmester.settOppgaverMedUtgåttFristTilKlarTilBehandling()
             } catch (e: Exception) {
                 logger.error { "Sletterutine feilet: $e" }
             }
@@ -39,17 +39,17 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(frist: LocalDate = LocalDate
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                    """
-                            SELECT id
-                            FROM oppgave_v1
-                            WHERE tilstand = :tilstand
-                                AND utsatt_til < :frist
-                            """.trimIndent(),
+                        """
+                        SELECT id
+                        FROM oppgave_v1
+                        WHERE tilstand = :tilstand
+                            AND utsatt_til < :frist
+                        """.trimIndent(),
                     paramMap =
-                    mapOf(
-                        "frist" to frist,
-                        "tilstand" to PAA_VENT.name,
-                    ),
+                        mapOf(
+                            "frist" to frist,
+                            "tilstand" to PAA_VENT.name,
+                        ),
                 ).map { row ->
                     row.uuid("id")
                 }.asList,
@@ -58,12 +58,12 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(frist: LocalDate = LocalDate
         session.batchPreparedStatement(
             //language=PostgreSQL
             statement =
-            """
-                    UPDATE oppgave_v1
-                    SET    tilstand = '${Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING.name}',
-                           utsatt_til = null
-                    WHERE id = ?
-                    """.trimIndent(),
+                """
+                UPDATE oppgave_v1
+                SET    tilstand = '${Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING.name}',
+                       utsatt_til = null
+                WHERE id = ?
+                """.trimIndent(),
             params = listOf(utgåtteOppgaver),
         )
     }
