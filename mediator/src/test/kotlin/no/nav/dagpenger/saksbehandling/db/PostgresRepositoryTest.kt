@@ -5,7 +5,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -23,13 +22,9 @@ import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 class PostgresRepositoryTest {
     private val saksbehandlerIdent = "Z123456"
-    private val testPerson = Person(ident = "12345678901")
-    private val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val oppgaveIdTest = UUIDv7.ny()
 
     @Test
@@ -535,38 +530,5 @@ class PostgresRepositoryTest {
             repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
-    }
-
-    private fun lagOppgave(
-        tilstand: Oppgave.Tilstand = KlarTilBehandling,
-        opprettet: LocalDateTime = opprettetNå,
-        saksbehandlerIdent: String? = null,
-        person: Person = testPerson,
-        behandling: Behandling = lagBehandling(person = person),
-        emneknagger: Set<String> = emptySet(),
-    ): Oppgave {
-        return Oppgave.rehydrer(
-            oppgaveId = UUIDv7.ny(),
-            ident = person.ident,
-            saksbehandlerIdent = saksbehandlerIdent,
-            behandlingId = behandling.behandlingId,
-            opprettet = opprettet,
-            emneknagger = emneknagger,
-            tilstand = tilstand,
-            behandling = behandling,
-            utsattTil = null,
-        )
-    }
-
-    private fun lagBehandling(
-        behandlingId: UUID = UUIDv7.ny(),
-        opprettet: LocalDateTime = opprettetNå,
-        person: Person = testPerson,
-    ): Behandling {
-        return Behandling(
-            behandlingId = behandlingId,
-            person = person,
-            opprettet = opprettet,
-        )
     }
 }
