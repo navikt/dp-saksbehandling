@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -19,6 +20,7 @@ fun lagOppgave(
     person: Person = testPerson,
     behandling: Behandling = lagBehandling(person = person),
     emneknagger: Set<String> = emptySet(),
+    utsattTil: LocalDate? = null
 ): Oppgave {
     return Oppgave.rehydrer(
         oppgaveId = UUIDv7.ny(),
@@ -29,7 +31,7 @@ fun lagOppgave(
         emneknagger = emneknagger,
         tilstand = tilstand,
         behandling = behandling,
-        utsattTil = null,
+        utsattTil = utsattTil,
     )
 }
 
