@@ -30,9 +30,11 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -113,6 +115,13 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
+                    route("utsett") {
+                        put {
+                            val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
+                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
+                            call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
                 }
             }
             route("behandling/{behandlingId}/oppgaveId") {
@@ -132,6 +141,16 @@ internal fun Application.oppgaveApi(
             }
         }
     }
+}
+
+private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendelse {
+    val utSattTil = this.receive<UtsettOppgaveDTO>().utsettTil
+
+    return UtsettOppgaveHendelse(
+        oppgaveId = this.finnUUID("oppgaveId"),
+        navIdent = this.navIdent(),
+        utSattTil = utSattTil,
+    )
 }
 
 private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse =

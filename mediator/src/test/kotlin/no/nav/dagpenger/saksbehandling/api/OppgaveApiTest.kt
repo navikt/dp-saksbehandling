@@ -41,6 +41,7 @@ import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.Periode
 import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
@@ -363,6 +364,45 @@ class OppgaveApiTest {
                     testNAVIdent,
                 ),
             )
+        }
+    }
+
+    @Test
+    fun `Saksbehandler skal kunne utsette oppgave`() {
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
+        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
+        val utsettTil = LocalDate.now().plusDays(1)
+        val utsettOppgaveHendelse =
+            UtsettOppgaveHendelse(
+                oppgaveId = testOppgave.oppgaveId,
+                navIdent = testNAVIdent,
+                utSattTil = utsettTil,
+            )
+
+        coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
+        coEvery {
+            oppgaveMediatorMock.utsettOppgave(
+                utsettOppgaveHendelse,
+            )
+        } just runs
+
+        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
+            client.put("oppgave/${testOppgave.oppgaveId}/utsett") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """
+                        {"utsettTil":"$utsettTil"}
+                    """.trimMargin(),
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+        }
+
+        verify(exactly = 1) {
+            oppgaveMediatorMock.utsettOppgave(utsettOppgaveHendelse)
         }
     }
 
