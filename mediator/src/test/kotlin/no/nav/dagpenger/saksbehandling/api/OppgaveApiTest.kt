@@ -364,12 +364,12 @@ class OppgaveApiTest {
     fun `Saksbehandler skal kunne utsette oppgave`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
-        val utsettTil = LocalDate.now().plusDays(1)
+        val utsettTilDato = LocalDate.now().plusDays(1)
         val utsettOppgaveHendelse =
             UtsettOppgaveHendelse(
                 oppgaveId = testOppgave.oppgaveId,
                 navIdent = testNAVIdent,
-                utSattTil = utsettTil,
+                utSattTil = utsettTilDato,
             )
 
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
@@ -386,7 +386,7 @@ class OppgaveApiTest {
                 setBody(
                     //language=JSON
                     """
-                        {"utsettTil":"$utsettTil"}
+                        {"utsettTilDato":"$utsettTilDato"}
                     """.trimMargin(),
                 )
             }.also { response ->

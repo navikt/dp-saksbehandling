@@ -101,6 +101,10 @@ data class Oppgave private constructor(
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
+    fun settTilbakeTilKlarTilBehandling() {
+        tilstand.settTilbakeTilKlarTilBehandling(this)
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -168,6 +172,21 @@ data class Oppgave private constructor(
 
     object PaaVent : Tilstand {
         override val type: Type = Type.PAA_VENT
+
+        override fun tildel(
+            oppgave: Oppgave,
+            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+        ) {
+            oppgave.tilstand = UnderBehandling
+            oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
+            oppgave.utsattTil = null
+        }
+
+        override fun settTilbakeTilKlarTilBehandling(oppgave: Oppgave) {
+            oppgave.tilstand = KlarTilBehandling
+            oppgave.saksbehandlerIdent = null
+            oppgave.utsattTil = null
+        }
     }
 
     interface Tilstand {
@@ -244,6 +263,10 @@ data class Oppgave private constructor(
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
             throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
+        }
+
+        fun settTilbakeTilKlarTilBehandling(oppgave: Oppgave) {
+            throw UlovligTilstandsendringException("Kan ikke sette oppgave tilbake til klar til behandling i tilstand $type")
         }
     }
 }

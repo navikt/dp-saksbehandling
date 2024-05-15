@@ -367,11 +367,11 @@ components:
     UtsettOppgave:
       type: object
       properties:
-        utsettTil:
+        utsettTilDato:
           type: string
           format: date
       required:
-        - utsettTil
+        - utsettTilDato
     HttpProblem:
       type: object
       properties:

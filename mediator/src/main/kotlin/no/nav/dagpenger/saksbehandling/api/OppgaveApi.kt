@@ -141,7 +141,7 @@ internal fun Application.oppgaveApi(
 }
 
 private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendelse {
-    val utSattTil = this.receive<UtsettOppgaveDTO>().utsettTil
+    val utSattTil = this.receive<UtsettOppgaveDTO>().utsettTilDato
 
     return UtsettOppgaveHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),

@@ -134,7 +134,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal kunne utsette en opppgave`() {
+    fun `Skal kunne utsette en opppgave og ta den tilbake til under behandling`() {
         val saksbehandlerIdent = "Z080808"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
         val utSattTil = LocalDate.now().plusDays(1)
@@ -149,6 +149,32 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.PaaVent
         oppgave.utsattTil() shouldBe utSattTil
+
+        oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerIdent))
+
+        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.utsattTil() shouldBe null
+    }
+
+    @Test
+    fun `En utsatt oppgave skal kunne settes tilbake til KLAR TIL Behandling`() {
+        val saksbehandlerIdent = "Z080808"
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+        val utSattTil = LocalDate.now().plusDays(1)
+
+        oppgave.utsett(
+            UtsettOppgaveHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                navIdent = saksbehandlerIdent,
+                utSattTil = utSattTil,
+            ),
+        )
+
+        oppgave.settTilbakeTilKlarTilBehandling()
+
+        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+        oppgave.utsattTil() shouldBe null
+        oppgave.saksbehandlerIdent shouldBe null
     }
 
     private val behandling =
