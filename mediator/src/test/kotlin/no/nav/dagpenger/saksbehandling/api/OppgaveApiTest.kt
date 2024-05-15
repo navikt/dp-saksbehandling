@@ -553,6 +553,7 @@ class OppgaveApiTest {
                     Oppgave.Tilstand.Type.PAA_VENT -> TODO()
                 },
             behandling = behandling,
+            utsattTil = null,
         )
     }
 

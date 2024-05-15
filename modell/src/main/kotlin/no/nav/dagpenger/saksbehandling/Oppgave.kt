@@ -24,6 +24,7 @@ data class Oppgave private constructor(
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = Opprettet,
     val behandling: Behandling,
+    private var utsattTil: LocalDate? = null,
 ) {
     constructor(
         oppgaveId: UUID,
@@ -56,6 +57,7 @@ data class Oppgave private constructor(
             emneknagger: Set<String>,
             tilstand: Tilstand,
             behandling: Behandling,
+            utsattTil: LocalDate?,
         ): Oppgave {
             return Oppgave(
                 oppgaveId = oppgaveId,
@@ -66,6 +68,7 @@ data class Oppgave private constructor(
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,
                 behandling = behandling,
+                utsattTil = utsattTil,
             )
         }
     }
@@ -74,6 +77,8 @@ data class Oppgave private constructor(
         get() = _emneknagger.toSet()
 
     fun tilstand() = this.tilstand
+
+    fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         this._emneknagger += forslagTilVedtakHendelse.emneknagger
@@ -149,8 +154,9 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
-            oppgave.tilstand = PaaVent(utsattTil = utsettOppgaveHendelse.utSattTil)
+            oppgave.tilstand = PaaVent
             oppgave.saksbehandlerIdent = utsettOppgaveHendelse.navIdent
+            oppgave.utsattTil = utsettOppgaveHendelse.utSattTil
         }
     }
 
@@ -160,42 +166,33 @@ data class Oppgave private constructor(
         override val type: Type = FERDIG_BEHANDLET
     }
 
-    data class PaaVent(override val utsattTil: LocalDate) : Tilstand {
+    object PaaVent : Tilstand {
         override val type: Type = Type.PAA_VENT
     }
 
     interface Tilstand {
         val type: Type
-        val utsattTil: LocalDate?
-            get() = null
 
         class UlovligTilstandsendringException(message: String) : RuntimeException(message)
 
         class UgyldigTilstandException(message: String) : RuntimeException(message)
 
         companion object {
-            fun fra(
-                type: Type,
-                utsattTil: LocalDate?,
-            ) = when (type) {
-                OPPRETTET -> Opprettet
-                KLAR_TIL_BEHANDLING -> KlarTilBehandling
-                UNDER_BEHANDLING -> UnderBehandling
-                FERDIG_BEHANDLET -> FerdigBehandlet
-                Type.PAA_VENT -> {
-                    requireNotNull(utsattTil) { "UtsattTil må være satt for tilstand PAA_VENT" }
-                    PaaVent(utsattTil)
+            fun fra(type: Type) =
+                when (type) {
+                    OPPRETTET -> Opprettet
+                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                    UNDER_BEHANDLING -> UnderBehandling
+                    FERDIG_BEHANDLET -> FerdigBehandlet
+                    Type.PAA_VENT -> PaaVent
                 }
-            }
 
-            fun fra(
-                type: String,
-                utsattTil: LocalDate? = null,
-            ) = kotlin.runCatching {
-                fra(Type.valueOf(type), utsattTil)
-            }.getOrElse { t ->
-                throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: $type ${t.message}")
-            }
+            fun fra(type: String) =
+                kotlin.runCatching {
+                    fra(Type.valueOf(type))
+                }.getOrElse { t ->
+                    throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: $type ${t.message}")
+                }
         }
 
         enum class Type {

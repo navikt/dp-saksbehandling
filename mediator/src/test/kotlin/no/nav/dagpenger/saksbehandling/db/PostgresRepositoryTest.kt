@@ -243,11 +243,15 @@ class PostgresRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
 
-            repo.lagre(testOppgave.copy(tilstand = Oppgave.PaaVent(utsattTil = utsattTil)))
-            repo.hentOppgave(testOppgave.oppgaveId).tilstand().let { lagretTilstand ->
-                lagretTilstand.type shouldBe Oppgave.Tilstand.Type.PAA_VENT
-                require(lagretTilstand is Oppgave.PaaVent)
-                lagretTilstand.utsattTil shouldBe utsattTil
+            repo.lagre(
+                testOppgave.copy(
+                    tilstand = Oppgave.PaaVent,
+                    utsattTil = utsattTil,
+                ),
+            )
+            repo.hentOppgave(testOppgave.oppgaveId).let { oppgave: Oppgave ->
+                oppgave.tilstand() shouldBe Oppgave.PaaVent
+                oppgave.utsattTil() shouldBe utsattTil
             }
         }
     }
@@ -548,9 +552,9 @@ class PostgresRepositoryTest {
             behandlingId = behandling.behandlingId,
             opprettet = opprettet,
             emneknagger = emneknagger,
-            // todo wtf
             tilstand = tilstand,
             behandling = behandling,
+            utsattTil = null,
         )
     }
 

@@ -82,6 +82,7 @@ class OppgaveTilstandTest {
                 emneknagger = setOf(),
                 tilstand = Oppgave.UnderBehandling,
                 behandling = behandling,
+                utsattTil = null,
             )
 
         shouldNotThrowAny {
@@ -136,19 +137,18 @@ class OppgaveTilstandTest {
     fun `Skal kunne utsette en opppgave`() {
         val saksbehandlerIdent = "Z080808"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+        val utSattTil = LocalDate.now().plusDays(1)
 
         oppgave.utsett(
             UtsettOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
-                utSattTil = LocalDate.now().plusDays(1),
+                utSattTil = utSattTil,
             ),
         )
 
-        oppgave.tilstand().let {
-            it.type shouldBe PAA_VENT
-            (it as Oppgave.PaaVent).utsattTil shouldBe LocalDate.now().plusDays(1)
-        }
+        oppgave.tilstand() shouldBe Oppgave.PaaVent
+        oppgave.utsattTil() shouldBe utSattTil
     }
 
     private val behandling =
@@ -161,7 +161,6 @@ class OppgaveTilstandTest {
     private fun lagOppgave(
         type: Type,
         saksbehandlerIdent: String? = null,
-        utsettTil: LocalDate? = null,
     ): Oppgave {
         val tilstand =
             when (type) {
@@ -169,7 +168,7 @@ class OppgaveTilstandTest {
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
-                PAA_VENT -> Oppgave.PaaVent(utsettTil ?: LocalDate.now())
+                PAA_VENT -> Oppgave.PaaVent
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
@@ -180,6 +179,7 @@ class OppgaveTilstandTest {
             tilstand = tilstand,
             saksbehandlerIdent = saksbehandlerIdent,
             behandling = behandling,
+            utsattTil = null,
         )
     }
 }
