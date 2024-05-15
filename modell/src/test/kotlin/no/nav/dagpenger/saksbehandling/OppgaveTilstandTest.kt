@@ -177,6 +177,32 @@ class OppgaveTilstandTest {
         oppgave.saksbehandlerIdent shouldBe null
     }
 
+    @Test
+    fun `Fjern ansvar fra en oppgave med tilstand PAA_VENT`() {
+        val saksbehandlerIdent = "Z080808"
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+        val utSattTil = LocalDate.now().plusDays(1)
+
+        oppgave.utsett(
+            UtsettOppgaveHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                navIdent = saksbehandlerIdent,
+                utSattTil = utSattTil,
+            ),
+        )
+
+        oppgave.fjernAnsvar(
+            OppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                navIdent = saksbehandlerIdent,
+            ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+        oppgave.utsattTil() shouldBe null
+        oppgave.saksbehandlerIdent shouldBe null
+    }
+
     private val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),

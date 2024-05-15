@@ -182,6 +182,15 @@ data class Oppgave private constructor(
             oppgave.utsattTil = null
         }
 
+        override fun fjernAnsvar(
+            oppgave: Oppgave,
+            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+        ) {
+            oppgave.tilstand = KlarTilBehandling
+            oppgave.saksbehandlerIdent = null
+            oppgave.utsattTil = null
+        }
+
         override fun settTilbakeTilKlarTilBehandling(oppgave: Oppgave) {
             oppgave.tilstand = KlarTilBehandling
             oppgave.saksbehandlerIdent = null
