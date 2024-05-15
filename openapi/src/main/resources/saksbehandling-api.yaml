@@ -311,6 +311,9 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
+        utsattTilDato:
+          type: string
+          format: date
         journalpostIder:
           type: array
           items:
@@ -338,19 +341,12 @@ components:
         - UKJENT
 
     OppgaveTilstand:
-      type: object
-      properties:
-        type:
-          enum:
-            - KLAR_TIL_BEHANDLING
-            - UNDER_BEHANDLING
-            - FERDIG_BEHANDLET
-            - PAA_VENT
-        utsattTil:
-          type: string
-          format: date
-      required:
-         - tilstandType
+      type: string
+      enum:
+        - KLAR_TIL_BEHANDLING
+        - UNDER_BEHANDLING
+        - FERDIG_BEHANDLET
+        - PAA_VENT
 
     PersonIdent:
       type: object

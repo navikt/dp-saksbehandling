@@ -93,9 +93,7 @@ class OppgaveApiTest {
                       "emneknagger": [
                         "Søknadsbehandling"
                       ],
-                      "tilstand": {
-                         "type": "${OppgaveTilstandDTO.Type.KLAR_TIL_BEHANDLING}"
-                      },
+                      "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
                       "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
                     },
                     {
@@ -105,10 +103,9 @@ class OppgaveApiTest {
                     "emneknagger": [
                     "Søknadsbehandling"
                     ],
-                      "tilstand": {
-                         "type": "${OppgaveTilstandDTO.Type.KLAR_TIL_BEHANDLING}"
-                      }
-                    }]
+                      "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
+                    }
+                    ]
                     """.trimIndent()
             }
         }
@@ -259,9 +256,7 @@ class OppgaveApiTest {
                     },
                     "saksbehandlerIdent": "$testNAVIdent",
                     "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": {
-                         "type": "${OppgaveTilstandDTO.Type.UNDER_BEHANDLING}"
-                      }
+                    "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                     }
                     """.trimIndent()
             }
@@ -327,9 +322,7 @@ class OppgaveApiTest {
                       "statsborgerskap": "NOR"
                     },
                     "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": {
-                      "type": "${OppgaveTilstandDTO.Type.UNDER_BEHANDLING}"
-                      }
+                    "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                     }
                     """.trimIndent()
             }
@@ -435,9 +428,7 @@ class OppgaveApiTest {
                       "statsborgerskap": "NOR"
                     },
                     "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": {
-                         "type": "${OppgaveTilstandDTO.Type.FERDIG_BEHANDLET}"
-                      }
+                    "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}"
                     }
                     """.trimIndent()
             }

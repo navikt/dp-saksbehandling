@@ -18,7 +18,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -44,8 +43,6 @@ internal fun Application.oppgaveApi(
     oppgaveMediator: OppgaveMediator,
     pdlKlient: PDLKlient,
 ) {
-    val sikkerLogger = KotlinLogging.logger("tjenestekall")
-
     apiConfig()
 
     routing {
@@ -195,10 +192,10 @@ private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
 private fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
     return when (this) {
         is Oppgave.Opprettet -> throw InternDataException("Ikke tillatt å eksponere oppgavetilstand Opprettet")
-        is Oppgave.KlarTilBehandling -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.KLAR_TIL_BEHANDLING, null)
-        is Oppgave.UnderBehandling -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.UNDER_BEHANDLING, null)
-        is Oppgave.FerdigBehandlet -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.FERDIG_BEHANDLET, null)
-        is Oppgave.PaaVent -> OppgaveTilstandDTO(OppgaveTilstandDTO.Type.PAA_VENT, this.utsattTil)
+        is Oppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
+        is Oppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
+        is Oppgave.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
+        is Oppgave.PaaVent -> OppgaveTilstandDTO.PAA_VENT
         else -> throw InternDataException("Ukjent tilstand: $this")
     }
 }
