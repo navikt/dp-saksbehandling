@@ -160,11 +160,11 @@ data class Oppgave private constructor(
         ) {
             oppgave.tilstand = PaaVent
             oppgave.saksbehandlerIdent =
-                when (utsettOppgaveHendelse.oppfølging) {
+                when (utsettOppgaveHendelse.beholdOppgave) {
                     true -> utsettOppgaveHendelse.navIdent
                     false -> null
                 }
-            oppgave.utsattTil = utsettOppgaveHendelse.utSattTil
+            oppgave.utsattTil = utsettOppgaveHendelse.utsattTil
         }
     }
 

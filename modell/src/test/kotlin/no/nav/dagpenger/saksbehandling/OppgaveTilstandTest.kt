@@ -143,8 +143,8 @@ class OppgaveTilstandTest {
             UtsettOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
-                utSattTil = utsattTil,
-                oppfølging = false,
+                utsattTil = utsattTil,
+                beholdOppgave = false,
             ),
         )
 
@@ -160,7 +160,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Saksbehandler skal kunne følge opp en oppgave PAA_VENT`() {
+    fun `Saksbehandler skal kunne beholde en oppgave når den settes PAA_VENT`() {
         val saksbehandlerIdent = "Z080808"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
         val utsattTil = LocalDate.now().plusDays(1)
@@ -169,8 +169,8 @@ class OppgaveTilstandTest {
             UtsettOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
-                utSattTil = utsattTil,
-                oppfølging = true,
+                utsattTil = utsattTil,
+                beholdOppgave = true,
             ),
         )
 
@@ -189,8 +189,8 @@ class OppgaveTilstandTest {
             UtsettOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
-                utSattTil = utSattTil,
-                oppfølging = false,
+                utsattTil = utSattTil,
+                beholdOppgave = false,
             ),
         )
 
@@ -211,8 +211,8 @@ class OppgaveTilstandTest {
             UtsettOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
-                utSattTil = utSattTil,
-                oppfølging = false,
+                utsattTil = utSattTil,
+                beholdOppgave = false,
             ),
         )
 

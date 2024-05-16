@@ -146,8 +146,8 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendel
     return UtsettOppgaveHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         navIdent = this.navIdent(),
-        utSattTil = utsettOppgaveDto.utsettTilDato,
-        oppfølging = utsettOppgaveDto.oppfølging,
+        utsattTil = utsettOppgaveDto.utsettTilDato,
+        beholdOppgave = utsettOppgaveDto.beholdOppgave,
     )
 }
 

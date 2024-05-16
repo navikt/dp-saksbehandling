@@ -369,8 +369,8 @@ class OppgaveApiTest {
             UtsettOppgaveHendelse(
                 oppgaveId = testOppgave.oppgaveId,
                 navIdent = testNAVIdent,
-                utSattTil = utsettTilDato,
-                oppfølging = true,
+                utsattTil = utsettTilDato,
+                beholdOppgave = true,
             )
 
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
@@ -389,7 +389,7 @@ class OppgaveApiTest {
                     """
                         {
                           "utsettTilDato":"$utsettTilDato",
-                          "oppfølging":"true"
+                          "beholdOppgave":"true"
                         }
                     """.trimMargin(),
                 )

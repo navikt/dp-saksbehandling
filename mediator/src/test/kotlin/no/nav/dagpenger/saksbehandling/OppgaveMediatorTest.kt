@@ -198,8 +198,8 @@ class OppgaveMediatorTest {
                 UtsettOppgaveHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",
-                    utSattTil = utSattTil,
-                    oppfølging = false,
+                    utsattTil = utSattTil,
+                    beholdOppgave = false,
                 ),
             )
 
