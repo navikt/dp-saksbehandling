@@ -5,9 +5,9 @@ import kotliquery.sessionOf
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import java.time.LocalDate
 import java.util.UUID
+import javax.sql.DataSource
 import kotlin.concurrent.fixedRateTimer
 
 private val logger = KotlinLogging.logger {}
@@ -32,7 +32,10 @@ fun settOppgaverKlarTilBehandling() {
 
 private val Int.Minutt get() = this * 1000L * 60L
 
-fun settOppgaverMedUtgåttFristTilKlarTilBehandling(frist: LocalDate = LocalDate.now()) {
+fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
+    dataSource: DataSource,
+    frist: LocalDate = LocalDate.now(),
+) {
     sessionOf(dataSource).use { session ->
         val utgåtteOppgaver: List<UUID> =
             session.run(
