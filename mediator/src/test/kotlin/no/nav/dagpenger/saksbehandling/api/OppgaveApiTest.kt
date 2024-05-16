@@ -370,6 +370,7 @@ class OppgaveApiTest {
                 oppgaveId = testOppgave.oppgaveId,
                 navIdent = testNAVIdent,
                 utSattTil = utsettTilDato,
+                oppfølging = true,
             )
 
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
@@ -386,7 +387,10 @@ class OppgaveApiTest {
                 setBody(
                     //language=JSON
                     """
-                        {"utsettTilDato":"$utsettTilDato"}
+                        {
+                          "utsettTilDato":"$utsettTilDato",
+                          "oppfølging":"true"
+                        }
                     """.trimMargin(),
                 )
             }.also { response ->

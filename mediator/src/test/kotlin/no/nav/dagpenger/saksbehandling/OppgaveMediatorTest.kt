@@ -199,6 +199,7 @@ class OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",
                     utSattTil = utSattTil,
+                    oppfølging = false,
                 ),
             )
 

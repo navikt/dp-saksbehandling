@@ -144,6 +144,7 @@ class OppgaveTilstandTest {
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
                 utSattTil = utsattTil,
+                oppfølging = false,
             ),
         )
 
@@ -169,6 +170,7 @@ class OppgaveTilstandTest {
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
                 utSattTil = utSattTil,
+                oppfølging = false,
             ),
         )
 
@@ -190,6 +192,7 @@ class OppgaveTilstandTest {
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
                 utSattTil = utSattTil,
+                oppfølging = false,
             ),
         )
 

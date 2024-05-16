@@ -370,8 +370,12 @@ components:
         utsettTilDato:
           type: string
           format: date
+        oppfølging:
+          type: boolean
+          default: false
       required:
         - utsettTilDato
+        - oppfølging
     HttpProblem:
       type: object
       properties:
