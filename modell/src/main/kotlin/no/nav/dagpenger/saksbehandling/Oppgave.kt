@@ -159,7 +159,7 @@ data class Oppgave private constructor(
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
             oppgave.tilstand = PaaVent
-            oppgave.saksbehandlerIdent = utsettOppgaveHendelse.navIdent
+            oppgave.saksbehandlerIdent = null
             oppgave.utsattTil = utsettOppgaveHendelse.utSattTil
         }
     }

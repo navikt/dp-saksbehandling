@@ -137,23 +137,25 @@ class OppgaveTilstandTest {
     fun `Skal kunne utsette en opppgave og ta den tilbake til under behandling`() {
         val saksbehandlerIdent = "Z080808"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
-        val utSattTil = LocalDate.now().plusDays(1)
+        val utsattTil = LocalDate.now().plusDays(1)
 
         oppgave.utsett(
             UtsettOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandlerIdent,
-                utSattTil = utSattTil,
+                utSattTil = utsattTil,
             ),
         )
 
         oppgave.tilstand() shouldBe Oppgave.PaaVent
-        oppgave.utsattTil() shouldBe utSattTil
+        oppgave.utsattTil() shouldBe utsattTil
+        oppgave.saksbehandlerIdent shouldBe null
 
         oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerIdent))
 
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.utsattTil() shouldBe null
+        oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
     }
 
     @Test
