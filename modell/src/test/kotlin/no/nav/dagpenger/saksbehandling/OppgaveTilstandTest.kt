@@ -160,6 +160,26 @@ class OppgaveTilstandTest {
     }
 
     @Test
+    fun `Saksbehandler skal kunne følge opp en oppgave PAA_VENT`() {
+        val saksbehandlerIdent = "Z080808"
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+        val utsattTil = LocalDate.now().plusDays(1)
+
+        oppgave.utsett(
+            UtsettOppgaveHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                navIdent = saksbehandlerIdent,
+                utSattTil = utsattTil,
+                oppfølging = true,
+            ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.PaaVent
+        oppgave.utsattTil() shouldBe utsattTil
+        oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+    }
+
+    @Test
     fun `En utsatt oppgave skal kunne settes tilbake til KLAR TIL Behandling`() {
         val saksbehandlerIdent = "Z080808"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
