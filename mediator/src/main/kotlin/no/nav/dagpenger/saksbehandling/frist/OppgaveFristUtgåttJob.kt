@@ -5,7 +5,11 @@ import kotliquery.sessionOf
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
+import java.util.Date
 import java.util.UUID
 import javax.sql.DataSource
 import kotlin.concurrent.fixedRateTimer
@@ -13,31 +17,35 @@ import kotlin.concurrent.fixedRateTimer
 private val logger = KotlinLogging.logger {}
 
 fun settOppgaverKlarTilBehandling() {
-    // val vaktmester = no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob(dataSource)
+    val date = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
 
     fixedRateTimer(
         name = "",
         daemon = true,
-        initialDelay = 1.Minutt,
-        period = 15.Minutt,
+        startAt = date,
+        period = 1.Dag,
         action = {
             try {
-                // vaktmester.settOppgaverMedUtgåttFristTilKlarTilBehandling()
+                logger.info { "Starter settOppgaverMedUtgåttFristTilKlarTilBehandling jobb" }
+                settOppgaverMedUtgåttFristTilKlarTilBehandling(
+                    PostgresDataSourceBuilder.dataSource,
+                    frist = LocalDate.now(),
+                )
             } catch (e: Exception) {
-                logger.error { "Sletterutine feilet: $e" }
+                logger.error(e) { "SettOppgaverMedUtgåttFristTilKlarTilBehandling feilet: ${e.message} " }
             }
         },
     )
 }
 
-private val Int.Minutt get() = this * 1000L * 60L
+private val Int.Dag get() = this * 1000L * 60L * 60L * 24L
 
 fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
     dataSource: DataSource,
     frist: LocalDate = LocalDate.now(),
 ) {
     sessionOf(dataSource).use { session ->
-        val utgåtteOppgaver: List<UUID> =
+        val utgåtteOppgaver: List<List<UUID>> =
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -57,6 +65,10 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
                     row.uuid("id")
                 }.asList,
             )
+                .also {
+                    logger.info { "${it.size} oppgaver skal settes tilbake til KLAR_TIL_BEHANDLING: $it" }
+                }
+                .map { listOf(it) }
 
         session.batchPreparedStatement(
             //language=PostgreSQL
@@ -67,7 +79,9 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
                        utsatt_til = null
                 WHERE id = ?
                 """.trimIndent(),
-            params = listOf(utgåtteOppgaver),
-        )
+            params = utgåtteOppgaver,
+        ).also {
+            logger.info { "Oppgaver oppdatert: ${it.sum()}" }
+        }
     }
 }

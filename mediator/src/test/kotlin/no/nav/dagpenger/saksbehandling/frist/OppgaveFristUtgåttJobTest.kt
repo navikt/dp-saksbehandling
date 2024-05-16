@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling.frist
 
+import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
@@ -11,21 +13,54 @@ class OppgaveFristUtgåttJobTest {
     @Test
     fun `Hugga bugga`() =
         withMigratedDb { ds ->
+            val saksbehandlerIdent = "Z123456"
             val repo = PostgresRepository(ds)
+
+            val idag = LocalDate.now()
+            val igår = idag.minusDays(1)
 
             val oppgave =
                 lagOppgave(
                     tilstand = PaaVent,
-                    utsattTil = LocalDate.now().minusDays(1),
+                    utsattTil = igår,
+                    saksbehandlerIdent = null,
                 )
             val oppgave2 =
                 lagOppgave(
                     tilstand = PaaVent,
-                    utsattTil = LocalDate.now(),
+                    utsattTil = igår,
+                    saksbehandlerIdent = saksbehandlerIdent,
                 )
+
+            val oppgave3 =
+                lagOppgave(
+                    tilstand = PaaVent,
+                    utsattTil = idag,
+                    saksbehandlerIdent = saksbehandlerIdent,
+                )
+
             repo.lagre(oppgave)
             repo.lagre(oppgave2)
+            repo.lagre(oppgave3)
 
-            settOppgaverMedUtgåttFristTilKlarTilBehandling(ds)
+            settOppgaverMedUtgåttFristTilKlarTilBehandling(
+                dataSource = ds,
+                frist = idag,
+            )
+
+            repo.hentOppgave(oppgave.oppgaveId).let { oppgave ->
+                oppgave.tilstand() shouldBe KlarTilBehandling
+                oppgave.saksbehandlerIdent shouldBe null
+            }
+
+            repo.hentOppgave(oppgave2.oppgaveId).let { oppgave ->
+                oppgave.tilstand() shouldBe KlarTilBehandling
+                oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+            }
+
+            repo.hentOppgave(oppgave3.oppgaveId).let { oppgave ->
+                oppgave.tilstand() shouldBe PaaVent
+                oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+            }
         }
 }
