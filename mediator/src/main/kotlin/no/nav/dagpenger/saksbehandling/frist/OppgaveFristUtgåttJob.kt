@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.frist
 
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
@@ -45,43 +46,76 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
     frist: LocalDate = LocalDate.now(),
 ) {
     sessionOf(dataSource).use { session ->
-        val utgåtteOppgaver: List<List<UUID>> =
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT id
-                        FROM oppgave_v1
-                        WHERE tilstand = :tilstand
-                            AND utsatt_til < :frist
-                        """.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "frist" to frist,
-                            "tilstand" to PAA_VENT.name,
-                        ),
-                ).map { row ->
-                    row.uuid("id")
-                }.asList,
-            )
-                .also {
-                    logger.info { "${it.size} oppgaver skal settes tilbake til KLAR_TIL_BEHANDLING: $it" }
-                }
-                .map { listOf(it) }
-
-        session.batchPreparedStatement(
-            //language=PostgreSQL
-            statement =
-                """
-                UPDATE oppgave_v1
-                SET    tilstand = '${Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING.name}',
-                       utsatt_til = null
-                WHERE id = ?
-                """.trimIndent(),
-            params = utgåtteOppgaver,
-        ).also {
-            logger.info { "Oppgaver oppdatert: ${it.sum()}" }
+        session.transaction { tx ->
+            val utgåtteOppgaver: List<List<UUID>> =
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT id
+                            FROM oppgave_v1
+                            WHERE tilstand = :tilstand
+                                AND utsatt_til < :frist
+                            """.trimIndent(),
+                        paramMap =
+                            mapOf(
+                                "frist" to frist,
+                                "tilstand" to PAA_VENT.name,
+                            ),
+                    ).map { row ->
+                        row.uuid("id")
+                    }.asList,
+                )
+                    .also {
+                        logger.info { "${it.size} oppgaver skal settes tilbake til KLAR_TIL_BEHANDLING: $it" }
+                    }
+                    .map { listOf(it) }
+            tx.settOppgaverTilKlarForBehandling(utgåtteOppgaver)
+            tx.leggPåUtsattTidligereEmneknagg(utgåtteOppgaver)
         }
+    }
+}
+
+private fun TransactionalSession.leggPåUtsattTidligereEmneknagg(utgåtteOppgaver: List<List<UUID>>) {
+    this.batchPreparedStatement(
+        //language=PostgreSQL
+        statement =
+            """
+            INSERT INTO emneknagg_v1 (oppgave_id, emneknagg)
+            VALUES (?, 'Tidligere utsatt')
+            """.trimIndent(),
+        params = utgåtteOppgaver,
+    ).also {
+        logger.info { "emneknagger oppdatert: ${it.sum()}" }
+    }
+}
+
+private fun TransactionalSession.settOppgaverTilKlarForBehandling(utgåtteOppgaver: List<List<UUID>>) {
+    this.batchPreparedStatement(
+        //language=PostgreSQL
+        statement =
+            """
+            UPDATE oppgave_v1
+            SET    tilstand = '${Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING.name}',
+                   utsatt_til = null
+            WHERE id = ?
+            """.trimIndent(),
+        params = utgåtteOppgaver,
+    ).also {
+        logger.info { "Oppgaver oppdatert: ${it.sum()}" }
+    }
+    this.batchPreparedStatement(
+        //language=PostgreSQL
+        statement =
+            """
+            UPDATE oppgave_v1
+            SET    tilstand = '${Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING.name}',
+                   utsatt_til = null
+            WHERE id = ?
+            """.trimIndent(),
+        params = utgåtteOppgaver,
+    ).also {
+        logger.info { "Oppgaver oppdatert: ${it.sum()}" }
     }
 }
