@@ -184,6 +184,7 @@ fun lagOppgaveDTO(
         emneknagger = oppgave.emneknagger.toList(),
         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
         journalpostIder = listOf(),
+        utsattTilDato = oppgave.utsattTil(),
     )
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
