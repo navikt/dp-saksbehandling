@@ -128,6 +128,13 @@ data class Oppgave private constructor(
             oppgave.tilstand = UnderBehandling
             oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
         }
+
+        override fun fjernAnsvar(
+            oppgave: Oppgave,
+            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+        ) {
+            oppgave.saksbehandlerIdent = null
+        }
     }
 
     object UnderBehandling : Tilstand {

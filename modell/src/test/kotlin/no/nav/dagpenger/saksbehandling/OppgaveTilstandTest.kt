@@ -94,24 +94,6 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal ikke kunne fjerne oppgaveansvar i tilstand Klar til behandling`() {
-        val oppgave = lagOppgave(OPPRETTET)
-        oppgave.tilstand().type shouldBe OPPRETTET
-        oppgave.oppgaveKlarTilBehandling(
-            ForslagTilVedtakHendelse(
-                ident = testIdent,
-                søknadId = UUIDv7.ny(),
-                behandlingId = UUIDv7.ny(),
-            ),
-        )
-        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
-
-        shouldThrow<UlovligTilstandsendringException> {
-            oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
-        }
-    }
-
-    @Test
     fun `Skal ikke endre tilstand på en oppgave når den er ferdigbehandlet`() {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
@@ -225,6 +207,22 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
         oppgave.utsattTil() shouldBe null
+        oppgave.saksbehandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Fjern ansvar fra en oppgave med tilstand KLAR_TIL_BEHANDLING`() {
+        val saksbehandlerIdent = "Z080808"
+        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING, saksbehandlerIdent)
+
+        oppgave.fjernAnsvar(
+            OppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                navIdent = saksbehandlerIdent,
+            ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
         oppgave.saksbehandlerIdent shouldBe null
     }
 
