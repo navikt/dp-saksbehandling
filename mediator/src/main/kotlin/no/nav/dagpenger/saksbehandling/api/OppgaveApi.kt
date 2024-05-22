@@ -183,7 +183,7 @@ fun lagOppgaveDTO(
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
-        journalpostIder = listOf("639515989"),
+        journalpostIder = listOf("638528079"),
         utsattTilDato = oppgave.utsattTil(),
     )
 
