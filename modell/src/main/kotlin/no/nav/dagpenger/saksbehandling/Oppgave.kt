@@ -14,6 +14,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
+private val logger = KotlinLogging.logger {}
+
 data class Oppgave private constructor(
     val oppgaveId: UUID,
     val opprettet: LocalDateTime,
@@ -247,7 +249,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ) {
-            throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type")
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type")
         }
 
         fun ferdigstill(
@@ -261,25 +263,30 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $type")
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $type")
         }
 
         fun tildel(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type")
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type")
         }
 
         fun utsett(
             oppgave: Oppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
-            throw UlovligTilstandsendringException("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
         }
 
         fun settTilbakeTilKlarTilBehandling(oppgave: Oppgave) {
-            throw UlovligTilstandsendringException("Kan ikke sette oppgave tilbake til klar til behandling i tilstand $type")
+            ulovligTilstandsendring("Kan ikke sette oppgave tilbake til klar til behandling i tilstand $type")
+        }
+
+        private fun ulovligTilstandsendring(message: String): Nothing {
+            logger.error { message }
+            throw UlovligTilstandsendringException(message)
         }
     }
 }
