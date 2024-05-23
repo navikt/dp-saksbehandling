@@ -25,7 +25,7 @@ class JournalpostIdHttpClientTest {
 
         val journalpostIdClient =
             JournalpostIdHttpClient(
-                journalpostIdApiUrl = "http://localhost:8080/$søknadId",
+                journalpostIdApiUrl = "http://localhost:8080",
                 tokenProvider = { "tøken" },
                 httpClient = httpClient(mockEngine),
             )

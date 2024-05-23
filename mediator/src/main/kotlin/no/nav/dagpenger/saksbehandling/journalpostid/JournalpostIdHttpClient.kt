@@ -23,7 +23,7 @@ class JournalpostIdHttpClient(
         logger.info { "Henter journalpostId for søknad med id: $søknadId" }
 
         return kotlin.runCatching {
-            httpClient.get(urlString = journalpostIdApiUrl) {
+            httpClient.get(urlString = "$journalpostIdApiUrl/$søknadId") {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 accept(ContentType.Text.Plain)
             }.bodyAsText()
