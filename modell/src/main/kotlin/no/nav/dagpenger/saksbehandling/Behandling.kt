@@ -16,10 +16,12 @@ data class Behandling(
             behandlingId: UUID,
             person: Person,
             opprettet: LocalDateTime,
+            hendelse: Hendelse,
         ) = Behandling(
             behandlingId = behandlingId,
             person = person,
             opprettet = opprettet,
+            hendelse = hendelse,
         )
     }
 }

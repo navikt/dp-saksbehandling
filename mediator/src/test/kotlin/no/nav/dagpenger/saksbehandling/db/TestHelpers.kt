@@ -5,6 +5,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -39,10 +41,12 @@ fun lagBehandling(
     behandlingId: UUID = UUIDv7.ny(),
     opprettet: LocalDateTime = opprettetNå,
     person: Person = testPerson,
+    hendelse: Hendelse = TomHendelse,
 ): Behandling {
     return Behandling(
         behandlingId = behandlingId,
         person = person,
         opprettet = opprettet,
+        hendelse = hendelse,
     )
 }

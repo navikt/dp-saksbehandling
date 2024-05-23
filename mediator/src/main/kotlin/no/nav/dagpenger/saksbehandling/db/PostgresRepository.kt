@@ -9,7 +9,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.Periode.Companion.UBEGRENSET_PERIODE
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.logger
+import no.nav.dagpenger.saksbehandling.serder.fraJson
+import no.nav.dagpenger.saksbehandling.serder.tilJson
+import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -102,6 +108,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         behandlingId = behandlingId,
                         person = finnPerson(ident)!!,
                         opprettet = row.localDateTime("opprettet"),
+                        hendelse = finnHendelseForBehandling(behandlingId),
                     )
                 }.asSingle,
             )
@@ -370,6 +377,33 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
     }
 
+    private fun Row.rehydrerHendelse(): Hendelse {
+        return when (val hendelseType = this.string("hendelse_type")) {
+            "TomHendelse" -> return TomHendelse
+            "SøknadsbehandlingOpprettetHendelse" -> fraJson<SøknadsbehandlingOpprettetHendelse>(this.string("hendelse_data"))
+            else -> throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
+        }
+    }
+
+    private fun finnHendelseForBehandling(behandlingId: UUID): Hendelse {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT hendelse_type, hendelse_data
+                        FROM   hendelse_v1
+                        WHERE  behandling_id = :behandling_id
+                        """.trimIndent(),
+                    paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row ->
+                    row.rehydrerHendelse()
+                }.asSingle,
+            ) ?: TomHendelse
+        }
+    }
+
     private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
         return sessionOf(dataSource).use { session ->
             session.run(
@@ -387,6 +421,35 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                 }.asList,
             )
         }.toSet()
+    }
+
+    private fun TransactionalSession.lagreHendelse(
+        behandlingId: UUID,
+        hendelse: Hendelse,
+    ) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO hendelse_v1
+                        (behandling_id, hendelse_type, hendelse_data)
+                    VALUES
+                        (:behandling_id, :hendelse_type, :hendelse_data) 
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "behandling_id" to behandlingId,
+                        "hendelse_type" to hendelse.javaClass.simpleName,
+                        "hendelse_data" to
+                            PGobject().also {
+                                it.type = "JSONB"
+                                it.value = hendelse.tilJson()
+                            },
+                    ),
+            ).asUpdate,
+        )
     }
 
     private fun TransactionalSession.lagre(behandling: Behandling) {
@@ -410,6 +473,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     ),
             ).asUpdate,
         )
+        this.lagreHendelse(behandling.behandlingId, behandling.hendelse)
     }
 
     private fun TransactionalSession.lagre(oppgave: Oppgave) {
@@ -477,6 +541,7 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                         ident = this.string("person_ident"),
                     ),
                 opprettet = this.localDateTime("behandling_opprettet"),
+                hendelse = finnHendelseForBehandling(behandlingId),
             )
 
         val tilstand =

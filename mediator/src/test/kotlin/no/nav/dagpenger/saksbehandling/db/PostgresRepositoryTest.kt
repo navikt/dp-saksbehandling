@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
@@ -185,11 +186,27 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne lagre en behandling`() {
         val testBehandling = lagBehandling()
+        val behandlingMedSøknadsbehandlingOpprettetHendelse =
+            lagBehandling(
+                hendelse =
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = UUIDv7.ny(),
+                        behandlingId = UUIDv7.ny(),
+                        ident = testPerson.ident,
+                        opprettet = LocalDateTime.now(),
+                    ),
+            )
+
         withMigratedDb { ds ->
             val repo = PostgresRepository(ds)
             repo.lagre(testBehandling)
             val behandlingFraDatabase = repo.hentBehandling(testBehandling.behandlingId)
             behandlingFraDatabase shouldBe testBehandling
+
+            repo.lagre(behandlingMedSøknadsbehandlingOpprettetHendelse)
+            repo.hentBehandling(
+                behandlingMedSøknadsbehandlingOpprettetHendelse.behandlingId,
+            ) shouldBe behandlingMedSøknadsbehandlingOpprettetHendelse
         }
     }
 
