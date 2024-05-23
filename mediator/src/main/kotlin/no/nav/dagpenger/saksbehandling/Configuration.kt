@@ -21,7 +21,7 @@ internal object Configuration {
                 "KAFKA_RESET_POLICY" to "latest",
                 "GRUPPE_BESLUTTER" to "123",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
-                "JOURNALPOSTID_API_URL" to "http://journalpostid-api/v1/journalpost",
+                "JOURNALPOSTID_API_URL" to "http://dp-oppslag-journalpost-id/v1/journalpost",
                 "JOURNALPOSTID_API_SCOOPE" to "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
