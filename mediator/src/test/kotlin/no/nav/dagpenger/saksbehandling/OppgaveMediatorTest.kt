@@ -70,9 +70,12 @@ class OppgaveMediatorTest {
                     opprettet = LocalDateTime.now(),
                 )
 
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).let { oppgaver ->
+                oppgaver.size shouldBe 1
+                oppgaver.single().behandling.hendelse shouldBe søknadsbehandlingOpprettetHendelse
+            }
 
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(

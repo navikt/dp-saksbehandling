@@ -30,6 +30,7 @@ internal class OppgaveMediator(
                 behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
                 person = person,
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                hendelse = søknadsbehandlingOpprettetHendelse,
             )
 
         val oppgave =
