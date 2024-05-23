@@ -72,6 +72,8 @@ spec:
       rules:
         - application: skjermede-personer-pip
           namespace: nom
+        - application: dp-oppslag-journalpost-id
+          namespace: teamdagpenger
       external:
         - host: {{pdl.host}}
   gcp:
