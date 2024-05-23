@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.respondBadRequest
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
@@ -24,7 +25,7 @@ class JournalpostIdHttpClientTest {
 
         val journalpostIdClient =
             JournalpostIdHttpClient(
-                journalpostIdApiUrl = "http://localhost:8080",
+                journalpostIdApiUrl = "http://localhost:8080/$søknadId",
                 tokenProvider = { "tøken" },
                 httpClient = httpClient(mockEngine),
             )
@@ -33,5 +34,25 @@ class JournalpostIdHttpClientTest {
                 journalpostIdClient.hentJournalpostId(søknadId = søknadId)
             }
         journalpostIdResultat shouldBe Result.success("1234")
+    }
+
+    @Test
+    fun `Kall mot journalpostId api feiler`() {
+        val mockEngine =
+            MockEngine { _ ->
+                respondBadRequest()
+            }
+
+        val journalpostIdClient =
+            JournalpostIdHttpClient(
+                journalpostIdApiUrl = "http://localhost:8080/$søknadId",
+                tokenProvider = { "tøken" },
+                httpClient = httpClient(mockEngine),
+            )
+        val journalpostIdResultat: Result<String> =
+            runBlocking {
+                journalpostIdClient.hentJournalpostId(søknadId = søknadId)
+            }
+        journalpostIdResultat.isFailure shouldBe true
     }
 }
