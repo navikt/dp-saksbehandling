@@ -46,6 +46,8 @@ spec:
       value: {{skjerming.url}}
     - name: SKJERMING_API_SCOPE
       value: {{skjerming.scope}}
+    - name: JOURNALPOSTID_API_SCOOPE
+      value: {{ journalpostid.scope }}
   azure:
     application:
       enabled: true

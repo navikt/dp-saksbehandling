@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandling
+import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
@@ -28,12 +29,18 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenSupplier = Configuration.pdlTokenProvider,
         )
 
+    private val journalpostIdClient =
+        JournalpostIdHttpClient(
+            journalpostIdApiUrl = Configuration.journalpostIdApiUrl,
+            tokenProvider = Configuration.journalpostTokenProvider,
+        )
+
     private val oppgaveMediator = OppgaveMediator(repository)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
-                this.oppgaveApi(oppgaveMediator, pdlKlient)
+                this.oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
             }.build().also { rapidsConnection ->
                 VedtakFattetMottak(rapidsConnection, oppgaveMediator)
                 BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, skjermingHttpKlient, pdlKlient)

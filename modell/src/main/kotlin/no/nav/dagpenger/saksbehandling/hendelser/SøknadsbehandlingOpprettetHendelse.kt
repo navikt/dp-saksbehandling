@@ -8,4 +8,4 @@ data class SøknadsbehandlingOpprettetHendelse(
     val behandlingId: UUID,
     val ident: String,
     val opprettet: LocalDateTime,
-)
+) : Hendelse()
