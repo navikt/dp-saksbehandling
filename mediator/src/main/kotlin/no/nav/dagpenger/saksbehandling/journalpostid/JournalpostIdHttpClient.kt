@@ -20,10 +20,11 @@ class JournalpostIdHttpClient(
     private val httpClient: HttpClient = httpClient(),
 ) : JournalpostIdClient {
     override suspend fun hentJournalpostId(søknadId: UUID): Result<String> {
-        logger.info { "Henter journalpostId for søknad med id: $søknadId" }
+        val urlString = "$journalpostIdApiUrl/$søknadId"
+        logger.info { "Henter journalpostId fra $urlString" }
 
         return kotlin.runCatching {
-            httpClient.get(urlString = "$journalpostIdApiUrl/$søknadId") {
+            httpClient.get(urlString = urlString) {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 accept(ContentType.Text.Plain)
             }.bodyAsText()

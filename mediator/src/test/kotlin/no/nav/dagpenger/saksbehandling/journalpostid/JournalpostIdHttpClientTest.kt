@@ -19,6 +19,7 @@ class JournalpostIdHttpClientTest {
         val mockEngine =
             MockEngine { request ->
                 request.headers[HttpHeaders.Authorization] shouldBe "Bearer tøken"
+                request.url.host shouldBe "localhost"
                 request.url.pathSegments shouldContain (søknadId.toString())
                 respond("1234", headers = headersOf("Content-Type", "plain/text"))
             }
