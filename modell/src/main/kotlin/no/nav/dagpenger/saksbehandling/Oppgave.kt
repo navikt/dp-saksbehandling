@@ -175,6 +175,13 @@ data class Oppgave private constructor(
                 }
             oppgave.utsattTil = utsettOppgaveHendelse.utsattTil
         }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
     }
 
     class AlleredeTildeltException(message: String) : RuntimeException(message)
@@ -263,7 +270,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            ulovligTilstandsendring("Kan ikke ferdigstille oppgave i tilstand $type for ${vedtakFattetHendelse.javaClass.simpleName}")
         }
 
         fun fjernAnsvar(
