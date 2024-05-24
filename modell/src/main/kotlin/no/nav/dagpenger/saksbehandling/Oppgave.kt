@@ -116,6 +116,13 @@ data class Oppgave private constructor(
         ) {
             oppgave.tilstand = KlarTilBehandling
         }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
     }
 
     object KlarTilBehandling : Tilstand {
