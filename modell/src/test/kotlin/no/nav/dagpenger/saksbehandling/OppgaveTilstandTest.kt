@@ -60,7 +60,8 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal kunne ferdigstille en oppgave fra OPPRETTET og UNDER_BEHANDLING`() {
-        setOf(UNDER_BEHANDLING, OPPRETTET).forEach { tilstand ->
+        val lovligeTilstander = setOf(UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING)
+        lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
             oppgave.ferdigstill(
                 VedtakFattetHendelse(behandlingId = oppgave.behandlingId, søknadId = UUIDv7.ny(), ident = testIdent),
@@ -68,7 +69,7 @@ class OppgaveTilstandTest {
             oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
         }
 
-        (Type.values.toMutableSet() - setOf(UNDER_BEHANDLING, OPPRETTET)).forEach { tilstand ->
+        (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
