@@ -119,7 +119,7 @@ class OppgaveMediatorTest {
                 // Language=JSON
                 """
                     {
-                      "@event_name": "StartUtsending",
+                      "@event_name": "start_utsending",
                       "oppgaveId": "${tildeltOppgave.oppgaveId}"
                     }
                 """

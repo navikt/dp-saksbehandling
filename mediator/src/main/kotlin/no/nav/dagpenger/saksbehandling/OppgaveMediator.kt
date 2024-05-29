@@ -108,7 +108,7 @@ internal class OppgaveMediator(
             rapidsConnection.publish(
                 JsonMessage.newMessage(
                     mapOf(
-                        "@event_name" to "StartUtsending",
+                        "@event_name" to "start_utsending",
                         "oppgaveId" to oppgave.oppgaveId,
                     ),
                 ).toJson(),
