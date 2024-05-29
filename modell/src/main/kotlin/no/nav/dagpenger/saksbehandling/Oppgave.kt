@@ -273,7 +273,7 @@ data class Oppgave private constructor(
                     UNDER_BEHANDLING -> UnderBehandling
                     FERDIG_BEHANDLET -> FerdigBehandlet
                     PAA_VENT -> PaaVent
-                    AVVENTER_UTSENDING -> TODO()
+                    AVVENTER_UTSENDING -> AvventerUtsending
                 }
 
             fun fra(type: String) =

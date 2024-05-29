@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -104,14 +105,16 @@ class OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.saksbehandlerIdent shouldBe "NAVIdent"
 
-            oppgaveMediator.ferdigstillOppgave(
+            val vedtakFattetHendelse =
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,
                     ident = testIdent,
-                ),
-            )
+                )
+            oppgaveMediator.startUtsending(vedtakFattetHendelse)
+            oppgaveMediator.hentAlleOppgaverMedTilstand(AVVENTER_UTSENDING).size shouldBe 1
 
+            oppgaveMediator.ferdigstillOppgave(vedtakFattetHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
         }
     }
