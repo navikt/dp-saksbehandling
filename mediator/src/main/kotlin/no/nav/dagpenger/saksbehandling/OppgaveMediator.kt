@@ -100,5 +100,9 @@ internal class OppgaveMediator(
     }
 
     fun startUtsending(vedtakFattetHendelse: VedtakFattetHendelse) {
+        hentOppgaveFor(vedtakFattetHendelse.behandlingId).let { oppgave ->
+            oppgave.startUtsending(vedtakFattetHendelse)
+            lagre(oppgave)
+        }
     }
 }

@@ -12,7 +12,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.VedtaksbrevHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -110,8 +109,8 @@ data class Oppgave private constructor(
         tilstand.settTilbakeTilKlarTilBehandling(this)
     }
 
-    fun startUtsending(vedtaksbrevHendelse: VedtaksbrevHendelse) {
-        tilstand.startUtsending(this, vedtaksbrevHendelse)
+    fun startUtsending(vedtakFattetHendelse: VedtakFattetHendelse) {
+        tilstand.startUtsending(this, vedtakFattetHendelse)
     }
 
     object Opprettet : Tilstand {
@@ -163,7 +162,7 @@ data class Oppgave private constructor(
 
         override fun startUtsending(
             oppgave: Oppgave,
-            vedtaksbrevHendelse: VedtaksbrevHendelse,
+            vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
             oppgave.tilstand = AvventerUtsending
         }
@@ -250,6 +249,13 @@ data class Oppgave private constructor(
         override val type: Type = AVVENTER_UTSENDING
 
         override fun behov() = setOf("ditten", "datten")
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
     }
 
     interface Tilstand {
@@ -338,7 +344,7 @@ data class Oppgave private constructor(
 
         fun startUtsending(
             oppgave: Oppgave,
-            vedtaksbrevHendelse: VedtaksbrevHendelse,
+            vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke sette oppgaven til avventer utsending i tilstand $type")
         }

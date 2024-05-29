@@ -17,7 +17,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.VedtaksbrevHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -63,7 +62,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal kunne ferdigstille en oppgave fra alle lovlige tilstander`() {
-        val lovligeTilstander = setOf(UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING)
+        val lovligeTilstander = setOf(UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, AVVENTER_UTSENDING)
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
             oppgave.ferdigstill(
@@ -86,7 +85,8 @@ class OppgaveTilstandTest {
     fun `Skal gå fra UnderBehandling til AvventerUtsending`() {
         val saksbehandlerIdent = "saksbehandlerIdent"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
-        oppgave.startUtsending(VedtaksbrevHendelse(saksbehandlerIdent))
+        val vedtakFattetHendelse = VedtakFattetHendelse(behandlingId = UUIDv7.ny(), søknadId = UUIDv7.ny(), ident = "risus")
+        oppgave.startUtsending(vedtakFattetHendelse)
 
         oppgave.tilstand().type shouldBe AVVENTER_UTSENDING
         oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
