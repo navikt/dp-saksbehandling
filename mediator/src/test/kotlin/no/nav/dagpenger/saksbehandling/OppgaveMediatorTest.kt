@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
@@ -39,7 +40,7 @@ class OppgaveMediatorTest {
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
         withMigratedDb { datasource ->
             val repo = PostgresRepository(datasource)
-            val oppgaveMediator = OppgaveMediator(repo)
+            val oppgaveMediator = OppgaveMediator(repo, testRapid)
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =
@@ -57,7 +58,7 @@ class OppgaveMediatorTest {
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresRepository(datasource))
+                OppgaveMediator(repository = PostgresRepository(datasource), rapidsConnection = testRapid)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
 
@@ -113,7 +114,18 @@ class OppgaveMediatorTest {
                 )
             oppgaveMediator.startUtsending(vedtakFattetHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(AVVENTER_UTSENDING).size shouldBe 1
-
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).toPrettyString() shouldEqualSpecifiedJson
+                // Language=JSON
+                """
+                    {
+                      "@event_name": "behov",
+                      "@behov": [
+                        "ditten",
+                        "datten"
+                      ]
+                    }
+                """
             oppgaveMediator.ferdigstillOppgave(vedtakFattetHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
         }
@@ -125,6 +137,7 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresRepository(datasource),
+                    rapidsConnection = testRapid,
                 )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
@@ -170,6 +183,7 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresRepository(datasource),
+                    rapidsConnection = testRapid,
                 )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)

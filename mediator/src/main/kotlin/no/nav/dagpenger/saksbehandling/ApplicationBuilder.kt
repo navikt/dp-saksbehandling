@@ -35,8 +35,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.journalpostTokenProvider,
         )
 
-    private val oppgaveMediator = OppgaveMediator(repository)
-
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
@@ -47,6 +45,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
                 ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
             }
+
+    private val oppgaveMediator = OppgaveMediator(repository, rapidsConnection)
 
     init {
         rapidsConnection.register(this)

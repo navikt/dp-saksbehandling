@@ -8,11 +8,14 @@ import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.RapidsConnection
 
 val logger = KotlinLogging.logger {}
 
 internal class OppgaveMediator(
     private val repository: Repository,
+    private val rapidsConnection: RapidsConnection,
 ) : Repository by repository {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
@@ -102,6 +105,9 @@ internal class OppgaveMediator(
     fun startUtsending(vedtakFattetHendelse: VedtakFattetHendelse) {
         hentOppgaveFor(vedtakFattetHendelse.behandlingId).let { oppgave ->
             oppgave.startUtsending(vedtakFattetHendelse)
+            rapidsConnection.publish(
+                JsonMessage.newNeed(behov = oppgave.tilstand().behov()).toJson(),
+            )
             lagre(oppgave)
         }
     }
