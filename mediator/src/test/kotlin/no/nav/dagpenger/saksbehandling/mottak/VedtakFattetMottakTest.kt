@@ -26,14 +26,15 @@ internal class VedtakFattetMottakTest {
     @Test
     fun `Skal behandle vedtak fattet hendelse`() {
         testRapid.sendTestMessage(vedtakFattetHendelse())
-        verify(exactly = 1) {
-            oppgaveMediatorMock.ferdigstillOppgave(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    søknadId = søknadId,
-                    ident = testIdent,
-                ),
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = behandlingId,
+                søknadId = søknadId,
+                ident = testIdent,
             )
+        verify(exactly = 1) {
+            oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
+            oppgaveMediatorMock.startUtsending(vedtakFattetHendelse)
         }
     }
 

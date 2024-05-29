@@ -98,4 +98,7 @@ internal class OppgaveMediator(
             repository.lagre(oppgave)
         }
     }
+
+    fun startUtsending(vedtakFattetHendelse: VedtakFattetHendelse) {
+    }
 }
