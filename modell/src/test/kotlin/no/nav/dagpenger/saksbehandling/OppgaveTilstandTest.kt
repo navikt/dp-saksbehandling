@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
@@ -61,7 +62,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave fra OPPRETTET og UNDER_BEHANDLING`() {
+    fun `Skal kunne ferdigstille en oppgave fra alle lovlige tilstander`() {
         val lovligeTilstander = setOf(UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING)
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
@@ -82,29 +83,19 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå til InformerBruker fra UnderBehandling`() {
+    fun `Skal gå fra UnderBehandling til AvventerUtsending`() {
         val saksbehandlerIdent = "saksbehandlerIdent"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
-        oppgave.informerBruker(VedtaksbrevHendelse(saksbehandlerIdent))
+        oppgave.startUtsending(VedtaksbrevHendelse(saksbehandlerIdent))
 
         oppgave.tilstand().type shouldBe AVVENTER_UTSENDING
         oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+        oppgave.tilstand().behov() shouldContainAll setOf("ditten", "datten")
     }
 
     @Test
     fun `Skal gå til KlarTilBehandling fra UnderBehandling`() {
-        val oppgave =
-            Oppgave.rehydrer(
-                oppgaveId = UUIDv7.ny(),
-                ident = "ident",
-                saksbehandlerIdent = "saksbehandlerIdent",
-                behandlingId = UUIDv7.ny(),
-                opprettet = LocalDateTime.now(),
-                emneknagger = setOf(),
-                tilstand = Oppgave.UnderBehandling,
-                behandling = behandling,
-                utsattTil = null,
-            )
+        val oppgave = lagOppgave(type = KLAR_TIL_BEHANDLING)
 
         shouldNotThrowAny {
             oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, "Z080808"))
@@ -265,7 +256,7 @@ class OppgaveTilstandTest {
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
                 PAA_VENT -> Oppgave.PaaVent
-                AVVENTER_UTSENDING -> TODO()
+                AVVENTER_UTSENDING -> Oppgave.AvventerUtsending
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),

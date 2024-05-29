@@ -110,8 +110,8 @@ data class Oppgave private constructor(
         tilstand.settTilbakeTilKlarTilBehandling(this)
     }
 
-    fun informerBruker(vedtaksbrevHendelse: VedtaksbrevHendelse) {
-        tilstand.informerBruker(this, vedtaksbrevHendelse)
+    fun startUtsending(vedtaksbrevHendelse: VedtaksbrevHendelse) {
+        tilstand.startUtsending(this, vedtaksbrevHendelse)
     }
 
     object Opprettet : Tilstand {
@@ -161,11 +161,11 @@ data class Oppgave private constructor(
     object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
 
-        override fun informerBruker(
+        override fun startUtsending(
             oppgave: Oppgave,
             vedtaksbrevHendelse: VedtaksbrevHendelse,
         ) {
-            oppgave.tilstand = AventerUtsending
+            oppgave.tilstand = AvventerUtsending
         }
 
         override fun fjernAnsvar(
@@ -246,8 +246,10 @@ data class Oppgave private constructor(
         }
     }
 
-    object AventerUtsending : Tilstand {
+    object AvventerUtsending : Tilstand {
         override val type: Type = AVVENTER_UTSENDING
+
+        override fun behov() = setOf("ditten", "datten")
     }
 
     interface Tilstand {
@@ -293,6 +295,8 @@ data class Oppgave private constructor(
             }
         }
 
+        fun behov() = emptySet<String>()
+
         fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
@@ -332,7 +336,7 @@ data class Oppgave private constructor(
             ulovligTilstandsendring("Kan ikke sette oppgave tilbake til klar til behandling i tilstand $type")
         }
 
-        fun informerBruker(
+        fun startUtsending(
             oppgave: Oppgave,
             vedtaksbrevHendelse: VedtaksbrevHendelse,
         ) {

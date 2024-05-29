@@ -27,10 +27,16 @@ import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -571,11 +577,12 @@ class OppgaveApiTest {
             emneknagger = setOf("Søknadsbehandling"),
             tilstand =
                 when (tilstand) {
-                    OPPRETTET -> Oppgave.Opprettet
-                    KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
-                    UNDER_BEHANDLING -> Oppgave.UnderBehandling
-                    FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
-                    Oppgave.Tilstand.Type.PAA_VENT -> TODO()
+                    OPPRETTET -> Opprettet
+                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                    UNDER_BEHANDLING -> UnderBehandling
+                    FERDIG_BEHANDLET -> FerdigBehandlet
+                    PAA_VENT -> TODO()
+                    AVVENTER_UTSENDING -> TODO()
                 },
             behandling = behandling,
             utsattTil = null,
