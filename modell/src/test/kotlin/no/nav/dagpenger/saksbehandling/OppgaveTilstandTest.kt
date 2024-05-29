@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -15,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtaksbrevHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -77,6 +79,16 @@ class OppgaveTilstandTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun `Skal gå til InformerBruker fra UnderBehandling`() {
+        val saksbehandlerIdent = "saksbehandlerIdent"
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+        oppgave.informerBruker(VedtaksbrevHendelse(saksbehandlerIdent))
+
+        oppgave.tilstand().type shouldBe AVVENTER_UTSENDING
+        oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
     }
 
     @Test
@@ -253,6 +265,7 @@ class OppgaveTilstandTest {
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
                 PAA_VENT -> Oppgave.PaaVent
+                AVVENTER_UTSENDING -> TODO()
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
