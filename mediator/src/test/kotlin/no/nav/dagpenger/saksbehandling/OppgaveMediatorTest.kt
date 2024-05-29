@@ -119,11 +119,8 @@ class OppgaveMediatorTest {
                 // Language=JSON
                 """
                     {
-                      "@event_name": "behov",
-                      "@behov": [
-                        "ditten",
-                        "datten"
-                      ]
+                      "@event_name": "StartUtsending",
+                      "oppgaveId": "${tildeltOppgave.oppgaveId}"
                     }
                 """
             oppgaveMediator.ferdigstillOppgave(vedtakFattetHendelse)

@@ -106,7 +106,12 @@ internal class OppgaveMediator(
         hentOppgaveFor(vedtakFattetHendelse.behandlingId).let { oppgave ->
             oppgave.startUtsending(vedtakFattetHendelse)
             rapidsConnection.publish(
-                JsonMessage.newNeed(behov = oppgave.tilstand().behov()).toJson(),
+                JsonMessage.newMessage(
+                    mapOf(
+                        "@event_name" to "StartUtsending",
+                        "oppgaveId" to oppgave.oppgaveId,
+                    ),
+                ).toJson(),
             )
             lagre(oppgave)
         }
