@@ -1,0 +1,60 @@
+package no.nav.dagpenger.saksbehandling.utsending
+
+import de.slub.urn.URN
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.UtsendingKvitteringHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
+import org.junit.jupiter.api.Test
+
+class UtsendingTilstandTest {
+    @Test
+    fun `Lovlige tilstandsendringer`() {
+        val utsending = Utsending(oppgaveId = UUIDv7.ny())
+        utsending.brev() shouldBe null
+        utsending.tilstand() shouldBe Utsending.VenterPåBrev
+
+        val brev = "Dette er et vedtaksbrev"
+        val vedtaksbrevHendelse = VedtaksbrevHendelse(brev = brev)
+        utsending.mottaBrev(vedtaksbrevHendelse)
+        utsending.brev() shouldBe brev
+        utsending.tilstand() shouldBe Utsending.AvventerPdfVersjonAvBrev
+
+        val pdfUrn = URN.rfc8141().parse("urn:pdf:123456")
+        utsending.mottaUrnTilPdfAvBrev(ArkiverbartBrevHendelse(pdfUrn = pdfUrn))
+        utsending.pdfUrn() shouldBe pdfUrn
+        utsending.tilstand() shouldBe Utsending.AvventerMidlertidigJournalføring
+
+        val midlertidigJournalpostHendelse = MidlertidigJournalpostHendelse(journalpostId = "123456")
+        utsending.mottaMidlertidigJournalpost(midlertidigJournalpostHendelse)
+        utsending.journalpostId() shouldBe midlertidigJournalpostHendelse.journalpostId
+        utsending.tilstand() shouldBe Utsending.AvventerJournalføring
+
+        val journalpostHendelse = JournalpostHendelse(journalpostId = "123456")
+        utsending.mottaJournalpost(journalpostHendelse)
+        utsending.journalpostId() shouldBe journalpostHendelse.journalpostId
+        utsending.tilstand() shouldBe Utsending.AvventerDistribuering
+
+        val utsendingKvitteringHendelse = UtsendingKvitteringHendelse(utsendingId = UUIDv7.ny(), journalpostId = "123456")
+        utsending.mottaKvitteringPåUtsending(utsendingKvitteringHendelse)
+        utsending.tilstand() shouldBe Utsending.Distribuert
+    }
+
+    @Test
+    fun `Ugyldig tilstandsendring`() {
+        val utsending = Utsending(oppgaveId = UUIDv7.ny())
+        val vedtaksbrevHendelse = VedtaksbrevHendelse(brev = "Dette er et vedtaksbrev")
+        shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
+            utsending.mottaUrnTilPdfAvBrev(
+                ArkiverbartBrevHendelse(pdfUrn = URN.rfc8141().parse("urn:pdf:123456")),
+            )
+        }
+        shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
+            utsending.mottaBrev(vedtaksbrevHendelse)
+        }
+    }
+}
