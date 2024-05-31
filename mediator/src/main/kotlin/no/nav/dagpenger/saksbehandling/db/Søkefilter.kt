@@ -31,6 +31,8 @@ class FilterBuilder {
     }
 
     private fun parseQueryString(queryString: String): StringValues {
+        if (queryString.isEmpty()) return StringValues.Empty
+
         val builder = StringValuesBuilderImpl()
 
         queryString

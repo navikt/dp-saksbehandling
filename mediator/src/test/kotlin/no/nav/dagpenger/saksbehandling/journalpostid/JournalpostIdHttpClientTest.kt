@@ -19,13 +19,14 @@ class JournalpostIdHttpClientTest {
         val mockEngine =
             MockEngine { request ->
                 request.headers[HttpHeaders.Authorization] shouldBe "Bearer tøken"
+                request.url.host shouldBe "localhost"
                 request.url.pathSegments shouldContain (søknadId.toString())
                 respond("1234", headers = headersOf("Content-Type", "plain/text"))
             }
 
         val journalpostIdClient =
             JournalpostIdHttpClient(
-                journalpostIdApiUrl = "http://localhost:8080/$søknadId",
+                journalpostIdApiUrl = "http://localhost:8080",
                 tokenProvider = { "tøken" },
                 httpClient = httpClient(mockEngine),
             )

@@ -16,8 +16,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -60,14 +58,25 @@ class OppgaveTilstandTest {
         oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
     }
 
-    @ParameterizedTest
-    @EnumSource(Type::class)
-    fun `Skal kunne ferdigstill en oppgave fra alle tilstander`(type: Type) {
-        val oppgave = lagOppgave(type)
-        oppgave.ferdigstill(
-            VedtakFattetHendelse(behandlingId = oppgave.behandlingId, søknadId = UUIDv7.ny(), ident = testIdent),
-        )
-        oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+    @Test
+    fun `Skal kunne ferdigstille en oppgave fra OPPRETTET og UNDER_BEHANDLING`() {
+        val lovligeTilstander = setOf(UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING)
+        lovligeTilstander.forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand)
+            oppgave.ferdigstill(
+                VedtakFattetHendelse(behandlingId = oppgave.behandlingId, søknadId = UUIDv7.ny(), ident = testIdent),
+            )
+            oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+        }
+
+        (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand)
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.ferdigstill(
+                    VedtakFattetHendelse(behandlingId = oppgave.behandlingId, søknadId = UUIDv7.ny(), ident = testIdent),
+                )
+            }
+        }
     }
 
     @Test

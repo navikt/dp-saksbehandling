@@ -19,6 +19,7 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
@@ -33,7 +34,10 @@ import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -42,6 +46,7 @@ import java.util.UUID
 internal fun Application.oppgaveApi(
     oppgaveMediator: OppgaveMediator,
     pdlKlient: PDLKlient,
+    journalpostIdClient: JournalpostIdClient,
 ) {
     apiConfig()
 
@@ -77,7 +82,8 @@ internal fun Application.oppgaveApi(
                             null -> call.respond(HttpStatusCode.NotFound)
                             else -> {
                                 val person = pdlKlient.person(oppgave.ident).getOrThrow()
-                                val oppgaveDTO = lagOppgaveDTO(oppgave, person)
+                                val journalpostIder = journalpostIdClient.hentJournalPostIder(oppgave.behandling)
+                                val oppgaveDTO = lagOppgaveDTO(oppgave, person, journalpostIder)
                                 call.respond(HttpStatusCode.OK, oppgaveDTO)
                             }
                         }
@@ -89,7 +95,8 @@ internal fun Application.oppgaveApi(
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
                         val person: PDLPersonIntern = pdlKlient.person(oppgave.ident).getOrThrow()
-                        val oppgaveDTO = lagOppgaveDTO(oppgave, person)
+                        val journalpostIder = journalpostIdClient.hentJournalPostIder(oppgave.behandling)
+                        val oppgaveDTO = lagOppgaveDTO(oppgave, person, journalpostIder)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
                     route("tildel") {
@@ -98,7 +105,8 @@ internal fun Application.oppgaveApi(
                             try {
                                 val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
                                 val person = pdlKlient.person(oppgave.ident).getOrThrow()
-                                val oppgaveDTO = lagOppgaveDTO(oppgave, person)
+                                val journalpostIder = journalpostIdClient.hentJournalPostIder(oppgave.behandling)
+                                val oppgaveDTO = lagOppgaveDTO(oppgave, person, journalpostIder)
                                 call.respond(HttpStatusCode.OK, oppgaveDTO)
                             } catch (e: Oppgave.AlleredeTildeltException) {
                                 call.respond(HttpStatusCode.Conflict) { e.message.toString() }
@@ -140,6 +148,20 @@ internal fun Application.oppgaveApi(
     }
 }
 
+private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandling): Set<String> {
+    return when (val hendelse = behandling.hendelse) {
+        is SøknadsbehandlingOpprettetHendelse -> {
+            this.hentJournalpostId(hendelse.søknadId).map {
+                setOf(it)
+            }.getOrElse {
+                emptySet()
+            }
+        }
+
+        TomHendelse -> emptySet()
+    }
+}
+
 private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendelse {
     val utsettOppgaveDto = this.receive<UtsettOppgaveDTO>()
 
@@ -157,6 +179,7 @@ private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse =
 fun lagOppgaveDTO(
     oppgave: Oppgave,
     person: PDLPersonIntern,
+    journalpostIder: Set<String>,
 ): OppgaveDTO =
 
     OppgaveDTO(
@@ -183,7 +206,7 @@ fun lagOppgaveDTO(
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
-        journalpostIder = listOf(),
+        journalpostIder = journalpostIder.toList(),
         utsattTilDato = oppgave.utsattTil(),
     )
 

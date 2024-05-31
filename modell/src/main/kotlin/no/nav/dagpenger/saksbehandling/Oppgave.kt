@@ -116,6 +116,13 @@ data class Oppgave private constructor(
         ) {
             oppgave.tilstand = KlarTilBehandling
         }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
     }
 
     object KlarTilBehandling : Tilstand {
@@ -134,6 +141,13 @@ data class Oppgave private constructor(
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
             oppgave.saksbehandlerIdent = null
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
         }
     }
 
@@ -174,6 +188,13 @@ data class Oppgave private constructor(
                     false -> null
                 }
             oppgave.utsattTil = utsettOppgaveHendelse.utsattTil
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
         }
     }
 
@@ -263,7 +284,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            ulovligTilstandsendring("Kan ikke ferdigstille oppgave i tilstand $type for ${vedtakFattetHendelse.javaClass.simpleName}")
         }
 
         fun fjernAnsvar(

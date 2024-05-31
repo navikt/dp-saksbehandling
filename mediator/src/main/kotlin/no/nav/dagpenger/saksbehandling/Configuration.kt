@@ -21,6 +21,8 @@ internal object Configuration {
                 "KAFKA_RESET_POLICY" to "latest",
                 "GRUPPE_BESLUTTER" to "123",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
+                "JOURNALPOSTID_API_URL" to "http://dp-oppslag-journalpost-id/v1/journalpost",
+                "JOURNALPOSTID_API_SCOOPE" to "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
@@ -34,6 +36,13 @@ internal object Configuration {
         properties.list().reversed().fold(emptyMap()) { map, pair ->
             map + pair.second
         }
+
+    val journalpostIdApiUrl: String = properties[Key("JOURNALPOSTID_API_URL", stringType)]
+    val journalpostApiScope: String = properties[Key("JOURNALPOSTID_API_SCOOPE", stringType)]
+
+    val journalpostTokenProvider = {
+        azureAdClient().clientCredentials(journalpostApiScope).accessToken
+    }
 
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingApiScope: String = properties[Key("SKJERMING_API_SCOPE", stringType)]

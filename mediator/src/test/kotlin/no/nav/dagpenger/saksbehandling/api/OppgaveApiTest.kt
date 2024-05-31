@@ -41,7 +41,9 @@ import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.Periode
 import no.nav.dagpenger.saksbehandling.db.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
@@ -404,15 +406,37 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Hent oppgave med tilhørende personinfo`() {
+    fun `Hent oppgave med tilhørende personinfo og journalpostIder `() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val pdlMock = mockk<PDLKlient>()
-        val testOppgave = lagTestOppgaveMedTilstand(FERDIG_BEHANDLET)
+        val journalpostIdClientMock = mockk<JournalpostIdClient>()
+        val testOppgave =
+            lagTestOppgaveMedTilstandOgBehandling(
+                tilstand = FERDIG_BEHANDLET,
+                behandling =
+                    Behandling(
+                        behandlingId = UUIDv7.ny(),
+                        opprettet = LocalDateTime.now(),
+                        person =
+                            Person(
+                                id = UUIDv7.ny(),
+                                ident = testIdent,
+                            ),
+                        hendelse =
+                            SøknadsbehandlingOpprettetHendelse(
+                                søknadId = UUIDv7.ny(),
+                                behandlingId = UUIDv7.ny(),
+                                ident = testIdent,
+                                opprettet = LocalDateTime.now(),
+                            ),
+                    ),
+            )
 
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+        coEvery { journalpostIdClientMock.hentJournalpostId(any()) } returns Result.success("123456789")
 
-        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock, pdlKlient = pdlMock) {
+        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock, pdlKlient = pdlMock, journalpostIdClient = journalpostIdClientMock) {
             client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -432,7 +456,8 @@ class OppgaveApiTest {
                       "statsborgerskap": "NOR"
                     },
                     "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}"
+                    "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}",
+                    "journalpostIder": ["123456789"]
                     }
                     """.trimIndent()
             }
@@ -519,10 +544,11 @@ class OppgaveApiTest {
     private fun withOppgaveApi(
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         pdlKlient: PDLKlient = mockk(relaxed = true),
+        journalpostIdClient: JournalpostIdClient = mockk(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
-            application { oppgaveApi(oppgaveMediator, pdlKlient) }
+            application { oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient) }
             test()
         }
     }
@@ -531,16 +557,11 @@ class OppgaveApiTest {
         header(HttpHeaders.Authorization, "Bearer $token")
     }
 
-    private fun lagTestOppgaveMedTilstand(
+    private fun lagTestOppgaveMedTilstandOgBehandling(
         tilstand: Oppgave.Tilstand.Type,
         saksbehandlerIdent: String? = null,
+        behandling: Behandling,
     ): Oppgave {
-        val behandling =
-            Behandling(
-                behandlingId = UUIDv7.ny(),
-                person = Person(id = UUIDv7.ny(), ident = testIdent),
-                opprettet = LocalDateTime.now(),
-            )
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             ident = testIdent,
@@ -559,6 +580,19 @@ class OppgaveApiTest {
             behandling = behandling,
             utsattTil = null,
         )
+    }
+
+    private fun lagTestOppgaveMedTilstand(
+        tilstand: Oppgave.Tilstand.Type,
+        saksbehandlerIdent: String? = null,
+    ): Oppgave {
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                person = Person(id = UUIDv7.ny(), ident = testIdent),
+                opprettet = LocalDateTime.now(),
+            )
+        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling)
     }
 
     private val testPerson =
