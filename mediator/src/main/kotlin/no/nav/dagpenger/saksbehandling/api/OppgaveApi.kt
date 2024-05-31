@@ -39,7 +39,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
-import no.nav.dagpenger.saksbehandling.logger
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
@@ -71,27 +70,22 @@ internal fun Application.oppgaveApi(
                 }
                 route("neste") {
                     put {
-                        try {
-                            val dto = call.receive<NesteOppgaveDTO>()
-                            val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams)
+                        val dto = call.receive<NesteOppgaveDTO>()
+                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams)
 
-                            val oppgave =
-                                oppgaveMediator.tildelNesteOppgaveTil(
-                                    saksbehandlerIdent = call.navIdent(),
-                                    filter = søkefilter,
-                                )
-                            when (oppgave) {
-                                null -> call.respond(HttpStatusCode.NotFound)
-                                else -> {
-                                    val person = pdlKlient.person(oppgave.ident).getOrThrow()
-                                    val journalpostIder = journalpostIdClient.hentJournalPostIder(oppgave.behandling)
-                                    val oppgaveDTO = lagOppgaveDTO(oppgave, person, journalpostIder)
-                                    call.respond(HttpStatusCode.OK, oppgaveDTO)
-                                }
+                        val oppgave =
+                            oppgaveMediator.tildelNesteOppgaveTil(
+                                saksbehandlerIdent = call.navIdent(),
+                                filter = søkefilter,
+                            )
+                        when (oppgave) {
+                            null -> call.respond(HttpStatusCode.NotFound)
+                            else -> {
+                                val person = pdlKlient.person(oppgave.ident).getOrThrow()
+                                val journalpostIder = journalpostIdClient.hentJournalPostIder(oppgave.behandling)
+                                val oppgaveDTO = lagOppgaveDTO(oppgave, person, journalpostIder)
+                                call.respond(HttpStatusCode.OK, oppgaveDTO)
                             }
-                        } catch (e: Exception) {
-                            logger.error("Feil ved tildeling av neste oppgave", e)
-                            throw e
                         }
                     }
                 }
