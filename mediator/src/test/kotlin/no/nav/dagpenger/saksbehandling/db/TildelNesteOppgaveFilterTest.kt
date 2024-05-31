@@ -19,4 +19,14 @@ class TildelNesteOppgaveFilterTest {
                 emneknagg = setOf("knagg1", "knagg2"),
             )
     }
+
+    @Test
+    fun `Skal håndtere tom streng`() {
+        val queryString = ""
+        TildelNesteOppgaveFilter.fra(queryString) shouldBe
+            TildelNesteOppgaveFilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                emneknagg = setOf(),
+            )
+    }
 }
