@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.logger
 import java.net.URI
 import java.time.format.DateTimeParseException
 
@@ -116,7 +117,9 @@ fun Application.apiConfig() {
                         )
                     call.respond(HttpStatusCode.BadRequest, problem)
                 }
+
                 else -> {
+                    logger.error(cause) { "Uhåndtert feil: Se sikkerlogg for detaljer" }
                     sikkerLogger.error(cause) { "Uhåndtert feil: ${cause.message}" }
                     val problem =
                         HttpProblemDTO(
