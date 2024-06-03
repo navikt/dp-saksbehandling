@@ -15,12 +15,13 @@ import org.junit.jupiter.api.Test
 class UtsendingTilstandTest {
     @Test
     fun `Lovlige tilstandsendringer`() {
-        val utsending = Utsending(oppgaveId = UUIDv7.ny())
+        val oppgaveId = UUIDv7.ny()
+        val utsending = Utsending(oppgaveId)
         utsending.brev() shouldBe null
         utsending.tilstand() shouldBe Utsending.VenterPåBrev
 
         val brev = "Dette er et vedtaksbrev"
-        val vedtaksbrevHendelse = VedtaksbrevHendelse(brev = brev)
+        val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brev)
         utsending.mottaBrev(vedtaksbrevHendelse)
         utsending.brev() shouldBe brev
         utsending.tilstand() shouldBe Utsending.AvventerArkiverbarVersjonAvBrev
@@ -48,8 +49,9 @@ class UtsendingTilstandTest {
     @Test
     @Disabled
     fun `Ugyldig tilstandsendring`() {
-        val utsending = Utsending(oppgaveId = UUIDv7.ny())
-        val vedtaksbrevHendelse = VedtaksbrevHendelse(brev = "Dette er et vedtaksbrev")
+        val oppgaveId = UUIDv7.ny()
+        val utsending = Utsending(oppgaveId)
+        val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brev = "Dette er et vedtaksbrev")
         shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
             utsending.mottaUrnTilArkiverbartFormatAvBrev(
                 ArkiverbartBrevHendelse(pdfUrn = URN.rfc8141().parse("urn:pdf:123456")),

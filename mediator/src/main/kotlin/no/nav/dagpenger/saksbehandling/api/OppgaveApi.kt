@@ -89,7 +89,6 @@ internal fun Application.oppgaveApi(
                         }
                     }
                 }
-
                 route("{oppgaveId}") {
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")

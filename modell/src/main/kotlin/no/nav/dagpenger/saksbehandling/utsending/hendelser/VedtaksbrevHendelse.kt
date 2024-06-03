@@ -1,3 +1,5 @@
 package no.nav.dagpenger.saksbehandling.utsending.hendelser
 
-data class VedtaksbrevHendelse(val brev: String)
+import java.util.UUID
+
+data class VedtaksbrevHendelse(val oppgaveId: UUID, val brev: String)
