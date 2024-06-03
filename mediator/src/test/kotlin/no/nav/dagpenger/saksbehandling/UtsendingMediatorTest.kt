@@ -10,13 +10,13 @@ class UtsendingMediatorTest {
     private val rapid = TestRapid()
 
     @Test
-    fun `livsyklus test av en utsending`() {
+    fun `livsyklus av en utsending`() {
         withMigratedDb { datasource ->
             val repository = PostgresUtsendingRepository(datasource)
             val utsendingMediator = UtsendingMediator(repository)
             UtsendingMottak(
                 rapidsConnection = rapid,
-                mediator = utsendingMediator
+                mediator = utsendingMediator,
             )
 
             val oppgaveId = UUIDv7.ny()
@@ -27,12 +27,10 @@ class UtsendingMediatorTest {
                     "@event_name": "start_utsending",
                     "oppgaveId": "$oppgaveId"
                 }
-                """
+                """,
             )
 
             repository.hent(oppgaveId)
-
-
         }
     }
 }

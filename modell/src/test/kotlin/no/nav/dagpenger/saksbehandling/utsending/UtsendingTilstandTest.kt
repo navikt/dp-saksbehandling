@@ -22,10 +22,10 @@ class UtsendingTilstandTest {
         val vedtaksbrevHendelse = VedtaksbrevHendelse(brev = brev)
         utsending.mottaBrev(vedtaksbrevHendelse)
         utsending.brev() shouldBe brev
-        utsending.tilstand() shouldBe Utsending.AvventerPdfVersjonAvBrev
+        utsending.tilstand() shouldBe Utsending.AvventerArkiverbarVersjonAvBrev
 
         val pdfUrn = URN.rfc8141().parse("urn:pdf:123456")
-        utsending.mottaUrnTilPdfAvBrev(ArkiverbartBrevHendelse(pdfUrn = pdfUrn))
+        utsending.mottaUrnTilArkiverbartFormatAvBrev(ArkiverbartBrevHendelse(pdfUrn = pdfUrn))
         utsending.pdfUrn() shouldBe pdfUrn
         utsending.tilstand() shouldBe Utsending.AvventerMidlertidigJournalføring
 
@@ -49,7 +49,7 @@ class UtsendingTilstandTest {
         val utsending = Utsending(oppgaveId = UUIDv7.ny())
         val vedtaksbrevHendelse = VedtaksbrevHendelse(brev = "Dette er et vedtaksbrev")
         shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
-            utsending.mottaUrnTilPdfAvBrev(
+            utsending.mottaUrnTilArkiverbartFormatAvBrev(
                 ArkiverbartBrevHendelse(pdfUrn = URN.rfc8141().parse("urn:pdf:123456")),
             )
         }

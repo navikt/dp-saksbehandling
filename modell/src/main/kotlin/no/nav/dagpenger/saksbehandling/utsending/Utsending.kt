@@ -30,7 +30,7 @@ class Utsending(
         tilstand.mottaBrev(this, vedtaksbrevHendelse)
     }
 
-    fun mottaUrnTilPdfAvBrev(arkiverbartBrevHendelse: ArkiverbartBrevHendelse) {
+    fun mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse: ArkiverbartBrevHendelse) {
         pdfUrn = arkiverbartBrevHendelse.pdfUrn
         tilstand.mottaUrnTilPdfAvBrev(this, arkiverbartBrevHendelse)
     }
@@ -53,13 +53,13 @@ class Utsending(
             utsending: Utsending,
             vedtaksbrevHendelse: VedtaksbrevHendelse,
         ) {
-            utsending.tilstand = AvventerPdfVersjonAvBrev
+            utsending.tilstand = AvventerArkiverbarVersjonAvBrev
         }
 
         override val type = Tilstand.Type.VenterPåBrev
     }
 
-    object AvventerPdfVersjonAvBrev : Tilstand {
+    object AvventerArkiverbarVersjonAvBrev : Tilstand {
         override val type = Tilstand.Type.AvventerPdfVersjonAvBrev
 
         override fun mottaUrnTilPdfAvBrev(
