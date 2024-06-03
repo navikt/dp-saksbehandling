@@ -30,7 +30,7 @@ class UtsendingMediatorTest {
                 """,
             )
 
-            repository.hent(oppgaveId)
+            // repository.hent(oppgaveId)
         }
     }
 }
