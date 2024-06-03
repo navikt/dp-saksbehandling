@@ -27,7 +27,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.logging.jvm)
 
-    api("com.fasterxml.uuid:java-uuid-generator:5.0.0")
+    api("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
     testImplementation(libs.mockk)
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
