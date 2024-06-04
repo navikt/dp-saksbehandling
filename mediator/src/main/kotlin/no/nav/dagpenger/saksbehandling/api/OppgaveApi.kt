@@ -18,6 +18,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -53,6 +55,14 @@ internal fun Application.oppgaveApi(
 ) {
     apiConfig()
 
+    suspend fun oppgaveDTO(oppgave: Oppgave): OppgaveDTO =
+        coroutineScope {
+            val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
+            val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
+            val oppgaveDTO = lagOppgaveDTO(oppgave, person.await(), journalpostIder.await())
+            oppgaveDTO
+        }
+
     routing {
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
 
@@ -83,12 +93,7 @@ internal fun Application.oppgaveApi(
                             )
                         when (oppgave) {
                             null -> call.respond(HttpStatusCode.NotFound)
-                            else -> {
-                                val person = pdlKlient.person(oppgave.ident).getOrThrow()
-                                val journalpostIder = journalpostIdClient.hentJournalPostIder(oppgave.behandling)
-                                val oppgaveDTO = lagOppgaveDTO(oppgave, person, journalpostIder)
-                                call.respond(HttpStatusCode.OK, oppgaveDTO)
-                            }
+                            else -> call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
                         }
                     }
                 }
@@ -97,20 +102,14 @@ internal fun Application.oppgaveApi(
                     get {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
-                        val person: PDLPersonIntern = pdlKlient.person(oppgave.ident).getOrThrow()
-                        val journalpostIder = journalpostIdClient.hentJournalPostIder(oppgave.behandling)
-                        val oppgaveDTO = lagOppgaveDTO(oppgave, person, journalpostIder)
-                        call.respond(HttpStatusCode.OK, oppgaveDTO)
+                        call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
                     }
                     route("tildel") {
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
                             try {
                                 val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
-                                val person = pdlKlient.person(oppgave.ident).getOrThrow()
-                                val journalpostIder = journalpostIdClient.hentJournalPostIder(oppgave.behandling)
-                                val oppgaveDTO = lagOppgaveDTO(oppgave, person, journalpostIder)
-                                call.respond(HttpStatusCode.OK, oppgaveDTO)
+                                call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
                             } catch (e: Oppgave.AlleredeTildeltException) {
                                 call.respond(HttpStatusCode.Conflict) { e.message.toString() }
                             }
