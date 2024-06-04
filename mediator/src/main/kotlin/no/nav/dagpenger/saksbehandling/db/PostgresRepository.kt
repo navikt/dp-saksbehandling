@@ -4,6 +4,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
@@ -18,8 +19,9 @@ import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
+import kotlin.time.measureTime
 
-class DataNotFoundException(message: String) : RuntimeException(message)
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class PostgresRepository(private val dataSource: DataSource) : Repository {
     override fun lagre(person: Person) {
@@ -241,90 +243,102 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
 
     override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
-        return sessionOf(dataSource).use { session ->
-            val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
+        var oppgaver: List<Oppgave>
+        val tid =
+            measureTime {
+                oppgaver =
+                    sessionOf(dataSource).use { session ->
+                        val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
 
-            val saksBehandlerClause =
-                søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
+                        val saksBehandlerClause =
+                            søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
 
-            val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
+                        val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
 
-            val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id" } ?: ""
+                        val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id" } ?: ""
 
-            val behandlingIdClause = søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
+                        val behandlingIdClause =
+                            søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
 
-            val emneknagger = søkeFilter.emneknagg.joinToString { "'$it'" }
-            val emneknaggClause =
-                if (søkeFilter.emneknagg.isNotEmpty()) {
-                    """
-                    AND EXISTS(
-                        SELECT 1
-                        FROM   emneknagg_v1 emne
-                        WHERE  emne.oppgave_id = oppg.id
-                        AND    emne.emneknagg IN ($emneknagger)
-                    )
-                    """.trimIndent()
-                } else {
-                    ""
-                }
+                        val emneknagger = søkeFilter.emneknagg.joinToString { "'$it'" }
+                        val emneknaggClause =
+                            if (søkeFilter.emneknagg.isNotEmpty()) {
+                                """
+                                AND EXISTS(
+                                    SELECT 1
+                                    FROM   emneknagg_v1 emne
+                                    WHERE  emne.oppgave_id = oppg.id
+                                    AND    emne.emneknagg IN ($emneknagger)
+                                )
+                                """.trimIndent()
+                            } else {
+                                ""
+                            }
 
-            // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
-            //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
-            //language=PostgreSQL
-            val sql =
-                StringBuilder(
-                    """
+                        // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
+                        //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
+                        //language=PostgreSQL
+                        val sql =
+                            StringBuilder(
+                                """
                     ${
-                        """
-                        SELECT  pers.id AS person_id, 
-                                pers.ident AS person_ident, 
-                                oppg.id AS oppgave_id, 
-                                oppg.tilstand, 
-                                oppg.opprettet AS oppgave_opprettet, 
-                                oppg.behandling_id, 
-                                oppg.saksbehandler_ident,
-                                oppg.utsatt_til,
-                                beha.opprettet AS behandling_opprettet
-                        FROM    oppgave_v1    oppg
-                        JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                        JOIN    person_v1     pers ON pers.id = beha.person_id
-                        """.trimIndent()
-                    }
+                                    """
+                                    SELECT  pers.id AS person_id, 
+                                            pers.ident AS person_ident, 
+                                            oppg.id AS oppgave_id, 
+                                            oppg.tilstand, 
+                                            oppg.opprettet AS oppgave_opprettet, 
+                                            oppg.behandling_id, 
+                                            oppg.saksbehandler_ident,
+                                            oppg.utsatt_til,
+                                            beha.opprettet AS behandling_opprettet
+                                    FROM    oppgave_v1    oppg
+                                    JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                                    JOIN    person_v1     pers ON pers.id = beha.person_id
+                                    """.trimIndent()
+                                }
                     WHERE  oppg.tilstand IN ($tilstander)
                     AND    oppg.opprettet >= :fom
                     AND    oppg.opprettet <  :tom_pluss_1_dag
                 """,
-                )
-                    .append(
-                        saksBehandlerClause,
-                        personIdentClause,
-                        oppgaveIdClause,
-                        behandlingIdClause,
-                        emneknaggClause,
-                    )
-                    .toString()
+                            )
+                                .append(
+                                    saksBehandlerClause,
+                                    personIdentClause,
+                                    oppgaveIdClause,
+                                    behandlingIdClause,
+                                    emneknaggClause,
+                                )
+                                .toString()
 
-            val queryOf =
-                queryOf(
-                    statement = sql,
-                    paramMap =
-                        mapOf(
-                            "tilstander" to tilstander,
-                            "fom" to søkeFilter.periode.fom,
-                            "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
-                            "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                            "person_ident" to søkeFilter.personIdent,
-                            "oppgave_id" to søkeFilter.oppgaveId,
-                            "behandling_id" to søkeFilter.behandlingId,
-                            "emneknagger" to emneknagger,
-                        ),
-                )
-            session.run(
-                queryOf.map { row ->
-                    row.rehydrerOppgave()
-                }.asList,
-            )
-        }
+                        val queryOf =
+                            queryOf(
+                                statement = sql,
+                                paramMap =
+                                    mapOf(
+                                        "tilstander" to tilstander,
+                                        "fom" to søkeFilter.periode.fom,
+                                        "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
+                                        "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                                        "person_ident" to søkeFilter.personIdent,
+                                        "oppgave_id" to søkeFilter.oppgaveId,
+                                        "behandling_id" to søkeFilter.behandlingId,
+                                        "emneknagger" to emneknagger,
+                                    ),
+                            )
+                        session.run(
+                            queryOf.map { row ->
+                                row.rehydrerOppgave()
+                            }.asList,
+                        )
+                    }
+            }.also { duration ->
+                sikkerlogg.info {
+                    "Søk etter oppgaver tok ${duration.inWholeMicroseconds} ms, antall oppgaver: ${oppgaver.size}" +
+                        " og med søkefilter: $søkeFilter"
+                }
+            }
+        return oppgaver
     }
 
     private fun TransactionalSession.lagre(person: Person) {
@@ -562,3 +576,5 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
         )
     }
 }
+
+class DataNotFoundException(message: String) : RuntimeException(message)
