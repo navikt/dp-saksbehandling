@@ -334,14 +334,14 @@ class PostgresRepository(private val dataSource: DataSource) : Repository {
                     }
             }.also { duration ->
                 sikkerlogg.info {
-                    "Søk etter oppgaver tok ${duration.inWholeMicroseconds} ms, antall oppgaver: ${oppgaver.size}" +
+                    "Søk etter oppgaver tok ${duration.inWholeMilliseconds} ms, antall oppgaver: ${oppgaver.size}" +
                         " og med søkefilter: $søkeFilter"
                 }
             }
         return oppgaver
     }
 
-    private fun TransactionalSession.lagre(person: Person) {
+    private fun TransactionalSession.lagre() {
         run(
             queryOf(
                 //language=PostgreSQL
