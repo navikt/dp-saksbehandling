@@ -9,7 +9,7 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.UtsendingKvitteringHe
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import java.util.UUID
 
-class Utsending(
+data class Utsending(
     val oppgaveId: UUID,
     val id: UUID = UUIDv7.ny(),
     private var brev: String? = null,
@@ -24,6 +24,26 @@ class Utsending(
     fun journalpostId(): String? = journalpostId
 
     fun tilstand() = tilstand
+
+    companion object {
+        fun rehydrer(
+            id: UUID,
+            oppgaveId: UUID,
+            tilstand: Tilstand,
+            brev: String?,
+            pdfUrn: String?,
+            journalpostId: String?,
+        ): Utsending {
+            return Utsending(
+                id = id,
+                oppgaveId = oppgaveId,
+                tilstand = tilstand,
+                brev = brev,
+                pdfUrn = pdfUrn?.let { URN.rfc8141().parse(it) },
+                journalpostId = journalpostId,
+            )
+        }
+    }
 
     fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
         this.brev = vedtaksbrevHendelse.brev
@@ -60,7 +80,7 @@ class Utsending(
     }
 
     object AvventerArkiverbarVersjonAvBrev : Tilstand {
-        override val type = Tilstand.Type.AvventerPdfVersjonAvBrev
+        override val type = Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 
         override fun mottaUrnTilPdfAvBrev(
             utsending: Utsending,
@@ -154,7 +174,7 @@ class Utsending(
 
         enum class Type {
             VenterPåBrev,
-            AvventerPdfVersjonAvBrev,
+            AvventerArkiverbarVersjonAvBrev,
             AvventerMidlertidigJournalføring,
             AvventerJournalføring,
             AvventerDistribuering,

@@ -8,6 +8,7 @@ import java.util.UUID
 class UtsendingMediator(private val repository: UtsendingRepository) {
     fun startUtsending(oppgaveId: UUID) {
         val utsending = Utsending(oppgaveId)
+        repository.lagre(utsending)
     }
 
     fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
