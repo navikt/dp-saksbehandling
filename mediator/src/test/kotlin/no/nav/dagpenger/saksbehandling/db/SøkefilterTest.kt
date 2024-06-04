@@ -34,14 +34,15 @@ class SøkefilterTest {
 
     @Test
     fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom eller tom`() {
-        Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe Søkefilter(
-            periode = Periode.UBEGRENSET_PERIODE,
-            tilstand = Oppgave.Tilstand.Type.søkbareTyper,
-            saksbehandlerIdent = null,
-            personIdent = null,
-            oppgaveId = null,
-            behandlingId = null,
-        )
+        Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
+            Søkefilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                tilstand = Oppgave.Tilstand.Type.defaultOppgaveListTilstander,
+                saksbehandlerIdent = null,
+                personIdent = null,
+                oppgaveId = null,
+                behandlingId = null,
+            )
     }
 
     @Test

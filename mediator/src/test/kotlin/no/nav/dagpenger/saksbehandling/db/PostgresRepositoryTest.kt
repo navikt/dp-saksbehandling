@@ -453,7 +453,7 @@ class PostgresRepositoryTest {
                     personIdent = null,
                     oppgaveId = null,
                     behandlingId = null,
-                )
+                ),
             ).let {
                 it.size shouldBe 3
                 it.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe

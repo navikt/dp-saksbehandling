@@ -4,6 +4,7 @@ import io.ktor.http.Parameters
 import io.ktor.util.StringValues
 import io.ktor.util.StringValuesBuilderImpl
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.defaultOppgaveListTilstander
 import java.time.LocalDate
 import java.util.UUID
 
@@ -69,14 +70,13 @@ data class Søkefilter(
     val emneknagg: Set<String> = emptySet(),
 ) {
     companion object {
-
         fun fra(
             queryParameters: Parameters,
             saksbehandlerIdent: String,
         ): Søkefilter {
             val builder = FilterBuilder(queryParameters)
 
-            val tilstand = builder.tilstand() ?: Oppgave.Tilstand.Type.søkbareTyper
+            val tilstand = builder.tilstand() ?: defaultOppgaveListTilstander
             val mine = builder.mineOppgaver() ?: false
             val emneknagg = builder.emneknagg() ?: emptySet()
 
