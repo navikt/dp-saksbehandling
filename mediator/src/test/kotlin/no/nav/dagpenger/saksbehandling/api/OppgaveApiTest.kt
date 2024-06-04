@@ -77,7 +77,16 @@ class OppgaveApiTest {
         val oppgave2 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = null)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.søk(Søkefilter.DEFAULT_SØKEFILTER) } returns listOf(oppgave1, oppgave2)
+                every { it.søk(
+                    Søkefilter(
+                        periode = Periode.UBEGRENSET_PERIODE,
+                        tilstand = Oppgave.Tilstand.Type.søkbareTyper,
+                        saksbehandlerIdent = null,
+                        personIdent = null,
+                        oppgaveId = null,
+                        behandlingId = null,
+                    )
+                ) } returns listOf(oppgave1, oppgave2)
             }
 
         withOppgaveApi(oppgaveMediatorMock) {

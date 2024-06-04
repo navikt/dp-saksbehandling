@@ -445,7 +445,16 @@ class PostgresRepositoryTest {
                 ),
             ).size shouldBe 3
 
-            repo.søk(Søkefilter.DEFAULT_SØKEFILTER).let {
+            repo.søk(
+                Søkefilter(
+                    periode = UBEGRENSET_PERIODE,
+                    tilstand = Oppgave.Tilstand.Type.søkbareTyper,
+                    saksbehandlerIdent = null,
+                    personIdent = null,
+                    oppgaveId = null,
+                    behandlingId = null,
+                )
+            ).let {
                 it.size shouldBe 3
                 it.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
                     setOf(

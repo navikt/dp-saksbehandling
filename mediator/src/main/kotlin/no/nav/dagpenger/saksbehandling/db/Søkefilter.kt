@@ -69,15 +69,6 @@ data class Søkefilter(
     val emneknagg: Set<String> = emptySet(),
 ) {
     companion object {
-        val DEFAULT_SØKEFILTER =
-            Søkefilter(
-                periode = Periode.UBEGRENSET_PERIODE,
-                tilstand = Oppgave.Tilstand.Type.søkbareTyper,
-                saksbehandlerIdent = null,
-                personIdent = null,
-                oppgaveId = null,
-                behandlingId = null,
-            )
 
         fun fra(
             queryParameters: Parameters,
