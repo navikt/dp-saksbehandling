@@ -8,9 +8,11 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.callloging.processingTimeMillis
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.document
+import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import mu.KotlinLogging
@@ -34,6 +36,14 @@ fun Application.apiConfig() {
                 "isready",
                 "metrics",
             ).contains(call.request.document())
+        }
+        format { call ->
+            val status = call.response.status()?.value ?: "Unhandled"
+            val method = call.request.httpMethod.value
+            val path = call.request.path()
+            val duration = call.processingTimeMillis()
+            val queryParams = call.request.queryParameters.entries()
+            "$status $method $path $queryParams $duration ms"
         }
     }
 
