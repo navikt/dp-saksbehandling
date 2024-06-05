@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
@@ -20,7 +21,7 @@ class UtsendingMediatorTest {
     @Test
     fun `Vedtaksbrev starter utsendingen`() {
         withMigratedDb { datasource ->
-            val oppgaveId = lagreOppgave(datasource)
+            val oppgaveId = lagreOppgaveOgBehandling(datasource).first
             val utsendingRepository = PostgresUtsendingRepository(datasource)
             val utsendingMediator = UtsendingMediator(utsendingRepository)
 
@@ -38,7 +39,8 @@ class UtsendingMediatorTest {
     @Test
     fun `livsyklus av en utsending`() {
         withMigratedDb { datasource ->
-            val oppgaveId = lagreOppgave(datasource)
+            val (oppgaveId, behandlingId) = lagreOppgaveOgBehandling(datasource)
+
             val repository = PostgresUtsendingRepository(datasource)
             val utsendingMediator = UtsendingMediator(repository)
             UtsendingMottak(
@@ -47,8 +49,9 @@ class UtsendingMediatorTest {
             )
             utsendingMediator.mottaBrev(VedtaksbrevHendelse(oppgaveId, "vedtaksbrev.html"))
 
-            val utsending = repository.hent(oppgaveId)
+            var utsending = repository.hent(oppgaveId)
             utsending.oppgaveId shouldBe oppgaveId
+
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe "vedtaksbrev.html"
 
@@ -57,19 +60,22 @@ class UtsendingMediatorTest {
                 {
                     "@event_name": "vedtak_fattet",
                     "søknadId": "${UUID.randomUUID()}",
-                    "behandlingId": "${UUID.randomUUID()}",
+                    "behandlingId": "$behandlingId",
                     "ident": "12345678901"
                 }
                 """,
             )
+
+            utsending = repository.hent(oppgaveId)
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
         }
     }
 
-    private fun lagreOppgave(dataSource: DataSource): UUID {
-        val oppgave = lagOppgave()
+    private fun lagreOppgaveOgBehandling(dataSource: DataSource): Pair<UUID, UUID> {
+        val behandling = lagBehandling()
+        val oppgave = lagOppgave(behandling = behandling)
         val repository = PostgresRepository(dataSource)
         repository.lagre(oppgave)
-        return oppgave.oppgaveId
+        return Pair(oppgave.oppgaveId, behandling.behandlingId)
     }
 }

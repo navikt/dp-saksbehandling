@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.utsending.db
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.db.PostgresRepository
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
@@ -15,6 +16,8 @@ import java.util.UUID
 import javax.sql.DataSource
 
 class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingRepository {
+    private val repo = PostgresRepository(ds)
+
     override fun lagre(utsending: Utsending) {
         sessionOf(ds).use { session ->
             session.run(
@@ -47,10 +50,10 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
     }
 
     override fun hent(oppgaveId: UUID): Utsending {
-        return finn(oppgaveId) ?: throw UtsendingIkkeFunnet("Fant ikke utsending for oppgaveId: $oppgaveId")
+        return finnUtsendingFor(oppgaveId) ?: throw UtsendingIkkeFunnet("Fant ikke utsending for oppgaveId: $oppgaveId")
     }
 
-    override fun finn(oppgaveId: UUID): Utsending? {
+    override fun finnUtsendingFor(oppgaveId: UUID): Utsending? {
         sessionOf(ds).use { session ->
             return session.run(
                 queryOf(
@@ -85,5 +88,11 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                 }.asSingle,
             )
         }
+    }
+
+    override fun hentUtsendingFor(behandlingId: UUID): Utsending {
+        return repo.finnOppgaveFor(behandlingId)?.let { oppgave ->
+            finnUtsendingFor(oppgave.oppgaveId)
+        } ?: throw UtsendingIkkeFunnet("Fant ikke utsending for behandlingId: $behandlingId")
     }
 }

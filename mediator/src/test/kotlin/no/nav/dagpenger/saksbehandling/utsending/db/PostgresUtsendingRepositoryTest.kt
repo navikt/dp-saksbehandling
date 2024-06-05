@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import org.junit.jupiter.api.Test
@@ -14,24 +15,28 @@ class PostgresUtsendingRepositoryTest {
     @Test
     fun `lagring og henting av utsending`() {
         withMigratedDb { ds ->
-            val oppgaveId = lagreOppgave(ds)
+
+            val (oppgaveId, behandlingId) = lagreOppgaveOgBehandling(ds)
+
             val repository = PostgresUtsendingRepository(ds)
             val utsending = Utsending(oppgaveId)
             repository.lagre(utsending)
-            val hentetUtsending = repository.hent(utsending.oppgaveId)
-            hentetUtsending shouldBe utsending
 
-            repository.finn(UUID.randomUUID()) shouldBe null
+            repository.hent(utsending.oppgaveId) shouldBe utsending
+            repository.hentUtsendingFor(behandlingId) shouldBe utsending
+
+            repository.finnUtsendingFor(UUID.randomUUID()) shouldBe null
             shouldThrow<UtsendingIkkeFunnet> {
                 repository.hent(UUID.randomUUID())
             }
         }
     }
 
-    private fun lagreOppgave(dataSource: DataSource): UUID {
-        val oppgave = lagOppgave()
+    private fun lagreOppgaveOgBehandling(dataSource: DataSource): Pair<UUID, UUID> {
+        val behandling = lagBehandling()
+        val oppgave = lagOppgave(behandling = behandling)
         val repository = PostgresRepository(dataSource)
         repository.lagre(oppgave)
-        return oppgave.oppgaveId
+        return Pair(oppgave.oppgaveId, behandling.behandlingId)
     }
 }
