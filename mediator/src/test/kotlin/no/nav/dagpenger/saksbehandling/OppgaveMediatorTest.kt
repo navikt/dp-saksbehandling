@@ -1,10 +1,8 @@
 package no.nav.dagpenger.saksbehandling
 
-import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -112,17 +110,7 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     ident = testIdent,
                 )
-            oppgaveMediator.startUtsending(vedtakFattetHendelse)
-            oppgaveMediator.hentAlleOppgaverMedTilstand(AVVENTER_UTSENDING).size shouldBe 1
-            testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).toPrettyString() shouldEqualSpecifiedJson
-                // Language=JSON
-                """
-                    {
-                      "@event_name": "start_utsending",
-                      "oppgaveId": "${tildeltOppgave.oppgaveId}"
-                    }
-                """
+
             oppgaveMediator.ferdigstillOppgave(vedtakFattetHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
         }

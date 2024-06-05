@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import java.util.UUID
 
-internal interface Repository {
+interface Repository {
     fun finnPerson(ident: String): Person?
 
     fun hentPerson(ident: String): Person

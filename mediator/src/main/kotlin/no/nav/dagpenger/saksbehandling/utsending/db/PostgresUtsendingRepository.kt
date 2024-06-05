@@ -9,7 +9,8 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerMidlertidigJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
-import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåBrev
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Opprettet
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -46,6 +47,10 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
     }
 
     override fun hent(oppgaveId: UUID): Utsending {
+        return finn(oppgaveId) ?: throw UtsendingIkkeFunnet("Fant ikke utsending for oppgaveId: $oppgaveId")
+    }
+
+    override fun finn(oppgaveId: UUID): Utsending? {
         sessionOf(ds).use { session ->
             return session.run(
                 queryOf(
@@ -60,7 +65,8 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                 ).map { row ->
                     val tilstand =
                         when (Tilstand.Type.valueOf(row.string("tilstand"))) {
-                            VenterPåBrev -> Utsending.VenterPåBrev
+                            Opprettet -> Utsending.Opprettet
+                            VenterPåVedtak -> Utsending.VenterPåVedtak
                             AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev
                             AvventerMidlertidigJournalføring -> Utsending.AvventerMidlertidigJournalføring
                             AvventerJournalføring -> Utsending.AvventerJournalføring
@@ -77,7 +83,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         journalpostId = row.stringOrNull("journalpost_id"),
                     )
                 }.asSingle,
-            ) ?: throw UtsendingIkkeFunnet("Fant ikke utsending for oppgaveId: $oppgaveId")
+            )
         }
     }
 }

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utsending.db
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresRepository
@@ -19,6 +20,11 @@ class PostgresUtsendingRepositoryTest {
             repository.lagre(utsending)
             val hentetUtsending = repository.hent(utsending.oppgaveId)
             hentetUtsending shouldBe utsending
+
+            repository.finn(UUID.randomUUID()) shouldBe null
+            shouldThrow<UtsendingIkkeFunnet> {
+                repository.hent(UUID.randomUUID())
+            }
         }
     }
 

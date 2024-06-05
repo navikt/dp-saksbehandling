@@ -13,7 +13,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 
 val logger = KotlinLogging.logger {}
 
-internal class OppgaveMediator(
+class OppgaveMediator(
     private val repository: Repository,
     private val rapidsConnection: RapidsConnection,
 ) : Repository by repository {

@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.utsending
 
 import de.slub.urn.URN
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
@@ -15,7 +16,7 @@ data class Utsending(
     private var brev: String? = null,
     private var pdfUrn: URN? = null,
     private var journalpostId: String? = null,
-    private var tilstand: Tilstand = VenterPåBrev,
+    private var tilstand: Tilstand = Opprettet,
 ) {
     fun brev(): String? = brev
 
@@ -45,6 +46,10 @@ data class Utsending(
         }
     }
 
+    fun mottaVedtak(vedtakFattetHendelse: VedtakFattetHendelse) {
+        tilstand.mottaVedtak(this, vedtakFattetHendelse)
+    }
+
     fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
         this.brev = vedtaksbrevHendelse.brev
         tilstand.mottaBrev(this, vedtaksbrevHendelse)
@@ -68,15 +73,27 @@ data class Utsending(
         tilstand.mottaKvitteringPåUtsending(this, utsendingKvitteringHendelse)
     }
 
-    object VenterPåBrev : Tilstand {
+    object Opprettet : Tilstand {
+        override val type = Tilstand.Type.Opprettet
+
         override fun mottaBrev(
             utsending: Utsending,
             vedtaksbrevHendelse: VedtaksbrevHendelse,
         ) {
+            utsending.brev = vedtaksbrevHendelse.brev
+            utsending.tilstand = VenterPåVedtak
+        }
+    }
+
+    object VenterPåVedtak : Tilstand {
+        override fun mottaVedtak(
+            utsending: Utsending,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
             utsending.tilstand = AvventerArkiverbarVersjonAvBrev
         }
 
-        override val type = Tilstand.Type.VenterPåBrev
+        override val type = Tilstand.Type.VenterPåVedtak
     }
 
     object AvventerArkiverbarVersjonAvBrev : Tilstand {
@@ -170,10 +187,18 @@ data class Utsending(
             throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på utsending i tilstand: ${this.type}")
         }
 
+        fun mottaVedtak(
+            utsending: Utsending,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            throw UlovligUtsendingTilstandsendring("Kan ikke motta vedtak i tilstand: ${this.type}")
+        }
+
         val type: Type
 
         enum class Type {
-            VenterPåBrev,
+            Opprettet,
+            VenterPåVedtak,
             AvventerArkiverbarVersjonAvBrev,
             AvventerMidlertidigJournalføring,
             AvventerJournalføring,

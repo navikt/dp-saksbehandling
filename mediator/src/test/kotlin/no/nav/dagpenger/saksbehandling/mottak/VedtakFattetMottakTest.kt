@@ -34,7 +34,6 @@ internal class VedtakFattetMottakTest {
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
-            oppgaveMediatorMock.startUtsending(vedtakFattetHendelse)
         }
     }
 
