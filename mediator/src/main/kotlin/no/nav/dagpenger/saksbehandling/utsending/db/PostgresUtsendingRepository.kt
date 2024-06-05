@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.utsending.db
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.db.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
@@ -16,7 +16,7 @@ import java.util.UUID
 import javax.sql.DataSource
 
 class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingRepository {
-    private val repo = PostgresRepository(ds)
+    private val oppgaveRepository = PostgresOppgaveRepository(ds)
 
     override fun lagre(utsending: Utsending) {
         sessionOf(ds).use { session ->
@@ -91,7 +91,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
     }
 
     override fun hentUtsendingFor(behandlingId: UUID): Utsending {
-        return repo.finnOppgaveFor(behandlingId)?.let { oppgave ->
+        return oppgaveRepository.finnOppgaveFor(behandlingId)?.let { oppgave ->
             finnUtsendingFor(oppgave.oppgaveId)
         } ?: throw UtsendingIkkeFunnet("Fant ikke utsending for behandlingId: $behandlingId")
     }

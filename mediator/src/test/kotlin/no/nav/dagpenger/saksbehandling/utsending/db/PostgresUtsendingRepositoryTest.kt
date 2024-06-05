@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.utsending.db
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
@@ -35,7 +35,7 @@ class PostgresUtsendingRepositoryTest {
     private fun lagreOppgaveOgBehandling(dataSource: DataSource): Pair<UUID, UUID> {
         val behandling = lagBehandling()
         val oppgave = lagOppgave(behandling = behandling)
-        val repository = PostgresRepository(dataSource)
+        val repository = PostgresOppgaveRepository(dataSource)
         repository.lagre(oppgave)
         return Pair(oppgave.oppgaveId, behandling.behandlingId)
     }

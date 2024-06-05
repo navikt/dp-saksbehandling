@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
-import no.nav.dagpenger.saksbehandling.db.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandling
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -17,7 +17,7 @@ import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
-    private val repository = PostgresRepository(PostgresDataSourceBuilder.dataSource)
+    private val repository = PostgresOppgaveRepository(PostgresDataSourceBuilder.dataSource)
     private val skjermingHttpKlient =
         SkjermingHttpKlient(
             skjermingApiUrl = Configuration.skjermingApiUrl,

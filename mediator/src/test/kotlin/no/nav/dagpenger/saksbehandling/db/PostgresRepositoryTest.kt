@@ -31,7 +31,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente person`() {
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testPerson)
 
             val personFraDatabase = repo.finnPerson(testPerson.ident)
@@ -42,7 +42,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
 
             repo.lagre(lagOppgave(tilstand = FerdigBehandlet))
             repo.tildelNesteOppgaveTil(
@@ -60,7 +60,7 @@ class PostgresRepositoryTest {
     fun `Ved tildeling av neste oppgave, skal man ut fra filteret finne eldste ledige oppgave klar til behandling og oppdatere den`() {
         withMigratedDb { ds ->
             val testSaksbehandler = "NAVIdent"
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
 
             val yngsteLedigeOppgave =
                 lagOppgave(
@@ -132,7 +132,7 @@ class PostgresRepositoryTest {
     fun `Skal kunne slette behandling`() {
         val testOppgave = lagOppgave(emneknagger = setOf("hugga", "bugga"))
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             repo.slettBehandling(testOppgave.behandlingId)
 
@@ -164,7 +164,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Exception hvis vi ikke får hentet person basert på ident`() {
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
 
             shouldThrow<DataNotFoundException> {
                 repo.hentPerson(testPerson.ident)
@@ -175,7 +175,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Exception hvis vi ikke får hentet behandling basert på behandlingId`() {
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
 
             shouldThrow<DataNotFoundException> {
                 repo.hentBehandling(UUIDv7.ny())
@@ -198,7 +198,7 @@ class PostgresRepositoryTest {
             )
 
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testBehandling)
             val behandlingFraDatabase = repo.hentBehandling(testBehandling.behandlingId)
             behandlingFraDatabase shouldBe testBehandling
@@ -214,7 +214,7 @@ class PostgresRepositoryTest {
     fun `Skal kunne lagre en oppgave flere ganger`() {
         val testOppgave = lagOppgave()
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
 
             shouldNotThrowAny {
                 repo.lagre(testOppgave)
@@ -227,7 +227,7 @@ class PostgresRepositoryTest {
     fun `Skal kunne lagre og hente en oppgave`() {
         val testOppgave = lagOppgave()
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase shouldBe testOppgave
@@ -238,7 +238,7 @@ class PostgresRepositoryTest {
     fun `Skal kunne endre tilstand på en oppgave`() {
         val testOppgave = lagOppgave(tilstand = KlarTilBehandling)
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
 
             repo.lagre(testOppgave)
             repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -253,7 +253,7 @@ class PostgresRepositoryTest {
         val testOppgave = lagOppgave(tilstand = UnderBehandling)
         val utsattTil = LocalDate.now().plusDays(1)
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
 
             repo.lagre(
                 testOppgave.copy(
@@ -274,7 +274,7 @@ class PostgresRepositoryTest {
         val oppgaveFerdigBehandlet = lagOppgave(tilstand = FerdigBehandlet)
 
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(oppgaveKlarTilBehandling)
             repo.lagre(oppgaveFerdigBehandlet)
 
@@ -300,7 +300,7 @@ class PostgresRepositoryTest {
         val oppgave1TilKari = lagOppgave(person = kari, tilstand = FerdigBehandlet)
 
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(oppgave1TilOla)
             repo.lagre(oppgave2TilOla)
             repo.lagre(oppgave1TilKari)
@@ -316,7 +316,7 @@ class PostgresRepositoryTest {
         val oppgave = lagOppgave(behandling = behandling)
 
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(oppgave)
             repo.lagre(behandling)
 
@@ -328,7 +328,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på emneknagger`() {
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             val oppgave1 = lagOppgave(emneknagger = setOf("hubba", "bubba"))
             val oppgave2 = lagOppgave(emneknagger = setOf("hubba"))
             val oppgave3 = lagOppgave(emneknagger = emptySet())
@@ -378,7 +378,7 @@ class PostgresRepositoryTest {
         val saksbehandler2 = "saksbehandler2"
 
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1)
             val oppgave2 = lagOppgave(UnderBehandling, saksbehandlerIdent = saksbehandler2)
             val oppgave3 = lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2)
@@ -420,7 +420,7 @@ class PostgresRepositoryTest {
         val enUkeSiden = opprettetNå.minusDays(7)
 
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             val oppgaveUnderBehandlingEnUkeGammel =
                 lagOppgave(UnderBehandling, opprettet = enUkeSiden, saksbehandlerIdent = saksbehandlerIdent)
             val oppgaveKlarTilBehandlingIDag = lagOppgave(KlarTilBehandling)
@@ -508,7 +508,7 @@ class PostgresRepositoryTest {
             val iGårSåTidligPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MIN)
             val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX)
             val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             val oppgaveOpprettetSeintForgårs =
                 lagOppgave(KlarTilBehandling, opprettet = iForgårsSåSeintPåDagenSomMulig)
             val oppgaveOpprettetTidligIGår = lagOppgave(KlarTilBehandling, opprettet = iGårSåTidligPåDagenSomMulig)
@@ -536,7 +536,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal hente en oppgave basert på behandlingId`() {
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             val oppgave = lagOppgave()
             repo.lagre(oppgave)
             repo.hentOppgaveFor(oppgave.behandlingId) shouldBe oppgave
@@ -550,7 +550,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             val oppgave = lagOppgave()
             repo.lagre(oppgave)
             repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave

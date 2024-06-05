@@ -31,7 +31,7 @@ class PostgresTriggerTest {
                 behandling = testBehandling,
             )
         withMigratedDb { ds ->
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val endretTidspunkt = ds.hentEndretTidspunkt(testOppgave.oppgaveId)
             Thread.sleep(100)

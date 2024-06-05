@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
@@ -37,7 +37,7 @@ class OppgaveMediatorTest {
     @Test
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
         withMigratedDb { datasource ->
-            val repo = PostgresRepository(datasource)
+            val repo = PostgresOppgaveRepository(datasource)
             val oppgaveMediator = OppgaveMediator(repo, testRapid)
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
@@ -56,7 +56,7 @@ class OppgaveMediatorTest {
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresRepository(datasource), rapidsConnection = testRapid)
+                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), rapidsConnection = testRapid)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
 
@@ -121,7 +121,7 @@ class OppgaveMediatorTest {
         withMigratedDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
-                    repository = PostgresRepository(datasource),
+                    repository = PostgresOppgaveRepository(datasource),
                     rapidsConnection = testRapid,
                 )
 
@@ -167,7 +167,7 @@ class OppgaveMediatorTest {
         withMigratedDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
-                    repository = PostgresRepository(datasource),
+                    repository = PostgresOppgaveRepository(datasource),
                     rapidsConnection = testRapid,
                 )
 

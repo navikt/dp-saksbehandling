@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -16,7 +16,7 @@ class OppgaveFristUtgåttJobTest {
     fun `Sett utgåtte oppgaver til KLAR_FOR_BEHANDLING`() =
         withMigratedDb { ds ->
             val saksbehandlerIdent = "Z123456"
-            val repo = PostgresRepository(ds)
+            val repo = PostgresOppgaveRepository(ds)
 
             val idag = LocalDate.now()
             val igår = idag.minusDays(1)

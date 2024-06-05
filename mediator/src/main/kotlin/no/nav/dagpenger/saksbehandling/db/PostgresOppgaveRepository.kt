@@ -24,7 +24,7 @@ import kotlin.time.measureTime
 
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-class PostgresRepository(private val dataSource: DataSource) : Repository {
+class PostgresOppgaveRepository(private val dataSource: DataSource) : Repository {
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->

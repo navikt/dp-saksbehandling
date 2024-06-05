@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
@@ -74,7 +74,7 @@ class UtsendingMediatorTest {
     private fun lagreOppgaveOgBehandling(dataSource: DataSource): Pair<UUID, UUID> {
         val behandling = lagBehandling()
         val oppgave = lagOppgave(behandling = behandling)
-        val repository = PostgresRepository(dataSource)
+        val repository = PostgresOppgaveRepository(dataSource)
         repository.lagre(oppgave)
         return Pair(oppgave.oppgaveId, behandling.behandlingId)
     }
