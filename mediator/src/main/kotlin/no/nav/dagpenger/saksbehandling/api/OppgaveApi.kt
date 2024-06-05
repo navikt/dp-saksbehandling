@@ -18,6 +18,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -42,6 +43,8 @@ import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
+
+private val logger = KotlinLogging.logger { }
 
 internal fun Application.oppgaveApi(
     oppgaveMediator: OppgaveMediator,
@@ -122,6 +125,7 @@ internal fun Application.oppgaveApi(
                     route("utsett") {
                         put {
                             val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
+                            logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
                             oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }

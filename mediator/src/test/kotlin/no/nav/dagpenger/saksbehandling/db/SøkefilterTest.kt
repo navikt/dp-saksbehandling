@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAnyUnit
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Parameters
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import org.junit.jupiter.api.Test
@@ -33,7 +34,15 @@ class SøkefilterTest {
 
     @Test
     fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom eller tom`() {
-        Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe Søkefilter.DEFAULT_SØKEFILTER
+        Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
+            Søkefilter(
+                periode = Periode.UBEGRENSET_PERIODE,
+                tilstand = Oppgave.Tilstand.Type.defaultOppgaveListTilstander,
+                saksbehandlerIdent = null,
+                personIdent = null,
+                oppgaveId = null,
+                behandlingId = null,
+            )
     }
 
     @Test

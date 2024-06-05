@@ -298,6 +298,11 @@ data class Oppgave private constructor(
                     get() = Type.entries.toSet()
 
                 val søkbareTyper = Type.entries.toSet().minus(OPPRETTET)
+                val defaultOppgaveListTilstander =
+                    setOf(
+                        KLAR_TIL_BEHANDLING,
+                        UNDER_BEHANDLING,
+                    )
             }
         }
 
