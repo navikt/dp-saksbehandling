@@ -27,6 +27,7 @@ class UtsendingTilstandTest {
 
         utsending.startUtsending(StartUtsendingHendelse(oppgaveId = oppgaveId, behandlingId = UUIDv7.ny(), ident = "12345678901"))
         utsending.tilstand() shouldBe Utsending.AvventerArkiverbarVersjonAvBrev
+        utsending.tilstand().behov() shouldBe setOf("pdfPlease")
 
         val pdfUrn = URN.rfc8141().parse("urn:pdf:123456")
         utsending.mottaUrnTilArkiverbartFormatAvBrev(ArkiverbartBrevHendelse(pdfUrn = pdfUrn))

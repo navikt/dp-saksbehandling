@@ -85,18 +85,24 @@ data class Utsending(
     }
 
     object VenterPåVedtak : Tilstand {
+        override val type = Tilstand.Type.VenterPåVedtak
+
         override fun mottaStartUtsending(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
             utsending.tilstand = AvventerArkiverbarVersjonAvBrev
         }
-
-        override val type = Tilstand.Type.VenterPåVedtak
     }
 
     object AvventerArkiverbarVersjonAvBrev : Tilstand {
         override val type = Tilstand.Type.AvventerArkiverbarVersjonAvBrev
+
+        override fun behov() = setOf("pdfPlease")
+
+        override fun behov2(utsending: Utsending): Map<String, Map<String, Any>> {
+            return mapOf("pdfPlease" to mapOf("html" to utsending.brev()!!))
+        }
 
         override fun mottaUrnTilPdfAvBrev(
             utsending: Utsending,
@@ -151,6 +157,10 @@ data class Utsending(
     }
 
     interface Tilstand {
+        fun behov() = emptySet<String>()
+
+        fun behov2(utsending: Utsending) = mapOf<String, Map<String, Any>>()
+
         fun mottaBrev(
             utsending: Utsending,
             vedtaksbrevHendelse: VedtaksbrevHendelse,

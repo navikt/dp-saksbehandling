@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
@@ -23,7 +24,7 @@ class UtsendingMediatorTest {
         withMigratedDb { datasource ->
             val oppgaveId = lagreOppgaveOgBehandling(datasource).first
             val utsendingRepository = PostgresUtsendingRepository(datasource)
-            val utsendingMediator = UtsendingMediator(utsendingRepository)
+            val utsendingMediator = UtsendingMediator(repository = utsendingRepository, rapidsConnection = rapid)
 
             val brev = "vedtaksbrev.html"
             val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brev)
@@ -41,15 +42,15 @@ class UtsendingMediatorTest {
         withMigratedDb { datasource ->
             val (oppgaveId, behandlingId) = lagreOppgaveOgBehandling(datasource)
 
-            val repository = PostgresUtsendingRepository(datasource)
-            val utsendingMediator = UtsendingMediator(repository)
+            val utsendingRepository = PostgresUtsendingRepository(datasource)
+            val utsendingMediator = UtsendingMediator(repository = utsendingRepository, rapidsConnection = rapid)
             UtsendingMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
             )
             utsendingMediator.mottaBrev(VedtaksbrevHendelse(oppgaveId, "vedtaksbrev.html"))
 
-            var utsending = repository.hent(oppgaveId)
+            var utsending = utsendingRepository.hent(oppgaveId)
             utsending.oppgaveId shouldBe oppgaveId
 
             utsending.tilstand().type shouldBe VenterPåVedtak
@@ -58,16 +59,21 @@ class UtsendingMediatorTest {
             rapid.sendTestMessage(
                 """
                 {
-                    "@event_name": "vedtak_fattet",
-                    "søknadId": "${UUID.randomUUID()}",
+                    "@event_name": "start_utsending",
+                    "oppgaveId": "$oppgaveId",
                     "behandlingId": "$behandlingId",
                     "ident": "12345678901"
                 }
                 """,
             )
 
-            utsending = repository.hent(oppgaveId)
+            utsending = utsendingRepository.hent(oppgaveId)
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
+
+            rapid.inspektør.size shouldBe 1
+            rapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+                //language=JSON
+                """{"@event_name":"behov","@behov":["pdfPlease"]}""".trimIndent()
         }
     }
 
