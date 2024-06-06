@@ -80,7 +80,6 @@ data class Utsending(
             utsending: Utsending,
             vedtaksbrevHendelse: VedtaksbrevHendelse,
         ) {
-            utsending.brev = vedtaksbrevHendelse.brev
             utsending.tilstand = VenterPåVedtak
         }
     }
