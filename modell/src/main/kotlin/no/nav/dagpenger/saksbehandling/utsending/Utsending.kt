@@ -11,8 +11,8 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import java.util.UUID
 
 data class Utsending(
-    val oppgaveId: UUID,
     val id: UUID = UUIDv7.ny(),
+    val oppgaveId: UUID,
     private var brev: String? = null,
     private var pdfUrn: URN? = null,
     private var journalpostId: String? = null,

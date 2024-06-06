@@ -17,7 +17,7 @@ class UtsendingTilstandTest {
     @Test
     fun `Lovlige tilstandsendringer`() {
         val oppgaveId = UUIDv7.ny()
-        val utsending = Utsending(oppgaveId)
+        val utsending = Utsending(oppgaveId = oppgaveId)
         utsending.brev() shouldBe null
         utsending.tilstand() shouldBe Utsending.Opprettet
 
@@ -52,7 +52,7 @@ class UtsendingTilstandTest {
     @Disabled
     fun `Ugyldig tilstandsendring`() {
         val oppgaveId = UUIDv7.ny()
-        val utsending = Utsending(oppgaveId)
+        val utsending = Utsending(oppgaveId = oppgaveId)
         val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brev = "Dette er et vedtaksbrev")
         shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
             utsending.mottaUrnTilArkiverbartFormatAvBrev(
