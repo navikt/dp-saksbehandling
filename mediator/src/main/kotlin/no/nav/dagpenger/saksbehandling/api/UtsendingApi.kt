@@ -24,7 +24,7 @@ internal fun Application.utsendingApi(utsendingMediator: UtsendingMediator) {
         authenticate("azureAd") {
             route("/utsending/{oppgaveId}/send-brev") {
                 post {
-                    if (!brevErHtml) throw UgyldigBrevformat("Kun støtte for HTML")
+                    if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
 
                     val oppgaveId = call.finnUUID("oppgaveId")
 
@@ -38,7 +38,7 @@ internal fun Application.utsendingApi(utsendingMediator: UtsendingMediator) {
     }
 }
 
-class UgyldigBrevformat(message: String) : RuntimeException(message)
+class UgyldigContentType(message: String) : RuntimeException(message)
 
-private val PipelineContext<Unit, ApplicationCall>.brevErHtml: Boolean
+private val PipelineContext<Unit, ApplicationCall>.htmlContentType: Boolean
     get() = call.request.contentType().match(ContentType.Text.Html)
