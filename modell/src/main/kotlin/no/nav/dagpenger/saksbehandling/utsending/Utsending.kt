@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.utsending
 
 import de.slub.urn.URN
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
@@ -46,8 +46,8 @@ data class Utsending(
         }
     }
 
-    fun mottaVedtak(vedtakFattetHendelse: VedtakFattetHendelse) {
-        tilstand.mottaVedtak(this, vedtakFattetHendelse)
+    fun startUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
+        tilstand.mottaStartUtsending(this, startUtsendingHendelse)
     }
 
     fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
@@ -85,9 +85,9 @@ data class Utsending(
     }
 
     object VenterPåVedtak : Tilstand {
-        override fun mottaVedtak(
+        override fun mottaStartUtsending(
             utsending: Utsending,
-            vedtakFattetHendelse: VedtakFattetHendelse,
+            startUtsendingHendelse: StartUtsendingHendelse,
         ) {
             utsending.tilstand = AvventerArkiverbarVersjonAvBrev
         }
@@ -186,9 +186,9 @@ data class Utsending(
             throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på utsending i tilstand: ${this.type}")
         }
 
-        fun mottaVedtak(
+        fun mottaStartUtsending(
             utsending: Utsending,
-            vedtakFattetHendelse: VedtakFattetHendelse,
+            startUtsendingHendelse: StartUtsendingHendelse,
         ) {
             throw UlovligUtsendingTilstandsendring("Kan ikke motta vedtak i tilstand: ${this.type}")
         }

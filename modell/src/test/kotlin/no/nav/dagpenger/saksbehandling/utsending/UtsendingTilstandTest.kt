@@ -4,7 +4,7 @@ import de.slub.urn.URN
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
@@ -25,7 +25,7 @@ class UtsendingTilstandTest {
         utsending.brev() shouldBe "Dette er et vedtaksbrev"
         utsending.tilstand() shouldBe Utsending.VenterPåVedtak
 
-        utsending.mottaVedtak(VedtakFattetHendelse(UUIDv7.ny(), UUIDv7.ny(), "123456"))
+        utsending.startUtsending(StartUtsendingHendelse(oppgaveId = oppgaveId, behandlingId = UUIDv7.ny(), ident = "12345678901"))
         utsending.tilstand() shouldBe Utsending.AvventerArkiverbarVersjonAvBrev
 
         val pdfUrn = URN.rfc8141().parse("urn:pdf:123456")

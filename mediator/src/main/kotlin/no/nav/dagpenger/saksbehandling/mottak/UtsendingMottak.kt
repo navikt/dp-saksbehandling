@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
-import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -12,7 +12,7 @@ class UtsendingMottak(rapidsConnection: RapidsConnection, private val utsendingM
     companion object {
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "start_utsending") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId") }
+            validate { it.requireKey("oppgaveId", "behandlingId", "ident") }
         }
     }
 
@@ -24,13 +24,13 @@ class UtsendingMottak(rapidsConnection: RapidsConnection, private val utsendingM
         packet: JsonMessage,
         context: MessageContext,
     ) {
-        val søknadId = packet["søknadId"].asUUID()
+        val oppgaveId = packet["oppgaveId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
-        utsendingMediator.mottaVedtakFattet(
-            VedtakFattetHendelse(
+        utsendingMediator.mottaStartUtsending(
+            StartUtsendingHendelse(
+                oppgaveId = oppgaveId,
                 behandlingId = behandlingId,
-                søknadId = søknadId,
                 ident = ident,
             ),
         )
