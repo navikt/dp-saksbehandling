@@ -11,7 +11,7 @@ class UtsendingMottak(rapidsConnection: RapidsConnection, private val utsendingM
     River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "vedtak_fattet") }
+            validate { it.demandValue("@event_name", "start_utsending") }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
         }
     }

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
+import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -35,6 +36,8 @@ internal class VedtakFattetMottakTest {
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
         }
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).path("@event_name").asText() shouldBe "start_utsending"
     }
 
     @Language("JSON")

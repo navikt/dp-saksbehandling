@@ -111,8 +111,9 @@ class OppgaveMediatorTest {
                     ident = testIdent,
                 )
 
-            oppgaveMediator.ferdigstillOppgave(vedtakFattetHendelse)
-            oppgaveMediator.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).size shouldBe 1
+            oppgaveMediator.ferdigstillOppgave(vedtakFattetHendelse).also { ferdigstiltOppgave ->
+                ferdigstiltOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            }
         }
     }
 

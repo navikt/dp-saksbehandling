@@ -36,12 +36,25 @@ internal class VedtakFattetMottak(
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak fattet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
-            oppgaveMediator.ferdigstillOppgave(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    søknadId = søknadId,
-                    ident = ident,
-                ),
+            val oppgave =
+                oppgaveMediator.ferdigstillOppgave(
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        søknadId = søknadId,
+                        ident = ident,
+                    ),
+                )
+
+            context.publish(
+                JsonMessage.newMessage(
+                    map =
+                        mapOf(
+                            "@event_name" to "start_utsending",
+                            "oppgaveId" to oppgave.oppgaveId.toString(),
+                            "behandlingId" to oppgave.behandlingId.toString(),
+                            "ident" to oppgave.ident,
+                        ),
+                ).toJson(),
             )
         }
     }

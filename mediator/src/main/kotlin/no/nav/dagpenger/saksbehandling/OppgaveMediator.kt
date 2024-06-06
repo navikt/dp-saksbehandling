@@ -82,9 +82,9 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse) {
+    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
         logger.info { "Mottatt vedtak fattet hendelse for behandling med id ${vedtakFattetHendelse.behandlingId}. Behandling avsluttes." }
-        hentOppgaveFor(vedtakFattetHendelse.behandlingId).let { oppgave ->
+        return hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
             oppgave.ferdigstill(vedtakFattetHendelse)
             lagre(oppgave)
         }
