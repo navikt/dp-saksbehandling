@@ -11,14 +11,14 @@ data class ArkiverbartBrevBehov(
     override val navn: String,
     private val html: String,
 ) : Behov {
-    override val data: Map<String, Any>
-        get() {
-            return mapOf("html" to html.toBase64()) //
-        }
+    init {
+        require(html.isNotBlank()) { "HTML kan ikke være tom" }
+        // TODO: Add more validation of html
+    }
+
+    override val data: Map<String, Any> = mapOf("html" to html.toBase64())
 
     private fun String.toBase64() = Base64.getEncoder().encodeToString(this.toByteArray(Charsets.UTF_8))
-
-    // fun toJson() = mapOf("navn" to navn, "data" to data)
 }
 
 object IngenBehov : Behov {
