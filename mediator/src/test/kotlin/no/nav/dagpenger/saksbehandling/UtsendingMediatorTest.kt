@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
+import java.util.Base64
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -38,7 +39,7 @@ class UtsendingMediatorTest {
     }
 
     @Test
-    fun `livsyklus av en utsending`() {
+    fun `livssyklus av en utsending`() {
         withMigratedDb { datasource ->
             val (oppgaveId, behandlingId) = lagreOppgaveOgBehandling(datasource)
 
@@ -48,13 +49,14 @@ class UtsendingMediatorTest {
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
             )
-            utsendingMediator.mottaBrev(VedtaksbrevHendelse(oppgaveId, "vedtaksbrev.html"))
+            val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
+            utsendingMediator.mottaBrev(VedtaksbrevHendelse(oppgaveId, htmlBrev))
 
             var utsending = utsendingRepository.hent(oppgaveId)
             utsending.oppgaveId shouldBe oppgaveId
 
             utsending.tilstand().type shouldBe VenterPåVedtak
-            utsending.brev() shouldBe "vedtaksbrev.html"
+            utsending.brev() shouldBe htmlBrev
 
             rapid.sendTestMessage(
                 """
@@ -71,15 +73,16 @@ class UtsendingMediatorTest {
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
 
             rapid.inspektør.size shouldBe 1
+            val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
             rapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
                 //language=JSON
-                """{"@event_name":"behov","@behov":["pdfPlease"]}""".trimIndent()
+                """{"@event_name":"behov","@behov":["pdfPlease"], "html": "$htmlBrevAsBase64"}""".trimIndent()
         }
     }
 
     private fun lagreOppgaveOgBehandling(dataSource: DataSource): Pair<UUID, UUID> {
         val behandling = lagBehandling()
-        val oppgave = lagOppgave(behandling = behandling)
+        val oppgave = lagOppgave()
         val repository = PostgresOppgaveRepository(dataSource)
         repository.lagre(oppgave)
         return Pair(oppgave.oppgaveId, behandling.behandlingId)

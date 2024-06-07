@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
+import no.nav.dagpenger.saksbehandling.utsending.IngenBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
@@ -27,9 +28,9 @@ class UtsendingMediator(private val repository: UtsendingRepository, private val
     }
 
     private fun publiserBehov(utsending: Utsending) {
-        val behov = utsending.tilstand().behov2(utsending)
-        if (behov.isEmpty()) return
+        val behov = utsending.tilstand().behov(utsending)
+        if (behov is IngenBehov) return
 
-        rapidsConnection.publish(JsonMessage.newNeed(behov.keys, behov.entries.first().value).toJson())
+        rapidsConnection.publish(JsonMessage.newNeed(setOf(behov.navn), behov.data).toJson())
     }
 }

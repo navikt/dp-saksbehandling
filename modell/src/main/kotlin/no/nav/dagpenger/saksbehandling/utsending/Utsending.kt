@@ -98,11 +98,11 @@ data class Utsending(
     object AvventerArkiverbarVersjonAvBrev : Tilstand {
         override val type = Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 
-        override fun behov() = setOf("pdfPlease")
-
-        override fun behov2(utsending: Utsending): Map<String, Map<String, Any>> {
-            return mapOf("pdfPlease" to mapOf("html" to utsending.brev()!!))
-        }
+        override fun behov(utsending: Utsending) =
+            ArkiverbartBrevBehov(
+                navn = "pdfPlease",
+                html = utsending.brev ?: throw IllegalStateException("Brev mangler"),
+            )
 
         override fun mottaUrnTilPdfAvBrev(
             utsending: Utsending,
@@ -157,9 +157,7 @@ data class Utsending(
     }
 
     interface Tilstand {
-        fun behov() = emptySet<String>()
-
-        fun behov2(utsending: Utsending) = mapOf<String, Map<String, Any>>()
+        fun behov(utsending: Utsending): Behov = IngenBehov
 
         fun mottaBrev(
             utsending: Utsending,

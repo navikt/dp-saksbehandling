@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.utsending
 import de.slub.urn.URN
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
@@ -27,7 +28,7 @@ class UtsendingTilstandTest {
 
         utsending.startUtsending(StartUtsendingHendelse(oppgaveId = oppgaveId, behandlingId = UUIDv7.ny(), ident = "12345678901"))
         utsending.tilstand() shouldBe Utsending.AvventerArkiverbarVersjonAvBrev
-        utsending.tilstand().behov() shouldBe setOf("pdfPlease")
+        utsending.tilstand().behov(utsending).shouldBeInstanceOf<ArkiverbartBrevBehov>()
 
         val pdfUrn = URN.rfc8141().parse("urn:pdf:123456")
         utsending.mottaUrnTilArkiverbartFormatAvBrev(ArkiverbartBrevHendelse(pdfUrn = pdfUrn))
