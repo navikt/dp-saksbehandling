@@ -1,3 +1,5 @@
 package no.nav.dagpenger.saksbehandling.utsending.hendelser
 
-data class MidlertidigJournalpostHendelse(val journalpostId: String)
+import java.util.UUID
+
+data class MidlertidigJournalpostHendelse(override val oppgaveId: UUID, val journalpostId: String) : UtsendingHendelse

@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.IngenBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -19,6 +20,12 @@ class UtsendingMediator(private val repository: UtsendingRepository, private val
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
         val utsending = repository.hent(startUtsendingHendelse.oppgaveId)
         utsending.startUtsending(startUtsendingHendelse)
+        lagreOgPubliserBehov(utsending)
+    }
+
+    fun mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse: ArkiverbartBrevHendelse) {
+        val utsending = repository.hent(arkiverbartBrevHendelse.oppgaveId)
+        utsending.mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse)
         lagreOgPubliserBehov(utsending)
     }
 

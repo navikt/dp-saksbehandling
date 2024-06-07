@@ -8,8 +8,10 @@ import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerMidlertidigJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -77,6 +79,13 @@ class UtsendingMediatorTest {
             rapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
                 //language=JSON
                 """{"@event_name":"behov","@behov":["pdfPlease"], "html": "$htmlBrevAsBase64"}""".trimIndent()
+
+            utsending.mottaUrnTilArkiverbartFormatAvBrev(
+                ArkiverbartBrevHendelse(oppgaveId, pdfUrn = "urn:pdf:1234".toUrn()),
+            )
+            utsending = utsendingRepository.hent(oppgaveId)
+            utsending.tilstand().type shouldBe AvventerMidlertidigJournalføring
+            utsending.pdfUrn() shouldBe "urn:pdf:1234".toUrn()
         }
     }
 
