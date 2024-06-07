@@ -80,7 +80,7 @@ class UtsendingMediatorTest {
                 //language=JSON
                 """{"@event_name":"behov","@behov":["pdfPlease"], "html": "$htmlBrevAsBase64"}""".trimIndent()
 
-            utsending.mottaUrnTilArkiverbartFormatAvBrev(
+            utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(
                 ArkiverbartBrevHendelse(oppgaveId, pdfUrn = "urn:pdf:1234".toUrn()),
             )
             utsending = utsendingRepository.hent(oppgaveId)

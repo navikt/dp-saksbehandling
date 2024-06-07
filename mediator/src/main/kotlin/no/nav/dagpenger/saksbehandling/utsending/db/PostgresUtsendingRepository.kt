@@ -38,7 +38,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                             "oppgave_id" to utsending.oppgaveId,
                             "tilstand" to utsending.tilstand().type.name,
                             "brev" to utsending.brev(),
-                            "pdf_urn" to utsending.pdfUrn(),
+                            "pdf_urn" to utsending.pdfUrn()?.toString(),
                             "journalpost_id" to utsending.journalpostId(),
                         ),
                 ).asUpdate,

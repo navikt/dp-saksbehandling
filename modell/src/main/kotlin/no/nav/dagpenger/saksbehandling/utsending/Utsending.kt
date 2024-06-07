@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.utsending
 import de.slub.urn.URN
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
+import no.nav.dagpenger.saksbehandling.toUrnOrNull
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
@@ -40,7 +41,7 @@ data class Utsending(
                 oppgaveId = oppgaveId,
                 tilstand = tilstand,
                 brev = brev,
-                pdfUrn = pdfUrn?.let { URN.rfc8141().parse(it) },
+                pdfUrn = pdfUrn.toUrnOrNull(),
                 journalpostId = journalpostId,
             )
         }
