@@ -122,6 +122,12 @@ data class Utsending(
         ) {
             utsending.tilstand = AvventerJournalføring
         }
+
+        override fun behov(utsending: Utsending): Behov {
+            return MidlertidigJournalføringBehov(
+                pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
+            )
+        }
     }
 
     object AvventerJournalføring : Tilstand {

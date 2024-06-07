@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
+import no.nav.dagpenger.saksbehandling.utsending.MidlertidigJournalføringBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerMidlertidigJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
@@ -80,12 +81,21 @@ class UtsendingMediatorTest {
                 //language=JSON
                 """{"@event_name":"behov","@behov":["pdfPlease"], "html": "$htmlBrevAsBase64"}""".trimIndent()
 
+            val pdfUrnString = "urn:pdf:123"
             utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(
-                ArkiverbartBrevHendelse(oppgaveId, pdfUrn = "urn:pdf:1234".toUrn()),
+                ArkiverbartBrevHendelse(oppgaveId, pdfUrn = pdfUrnString.toUrn()),
             )
             utsending = utsendingRepository.hent(oppgaveId)
             utsending.tilstand().type shouldBe AvventerMidlertidigJournalføring
-            utsending.pdfUrn() shouldBe "urn:pdf:1234".toUrn()
+            utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
+
+            rapid.inspektør.size shouldBe 2
+            rapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
+                //language=JSON
+                """
+                {"@event_name":"behov","@behov":["${MidlertidigJournalføringBehov.BEHOV_NAVN}"],
+                "pdfUrn": "$pdfUrnString"}
+                """.trimIndent()
         }
     }
 

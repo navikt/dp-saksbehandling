@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
+import de.slub.urn.URN
 import java.util.Base64
 
 interface Behov {
@@ -19,6 +20,21 @@ data class ArkiverbartBrevBehov(
     override val data: Map<String, Any> = mapOf("html" to html.toBase64())
 
     private fun String.toBase64() = Base64.getEncoder().encodeToString(this.toByteArray(Charsets.UTF_8))
+}
+
+data class MidlertidigJournalføringBehov(
+    private val pdfUrn: URN,
+) : Behov {
+    companion object {
+        const val BEHOV_NAVN = "MidlertidigJournalføringBehov"
+    }
+
+    override val navn: String = BEHOV_NAVN
+    override val data: Map<String, Any>
+        get() =
+            mapOf(
+                "pdfUrn" to pdfUrn.toString(),
+            )
 }
 
 object IngenBehov : Behov {
