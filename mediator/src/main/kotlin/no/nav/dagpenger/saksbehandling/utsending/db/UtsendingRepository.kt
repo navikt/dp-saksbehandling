@@ -9,8 +9,6 @@ interface UtsendingRepository {
     fun hent(oppgaveId: UUID): Utsending
 
     fun finnUtsendingFor(oppgaveId: UUID): Utsending?
-
-    fun hentUtsendingFor(behandlingId: UUID): Utsending
 }
 
 class UtsendingIkkeFunnet(message: String) : RuntimeException(message)
