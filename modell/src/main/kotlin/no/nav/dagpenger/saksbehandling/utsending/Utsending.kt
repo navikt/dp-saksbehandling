@@ -116,22 +116,26 @@ data class Utsending(
     object AvventerMidlertidigJournalføring : Tilstand {
         override val type = Tilstand.Type.AvventerMidlertidigJournalføring
 
+        override fun behov(utsending: Utsending): Behov {
+            return MidlertidigJournalføringBehov(
+                pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
+            )
+        }
+
         override fun mottaMidlertidigJournalpost(
             utsending: Utsending,
             midlertidigJournalpostHendelse: MidlertidigJournalpostHendelse,
         ) {
             utsending.tilstand = AvventerJournalføring
         }
-
-        override fun behov(utsending: Utsending): Behov {
-            return MidlertidigJournalføringBehov(
-                pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
-            )
-        }
     }
 
     object AvventerJournalføring : Tilstand {
         override val type = Tilstand.Type.AvventerJournalføring
+
+        override fun behov(utsending: Utsending): Behov {
+            return IngenBehov
+        }
 
         override fun mottaJournalpost(
             utsending: Utsending,
@@ -147,6 +151,12 @@ data class Utsending(
 
     object AvventerDistribuering : Tilstand {
         override val type = Tilstand.Type.AvventerDistribuering
+
+        override fun behov(utsending: Utsending): Behov {
+            return DistribueringBehov(
+                pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
+            )
+        }
 
         override fun mottaKvitteringPåUtsending(
             utsending: Utsending,

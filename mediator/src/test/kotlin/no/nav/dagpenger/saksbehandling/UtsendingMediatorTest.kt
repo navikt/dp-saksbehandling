@@ -7,12 +7,17 @@ import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
+import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.MidlertidigJournalføringBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerMidlertidigJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -94,6 +99,28 @@ class UtsendingMediatorTest {
                 //language=JSON
                 """
                 {"@event_name":"behov","@behov":["${MidlertidigJournalføringBehov.BEHOV_NAVN}"],
+                "pdfUrn": "$pdfUrnString"}
+                """.trimIndent()
+
+            utsendingMediator.mottaMidleridigJournalpost(
+                MidlertidigJournalpostHendelse(oppgaveId, journalpostId = "123"),
+            )
+            utsending = utsendingRepository.hent(oppgaveId)
+            utsending.tilstand().type shouldBe AvventerJournalføring
+            utsending.journalpostId() shouldBe "123"
+            rapid.inspektør.size shouldBe 2
+
+            utsendingMediator.mottaJournalpost(
+                JournalpostHendelse(oppgaveId, journalpostId = "123"),
+            )
+            utsending = utsendingRepository.hent(oppgaveId)
+            utsending.tilstand().type shouldBe AvventerDistribuering
+            utsending.journalpostId() shouldBe "123"
+            rapid.inspektør.size shouldBe 3
+            rapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
+                //language=JSON
+                """
+                {"@event_name":"behov","@behov":["${DistribueringBehov.BEHOV_NAVN}"],
                 "pdfUrn": "$pdfUrnString"}
                 """.trimIndent()
         }

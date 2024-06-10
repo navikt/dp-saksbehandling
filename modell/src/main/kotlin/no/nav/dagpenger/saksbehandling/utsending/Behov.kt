@@ -37,6 +37,21 @@ data class MidlertidigJournalføringBehov(
             )
 }
 
+data class DistribueringBehov(
+    private val pdfUrn: URN,
+) : Behov {
+    companion object {
+        const val BEHOV_NAVN = "DistribueringBehov"
+    }
+
+    override val navn: String = BEHOV_NAVN
+    override val data: Map<String, Any>
+        get() =
+            mapOf(
+                "pdfUrn" to pdfUrn.toString(),
+            )
+}
+
 object IngenBehov : Behov {
     override val navn = "IngenBehov"
     override val data = emptyMap<String, Any>()
