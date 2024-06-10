@@ -9,9 +9,14 @@ interface Behov {
 }
 
 data class ArkiverbartBrevBehov(
-    override val navn: String,
     private val html: String,
 ) : Behov {
+    companion object {
+        const val BEHOV_NAVN = "ArkiverbartBrevBehov"
+    }
+
+    override val navn: String = BEHOV_NAVN
+
     init {
         require(html.isNotBlank()) { "HTML kan ikke være tom" }
         // TODO: Add more validation of html

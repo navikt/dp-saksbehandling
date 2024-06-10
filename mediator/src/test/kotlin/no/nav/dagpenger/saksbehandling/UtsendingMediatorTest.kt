@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
+import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.MidlertidigJournalføringBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
@@ -84,7 +85,7 @@ class UtsendingMediatorTest {
             val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
             rapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
                 //language=JSON
-                """{"@event_name":"behov","@behov":["pdfPlease"], "html": "$htmlBrevAsBase64"}""".trimIndent()
+                """{"@event_name":"behov","@behov":["${ArkiverbartBrevBehov.BEHOV_NAVN}"], "html": "$htmlBrevAsBase64"}""".trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
             utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(

@@ -101,7 +101,6 @@ data class Utsending(
 
         override fun behov(utsending: Utsending) =
             ArkiverbartBrevBehov(
-                navn = "pdfPlease",
                 html = utsending.brev ?: throw IllegalStateException("Brev mangler"),
             )
 
