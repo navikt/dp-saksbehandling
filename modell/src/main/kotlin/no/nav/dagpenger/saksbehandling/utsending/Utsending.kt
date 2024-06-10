@@ -101,6 +101,7 @@ data class Utsending(
 
         override fun behov(utsending: Utsending) =
             ArkiverbartBrevBehov(
+                oppgaveId = utsending.oppgaveId,
                 html = utsending.brev ?: throw IllegalStateException("Brev mangler"),
             )
 
@@ -116,7 +117,8 @@ data class Utsending(
         override val type = Tilstand.Type.AvventerMidlertidigJournalføring
 
         override fun behov(utsending: Utsending): Behov {
-            return MidlertidigJournalføringBehov(
+            return JournalføringBehov(
+                oppgaveId = utsending.oppgaveId,
                 pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
             )
         }
@@ -153,6 +155,7 @@ data class Utsending(
 
         override fun behov(utsending: Utsending): Behov {
             return DistribueringBehov(
+                oppgaveId = utsending.oppgaveId,
                 pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
             )
         }

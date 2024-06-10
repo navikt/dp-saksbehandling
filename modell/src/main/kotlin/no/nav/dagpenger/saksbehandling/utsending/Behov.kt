@@ -2,15 +2,21 @@ package no.nav.dagpenger.saksbehandling.utsending
 
 import de.slub.urn.URN
 import java.util.Base64
+import java.util.UUID
 
 interface Behov {
     val navn: String
     val data: Map<String, Any>
 }
 
+abstract class AbstractBehov(open val oppgaveId: UUID) : Behov {
+    protected fun data() = mapOf("oppgaveId" to oppgaveId.toString())
+}
+
 data class ArkiverbartBrevBehov(
+    override val oppgaveId: UUID,
     private val html: String,
-) : Behov {
+) : AbstractBehov(oppgaveId) {
     companion object {
         const val BEHOV_NAVN = "ArkiverbartDokumentBehov"
     }
@@ -22,39 +28,33 @@ data class ArkiverbartBrevBehov(
         // TODO: Add more validation of html
     }
 
-    override val data: Map<String, Any> = mapOf("html" to html.toBase64())
+    override val data: Map<String, Any> = data() + mapOf("html" to html.toBase64())
 
     private fun String.toBase64() = Base64.getEncoder().encodeToString(this.toByteArray(Charsets.UTF_8))
 }
 
-data class MidlertidigJournalføringBehov(
+data class JournalføringBehov(
+    override val oppgaveId: UUID,
     private val pdfUrn: URN,
-) : Behov {
+) : AbstractBehov(oppgaveId) {
     companion object {
-        const val BEHOV_NAVN = "MidlertidigJournalføringBehov"
+        const val BEHOV_NAVN = "JournalføringBehov"
     }
 
     override val navn: String = BEHOV_NAVN
-    override val data: Map<String, Any>
-        get() =
-            mapOf(
-                "pdfUrn" to pdfUrn.toString(),
-            )
+    override val data: Map<String, Any> = data() + mapOf("pdfUrn" to pdfUrn.toString())
 }
 
 data class DistribueringBehov(
+    override val oppgaveId: UUID,
     private val pdfUrn: URN,
-) : Behov {
+) : AbstractBehov(oppgaveId) {
     companion object {
         const val BEHOV_NAVN = "DistribueringBehov"
     }
 
     override val navn: String = BEHOV_NAVN
-    override val data: Map<String, Any>
-        get() =
-            mapOf(
-                "pdfUrn" to pdfUrn.toString(),
-            )
+    override val data: Map<String, Any> = data() + mapOf("pdfUrn" to pdfUrn.toString())
 }
 
 object IngenBehov : Behov {

@@ -9,7 +9,7 @@ import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
-import no.nav.dagpenger.saksbehandling.utsending.MidlertidigJournalføringBehov
+import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
@@ -58,7 +58,7 @@ class UtsendingMediatorTest {
                 utsendingMediator = utsendingMediator,
             )
 
-            BehovLøsningMediator(
+            BehovLøsningMottak(
                 utsendingMediator = utsendingMediator,
                 rapidsConnection = rapid,
             )
@@ -90,7 +90,16 @@ class UtsendingMediatorTest {
             val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
             rapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
                 //language=JSON
-                """{"@event_name":"behov","@behov":["${ArkiverbartBrevBehov.BEHOV_NAVN}"], "html": "$htmlBrevAsBase64"}""".trimIndent()
+                """
+                {
+                   "@event_name": "behov",
+                   "@behov": [
+                     "${ArkiverbartBrevBehov.BEHOV_NAVN}"
+                   ],
+                   "html": "$htmlBrevAsBase64",
+                   "oppgaveId": "$oppgaveId"
+                }
+                """.trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
             rapid.sendTestMessage(arkiverbartDokumentBehovLosning(oppgaveId, pdfUrnString))
@@ -103,8 +112,14 @@ class UtsendingMediatorTest {
             rapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
                 //language=JSON
                 """
-                {"@event_name":"behov","@behov":["${MidlertidigJournalføringBehov.BEHOV_NAVN}"],
-                "pdfUrn": "$pdfUrnString"}
+                {
+                  "@event_name": "behov",
+                  "@behov": [
+                    "${JournalføringBehov.BEHOV_NAVN}"
+                  ],
+                  "pdfUrn": "$pdfUrnString",
+                   "oppgaveId": "$oppgaveId"
+                }
                 """.trimIndent()
 
             utsendingMediator.mottaMidleridigJournalpost(
@@ -125,8 +140,14 @@ class UtsendingMediatorTest {
             rapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
                 //language=JSON
                 """
-                {"@event_name":"behov","@behov":["${DistribueringBehov.BEHOV_NAVN}"],
-                "pdfUrn": "$pdfUrnString"}
+                {
+                  "@event_name": "behov",
+                  "@behov": [
+                    "${DistribueringBehov.BEHOV_NAVN}"
+                  ],
+                  "pdfUrn": "$pdfUrnString",
+                  "oppgaveId": "$oppgaveId"
+                }
                 """.trimIndent()
         }
     }

@@ -3,12 +3,13 @@ package no.nav.dagpenger.saksbehandling
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
-class BehovLøsningMediator(
+class BehovLøsningMottak(
     private val utsendingMediator: UtsendingMediator,
     rapidsConnection: RapidsConnection,
 ) : River.PacketListener {
@@ -21,7 +22,7 @@ class BehovLøsningMediator(
             validate {
                 it.requireAllOrAny(
                     "@behov",
-                    listOf("ArkiverbartDokumentBehov", "MidlertidigJournalføringBehov", "DistribueringBehov"),
+                    listOf("ArkiverbartDokumentBehov", "JournalføringBehov", "DistribueringBehov"),
                 )
             }
         }
@@ -42,8 +43,8 @@ class BehovLøsningMediator(
                 utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
             }
 
-            "MidlertidigJournalføringBehov" -> {
-                logger.info { "Fått løsning for MidlertidigJournalføringBehov" }
+            "JournalføringBehov" -> {
+                utsendingMediator.mottaMidleridigJournalpost(packet.nyJournalPost())
             }
 
             "DistribueringBehov" -> {
@@ -55,6 +56,13 @@ class BehovLøsningMediator(
             }
         }
     }
+}
+
+private fun JsonMessage.nyJournalPost(): MidlertidigJournalpostHendelse {
+    return MidlertidigJournalpostHendelse(
+        oppgaveId = this["oppgaveId"].asUUID(),
+        journalpostId = this["@løsning"]["NyJournalpost"].asText(),
+    )
 }
 
 private fun JsonMessage.arkiverbartDokumentLøsning(): ArkiverbartBrevHendelse {

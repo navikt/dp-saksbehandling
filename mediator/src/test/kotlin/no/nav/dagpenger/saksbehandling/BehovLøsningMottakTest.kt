@@ -3,18 +3,19 @@ package no.nav.dagpenger.saksbehandling
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class BehovLøsningMediatorTest {
+class BehovLøsningMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveUUID: UUID = UUIDv7.ny()
 
     @Test
     fun `River filter`() {
         val mediator = mockk<UtsendingMediator>(relaxed = true)
-        BehovLøsningMediator(
+        BehovLøsningMottak(
             utsendingMediator = mediator,
             rapidsConnection = testRapid,
         )
@@ -30,6 +31,39 @@ class BehovLøsningMediatorTest {
                 ),
             )
         }
+
+        //language=JSON
+        val journalPostId = "jp1"
+        testRapid.sendTestMessage(nyJournalpostLøsning(oppgaveUUID, journalPostId))
+
+        verify(exactly = 1) {
+            mediator.mottaMidleridigJournalpost(
+                MidlertidigJournalpostHendelse(
+                    oppgaveId = oppgaveUUID,
+                    journalpostId = journalPostId,
+                ),
+            )
+        }
+    }
+
+    private fun nyJournalpostLøsning(
+        oppgaveUUID: UUID,
+        journalPostId: String,
+    ): String {
+        //language=JSON
+        return """
+            {
+              "@event_name": "behov",
+              "oppgaveId": "$oppgaveUUID",
+              "@behov": [
+                "JournalføringBehov"
+              ],
+              "@løsning": {
+                "NyJournalpost": "$journalPostId"
+              }
+            }
+            
+            """.trimIndent()
     }
 
     //language=JSON
