@@ -16,7 +16,6 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerMidlertidigJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
@@ -58,6 +57,12 @@ class UtsendingMediatorTest {
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
             )
+
+            BehovLøsningMediator(
+                utsendingMediator = utsendingMediator,
+                rapidsConnection = rapid,
+            )
+
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
             utsendingMediator.mottaBrev(VedtaksbrevHendelse(oppgaveId, htmlBrev))
 
@@ -88,9 +93,8 @@ class UtsendingMediatorTest {
                 """{"@event_name":"behov","@behov":["${ArkiverbartBrevBehov.BEHOV_NAVN}"], "html": "$htmlBrevAsBase64"}""".trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
-            utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(
-                ArkiverbartBrevHendelse(oppgaveId, pdfUrn = pdfUrnString.toUrn()),
-            )
+            rapid.sendTestMessage(arkiverbartDokumentBehovLosning(oppgaveId, pdfUrnString))
+
             utsending = utsendingRepository.hent(oppgaveId)
             utsending.tilstand().type shouldBe AvventerMidlertidigJournalføring
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
@@ -134,4 +138,25 @@ class UtsendingMediatorTest {
         repository.lagre(oppgave)
         return Pair(oppgave.oppgaveId, behandling.behandlingId)
     }
+
+    //language=JSON
+    private fun arkiverbartDokumentBehovLosning(
+        oppgaveUUID: UUID,
+        pdfUrnString: String,
+    ) = """
+        {
+          "@event_name": "behov",
+          "oppgaveId": "$oppgaveUUID",
+          "@behov": ["ArkiverbartDokumentBehov"],
+          "@løsning": {
+            "ArkiverbartDokument": {
+              "metainfo": {
+                "filnavn": "netto.pdf",
+                "filtype": "PDF"
+              },
+              "urn": "$pdfUrnString"
+            }
+          }
+        }
+        """.trimIndent()
 }

@@ -12,7 +12,7 @@ data class ArkiverbartBrevBehov(
     private val html: String,
 ) : Behov {
     companion object {
-        const val BEHOV_NAVN = "ArkiverbartBrevBehov"
+        const val BEHOV_NAVN = "ArkiverbartDokumentBehov"
     }
 
     override val navn: String = BEHOV_NAVN
