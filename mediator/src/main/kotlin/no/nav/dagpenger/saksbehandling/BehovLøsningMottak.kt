@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -45,10 +44,6 @@ class BehovLøsningMottak(
                 utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
             }
 
-            "JournalføringBehov" -> {
-                utsendingMediator.mottaMidleridigJournalpost(packet.nyJournalPost())
-            }
-
             "DistribueringBehov" -> {
                 utsendingMediator.mottaDistribueringKvittering(packet.distribuertKvittering())
             }
@@ -65,13 +60,6 @@ private fun JsonMessage.distribuertKvittering(): DistribueringKvitteringHendelse
         oppgaveId = this["oppgaveId"].asUUID(),
         distribueringId = this["@løsning"]["distribueringId"].asText(),
         journalpostId = this["journalpostId"].asText(),
-    )
-}
-
-private fun JsonMessage.nyJournalPost(): MidlertidigJournalpostHendelse {
-    return MidlertidigJournalpostHendelse(
-        oppgaveId = this["oppgaveId"].asUUID(),
-        journalpostId = this["@løsning"]["NyJournalpost"].asText(),
     )
 }
 

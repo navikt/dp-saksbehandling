@@ -7,7 +7,6 @@ import no.nav.dagpenger.saksbehandling.toUrnOrNull
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import java.util.UUID
 
@@ -61,11 +60,6 @@ data class Utsending(
         tilstand.mottaUrnTilPdfAvBrev(this, arkiverbartBrevHendelse)
     }
 
-    fun mottaMidlertidigJournalpost(midlertidigJournalpostHendelse: MidlertidigJournalpostHendelse) {
-        journalpostId = midlertidigJournalpostHendelse.journalpostId
-        tilstand.mottaMidlertidigJournalpost(this, midlertidigJournalpostHendelse)
-    }
-
     fun mottaJournalpost(journalpostHendelse: JournalpostHendelse) {
         tilstand.mottaJournalpost(this, journalpostHendelse)
     }
@@ -109,24 +103,6 @@ data class Utsending(
             utsending: Utsending,
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
         ) {
-            utsending.tilstand = AvventerMidlertidigJournalføring
-        }
-    }
-
-    object AvventerMidlertidigJournalføring : Tilstand {
-        override val type = Tilstand.Type.AvventerMidlertidigJournalføring
-
-        override fun behov(utsending: Utsending): Behov {
-            return JournalføringBehov(
-                oppgaveId = utsending.oppgaveId,
-                pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
-            )
-        }
-
-        override fun mottaMidlertidigJournalpost(
-            utsending: Utsending,
-            midlertidigJournalpostHendelse: MidlertidigJournalpostHendelse,
-        ) {
             utsending.tilstand = AvventerJournalføring
         }
     }
@@ -135,17 +111,17 @@ data class Utsending(
         override val type = Tilstand.Type.AvventerJournalføring
 
         override fun behov(utsending: Utsending): Behov {
-            return IngenBehov
+            return JournalføringBehov(
+                oppgaveId = utsending.oppgaveId,
+                pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
+            )
         }
 
         override fun mottaJournalpost(
             utsending: Utsending,
             journalpostHendelse: JournalpostHendelse,
         ) {
-            if (journalpostHendelse.journalpostId != utsending.journalpostId) {
-                // TODO: Her må det tenkes mer på hva som skal skje
-                throw IllegalArgumentException("JournalpostId mismatch")
-            }
+            utsending.journalpostId = journalpostHendelse.journalpostId
             utsending.tilstand = AvventerDistribuering
         }
     }
@@ -190,13 +166,6 @@ data class Utsending(
             throw UlovligUtsendingTilstandsendring("Kan ikke motta urn til pdf av brev i tilstand: ${this.type}")
         }
 
-        fun mottaMidlertidigJournalpost(
-            utsending: Utsending,
-            midlertidigJournalpostHendelse: MidlertidigJournalpostHendelse,
-        ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta midlertidig journalpost i tilstand: ${this.type}")
-        }
-
         fun mottaJournalpost(
             utsending: Utsending,
             journalpostHendelse: JournalpostHendelse,
@@ -224,7 +193,6 @@ data class Utsending(
             Opprettet,
             VenterPåVedtak,
             AvventerArkiverbarVersjonAvBrev,
-            AvventerMidlertidigJournalføring,
             AvventerJournalføring,
             AvventerDistribuering,
             Distribuert,

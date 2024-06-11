@@ -4,7 +4,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -33,16 +32,7 @@ class BehovLøsningMottakTest {
         }
 
         val journalPostId = "jp1"
-        testRapid.sendTestMessage(nyJournalpostLøsning(oppgaveUUID, journalPostId))
-
-        verify(exactly = 1) {
-            mediator.mottaMidleridigJournalpost(
-                MidlertidigJournalpostHendelse(
-                    oppgaveId = oppgaveUUID,
-                    journalpostId = journalPostId,
-                ),
-            )
-        }
+        // todo
 
         val distribusjonId = "distribusjonId"
         testRapid.sendTestMessage(
@@ -61,26 +51,6 @@ class BehovLøsningMottakTest {
                 ),
             )
         }
-    }
-
-    private fun nyJournalpostLøsning(
-        oppgaveUUID: UUID,
-        journalPostId: String,
-    ): String {
-        //language=JSON
-        return """
-            {
-              "@event_name": "behov",
-              "oppgaveId": "$oppgaveUUID",
-              "@behov": [
-                "JournalføringBehov"
-              ],
-              "@løsning": {
-                "NyJournalpost": "$journalPostId"
-              }
-            }
-            
-            """.trimIndent()
     }
 
     //language=JSON

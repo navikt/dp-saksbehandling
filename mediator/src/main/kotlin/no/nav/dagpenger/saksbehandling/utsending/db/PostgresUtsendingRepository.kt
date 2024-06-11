@@ -7,7 +7,6 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
-import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerMidlertidigJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Opprettet
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
@@ -68,7 +67,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                             Opprettet -> Utsending.Opprettet
                             VenterPåVedtak -> Utsending.VenterPåVedtak
                             AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev
-                            AvventerMidlertidigJournalføring -> Utsending.AvventerMidlertidigJournalføring
                             AvventerJournalføring -> Utsending.AvventerJournalføring
                             AvventerDistribuering -> Utsending.AvventerDistribuering
                             Distribuert -> Utsending.Distribuert

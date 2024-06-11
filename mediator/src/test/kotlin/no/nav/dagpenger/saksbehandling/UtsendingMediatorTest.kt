@@ -13,11 +13,9 @@ import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
-import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerMidlertidigJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -105,9 +103,8 @@ class UtsendingMediatorTest {
             rapid.sendTestMessage(arkiverbartDokumentBehovLosning(oppgaveId, pdfUrnString))
 
             utsending = utsendingRepository.hent(oppgaveId)
-            utsending.tilstand().type shouldBe AvventerMidlertidigJournalføring
+            utsending.tilstand().type shouldBe AvventerJournalføring
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
-
             rapid.inspektør.size shouldBe 2
             rapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
                 //language=JSON
@@ -122,14 +119,7 @@ class UtsendingMediatorTest {
                 }
                 """.trimIndent()
 
-            utsendingMediator.mottaMidleridigJournalpost(
-                MidlertidigJournalpostHendelse(oppgaveId, journalpostId = "123"),
-            )
-            utsending = utsendingRepository.hent(oppgaveId)
-            utsending.tilstand().type shouldBe AvventerJournalføring
-            utsending.journalpostId() shouldBe "123"
-            rapid.inspektør.size shouldBe 2
-
+            // todo skal få løsning om journalpost på rapid
             utsendingMediator.mottaJournalpost(
                 JournalpostHendelse(oppgaveId, journalpostId = "123"),
             )

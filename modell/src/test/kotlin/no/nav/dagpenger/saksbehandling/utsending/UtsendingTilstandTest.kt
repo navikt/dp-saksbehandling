@@ -10,7 +10,6 @@ import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -34,11 +33,6 @@ class UtsendingTilstandTest {
         val pdfUrn = URN.rfc8141().parse("urn:pdf:123456")
         utsending.mottaUrnTilArkiverbartFormatAvBrev(ArkiverbartBrevHendelse(oppgaveId, pdfUrn = pdfUrn))
         utsending.pdfUrn() shouldBe pdfUrn
-        utsending.tilstand() shouldBe Utsending.AvventerMidlertidigJournalføring
-
-        val midlertidigJournalpostHendelse = MidlertidigJournalpostHendelse(oppgaveId, journalpostId = "123456")
-        utsending.mottaMidlertidigJournalpost(midlertidigJournalpostHendelse)
-        utsending.journalpostId() shouldBe midlertidigJournalpostHendelse.journalpostId
         utsending.tilstand() shouldBe Utsending.AvventerJournalføring
 
         val journalpostHendelse = JournalpostHendelse(oppgaveId, journalpostId = "123456")
