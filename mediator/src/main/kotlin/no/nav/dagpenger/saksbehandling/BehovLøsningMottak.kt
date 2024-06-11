@@ -7,7 +7,6 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteri
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
-import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
@@ -35,19 +34,6 @@ class BehovLøsningMottak(
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
-    override fun onError(
-        problems: MessageProblems,
-        context: MessageContext,
-    ) {
-        super.onError(problems, context)
-    }
-
-    override fun onSevere(
-        error: MessageProblems.MessageException,
-        context: MessageContext,
-    ) {
-        super.onSevere(error, context)
-    }
 
     override fun onPacket(
         packet: JsonMessage,
