@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 class OppgaveTilstandTest {
     private val oppgaveId = UUIDv7.ny()
     private val testIdent = "12345699999"
-    private val sakId = VedtakFattetHendelse.SakId("12342", "Arena")
+    private val sak = Sak("12342", "Arena")
 
     @Test
     fun `Skal på nytt kunne tildele en tildelt oppgave til samme saksbehandler`() {
@@ -71,7 +71,7 @@ class OppgaveTilstandTest {
                     behandlingId = oppgave.behandlingId,
                     søknadId = UUIDv7.ny(),
                     ident = testIdent,
-                    sakId = sakId,
+                    sak = sak,
                 ),
             )
             oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
@@ -85,7 +85,7 @@ class OppgaveTilstandTest {
                         behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
-                        sakId = sakId,
+                        sak = sak,
                     ),
                 )
             }
@@ -101,7 +101,7 @@ class OppgaveTilstandTest {
                 behandlingId = UUIDv7.ny(),
                 søknadId = UUIDv7.ny(),
                 ident = "risus",
-                sakId = sakId,
+                sak = sak,
             )
         oppgave.startUtsending(vedtakFattetHendelse)
 

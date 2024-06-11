@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
@@ -13,6 +14,11 @@ internal class UtsendingMottakTest {
     private val testIdent = "12345678901"
     private val behandlingId = UUIDv7.ny()
     private val oppgaveId = UUIDv7.ny()
+    private val sak =
+        Sak(
+            id = "sakId",
+            kontekst = "fagsystem",
+        )
     private val testRapid = TestRapid()
     private val utsendingMediatorMock = mockk<UtsendingMediator>(relaxed = true)
 
@@ -28,6 +34,7 @@ internal class UtsendingMottakTest {
                 oppgaveId = oppgaveId,
                 behandlingId = behandlingId,
                 ident = testIdent,
+                sak = sak,
             )
         verify(exactly = 1) {
             utsendingMediatorMock.mottaStartUtsending(startUtsendingHendelse)
@@ -41,19 +48,9 @@ internal class UtsendingMottakTest {
           "oppgaveId": "$oppgaveId",
           "behandlingId": "$behandlingId",
           "ident": "$testIdent",
-          "@id": "34ae352f-fa37-4552-820f-377dfa671987",
-          "@opprettet": "2024-06-06T11:02:15.443504",
-          "system_read_count": 0,
-          "system_participating_services": [
-            {
-              "id": "34ae352f-fa37-4552-820f-377dfa671987",
-              "time": "2024-06-06T11:02:15.443504"
-            }
-          ],
-          "@forårsaket_av": {
-            "id": "0a1ca5e8-e27e-46d3-aa46-6ab7907de324",
-            "opprettet": "2024-06-06T11:02:15.155003",
-            "event_name": "vedtak_fattet"
+          "sak": {
+              "id": "${sak.id}",
+              "kontekst": "${sak.kontekst}"
           }
         }
         """

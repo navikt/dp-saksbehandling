@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import de.slub.urn.URN
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.toUrnOrNull
@@ -13,6 +14,7 @@ import java.util.UUID
 data class Utsending(
     val id: UUID = UUIDv7.ny(),
     val oppgaveId: UUID,
+    private var sak: Sak? = null,
     private var brev: String? = null,
     private var pdfUrn: URN? = null,
     private var journalpostId: String? = null,
@@ -26,6 +28,8 @@ data class Utsending(
 
     fun tilstand() = tilstand
 
+    fun sak() = sak
+
     companion object {
         fun rehydrer(
             id: UUID,
@@ -34,6 +38,7 @@ data class Utsending(
             brev: String?,
             pdfUrn: String?,
             journalpostId: String?,
+            sak: Sak?,
         ): Utsending {
             return Utsending(
                 id = id,
@@ -42,6 +47,7 @@ data class Utsending(
                 brev = brev,
                 pdfUrn = pdfUrn.toUrnOrNull(),
                 journalpostId = journalpostId,
+                sak = sak,
             )
         }
     }
@@ -87,6 +93,7 @@ data class Utsending(
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
             utsending.tilstand = AvventerArkiverbarVersjonAvBrev
+            utsending.sak = startUtsendingHendelse.sak
         }
     }
 

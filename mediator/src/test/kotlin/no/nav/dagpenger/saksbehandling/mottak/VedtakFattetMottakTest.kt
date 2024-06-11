@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
@@ -15,7 +16,7 @@ internal class VedtakFattetMottakTest {
     val testIdent = "12345678901"
     val søknadId = UUID.randomUUID()
     val behandlingId = UUID.randomUUID()
-    val sakId = VedtakFattetHendelse.SakId("12342", "Arena")
+    val sak = Sak("12342", "Arena")
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
 
     private val testRapid = TestRapid()
@@ -33,7 +34,7 @@ internal class VedtakFattetMottakTest {
                 behandlingId = behandlingId,
                 søknadId = søknadId,
                 ident = testIdent,
-                sakId = sakId,
+                sak = sak,
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
@@ -41,9 +42,9 @@ internal class VedtakFattetMottakTest {
         testRapid.inspektør.size shouldBe 1
         testRapid.inspektør.message(0).let { jsonNode ->
             jsonNode.path("@event_name").asText() shouldBe "start_utsending"
-            jsonNode["sakId"].let { sakIdNode ->
-                sakIdNode["id"].asText() shouldBe sakId.id
-                sakIdNode["kontekst"].asText() shouldBe sakId.kontekst
+            jsonNode["sak"].let { sakIdNode ->
+                sakIdNode["id"].asText() shouldBe sak.id
+                sakIdNode["kontekst"].asText() shouldBe sak.kontekst
             }
         }
     }

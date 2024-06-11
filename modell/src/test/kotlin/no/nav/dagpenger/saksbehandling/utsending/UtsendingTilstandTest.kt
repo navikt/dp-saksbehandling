@@ -4,6 +4,7 @@ import de.slub.urn.URN
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.toUrn
@@ -26,7 +27,14 @@ class UtsendingTilstandTest {
         utsending.brev() shouldBe "Dette er et vedtaksbrev"
         utsending.tilstand() shouldBe Utsending.VenterPåVedtak
 
-        utsending.startUtsending(StartUtsendingHendelse(oppgaveId, behandlingId = UUIDv7.ny(), ident = "12345678901"))
+        utsending.startUtsending(
+            StartUtsendingHendelse(
+                oppgaveId = oppgaveId,
+                behandlingId = UUIDv7.ny(),
+                ident = "12345678901",
+                sak = Sak(id = "sakId", kontekst = "fagsystem"),
+            ),
+        )
         utsending.tilstand() shouldBe Utsending.AvventerArkiverbarVersjonAvBrev
         utsending.tilstand().behov(utsending).shouldBeInstanceOf<ArkiverbartBrevBehov>()
 

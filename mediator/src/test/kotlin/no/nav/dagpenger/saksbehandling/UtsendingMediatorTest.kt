@@ -70,18 +70,25 @@ class UtsendingMediatorTest {
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe htmlBrev
 
+            val sak = Sak("sakId", "fagsystem")
             rapid.sendTestMessage(
+                //language=JSON
                 """
                 {
                     "@event_name": "start_utsending",
                     "oppgaveId": "$oppgaveId",
                     "behandlingId": "$behandlingId",
-                    "ident": "12345678901"
+                    "ident": "12345678901",
+                    "sak": {
+                        "id": "${sak.id}",
+                        "kontekst": "${sak.kontekst}"
+                    }
                 }
                 """,
             )
 
             utsending = utsendingRepository.hent(oppgaveId)
+            utsending.sak() shouldBe sak
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
 
             rapid.inspektør.size shouldBe 1

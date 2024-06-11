@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.utsending.db
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
@@ -16,9 +17,10 @@ class PostgresUtsendingRepositoryTest {
         withMigratedDb { ds ->
 
             val oppgaveId = lagreOppgaveOgBehandling(ds)
+            val sak = Sak("id", "fagsystem")
 
             val repository = PostgresUtsendingRepository(ds)
-            val utsending = Utsending(oppgaveId = oppgaveId)
+            val utsending = Utsending(oppgaveId = oppgaveId, sak = sak)
             repository.lagre(utsending)
 
             repository.hent(utsending.oppgaveId) shouldBe utsending
