@@ -4,19 +4,18 @@ import de.slub.urn.URN
 import java.util.Base64
 import java.util.UUID
 
-interface Behov {
-    val navn: String
-    val data: Map<String, Any>
-}
+sealed class Behov() {
+    abstract val oppgaveId: UUID
+    abstract val navn: String
+    protected abstract val data: Map<String, Any>
 
-abstract class AbstractBehov(open val oppgaveId: UUID) : Behov {
-    protected fun data() = mapOf("oppgaveId" to oppgaveId.toString())
+    fun data() = mapOf("oppgaveId" to oppgaveId.toString()) + data
 }
 
 data class ArkiverbartBrevBehov(
     override val oppgaveId: UUID,
     private val html: String,
-) : AbstractBehov(oppgaveId) {
+) : Behov() {
     companion object {
         const val BEHOV_NAVN = "ArkiverbartDokumentBehov"
     }
@@ -28,7 +27,7 @@ data class ArkiverbartBrevBehov(
         // TODO: Add more validation of html
     }
 
-    override val data: Map<String, Any> = data() + mapOf("html" to html.toBase64())
+    override val data: Map<String, Any> = mapOf("html" to html.toBase64())
 
     private fun String.toBase64() = Base64.getEncoder().encodeToString(this.toByteArray(Charsets.UTF_8))
 }
@@ -36,28 +35,30 @@ data class ArkiverbartBrevBehov(
 data class JournalføringBehov(
     override val oppgaveId: UUID,
     private val pdfUrn: URN,
-) : AbstractBehov(oppgaveId) {
+) : Behov() {
     companion object {
         const val BEHOV_NAVN = "JournalføringBehov"
     }
 
     override val navn: String = BEHOV_NAVN
-    override val data: Map<String, Any> = data() + mapOf("pdfUrn" to pdfUrn.toString())
+    override val data: Map<String, Any> = mapOf("pdfUrn" to pdfUrn.toString())
 }
 
 data class DistribueringBehov(
     override val oppgaveId: UUID,
     private val journalpostId: String,
-) : AbstractBehov(oppgaveId) {
+) : Behov() {
     companion object {
         const val BEHOV_NAVN = "DistribueringBehov"
     }
 
     override val navn: String = BEHOV_NAVN
-    override val data: Map<String, Any> = data() + mapOf("journalpostId" to journalpostId)
+    override val data: Map<String, Any> = mapOf("journalpostId" to journalpostId)
 }
 
-object IngenBehov : Behov {
+object IngenBehov : Behov() {
+    override val oppgaveId: UUID
+        get() = throw NotImplementedError("Ingen behov har ingen oppgaveId")
     override val navn = "IngenBehov"
     override val data = emptyMap<String, Any>()
 }

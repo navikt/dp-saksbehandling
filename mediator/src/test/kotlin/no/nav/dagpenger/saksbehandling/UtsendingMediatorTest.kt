@@ -13,9 +13,9 @@ import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -119,13 +119,12 @@ class UtsendingMediatorTest {
                 }
                 """.trimIndent()
 
-            // todo skal få løsning om journalpost på rapid
-            utsendingMediator.mottaJournalpost(
-                JournalpostHendelse(oppgaveId, journalpostId = "123"),
-            )
+            val journalpostId = "123"
+            rapid.sendTestMessage(journalføringBehovLøsning(oppgaveId, journalpostId))
+
             utsending = utsendingRepository.hent(oppgaveId)
             utsending.tilstand().type shouldBe AvventerDistribuering
-            utsending.journalpostId() shouldBe "123"
+            utsending.journalpostId() shouldBe journalpostId
             rapid.inspektør.size shouldBe 3
             rapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
                 //language=JSON
@@ -139,6 +138,18 @@ class UtsendingMediatorTest {
                   "oppgaveId": "$oppgaveId"
                 }
                 """.trimIndent()
+
+            val distribueringId = "distribueringId"
+            rapid.sendTestMessage(
+                distribuertDokumentBehovLøsning(
+                    oppgaveId = oppgaveId,
+                    journalpostId = journalpostId,
+                    distribueringId = distribueringId,
+                ),
+            )
+            utsending = utsendingRepository.hent(oppgaveId)
+            utsending.tilstand().type shouldBe Distribuert
+            // utsending.distribueringId() shouldBe distribueringId
         }
     }
 
@@ -148,6 +159,47 @@ class UtsendingMediatorTest {
         val repository = PostgresOppgaveRepository(dataSource)
         repository.lagre(oppgave)
         return Pair(oppgave.oppgaveId, behandling.behandlingId)
+    }
+
+    private fun journalføringBehovLøsning(
+        oppgaveUUID: UUID,
+        journalpostId: String,
+    ): String {
+        return """
+               {
+              "@event_name": "behov",
+              "oppgaveId": "$oppgaveUUID",
+              "@behov": ["${JournalføringBehov.BEHOV_NAVN}"],
+              "@løsning": {
+                "JournalføringBehov": {
+                    "journalpostId": "$journalpostId"
+                }
+              }
+            }
+            """.trimIndent()
+    }
+
+    private fun distribuertDokumentBehovLøsning(
+        oppgaveId: UUID,
+        journalpostId: String,
+        distribueringId: String,
+    ): String {
+        //language=JSON
+        return """
+            {
+              "@event_name": "behov",
+              "oppgaveId": "$oppgaveId",
+              "journalpostId": "$journalpostId",
+              "@behov": [
+                "${DistribueringBehov.BEHOV_NAVN}"
+              ],
+              "@løsning": {
+                "DistribueringBehov": {
+                  "distribueringId": "$distribueringId"
+                }
+              }
+            }
+            """.trimIndent()
     }
 
     //language=JSON

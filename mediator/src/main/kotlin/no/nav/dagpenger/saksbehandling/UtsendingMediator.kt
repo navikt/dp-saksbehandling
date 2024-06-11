@@ -53,6 +53,6 @@ class UtsendingMediator(private val repository: UtsendingRepository, private val
         val behov = utsending.tilstand().behov(utsending)
         if (behov is IngenBehov) return
 
-        rapidsConnection.publish(JsonMessage.newNeed(setOf(behov.navn), behov.data).toJson())
+        rapidsConnection.publish(JsonMessage.newNeed(setOf(behov.navn), behov.data()).toJson())
     }
 }

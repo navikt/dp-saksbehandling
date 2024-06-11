@@ -4,8 +4,10 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
+import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
@@ -33,15 +35,33 @@ class BehovLøsningMottak(
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+    ) {
+        super.onError(problems, context)
+    }
+
+    override fun onSevere(
+        error: MessageProblems.MessageException,
+        context: MessageContext,
+    ) {
+        super.onSevere(error, context)
+    }
+
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
     ) {
-        val typeLøsning: String = packet.get("@behov").first().asText()
+        val typeLøsning = packet.get("@behov").first().asText()
 
         when (typeLøsning) {
             "ArkiverbartDokumentBehov" -> {
                 utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
+            }
+
+            "JournalføringBehov" -> {
+                utsendingMediator.mottaJournalpost(packet.journalførtLøsning())
             }
 
             "DistribueringBehov" -> {
@@ -49,16 +69,23 @@ class BehovLøsningMottak(
             }
 
             else -> {
-                logger.info { "Fått løsning for $typeLøsning" }
+                throw IllegalStateException("Ukjent behov: $typeLøsning")
             }
         }
     }
 }
 
+private fun JsonMessage.journalførtLøsning(): JournalpostHendelse {
+    return JournalpostHendelse(
+        oppgaveId = this["oppgaveId"].asUUID(),
+        journalpostId = this["@løsning"]["JournalføringBehov"]["journalpostId"].asText(),
+    )
+}
+
 private fun JsonMessage.distribuertKvittering(): DistribueringKvitteringHendelse {
     return DistribueringKvitteringHendelse(
         oppgaveId = this["oppgaveId"].asUUID(),
-        distribueringId = this["@løsning"]["distribueringId"].asText(),
+        distribueringId = this["@løsning"]["DistribueringBehov"]["distribueringId"].asText(),
         journalpostId = this["journalpostId"].asText(),
     )
 }
