@@ -18,7 +18,7 @@ internal class VedtakFattetMottak(
     companion object {
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "vedtak_fattet") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId", "sakId") }
         }
     }
 
@@ -33,6 +33,7 @@ internal class VedtakFattetMottak(
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
+        val sakId = packet.sakId()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak fattet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
@@ -42,6 +43,7 @@ internal class VedtakFattetMottak(
                         behandlingId = behandlingId,
                         søknadId = søknadId,
                         ident = ident,
+                        sakId = sakId,
                     ),
                 )
 
@@ -53,9 +55,17 @@ internal class VedtakFattetMottak(
                             "oppgaveId" to oppgave.oppgaveId.toString(),
                             "behandlingId" to oppgave.behandlingId.toString(),
                             "ident" to oppgave.ident,
+                            "sakId" to sakId.toMap(),
                         ),
                 ).toJson(),
             )
         }
     }
+}
+
+private fun JsonMessage.sakId(): VedtakFattetHendelse.SakId {
+    return VedtakFattetHendelse.SakId(
+        id = this["sakId"]["id"].asText(),
+        kontekst = this["sakId"]["kontekst"].asText(),
+    )
 }

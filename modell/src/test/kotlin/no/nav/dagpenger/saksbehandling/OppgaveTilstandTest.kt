@@ -24,6 +24,7 @@ import java.time.LocalDateTime
 class OppgaveTilstandTest {
     private val oppgaveId = UUIDv7.ny()
     private val testIdent = "12345699999"
+    private val sakId = VedtakFattetHendelse.SakId("12342", "Arena")
 
     @Test
     fun `Skal på nytt kunne tildele en tildelt oppgave til samme saksbehandler`() {
@@ -66,7 +67,12 @@ class OppgaveTilstandTest {
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
             oppgave.ferdigstill(
-                VedtakFattetHendelse(behandlingId = oppgave.behandlingId, søknadId = UUIDv7.ny(), ident = testIdent),
+                VedtakFattetHendelse(
+                    behandlingId = oppgave.behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    ident = testIdent,
+                    sakId = sakId,
+                ),
             )
             oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
         }
@@ -75,7 +81,12 @@ class OppgaveTilstandTest {
             val oppgave = lagOppgave(tilstand)
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
-                    VedtakFattetHendelse(behandlingId = oppgave.behandlingId, søknadId = UUIDv7.ny(), ident = testIdent),
+                    VedtakFattetHendelse(
+                        behandlingId = oppgave.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                        sakId = sakId,
+                    ),
                 )
             }
         }
@@ -85,7 +96,13 @@ class OppgaveTilstandTest {
     fun `Skal gå fra UnderBehandling til AvventerUtsending`() {
         val saksbehandlerIdent = "saksbehandlerIdent"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
-        val vedtakFattetHendelse = VedtakFattetHendelse(behandlingId = UUIDv7.ny(), søknadId = UUIDv7.ny(), ident = "risus")
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = UUIDv7.ny(),
+                søknadId = UUIDv7.ny(),
+                ident = "risus",
+                sakId = sakId,
+            )
         oppgave.startUtsending(vedtakFattetHendelse)
 
         oppgave.tilstand().type shouldBe AVVENTER_UTSENDING

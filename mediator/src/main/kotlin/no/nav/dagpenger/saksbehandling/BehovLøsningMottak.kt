@@ -34,7 +34,6 @@ class BehovLøsningMottak(
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
-
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,

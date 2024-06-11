@@ -72,18 +72,26 @@ class BehovLøsningMottakTest {
         }
         """.trimIndent()
 
-    //language=JSON
     private fun distribuertDokumentBehovLøsning(
         oppgaveUUID: UUID,
         journalpostId: String,
         distribueringId: String,
-    ) = """
-        {
-          "@event_name": "behov",
-          "oppgaveId": "$oppgaveUUID",
-          "journalpostId": "$journalpostId",
-          "@behov": ["DistribueringBehov"],
-          "@løsning": { "distribueringId": "$distribueringId" }
-        }
-        """.trimIndent()
+    ): String {
+        //language=JSON
+        return """
+            {
+              "@event_name": "behov",
+              "oppgaveId": "$oppgaveUUID",
+              "journalpostId": "$journalpostId",
+              "@behov": [
+                "DistribueringBehov"
+              ],
+              "@løsning": {
+                "DistribueringBehov": {
+                  "distribueringId": "$distribueringId"
+                }
+              }
+            }
+            """.trimIndent()
+    }
 }

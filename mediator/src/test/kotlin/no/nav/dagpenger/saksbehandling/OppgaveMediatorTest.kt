@@ -29,6 +29,7 @@ import java.time.LocalDateTime
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
+    private val sakId = VedtakFattetHendelse.SakId("12342", "Arena")
     private val testRapid = TestRapid()
     private val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
     private val skjermingKlientMock = mockk<SkjermingKlient>(relaxed = true)
@@ -109,6 +110,7 @@ class OppgaveMediatorTest {
                     behandlingId = behandlingId,
                     søknadId = søknadId,
                     ident = testIdent,
+                    sakId = sakId,
                 )
 
             oppgaveMediator.ferdigstillOppgave(vedtakFattetHendelse).also { ferdigstiltOppgave ->
