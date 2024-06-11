@@ -5,9 +5,9 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.toUrnOrNull
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.UtsendingKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import java.util.UUID
 
@@ -70,8 +70,8 @@ data class Utsending(
         tilstand.mottaJournalpost(this, journalpostHendelse)
     }
 
-    fun mottaKvitteringPåUtsending(utsendingKvitteringHendelse: UtsendingKvitteringHendelse) {
-        tilstand.mottaKvitteringPåUtsending(this, utsendingKvitteringHendelse)
+    fun mottaDistribueringKvittering(distribueringKvitteringHendelse: DistribueringKvitteringHendelse) {
+        tilstand.mottaKvitteringPåUtsending(this, distribueringKvitteringHendelse)
     }
 
     object Opprettet : Tilstand {
@@ -156,17 +156,15 @@ data class Utsending(
         override fun behov(utsending: Utsending): Behov {
             return DistribueringBehov(
                 oppgaveId = utsending.oppgaveId,
-                pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
+                journalpostId = utsending.journalpostId ?: throw IllegalStateException("journalpostId mangler"),
             )
         }
 
         override fun mottaKvitteringPåUtsending(
             utsending: Utsending,
-            utsendingKvitteringHendelse: UtsendingKvitteringHendelse,
+            distribueringKvitteringHendelse: DistribueringKvitteringHendelse,
         ) {
-            if (utsendingKvitteringHendelse.utsendingId != utsending.id) {
-                // TODO: Sanity check av noe slag
-            }
+            // TODO: Sanity check av noe slag
             utsending.tilstand = Distribuert
         }
     }
@@ -208,7 +206,7 @@ data class Utsending(
 
         fun mottaKvitteringPåUtsending(
             utsending: Utsending,
-            utsendingKvitteringHendelse: UtsendingKvitteringHendelse,
+            distribueringKvitteringHendelse: DistribueringKvitteringHendelse,
         ) {
             throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på utsending i tilstand: ${this.type}")
         }

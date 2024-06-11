@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -20,7 +21,6 @@ class BehovLøsningMottakTest {
             rapidsConnection = testRapid,
         )
 
-        //language=JSON
         testRapid.sendTestMessage(arkiverbartDokumentBehovLosning(oppgaveUUID))
 
         verify(exactly = 1) {
@@ -32,7 +32,6 @@ class BehovLøsningMottakTest {
             )
         }
 
-        //language=JSON
         val journalPostId = "jp1"
         testRapid.sendTestMessage(nyJournalpostLøsning(oppgaveUUID, journalPostId))
 
@@ -40,6 +39,24 @@ class BehovLøsningMottakTest {
             mediator.mottaMidleridigJournalpost(
                 MidlertidigJournalpostHendelse(
                     oppgaveId = oppgaveUUID,
+                    journalpostId = journalPostId,
+                ),
+            )
+        }
+
+        val distribusjonId = "distribusjonId"
+        testRapid.sendTestMessage(
+            distribuertDokumentBehovLøsning(
+                oppgaveUUID = oppgaveUUID,
+                journalpostId = journalPostId,
+                distribueringId = distribusjonId,
+            ),
+        )
+        verify(exactly = 1) {
+            mediator.mottaDistribueringKvittering(
+                DistribueringKvitteringHendelse(
+                    oppgaveId = oppgaveUUID,
+                    distribueringId = distribusjonId,
                     journalpostId = journalPostId,
                 ),
             )
@@ -82,6 +99,21 @@ class BehovLøsningMottakTest {
               "urn": "urn:saksbehandling:$oppgaveUUID"
             }
           }
+        }
+        """.trimIndent()
+
+    //language=JSON
+    private fun distribuertDokumentBehovLøsning(
+        oppgaveUUID: UUID,
+        journalpostId: String,
+        distribueringId: String,
+    ) = """
+        {
+          "@event_name": "behov",
+          "oppgaveId": "$oppgaveUUID",
+          "journalpostId": "$journalpostId",
+          "@behov": ["DistribueringBehov"],
+          "@løsning": { "distribueringId": "$distribueringId" }
         }
         """.trimIndent()
 }

@@ -47,14 +47,14 @@ data class JournalføringBehov(
 
 data class DistribueringBehov(
     override val oppgaveId: UUID,
-    private val pdfUrn: URN,
+    private val journalpostId: String,
 ) : AbstractBehov(oppgaveId) {
     companion object {
         const val BEHOV_NAVN = "DistribueringBehov"
     }
 
     override val navn: String = BEHOV_NAVN
-    override val data: Map<String, Any> = data() + mapOf("pdfUrn" to pdfUrn.toString())
+    override val data: Map<String, Any> = data() + mapOf("journalpostId" to journalpostId)
 }
 
 object IngenBehov : Behov {

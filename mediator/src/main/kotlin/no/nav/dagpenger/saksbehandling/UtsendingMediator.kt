@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.utsending.IngenBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
@@ -41,6 +42,12 @@ class UtsendingMediator(private val repository: UtsendingRepository, private val
     fun mottaJournalpost(journalpostHendelse: JournalpostHendelse) {
         val utsending = repository.hent(journalpostHendelse.oppgaveId)
         utsending.mottaJournalpost(journalpostHendelse)
+        lagreOgPubliserBehov(utsending)
+    }
+
+    fun mottaDistribueringKvittering(distribueringKvitteringHendelse: DistribueringKvitteringHendelse) {
+        val utsending = repository.hent(distribueringKvitteringHendelse.oppgaveId)
+        utsending.mottaDistribueringKvittering(distribueringKvitteringHendelse)
         lagreOgPubliserBehov(utsending)
     }
 

@@ -8,9 +8,9 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.UtsendingKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -46,8 +46,13 @@ class UtsendingTilstandTest {
         utsending.journalpostId() shouldBe journalpostHendelse.journalpostId
         utsending.tilstand() shouldBe Utsending.AvventerDistribuering
 
-        val utsendingKvitteringHendelse = UtsendingKvitteringHendelse(utsendingId = UUIDv7.ny(), journalpostId = "123456")
-        utsending.mottaKvitteringPåUtsending(utsendingKvitteringHendelse)
+        val distribueringKvitteringHendelse =
+            DistribueringKvitteringHendelse(
+                oppgaveId = oppgaveId,
+                distribueringId = "distribueringId",
+                journalpostId = "123456",
+            )
+        utsending.mottaDistribueringKvittering(distribueringKvitteringHendelse)
         utsending.tilstand() shouldBe Utsending.Distribuert
     }
 

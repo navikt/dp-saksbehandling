@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.MidlertidigJournalpostHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
@@ -19,6 +20,7 @@ class BehovLøsningMottak(
             validate { it.demandValue("@event_name", "behov") }
             validate { it.requireKey("@løsning") }
             validate { it.requireKey("oppgaveId") }
+            validate { it.interestedIn("journalpostId") }
             validate {
                 it.requireAllOrAny(
                     "@behov",
@@ -48,7 +50,7 @@ class BehovLøsningMottak(
             }
 
             "DistribueringBehov" -> {
-                logger.info { "Fått løsning for DistribueringBehov" }
+                utsendingMediator.mottaDistribueringKvittering(packet.distribuertKvittering())
             }
 
             else -> {
@@ -56,6 +58,14 @@ class BehovLøsningMottak(
             }
         }
     }
+}
+
+private fun JsonMessage.distribuertKvittering(): DistribueringKvitteringHendelse {
+    return DistribueringKvitteringHendelse(
+        oppgaveId = this["oppgaveId"].asUUID(),
+        distribueringId = this["@løsning"]["distribueringId"].asText(),
+        journalpostId = this["journalpostId"].asText(),
+    )
 }
 
 private fun JsonMessage.nyJournalPost(): MidlertidigJournalpostHendelse {
