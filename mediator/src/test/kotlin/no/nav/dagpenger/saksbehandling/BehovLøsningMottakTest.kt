@@ -46,7 +46,7 @@ class BehovLøsningMottakTest {
             mediator.mottaDistribueringKvittering(
                 DistribueringKvitteringHendelse(
                     oppgaveId = oppgaveUUID,
-                    distribueringId = distribusjonId,
+                    distribusjonId = distribusjonId,
                     journalpostId = journalPostId,
                 ),
             )

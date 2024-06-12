@@ -4,6 +4,6 @@ import java.util.UUID
 
 data class DistribueringKvitteringHendelse(
     override val oppgaveId: UUID,
-    val distribueringId: String,
+    val distribusjonId: String,
     val journalpostId: String,
 ) : UtsendingHendelse

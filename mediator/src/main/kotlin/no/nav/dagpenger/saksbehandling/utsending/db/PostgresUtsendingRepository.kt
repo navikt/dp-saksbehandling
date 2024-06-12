@@ -26,14 +26,15 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         statement =
                             """
                             INSERT INTO utsending_v1
-                                (id, oppgave_id, tilstand, brev, pdf_urn, journalpost_id, sak_id) 
+                                (id, oppgave_id, tilstand, brev, pdf_urn, journalpost_id, distribusjon_id, sak_id) 
                             VALUES
-                                (:id, :oppgave_id, :tilstand, :brev, :pdf_urn, :journalpost_id, :sak_id) 
+                                (:id, :oppgave_id, :tilstand, :brev, :pdf_urn, :journalpost_id, :distribusjon_id, :sak_id) 
                             ON CONFLICT (id) DO UPDATE SET 
                                 tilstand = :tilstand,
                                 brev = :brev,
                                 pdf_urn = :pdf_urn,
                                 journalpost_id = :journalpost_id,
+                                distribusjon_id = :distribusjon_id,
                                 sak_id = :sak_id
                             """.trimIndent(),
                         paramMap =
@@ -44,6 +45,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                                 "brev" to utsending.brev(),
                                 "pdf_urn" to utsending.pdfUrn()?.toString(),
                                 "journalpost_id" to utsending.journalpostId(),
+                                "distribusjon_id" to utsending.distribusjonId(),
                                 "sak_id" to utsending.sak()?.id,
                             ),
                     ).asUpdate,
@@ -63,8 +65,15 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT  uts.id as utsending_id, uts.oppgave_id, uts.tilstand, uts.brev, uts.pdf_urn, uts.journalpost_id,
-                                sak.id as sak_id, sak.kontekst
+                        SELECT  uts.id as utsending_id, 
+                                uts.oppgave_id, 
+                                uts.tilstand, 
+                                uts.brev, 
+                                uts.pdf_urn, 
+                                uts.journalpost_id,
+                                uts.distribusjon_id,
+                                sak.id as sak_id, 
+                                sak.kontekst
                         FROM utsending_v1 uts
                         LEFT JOIN sak_v1 sak on uts.sak_id = sak.id
                         WHERE uts.oppgave_id = :oppgave_id
@@ -90,6 +99,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         brev = row.stringOrNull("brev"),
                         pdfUrn = row.stringOrNull("pdf_urn"),
                         journalpostId = row.stringOrNull("journalpost_id"),
+                        distribusjonId = row.stringOrNull("distribusjon_id"),
                         sak = sak,
                     )
                 }.asSingle,

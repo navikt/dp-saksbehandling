@@ -70,7 +70,7 @@ private fun JsonMessage.journalførtLøsning(): JournalpostHendelse {
 private fun JsonMessage.distribuertKvittering(): DistribueringKvitteringHendelse {
     return DistribueringKvitteringHendelse(
         oppgaveId = this["oppgaveId"].asUUID(),
-        distribueringId = this["@løsning"]["DistribueringBehov"]["distribueringId"].asText(),
+        distribusjonId = this["@løsning"]["DistribueringBehov"]["distribueringId"].asText(),
         journalpostId = this["journalpostId"].asText(),
     )
 }

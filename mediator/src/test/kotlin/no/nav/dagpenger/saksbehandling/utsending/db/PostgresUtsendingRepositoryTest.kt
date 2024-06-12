@@ -20,7 +20,8 @@ class PostgresUtsendingRepositoryTest {
             val sak = Sak("id", "fagsystem")
 
             val repository = PostgresUtsendingRepository(ds)
-            val utsending = Utsending(oppgaveId = oppgaveId, sak = sak)
+            val distribusjonId = "distribusjonId"
+            val utsending = Utsending(oppgaveId = oppgaveId, sak = sak, distribusjonId = distribusjonId)
             repository.lagre(utsending)
 
             repository.hent(utsending.oppgaveId) shouldBe utsending

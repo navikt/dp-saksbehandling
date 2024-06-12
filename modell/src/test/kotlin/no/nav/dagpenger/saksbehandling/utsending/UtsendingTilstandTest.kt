@@ -51,7 +51,7 @@ class UtsendingTilstandTest {
         val distribueringKvitteringHendelse =
             DistribueringKvitteringHendelse(
                 oppgaveId = oppgaveId,
-                distribueringId = "distribueringId",
+                distribusjonId = "distribueringId",
                 journalpostId = "123456",
             )
         utsending.mottaDistribueringKvittering(distribueringKvitteringHendelse)

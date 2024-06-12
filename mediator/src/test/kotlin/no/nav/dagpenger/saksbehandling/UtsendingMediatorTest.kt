@@ -146,17 +146,17 @@ class UtsendingMediatorTest {
                 }
                 """.trimIndent()
 
-            val distribueringId = "distribueringId"
+            val distribusjonId = "distribusjonId"
             rapid.sendTestMessage(
                 distribuertDokumentBehovLøsning(
                     oppgaveId = oppgaveId,
                     journalpostId = journalpostId,
-                    distribueringId = distribueringId,
+                    distribueringId = distribusjonId,
                 ),
             )
             utsending = utsendingRepository.hent(oppgaveId)
             utsending.tilstand().type shouldBe Distribuert
-            // utsending.distribueringId() shouldBe distribueringId
+            utsending.distribusjonId() shouldBe distribusjonId
         }
     }
 

@@ -18,6 +18,7 @@ data class Utsending(
     private var brev: String? = null,
     private var pdfUrn: URN? = null,
     private var journalpostId: String? = null,
+    private var distribusjonId: String? = null,
     private var tilstand: Tilstand = Opprettet,
 ) {
     fun brev(): String? = brev
@@ -25,6 +26,8 @@ data class Utsending(
     fun pdfUrn(): URN? = pdfUrn
 
     fun journalpostId(): String? = journalpostId
+
+    fun distribusjonId(): String? = distribusjonId
 
     fun tilstand() = tilstand
 
@@ -38,6 +41,7 @@ data class Utsending(
             brev: String?,
             pdfUrn: String?,
             journalpostId: String?,
+            distribusjonId: String?,
             sak: Sak?,
         ): Utsending {
             return Utsending(
@@ -47,6 +51,7 @@ data class Utsending(
                 brev = brev,
                 pdfUrn = pdfUrn.toUrnOrNull(),
                 journalpostId = journalpostId,
+                distribusjonId = distribusjonId,
                 sak = sak,
             )
         }
@@ -148,6 +153,7 @@ data class Utsending(
             distribueringKvitteringHendelse: DistribueringKvitteringHendelse,
         ) {
             // TODO: Sanity check av noe slag
+            utsending.distribusjonId = distribueringKvitteringHendelse.distribusjonId
             utsending.tilstand = Distribuert
         }
     }

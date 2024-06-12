@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS utsending_v1
     brev                 TEXT,
     pdf_urn              TEXT,
     journalpost_id       TEXT,
+    distribusjon_id      TEXT,
     sak_id               TEXT references sak_v1 (id),
     registrert_tidspunkt TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp),
     endret_tidspunkt     TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp)
