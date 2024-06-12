@@ -51,28 +51,6 @@ internal class VedtakFattetMottak(
                         sak = sak,
                     ),
                 )
-//            val oppgave =
-//                oppgaveMediator.ferdigstillOppgave(
-//                    VedtakFattetHendelse(
-//                        behandlingId = behandlingId,
-//                        søknadId = søknadId,
-//                        ident = ident,
-//                        sak = sak,
-//                    ),
-//                )
-
-//            context.publish(
-//                JsonMessage.newMessage(
-//                    map =
-//                    mapOf(
-//                        "@event_name" to "start_utsending",
-//                        "oppgaveId" to oppgave.oppgaveId.toString(),
-//                        "behandlingId" to oppgave.behandlingId.toString(),
-//                        "ident" to oppgave.ident,
-//                        "sak" to sak.toMap(),
-//                    ),
-//                ).toJson(),
-//            )
         }
     }
 }
