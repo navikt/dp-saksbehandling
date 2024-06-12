@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -19,13 +20,17 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
+import no.nav.dagpenger.saksbehandling.mottak.HubbaMottak
+import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
+import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
@@ -60,6 +65,7 @@ class OppgaveMediatorTest {
                 OppgaveMediator(repository = PostgresOppgaveRepository(datasource), rapidsConnection = testRapid)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
+            HubbaMottak(oppgaveMediator, testRapid)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
@@ -113,9 +119,31 @@ class OppgaveMediatorTest {
                     sak = sak,
                 )
 
-            oppgaveMediator.ferdigstillOppgave(vedtakFattetHendelse).also { ferdigstiltOppgave ->
-                ferdigstiltOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            oppgaveMediator.startUtsending(vedtakFattetHendelse)
+            val oppgaveMedUtsending = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            oppgaveMedUtsending.tilstand().type shouldBe AVVENTER_UTSENDING
+
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).let { jsonNode ->
+                jsonNode["@event_name"].asText() shouldBe "start_utsending"
+                jsonNode["oppgaveId"].asUUID() shouldBe oppgave.oppgaveId
+                jsonNode["behandlingId"].asUUID() shouldBe oppgave.behandlingId
+                jsonNode["ident"].asText() shouldBe oppgave.ident
+                jsonNode["sak"].let { sakIdNode ->
+                    sakIdNode["id"].asText() shouldBe sak.id
+                    sakIdNode["kontekst"].asText() shouldBe sak.kontekst
+                }
             }
+
+            testRapid.sendTestMessage(
+                distribuertDokumentBehovLøsning(
+                    oppgaveId = oppgave.oppgaveId,
+                    journalpostId = "mikkemus",
+                    distribusjonId = "distId",
+                ),
+            )
+            val ferdigstiltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            ferdigstiltOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
 
@@ -214,4 +242,28 @@ class OppgaveMediatorTest {
             oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT).size shouldBe 1
         }
     }
+}
+
+// TODO Slå sammen med tilsvarende fun i UtsendingMediatorTest
+private fun distribuertDokumentBehovLøsning(
+    oppgaveId: UUID,
+    journalpostId: String,
+    distribusjonId: String,
+): String {
+    //language=JSON
+    return """
+        {
+          "@event_name": "behov",
+          "oppgaveId": "$oppgaveId",
+          "journalpostId": "$journalpostId",
+          "@behov": [
+            "${DistribueringBehov.BEHOV_NAVN}"
+          ],
+          "@løsning": {
+            "DistribueringBehov": {
+              "distribueringId": "$distribusjonId"
+            }
+          }
+        }
+        """.trimIndent()
 }

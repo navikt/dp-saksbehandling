@@ -151,7 +151,7 @@ class UtsendingMediatorTest {
                 distribuertDokumentBehovLøsning(
                     oppgaveId = oppgaveId,
                     journalpostId = journalpostId,
-                    distribueringId = distribusjonId,
+                    distribusjonId = distribusjonId,
                 ),
             )
             utsending = utsendingRepository.hent(oppgaveId)
@@ -189,7 +189,7 @@ class UtsendingMediatorTest {
     private fun distribuertDokumentBehovLøsning(
         oppgaveId: UUID,
         journalpostId: String,
-        distribueringId: String,
+        distribusjonId: String,
     ): String {
         //language=JSON
         return """
@@ -202,7 +202,7 @@ class UtsendingMediatorTest {
               ],
               "@løsning": {
                 "DistribueringBehov": {
-                  "distribueringId": "$distribueringId"
+                  "distribueringId": "$distribusjonId"
                 }
               }
             }

@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -90,6 +91,16 @@ class OppgaveMediator(
         }
     }
 
+    fun ferdigstillOppgave(utsendingFerdigstiltHendelse: UtsendingFerdigstiltHendelse): Oppgave {
+        logger.info {
+            "Mottatt utsending ferdigstilt hendelse for behandling med id ${utsendingFerdigstiltHendelse.oppgaveId}. Oppgave ferdigstilt."
+        }
+        return hentOppgave(utsendingFerdigstiltHendelse.oppgaveId).also { oppgave ->
+            oppgave.ferdigstill(utsendingFerdigstiltHendelse)
+            lagre(oppgave)
+        }
+    }
+
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
         repository.slettBehandling(hendelse.behandlingId)
         logger.info { "Mottatt behandling avbrutt hendelse for behandling med id ${hendelse.behandlingId}. Behandling slettet." }
@@ -109,7 +120,10 @@ class OppgaveMediator(
                 JsonMessage.newMessage(
                     mapOf(
                         "@event_name" to "start_utsending",
-                        "oppgaveId" to oppgave.oppgaveId,
+                        "oppgaveId" to oppgave.oppgaveId.toString(),
+                        "behandlingId" to oppgave.behandlingId.toString(),
+                        "ident" to oppgave.ident,
+                        "sak" to vedtakFattetHendelse.sak.toMap(),
                     ),
                 ).toJson(),
             )
