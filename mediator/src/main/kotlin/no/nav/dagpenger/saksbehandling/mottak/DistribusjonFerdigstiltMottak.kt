@@ -9,8 +9,8 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
 class DistribusjonFerdigstiltMottak(
-    private val oppgaveMediator: OppgaveMediator,
     rapidsConnection: RapidsConnection,
+    private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}

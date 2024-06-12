@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid

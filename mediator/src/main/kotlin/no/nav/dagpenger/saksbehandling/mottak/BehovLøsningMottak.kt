@@ -1,7 +1,8 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.mottak
 
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
@@ -11,8 +12,8 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
 class BehovLøsningMottak(
-    private val utsendingMediator: UtsendingMediator,
     rapidsConnection: RapidsConnection,
+    private val utsendingMediator: UtsendingMediator,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}

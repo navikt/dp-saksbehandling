@@ -9,15 +9,20 @@ import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandling
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
+import no.nav.dagpenger.saksbehandling.mottak.DistribusjonFerdigstiltMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
+import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
+import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
-    private val repository = PostgresOppgaveRepository(PostgresDataSourceBuilder.dataSource)
+    private val oppgaveRepository = PostgresOppgaveRepository(PostgresDataSourceBuilder.dataSource)
+    private val utsendingRepository = PostgresUtsendingRepository(PostgresDataSourceBuilder.dataSource)
     private val skjermingHttpKlient =
         SkjermingHttpKlient(
             skjermingApiUrl = Configuration.skjermingApiUrl,
@@ -44,9 +49,13 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, skjermingHttpKlient, pdlKlient)
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
                 ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
+                UtsendingMottak(rapidsConnection, utsendingMediator)
+                DistribusjonFerdigstiltMottak(rapidsConnection, oppgaveMediator)
+                BehovLøsningMottak(rapidsConnection, utsendingMediator)
             }
 
-    private val oppgaveMediator = OppgaveMediator(repository, rapidsConnection)
+    private val oppgaveMediator = OppgaveMediator(oppgaveRepository, rapidsConnection)
+    private val utsendingMediator = UtsendingMediator(utsendingRepository, rapidsConnection)
 
     init {
         rapidsConnection.register(this)
