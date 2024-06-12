@@ -104,7 +104,8 @@ class UtsendingMediatorTest {
                      "${ArkiverbartBrevBehov.BEHOV_NAVN}"
                    ],
                    "html": "$htmlBrevAsBase64",
-                   "oppgaveId": "$oppgaveId"
+                   "oppgaveId": "$oppgaveId",
+                   "ident": "${oppgave.ident}"
                 }
                 """.trimIndent()
 

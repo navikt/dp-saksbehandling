@@ -112,6 +112,7 @@ data class Utsending(
             ArkiverbartBrevBehov(
                 oppgaveId = utsending.oppgaveId,
                 html = utsending.brev ?: throw IllegalStateException("Brev mangler"),
+                ident = utsending.ident,
             )
 
         override fun mottaUrnTilPdfAvBrev(

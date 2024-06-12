@@ -15,6 +15,7 @@ sealed class Behov() {
 data class ArkiverbartBrevBehov(
     override val oppgaveId: UUID,
     private val html: String,
+    private val ident: String,
 ) : Behov() {
     companion object {
         const val BEHOV_NAVN = "ArkiverbartDokumentBehov"
@@ -27,7 +28,11 @@ data class ArkiverbartBrevBehov(
         // TODO: Add more validation of html
     }
 
-    override val data: Map<String, Any> = mapOf("html" to html.toBase64())
+    override val data: Map<String, Any> =
+        mapOf(
+            "html" to html.toBase64(),
+            "ident" to ident,
+        )
 
     private fun String.toBase64() = Base64.getEncoder().encodeToString(this.toByteArray(Charsets.UTF_8))
 }
