@@ -3,13 +3,10 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.lagBehandling
-import no.nav.dagpenger.saksbehandling.db.lagOppgave
-import no.nav.dagpenger.saksbehandling.hendelser.arkiverbartDokumentBehovLøsning
-import no.nav.dagpenger.saksbehandling.hendelser.distribuertDokumentBehovLøsning
-import no.nav.dagpenger.saksbehandling.hendelser.journalføringBehovLøsning
-import no.nav.dagpenger.saksbehandling.hendelser.lagreOppgaveOgBehandling
+import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
+import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
+import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
+import no.nav.dagpenger.saksbehandling.helper.lagreOppgaveOgBehandling
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
@@ -24,8 +21,6 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.util.Base64
-import java.util.UUID
-import javax.sql.DataSource
 
 class UtsendingMediatorTest {
     private val rapid = TestRapid()
@@ -98,8 +93,8 @@ class UtsendingMediatorTest {
             rapid.inspektør.size shouldBe 1
             val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
             rapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
-                    //language=JSON
-                    """
+                //language=JSON
+                """
                 {
                    "@event_name": "behov",
                    "@behov": [
@@ -118,8 +113,8 @@ class UtsendingMediatorTest {
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
             rapid.inspektør.size shouldBe 2
             rapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
-                    //language=JSON
-                    """
+                //language=JSON
+                """
                 {
                   "@event_name": "behov",
                   "@behov": [
@@ -138,8 +133,8 @@ class UtsendingMediatorTest {
             utsending.journalpostId() shouldBe journalpostId
             rapid.inspektør.size shouldBe 3
             rapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
-                    //language=JSON
-                    """
+                //language=JSON
+                """
                 {
                   "@event_name": "behov",
                   "@behov": [
@@ -163,6 +158,4 @@ class UtsendingMediatorTest {
             utsending.distribusjonId() shouldBe distribusjonId
         }
     }
-
-
 }

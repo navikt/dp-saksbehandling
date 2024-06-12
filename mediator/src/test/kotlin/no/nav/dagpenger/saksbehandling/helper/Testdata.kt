@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.hendelser
+package no.nav.dagpenger.saksbehandling.helper
 
 import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagBehandling
@@ -7,7 +7,6 @@ import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import java.util.UUID
 import javax.sql.DataSource
-
 
 internal fun distribuertDokumentBehovLøsning(
     oppgaveId: UUID,
@@ -38,19 +37,18 @@ internal fun journalføringBehovLøsning(
 ): String {
 //language=JSON
     return """
-               {
-              "@event_name": "behov",
-              "oppgaveId": "$oppgaveUUID",
-              "@behov": ["${JournalføringBehov.BEHOV_NAVN}"],
-              "@løsning": {
-                "JournalføringBehov": {
-                    "journalpostId": "$journalpostId"
-                }
-              }
+           {
+          "@event_name": "behov",
+          "oppgaveId": "$oppgaveUUID",
+          "@behov": ["${JournalføringBehov.BEHOV_NAVN}"],
+          "@løsning": {
+            "JournalføringBehov": {
+                "journalpostId": "$journalpostId"
             }
-            """.trimIndent()
+          }
+        }
+        """.trimIndent()
 }
-
 
 internal fun arkiverbartDokumentBehovLøsning(
     oppgaveUUID: UUID,

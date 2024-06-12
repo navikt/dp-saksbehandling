@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.hendelser.lagreOppgaveOgBehandling
+import no.nav.dagpenger.saksbehandling.helper.lagreOppgaveOgBehandling
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -30,5 +30,4 @@ class PostgresUtsendingRepositoryTest {
             }
         }
     }
-
 }

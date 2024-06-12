@@ -18,7 +18,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.distribuertDokumentBehovLøsning
+import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.DistribusjonFerdigstiltMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
@@ -162,12 +162,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                ),
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
             )
             oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
@@ -208,12 +208,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                ),
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
             )
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
@@ -242,4 +242,3 @@ class OppgaveMediatorTest {
         }
     }
 }
-
