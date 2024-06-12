@@ -18,19 +18,18 @@ import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.mottak.DistribusjonFerdigstiltMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
-import no.nav.dagpenger.saksbehandling.mottak.HubbaMottak
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
-import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
@@ -65,7 +64,7 @@ class OppgaveMediatorTest {
                 OppgaveMediator(repository = PostgresOppgaveRepository(datasource), rapidsConnection = testRapid)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
-            HubbaMottak(oppgaveMediator, testRapid)
+            DistribusjonFerdigstiltMottak(oppgaveMediator, testRapid)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
@@ -163,12 +162,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
@@ -209,12 +208,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
@@ -244,26 +243,3 @@ class OppgaveMediatorTest {
     }
 }
 
-// TODO Slå sammen med tilsvarende fun i UtsendingMediatorTest
-private fun distribuertDokumentBehovLøsning(
-    oppgaveId: UUID,
-    journalpostId: String,
-    distribusjonId: String,
-): String {
-    //language=JSON
-    return """
-        {
-          "@event_name": "behov",
-          "oppgaveId": "$oppgaveId",
-          "journalpostId": "$journalpostId",
-          "@behov": [
-            "${DistribueringBehov.BEHOV_NAVN}"
-          ],
-          "@løsning": {
-            "DistribueringBehov": {
-              "distribueringId": "$distribusjonId"
-            }
-          }
-        }
-        """.trimIndent()
-}

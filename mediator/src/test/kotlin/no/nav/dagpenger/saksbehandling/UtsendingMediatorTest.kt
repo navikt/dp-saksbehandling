@@ -6,6 +6,10 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
+import no.nav.dagpenger.saksbehandling.hendelser.arkiverbartDokumentBehovLøsning
+import no.nav.dagpenger.saksbehandling.hendelser.distribuertDokumentBehovLøsning
+import no.nav.dagpenger.saksbehandling.hendelser.journalføringBehovLøsning
+import no.nav.dagpenger.saksbehandling.hendelser.lagreOppgaveOgBehandling
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
@@ -94,8 +98,8 @@ class UtsendingMediatorTest {
             rapid.inspektør.size shouldBe 1
             val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
             rapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
-                //language=JSON
-                """
+                    //language=JSON
+                    """
                 {
                    "@event_name": "behov",
                    "@behov": [
@@ -114,8 +118,8 @@ class UtsendingMediatorTest {
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
             rapid.inspektør.size shouldBe 2
             rapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
-                //language=JSON
-                """
+                    //language=JSON
+                    """
                 {
                   "@event_name": "behov",
                   "@behov": [
@@ -134,8 +138,8 @@ class UtsendingMediatorTest {
             utsending.journalpostId() shouldBe journalpostId
             rapid.inspektør.size shouldBe 3
             rapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
-                //language=JSON
-                """
+                    //language=JSON
+                    """
                 {
                   "@event_name": "behov",
                   "@behov": [
@@ -160,73 +164,5 @@ class UtsendingMediatorTest {
         }
     }
 
-    private fun lagreOppgaveOgBehandling(dataSource: DataSource): Pair<UUID, UUID> {
-        val behandling = lagBehandling()
-        val oppgave = lagOppgave()
-        val repository = PostgresOppgaveRepository(dataSource)
-        repository.lagre(oppgave)
-        return Pair(oppgave.oppgaveId, behandling.behandlingId)
-    }
 
-    private fun journalføringBehovLøsning(
-        oppgaveUUID: UUID,
-        journalpostId: String,
-    ): String {
-        return """
-               {
-              "@event_name": "behov",
-              "oppgaveId": "$oppgaveUUID",
-              "@behov": ["${JournalføringBehov.BEHOV_NAVN}"],
-              "@løsning": {
-                "JournalføringBehov": {
-                    "journalpostId": "$journalpostId"
-                }
-              }
-            }
-            """.trimIndent()
-    }
-
-    private fun distribuertDokumentBehovLøsning(
-        oppgaveId: UUID,
-        journalpostId: String,
-        distribusjonId: String,
-    ): String {
-        //language=JSON
-        return """
-            {
-              "@event_name": "behov",
-              "oppgaveId": "$oppgaveId",
-              "journalpostId": "$journalpostId",
-              "@behov": [
-                "${DistribueringBehov.BEHOV_NAVN}"
-              ],
-              "@løsning": {
-                "DistribueringBehov": {
-                  "distribueringId": "$distribusjonId"
-                }
-              }
-            }
-            """.trimIndent()
-    }
-
-    //language=JSON
-    private fun arkiverbartDokumentBehovLøsning(
-        oppgaveUUID: UUID,
-        pdfUrnString: String,
-    ) = """
-        {
-          "@event_name": "behov",
-          "oppgaveId": "$oppgaveUUID",
-          "@behov": ["ArkiverbartDokumentBehov"],
-          "@løsning": {
-            "ArkiverbartDokument": {
-              "metainfo": {
-                "filnavn": "netto.pdf",
-                "filtype": "PDF"
-              },
-              "urn": "$pdfUrnString"
-            }
-          }
-        }
-        """.trimIndent()
 }

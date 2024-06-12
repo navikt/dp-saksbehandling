@@ -8,7 +8,7 @@ import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
-class HubbaMottak(
+class DistribusjonFerdigstiltMottak(
     private val oppgaveMediator: OppgaveMediator,
     rapidsConnection: RapidsConnection,
 ) : River.PacketListener {
@@ -18,7 +18,6 @@ class HubbaMottak(
             validate { it.demandValue("@event_name", "behov") }
             validate { it.requireKey("@løsning") }
             validate { it.requireKey("oppgaveId") }
-            validate { it.interestedIn("journalpostId") }
             validate {
                 it.requireAllOrAny(
                     "@behov",
@@ -37,6 +36,7 @@ class HubbaMottak(
         context: MessageContext,
     ) {
         val oppgaveId = packet["oppgaveId"].asUUID()
+        logger.info { "Mottok distribusjon ferdigstilt for oppgave $oppgaveId" }
         oppgaveMediator.ferdigstillOppgave(utsendingFerdigstiltHendelse = UtsendingFerdigstiltHendelse(oppgaveId))
     }
 }

@@ -4,19 +4,17 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.lagOppgave
+import no.nav.dagpenger.saksbehandling.hendelser.lagreOppgaveOgBehandling
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import org.junit.jupiter.api.Test
 import java.util.UUID
-import javax.sql.DataSource
 
 class PostgresUtsendingRepositoryTest {
     @Test
     fun `lagring og henting av utsending`() {
         withMigratedDb { ds ->
 
-            val oppgaveId = lagreOppgaveOgBehandling(ds)
+            val oppgaveId = lagreOppgaveOgBehandling(ds).first
             val sak = Sak("id", "fagsystem")
 
             val repository = PostgresUtsendingRepository(ds)
@@ -33,10 +31,4 @@ class PostgresUtsendingRepositoryTest {
         }
     }
 
-    private fun lagreOppgaveOgBehandling(dataSource: DataSource): UUID {
-        val oppgave = lagOppgave()
-        val repository = PostgresOppgaveRepository(dataSource)
-        repository.lagre(oppgave)
-        return oppgave.oppgaveId
-    }
 }
