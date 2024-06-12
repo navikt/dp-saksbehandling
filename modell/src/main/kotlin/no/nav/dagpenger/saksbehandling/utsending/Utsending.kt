@@ -14,6 +14,7 @@ import java.util.UUID
 data class Utsending(
     val id: UUID = UUIDv7.ny(),
     val oppgaveId: UUID,
+    val ident: String,
     private var sak: Sak? = null,
     private var brev: String? = null,
     private var pdfUrn: URN? = null,
@@ -37,6 +38,7 @@ data class Utsending(
         fun rehydrer(
             id: UUID,
             oppgaveId: UUID,
+            ident: String,
             tilstand: Tilstand,
             brev: String?,
             pdfUrn: String?,
@@ -47,6 +49,7 @@ data class Utsending(
             return Utsending(
                 id = id,
                 oppgaveId = oppgaveId,
+                ident = ident,
                 tilstand = tilstand,
                 brev = brev,
                 pdfUrn = pdfUrn.toUrnOrNull(),

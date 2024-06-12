@@ -14,12 +14,18 @@ class PostgresUtsendingRepositoryTest {
     fun `lagring og henting av utsending`() {
         withMigratedDb { ds ->
 
-            val oppgaveId = lagreOppgave(ds).oppgaveId
+            val oppgave = lagreOppgave(ds)
             val sak = Sak("id", "fagsystem")
 
             val repository = PostgresUtsendingRepository(ds)
             val distribusjonId = "distribusjonId"
-            val utsending = Utsending(oppgaveId = oppgaveId, sak = sak, distribusjonId = distribusjonId)
+            val utsending =
+                Utsending(
+                    oppgaveId = oppgave.oppgaveId,
+                    sak = sak,
+                    ident = oppgave.ident,
+                    distribusjonId = distribusjonId,
+                )
             repository.lagre(utsending)
 
             repository.hent(utsending.oppgaveId) shouldBe utsending

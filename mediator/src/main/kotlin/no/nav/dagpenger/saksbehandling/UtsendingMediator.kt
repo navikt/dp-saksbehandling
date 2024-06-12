@@ -13,9 +13,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 
 class UtsendingMediator(private val repository: UtsendingRepository, private val rapidsConnection: RapidsConnection) {
     fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
-        val utsending =
-            repository.finnUtsendingFor(vedtaksbrevHendelse.oppgaveId)
-                ?: Utsending(oppgaveId = vedtaksbrevHendelse.oppgaveId)
+        val utsending = repository.hentEllerOpprettUtsending(vedtaksbrevHendelse.oppgaveId)
         utsending.mottaBrev(vedtaksbrevHendelse)
         lagreOgPubliserBehov(utsending)
     }

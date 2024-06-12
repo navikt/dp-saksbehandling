@@ -8,7 +8,11 @@ interface UtsendingRepository {
 
     fun hent(oppgaveId: UUID): Utsending
 
+    fun hentEllerOpprettUtsending(oppgaveId: UUID): Utsending
+
     fun finnUtsendingFor(oppgaveId: UUID): Utsending?
 }
 
 class UtsendingIkkeFunnet(message: String) : RuntimeException(message)
+
+class IdentIkkeFunnet(message: String) : RuntimeException(message)

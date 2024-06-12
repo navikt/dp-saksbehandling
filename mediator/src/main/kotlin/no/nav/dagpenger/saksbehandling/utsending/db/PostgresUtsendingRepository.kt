@@ -58,6 +58,10 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         return finnUtsendingFor(oppgaveId) ?: throw UtsendingIkkeFunnet("Fant ikke utsending for oppgaveId: $oppgaveId")
     }
 
+    override fun hentEllerOpprettUtsending(oppgaveId: UUID): Utsending {
+        return finnUtsendingFor(oppgaveId) ?: oppretteUtsending(oppgaveId)
+    }
+
     override fun finnUtsendingFor(oppgaveId: UUID): Utsending? {
         sessionOf(ds).use { session ->
             return session.run(
@@ -73,8 +77,12 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                                 uts.journalpost_id,
                                 uts.distribusjon_id,
                                 sak.id as sak_id, 
-                                sak.kontekst
+                                sak.kontekst,
+                                per.ident
                         FROM utsending_v1 uts
+                        JOIN oppgave_v1 opp on uts.oppgave_id = opp.id
+                        JOIN behandling_v1 beh on opp.behandling_id = beh.id
+                        JOIN person_v1 per on beh.person_id = per.id
                         LEFT JOIN sak_v1 sak on uts.sak_id = sak.id
                         WHERE uts.oppgave_id = :oppgave_id
                         """.trimIndent(),
@@ -95,6 +103,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                     Utsending.rehydrer(
                         id = row.uuid("utsending_id"),
                         oppgaveId = row.uuid("oppgave_id"),
+                        ident = row.string("ident"),
                         tilstand = tilstand,
                         brev = row.stringOrNull("brev"),
                         pdfUrn = row.stringOrNull("pdf_urn"),
@@ -104,6 +113,33 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                     )
                 }.asSingle,
             )
+        }
+    }
+
+    private fun oppretteUtsending(oppgaveId: UUID): Utsending {
+        return Utsending(
+            tilstand = Utsending.Opprettet,
+            oppgaveId = oppgaveId,
+            ident = hentIdentForOppgaveId(oppgaveId),
+        ).also { lagre(it) }
+    }
+
+    private fun hentIdentForOppgaveId(oppgaveId: UUID): String {
+        sessionOf(ds).use { session ->
+            return session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT per.ident
+                        FROM oppgave_v1 opp
+                        JOIN behandling_v1 beh on opp.behandling_id = beh.id
+                        JOIN person_v1 per on beh.person_id = per.id
+                        WHERE opp.id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row -> row.string("ident") }.asSingle,
+            ) ?: throw IdentIkkeFunnet("Fant ikke ident for oppgaveId: $oppgaveId")
         }
     }
 }
