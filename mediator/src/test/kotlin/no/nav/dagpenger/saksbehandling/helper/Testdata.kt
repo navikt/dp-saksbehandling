@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.helper
 
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.lagBehandling
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
@@ -73,10 +73,9 @@ internal fun arkiverbartDokumentBehovLøsning(
         """.trimIndent()
 }
 
-internal fun lagreOppgaveOgBehandling(dataSource: DataSource): Pair<UUID, UUID> {
-    val behandling = lagBehandling()
+internal fun lagreOppgave(dataSource: DataSource): Oppgave {
     val oppgave = lagOppgave()
     val repository = PostgresOppgaveRepository(dataSource)
     repository.lagre(oppgave)
-    return Pair(oppgave.oppgaveId, behandling.behandlingId)
+    return oppgave
 }

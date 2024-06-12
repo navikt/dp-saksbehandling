@@ -6,7 +6,7 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
-import no.nav.dagpenger.saksbehandling.helper.lagreOppgaveOgBehandling
+import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
@@ -29,7 +29,7 @@ class UtsendingMediatorTest {
     @Test
     fun `Vedtaksbrev starter utsendingen`() {
         withMigratedDb { datasource ->
-            val oppgaveId = lagreOppgaveOgBehandling(datasource).first
+            val oppgaveId = lagreOppgave(datasource).oppgaveId
             val utsendingRepository = PostgresUtsendingRepository(datasource)
             val utsendingMediator = UtsendingMediator(repository = utsendingRepository, rapidsConnection = rapid)
 
@@ -47,7 +47,9 @@ class UtsendingMediatorTest {
     @Test
     fun `livssyklus av en utsending`() {
         withMigratedDb { datasource ->
-            val (oppgaveId, behandlingId) = lagreOppgaveOgBehandling(datasource)
+            val oppgave = lagreOppgave(datasource)
+            val oppgaveId = oppgave.oppgaveId
+            val behandlingId = oppgave.behandlingId
 
             val utsendingRepository = PostgresUtsendingRepository(datasource)
             val utsendingMediator = UtsendingMediator(repository = utsendingRepository, rapidsConnection = rapid)
@@ -102,8 +104,7 @@ class UtsendingMediatorTest {
                      "${ArkiverbartBrevBehov.BEHOV_NAVN}"
                    ],
                    "html": "$htmlBrevAsBase64",
-                   "oppgaveId": "$oppgaveId",
-                   "ident" : "$o"
+                   "oppgaveId": "$oppgaveId"
                 }
                 """.trimIndent()
 
