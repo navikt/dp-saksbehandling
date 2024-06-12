@@ -20,7 +20,7 @@ class BehovLøsningMottakTest {
             rapidsConnection = testRapid,
         )
 
-        testRapid.sendTestMessage(arkiverbartDokumentBehovLosning(oppgaveUUID))
+        testRapid.sendTestMessage(arkiverbartDokumentBehovLøsning(oppgaveUUID))
 
         verify(exactly = 1) {
             mediator.mottaUrnTilArkiverbartFormatAvBrev(
@@ -54,7 +54,7 @@ class BehovLøsningMottakTest {
     }
 
     //language=JSON
-    private fun arkiverbartDokumentBehovLosning(oppgaveUUID: UUID) =
+    private fun arkiverbartDokumentBehovLøsning(oppgaveUUID: UUID) =
         """
         {
           "@event_name": "behov",

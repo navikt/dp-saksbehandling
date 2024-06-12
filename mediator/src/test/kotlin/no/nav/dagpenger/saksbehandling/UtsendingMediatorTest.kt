@@ -107,7 +107,7 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
-            rapid.sendTestMessage(arkiverbartDokumentBehovLosning(oppgaveId, pdfUrnString))
+            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(oppgaveId, pdfUrnString))
 
             utsending = utsendingRepository.hent(oppgaveId)
             utsending.tilstand().type shouldBe AvventerJournalføring
@@ -210,7 +210,7 @@ class UtsendingMediatorTest {
     }
 
     //language=JSON
-    private fun arkiverbartDokumentBehovLosning(
+    private fun arkiverbartDokumentBehovLøsning(
         oppgaveUUID: UUID,
         pdfUrnString: String,
     ) = """
