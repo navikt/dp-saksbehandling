@@ -14,7 +14,7 @@ class ArkiverbartBrevBehovTest {
     fun `data skal inneholde base64 enkodet html`() {
         val html = "<H1>Hugga</H1><p>bubba</p>"
         val behov = ArkiverbartBrevBehov(oppgaveId, html, ident)
-        behov.data()["html"].let { base64Html ->
+        behov.data()["htmlBase64"].let { base64Html ->
             Base64.decode(base64Html as String).toString(Charsets.UTF_8) shouldBe html
         }
     }

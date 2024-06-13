@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
@@ -21,19 +22,24 @@ class BehovLøsningMottakTest {
             rapidsConnection = testRapid,
         )
 
-        testRapid.sendTestMessage(arkiverbartDokumentBehovLøsning(oppgaveUUID))
+        val pdfUrn = "urn:pdf:1234".toUrn()
+        testRapid.sendTestMessage(
+            arkiverbartDokumentBehovLøsning(
+                oppgaveUUID = oppgaveUUID,
+                pdfUrnString = pdfUrn.toString(),
+            ),
+        )
 
         verify(exactly = 1) {
             mediator.mottaUrnTilArkiverbartFormatAvBrev(
                 ArkiverbartBrevHendelse(
                     oppgaveId = oppgaveUUID,
-                    pdfUrn = "urn:saksbehandling:$oppgaveUUID".toUrn(),
+                    pdfUrn = pdfUrn,
                 ),
             )
         }
 
         val journalPostId = "jp1"
-        // todo
 
         val distribusjonId = "distribusjonId"
         testRapid.sendTestMessage(
@@ -55,23 +61,6 @@ class BehovLøsningMottakTest {
     }
 
     //language=JSON
-    private fun arkiverbartDokumentBehovLøsning(oppgaveUUID: UUID) =
-        """
-        {
-          "@event_name": "behov",
-          "oppgaveId": "$oppgaveUUID",
-          "@behov": ["ArkiverbartDokumentBehov"],
-          "@løsning": {
-            "ArkiverbartDokument": {
-              "metainfo": {
-                "filnavn": "netto.pdf",
-                "filtype": "PDF"
-              },
-              "urn": "urn:saksbehandling:$oppgaveUUID"
-            }
-          }
-        }
-        """.trimIndent()
 
     private fun distribuertDokumentBehovLøsning(
         oppgaveUUID: UUID,

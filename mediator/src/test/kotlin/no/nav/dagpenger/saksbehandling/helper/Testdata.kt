@@ -61,10 +61,10 @@ internal fun arkiverbartDokumentBehovLøsning(
           "oppgaveId": "$oppgaveUUID",
           "@behov": ["ArkiverbartDokumentBehov"],
           "@løsning": {
-            "ArkiverbartDokument": {
+            "ArkiverbartDokumentBehov": {
               "metainfo": {
-                "filnavn": "netto.pdf",
-                "filtype": "PDF"
+                "dokumentNavn": "netto.pdf",
+                "dokumentType": "PDF"
               },
               "urn": "$pdfUrnString"
             }

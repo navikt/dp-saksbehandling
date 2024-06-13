@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.ARKIVERBART_DOKUMENT_BEHOV
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
@@ -17,6 +18,7 @@ class BehovLøsningMottak(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
+        const val ARKIVERBART_DOKUMENT_BEHOV = "ArkiverbartDokumentBehov"
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "behov") }
             validate { it.requireKey("@løsning") }
@@ -25,7 +27,7 @@ class BehovLøsningMottak(
             validate {
                 it.requireAllOrAny(
                     "@behov",
-                    listOf("ArkiverbartDokumentBehov", "JournalføringBehov", "DistribueringBehov"),
+                    listOf(ARKIVERBART_DOKUMENT_BEHOV, "JournalføringBehov", "DistribueringBehov"),
                 )
             }
         }
@@ -79,6 +81,6 @@ private fun JsonMessage.distribuertKvittering(): DistribueringKvitteringHendelse
 private fun JsonMessage.arkiverbartDokumentLøsning(): ArkiverbartBrevHendelse {
     return ArkiverbartBrevHendelse(
         oppgaveId = this["oppgaveId"].asUUID(),
-        pdfUrn = this["@løsning"]["ArkiverbartDokument"]["urn"].asText().toUrn(),
+        pdfUrn = this["@løsning"][ARKIVERBART_DOKUMENT_BEHOV]["urn"].asText().toUrn(),
     )
 }

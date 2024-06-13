@@ -30,8 +30,9 @@ data class ArkiverbartBrevBehov(
 
     override val data: Map<String, Any> =
         mapOf(
-            "html" to html.toBase64(),
+            "htmlBase64" to html.toBase64(),
             "ident" to ident,
+            "dokumentNavn" to "vedtak_$oppgaveId",
         )
 
     private fun String.toBase64() = Base64.getEncoder().encodeToString(this.toByteArray(Charsets.UTF_8))
