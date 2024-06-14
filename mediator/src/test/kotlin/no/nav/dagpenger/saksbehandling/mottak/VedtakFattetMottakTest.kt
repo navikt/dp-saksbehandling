@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -18,11 +19,24 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 internal class VedtakFattetMottakTest {
-    val testIdent = "12345678901"
-    val søknadId = UUID.randomUUID()
-    val behandlingId = UUID.randomUUID()
-    val sak = Sak("12342", "Arena")
-    val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
+    private val testIdent = "12345678901"
+    private val søknadId = UUID.randomUUID()
+    private val behandlingId = UUID.randomUUID()
+    private val sak = Sak("12342", "Arena")
+    private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
+    private val oppgave =
+        Oppgave(
+            oppgaveId = UUIDv7.ny(),
+            ident = testIdent,
+            behandlingId = behandlingId,
+            opprettet = opprettet,
+            behandling =
+                Behandling(
+                    behandlingId = behandlingId,
+                    person = Person(id = UUIDv7.ny(), ident = testIdent),
+                    opprettet = opprettet,
+                ),
+        )
 
     private val testRapid = TestRapid()
     private val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
@@ -32,20 +46,27 @@ internal class VedtakFattetMottakTest {
     }
 
     @Test
+    fun `Skal kunne håndtere vedtak uten sakId`() {
+        val slot = slot<VedtakFattetHendelse>()
+        every { oppgaveMediatorMock.ferdigstillOppgave(capture(slot)) } returns oppgave
+        testRapid.sendTestMessage(
+            """
+            {
+                "@event_name": "vedtak_fattet",
+                "ident": "$testIdent",
+                "søknadId": "$søknadId",
+                "behandlingId": "$behandlingId"
+            }
+            
+            """.trimIndent(),
+        )
+
+        slot.isCaptured shouldBe true
+        slot.captured.sak shouldBe Sak("ukjent", "ukjent")
+    }
+
+    @Test
     fun `Skal behandle vedtak fattet hendelse`() {
-        val oppgave =
-            Oppgave(
-                oppgaveId = UUIDv7.ny(),
-                ident = testIdent,
-                behandlingId = behandlingId,
-                opprettet = opprettet,
-                behandling =
-                    Behandling(
-                        behandlingId = behandlingId,
-                        person = Person(id = UUIDv7.ny(), ident = testIdent),
-                        opprettet = opprettet,
-                    ),
-            )
         every { oppgaveMediatorMock.ferdigstillOppgave(any()) } returns oppgave
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
@@ -55,6 +76,7 @@ internal class VedtakFattetMottakTest {
                 sakId = sak.id,
             ),
         )
+
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = behandlingId,

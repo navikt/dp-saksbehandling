@@ -9,6 +9,7 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import no.nav.helse.rapids_rivers.isMissingOrNull
 
 private val logger = KotlinLogging.logger {}
 
@@ -19,7 +20,8 @@ internal class VedtakFattetMottak(
     companion object {
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "vedtak_fattet") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId", "sakId") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId") }
+            validate { it.interestedIn("sakId") }
         }
     }
 
@@ -34,11 +36,7 @@ internal class VedtakFattetMottak(
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
-        val sak =
-            Sak(
-                id = packet["sakId"]["id"].asText(),
-                kontekst = packet["sakId"]["kontekst"].asText(),
-            )
+        val sak = packet.sak()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak fattet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
@@ -63,5 +61,18 @@ internal class VedtakFattetMottak(
                 ).toJson(),
             )
         }
+    }
+}
+
+private fun JsonMessage.sak(): Sak {
+    val sakId = this["sakId"]
+
+    return when (sakId.isMissingOrNull()) {
+        true -> Sak("ukjent", "ukjent")
+        false ->
+            Sak(
+                id = sakId["id"].asText(),
+                kontekst = sakId["kontekst"].asText(),
+            )
     }
 }
