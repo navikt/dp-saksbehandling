@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.IngenBehov
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
@@ -11,6 +12,8 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 
+private val logger = KotlinLogging.logger {}
+
 class UtsendingMediator(private val repository: UtsendingRepository, private val rapidsConnection: RapidsConnection) {
     fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
         val utsending = repository.hentEllerOpprettUtsending(vedtaksbrevHendelse.oppgaveId)
@@ -19,9 +22,17 @@ class UtsendingMediator(private val repository: UtsendingRepository, private val
     }
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
-        repository.finnUtsendingFor(startUtsendingHendelse.oppgaveId)?.let { utsending ->
+        val utsending = repository.finnUtsendingFor(startUtsendingHendelse.oppgaveId)
+        utsending?.let { utsending ->
             utsending.startUtsending(startUtsendingHendelse)
             lagreOgPubliserBehov(utsending)
+        }
+
+        if (utsending == null) {
+            logger.info {
+                "Fant ingen utsending for behandlingId:${startUtsendingHendelse.behandlingId}," +
+                        " oppgaveId=${startUtsendingHendelse.oppgaveId}."
+            }
         }
     }
 

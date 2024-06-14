@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.helse.rapids_rivers.RapidsConnection
 
-val logger = KotlinLogging.logger {}
+private val logger = KotlinLogging.logger {}
 
 class OppgaveMediator(
     private val repository: Repository,
@@ -56,7 +56,7 @@ class OppgaveMediator(
             null -> {
                 logger.warn {
                     "Fant ikke oppgave for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
-                        "Gjør derfor ingenting med hendelsen"
+                            "Gjør derfor ingenting med hendelsen"
                 }
             }
 
