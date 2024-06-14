@@ -6,8 +6,8 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.toUrnOrNull
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import java.util.UUID
 
@@ -61,7 +61,7 @@ data class Utsending(
     }
 
     fun startUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
-        tilstand.mottaStartUtsending(this, startUtsendingHendelse)
+        tilstand.mottaStartUtsendingHendelse(this, startUtsendingHendelse)
     }
 
     fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
@@ -74,12 +74,12 @@ data class Utsending(
         tilstand.mottaUrnTilPdfAvBrev(this, arkiverbartBrevHendelse)
     }
 
-    fun mottaJournalpost(journalpostHendelse: JournalpostHendelse) {
-        tilstand.mottaJournalpost(this, journalpostHendelse)
+    fun mottaJournalførtKvittering(journalførtHendelse: JournalførtHendelse) {
+        tilstand.mottaJournalførtKvittering(this, journalførtHendelse)
     }
 
-    fun mottaDistribueringKvittering(distribueringKvitteringHendelse: DistribueringKvitteringHendelse) {
-        tilstand.mottaKvitteringPåUtsending(this, distribueringKvitteringHendelse)
+    fun mottaDistribuertKvittering(distribuertHendelse: DistribuertHendelse) {
+        tilstand.mottaDistribuertKvittering(this, distribuertHendelse)
     }
 
     object Opprettet : Tilstand {
@@ -96,7 +96,7 @@ data class Utsending(
     object VenterPåVedtak : Tilstand {
         override val type = Tilstand.Type.VenterPåVedtak
 
-        override fun mottaStartUtsending(
+        override fun mottaStartUtsendingHendelse(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
@@ -133,11 +133,11 @@ data class Utsending(
             )
         }
 
-        override fun mottaJournalpost(
+        override fun mottaJournalførtKvittering(
             utsending: Utsending,
-            journalpostHendelse: JournalpostHendelse,
+            journalførtHendelse: JournalførtHendelse,
         ) {
-            utsending.journalpostId = journalpostHendelse.journalpostId
+            utsending.journalpostId = journalførtHendelse.journalpostId
             utsending.tilstand = AvventerDistribuering
         }
     }
@@ -152,12 +152,12 @@ data class Utsending(
             )
         }
 
-        override fun mottaKvitteringPåUtsending(
+        override fun mottaDistribuertKvittering(
             utsending: Utsending,
-            distribueringKvitteringHendelse: DistribueringKvitteringHendelse,
+            distribuertHendelse: DistribuertHendelse,
         ) {
             // TODO: Sanity check av noe slag
-            utsending.distribusjonId = distribueringKvitteringHendelse.distribusjonId
+            utsending.distribusjonId = distribuertHendelse.distribusjonId
             utsending.tilstand = Distribuert
         }
     }
@@ -180,28 +180,28 @@ data class Utsending(
             utsending: Utsending,
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
         ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta urn til pdf av brev i tilstand: ${this.type}")
+            throw UlovligUtsendingTilstandsendring("Kan ikke motta urn til arkiverbart brev i tilstand: ${this.type}")
         }
 
-        fun mottaJournalpost(
+        fun mottaJournalførtKvittering(
             utsending: Utsending,
-            journalpostHendelse: JournalpostHendelse,
+            journalførtHendelse: JournalførtHendelse,
         ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta journalpost i tilstand: ${this.type}")
+            throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på journalføring i tilstand: ${this.type}")
         }
 
-        fun mottaKvitteringPåUtsending(
+        fun mottaDistribuertKvittering(
             utsending: Utsending,
-            distribueringKvitteringHendelse: DistribueringKvitteringHendelse,
+            distribuertHendelse: DistribuertHendelse,
         ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på utsending i tilstand: ${this.type}")
+            throw UlovligUtsendingTilstandsendring("Kan ikke motta kvittering på distribusjon i tilstand: ${this.type}")
         }
 
-        fun mottaStartUtsending(
+        fun mottaStartUtsendingHendelse(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta vedtak i tilstand: ${this.type}")
+            throw UlovligUtsendingTilstandsendring("Kan ikke starte utsending i tilstand: ${this.type}")
         }
 
         val type: Type

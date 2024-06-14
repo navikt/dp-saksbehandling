@@ -10,7 +10,6 @@ import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
-import no.nav.dagpenger.saksbehandling.mottak.DistribusjonFerdigstiltMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
@@ -50,7 +49,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
                 ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
                 UtsendingMottak(rapidsConnection, utsendingMediator)
-                DistribusjonFerdigstiltMottak(rapidsConnection, oppgaveMediator)
                 BehovLøsningMottak(rapidsConnection, utsendingMediator)
             }
 

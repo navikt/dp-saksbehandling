@@ -5,7 +5,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -40,7 +40,6 @@ class BehovLøsningMottakTest {
         }
 
         val journalPostId = "jp1"
-
         val distribusjonId = "distribusjonId"
         testRapid.sendTestMessage(
             distribuertDokumentBehovLøsning(
@@ -50,8 +49,8 @@ class BehovLøsningMottakTest {
             ),
         )
         verify(exactly = 1) {
-            mediator.mottaDistribueringKvittering(
-                DistribueringKvitteringHendelse(
+            mediator.mottaDistribuertKvittering(
+                DistribuertHendelse(
                     oppgaveId = oppgaveUUID,
                     distribusjonId = distribusjonId,
                     journalpostId = journalPostId,
@@ -59,8 +58,6 @@ class BehovLøsningMottakTest {
             )
         }
     }
-
-    //language=JSON
 
     private fun distribuertDokumentBehovLøsning(
         oppgaveUUID: UUID,

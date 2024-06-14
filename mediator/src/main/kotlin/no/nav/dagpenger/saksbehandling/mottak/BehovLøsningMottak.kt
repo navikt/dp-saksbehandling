@@ -3,10 +3,12 @@ package no.nav.dagpenger.saksbehandling.mottak
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.ARKIVERBART_DOKUMENT_BEHOV
+import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.DISTRIBUERING_BEHOV
+import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.JOURNALFØRING_BEHOV
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -19,15 +21,18 @@ class BehovLøsningMottak(
     companion object {
         private val logger = KotlinLogging.logger {}
         const val ARKIVERBART_DOKUMENT_BEHOV = "ArkiverbartDokumentBehov"
+        const val JOURNALFØRING_BEHOV = "JournalføringBehov"
+        const val DISTRIBUERING_BEHOV = "DistribueringBehov"
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "behov") }
             validate { it.requireKey("@løsning") }
             validate { it.requireKey("oppgaveId") }
             validate { it.interestedIn("journalpostId") }
+            validate { it.interestedIn("urn") }
             validate {
                 it.requireAllOrAny(
                     "@behov",
-                    listOf(ARKIVERBART_DOKUMENT_BEHOV, "JournalføringBehov", "DistribueringBehov"),
+                    listOf(ARKIVERBART_DOKUMENT_BEHOV, JOURNALFØRING_BEHOV, DISTRIBUERING_BEHOV),
                 )
             }
         }
@@ -44,16 +49,16 @@ class BehovLøsningMottak(
         val typeLøsning = packet.get("@behov").first().asText()
 
         when (typeLøsning) {
-            "ArkiverbartDokumentBehov" -> {
+            ARKIVERBART_DOKUMENT_BEHOV -> {
                 utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
             }
 
-            "JournalføringBehov" -> {
-                utsendingMediator.mottaJournalpost(packet.journalførtLøsning())
+            JOURNALFØRING_BEHOV -> {
+                utsendingMediator.mottaJournalførtKvittering(packet.journalførtLøsning())
             }
 
-            "DistribueringBehov" -> {
-                utsendingMediator.mottaDistribueringKvittering(packet.distribuertKvittering())
+            DISTRIBUERING_BEHOV -> {
+                utsendingMediator.mottaDistribuertKvittering(packet.distribuertLøsning())
             }
 
             else -> {
@@ -63,17 +68,17 @@ class BehovLøsningMottak(
     }
 }
 
-private fun JsonMessage.journalførtLøsning(): JournalpostHendelse {
-    return JournalpostHendelse(
+private fun JsonMessage.journalførtLøsning(): JournalførtHendelse {
+    return JournalførtHendelse(
         oppgaveId = this["oppgaveId"].asUUID(),
-        journalpostId = this["@løsning"]["JournalføringBehov"]["journalpostId"].asText(),
+        journalpostId = this["@løsning"][JOURNALFØRING_BEHOV]["journalpostId"].asText(),
     )
 }
 
-private fun JsonMessage.distribuertKvittering(): DistribueringKvitteringHendelse {
-    return DistribueringKvitteringHendelse(
+private fun JsonMessage.distribuertLøsning(): DistribuertHendelse {
+    return DistribuertHendelse(
         oppgaveId = this["oppgaveId"].asUUID(),
-        distribusjonId = this["@løsning"]["DistribueringBehov"]["distribueringId"].asText(),
+        distribusjonId = this["@løsning"][DISTRIBUERING_BEHOV]["distribueringId"].asText(),
         journalpostId = this["journalpostId"].asText(),
     )
 }

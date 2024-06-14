@@ -9,8 +9,8 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribueringKvitteringHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalpostHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -45,18 +45,18 @@ class UtsendingTilstandTest {
         utsending.pdfUrn() shouldBe pdfUrn
         utsending.tilstand() shouldBe Utsending.AvventerJournalføring
 
-        val journalpostHendelse = JournalpostHendelse(oppgaveId, journalpostId = "123456")
-        utsending.mottaJournalpost(journalpostHendelse)
-        utsending.journalpostId() shouldBe journalpostHendelse.journalpostId
+        val journalførtHendelse = JournalførtHendelse(oppgaveId, journalpostId = "123456")
+        utsending.mottaJournalførtKvittering(journalførtHendelse)
+        utsending.journalpostId() shouldBe journalførtHendelse.journalpostId
         utsending.tilstand() shouldBe Utsending.AvventerDistribuering
 
-        val distribueringKvitteringHendelse =
-            DistribueringKvitteringHendelse(
+        val distribuertHendelse =
+            DistribuertHendelse(
                 oppgaveId = oppgaveId,
                 distribusjonId = "distribueringId",
                 journalpostId = "123456",
             )
-        utsending.mottaDistribueringKvittering(distribueringKvitteringHendelse)
+        utsending.mottaDistribuertKvittering(distribuertHendelse)
         utsending.tilstand() shouldBe Utsending.Distribuert
     }
 
