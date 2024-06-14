@@ -32,7 +32,8 @@ class UtsendingMediatorTest {
         withMigratedDb { datasource ->
             val oppgaveId = lagreOppgave(datasource).oppgaveId
             val utsendingRepository = PostgresUtsendingRepository(datasource)
-            val utsendingMediator = UtsendingMediator(repository = utsendingRepository, rapidsConnection = rapid)
+            val utsendingMediator =
+                UtsendingMediator(repository = utsendingRepository).also { it.setRapidsConnection(rapid) }
 
             val brev = "vedtaksbrev.html"
             val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brev)
@@ -53,7 +54,8 @@ class UtsendingMediatorTest {
             val behandlingId = oppgave.behandlingId
 
             val utsendingRepository = PostgresUtsendingRepository(datasource)
-            val utsendingMediator = UtsendingMediator(repository = utsendingRepository, rapidsConnection = rapid)
+            val utsendingMediator =
+                UtsendingMediator(repository = utsendingRepository).also { it.setRapidsConnection(rapid) }
             UtsendingMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
@@ -87,7 +89,8 @@ class UtsendingMediatorTest {
             val behandlingId = oppgave.behandlingId
 
             val utsendingRepository = PostgresUtsendingRepository(datasource)
-            val utsendingMediator = UtsendingMediator(repository = utsendingRepository, rapidsConnection = rapid)
+            val utsendingMediator =
+                UtsendingMediator(repository = utsendingRepository).also { it.setRapidsConnection(rapid) }
             UtsendingMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,

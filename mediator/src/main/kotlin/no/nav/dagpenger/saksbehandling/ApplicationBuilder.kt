@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
+import no.nav.dagpenger.saksbehandling.api.utsendingApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
@@ -40,13 +41,15 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
 
     private val oppgaveMediator = OppgaveMediator(oppgaveRepository)
+    private val utsendingMediator = UtsendingMediator(utsendingRepository)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
                 this.oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
+                this.utsendingApi(utsendingMediator)
             }.build().also { rapidsConnection ->
-                val utsendingMediator = UtsendingMediator(utsendingRepository, rapidsConnection)
+                utsendingMediator.setRapidsConnection(rapidsConnection)
                 VedtakFattetMottak(rapidsConnection, oppgaveMediator)
                 BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, skjermingHttpKlient, pdlKlient)
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)

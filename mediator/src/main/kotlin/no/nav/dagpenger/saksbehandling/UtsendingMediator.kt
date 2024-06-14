@@ -14,7 +14,13 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 
 private val logger = KotlinLogging.logger {}
 
-class UtsendingMediator(private val repository: UtsendingRepository, private val rapidsConnection: RapidsConnection) {
+class UtsendingMediator(private val repository: UtsendingRepository) {
+    private lateinit var rapidsConnection: RapidsConnection
+
+    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
+        this.rapidsConnection = rapidsConnection
+    }
+
     fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
         val utsending = repository.hentEllerOpprettUtsending(vedtaksbrevHendelse.oppgaveId)
         utsending.mottaBrev(vedtaksbrevHendelse)
@@ -23,9 +29,9 @@ class UtsendingMediator(private val repository: UtsendingRepository, private val
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
         val utsending = repository.finnUtsendingFor(startUtsendingHendelse.oppgaveId)
-        utsending?.let { utsending ->
-            utsending.startUtsending(startUtsendingHendelse)
-            lagreOgPubliserBehov(utsending)
+        utsending?.let {
+            it.startUtsending(startUtsendingHendelse)
+            lagreOgPubliserBehov(it)
         }
 
         if (utsending == null) {
