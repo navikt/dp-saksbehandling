@@ -14,7 +14,6 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.logger
 import no.nav.dagpenger.saksbehandling.serder.fraJson
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import org.postgresql.util.PGobject
@@ -23,6 +22,7 @@ import javax.sql.DataSource
 import kotlin.time.measureTime
 
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+private val logger = KotlinLogging.logger {}
 
 class PostgresOppgaveRepository(private val dataSource: DataSource) : Repository {
     override fun lagre(person: Person) {

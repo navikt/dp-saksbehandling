@@ -31,7 +31,7 @@ class UtsendingMediator(private val repository: UtsendingRepository, private val
         if (utsending == null) {
             logger.info {
                 "Fant ingen utsending for behandlingId:${startUtsendingHendelse.behandlingId}," +
-                        " oppgaveId=${startUtsendingHendelse.oppgaveId}."
+                    " oppgaveId=${startUtsendingHendelse.oppgaveId}."
             }
         }
     }

@@ -104,7 +104,7 @@ data class Utsending(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
-            logger.info { "Mottok start_utsending  for oppgaveId: ${startUtsendingHendelse.oppgaveId}" }
+            logger.info { "Mottok start_utsending for oppgaveId: ${startUtsendingHendelse.oppgaveId}" }
             utsending.tilstand = AvventerArkiverbarVersjonAvBrev
             utsending.sak = startUtsendingHendelse.sak
         }
@@ -126,7 +126,7 @@ data class Utsending(
         ) {
             logger.info {
                 "Mottok arkiverbart dokument med urn: ${arkiverbartBrevHendelse.pdfUrn}" +
-                    "  for oppgaveId: ${arkiverbartBrevHendelse.oppgaveId}"
+                    " for oppgaveId: ${arkiverbartBrevHendelse.oppgaveId}"
             }
             utsending.tilstand = AvventerJournalføring
         }
@@ -147,8 +147,8 @@ data class Utsending(
             journalførtHendelse: JournalførtHendelse,
         ) {
             logger.info {
-                "Mottok journalført kvittering med journalpostId: ${journalførtHendelse.journalpostId} " +
-                    "for oppgaveId: ${journalførtHendelse.oppgaveId}"
+                "Mottok journalført kvittering med journalpostId: ${journalførtHendelse.journalpostId}" +
+                    " for oppgaveId: ${journalførtHendelse.oppgaveId}"
             }
             utsending.journalpostId = journalførtHendelse.journalpostId
             utsending.tilstand = AvventerDistribuering
@@ -170,8 +170,8 @@ data class Utsending(
             distribuertHendelse: DistribuertHendelse,
         ) {
             logger.info {
-                "Mottok distribuering kvittering med distribusjonId: ${distribuertHendelse.distribusjonId} " +
-                    "for oppgaveId: ${distribuertHendelse.oppgaveId}"
+                "Mottok distribuert kvittering med distribusjonId: ${distribuertHendelse.distribusjonId}" +
+                    " for oppgaveId: ${distribuertHendelse.oppgaveId}"
             }
             // TODO: Sanity check av noe slag
             utsending.distribusjonId = distribuertHendelse.distribusjonId

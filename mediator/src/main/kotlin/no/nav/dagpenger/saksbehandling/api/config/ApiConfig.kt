@@ -21,11 +21,11 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.logger
 import java.net.URI
 import java.time.format.DateTimeParseException
 
 private val sikkerLogger = KotlinLogging.logger("tjenestekall")
+private val logger = KotlinLogging.logger {}
 
 fun Application.apiConfig() {
     install(CallLogging) {
