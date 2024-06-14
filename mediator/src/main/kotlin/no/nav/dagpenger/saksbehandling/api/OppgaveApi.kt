@@ -23,7 +23,6 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -51,8 +50,6 @@ internal fun Application.oppgaveApi(
     pdlKlient: PDLKlient,
     journalpostIdClient: JournalpostIdClient,
 ) {
-    apiConfig()
-
     routing {
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
 

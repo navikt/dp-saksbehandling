@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.api.utsendingApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
@@ -46,6 +47,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
+                this.apiConfig()
                 this.oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
                 this.utsendingApi(utsendingMediator)
             }.build().also { rapidsConnection ->

@@ -17,6 +17,7 @@ import io.mockk.just
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import org.junit.jupiter.api.Test
 
@@ -65,7 +66,10 @@ class UtsendingApiTest {
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
-            application { utsendingApi(utsendingMediator) }
+            application {
+                apiConfig()
+                utsendingApi(utsendingMediator)
+            }
             test()
         }
     }

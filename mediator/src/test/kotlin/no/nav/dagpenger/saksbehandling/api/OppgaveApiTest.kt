@@ -39,6 +39,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.config.objectMapper
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
@@ -564,7 +565,10 @@ class OppgaveApiTest {
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
-            application { oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient) }
+            application {
+                apiConfig()
+                oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
+            }
             test()
         }
     }

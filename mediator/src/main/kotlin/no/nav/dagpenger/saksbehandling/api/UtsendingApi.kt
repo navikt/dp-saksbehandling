@@ -14,12 +14,9 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 
 internal fun Application.utsendingApi(utsendingMediator: UtsendingMediator) {
-    apiConfig()
-
     routing {
         authenticate("azureAd") {
             route("/utsending/{oppgaveId}/send-brev") {
