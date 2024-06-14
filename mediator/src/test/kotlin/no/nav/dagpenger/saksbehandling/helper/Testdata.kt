@@ -8,6 +8,25 @@ import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import java.util.UUID
 import javax.sql.DataSource
 
+internal fun vedtakFattetHendelse(
+    ident: String,
+    søknadId: UUID,
+    behandlingId: UUID,
+    sakId: String,
+): String {
+    //language=JSON
+    return """{
+      "@event_name": "vedtak_fattet",
+      "søknadId": "$søknadId",
+      "behandlingId": "$behandlingId",
+      "ident": "$ident",
+      "sakId": {
+        "id": "$sakId",
+        "kontekst": "Arena"
+      }
+    }"""
+}
+
 internal fun distribuertDokumentBehovLøsning(
     oppgaveId: UUID,
     journalpostId: String,

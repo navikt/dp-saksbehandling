@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.UtsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
@@ -83,12 +82,12 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(utsendingFerdigstiltHendelse: UtsendingFerdigstiltHendelse): Oppgave {
+    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
         logger.info {
-            "Mottatt utsending ferdigstilt hendelse for behandling med id ${utsendingFerdigstiltHendelse.oppgaveId}. Oppgave ferdigstilt."
+            "Mottatt vedtak fattet hendelse for behandling med id ${vedtakFattetHendelse.behandlingId}. Oppgave ferdigstilt."
         }
-        return hentOppgave(utsendingFerdigstiltHendelse.oppgaveId).also { oppgave ->
-            oppgave.ferdigstill(utsendingFerdigstiltHendelse)
+        return hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
+            oppgave.ferdigstill(vedtakFattetHendelse)
             lagre(oppgave)
         }
     }
@@ -102,24 +101,6 @@ class OppgaveMediator(
         repository.hentOppgave(utsettOppgaveHendelse.oppgaveId).let { oppgave ->
             oppgave.utsett(utsettOppgaveHendelse)
             repository.lagre(oppgave)
-        }
-    }
-
-    fun startUtsending(vedtakFattetHendelse: VedtakFattetHendelse) {
-        hentOppgaveFor(vedtakFattetHendelse.behandlingId).let { oppgave ->
-            oppgave.startUtsending(vedtakFattetHendelse)
-            rapidsConnection.publish(
-                JsonMessage.newMessage(
-                    mapOf(
-                        "@event_name" to "start_utsending",
-                        "oppgaveId" to oppgave.oppgaveId.toString(),
-                        "behandlingId" to oppgave.behandlingId.toString(),
-                        "ident" to oppgave.ident,
-                        "sak" to vedtakFattetHendelse.sak.toMap(),
-                    ),
-                ).toJson(),
-            )
-            lagre(oppgave)
         }
     }
 }

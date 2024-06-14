@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -12,17 +11,15 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
+import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
-import no.nav.dagpenger.saksbehandling.mottak.DistribusjonFerdigstiltMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -64,7 +61,7 @@ class OppgaveMediatorTest {
                 OppgaveMediator(repository = PostgresOppgaveRepository(datasource), rapidsConnection = testRapid)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
-            DistribusjonFerdigstiltMottak(testRapid, oppgaveMediator)
+            VedtakFattetMottak(testRapid, oppgaveMediator)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
@@ -110,39 +107,17 @@ class OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.saksbehandlerIdent shouldBe "NAVIdent"
 
-            val vedtakFattetHendelse =
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    søknadId = søknadId,
-                    ident = testIdent,
-                    sak = sak,
-                )
-
-            oppgaveMediator.startUtsending(vedtakFattetHendelse)
-            val oppgaveMedUtsending = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
-            oppgaveMedUtsending.tilstand().type shouldBe AVVENTER_UTSENDING
-
-            testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).let { jsonNode ->
-                jsonNode["@event_name"].asText() shouldBe "start_utsending"
-                jsonNode["oppgaveId"].asUUID() shouldBe oppgave.oppgaveId
-                jsonNode["behandlingId"].asUUID() shouldBe oppgave.behandlingId
-                jsonNode["ident"].asText() shouldBe oppgave.ident
-                jsonNode["sak"].let { sakIdNode ->
-                    sakIdNode["id"].asText() shouldBe sak.id
-                    sakIdNode["kontekst"].asText() shouldBe sak.kontekst
-                }
-            }
-
             testRapid.sendTestMessage(
-                distribuertDokumentBehovLøsning(
-                    oppgaveId = oppgave.oppgaveId,
-                    journalpostId = "mikkemus",
-                    distribusjonId = "distId",
+                vedtakFattetHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    sakId = sak.id,
                 ),
             )
-            val ferdigstiltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
-            ferdigstiltOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
 

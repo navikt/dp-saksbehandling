@@ -9,7 +9,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.UtsendingFerdigstiltHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
@@ -91,10 +90,6 @@ data class Oppgave private constructor(
 
     fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse) {
         tilstand.ferdigstill(this, vedtakFattetHendelse)
-    }
-
-    fun ferdigstill(utsendingFerdigstiltHendelse: UtsendingFerdigstiltHendelse) {
-        tilstand.ferdigstill(this, utsendingFerdigstiltHendelse)
     }
 
     fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
@@ -298,15 +293,6 @@ data class Oppgave private constructor(
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke ferdigstille oppgave i tilstand $type for ${vedtakFattetHendelse.javaClass.simpleName}")
-        }
-
-        fun ferdigstill(
-            oppgave: Oppgave,
-            utsendingFerdigstiltHendelse: UtsendingFerdigstiltHendelse,
-        ) {
-            ulovligTilstandsendring(
-                "Kan ikke ferdigstille oppgave i tilstand $type for ${utsendingFerdigstiltHendelse.javaClass.simpleName}",
-            )
         }
 
         fun fjernAnsvar(
