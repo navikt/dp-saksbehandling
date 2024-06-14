@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import de.slub.urn.URN
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
@@ -10,6 +11,8 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 data class Utsending(
     val id: UUID = UUIDv7.ny(),
@@ -89,6 +92,7 @@ data class Utsending(
             utsending: Utsending,
             vedtaksbrevHendelse: VedtaksbrevHendelse,
         ) {
+            logger.info { "Mottok brev for oppgaveId: ${vedtaksbrevHendelse.oppgaveId}" }
             utsending.tilstand = VenterPåVedtak
         }
     }
@@ -100,6 +104,7 @@ data class Utsending(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
+            logger.info { "Mottok start_utsending  for oppgaveId: ${startUtsendingHendelse.oppgaveId}" }
             utsending.tilstand = AvventerArkiverbarVersjonAvBrev
             utsending.sak = startUtsendingHendelse.sak
         }
@@ -119,6 +124,10 @@ data class Utsending(
             utsending: Utsending,
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
         ) {
+            logger.info {
+                "Mottok arkiverbart dokument med urn: ${arkiverbartBrevHendelse.pdfUrn}" +
+                    "  for oppgaveId: ${arkiverbartBrevHendelse.oppgaveId}"
+            }
             utsending.tilstand = AvventerJournalføring
         }
     }
@@ -137,6 +146,10 @@ data class Utsending(
             utsending: Utsending,
             journalførtHendelse: JournalførtHendelse,
         ) {
+            logger.info {
+                "Mottok journalført kvittering med journalpostId: ${journalførtHendelse.journalpostId} " +
+                    "for oppgaveId: ${journalførtHendelse.oppgaveId}"
+            }
             utsending.journalpostId = journalførtHendelse.journalpostId
             utsending.tilstand = AvventerDistribuering
         }
@@ -156,6 +169,10 @@ data class Utsending(
             utsending: Utsending,
             distribuertHendelse: DistribuertHendelse,
         ) {
+            logger.info {
+                "Mottok distribuering kvittering med distribusjonId: ${distribuertHendelse.distribusjonId} " +
+                    "for oppgaveId: ${distribuertHendelse.oppgaveId}"
+            }
             // TODO: Sanity check av noe slag
             utsending.distribusjonId = distribuertHendelse.distribusjonId
             utsending.tilstand = Distribuert

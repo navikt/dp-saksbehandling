@@ -19,9 +19,10 @@ class UtsendingMediator(private val repository: UtsendingRepository, private val
     }
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
-        val utsending = repository.hent(startUtsendingHendelse.oppgaveId)
-        utsending.startUtsending(startUtsendingHendelse)
-        lagreOgPubliserBehov(utsending)
+        repository.finnUtsendingFor(startUtsendingHendelse.oppgaveId)?.let { utsending ->
+            utsending.startUtsending(startUtsendingHendelse)
+            lagreOgPubliserBehov(utsending)
+        }
     }
 
     fun mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse: ArkiverbartBrevHendelse) {

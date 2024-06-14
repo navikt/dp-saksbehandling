@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
@@ -41,6 +42,40 @@ class UtsendingMediatorTest {
             utsending.oppgaveId shouldBe oppgaveId
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe brev
+        }
+    }
+
+    @Test
+    fun `Må ha et brev før vi starter utsending`() {
+        withMigratedDb { datasource ->
+            val oppgave = lagreOppgave(datasource)
+            val oppgaveId = oppgave.oppgaveId
+            val behandlingId = oppgave.behandlingId
+
+            val utsendingRepository = PostgresUtsendingRepository(datasource)
+            val utsendingMediator = UtsendingMediator(repository = utsendingRepository, rapidsConnection = rapid)
+            UtsendingMottak(
+                rapidsConnection = rapid,
+                utsendingMediator = utsendingMediator,
+            )
+
+            shouldNotThrowAny {
+                rapid.sendTestMessage(
+                    //language=JSON
+                    """
+                {
+                    "@event_name": "start_utsending",
+                    "oppgaveId": "$oppgaveId",
+                    "behandlingId": "$behandlingId",
+                    "ident": "12345678901",
+                    "sak": {
+                        "id": "sakId",
+                        "kontekst": "fagsystem"
+                    }
+                }
+                """,
+                )
+            }
         }
     }
 
