@@ -39,11 +39,14 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.journalpostTokenProvider,
         )
 
+    private val oppgaveMediator = OppgaveMediator(oppgaveRepository)
+
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
                 this.oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
             }.build().also { rapidsConnection ->
+                val utsendingMediator = UtsendingMediator(utsendingRepository, rapidsConnection)
                 VedtakFattetMottak(rapidsConnection, oppgaveMediator)
                 BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, skjermingHttpKlient, pdlKlient)
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
@@ -51,9 +54,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 UtsendingMottak(rapidsConnection, utsendingMediator)
                 BehovLøsningMottak(rapidsConnection, utsendingMediator)
             }
-
-    private val oppgaveMediator = OppgaveMediator(oppgaveRepository, rapidsConnection)
-    private val utsendingMediator = UtsendingMediator(utsendingRepository, rapidsConnection)
 
     init {
         rapidsConnection.register(this)

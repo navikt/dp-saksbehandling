@@ -8,13 +8,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.helse.rapids_rivers.RapidsConnection
 
 private val logger = KotlinLogging.logger {}
 
 class OppgaveMediator(
     private val repository: Repository,
-    private val rapidsConnection: RapidsConnection,
 ) : Repository by repository {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
