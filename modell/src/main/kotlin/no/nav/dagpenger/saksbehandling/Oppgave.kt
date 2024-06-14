@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -114,10 +113,6 @@ data class Oppgave private constructor(
         tilstand.settTilbakeTilKlarTilBehandling(this)
     }
 
-    fun startUtsending(vedtakFattetHendelse: VedtakFattetHendelse) {
-        tilstand.startUtsending(this, vedtakFattetHendelse)
-    }
-
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -164,13 +159,6 @@ data class Oppgave private constructor(
 
     object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
-
-        override fun startUtsending(
-            oppgave: Oppgave,
-            vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
-            oppgave.tilstand = AvventerUtsending
-        }
 
         override fun fjernAnsvar(
             oppgave: Oppgave,
@@ -250,26 +238,6 @@ data class Oppgave private constructor(
         }
     }
 
-    object AvventerUtsending : Tilstand {
-        override val type: Type = AVVENTER_UTSENDING
-
-        override fun behov() = setOf("ditten", "datten")
-
-        override fun ferdigstill(
-            oppgave: Oppgave,
-            vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
-            oppgave.tilstand = FerdigBehandlet
-        }
-
-        override fun ferdigstill(
-            oppgave: Oppgave,
-            utsendingFerdigstiltHendelse: UtsendingFerdigstiltHendelse,
-        ) {
-            oppgave.tilstand = FerdigBehandlet
-        }
-    }
-
     interface Tilstand {
         val type: Type
 
@@ -285,7 +253,6 @@ data class Oppgave private constructor(
                     UNDER_BEHANDLING -> UnderBehandling
                     FERDIG_BEHANDLET -> FerdigBehandlet
                     PAA_VENT -> PaaVent
-                    AVVENTER_UTSENDING -> AvventerUtsending
                 }
 
             fun fra(type: String) =
@@ -302,7 +269,6 @@ data class Oppgave private constructor(
             UNDER_BEHANDLING,
             FERDIG_BEHANDLET,
             PAA_VENT,
-            AVVENTER_UTSENDING,
             ;
 
             companion object {
@@ -366,13 +332,6 @@ data class Oppgave private constructor(
 
         fun settTilbakeTilKlarTilBehandling(oppgave: Oppgave) {
             ulovligTilstandsendring("Kan ikke sette oppgave tilbake til klar til behandling i tilstand $type")
-        }
-
-        fun startUtsending(
-            oppgave: Oppgave,
-            vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
-            ulovligTilstandsendring("Kan ikke sette oppgaven til avventer utsending i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(message: String): Nothing {

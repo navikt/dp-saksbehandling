@@ -3,10 +3,8 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_UTSENDING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
@@ -63,7 +61,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal kunne ferdigstille en oppgave fra alle lovlige tilstander`() {
-        val lovligeTilstander = setOf(UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, AVVENTER_UTSENDING)
+        val lovligeTilstander = setOf(UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING)
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
             oppgave.ferdigstill(
@@ -90,24 +88,6 @@ class OppgaveTilstandTest {
                 )
             }
         }
-    }
-
-    @Test
-    fun `Skal gå fra UnderBehandling til AvventerUtsending`() {
-        val saksbehandlerIdent = "saksbehandlerIdent"
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
-        val vedtakFattetHendelse =
-            VedtakFattetHendelse(
-                behandlingId = UUIDv7.ny(),
-                søknadId = UUIDv7.ny(),
-                ident = "risus",
-                sak = sak,
-            )
-        oppgave.startUtsending(vedtakFattetHendelse)
-
-        oppgave.tilstand().type shouldBe AVVENTER_UTSENDING
-        oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
-        oppgave.tilstand().behov() shouldContainAll setOf("ditten", "datten")
     }
 
     @Test
@@ -273,7 +253,6 @@ class OppgaveTilstandTest {
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
                 PAA_VENT -> Oppgave.PaaVent
-                AVVENTER_UTSENDING -> Oppgave.AvventerUtsending
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
