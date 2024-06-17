@@ -164,8 +164,13 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${JournalføringBehov.BEHOV_NAVN}"
                   ],
+                  "ident": "${oppgave.ident}",
                   "pdfUrn": "$pdfUrnString",
-                   "oppgaveId": "$oppgaveId"
+                   "oppgaveId": "$oppgaveId",
+                    "sak": {
+                        "id": "${sak.id}",
+                        "kontekst": "${sak.kontekst}"
+                    }
                 }
                 """.trimIndent()
 

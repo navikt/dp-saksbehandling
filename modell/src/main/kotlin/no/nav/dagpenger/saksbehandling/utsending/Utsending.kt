@@ -140,7 +140,7 @@ data class Utsending(
                 oppgaveId = utsending.oppgaveId,
                 pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
                 ident = utsending.ident,
-                sak - utsending.sak ?: throw IllegalStateException("Sak mangler"),
+                sak = utsending.sak ?: throw IllegalStateException("Sak mangler"),
             )
         }
 

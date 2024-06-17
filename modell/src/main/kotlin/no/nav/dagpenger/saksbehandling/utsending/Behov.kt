@@ -44,21 +44,23 @@ data class JournalføringBehov(
     override val oppgaveId: UUID,
     private val pdfUrn: URN,
     private val ident: String,
-    private val sak: Sak
+    private val sak: Sak,
 ) : Behov() {
     companion object {
         const val BEHOV_NAVN = "JournalføringBehov"
     }
 
     override val navn: String = BEHOV_NAVN
-    override val data: Map<String, Any> = mapOf(
-        "pdfUrn" to pdfUrn.toString(),
-        "ident" to ident,
-        "sak" to {
-            "id" to sak.id,
-            "kontekst" to sak.kontekst
-        }
-    )
+    override val data: Map<String, Any> =
+        mapOf(
+            "pdfUrn" to pdfUrn.toString(),
+            "ident" to ident,
+            "sak" to
+                mapOf(
+                    "id" to sak.id,
+                    "kontekst" to sak.kontekst,
+                ),
+        )
 }
 
 data class DistribueringBehov(
