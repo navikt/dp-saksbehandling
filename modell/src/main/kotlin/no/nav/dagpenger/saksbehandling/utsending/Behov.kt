@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import de.slub.urn.URN
+import no.nav.dagpenger.saksbehandling.Sak
 import java.util.Base64
 import java.util.UUID
 
@@ -42,13 +43,22 @@ data class ArkiverbartBrevBehov(
 data class JournalføringBehov(
     override val oppgaveId: UUID,
     private val pdfUrn: URN,
+    private val ident: String,
+    private val sak: Sak
 ) : Behov() {
     companion object {
         const val BEHOV_NAVN = "JournalføringBehov"
     }
 
     override val navn: String = BEHOV_NAVN
-    override val data: Map<String, Any> = mapOf("pdfUrn" to pdfUrn.toString())
+    override val data: Map<String, Any> = mapOf(
+        "pdfUrn" to pdfUrn.toString(),
+        "ident" to ident,
+        "sak" to {
+            "id" to sak.id,
+            "kontekst" to sak.kontekst
+        }
+    )
 }
 
 data class DistribueringBehov(

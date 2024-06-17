@@ -10,16 +10,14 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
 class E2E {
     @Test
-    @Disabled
     fun sendBrev() {
         val token = ""
-        val oppgaveId = "018fe84e-79c9-7784-8b3b-55c11e5494c1"
+        val oppgaveId = ""
         runBlocking {
             val response =
                 plainHttpClient.post("https://dp-saksbehandling.intern.dev.nav.no/utsending/$oppgaveId/send-brev") {
