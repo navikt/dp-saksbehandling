@@ -32,7 +32,8 @@ data class ArkiverbartBrevBehov(
         mapOf(
             "htmlBase64" to html.toBase64(),
             "ident" to ident,
-            "dokumentNavn" to "vedtak_$oppgaveId",
+            "dokumentNavn" to "vedtak.pdf",
+            "kontekst" to "oppgave/$oppgaveId",
         )
 
     private fun String.toBase64() = Base64.getEncoder().encodeToString(this.toByteArray(Charsets.UTF_8))

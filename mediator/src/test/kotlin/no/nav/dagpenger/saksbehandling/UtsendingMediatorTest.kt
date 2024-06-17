@@ -142,7 +142,8 @@ class UtsendingMediatorTest {
                      "${ArkiverbartBrevBehov.BEHOV_NAVN}"
                    ],
                    "htmlBase64": "$htmlBrevAsBase64",
-                   "dokumentNavn": "vedtak_$oppgaveId",
+                   "dokumentNavn": "vedtak.pdf",
+                   "kontekst": "oppgave/$oppgaveId",
                    "oppgaveId": "$oppgaveId",
                    "ident": "${oppgave.ident}"
                 }
