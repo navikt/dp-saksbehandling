@@ -38,7 +38,7 @@ class UtsendingMediator(private val repository: UtsendingRepository) {
         if (utsending == null) {
             logger.info {
                 "Fant ingen utsending for behandlingId:${startUtsendingHendelse.behandlingId}," +
-                        " oppgaveId=${startUtsendingHendelse.oppgaveId}."
+                    " oppgaveId=${startUtsendingHendelse.oppgaveId}."
             }
         }
     }
@@ -70,9 +70,10 @@ class UtsendingMediator(private val repository: UtsendingRepository) {
         val behov = utsending.tilstand().behov(utsending)
         if (behov is IngenBehov) return
 
-        val message = JsonMessage.newNeed(setOf(behov.navn), behov.data()).toJson().also {
-            sikkerlogg.info { "Publiserer behov: $it" }
-        }
+        val message =
+            JsonMessage.newNeed(setOf(behov.navn), behov.data()).toJson().also {
+                sikkerlogg.info { "Publiserer behov: $it" }
+            }
         rapidsConnection.publish(message)
     }
 }
