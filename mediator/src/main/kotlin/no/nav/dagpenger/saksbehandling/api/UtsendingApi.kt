@@ -13,22 +13,29 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
+
+private val logger = KotlinLogging.logger {}
 
 internal fun Application.utsendingApi(utsendingMediator: UtsendingMediator) {
     routing {
         authenticate("azureAd") {
             route("/utsending/{oppgaveId}/send-brev") {
                 post {
-                    if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
+                    try {
+                        if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
 
-                    val oppgaveId = call.finnUUID("oppgaveId")
+                        val oppgaveId = call.finnUUID("oppgaveId")
 
-                    val brevHtml = call.receiveText()
-                    val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brevHtml)
-                    utsendingMediator.mottaBrev(vedtaksbrevHendelse)
-                    call.respond(HttpStatusCode.Accepted)
+                        val brevHtml = call.receiveText()
+                        val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brevHtml)
+                        utsendingMediator.mottaBrev(vedtaksbrevHendelse)
+                        call.respond(HttpStatusCode.Accepted)
+                    } catch (e: Exception) {
+                        logger.error(e) { "Feil ved mottak av brev: ${e.message}" }
+                    }
                 }
             }
         }
