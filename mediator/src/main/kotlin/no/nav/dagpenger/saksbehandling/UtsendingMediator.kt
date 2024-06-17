@@ -13,6 +13,7 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class UtsendingMediator(private val repository: UtsendingRepository) {
     private lateinit var rapidsConnection: RapidsConnection
@@ -37,7 +38,7 @@ class UtsendingMediator(private val repository: UtsendingRepository) {
         if (utsending == null) {
             logger.info {
                 "Fant ingen utsending for behandlingId:${startUtsendingHendelse.behandlingId}," +
-                    " oppgaveId=${startUtsendingHendelse.oppgaveId}."
+                        " oppgaveId=${startUtsendingHendelse.oppgaveId}."
             }
         }
     }
@@ -69,6 +70,9 @@ class UtsendingMediator(private val repository: UtsendingRepository) {
         val behov = utsending.tilstand().behov(utsending)
         if (behov is IngenBehov) return
 
-        rapidsConnection.publish(JsonMessage.newNeed(setOf(behov.navn), behov.data()).toJson())
+        val message = JsonMessage.newNeed(setOf(behov.navn), behov.data()).toJson().also {
+            sikkerlogg.info { "Publiserer behov: $it" }
+        }
+        rapidsConnection.publish(message)
     }
 }
