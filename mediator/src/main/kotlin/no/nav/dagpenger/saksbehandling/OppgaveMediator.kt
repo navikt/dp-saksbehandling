@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.db.Repository
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
@@ -12,8 +12,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 private val logger = KotlinLogging.logger {}
 
 class OppgaveMediator(
-    private val repository: Repository,
-) : Repository by repository {
+    private val repository: OppgaveRepository,
+) : OppgaveRepository by repository {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
             repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(

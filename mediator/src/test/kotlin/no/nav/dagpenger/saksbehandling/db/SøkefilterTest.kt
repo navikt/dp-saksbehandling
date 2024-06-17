@@ -7,6 +7,8 @@ import io.ktor.http.Parameters
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
+import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 

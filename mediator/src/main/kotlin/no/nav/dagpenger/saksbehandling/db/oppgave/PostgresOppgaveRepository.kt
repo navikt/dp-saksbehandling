@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.db
+package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import kotliquery.Row
 import kotliquery.TransactionalSession
@@ -9,8 +9,8 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.db.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -24,7 +24,7 @@ import kotlin.time.measureTime
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 private val logger = KotlinLogging.logger {}
 
-class PostgresOppgaveRepository(private val dataSource: DataSource) : Repository {
+class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRepository {
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
@@ -218,7 +218,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : Repository
             søkeFilter =
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
-                    tilstand = Type.Companion.values,
+                    tilstand = Type.values,
                     behandlingId = behandlingId,
                 ),
         ).singleOrNull()
@@ -228,7 +228,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : Repository
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstand = Type.Companion.values,
+                tilstand = Type.values,
                 oppgaveId = oppgaveId,
             ),
         ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
@@ -237,7 +237,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : Repository
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstand = Type.Companion.søkbareTyper,
+                tilstand = Type.søkbareTyper,
                 saksbehandlerIdent = null,
                 personIdent = ident,
             ),

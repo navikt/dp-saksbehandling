@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.db
+package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import io.ktor.http.Parameters
 import io.ktor.util.StringValues

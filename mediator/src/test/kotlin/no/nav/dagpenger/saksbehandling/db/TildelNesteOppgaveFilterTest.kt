@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling.db
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
+import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 

@@ -1,11 +1,11 @@
-package no.nav.dagpenger.saksbehandling.db
+package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import java.util.UUID
 
-interface Repository {
+interface OppgaveRepository {
     fun finnPerson(ident: String): Person?
 
     fun hentPerson(ident: String): Person

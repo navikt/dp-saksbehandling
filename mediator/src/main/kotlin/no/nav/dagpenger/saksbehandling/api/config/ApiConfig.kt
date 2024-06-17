@@ -20,7 +20,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
-import no.nav.dagpenger.saksbehandling.db.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import java.net.URI
 import java.time.format.DateTimeParseException
 
