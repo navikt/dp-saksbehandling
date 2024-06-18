@@ -37,6 +37,13 @@ data class Utsending(
 
     fun sak() = sak
 
+    override fun toString(): String {
+        return """
+            Utsending(id=$id, oppgaveId=$oppgaveId, pdfUrn=$pdfUrn, journalpostId=$journalpostId, 
+            distribusjonId=$distribusjonId , tilstand=${tilstand.type})
+            """.trimIndent()
+    }
+
     companion object {
         fun rehydrer(
             id: UUID,
@@ -142,6 +149,23 @@ data class Utsending(
                 ident = utsending.ident,
                 sak = utsending.sak ?: throw IllegalStateException("Sak mangler"),
             )
+        }
+
+        override fun mottaUrnTilPdfAvBrev(
+            utsending: Utsending,
+            arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
+        ) {
+            if (utsending.pdfUrn == arkiverbartBrevHendelse.pdfUrn) {
+                logger.warn {
+                    "Mystisk! Fikk pdfUrn på nytt. Den var lik. ArkiverbartBrevHendelse: $arkiverbartBrevHendelse " +
+                        "Utsending =$utsending"
+                }
+            } else {
+                logger.warn {
+                    "Mystisk! Fikk pdfUrn på nytt. Den var ulik. Utsending.pdfurn = ${utsending.pdfUrn} " +
+                        "ArkiverbartBrevHendelse: $arkiverbartBrevHendelse Utsending =$utsending "
+                }
+            }
         }
 
         override fun mottaJournalførtKvittering(
