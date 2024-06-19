@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.mottak
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -46,26 +45,6 @@ internal class VedtakFattetMottakTest {
     }
 
     @Test
-    fun `Skal kunne håndtere vedtak uten sakId`() {
-        val slot = slot<VedtakFattetHendelse>()
-        every { oppgaveMediatorMock.ferdigstillOppgave(capture(slot)) } returns oppgave
-        testRapid.sendTestMessage(
-            """
-            {
-                "@event_name": "vedtak_fattet",
-                "ident": "$testIdent",
-                "søknadId": "$søknadId",
-                "behandlingId": "$behandlingId"
-            }
-            
-            """.trimIndent(),
-        )
-
-        slot.isCaptured shouldBe true
-        slot.captured.sak shouldBe Sak("ukjent", "ukjent")
-    }
-
-    @Test
     fun `Skal behandle vedtak fattet hendelse`() {
         every { oppgaveMediatorMock.ferdigstillOppgave(any()) } returns oppgave
         testRapid.sendTestMessage(
@@ -73,7 +52,7 @@ internal class VedtakFattetMottakTest {
                 ident = testIdent,
                 søknadId = søknadId,
                 behandlingId = behandlingId,
-                sakId = sak.id,
+                sakId = sak.id.toInt(),
             ),
         )
 

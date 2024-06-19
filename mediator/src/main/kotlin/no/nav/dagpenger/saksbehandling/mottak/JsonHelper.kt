@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import com.fasterxml.jackson.databind.JsonNode
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.helse.rapids_rivers.JsonMessage
 import java.util.UUID
 
@@ -11,6 +12,18 @@ fun JsonMessage.emneknagger(): Set<String> {
         this["avklaringer"].avklaringstyper()
     } catch (e: NullPointerException) {
         emptySet()
+    }
+}
+
+fun JsonNode.sak(): Sak {
+    return this.single {
+        val jsonNode = it["opplysningstype"]["id"]
+        jsonNode.erTekst() && jsonNode.asText() == "fagsakId"
+    }.let { fagsakNode ->
+        Sak(
+            id = fagsakNode["verdi"].asInt().toString(),
+            kontekst = "Arena",
+        )
     }
 }
 

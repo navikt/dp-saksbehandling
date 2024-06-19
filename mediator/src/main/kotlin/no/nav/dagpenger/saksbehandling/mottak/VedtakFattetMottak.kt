@@ -9,7 +9,6 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
-import no.nav.helse.rapids_rivers.isMissingOrNull
 
 private val logger = KotlinLogging.logger {}
 
@@ -20,8 +19,7 @@ internal class VedtakFattetMottak(
     companion object {
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "vedtak_fattet") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId") }
-            validate { it.interestedIn("sakId") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId", "opplysninger") }
         }
     }
 
@@ -65,14 +63,5 @@ internal class VedtakFattetMottak(
 }
 
 private fun JsonMessage.sak(): Sak {
-    val sakId = this["sakId"]
-
-    return when (sakId.isMissingOrNull()) {
-        true -> Sak("ukjent", "ukjent")
-        false ->
-            Sak(
-                id = sakId["id"].asText(),
-                kontekst = sakId["kontekst"].asText(),
-            )
-    }
+    return this["opplysninger"].sak()
 }

@@ -112,7 +112,7 @@ class OppgaveMediatorTest {
                     ident = testIdent,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    sakId = sak.id,
+                    sakId = sak.id.toInt(),
                 ),
             )
 

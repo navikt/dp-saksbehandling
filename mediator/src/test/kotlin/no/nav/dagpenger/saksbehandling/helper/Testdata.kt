@@ -12,7 +12,7 @@ internal fun vedtakFattetHendelse(
     ident: String,
     søknadId: UUID,
     behandlingId: UUID,
-    sakId: String,
+    sakId: Int,
 ): String {
     //language=JSON
     return """{
@@ -20,10 +20,27 @@ internal fun vedtakFattetHendelse(
       "søknadId": "$søknadId",
       "behandlingId": "$behandlingId",
       "ident": "$ident",
-      "sakId": {
-        "id": "$sakId",
-        "kontekst": "Arena"
-      }
+      "opplysninger": [
+        {
+          "opplysningstype": {
+            "datatype": {
+              "klasse": "int"
+            },
+            "id": "fagsakId",
+            "navn": "fagsakId"
+          },
+          "verdi": $sakId
+        },
+        {
+          "opplysningstype": {
+            "datatype": {
+              "klasse": "int"
+            },
+            "id": "hubba",
+            "navn": "bubba"
+          },
+          "verdi": 14
+        }]
     }"""
 }
 

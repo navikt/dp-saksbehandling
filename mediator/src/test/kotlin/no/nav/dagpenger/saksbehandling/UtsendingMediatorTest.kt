@@ -166,11 +166,11 @@ class UtsendingMediatorTest {
                   ],
                   "ident": "${oppgave.ident}",
                   "pdfUrn": "$pdfUrnString",
-                   "oppgaveId": "$oppgaveId",
-                    "sak": {
-                        "id": "${sak.id}",
-                        "kontekst": "${sak.kontekst}"
-                    }
+                  "oppgaveId": "$oppgaveId",
+                  "sak": {
+                    "id": "${sak.id}",
+                    "kontekst": "${sak.kontekst}"
+                  }
                 }
                 """.trimIndent()
 

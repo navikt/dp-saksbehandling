@@ -7,10 +7,10 @@ import io.ktor.client.engine.mock.respondBadRequest
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.helper.fileAsText
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import java.io.FileNotFoundException
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -123,10 +123,5 @@ class PDLHttpKlientTest {
         val pattern = """"gradering"\s*:\s*"([^"]*)"""".toRegex()
         val replacement = """"gradering": "$gradering""""
         return jsonString.replace(pattern, replacement)
-    }
-
-    private fun String.fileAsText(): String {
-        return object {}.javaClass.getResource(this)?.readText()
-            ?: throw FileNotFoundException()
     }
 }
