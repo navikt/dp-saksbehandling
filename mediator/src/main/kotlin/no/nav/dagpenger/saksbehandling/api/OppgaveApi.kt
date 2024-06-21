@@ -25,7 +25,6 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -53,8 +52,6 @@ internal fun Application.oppgaveApi(
     pdlKlient: PDLKlient,
     journalpostIdClient: JournalpostIdClient,
 ) {
-    apiConfig()
-
     suspend fun oppgaveDTO(oppgave: Oppgave): OppgaveDTO =
         coroutineScope {
             val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
@@ -188,21 +185,21 @@ fun lagOppgaveDTO(
         behandlingId = oppgave.behandlingId,
         personIdent = oppgave.ident,
         person =
-        PersonDTO(
-            ident = person.ident,
-            fornavn = person.fornavn,
-            etternavn = person.etternavn,
-            mellomnavn = person.mellomnavn,
-            fodselsdato = person.fødselsdato,
-            alder = person.alder,
-            kjonn =
-            when (person.kjønn) {
-                PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
-                PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
-                PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
-            },
-            statsborgerskap = person.statsborgerskap,
-        ),
+            PersonDTO(
+                ident = person.ident,
+                fornavn = person.fornavn,
+                etternavn = person.etternavn,
+                mellomnavn = person.mellomnavn,
+                fodselsdato = person.fødselsdato,
+                alder = person.alder,
+                kjonn =
+                    when (person.kjønn) {
+                        PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
+                        PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
+                        PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
+                    },
+                statsborgerskap = person.statsborgerskap,
+            ),
         saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
