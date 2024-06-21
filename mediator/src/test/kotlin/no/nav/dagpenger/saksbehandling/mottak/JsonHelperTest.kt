@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.helper.fileAsText
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak.Companion.AVKLARINGER
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -21,13 +20,13 @@ class JsonHelperTest {
     }
 
     @Test
-    fun `Skal kunne parse sak fra et vedtak fattet hendelse json`() {
+    fun `Skal kunne parse sakId fra et vedtak fattet hendelse json`() {
         val vedtakFattetJson =
             "/vedtak_fattet.json".fileAsText().let {
                 objectMapper.readTree(it)
             }
 
-        vedtakFattetJson["opplysninger"].sak() shouldBe Sak("14952361", "Arena")
+        vedtakFattetJson["opplysninger"].sakId() shouldBe "14952361"
     }
 
     private fun lagJsonMedFilter(json: Map<String, Any>): JsonMessage {

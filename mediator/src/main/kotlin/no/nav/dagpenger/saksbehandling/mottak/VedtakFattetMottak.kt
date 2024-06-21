@@ -62,6 +62,4 @@ internal class VedtakFattetMottak(
     }
 }
 
-private fun JsonMessage.sak(): Sak {
-    return this["opplysninger"].sak()
-}
+private fun JsonMessage.sak(): Sak = Sak(id = this["opplysninger"].sakId())
