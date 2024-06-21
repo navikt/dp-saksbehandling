@@ -21,7 +21,6 @@ spec:
     max: 2
   resources:
     limits:
-      cpu: 500m
       memory: 512Mi
     requests:
       cpu: 200m
@@ -32,6 +31,8 @@ spec:
   kafka:
     pool: {{ kafka_pool }}
   env:
+    - name: JDK_JAVA_OPTIONS
+      value: -XX:+UseParallelGC -XX:MaxRAMPercentage=50.0 -XX:ActiveProcessorCount=4
     - name: FLYWAY_CLEAN_DISABLED
       value: "false"
     - name: GRUPPE_SAKSBEHANDLER

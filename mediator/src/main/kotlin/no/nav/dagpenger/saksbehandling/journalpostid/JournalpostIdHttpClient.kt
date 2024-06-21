@@ -11,6 +11,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import mu.KotlinLogging
 import java.util.UUID
+import kotlin.time.measureTimedValue
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,12 +24,16 @@ class JournalpostIdHttpClient(
         val urlString = "$journalpostIdApiUrl/$søknadId"
         logger.info { "Henter journalpostId fra $urlString" }
 
-        return kotlin.runCatching {
-            httpClient.get(urlString = urlString) {
-                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
-                accept(ContentType.Text.Plain)
-            }.bodyAsText()
-        }.onFailure { throwable -> logger.error(throwable) { "Kall til journalpostId-api feilet." } }
+        return measureTimedValue {
+            kotlin.runCatching {
+                httpClient.get(urlString = urlString) {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                    accept(ContentType.Text.Plain)
+                }.bodyAsText()
+            }.onFailure { throwable -> logger.error(throwable) { "Kall til journalpostId-api feilet." } }
+        }.also {
+            logger.info { "Kall til journalpost api tok ${it.duration.inWholeMilliseconds} ms" }
+        }.value
     }
 }
 

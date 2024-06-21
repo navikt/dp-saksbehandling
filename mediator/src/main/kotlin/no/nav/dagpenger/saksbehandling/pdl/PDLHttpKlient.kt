@@ -16,7 +16,9 @@ import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTRO
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.pdl.createPersonOppslag
+import kotlin.time.measureTimedValue
 
+private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class PDLHttpKlient(
@@ -32,25 +34,27 @@ internal class PDLHttpKlient(
 
     override suspend fun erAdressebeskyttet(ident: String): Result<Boolean> {
         try {
-            val invoke = tokenSupplier.invoke()
-            val adresseBeskyttelse =
-                hentPersonClient.hentPerson(
-                    ident,
-                    mapOf(
-                        HttpHeaders.Authorization to "Bearer $invoke",
-//                    HttpHeaders.XRequestId to MDC.get("behovId"),
-//                    "Nav-Call-Id" to MDC.get("behovId"),
-                        // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
-                        "behandlingsnummer" to "B286",
-                        "TEMA" to "DAG",
-                    ),
-                ).adresseBeskyttelse
-            return when (adresseBeskyttelse) {
-                FORTROLIG -> Result.success(true)
-                STRENGT_FORTROLIG -> Result.success(true)
-                STRENGT_FORTROLIG_UTLAND -> Result.success(true)
-                UGRADERT -> Result.success(false)
-            }
+            return measureTimedValue {
+                val invoke = tokenSupplier.invoke()
+                val adresseBeskyttelse =
+                    hentPersonClient.hentPerson(
+                        ident,
+                        mapOf(
+                            HttpHeaders.Authorization to "Bearer $invoke",
+                            // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
+                            "behandlingsnummer" to "B286",
+                            "TEMA" to "DAG",
+                        ),
+                    ).adresseBeskyttelse
+                when (adresseBeskyttelse) {
+                    FORTROLIG -> Result.success(true)
+                    STRENGT_FORTROLIG -> Result.success(true)
+                    STRENGT_FORTROLIG_UTLAND -> Result.success(true)
+                    UGRADERT -> Result.success(false)
+                }
+            }.also {
+                logger.info { "Kall til PDL api tok ${it.duration.inWholeMilliseconds} ms" }
+            }.value
         } catch (e: Exception) {
             sikkerLogg.error(e) { "Feil i adressebeskyttelse-oppslag for person med id $ident" }
             return Result.failure(e)
