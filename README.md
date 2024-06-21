@@ -5,7 +5,7 @@ Link til swagger api dokumentasjon: https://navikt.github.io/dp-saksbehandling/
 
 ## Komme i gang
 
-Backend-applikasjon som lytter på søknadshendelser, validerer vilkår, oppretter sak og sender resultat av behandlingen ut på rapiden.
+Backend-applikasjon som lytter på behandlingshendelser og håndterer oppgavebehandling.
 
 `./gradlew build`
 
