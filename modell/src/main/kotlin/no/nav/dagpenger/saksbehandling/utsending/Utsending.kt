@@ -187,6 +187,7 @@ data class Utsending(
         override fun behov(utsending: Utsending): Behov {
             return DistribueringBehov(
                 oppgaveId = utsending.oppgaveId,
+                ident = utsending.ident,
                 journalpostId = utsending.journalpostId ?: throw IllegalStateException("journalpostId mangler"),
             )
         }

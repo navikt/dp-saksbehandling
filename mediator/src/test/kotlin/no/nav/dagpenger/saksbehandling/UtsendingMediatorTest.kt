@@ -190,7 +190,8 @@ class UtsendingMediatorTest {
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
                   "journalpostId": "${utsending.journalpostId()}",
-                  "oppgaveId": "$oppgaveId"
+                  "oppgaveId": "$oppgaveId",
+                   "ident": "${oppgave.ident}"
                 }
                 """.trimIndent()
 
