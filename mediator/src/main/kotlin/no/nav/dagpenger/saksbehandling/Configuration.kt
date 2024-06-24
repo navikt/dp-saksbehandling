@@ -8,6 +8,7 @@ import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config
+import kotlin.time.measureTimedValue
 
 internal object Configuration {
     const val APP_NAME = "dp-saksbehandling"
@@ -53,7 +54,11 @@ internal object Configuration {
     val pdlUrl: String = properties[Key("PDL_API_URL", stringType)]
     val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
     val pdlTokenProvider = {
-        azureAdClient().clientCredentials(pdlApiScope).accessToken
+        measureTimedValue {
+            azureAdClient().clientCredentials(pdlApiScope).accessToken
+        }.also { timedValue ->
+            logger.info { "Token henting tok ${timedValue.duration.inWholeMilliseconds} ms" }
+        }.value
     }
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }

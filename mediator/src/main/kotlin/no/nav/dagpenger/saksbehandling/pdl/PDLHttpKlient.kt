@@ -11,6 +11,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
+import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
@@ -33,62 +34,51 @@ internal class PDLHttpKlient(
         )
 
     override suspend fun erAdressebeskyttet(ident: String): Result<Boolean> {
-        try {
-            return measureTimedValue {
-                val invoke = tokenSupplier.invoke()
-                val adresseBeskyttelse =
-                    hentPersonClient.hentPerson(
-                        ident,
-                        mapOf(
-                            HttpHeaders.Authorization to "Bearer $invoke",
-                            // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
-                            "behandlingsnummer" to "B286",
-                            "TEMA" to "DAG",
-                        ),
-                    ).adresseBeskyttelse
-                when (adresseBeskyttelse) {
-                    FORTROLIG -> Result.success(true)
-                    STRENGT_FORTROLIG -> Result.success(true)
-                    STRENGT_FORTROLIG_UTLAND -> Result.success(true)
-                    UGRADERT -> Result.success(false)
+        return hentPerson(ident)
+            .map {
+                when (it.adresseBeskyttelse) {
+                    FORTROLIG -> true
+                    STRENGT_FORTROLIG -> true
+                    STRENGT_FORTROLIG_UTLAND -> true
+                    UGRADERT -> false
                 }
-            }.also {
-                logger.info { "Kall til PDL api tok ${it.duration.inWholeMilliseconds} ms" }
-            }.value
-        } catch (e: Exception) {
-            sikkerLogg.error(e) { "Feil i adressebeskyttelse-oppslag for person med id $ident" }
-            return Result.failure(e)
-        }
+            }
     }
 
     override suspend fun person(ident: String): Result<PDLPersonIntern> {
-        return kotlin.runCatching {
-            val invoke = tokenSupplier.invoke()
-            hentPersonClient.hentPerson(
-                ident,
-                mapOf(
-                    HttpHeaders.Authorization to "Bearer $invoke",
-//                    HttpHeaders.XRequestId to MDC.get("behovId"),
-//                    "Nav-Call-Id" to MDC.get("behovId"),
-                    // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
-                    "behandlingsnummer" to "B286",
-                    "TEMA" to "DAG",
-                ),
-            )
-        }
-            .map { person ->
+        return hentPerson(ident)
+            .map { pdlPerson ->
                 PDLPersonIntern(
-                    ident = person.fodselnummer,
-                    fornavn = person.fornavn,
-                    etternavn = person.etternavn,
-                    mellomnavn = person.mellomnavn,
-                    alder = person.alder.toInt(),
-                    statsborgerskap = person.statsborgerskap,
-                    kjønn = person.kjonn,
-                    fødselsdato = person.fodselsdato,
+                    ident = pdlPerson.fodselnummer,
+                    fornavn = pdlPerson.fornavn,
+                    etternavn = pdlPerson.etternavn,
+                    mellomnavn = pdlPerson.mellomnavn,
+                    alder = pdlPerson.alder.toInt(),
+                    statsborgerskap = pdlPerson.statsborgerskap,
+                    kjønn = pdlPerson.kjonn,
+                    fødselsdato = pdlPerson.fodselsdato,
                 )
             }
-            .onFailure { e -> sikkerLogg.error(e) { "Feil ved henting av personopplysninger for ident $ident" } }
+    }
+
+    private suspend fun hentPerson(ident: String): Result<PDLPerson> {
+        return kotlin.runCatching {
+            val invoke = tokenSupplier.invoke()
+            measureTimedValue {
+                hentPersonClient.hentPerson(
+                    ident,
+                    mapOf(
+                        HttpHeaders.Authorization to "Bearer $invoke",
+                        // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
+                        "behandlingsnummer" to "B286",
+                        "TEMA" to "DAG",
+                    ),
+                )
+            }.let { timedValue ->
+                logger.info { "Henting av personopplysninger tok ${timedValue.duration.inWholeMilliseconds} ms" }
+                timedValue.value
+            }
+        }.onFailure { e -> sikkerLogg.error(e) { "Feil ved henting av personopplysninger for ident $ident" } }
     }
 }
 
