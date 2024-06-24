@@ -5,6 +5,7 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondBadRequest
 import io.ktor.http.headersOf
+import io.prometheus.client.CollectorRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.helper.fileAsText
@@ -32,7 +33,8 @@ class PDLHttpKlientTest {
                     tokenSupplier = { "token" },
                     httpClient =
                         defaultHttpClient(
-                            mockEngine,
+                            collectorRegistry = CollectorRegistry(),
+                            engine = mockEngine,
                         ),
                 ).person("12345612345").getOrThrow()
             }
@@ -70,7 +72,8 @@ class PDLHttpKlientTest {
                 tokenSupplier = { "token" },
                 httpClient =
                     defaultHttpClient(
-                        mockEngine,
+                        collectorRegistry = CollectorRegistry(),
+                        engine = mockEngine,
                     ),
             ).erAdressebeskyttet("12345612345").getOrThrow() shouldBe forventet
         }
@@ -92,7 +95,8 @@ class PDLHttpKlientTest {
                 tokenSupplier = { "token" },
                 httpClient =
                     defaultHttpClient(
-                        mockEngine,
+                        collectorRegistry = CollectorRegistry(),
+                        engine = mockEngine,
                     ),
             ).erAdressebeskyttet("12345612345").isFailure shouldBe true
         }
@@ -111,9 +115,45 @@ class PDLHttpKlientTest {
                 tokenSupplier = { "token" },
                 httpClient =
                     defaultHttpClient(
-                        mockEngine,
+                        collectorRegistry = CollectorRegistry(),
+                        engine = mockEngine,
                     ),
             ).erAdressebeskyttet("12345612345").isFailure shouldBe true
+        }
+    }
+
+    @Test
+    fun `PDL klienthen har metrics`() {
+        val mockEngine =
+            MockEngine { request ->
+                respond(
+                    pdlResponse("UGRADERT"),
+                    headers = headersOf("Content-Type", "application/json"),
+                )
+            }
+
+        runBlocking {
+            val registry = CollectorRegistry()
+            val pdlHttpKlient =
+                PDLHttpKlient(
+                    url = "http://localhost:8080",
+                    tokenSupplier = { "token" },
+                    httpClient =
+                        defaultHttpClient(
+                            collectorRegistry = registry,
+                            engine = mockEngine,
+                        ),
+                )
+
+            repeat(5) {
+                pdlHttpKlient.person("12345612345")
+            }
+
+            registry.getSampleValue(
+                "dp_saksbehandling_pdl_http_klient_status_total",
+                listOf("status").toTypedArray(),
+                listOf("200").toTypedArray(),
+            ) shouldBe 5.0
         }
     }
 

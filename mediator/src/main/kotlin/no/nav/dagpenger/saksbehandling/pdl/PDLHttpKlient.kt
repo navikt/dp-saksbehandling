@@ -10,7 +10,9 @@ import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.jackson.jackson
+import io.prometheus.client.CollectorRegistry
 import mu.KotlinLogging
+import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTROLIG
@@ -82,23 +84,29 @@ internal class PDLHttpKlient(
     }
 }
 
-internal fun defaultHttpClient(engine: HttpClientEngine = CIO.create {}) =
-    HttpClient(engine) {
-        expectSuccess = true
+internal fun defaultHttpClient(
+    collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+    engine: HttpClientEngine = CIO.create {},
+) = HttpClient(engine) {
+    expectSuccess = true
+    install(PrometheusMetricsPlugin) {
+        this.baseName = "dp_saksbehandling_pdl_http_klient"
+        this.registry = collectorRegistry
+    }
 
-        install(ContentNegotiation) {
-            jackson {
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                registerModules(JavaTimeModule())
-            }
-        }
-
-        install(HttpRequestRetry) {
-            retryOnException(maxRetries = 5)
-            this.constantDelay(
-                millis = 100,
-                randomizationMs = 0,
-            )
+    install(ContentNegotiation) {
+        jackson {
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            registerModules(JavaTimeModule())
         }
     }
+
+    install(HttpRequestRetry) {
+        retryOnException(maxRetries = 5)
+        this.constantDelay(
+            millis = 100,
+            randomizationMs = 0,
+        )
+    }
+}
