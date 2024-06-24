@@ -20,6 +20,7 @@ class BehovLøsningMottak(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerlogger = KotlinLogging.logger ("tjenestekall")
         const val ARKIVERBART_DOKUMENT_BEHOV = "ArkiverbartDokumentBehov"
         const val JOURNALFØRING_BEHOV = "JournalføringBehov"
         const val DISTRIBUERING_BEHOV = "DistribueringBehov"
@@ -48,23 +49,30 @@ class BehovLøsningMottak(
     ) {
         val typeLøsning = packet.get("@behov").first().asText()
 
-        when (typeLøsning) {
-            ARKIVERBART_DOKUMENT_BEHOV -> {
-                utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
-            }
+        try {
+            when (typeLøsning) {
 
-            JOURNALFØRING_BEHOV -> {
-                utsendingMediator.mottaJournalførtKvittering(packet.journalførtLøsning())
-            }
+                ARKIVERBART_DOKUMENT_BEHOV -> {
+                    utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
+                }
 
-            DISTRIBUERING_BEHOV -> {
-                utsendingMediator.mottaDistribuertKvittering(packet.distribuertLøsning())
-            }
+                JOURNALFØRING_BEHOV -> {
+                    utsendingMediator.mottaJournalførtKvittering(packet.journalførtLøsning())
+                }
 
-            else -> {
-                throw IllegalStateException("Ukjent behov: $typeLøsning")
+                DISTRIBUERING_BEHOV -> {
+                    utsendingMediator.mottaDistribuertKvittering(packet.distribuertLøsning())
+                }
+
+                else -> {
+                    throw IllegalStateException("Ukjent behov: $typeLøsning")
+                }
             }
+        } catch (e: Exception) {
+            logger.error(e) { "Uhåndtert feil: $e" }
+            sikkerlogger.error(e) { "Uhåndtert feil ved mottak av: ${packet.toJson()}" }
         }
+
     }
 }
 
