@@ -7,6 +7,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondBadRequest
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headersOf
+import io.prometheus.client.CollectorRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -28,7 +29,11 @@ class JournalpostIdHttpClientTest {
             JournalpostIdHttpClient(
                 journalpostIdApiUrl = "http://localhost:8080",
                 tokenProvider = { "tøken" },
-                httpClient = httpClient(mockEngine),
+                httpClient =
+                    httpClient(
+                        collectorRegistry = CollectorRegistry(),
+                        engine = mockEngine,
+                    ),
             )
         val journalpostIdResultat: Result<String> =
             runBlocking {
@@ -48,12 +53,47 @@ class JournalpostIdHttpClientTest {
             JournalpostIdHttpClient(
                 journalpostIdApiUrl = "http://localhost:8080/$søknadId",
                 tokenProvider = { "tøken" },
-                httpClient = httpClient(mockEngine),
+                httpClient =
+                    httpClient(
+                        collectorRegistry = CollectorRegistry(),
+                        engine = mockEngine,
+                    ),
             )
         val journalpostIdResultat: Result<String> =
             runBlocking {
                 journalpostIdClient.hentJournalpostId(søknadId = søknadId)
             }
         journalpostIdResultat.isFailure shouldBe true
+    }
+
+    @Test
+    fun `Har metrikker`() {
+        val mockEngine =
+            MockEngine { _ ->
+                respondBadRequest()
+            }
+
+        val collectorRegistry = CollectorRegistry()
+        val journalpostIdClient =
+            JournalpostIdHttpClient(
+                journalpostIdApiUrl = "http://localhost:8080/$søknadId",
+                tokenProvider = { "tøken" },
+                httpClient =
+                    httpClient(
+                        collectorRegistry = collectorRegistry,
+                        engine = mockEngine,
+                    ),
+            )
+        runBlocking {
+            repeat(5) {
+                journalpostIdClient.hentJournalpostId(søknadId = søknadId)
+            }
+        }
+
+        collectorRegistry.getSampleValue(
+            "dp_saksbehandling_joark_http_klient_status_total",
+            listOf("status").toTypedArray(),
+            listOf("400").toTypedArray(),
+        ) shouldBe 5.0
     }
 }

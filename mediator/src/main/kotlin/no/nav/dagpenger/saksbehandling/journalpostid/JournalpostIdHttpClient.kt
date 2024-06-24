@@ -9,7 +9,9 @@ import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.prometheus.client.CollectorRegistry
 import mu.KotlinLogging
+import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import java.util.UUID
 import kotlin.time.measureTimedValue
 
@@ -37,7 +39,14 @@ class JournalpostIdHttpClient(
     }
 }
 
-fun httpClient(engine: HttpClientEngine = CIO.create { }) =
-    HttpClient(engine) {
-        expectSuccess = true
+fun httpClient(
+    collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+    engine: HttpClientEngine = CIO.create { },
+) = HttpClient(engine) {
+    expectSuccess = true
+
+    install(PrometheusMetricsPlugin) {
+        this.baseName = "dp_saksbehandling_joark_http_klient"
+        this.registry = collectorRegistry
     }
+}
