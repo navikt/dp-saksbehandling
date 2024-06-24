@@ -21,10 +21,11 @@ internal class SkjermingHttpKlient(
     private val httpClient: HttpClient = createHttpClient(engine = CIO.create { }),
 ) : SkjermingKlient {
     override suspend fun erSkjermetPerson(ident: String): Result<Boolean> {
+        val token = tokenProvider.invoke()
         return measureTimedValue {
             kotlin.runCatching {
                 httpClient.post(urlString = skjermingApiUrl) {
-                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                    header(HttpHeaders.Authorization, "Bearer $token")
                     contentType(ContentType.Application.Json)
                     accept(ContentType.Text.Plain)
                     setBody(SkjermingRequest(ident))

@@ -32,7 +32,7 @@ spec:
     pool: {{ kafka_pool }}
   env:
     - name: JDK_JAVA_OPTIONS
-      value: -XX:+UseParallelGC -XX:MaxRAMPercentage=50.0 -XX:ActiveProcessorCount=4
+      value: -XX:+UseParallelGC -XX:MaxRAMPercentage=50.0 -XX:ActiveProcessorCount=4 -XX:+PrintFlagsFinal
     - name: FLYWAY_CLEAN_DISABLED
       value: "false"
     - name: GRUPPE_SAKSBEHANDLER
