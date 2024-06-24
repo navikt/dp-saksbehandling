@@ -23,6 +23,7 @@ dependencies {
     implementation(libs.bundles.postgres)
     implementation(libs.dp.biblioteker.oauth2.klient)
     implementation(libs.dp.biblioteker.pdl.klient)
+    implementation(libs.dp.biblioteker.ktor.klient.metrics)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.logging.jvm)

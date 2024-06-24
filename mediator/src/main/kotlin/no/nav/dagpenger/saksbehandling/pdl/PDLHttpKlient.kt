@@ -11,6 +11,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
+import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTROLIG
@@ -85,6 +86,8 @@ internal class PDLHttpKlient(
 internal fun defaultHttpClient(engine: HttpClientEngine = CIO.create {}) =
     HttpClient(engine) {
         expectSuccess = true
+        install(PrometheusMetricsPlugin) {
+        }
 
         install(ContentNegotiation) {
             jackson {
