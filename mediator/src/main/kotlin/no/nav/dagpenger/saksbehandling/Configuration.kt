@@ -42,30 +42,30 @@ internal object Configuration {
     val journalpostApiScope: String = properties[Key("JOURNALPOSTID_API_SCOOPE", stringType)]
 
     val journalpostTokenProvider = {
-        azureAdClient().clientCredentials(journalpostApiScope).accessToken
+        azureAdClient.clientCredentials(journalpostApiScope).accessToken
     }
 
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingApiScope: String = properties[Key("SKJERMING_API_SCOPE", stringType)]
     val skjermingTokenProvider = {
-        azureAdClient().clientCredentials(skjermingApiScope).accessToken
+        azureAdClient.clientCredentials(skjermingApiScope).accessToken
     }
 
     val pdlUrl: String = properties[Key("PDL_API_URL", stringType)]
     val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
     val pdlTokenProvider = {
         measureTimedValue {
-            azureAdClient().clientCredentials(pdlApiScope).accessToken
+            azureAdClient.clientCredentials(pdlApiScope).accessToken
         }.also { timedValue ->
-            logger.info { "Token henting tok ${timedValue.duration.inWholeMilliseconds} ms" }
+            logger.info { ("Token henting tok ${timedValue.duration.inWholeMilliseconds} ms") }
         }.value
     }
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
 
-    fun azureAdClient(): CachedOauth2Client {
+    val azureAdClient: CachedOauth2Client by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)
-        return CachedOauth2Client(
+        CachedOauth2Client(
             tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
             authType = azureAdConfig.clientSecret(),
         )
