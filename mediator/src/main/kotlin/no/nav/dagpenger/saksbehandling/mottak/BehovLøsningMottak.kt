@@ -20,7 +20,7 @@ class BehovLøsningMottak(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
-        private val sikkerlogger = KotlinLogging.logger ("tjenestekall")
+        private val sikkerlogger = KotlinLogging.logger("tjenestekall")
         const val ARKIVERBART_DOKUMENT_BEHOV = "ArkiverbartDokumentBehov"
         const val JOURNALFØRING_BEHOV = "JournalføringBehov"
         const val DISTRIBUERING_BEHOV = "DistribueringBehov"
@@ -51,7 +51,6 @@ class BehovLøsningMottak(
 
         try {
             when (typeLøsning) {
-
                 ARKIVERBART_DOKUMENT_BEHOV -> {
                     utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
                 }
@@ -72,7 +71,6 @@ class BehovLøsningMottak(
             logger.error(e) { "Uhåndtert feil: $e" }
             sikkerlogger.error(e) { "Uhåndtert feil ved mottak av: ${packet.toJson()}" }
         }
-
     }
 }
 
