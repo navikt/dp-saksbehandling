@@ -78,11 +78,13 @@ class UtsendingMediatorTest {
                 """,
                 )
             }
+            rapid.inspektør.size shouldBe 0
+            utsendingRepository.finnUtsendingFor(oppgaveId) shouldBe null
         }
     }
 
     @Test
-    fun `livssyklus av en utsending`() {
+    fun `livssyklus for en utsending`() {
         withMigratedDb { datasource ->
             val oppgave = lagreOppgave(datasource)
             val oppgaveId = oppgave.oppgaveId

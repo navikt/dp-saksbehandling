@@ -30,16 +30,16 @@ class UtsendingMediator(private val repository: UtsendingRepository) {
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
         val utsending = repository.finnUtsendingFor(startUtsendingHendelse.oppgaveId)
-        utsending?.let {
-            it.startUtsending(startUtsendingHendelse)
-            lagreOgPubliserBehov(it)
-        }
-
-        if (utsending == null) {
-            logger.info {
-                "Fant ingen utsending for behandlingId:${startUtsendingHendelse.behandlingId}," +
-                    " oppgaveId=${startUtsendingHendelse.oppgaveId}."
+        when (utsending != null) {
+            true -> {
+                utsending.startUtsending(startUtsendingHendelse)
+                lagreOgPubliserBehov(utsending)
             }
+            false ->
+                logger.info {
+                    "Fant ingen utsending for behandlingId:${startUtsendingHendelse.behandlingId}," +
+                        " oppgaveId=${startUtsendingHendelse.oppgaveId}."
+                }
         }
     }
 
