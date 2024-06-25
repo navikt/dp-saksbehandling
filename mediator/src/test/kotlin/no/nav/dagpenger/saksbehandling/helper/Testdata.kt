@@ -68,14 +68,14 @@ internal fun distribuertDokumentBehovLøsning(
 }
 
 internal fun journalføringBehovLøsning(
-    oppgaveUUID: UUID,
+    oppgaveId: UUID,
     journalpostId: String,
 ): String {
 //language=JSON
     return """
            {
           "@event_name": "behov",
-          "oppgaveId": "$oppgaveUUID",
+          "oppgaveId": "$oppgaveId",
           "@behov": ["${JournalføringBehov.BEHOV_NAVN}"],
           "@løsning": {
             "JournalføringBehov": {

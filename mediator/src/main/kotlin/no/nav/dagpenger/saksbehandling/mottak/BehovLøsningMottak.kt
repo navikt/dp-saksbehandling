@@ -70,6 +70,7 @@ class BehovLøsningMottak(
         } catch (e: Exception) {
             logger.error(e) { "Uhåndtert feil: $e" }
             sikkerlogger.error(e) { "Uhåndtert feil ved mottak av: ${packet.toJson()}" }
+            throw e
         }
     }
 }
