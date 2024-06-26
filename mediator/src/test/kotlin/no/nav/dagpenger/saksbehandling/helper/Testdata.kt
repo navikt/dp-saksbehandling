@@ -89,6 +89,7 @@ internal fun journalføringBehovLøsning(
 internal fun arkiverbartDokumentBehovLøsning(
     oppgaveUUID: UUID,
     pdfUrnString: String,
+    final: Boolean? = null,
 ): String {
 //language=JSON
     return """
@@ -96,6 +97,7 @@ internal fun arkiverbartDokumentBehovLøsning(
           "@event_name": "behov",
           "oppgaveId": "$oppgaveUUID",
           "@behov": ["ArkiverbartDokumentBehov"],
+          ${final?.let { """"@final": $it,""" } ?: ""}
           "@løsning": {
             "ArkiverbartDokumentBehov": {
               "metainfo": {

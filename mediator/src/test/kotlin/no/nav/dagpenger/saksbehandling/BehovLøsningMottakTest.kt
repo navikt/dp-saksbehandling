@@ -80,6 +80,29 @@ class BehovLøsningMottakTest {
     }
 
     @Test
+    fun `Skal ignorere pakker med @final`() {
+        val mediator =
+            mockk<UtsendingMediator>(relaxed = true)
+        BehovLøsningMottak(
+            utsendingMediator = mediator,
+            rapidsConnection = testRapid,
+        )
+
+        val message =
+            arkiverbartDokumentBehovLøsning(
+                oppgaveUUID = oppgaveId,
+                pdfUrnString = "urn:pdf:1234",
+                final = true,
+            )
+        testRapid.sendTestMessage(
+            message,
+        )
+        verify(exactly = 0) {
+            mediator.mottaUrnTilArkiverbartFormatAvBrev(any())
+        }
+    }
+
+    @Test
     fun `Skal kaste feil hvis vi ikke kan håndtere forventet løsning`() {
         val mediator =
             mockk<UtsendingMediator>(relaxed = true).also {

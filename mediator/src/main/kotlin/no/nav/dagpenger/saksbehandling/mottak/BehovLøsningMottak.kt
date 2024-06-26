@@ -29,6 +29,7 @@ class BehovLøsningMottak(
             validate { it.demandValue("@event_name", "behov") }
             validate { it.requireKey("@løsning") }
             validate { it.requireKey("oppgaveId") }
+            validate { it.rejectKey("@final") }
             validate { it.interestedIn("journalpostId") }
             validate { it.interestedIn("urn") }
             validate {
@@ -77,9 +78,7 @@ class BehovLøsningMottak(
             } catch (e: Exception) {
                 logger.error(e) { "Uhåndtert feil: $e" }
                 sikkerlogger.error(e) { "Uhåndtert feil ved mottak av: ${packet.toJson()}" }
-                if (oppgaveId !in setOf("01904f20-2324-7615-834c-dd7b0ab2ba95")) {
-                    throw e
-                }
+                throw e
             }
         }
     }
