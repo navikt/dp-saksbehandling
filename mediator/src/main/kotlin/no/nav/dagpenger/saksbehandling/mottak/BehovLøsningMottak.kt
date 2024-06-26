@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.ARKIVERBART_DOKUMENT_BEHOV
 import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.DISTRIBUERING_BEHOV
@@ -47,30 +48,36 @@ class BehovLøsningMottak(
         packet: JsonMessage,
         context: MessageContext,
     ) {
-        val typeLøsning = packet.get("@behov").first().asText()
-
-        try {
-            when (typeLøsning) {
-                ARKIVERBART_DOKUMENT_BEHOV -> {
-                    utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
+        withLoggingContext(
+            "oppgaveId" to packet["oppgaveId"].asText(),
+        ) {
+            val typeLøsning =
+                packet.get("@behov").first().asText().also {
+                    logger.info { "Mottok løsning for behov: $it" }
                 }
+            try {
+                when (typeLøsning) {
+                    ARKIVERBART_DOKUMENT_BEHOV -> {
+                        utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
+                    }
 
-                JOURNALFØRING_BEHOV -> {
-                    utsendingMediator.mottaJournalførtKvittering(packet.journalførtLøsning())
-                }
+                    JOURNALFØRING_BEHOV -> {
+                        utsendingMediator.mottaJournalførtKvittering(packet.journalførtLøsning())
+                    }
 
-                DISTRIBUERING_BEHOV -> {
-                    utsendingMediator.mottaDistribuertKvittering(packet.distribuertLøsning())
-                }
+                    DISTRIBUERING_BEHOV -> {
+                        utsendingMediator.mottaDistribuertKvittering(packet.distribuertLøsning())
+                    }
 
-                else -> {
-                    throw IllegalStateException("Ukjent behov: $typeLøsning")
+                    else -> {
+                        throw IllegalStateException("Ukjent behov: $typeLøsning")
+                    }
                 }
+            } catch (e: Exception) {
+                logger.error(e) { "Uhåndtert feil: $e" }
+                sikkerlogger.error(e) { "Uhåndtert feil ved mottak av: ${packet.toJson()}" }
+                throw e
             }
-        } catch (e: Exception) {
-            logger.error(e) { "Uhåndtert feil: $e" }
-            sikkerlogger.error(e) { "Uhåndtert feil ved mottak av: ${packet.toJson()}" }
-            throw e
         }
     }
 }
