@@ -210,6 +210,8 @@ data class Utsending(
     }
 
     interface Tilstand {
+
+
         fun behov(utsending: Utsending): Behov = IngenBehov
 
         fun mottaBrev(
