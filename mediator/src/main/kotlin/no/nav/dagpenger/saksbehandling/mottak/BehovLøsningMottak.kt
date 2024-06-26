@@ -47,7 +47,15 @@ class BehovLøsningMottak(
         packet: JsonMessage,
         context: MessageContext,
     ) {
+        packet["oppgaveId"].asText().let { oppgaveId ->
+            if (oppgaveId in setOf("01904f05-6b53-7a9a-bd5e-d35b7d39b505")) {
+                logger.info { "Skipper: $oppgaveId" }
+                return
+            }
+        }
+
         val typeLøsning = packet.get("@behov").first().asText()
+
 
         try {
             when (typeLøsning) {
