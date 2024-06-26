@@ -48,8 +48,9 @@ class BehovLøsningMottak(
         packet: JsonMessage,
         context: MessageContext,
     ) {
+        val oppgaveId = packet["oppgaveId"].asText()
         withLoggingContext(
-            "oppgaveId" to packet["oppgaveId"].asText(),
+            "oppgaveId" to oppgaveId,
         ) {
             val typeLøsning =
                 packet.get("@behov").first().asText().also {
@@ -76,7 +77,9 @@ class BehovLøsningMottak(
             } catch (e: Exception) {
                 logger.error(e) { "Uhåndtert feil: $e" }
                 sikkerlogger.error(e) { "Uhåndtert feil ved mottak av: ${packet.toJson()}" }
-                throw e
+                if (oppgaveId !in setOf("01904f20-2324-7615-834c-dd7b0ab2ba95")) {
+                    throw e
+                }
             }
         }
     }
