@@ -3,10 +3,10 @@ package no.nav.dagpenger.saksbehandling.mottak
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
-import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.ARKIVERBART_DOKUMENT_BEHOV
-import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.DISTRIBUERING_BEHOV
-import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak.Companion.JOURNALFØRING_BEHOV
 import no.nav.dagpenger.saksbehandling.toUrn
+import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
+import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
+import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
@@ -22,9 +22,12 @@ class BehovLøsningMottak(
     companion object {
         private val logger = KotlinLogging.logger {}
         private val sikkerlogger = KotlinLogging.logger("tjenestekall")
-        const val ARKIVERBART_DOKUMENT_BEHOV = "ArkiverbartDokumentBehov"
-        const val JOURNALFØRING_BEHOV = "JournalføringBehov"
-        const val DISTRIBUERING_BEHOV = "DistribueringBehov"
+        val behovListe =
+            setOf(
+                ArkiverbartBrevBehov.BEHOV_NAVN,
+                JournalføringBehov.BEHOV_NAVN,
+                DistribueringBehov.BEHOV_NAVN,
+            ).toList()
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "behov") }
             validate { it.requireKey("@løsning") }
@@ -34,8 +37,8 @@ class BehovLøsningMottak(
             validate { it.interestedIn("urn") }
             validate {
                 it.requireAllOrAny(
-                    "@behov",
-                    listOf(ARKIVERBART_DOKUMENT_BEHOV, JOURNALFØRING_BEHOV, DISTRIBUERING_BEHOV),
+                    key = "@behov",
+                    values = behovListe,
                 )
             }
         }
@@ -63,15 +66,15 @@ class BehovLøsningMottak(
                 }
             try {
                 when (typeLøsning) {
-                    ARKIVERBART_DOKUMENT_BEHOV -> {
+                    ArkiverbartBrevBehov.BEHOV_NAVN -> {
                         utsendingMediator.mottaUrnTilArkiverbartFormatAvBrev(packet.arkiverbartDokumentLøsning())
                     }
 
-                    JOURNALFØRING_BEHOV -> {
+                    JournalføringBehov.BEHOV_NAVN -> {
                         utsendingMediator.mottaJournalførtKvittering(packet.journalførtLøsning())
                     }
 
-                    DISTRIBUERING_BEHOV -> {
+                    DistribueringBehov.BEHOV_NAVN -> {
                         utsendingMediator.mottaDistribuertKvittering(packet.distribuertLøsning())
                     }
 
@@ -91,14 +94,14 @@ class BehovLøsningMottak(
 private fun JsonMessage.journalførtLøsning(): JournalførtHendelse {
     return JournalførtHendelse(
         oppgaveId = this["oppgaveId"].asUUID(),
-        journalpostId = this["@løsning"][JOURNALFØRING_BEHOV]["journalpostId"].asText(),
+        journalpostId = this["@løsning"][JournalføringBehov.BEHOV_NAVN]["journalpostId"].asText(),
     )
 }
 
 private fun JsonMessage.distribuertLøsning(): DistribuertHendelse {
     return DistribuertHendelse(
         oppgaveId = this["oppgaveId"].asUUID(),
-        distribusjonId = this["@løsning"][DISTRIBUERING_BEHOV]["distribueringId"].asText(),
+        distribusjonId = this["@løsning"][DistribueringBehov.BEHOV_NAVN]["distribueringId"].asText(),
         journalpostId = this["journalpostId"].asText(),
     )
 }
@@ -106,6 +109,6 @@ private fun JsonMessage.distribuertLøsning(): DistribuertHendelse {
 private fun JsonMessage.arkiverbartDokumentLøsning(): ArkiverbartBrevHendelse {
     return ArkiverbartBrevHendelse(
         oppgaveId = this["oppgaveId"].asUUID(),
-        pdfUrn = this["@løsning"][ARKIVERBART_DOKUMENT_BEHOV]["urn"].asText().toUrn(),
+        pdfUrn = this["@løsning"][ArkiverbartBrevBehov.BEHOV_NAVN]["urn"].asText().toUrn(),
     )
 }

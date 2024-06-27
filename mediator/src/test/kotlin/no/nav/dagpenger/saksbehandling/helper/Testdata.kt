@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.helper
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import java.util.UUID
@@ -59,7 +60,7 @@ internal fun distribuertDokumentBehovLøsning(
             "${DistribueringBehov.BEHOV_NAVN}"
           ],
           "@løsning": {
-            "DistribueringBehov": {
+            "${DistribueringBehov.BEHOV_NAVN}": {
               "distribueringId": "$distribusjonId"
             }
           }
@@ -78,7 +79,7 @@ internal fun journalføringBehovLøsning(
           "oppgaveId": "$oppgaveId",
           "@behov": ["${JournalføringBehov.BEHOV_NAVN}"],
           "@løsning": {
-            "JournalføringBehov": {
+            "${JournalføringBehov.BEHOV_NAVN}": {
                 "journalpostId": "$journalpostId"
             }
           }
@@ -96,10 +97,10 @@ internal fun arkiverbartDokumentBehovLøsning(
         {
           "@event_name": "behov",
           "oppgaveId": "$oppgaveUUID",
-          "@behov": ["ArkiverbartDokumentBehov"],
+          "@behov": ["${ArkiverbartBrevBehov.BEHOV_NAVN}"],
           ${final?.let { """"@final": $it,""" } ?: ""}
           "@løsning": {
-            "ArkiverbartDokumentBehov": {
+            "${ArkiverbartBrevBehov.BEHOV_NAVN}": {
               "metainfo": {
                 "dokumentNavn": "netto.pdf",
                 "dokumentType": "PDF"

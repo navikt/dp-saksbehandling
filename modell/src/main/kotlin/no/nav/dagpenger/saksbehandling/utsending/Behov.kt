@@ -19,7 +19,7 @@ data class ArkiverbartBrevBehov(
     private val ident: String,
 ) : Behov() {
     companion object {
-        const val BEHOV_NAVN = "ArkiverbartDokumentBehov"
+        const val BEHOV_NAVN = "PdfBehov"
     }
 
     override val navn: String = BEHOV_NAVN
