@@ -231,6 +231,13 @@ data class Oppgave private constructor(
             oppgave.saksbehandlerIdent = null
             oppgave.utsattTil = null
         }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
     }
 
     interface Tilstand {
