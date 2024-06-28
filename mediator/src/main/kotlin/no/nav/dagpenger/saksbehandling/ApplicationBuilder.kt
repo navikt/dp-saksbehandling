@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.utsending.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandling
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
+import no.nav.dagpenger.saksbehandling.mottak.AvklareringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
@@ -58,6 +59,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
                 UtsendingMottak(rapidsConnection, utsendingMediator)
                 BehovLøsningMottak(rapidsConnection, utsendingMediator)
+                AvklareringIkkeRelevantMottak(rapidsConnection, oppgaveMediator)
             }
 
     init {
