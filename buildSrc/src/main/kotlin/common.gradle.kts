@@ -47,5 +47,5 @@ tasks.withType<Jar>().configureEach {
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-    dependsOn("spotlessApply")
+//    dependsOn("spotlessApply")
 }

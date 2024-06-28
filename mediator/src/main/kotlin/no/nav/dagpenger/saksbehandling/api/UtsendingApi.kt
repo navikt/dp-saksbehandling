@@ -18,23 +18,26 @@ import no.nav.dagpenger.saksbehandling.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal fun Application.utsendingApi(utsendingMediator: UtsendingMediator) {
     routing {
         authenticate("azureAd") {
             route("/utsending/{oppgaveId}/send-brev") {
                 post {
+                    val brevBody = call.receiveText()
                     try {
                         if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
 
                         val oppgaveId = call.finnUUID("oppgaveId")
 
-                        val brevHtml = call.receiveText()
-                        val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brevHtml)
+                        val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brevBody)
                         utsendingMediator.mottaBrev(vedtaksbrevHendelse)
                         call.respond(HttpStatusCode.Accepted)
                     } catch (e: Exception) {
-                        logger.error(e) { "Feil ved mottak av brev: ${e.message}" }
+                        val feilmelding = "Feil ved mottak av brev: ${e.message}"
+                        logger.error(e) { feilmelding }
+                        sikkerlogger.error(e) { "$feilmelding for $brevBody" }
                     }
                 }
             }
