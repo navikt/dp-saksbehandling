@@ -16,7 +16,6 @@ internal class AvklareringIkkeRelevantMottak(
     private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
-
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "AvklaringIkkeRelevant") }
             validate { it.requireKey("ident", "kode", "behandlingId") }
