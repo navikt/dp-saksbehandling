@@ -223,6 +223,32 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                 ),
         ).singleOrNull()
 
+    override fun fjerneEmneknagg(
+        behandlingId: UUID,
+        ikkeRelevantEmneknagg: String,
+    ): Boolean {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        DELETE FROM emneknagg_v1
+                        WHERE  oppgave_id = (SELECT oppg.id
+                                             FROM   oppgave_v1 oppg
+                                             WHERE  oppg.behandling_id = :behandling_id)
+                        AND    emneknagg = :emneknagg
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandlingId,
+                            "emneknagg" to ikkeRelevantEmneknagg,
+                        ),
+                ).asUpdate,
+            ) > 0
+        }
+    }
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(

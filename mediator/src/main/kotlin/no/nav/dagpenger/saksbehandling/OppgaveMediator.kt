@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -98,6 +99,15 @@ class OppgaveMediator(
         repository.hentOppgave(utsettOppgaveHendelse.oppgaveId).let { oppgave ->
             oppgave.utsett(utsettOppgaveHendelse)
             repository.lagre(oppgave)
+        }
+    }
+
+    fun fjernEmneknagg(hendelse: IkkeRelevantAvklaringHendelse) {
+        repository.fjerneEmneknagg(hendelse.behandlingId, hendelse.ikkeRelevantEmneknagg).let {
+            when (it) {
+                true -> logger.info { "Fjernet emneknagg: ${hendelse.ikkeRelevantEmneknagg} for behandlingId: ${hendelse.behandlingId}" }
+                false -> logger.warn { "Fant ikke emneknagg: ${hendelse.ikkeRelevantEmneknagg} for behandlingId: ${hendelse.behandlingId}" }
+            }
         }
     }
 }

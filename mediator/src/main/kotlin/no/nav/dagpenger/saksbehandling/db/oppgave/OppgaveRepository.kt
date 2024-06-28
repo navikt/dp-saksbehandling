@@ -40,4 +40,9 @@ interface OppgaveRepository {
     fun hentOppgaveFor(behandlingId: UUID): Oppgave
 
     fun finnOppgaveFor(behandlingId: UUID): Oppgave?
+
+    fun fjerneEmneknagg(
+        behandlingId: UUID,
+        ikkeRelevantEmneknagg: String,
+    ): Boolean
 }

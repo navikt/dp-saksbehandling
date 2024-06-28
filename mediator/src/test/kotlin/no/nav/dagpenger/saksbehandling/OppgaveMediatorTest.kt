@@ -14,9 +14,11 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.mottak.AvklareringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
@@ -51,6 +53,51 @@ class OppgaveMediatorTest {
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `Skal kunne slette avklaringer når de blir irrelevante`() {
+        withMigratedDb { datasource ->
+            val testEmneknagger = setOf("a", "b", "c")
+
+            val oppgaveMediator =
+                OppgaveMediator(repository = PostgresOppgaveRepository(datasource))
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
+            AvklareringIkkeRelevantMottak(testRapid, oppgaveMediator)
+
+            val søknadId = UUIDv7.ny()
+            val behandlingId = UUIDv7.ny()
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                )
+
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = testEmneknagger,
+                ),
+            )
+
+            oppgaveMediator.finnOppgaveFor(behandlingId)!!.emneknagger shouldContainAll testEmneknagger
+
+            oppgaveMediator.fjernEmneknagg(
+                IkkeRelevantAvklaringHendelse(
+                    ident = testIdent,
+                    behandlingId = behandlingId,
+                    ikkeRelevantEmneknagg = "a",
+                ),
+            )
+
+            oppgaveMediator.finnOppgaveFor(behandlingId)!!.emneknagger shouldContainAll testEmneknagger.minus("a")
         }
     }
 
