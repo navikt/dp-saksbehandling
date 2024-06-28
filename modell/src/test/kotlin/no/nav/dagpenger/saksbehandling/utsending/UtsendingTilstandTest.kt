@@ -12,7 +12,6 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendel
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class UtsendingTilstandTest {
@@ -61,17 +60,20 @@ class UtsendingTilstandTest {
     }
 
     @Test
-    @Disabled
     fun `Ugyldig tilstandsendring`() {
         val utsending = Utsending(oppgaveId = oppgaveId, ident = ident)
-        val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brev = "Dette er et vedtaksbrev")
+
+        shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
+            utsending.mottaJournalførtKvittering(JournalførtHendelse(oppgaveId, journalpostId = "123456"))
+        }
+
         shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
             utsending.mottaUrnTilArkiverbartFormatAvBrev(
-                ArkiverbartBrevHendelse(oppgaveId, pdfUrn = "urn:pdf:123456".toUrn()),
+                ArkiverbartBrevHendelse(
+                    oppgaveId,
+                    pdfUrn = "urn:pdf:123456".toUrn(),
+                ),
             )
-        }
-        shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
-            utsending.mottaBrev(vedtaksbrevHendelse)
         }
     }
 }
