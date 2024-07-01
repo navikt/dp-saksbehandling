@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm")
-    id("com.diffplug.spotless")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 repositories {
@@ -30,22 +30,10 @@ tasks.test {
     }
 }
 
-configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    val ktlintVersion = "1.1.1"
-
-    kotlin {
-        ktlint(ktlintVersion)
-    }
-
-    kotlinGradle {
-        ktlint(ktlintVersion)
-    }
-}
-
 tasks.withType<Jar>().configureEach {
     dependsOn("test")
 }
 
 tasks.withType<KotlinCompile>().configureEach {
-    dependsOn("spotlessApply")
+    dependsOn("ktlintFormat")
 }

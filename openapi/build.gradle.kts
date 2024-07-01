@@ -8,11 +8,15 @@ tasks {
     compileKotlin {
         dependsOn("openApiGenerate")
     }
-    spotlessKotlin {
-        dependsOn("openApiGenerate")
-    }
 }
 
+tasks.named("runKtlintCheckOverMainSourceSet").configure {
+    dependsOn("openApiGenerate")
+}
+
+tasks.named("runKtlintFormatOverMainSourceSet").configure {
+    dependsOn("openApiGenerate")
+}
 sourceSets {
     main {
         java {
