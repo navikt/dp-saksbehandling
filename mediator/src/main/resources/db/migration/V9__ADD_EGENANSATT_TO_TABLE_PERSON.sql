@@ -1,0 +1,3 @@
+ALTER TABLE person_v1
+    ADD COLUMN egenansatt BOOLEAN DEFAULT FALSE;
+

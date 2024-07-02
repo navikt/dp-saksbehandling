@@ -12,7 +12,11 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-val testPerson = Person(ident = "12345678901")
+val testPerson =
+    Person(
+        ident = "12345678901",
+        egenAnsatt = false,
+    )
 val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 
 fun lagOppgave(

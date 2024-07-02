@@ -45,6 +45,19 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne oppdatere egenansatt status på en person`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testPerson)
+            repo.finnPerson(testPerson.ident) shouldBe testPerson
+
+            val oppdatertPerson = testPerson.copy(egenAnsatt = true)
+            repo.lagre(oppdatertPerson)
+            repo.finnPerson(oppdatertPerson.ident) shouldBe oppdatertPerson
+        }
+    }
+
+    @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)

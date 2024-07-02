@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -35,14 +36,17 @@ class OppgaveMediatorTest {
     private val sak = Sak("12342", "Arena")
     private val testRapid = TestRapid()
     private val pdlKlientMock = mockk<PDLKlient>(relaxed = true)
-    private val skjermingKlientMock = mockk<SkjermingKlient>(relaxed = true)
+    private val skjermingKlientMock =
+        mockk<SkjermingKlient>(relaxed = true).also {
+            coEvery { it.erSkjermetPerson(any()) } returns Result.success(false)
+        }
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
 
     @Test
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
         withMigratedDb { datasource ->
             val repo = PostgresOppgaveRepository(datasource)
-            val oppgaveMediator = OppgaveMediator(repo)
+            val oppgaveMediator = OppgaveMediator(repo, skjermingKlientMock)
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =
@@ -62,7 +66,7 @@ class OppgaveMediatorTest {
             val testEmneknagger = setOf("a", "b", "c")
 
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresOppgaveRepository(datasource))
+                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
             AvklareringIkkeRelevantMottak(testRapid, oppgaveMediator)
@@ -105,7 +109,7 @@ class OppgaveMediatorTest {
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresOppgaveRepository(datasource))
+                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
             VedtakFattetMottak(testRapid, oppgaveMediator)
@@ -174,6 +178,7 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
                 )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
@@ -219,6 +224,7 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
                 )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)

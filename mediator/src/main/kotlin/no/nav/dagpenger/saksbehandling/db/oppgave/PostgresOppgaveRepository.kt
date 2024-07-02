@@ -52,6 +52,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     Person(
                         id = row.uuid("id"),
                         ident = row.string("ident"),
+                        egenAnsatt = row.boolean("egenansatt"),
                     )
                 }.asSingle,
             )
@@ -379,12 +380,13 @@ private fun TransactionalSession.lagre(person: Person) {
                     (id, ident) 
                 VALUES
                     (:id, :ident) 
-                ON CONFLICT (id) DO NOTHING
+                ON CONFLICT (id) DO update SET egenansatt = :egenansatt
                 """.trimIndent(),
             paramMap =
                 mapOf(
                     "id" to person.id,
                     "ident" to person.ident,
+                    "egenansatt" to person.egenAnsatt,
                 ),
         ).asUpdate,
     )

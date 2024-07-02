@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -9,15 +10,17 @@ import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 
 private val logger = KotlinLogging.logger {}
 
 class OppgaveMediator(
     private val repository: OppgaveRepository,
+    private val skjermingKlient: SkjermingKlient,
 ) : OppgaveRepository by repository {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
-            repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: Person(
+            repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: lagPerson(
                 ident = søknadsbehandlingOpprettetHendelse.ident,
             )
 
@@ -108,6 +111,15 @@ class OppgaveMediator(
                 true -> logger.info { "Fjernet emneknagg: ${hendelse.ikkeRelevantEmneknagg} for behandlingId: ${hendelse.behandlingId}" }
                 false -> logger.warn { "Fant ikke emneknagg: ${hendelse.ikkeRelevantEmneknagg} for behandlingId: ${hendelse.behandlingId}" }
             }
+        }
+    }
+
+    private fun lagPerson(ident: String): Person {
+        return runBlocking {
+            Person(
+                ident = ident,
+                egenAnsatt = skjermingKlient.erSkjermetPerson(ident).getOrThrow(),
+            )
         }
     }
 }
