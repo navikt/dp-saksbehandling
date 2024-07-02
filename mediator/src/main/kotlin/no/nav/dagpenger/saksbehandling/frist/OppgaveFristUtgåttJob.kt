@@ -48,7 +48,7 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
     sessionOf(dataSource).use { session ->
         session.transaction { tx ->
             val utgåtteOppgaver: List<List<UUID>> =
-                session.run(
+                tx.run(
                     queryOf(
                         //language=PostgreSQL
                         statement =
