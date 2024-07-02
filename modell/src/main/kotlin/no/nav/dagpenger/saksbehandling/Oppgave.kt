@@ -203,6 +203,17 @@ data class Oppgave private constructor(
 
     object FerdigBehandlet : Tilstand {
         override val type: Type = FERDIG_BEHANDLET
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            logger.warn { "Ferdigstiller allerede ferdib behandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
+            sikkerlogg.warn {
+                "Ferdigstiller allerede ferdib behandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
+                    "med vedtakFattetHendelse: $vedtakFattetHendelse "
+            }
+        }
     }
 
     object PaaVent : Tilstand {
