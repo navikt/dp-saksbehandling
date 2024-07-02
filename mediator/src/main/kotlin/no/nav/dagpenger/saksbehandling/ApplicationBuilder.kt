@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
+import no.nav.dagpenger.saksbehandling.api.statistikkApi
 import no.nav.dagpenger.saksbehandling.api.utsendingApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
@@ -19,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
+import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -51,6 +53,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 this.apiConfig()
                 this.oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
                 this.utsendingApi(utsendingMediator)
+                this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
             }.build().also { rapidsConnection ->
                 utsendingMediator.setRapidsConnection(rapidsConnection)
                 VedtakFattetMottak(rapidsConnection, oppgaveMediator)
