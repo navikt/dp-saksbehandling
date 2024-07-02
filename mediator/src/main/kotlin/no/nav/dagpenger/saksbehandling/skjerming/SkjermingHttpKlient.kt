@@ -31,7 +31,6 @@ internal class SkjermingHttpKlient(
                     setBody(SkjermingRequest(ident))
                 }.bodyAsText().toBoolean()
             }
-                .onSuccess { logger.info("Kall til skjerming gikk OK") }
                 .onFailure { throwable -> logger.error(throwable) { "Kall til skjerming feilet" } }
         }.also {
             logger.info { "Kall til skjerming api tok ${it.duration.inWholeMilliseconds} ms" }
