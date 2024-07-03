@@ -38,8 +38,8 @@ object KafkaConfiguration {
     fun kafkaStreamsConfiguration(applicationId: String): Map<String, String> {
         val configuration =
             when (System.getenv("NAIS_CLUSTER_NAME")) {
-                null -> systemProperties() overriding EnvironmentVariables overriding naisProperties
-                else -> localProperties
+                null -> localProperties
+                else -> systemProperties() overriding EnvironmentVariables overriding naisProperties
             }
         return configuration.list().reversed().fold(
             mapOf(
