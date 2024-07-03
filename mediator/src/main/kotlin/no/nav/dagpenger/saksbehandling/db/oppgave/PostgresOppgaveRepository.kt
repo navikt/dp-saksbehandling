@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.serder.fraJson
 import no.nav.dagpenger.saksbehandling.serder.tilJson
+import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
@@ -24,7 +25,7 @@ import kotlin.time.measureTime
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 private val logger = KotlinLogging.logger {}
 
-class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRepository {
+class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRepository, SkjermingRepository {
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
@@ -367,6 +368,30 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
             }
         }
         return oppgaver
+    }
+
+    override fun oppdaterSkjermingStatus(
+        fnr: String,
+        skjermet: Boolean,
+    ): Int {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        UPDATE person_v1
+                        SET    egenansatt = :skjermet
+                        WHERE  ident = :fnr
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "fnr" to fnr,
+                            "skjermet" to skjermet,
+                        ),
+                ).asUpdate,
+            )
+        }
     }
 }
 
