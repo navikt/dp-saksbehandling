@@ -12,7 +12,7 @@ internal class SkjermingConsumer(private val repository: SkjermingRepository) {
     ) {
         repository.oppdaterSkjermingStatus(fnr, skjermetStatus).also {
             when (it) {
-                0 -> logger.debug { "Ingen person oppdatert med ny skjerming status" }
+                0 -> logger.info { "Ingen person oppdatert med ny skjerming status" }
                 1 -> {
                     logger.info { "Person oppdatert med ny skjerming status" }
                     sikkerLogg.info { "Person($fnr) oppdatert med ny skjerming status($skjermetStatus)" }
