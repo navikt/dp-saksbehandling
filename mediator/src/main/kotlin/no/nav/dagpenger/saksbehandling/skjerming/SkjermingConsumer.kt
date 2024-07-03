@@ -23,7 +23,6 @@ internal class SkjermingConsumer(private val repository: SkjermingRepository) {
                     sikkerLogg.error { "Flere enn en person($fnr) oppdatert med ny skjerming status($skjermetStatus" }
                 }
             }
-            logger.info { "Skjermet status for fnr=$fnr er oppdatert til $skjermetStatus" }
         }
     }
 }
