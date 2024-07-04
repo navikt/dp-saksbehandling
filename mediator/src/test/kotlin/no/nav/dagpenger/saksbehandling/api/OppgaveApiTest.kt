@@ -17,6 +17,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -61,10 +62,18 @@ class OppgaveApiTest {
     private val testNAVIdent = "Z999999"
     private val fødselsdato = LocalDate.of(2000, 1, 1)
     private val mockAzure = mockAzure()
-    private val gyldigToken =
+    private val gyldigSaksbehandlerToken =
         mockAzure.lagTokenMedClaims(
             mapOf(
                 "groups" to listOf("SaksbehandlerADGruppe"),
+                "NAVident" to testNAVIdent,
+            ),
+        )
+
+    private val gyldigBeslutterToken =
+        mockAzure.lagTokenMedClaims(
+            mapOf(
+                "groups" to listOf("SaksbehandlerADGruppe", "BeslutterADGruppe"),
                 "NAVident" to testNAVIdent,
             ),
         )
@@ -74,6 +83,71 @@ class OppgaveApiTest {
         withOppgaveApi {
             client.get("/oppgave") { autentisert(token = mockAzure.lagTokenMedClaims(mapOf("groups" to "UgyldigADGruppe"))) }
                 .status shouldBe HttpStatusCode.Unauthorized
+        }
+    }
+
+    @Test
+    fun `Skal avvise kall på oppgaver tilhører egen ansatt(skjermet) dersom saksbehandler ikke er i riktig adgruppe`() {
+        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
+
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.egenAnsatt(any()) } returns true
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = gyldigSaksbehandlerToken) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = gyldigSaksbehandlerToken) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/legg-tilbake") { autentisert(token = gyldigSaksbehandlerToken) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = gyldigSaksbehandlerToken) }
+                .status shouldBe HttpStatusCode.Forbidden
+        }
+    }
+
+    @Test
+    fun `Skal godta kall på oppgaver tilhører egen ansatt(skjermet) dersom saksbehandler i riktig adgruppe`() {
+        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
+        val pdlMock = mockk<PDLKlient>()
+        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.egenAnsatt(any()) } returns true
+                every { it.tildelOppgave(any()) } returns testOppgave
+                every { it.hentOppgave(any()) } returns testOppgave
+                every { it.fristillOppgave(any()) } just Runs
+                every { it.utsettOppgave(any()) } just Runs
+            }
+
+        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = gyldigBeslutterToken) }
+                .status shouldBe HttpStatusCode.OK
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = gyldigBeslutterToken) }
+                .status shouldBe HttpStatusCode.OK
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/legg-tilbake") { autentisert(token = gyldigBeslutterToken) }
+                .status shouldBe HttpStatusCode.NoContent
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") {
+                autentisert(token = gyldigBeslutterToken)
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """
+                        {
+                          "utsettTilDato":"${LocalDate.now()}",
+                          "beholdOppgave":"true"
+                        }
+                    """.trimMargin(),
+                )
+            }
+                .status shouldBe HttpStatusCode.NoContent
         }
     }
 
@@ -307,7 +381,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne ta en oppgave`() {
-        val oppgaveMediatorMock = mockk<OppgaveMediator>()
+        val oppgaveMediatorMock = lagMediatorMock()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         coEvery {
@@ -350,7 +424,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne gi fra seg ansvar for en oppgave`() {
-        val oppgaveMediatorMock = mockk<OppgaveMediator>()
+        val oppgaveMediatorMock = lagMediatorMock()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
@@ -381,7 +455,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne utsette oppgave`() {
-        val oppgaveMediatorMock = mockk<OppgaveMediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
         val utsettTilDato = LocalDate.now().plusDays(1)
         val utsettOppgaveHendelse =
@@ -424,7 +498,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Hent oppgave med tilhørende personinfo og journalpostIder `() {
-        val oppgaveMediatorMock = mockk<OppgaveMediator>()
+        val oppgaveMediatorMock = lagMediatorMock()
         val pdlMock = mockk<PDLKlient>()
         val journalpostIdClientMock = mockk<JournalpostIdClient>()
         val testOppgave =
@@ -453,7 +527,11 @@ class OppgaveApiTest {
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
         coEvery { journalpostIdClientMock.hentJournalpostId(any()) } returns Result.success("123456789")
 
-        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock, pdlKlient = pdlMock, journalpostIdClient = journalpostIdClientMock) {
+        withOppgaveApi(
+            oppgaveMediator = oppgaveMediatorMock,
+            pdlKlient = pdlMock,
+            journalpostIdClient = journalpostIdClientMock,
+        ) {
             client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
@@ -485,8 +563,8 @@ class OppgaveApiTest {
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val oppgaveMediator =
-            mockk<OppgaveMediator>().also {
-                coEvery { it.hentOppgave(any()) } throws DataNotFoundException("Fant ikke testoppgave")
+            lagMediatorMock().also {
+                every { it.hentOppgave(any()) } throws DataNotFoundException("Fant ikke testoppgave")
             }
         withOppgaveApi(oppgaveMediator) {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
@@ -573,7 +651,13 @@ class OppgaveApiTest {
         }
     }
 
-    private fun HttpRequestBuilder.autentisert(token: String = gyldigToken) {
+    private fun lagMediatorMock(): OppgaveMediator {
+        return mockk<OppgaveMediator>().also {
+            every { it.egenAnsatt(any()) } returns false
+        }
+    }
+
+    private fun HttpRequestBuilder.autentisert(token: String = gyldigSaksbehandlerToken) {
         header(HttpHeaders.Authorization, "Bearer $token")
     }
 

@@ -251,6 +251,25 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
         }
     }
 
+    override fun egenAnsatt(oppgaveId: UUID): Boolean? {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    select  p.egenansatt from  oppgave_v1 o
+                    join behandling_v1 b on b.id = o.behandling_id
+                    join person_v1 p on p.id = b.person_id
+                    where o.id = :oppgave_id
+                    """.trimMargin(),
+                    mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.boolean("egenansatt")
+                }.asSingle,
+            )
+        }
+    }
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(

@@ -2,14 +2,11 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.plugins.swagger.swaggerUI
-import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -23,6 +20,7 @@ import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -94,35 +92,42 @@ internal fun Application.oppgaveApi(
                     }
                 }
                 route("{oppgaveId}") {
-                    get {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
-                        call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
-                    }
-                    route("tildel") {
-                        put {
-                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            try {
-                                val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
-                                call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
-                            } catch (e: Oppgave.AlleredeTildeltException) {
-                                call.respond(HttpStatusCode.Conflict) { e.message.toString() }
+                    val egenAnsattTilgangsKontroll =
+                        EgenAnsattTilgangsKontroll(
+                            tillatteGrupper = setOf(Configuration.beslutterADGruppe),
+                            erEgenAnssattFun = oppgaveMediator::egenAnsatt,
+                        )
+                    oppgaveTilgangsKontroll(setOf(egenAnsattTilgangsKontroll)) {
+                        get {
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
+                            call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                        }
+                        route("tildel") {
+                            put {
+                                val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                                try {
+                                    val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
+                                    call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                                } catch (e: Oppgave.AlleredeTildeltException) {
+                                    call.respond(HttpStatusCode.Conflict) { e.message.toString() }
+                                }
                             }
                         }
-                    }
-                    route("legg-tilbake") {
-                        put {
-                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
-                            call.respond(HttpStatusCode.NoContent)
+                        route("legg-tilbake") {
+                            put {
+                                val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                                oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
-                    }
-                    route("utsett") {
-                        put {
-                            val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
-                            logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
-                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
-                            call.respond(HttpStatusCode.NoContent)
+                        route("utsett") {
+                            put {
+                                val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
+                                logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
+                                oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
                 }
@@ -240,8 +245,3 @@ internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {
         UUID.fromString(it)
     } ?: throw IllegalArgumentException("Kunne ikke finne oppgaveId i path")
-
-internal fun ApplicationRequest.jwt(): String =
-    this.parseAuthorizationHeader().let { authHeader ->
-        (authHeader as? HttpAuthHeader.Single)?.blob ?: throw IllegalArgumentException("JWT not found")
-    }
