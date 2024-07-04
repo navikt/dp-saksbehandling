@@ -78,10 +78,10 @@ class PostgresOppgaveRepositoryTest {
             repo.tildelNesteOppgaveTil(
                 saksbehandlerIdent = "NAVIdent2",
                 filter =
-                TildelNesteOppgaveFilter(
-                    periode = UBEGRENSET_PERIODE,
-                    emneknagg = emptySet(),
-                ),
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                    ),
             ) shouldBe null
         }
     }
@@ -219,12 +219,12 @@ class PostgresOppgaveRepositoryTest {
         val behandlingMedSøknadsbehandlingOpprettetHendelse =
             lagBehandling(
                 hendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = UUIDv7.ny(),
-                    behandlingId = UUIDv7.ny(),
-                    ident = testPerson.ident,
-                    opprettet = LocalDateTime.now(),
-                ),
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = UUIDv7.ny(),
+                        behandlingId = UUIDv7.ny(),
+                        ident = testPerson.ident,
+                        opprettet = LocalDateTime.now(),
+                    ),
             )
 
         withMigratedDb { ds ->
@@ -487,20 +487,20 @@ class PostgresOppgaveRepositoryTest {
             ).let {
                 it.size shouldBe 3
                 it.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
-                        setOf(
-                            UNDER_BEHANDLING,
-                            KLAR_TIL_BEHANDLING,
-                        )
+                    setOf(
+                        UNDER_BEHANDLING,
+                        KLAR_TIL_BEHANDLING,
+                    )
             }
 
             repo.søk(
                 Søkefilter(
                     tilstand = setOf(KLAR_TIL_BEHANDLING),
                     periode =
-                    Periode(
-                        fom = enUkeSiden.plusDays(1).toLocalDate(),
-                        tom = enUkeSiden.plusDays(2).toLocalDate(),
-                    ),
+                        Periode(
+                            fom = enUkeSiden.plusDays(1).toLocalDate(),
+                            tom = enUkeSiden.plusDays(2).toLocalDate(),
+                        ),
                 ),
             ).size shouldBe 0
 
@@ -508,10 +508,10 @@ class PostgresOppgaveRepositoryTest {
                 Søkefilter(
                     tilstand = setOf(UNDER_BEHANDLING),
                     periode =
-                    Periode(
-                        fom = enUkeSiden.minusDays(1).toLocalDate(),
-                        tom = enUkeSiden.plusDays(2).toLocalDate(),
-                    ),
+                        Periode(
+                            fom = enUkeSiden.minusDays(1).toLocalDate(),
+                            tom = enUkeSiden.plusDays(2).toLocalDate(),
+                        ),
                 ),
             ).size shouldBe 1
 
@@ -519,10 +519,10 @@ class PostgresOppgaveRepositoryTest {
                 Søkefilter(
                     tilstand = setOf(KLAR_TIL_BEHANDLING),
                     periode =
-                    Periode(
-                        fom = opprettetNå.toLocalDate(),
-                        tom = opprettetNå.toLocalDate(),
-                    ),
+                        Periode(
+                            fom = opprettetNå.toLocalDate(),
+                            tom = opprettetNå.toLocalDate(),
+                        ),
                 ),
             ).size shouldBe 1
         }
