@@ -17,3 +17,4 @@ rootProject.name = "dp-saksbehandling"
 include("modell")
 include("openapi")
 include("mediator")
+include("streams-consumer")

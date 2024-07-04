@@ -6,6 +6,7 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import no.dagpenger.saksbehandling.streams.kafka.KafkaConfiguration
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config
 
@@ -25,6 +26,7 @@ internal object Configuration {
                 "JOURNALPOSTID_API_SCOOPE" to "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
+                "SKJERMING_TOPIC" to "nom.skjermede-personer-status-v1",
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
                 "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",
             ),
@@ -46,6 +48,7 @@ internal object Configuration {
 
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingApiScope: String = properties[Key("SKJERMING_API_SCOPE", stringType)]
+    val skjermingPersonStatusTopic: String = properties[Key("SKJERMING_TOPIC", stringType)]
     val skjermingTokenProvider = {
         azureAdClient.clientCredentials(skjermingApiScope).accessToken
     }
@@ -63,6 +66,13 @@ internal object Configuration {
         CachedOauth2Client(
             tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
             authType = azureAdConfig.clientSecret(),
+        )
+    }
+
+    val skjermingsConsumerId = "dp-saksbehandling-skjerming-consumer-v0.0.4"
+    val kafkaStreamProperties by lazy {
+        KafkaConfiguration.kafkaStreamsConfiguration(
+            applicationId = skjermingsConsumerId,
         )
     }
 }

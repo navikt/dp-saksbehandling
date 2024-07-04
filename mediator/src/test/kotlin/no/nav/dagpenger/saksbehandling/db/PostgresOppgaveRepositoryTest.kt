@@ -58,6 +58,18 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne oppdatere bare egenansatt status på en person`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testPerson)
+            repo.hentPerson(testPerson.ident).egenAnsatt shouldBe false
+
+            repo.oppdaterSkjermingStatus(testPerson.ident, true)
+            repo.hentPerson(testPerson.ident).egenAnsatt shouldBe true
+        }
+    }
+
+    @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
