@@ -455,7 +455,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne utsette oppgave`() {
-        val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
+        val oppgaveMediatorMock = lagMediatorMock()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
         val utsettTilDato = LocalDate.now().plusDays(1)
         val utsettOppgaveHendelse =
@@ -475,7 +475,7 @@ class OppgaveApiTest {
 
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
             client.put("oppgave/${testOppgave.oppgaveId}/utsett") {
-                autentisert()
+                autentisert(token = gyldigBeslutterToken)
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON

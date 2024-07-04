@@ -30,7 +30,10 @@ class EgenAnsattTilgangsKontroll(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): Boolean {
-        return erEgenAnssattFun(oppgaveId) == true && saksbehandler.grupper.any { it in tillatteGrupper }
+        return when (erEgenAnssattFun(oppgaveId)) {
+            true -> saksbehandler.grupper.any { it in tillatteGrupper }
+            else -> true
+        }
     }
 
     override fun feilMelding(

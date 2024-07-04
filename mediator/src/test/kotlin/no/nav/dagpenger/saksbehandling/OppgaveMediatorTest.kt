@@ -68,7 +68,7 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock)
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock)
             AvklareringIkkeRelevantMottak(testRapid, oppgaveMediator)
 
             val søknadId = UUIDv7.ny()
@@ -111,7 +111,7 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock)
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock)
             VedtakFattetMottak(testRapid, oppgaveMediator)
 
             val søknadId = UUIDv7.ny()
@@ -181,7 +181,7 @@ class OppgaveMediatorTest {
                     skjermingKlient = skjermingKlientMock,
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
@@ -227,7 +227,7 @@ class OppgaveMediatorTest {
                     skjermingKlient = skjermingKlientMock,
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
