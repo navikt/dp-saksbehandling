@@ -45,7 +45,7 @@ val KafkaStreamsPlugin =
         on(MonitoringEvent(ApplicationStarted), started)
         on(MonitoringEvent(ApplicationStopped), stopped)
 
-        onCall { _ ->
+        onCall { call ->
             when (val state = kafkaStreams.state()) {
                 State.RUNNING -> log.debug { "state: $state" }
                 else -> log.info { "state: $state" }

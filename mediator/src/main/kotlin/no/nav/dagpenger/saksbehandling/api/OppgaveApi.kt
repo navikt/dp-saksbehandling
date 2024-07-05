@@ -41,6 +41,8 @@ import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.tilgangskontroll.EgenAnsattTilgangsKontroll
+import no.nav.dagpenger.saksbehandling.tilgangskontroll.oppgaveTilgangsKontroll
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
