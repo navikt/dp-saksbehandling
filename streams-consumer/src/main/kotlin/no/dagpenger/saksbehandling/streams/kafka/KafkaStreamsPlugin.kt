@@ -40,4 +40,3 @@ val KafkaStreamsPlugin =
         on(MonitoringEvent(ApplicationStarted), started)
         on(MonitoringEvent(ApplicationStopped), stopped)
     }
-
