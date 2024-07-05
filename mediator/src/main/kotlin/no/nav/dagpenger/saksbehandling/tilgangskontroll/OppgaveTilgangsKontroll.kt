@@ -45,6 +45,8 @@ class EgenAnsattTilgangsKontroll(
     }
 }
 
+class IngenTilgangTilOppgaveException(message: String) : RuntimeException(message)
+
 fun Route.oppgaveTilgangsKontroll(
     tilgangsKontroll: Set<OppgaveTilgangsKontroll>,
     block: Route.() -> Unit,
@@ -73,8 +75,7 @@ fun Route.oppgaveTilgangsKontroll(
                     }
 
                     else -> {
-                        call.respond(HttpStatusCode.Forbidden, feilendeValidering.feilMelding(oppgaveId, saksbehandler))
-                        finish()
+                        throw IngenTilgangTilOppgaveException(feilendeValidering.feilMelding(oppgaveId, saksbehandler))
                     }
                 }
             }

@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import no.nav.dagpenger.saksbehandling.tilgangskontroll.IngenTilgangTilOppgaveException
 import org.slf4j.event.Level
 import java.net.URI
 import java.time.format.DateTimeParseException
@@ -129,6 +130,20 @@ fun Application.apiConfig() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.BadRequest, problem)
+                }
+
+                is IngenTilgangTilOppgaveException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Ingen tilgang til oppgave",
+                            detail = cause.message,
+                            status = HttpStatusCode.Forbidden.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-tilgang-til-oppgave")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.Forbidden, problem)
                 }
 
                 else -> {
