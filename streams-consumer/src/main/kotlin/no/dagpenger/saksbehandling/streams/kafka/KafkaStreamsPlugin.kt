@@ -1,7 +1,6 @@
 // shamelessly copied from navikt/hm-personhendelse
 package no.dagpenger.saksbehandling.streams.kafka
 
-import io.ktor.events.EventDefinition
 import io.ktor.events.EventHandler
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
@@ -10,7 +9,6 @@ import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.hooks.MonitoringEvent
 import mu.KotlinLogging
 import org.apache.kafka.streams.KafkaStreams
-import org.apache.kafka.streams.KafkaStreams.State
 
 private val log = KotlinLogging.logger {}
 
@@ -23,10 +21,7 @@ val KafkaStreamsPlugin =
         val kafkaStreams = pluginConfig.kafkaStreams
 
         kafkaStreams.setStateListener { newState, oldState ->
-            application.environment.monitor.raise(
-                KafkaStreamsStateTransitionEvent,
-                KafkaStreamsStateTransition(newState, oldState),
-            )
+            log.info { "Transition from $oldState to $newState" }
         }
 
         val started: EventHandler<Application> = { _ ->
@@ -44,15 +39,5 @@ val KafkaStreamsPlugin =
 
         on(MonitoringEvent(ApplicationStarted), started)
         on(MonitoringEvent(ApplicationStopped), stopped)
-
-        onCall { _ ->
-            when (val state = kafkaStreams.state()) {
-                State.RUNNING -> log.debug { "state: $state" }
-                else -> log.info { "state: $state" }
-            }
-        }
     }
 
-data class KafkaStreamsStateTransition(val newState: State, val oldState: State)
-
-val KafkaStreamsStateTransitionEvent: EventDefinition<KafkaStreamsStateTransition> = EventDefinition()
