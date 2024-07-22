@@ -59,6 +59,7 @@ spec:
         groups:
           - id: {{azure.grupper.saksbehandler}}
           - id: {{azure.grupper.beslutter}}
+          - id: {{azure.grupper.egne_ansatte}}
         extra:
           - NAVident
   accessPolicy:
