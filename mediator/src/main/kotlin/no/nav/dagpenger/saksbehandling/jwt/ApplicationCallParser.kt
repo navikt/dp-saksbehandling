@@ -10,7 +10,7 @@ import io.ktor.server.request.ApplicationRequest
 import no.nav.dagpenger.saksbehandling.api.Saksbehandler
 
 internal val JWTPrincipal.navIdent get(): String = requireNavIdent(this)
-internal val JWTPrincipal.saksBehandler
+internal val JWTPrincipal.saksbehandler
     get(): Saksbehandler {
         val grupper = this.payload.claims["groups"]?.asList(String::class.java)?.toSet() ?: setOf()
         return Saksbehandler(

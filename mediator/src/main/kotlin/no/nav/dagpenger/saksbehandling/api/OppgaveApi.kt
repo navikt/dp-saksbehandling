@@ -41,7 +41,7 @@ import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
-import no.nav.dagpenger.saksbehandling.tilgangskontroll.EgenAnsattTilgangsKontroll
+import no.nav.dagpenger.saksbehandling.tilgangskontroll.EgenAnsattTilgangskontroll
 import no.nav.dagpenger.saksbehandling.tilgangskontroll.oppgaveTilgangsKontroll
 import java.util.UUID
 
@@ -95,9 +95,9 @@ internal fun Application.oppgaveApi(
                 }
                 route("{oppgaveId}") {
                     val egenAnsattTilgangsKontroll =
-                        EgenAnsattTilgangsKontroll(
-                            tillatteGrupper = setOf(Configuration.beslutterADGruppe),
-                            erEgenAnssattFun = oppgaveMediator::egenAnsatt,
+                        EgenAnsattTilgangskontroll(
+                            tillatteGrupper = setOf(Configuration.egenAnsattADGruppe),
+                            erEgenAnsattFun = oppgaveMediator::egenAnsatt,
                         )
                     oppgaveTilgangsKontroll(setOf(egenAnsattTilgangsKontroll)) {
                         get {

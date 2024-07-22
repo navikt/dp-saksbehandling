@@ -8,36 +8,36 @@ import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import no.nav.dagpenger.saksbehandling.api.Saksbehandler
-import no.nav.dagpenger.saksbehandling.jwt.saksBehandler
+import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import java.util.UUID
 
-interface OppgaveTilgangsKontroll {
+interface OppgaveTilgangskontroll {
     fun harTilgang(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): Boolean?
 
-    fun feilMelding(
+    fun feilmelding(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): String
 }
 
-class EgenAnsattTilgangsKontroll(
+class EgenAnsattTilgangskontroll(
     private val tillatteGrupper: Set<String>,
-    private val erEgenAnssattFun: (UUID) -> Boolean?,
-) : OppgaveTilgangsKontroll {
+    private val erEgenAnsattFun: (UUID) -> Boolean?,
+) : OppgaveTilgangskontroll {
     override fun harTilgang(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): Boolean {
-        return when (erEgenAnssattFun(oppgaveId)) {
+        return when (erEgenAnsattFun(oppgaveId)) {
             true -> saksbehandler.grupper.any { it in tillatteGrupper }
             else -> true
         }
     }
 
-    override fun feilMelding(
+    override fun feilmelding(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): String {
@@ -48,12 +48,12 @@ class EgenAnsattTilgangsKontroll(
 class IngenTilgangTilOppgaveException(message: String) : RuntimeException(message)
 
 fun Route.oppgaveTilgangsKontroll(
-    tilgangsKontroll: Set<OppgaveTilgangsKontroll>,
+    tilgangskontroll: Set<OppgaveTilgangskontroll>,
     block: Route.() -> Unit,
 ) {
     intercept(ApplicationCallPipeline.Call) {
         val oppgaveId = call.parameters["oppgaveId"]?.let { UUID.fromString(it) }
-        val saksbehandler = call.principal<JWTPrincipal>()?.saksBehandler
+        val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
 
         when {
             oppgaveId == null || saksbehandler == null -> {
@@ -68,14 +68,14 @@ fun Route.oppgaveTilgangsKontroll(
 
             else -> {
                 val feilendeValidering =
-                    tilgangsKontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
+                    tilgangskontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
                 when (feilendeValidering) {
                     null -> {
                         proceed()
                     }
 
                     else -> {
-                        throw IngenTilgangTilOppgaveException(feilendeValidering.feilMelding(oppgaveId, saksbehandler))
+                        throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
                     }
                 }
             }
