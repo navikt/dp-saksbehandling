@@ -39,6 +39,8 @@ spec:
       value: {{azure.grupper.saksbehandler}}
     - name: GRUPPE_BESLUTTER
       value: {{azure.grupper.beslutter}}
+    - name: GRUPPE_EGNE_ANSATTE
+      value: {{azure.grupper.egne_ansatte}}
     - name: PDL_API_URL
       value: https://{{pdl.host}}
     - name: PDL_API_SCOPE

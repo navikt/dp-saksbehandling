@@ -45,7 +45,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne oppdatere egenansatt status på en person`() {
+    fun `Skal kunne oppdatere egen ansatt status på en person`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testPerson)
@@ -58,7 +58,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne oppdatere bare egenansatt status på en person`() {
+    fun `Skal kunne oppdatere bare egen ansatt status på en person`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testPerson)

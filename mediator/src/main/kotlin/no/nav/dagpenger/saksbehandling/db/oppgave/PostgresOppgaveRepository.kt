@@ -53,7 +53,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     Person(
                         id = row.uuid("id"),
                         ident = row.string("ident"),
-                        egenAnsatt = row.boolean("egenansatt"),
+                        egenAnsatt = row.boolean("egen_ansatt"),
                     )
                 }.asSingle,
             )
@@ -257,14 +257,15 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                 queryOf(
                     //language=PostgreSQL
                     """
-                    select  p.egenansatt from  oppgave_v1 o
-                    join behandling_v1 b on b.id = o.behandling_id
-                    join person_v1 p on p.id = b.person_id
-                    where o.id = :oppgave_id
+                    SELECT pers.egen_ansatt
+                    FROM   person_v1 pers
+                    JOIN   behandling_v1 beha ON beha.person_id = pers.id
+                    JOIN   oppgave_v1 oppg ON oppg.behandling_id = beha.id
+                    WHERE  oppg.id = :oppgave_id
                     """.trimMargin(),
                     mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
-                    row.boolean("egenansatt")
+                    row.boolean("egen_ansatt")
                 }.asSingle,
             )
         }
@@ -400,7 +401,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     statement =
                         """
                         UPDATE person_v1
-                        SET    egenansatt = :skjermet
+                        SET    egen_ansatt = :skjermet
                         WHERE  ident = :fnr
                         """.trimIndent(),
                     paramMap =
@@ -424,13 +425,13 @@ private fun TransactionalSession.lagre(person: Person) {
                     (id, ident) 
                 VALUES
                     (:id, :ident) 
-                ON CONFLICT (id) DO update SET egenansatt = :egenansatt
+                ON CONFLICT (id) DO UPDATE SET egen_ansatt = :egen_ansatt
                 """.trimIndent(),
             paramMap =
                 mapOf(
                     "id" to person.id,
                     "ident" to person.ident,
-                    "egenansatt" to person.egenAnsatt,
+                    "egen_ansatt" to person.egenAnsatt,
                 ),
         ).asUpdate,
     )
@@ -459,7 +460,7 @@ private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
     run(
         queryOf(
             //language=PostgreSQL
-            statement = "DELETE  FROM behandling_v1 WHERE id = :behandling_id",
+            statement = "DELETE FROM behandling_v1 WHERE id = :behandling_id",
             paramMap = mapOf("behandling_id" to behandlingId),
         ).asUpdate,
     )
