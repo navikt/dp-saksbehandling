@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.Sak
 import java.util.Base64
 import java.util.UUID
 
-sealed class Behov() {
+sealed class Behov {
     abstract val oppgaveId: UUID
     abstract val navn: String
     protected abstract val data: Map<String, Any>
