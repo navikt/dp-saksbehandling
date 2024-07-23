@@ -16,7 +16,7 @@ import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
-class BehovLøsningMottak(
+class UtsendingBehovLøsningMottak(
     rapidsConnection: RapidsConnection,
     private val utsendingMediator: UtsendingMediator,
 ) : River.PacketListener {
