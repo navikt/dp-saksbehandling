@@ -53,7 +53,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     Person(
                         id = row.uuid("id"),
                         ident = row.string("ident"),
-                        egenAnsatt = row.boolean("egen_ansatt"),
+                        egenAnsatt = row.boolean("egenansatt"),
                     )
                 }.asSingle,
             )
@@ -257,7 +257,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                 queryOf(
                     //language=PostgreSQL
                     """
-                    SELECT pers.egen_ansatt
+                    SELECT pers.egenansatt
                     FROM   person_v1 pers
                     JOIN   behandling_v1 beha ON beha.person_id = pers.id
                     JOIN   oppgave_v1 oppg ON oppg.behandling_id = beha.id
@@ -265,7 +265,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     """.trimMargin(),
                     mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
-                    row.boolean("egen_ansatt")
+                    row.boolean("egenansatt")
                 }.asSingle,
             )
         }
@@ -401,7 +401,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     statement =
                         """
                         UPDATE person_v1
-                        SET    egen_ansatt = :skjermet
+                        SET    egenansatt = :skjermet
                         WHERE  ident = :fnr
                         """.trimIndent(),
                     paramMap =
@@ -425,13 +425,13 @@ private fun TransactionalSession.lagre(person: Person) {
                     (id, ident) 
                 VALUES
                     (:id, :ident) 
-                ON CONFLICT (id) DO UPDATE SET egen_ansatt = :egen_ansatt
+                ON CONFLICT (id) DO UPDATE SET egenansatt = :egenansatt
                 """.trimIndent(),
             paramMap =
                 mapOf(
                     "id" to person.id,
                     "ident" to person.ident,
-                    "egen_ansatt" to person.egenAnsatt,
+                    "egenansatt" to person.egenAnsatt,
                 ),
         ).asUpdate,
     )
