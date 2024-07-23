@@ -17,7 +17,7 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class UtsendingUtsendingBehovLøsningMottakTest {
+class UtsendingBehovLøsningMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveId: UUID = UUIDv7.ny()
 
