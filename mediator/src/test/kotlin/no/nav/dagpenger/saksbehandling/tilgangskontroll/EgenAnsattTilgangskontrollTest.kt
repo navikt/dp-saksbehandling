@@ -5,10 +5,10 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.Saksbehandler
 import org.junit.jupiter.api.Test
 
-class EgneAnsatteTilgangskontrollTest {
+class EgenAnsattTilgangskontrollTest {
     @Test
-    fun `Saksbehandler har alltid tilgang dersom oppgaven tilhører en person som ikke er egen ansatt`() {
-        EgneAnsatteTilgangskontroll(
+    fun `Saksbehandler har alltid tilgang dersom oppgaven tilhører en person som ikke er skjermet`() {
+        EgenAnsattTilgangskontroll(
             tillatteGrupper = setOf("A", "B"),
             erEgenAnsattFun = { false },
         ).let {
@@ -19,8 +19,8 @@ class EgneAnsatteTilgangskontrollTest {
     }
 
     @Test
-    fun `Saksbehandler gis tilgang dersom person er egen ansatt og saksbehandler har tilgang til gruppa`() {
-        EgneAnsatteTilgangskontroll(
+    fun `Saksbehandler har tilgang dersom person er skjermet og saksbehandler er i en gruppe som har tilgang`() {
+        EgenAnsattTilgangskontroll(
             tillatteGrupper = setOf("A", "B"),
             erEgenAnsattFun = { true },
         ).let {
@@ -31,8 +31,8 @@ class EgneAnsatteTilgangskontrollTest {
     }
 
     @Test
-    fun `Saksbehandler gis ikke tilgang dersom person er egen ansatt og saksbehandler mangler tilgang til gruppa`() {
-        EgneAnsatteTilgangskontroll(
+    fun `Saksbehandler har IKKE tilgang dersom person er skjermet og saksbehandler IKKE er i en gruppe som har tilgang`() {
+        EgenAnsattTilgangskontroll(
             tillatteGrupper = setOf("A", "B"),
             erEgenAnsattFun = { true },
         ).harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"))) shouldBe false

@@ -23,7 +23,7 @@ interface OppgaveTilgangskontroll {
     ): String
 }
 
-class EgneAnsatteTilgangskontroll(
+class EgenAnsattTilgangskontroll(
     private val tillatteGrupper: Set<String>,
     private val erEgenAnsattFun: (UUID) -> Boolean?,
 ) : OppgaveTilgangskontroll {
