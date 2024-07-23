@@ -1,13 +1,15 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.utsending.mottak
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
-import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
+import no.nav.dagpenger.saksbehandling.toUrn
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
@@ -15,14 +17,14 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class BehovLøsningMottakTest {
+class UtsendingUtsendingBehovLøsningMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveId: UUID = UUIDv7.ny()
 
     @Test
     fun `Tar imot de forventede løsningene på behovene`() {
         val mediator = mockk<UtsendingMediator>(relaxed = true)
-        BehovLøsningMottak(
+        UtsendingBehovLøsningMottak(
             utsendingMediator = mediator,
             rapidsConnection = testRapid,
         )
@@ -83,7 +85,7 @@ class BehovLøsningMottakTest {
     fun `Skal ignorere pakker med @final`() {
         val mediator =
             mockk<UtsendingMediator>(relaxed = true)
-        BehovLøsningMottak(
+        UtsendingBehovLøsningMottak(
             utsendingMediator = mediator,
             rapidsConnection = testRapid,
         )
@@ -108,7 +110,7 @@ class BehovLøsningMottakTest {
             mockk<UtsendingMediator>(relaxed = true).also {
                 every { it.mottaUrnTilArkiverbartFormatAvBrev(any()) } throws RuntimeException()
             }
-        BehovLøsningMottak(
+        UtsendingBehovLøsningMottak(
             utsendingMediator = mediator,
             rapidsConnection = testRapid,
         )

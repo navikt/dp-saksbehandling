@@ -7,25 +7,26 @@ import no.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
-import no.nav.dagpenger.saksbehandling.api.statistikkApi
-import no.nav.dagpenger.saksbehandling.api.utsendingApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.utsending.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandling
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
-import no.nav.dagpenger.saksbehandling.mottak.AvklareringIkkeRelevantMottak
+import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
-import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
-import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
+import no.nav.dagpenger.saksbehandling.statistikk.statistikkApi
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
+import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
+import no.nav.dagpenger.saksbehandling.utsending.utsendingApi
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -76,8 +77,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
                 ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
                 UtsendingMottak(rapidsConnection, utsendingMediator)
-                BehovLøsningMottak(rapidsConnection, utsendingMediator)
-                AvklareringIkkeRelevantMottak(rapidsConnection, oppgaveMediator)
+                UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
+                AvklaringIkkeRelevantMottak(rapidsConnection, oppgaveMediator)
             }
 
     init {

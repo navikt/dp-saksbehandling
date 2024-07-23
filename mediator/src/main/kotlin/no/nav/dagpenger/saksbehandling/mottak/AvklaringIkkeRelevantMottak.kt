@@ -11,14 +11,15 @@ import no.nav.helse.rapids_rivers.River
 
 private val logger = KotlinLogging.logger {}
 
-internal class AvklareringIkkeRelevantMottak(
+internal class AvklaringIkkeRelevantMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "AvklaringIkkeRelevant") }
+            validate { it.demandValue("@event_name", "avklaring_lukket") }
             validate { it.requireKey("ident", "kode", "behandlingId") }
+            validate { it.interestedIn("avklaringId") }
         }
     }
 
@@ -31,22 +32,24 @@ internal class AvklareringIkkeRelevantMottak(
         context: MessageContext,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
+        val avklaringId = packet["avklaringId"].asText()
         val ident = packet["ident"].asText()
         val ikkeRelevantEmneknagg = packet.ikkeRelevantEmneknagg()
 
-        withLoggingContext("behandlingId" to "$behandlingId") {
+        withLoggingContext(
+            "behandlingId" to "$behandlingId",
+            "avklaringId" to avklaringId,
+        ) {
             val hendelse =
                 IkkeRelevantAvklaringHendelse(
                     ident = ident,
                     behandlingId = behandlingId,
                     ikkeRelevantEmneknagg = ikkeRelevantEmneknagg,
                 )
-            logger.info { "Mottok hendelse om ikke relevant avklaring  $hendelse" }
+            logger.info { "Mottok hendelse om ikke relevant avklaring $hendelse" }
             oppgaveMediator.fjernEmneknagg(hendelse)
         }
     }
 }
 
-private fun JsonMessage.ikkeRelevantEmneknagg(): String {
-    return this["kode"].asText()
-}
+private fun JsonMessage.ikkeRelevantEmneknagg(): String = this["kode"].asText()

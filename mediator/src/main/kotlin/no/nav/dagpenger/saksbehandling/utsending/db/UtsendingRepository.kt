@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.db.utsending
+package no.nav.dagpenger.saksbehandling.utsending.db
 
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import java.util.UUID
