@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.api
+package no.nav.dagpenger.saksbehandling.utsending
 
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.HttpRequestBuilder
@@ -16,8 +16,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import org.junit.jupiter.api.Test
 

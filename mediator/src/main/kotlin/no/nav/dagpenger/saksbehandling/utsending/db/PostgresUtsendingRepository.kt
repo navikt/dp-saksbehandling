@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.db.utsending
+package no.nav.dagpenger.saksbehandling.utsending.db
 
 import kotliquery.Session
 import kotliquery.queryOf
