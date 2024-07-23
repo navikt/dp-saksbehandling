@@ -46,5 +46,5 @@ interface OppgaveRepository {
         ikkeRelevantEmneknagg: String,
     ): Boolean
 
-    fun egenAnsatt(oppgaveId: UUID): Boolean?
+    fun personErSkjermetSomEgenAnsatt(oppgaveId: UUID): Boolean?
 }

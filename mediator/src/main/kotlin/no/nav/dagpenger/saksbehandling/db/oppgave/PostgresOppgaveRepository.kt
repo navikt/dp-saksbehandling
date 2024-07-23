@@ -251,16 +251,17 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
         }
     }
 
-    override fun egenAnsatt(oppgaveId: UUID): Boolean? {
+    override fun personErSkjermetSomEgenAnsatt(oppgaveId: UUID): Boolean? {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
                     """
-                    select  p.egenansatt from  oppgave_v1 o
-                    join behandling_v1 b on b.id = o.behandling_id
-                    join person_v1 p on p.id = b.person_id
-                    where o.id = :oppgave_id
+                    SELECT pers.egenansatt
+                    FROM   person_v1     pers
+                    JOIN   behandling_v1 beha ON beha.person_id = pers.id
+                    JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
+                    WHERE  oppg.id = :oppgave_id
                     """.trimMargin(),
                     mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->

@@ -70,10 +70,10 @@ class OppgaveApiTest {
             ),
         )
 
-    private val gyldigBeslutterToken =
+    private val gyldigBSaksbehandlerMedTilganTilEgneAnsatteToken =
         mockAzure.lagTokenMedClaims(
             mapOf(
-                "groups" to listOf("SaksbehandlerADGruppe", "BeslutterADGruppe"),
+                "groups" to listOf("SaksbehandlerADGruppe", "EgneAnsatteADGruppe"),
                 "NAVident" to testNAVIdent,
             ),
         )
@@ -92,7 +92,7 @@ class OppgaveApiTest {
 
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.egenAnsatt(any()) } returns true
+                every { it.personErSkjermetSomEgenAnsatt(any()) } returns true
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -111,13 +111,13 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal godta kall på oppgaver tilhører egen ansatt(skjermet) dersom saksbehandler i riktig adgruppe`() {
+    fun `Skal godta kall på oppgaver som gjelder egen ansatt (skjermet) dersom saksbehandler er i riktig ad-gruppe`() {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.egenAnsatt(any()) } returns true
+                every { it.personErSkjermetSomEgenAnsatt(any()) } returns true
                 every { it.tildelOppgave(any()) } returns testOppgave
                 every { it.hentOppgave(any()) } returns testOppgave
                 every { it.fristillOppgave(any()) } just Runs
@@ -125,17 +125,20 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
-            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = gyldigBeslutterToken) }
-                .status shouldBe HttpStatusCode.OK
+            client.get("/oppgave/${testOppgave.oppgaveId}") {
+                autentisert(token = gyldigBSaksbehandlerMedTilganTilEgneAnsatteToken)
+            }.status shouldBe HttpStatusCode.OK
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = gyldigBeslutterToken) }
-                .status shouldBe HttpStatusCode.OK
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") {
+                autentisert(token = gyldigBSaksbehandlerMedTilganTilEgneAnsatteToken)
+            }.status shouldBe HttpStatusCode.OK
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/legg-tilbake") { autentisert(token = gyldigBeslutterToken) }
-                .status shouldBe HttpStatusCode.NoContent
+            client.put("/oppgave/${testOppgave.oppgaveId}/legg-tilbake") {
+                autentisert(token = gyldigBSaksbehandlerMedTilganTilEgneAnsatteToken)
+            }.status shouldBe HttpStatusCode.NoContent
 
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") {
-                autentisert(token = gyldigBeslutterToken)
+                autentisert(token = gyldigBSaksbehandlerMedTilganTilEgneAnsatteToken)
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
@@ -475,7 +478,7 @@ class OppgaveApiTest {
 
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
             client.put("oppgave/${testOppgave.oppgaveId}/utsett") {
-                autentisert(token = gyldigBeslutterToken)
+                autentisert(token = gyldigSaksbehandlerToken)
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
@@ -653,7 +656,7 @@ class OppgaveApiTest {
 
     private fun lagMediatorMock(): OppgaveMediator {
         return mockk<OppgaveMediator>().also {
-            every { it.egenAnsatt(any()) } returns false
+            every { it.personErSkjermetSomEgenAnsatt(any()) } returns false
         }
     }
 

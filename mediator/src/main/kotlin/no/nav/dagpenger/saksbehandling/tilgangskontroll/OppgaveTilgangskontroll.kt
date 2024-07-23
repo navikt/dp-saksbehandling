@@ -7,9 +7,12 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.Saksbehandler
 import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 interface OppgaveTilgangskontroll {
     fun harTilgang(
@@ -23,7 +26,7 @@ interface OppgaveTilgangskontroll {
     ): String
 }
 
-class EgenAnsattTilgangskontroll(
+class EgneAnsatteTilgangskontroll(
     private val tillatteGrupper: Set<String>,
     private val erEgenAnsattFun: (UUID) -> Boolean?,
 ) : OppgaveTilgangskontroll {
@@ -53,30 +56,28 @@ fun Route.oppgaveTilgangsKontroll(
 ) {
     intercept(ApplicationCallPipeline.Call) {
         val oppgaveId = call.parameters["oppgaveId"]?.let { UUID.fromString(it) }
+        if (oppgaveId == null) {
+            call.respond(HttpStatusCode.BadRequest, "Manglende oppgaveId")
+            finish()
+        }
         val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
+        if (saksbehandler == null) {
+            call.respond(HttpStatusCode.BadRequest, "Manglende saksbehandler")
+            finish()
+        }
 
-        when {
-            oppgaveId == null || saksbehandler == null -> {
-                val feilGrunn =
-                    when (oppgaveId) {
-                        null -> "Mangelende oppgaveId"
-                        else -> "Manglende principal"
-                    }
-                call.respond(HttpStatusCode.BadRequest, feilGrunn)
-                finish()
-            }
+        if (oppgaveId != null && saksbehandler != null) {
+            val feilendeValidering =
+                tilgangskontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
+            when (feilendeValidering) {
+                null -> {
+                    logger.info { "Saksbehandler $saksbehandler har tilgang til oppgave med id $oppgaveId" }
+                    proceed()
+                }
 
-            else -> {
-                val feilendeValidering =
-                    tilgangskontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
-                when (feilendeValidering) {
-                    null -> {
-                        proceed()
-                    }
-
-                    else -> {
-                        throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
-                    }
+                else -> {
+                    logger.info { "Saksbehandler $saksbehandler har IKKE tilgang til oppgave med id $oppgaveId" }
+                    throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
                 }
             }
         }
