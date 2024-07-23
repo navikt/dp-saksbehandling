@@ -1,8 +1,9 @@
-package no.nav.dagpenger.saksbehandling.utsending
+package no.nav.dagpenger.saksbehandling.utsending.mottak
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import org.junit.jupiter.api.Test
 import org.postgresql.shaded.com.ongres.scram.common.bouncycastle.base64.Base64
 

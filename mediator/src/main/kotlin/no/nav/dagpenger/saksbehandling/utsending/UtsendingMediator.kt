@@ -1,13 +1,11 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.utsending
 
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.db.utsending.UtsendingRepository
-import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
-import no.nav.dagpenger.saksbehandling.utsending.IngenBehov
-import no.nav.dagpenger.saksbehandling.utsending.Utsending
+import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection

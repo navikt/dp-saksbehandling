@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.api
+package no.nav.dagpenger.saksbehandling.utsending
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -14,7 +14,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.api.finnUUID
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 
 private val logger = KotlinLogging.logger {}

@@ -1,25 +1,24 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.utsending
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.utsending.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
-import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
-import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
-import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
-import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
-import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
+import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
+import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
+import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
+import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.util.Base64
@@ -98,7 +97,7 @@ class UtsendingMediatorTest {
                 utsendingMediator = utsendingMediator,
             )
 
-            BehovLøsningMottak(
+            UtsendingBehovLøsningMottak(
                 utsendingMediator = utsendingMediator,
                 rapidsConnection = rapid,
             )
