@@ -9,7 +9,7 @@ import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 
-class AvklareringIkkeRelevantMottakTest {
+class AvklaringIkkeRelevantMottakTest {
     private val testRapid = TestRapid()
     private val testIdent = "12345678910"
     private val behandlingId = UUIDv7.ny()
@@ -19,7 +19,7 @@ class AvklareringIkkeRelevantMottakTest {
     fun `Skal håndtere riktig hendelse`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
 
-        AvklareringIkkeRelevantMottak(testRapid, oppgaveMediatorMock)
+        AvklaringIkkeRelevantMottak(testRapid, oppgaveMediatorMock)
         testRapid.sendTestMessage(avklaringLukketHendelse)
 
         verify(exactly = 1) {

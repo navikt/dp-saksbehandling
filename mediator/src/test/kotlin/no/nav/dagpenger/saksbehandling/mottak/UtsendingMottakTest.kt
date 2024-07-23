@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.hendelser.StartUtsendingHendelse
+import no.nav.dagpenger.saksbehandling.mottak.utsending.UtsendingMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test

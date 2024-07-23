@@ -19,7 +19,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.mottak.AvklareringIkkeRelevantMottak
+import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
@@ -69,7 +69,7 @@ class OppgaveMediatorTest {
                 OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, skjermingKlientMock, pdlKlientMock)
-            AvklareringIkkeRelevantMottak(testRapid, oppgaveMediator)
+            AvklaringIkkeRelevantMottak(testRapid, oppgaveMediator)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()

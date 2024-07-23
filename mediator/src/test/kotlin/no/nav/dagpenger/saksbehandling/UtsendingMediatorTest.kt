@@ -9,8 +9,8 @@ import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
-import no.nav.dagpenger.saksbehandling.mottak.BehovLøsningMottak
-import no.nav.dagpenger.saksbehandling.mottak.UtsendingMottak
+import no.nav.dagpenger.saksbehandling.mottak.utsending.BehovLøsningMottak
+import no.nav.dagpenger.saksbehandling.mottak.utsending.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
