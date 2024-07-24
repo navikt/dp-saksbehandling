@@ -28,13 +28,13 @@ interface OppgaveTilgangskontroll {
 
 class EgneAnsatteTilgangskontroll(
     private val tillatteGrupper: Set<String>,
-    private val erEgenAnsattFun: (UUID) -> Boolean?,
+    private val skjermesSomEgneAnsatteFun: (UUID) -> Boolean?,
 ) : OppgaveTilgangskontroll {
     override fun harTilgang(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): Boolean {
-        return when (erEgenAnsattFun(oppgaveId)) {
+        return when (skjermesSomEgneAnsatteFun(oppgaveId)) {
             true -> saksbehandler.grupper.any { it in tillatteGrupper }
             else -> true
         }

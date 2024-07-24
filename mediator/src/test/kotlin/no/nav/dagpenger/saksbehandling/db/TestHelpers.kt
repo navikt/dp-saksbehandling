@@ -15,7 +15,7 @@ import java.util.UUID
 val testPerson =
     Person(
         ident = "12345678901",
-        egenAnsatt = false,
+        skjermesSomEgneAnsatte = false,
     )
 val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 

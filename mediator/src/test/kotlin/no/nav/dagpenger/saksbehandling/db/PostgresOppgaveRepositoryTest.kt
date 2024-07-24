@@ -45,27 +45,27 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne oppdatere egenansatt status på en person`() {
+    fun `Skal kunne oppdatere egen ansatt skjerming på en person`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testPerson)
             repo.finnPerson(testPerson.ident) shouldBe testPerson
 
-            val oppdatertPerson = testPerson.copy(egenAnsatt = true)
+            val oppdatertPerson = testPerson.copy(skjermesSomEgneAnsatte = true)
             repo.lagre(oppdatertPerson)
             repo.finnPerson(oppdatertPerson.ident) shouldBe oppdatertPerson
         }
     }
 
     @Test
-    fun `Skal kunne oppdatere bare egenansatt status på en person`() {
+    fun `Skal kunne oppdatere bare egen ansatt skjerming på en person`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testPerson)
-            repo.hentPerson(testPerson.ident).egenAnsatt shouldBe false
+            repo.hentPerson(testPerson.ident).skjermesSomEgneAnsatte shouldBe false
 
             repo.oppdaterSkjermingStatus(testPerson.ident, true)
-            repo.hentPerson(testPerson.ident).egenAnsatt shouldBe true
+            repo.hentPerson(testPerson.ident).skjermesSomEgneAnsatte shouldBe true
         }
     }
 

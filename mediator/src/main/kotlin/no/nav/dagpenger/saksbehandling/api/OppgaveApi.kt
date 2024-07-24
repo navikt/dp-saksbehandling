@@ -97,7 +97,7 @@ internal fun Application.oppgaveApi(
                     val egneAnsatteTilgangsKontroll =
                         EgneAnsatteTilgangskontroll(
                             tillatteGrupper = setOf(Configuration.egneAnsatteADGruppe),
-                            erEgenAnsattFun = oppgaveMediator::personErSkjermetSomEgenAnsatt,
+                            skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
                         )
                     oppgaveTilgangsKontroll(setOf(egneAnsatteTilgangsKontroll)) {
                         get {

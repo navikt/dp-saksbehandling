@@ -53,7 +53,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     Person(
                         id = row.uuid("id"),
                         ident = row.string("ident"),
-                        egenAnsatt = row.boolean("egenansatt"),
+                        skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
                     )
                 }.asSingle,
             )
@@ -251,13 +251,13 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
         }
     }
 
-    override fun personErSkjermetSomEgenAnsatt(oppgaveId: UUID): Boolean? {
+    override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
                     """
-                    SELECT pers.egenansatt
+                    SELECT pers.skjermes_som_egne_ansatte
                     FROM   person_v1     pers
                     JOIN   behandling_v1 beha ON beha.person_id = pers.id
                     JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
@@ -265,7 +265,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     """.trimMargin(),
                     mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
-                    row.boolean("egenansatt")
+                    row.boolean("skjermes_som_egne_ansatte")
                 }.asSingle,
             )
         }
@@ -401,7 +401,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     statement =
                         """
                         UPDATE person_v1
-                        SET    egenansatt = :skjermet
+                        SET    skjermes_som_egne_ansatte = :skjermet
                         WHERE  ident = :fnr
                         """.trimIndent(),
                     paramMap =
@@ -425,13 +425,13 @@ private fun TransactionalSession.lagre(person: Person) {
                     (id, ident) 
                 VALUES
                     (:id, :ident) 
-                ON CONFLICT (id) DO update SET egenansatt = :egenansatt
+                ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte
                 """.trimIndent(),
             paramMap =
                 mapOf(
                     "id" to person.id,
                     "ident" to person.ident,
-                    "egenansatt" to person.egenAnsatt,
+                    "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
                 ),
         ).asUpdate,
     )

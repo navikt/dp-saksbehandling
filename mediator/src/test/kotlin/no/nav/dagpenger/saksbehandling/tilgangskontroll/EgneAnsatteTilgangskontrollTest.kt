@@ -10,7 +10,7 @@ class EgneAnsatteTilgangskontrollTest {
     fun `Saksbehandler har alltid tilgang dersom oppgaven tilhører en person som ikke er skjermet`() {
         EgneAnsatteTilgangskontroll(
             tillatteGrupper = setOf("A", "B"),
-            erEgenAnsattFun = { false },
+            skjermesSomEgneAnsatteFun = { false },
         ).let {
             it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe true
             it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"))) shouldBe true
@@ -22,7 +22,7 @@ class EgneAnsatteTilgangskontrollTest {
     fun `Saksbehandler har tilgang dersom person er skjermet og saksbehandler er i en gruppe som har tilgang`() {
         EgneAnsatteTilgangskontroll(
             tillatteGrupper = setOf("A", "B"),
-            erEgenAnsattFun = { true },
+            skjermesSomEgneAnsatteFun = { true },
         ).let {
             it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("B"))) shouldBe true
             it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A", "B"))) shouldBe true
@@ -34,7 +34,7 @@ class EgneAnsatteTilgangskontrollTest {
     fun `Saksbehandler har IKKE tilgang dersom person er skjermet og saksbehandler IKKE er i en gruppe som har tilgang`() {
         EgneAnsatteTilgangskontroll(
             tillatteGrupper = setOf("A", "B"),
-            erEgenAnsattFun = { true },
+            skjermesSomEgneAnsatteFun = { true },
         ).harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"))) shouldBe false
     }
 }
