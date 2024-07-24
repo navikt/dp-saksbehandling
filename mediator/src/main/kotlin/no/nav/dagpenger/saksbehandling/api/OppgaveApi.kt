@@ -116,13 +116,6 @@ internal fun Application.oppgaveApi(
                                 }
                             }
                         }
-                        route("legg-tilbake") {
-                            put {
-                                val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                                oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-                        }
                         route("utsett") {
                             put {
                                 val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
@@ -130,6 +123,13 @@ internal fun Application.oppgaveApi(
                                 oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
                                 call.respond(HttpStatusCode.NoContent)
                             }
+                        }
+                    }
+                    route("legg-tilbake") {
+                        put {
+                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
+                            call.respond(HttpStatusCode.NoContent)
                         }
                     }
                 }

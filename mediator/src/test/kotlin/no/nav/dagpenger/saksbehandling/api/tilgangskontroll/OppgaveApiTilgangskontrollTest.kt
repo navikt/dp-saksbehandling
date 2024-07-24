@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
+import io.ktor.http.ContentType.Application
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.mockk.Runs
@@ -37,31 +37,29 @@ class OppgaveApiTilgangskontrollTest {
     }
 
     @Test
-    fun `Skal avvise kall på oppgaver tilhører egne ansatte (skjermet) dersom saksbehandler ikke har riktig adgruppe`() {
+    fun `Avvis kall til oppgaver som gjelder egne ansatte dersom saksbehandler ikke har riktig adgruppe`() {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                every { it.personSkjermesSomEgneAnsatte(any()) } returns true
+            mockk<OppgaveMediator>().also { oppgaveMediator ->
+                every { oppgaveMediator.personSkjermesSomEgneAnsatte(any()) } returns true
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = gyldigSaksbehandlerToken()) }
+            val saksbehandlerTokenUtenEgneAnsatteTilgang = gyldigSaksbehandlerToken()
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
                 .status shouldBe HttpStatusCode.Forbidden
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = gyldigSaksbehandlerToken()) }
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
                 .status shouldBe HttpStatusCode.Forbidden
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/legg-tilbake") { autentisert(token = gyldigSaksbehandlerToken()) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = gyldigSaksbehandlerToken()) }
+            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
                 .status shouldBe HttpStatusCode.Forbidden
         }
     }
 
     @Test
-    fun `Skal godta kall på oppgaver som gjelder egne ansatte (skjermet) dersom saksbehandler har riktig ad-gruppe`() {
+    fun `Godta kall til oppgaver som gjelder egne ansatte dersom saksbehandler har riktig ad-gruppe`() {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -70,7 +68,6 @@ class OppgaveApiTilgangskontrollTest {
                 every { it.personSkjermesSomEgneAnsatte(any()) } returns true
                 every { it.tildelOppgave(any()) } returns testOppgave
                 every { it.hentOppgave(any()) } returns testOppgave
-                every { it.fristillOppgave(any()) } just Runs
                 every { it.utsettOppgave(any()) } just Runs
             }
 
@@ -83,13 +80,9 @@ class OppgaveApiTilgangskontrollTest {
                 autentisert(token = gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken())
             }.status shouldBe HttpStatusCode.OK
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/legg-tilbake") {
-                autentisert(token = gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken())
-            }.status shouldBe HttpStatusCode.NoContent
-
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") {
                 autentisert(token = gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken())
-                contentType(ContentType.Application.Json)
+                contentType(Application.Json)
                 setBody(
                     //language=JSON
                     """
