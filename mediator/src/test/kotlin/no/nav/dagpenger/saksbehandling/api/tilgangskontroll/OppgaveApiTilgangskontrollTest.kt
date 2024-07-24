@@ -102,10 +102,7 @@ class OppgaveApiTilgangskontrollTest {
 
     @Test
     fun `Saksbehandler kan legge tilbake oppgaven dersom hen ikke lenger har rettighet til å behandle personen`() {
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                every { it.personSkjermesSomEgneAnsatte(any()) } returns true
-            }
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgaveForEgenAnsatt =
             lagTestOppgaveMedTilstand(
                 tilstand = UNDER_BEHANDLING,

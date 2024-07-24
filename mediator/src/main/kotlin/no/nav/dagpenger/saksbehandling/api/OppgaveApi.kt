@@ -93,6 +93,7 @@ internal fun Application.oppgaveApi(
                         }
                     }
                 }
+
                 route("{oppgaveId}") {
                     route("legg-tilbake") {
                         put {
@@ -101,6 +102,8 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
+                }
+                route("{oppgaveId}") {
                     val egneAnsatteTilgangsKontroll =
                         EgneAnsatteTilgangskontroll(
                             tillatteGrupper = setOf(Configuration.egneAnsatteADGruppe),

@@ -5,6 +5,7 @@ import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.call
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
+import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import mu.KotlinLogging
@@ -54,6 +55,12 @@ fun Route.oppgaveTilgangsKontroll(
     block: Route.() -> Unit,
 ) {
     intercept(ApplicationCallPipeline.Call) {
+        //Midlertidig hack
+        if (call.request.uri.contains("legg-tilbake")) {
+            proceed()
+            return@intercept
+        }
+
         val oppgaveId = call.parameters["oppgaveId"]?.let { UUID.fromString(it) }
         if (oppgaveId == null) {
             call.respond(HttpStatusCode.BadRequest, "Manglende oppgaveId")
