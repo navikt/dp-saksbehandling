@@ -104,11 +104,12 @@ internal object OppgaveApiTestHelper {
     fun lagTestOppgaveMedTilstand(
         tilstand: Oppgave.Tilstand.Type,
         saksbehandlerIdent: String? = null,
+        skjermesSomEgneAnsatte: Boolean = false,
     ): Oppgave {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                person = Person(id = UUIDv7.ny(), ident = TEST_IDENT),
+                person = Person(id = UUIDv7.ny(), ident = TEST_IDENT, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
                 opprettet = LocalDateTime.now(),
             )
         return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling)

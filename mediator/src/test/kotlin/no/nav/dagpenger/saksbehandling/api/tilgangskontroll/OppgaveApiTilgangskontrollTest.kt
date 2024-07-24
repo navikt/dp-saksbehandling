@@ -12,8 +12,10 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
@@ -21,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.mockAzure
+import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -94,6 +97,35 @@ class OppgaveApiTilgangskontrollTest {
                 )
             }
                 .status shouldBe HttpStatusCode.NoContent
+        }
+    }
+
+    @Test
+    fun `Saksbehandler kan legge tilbake oppgaven dersom hen ikke lenger har rettighet til å behandle personen`() {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.personSkjermesSomEgneAnsatte(any()) } returns true
+            }
+        val testOppgaveForEgenAnsatt =
+            lagTestOppgaveMedTilstand(
+                tilstand = UNDER_BEHANDLING,
+                saksbehandlerIdent = OppgaveApiTestHelper.TEST_IDENT,
+                skjermesSomEgneAnsatte = true,
+            )
+        coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgaveForEgenAnsatt
+        coEvery {
+            oppgaveMediatorMock.fristillOppgave(
+                OppgaveAnsvarHendelse(
+                    testOppgaveForEgenAnsatt.oppgaveId,
+                    OppgaveApiTestHelper.TEST_NAV_IDENT,
+                ),
+            )
+        } just runs
+
+        withOppgaveApi(oppgaveMediatorMock, mockk<PDLKlient>()) {
+            client.put("/oppgave/${testOppgaveForEgenAnsatt.oppgaveId}/legg-tilbake") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
         }
     }
 }
