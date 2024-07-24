@@ -11,8 +11,8 @@ import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.tilgangskontroll.IngenTilgangTilOppgaveException
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
 

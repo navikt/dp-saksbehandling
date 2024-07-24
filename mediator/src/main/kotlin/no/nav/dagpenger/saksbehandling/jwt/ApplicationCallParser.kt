@@ -7,7 +7,7 @@ import io.ktor.server.auth.jwt.JWTPayloadHolder
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.request.ApplicationRequest
-import no.nav.dagpenger.saksbehandling.api.Saksbehandler
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
 
 internal val JWTPrincipal.navIdent get(): String = requireNavIdent(this)
 internal val JWTPrincipal.saksbehandler

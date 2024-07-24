@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.api
+package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 data class Saksbehandler(
     val navIdent: String,

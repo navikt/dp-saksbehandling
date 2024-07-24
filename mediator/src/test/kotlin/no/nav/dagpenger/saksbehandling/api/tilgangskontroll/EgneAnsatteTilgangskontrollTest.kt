@@ -1,8 +1,7 @@
-package no.nav.dagpenger.saksbehandling.tilgangskontroll
+package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.Saksbehandler
 import org.junit.jupiter.api.Test
 
 class EgneAnsatteTilgangskontrollTest {

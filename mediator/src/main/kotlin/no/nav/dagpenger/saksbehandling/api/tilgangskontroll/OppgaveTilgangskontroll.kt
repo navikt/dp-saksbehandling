@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.tilgangskontroll
+package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCallPipeline
@@ -8,7 +8,6 @@ import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.api.Saksbehandler
 import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import java.util.UUID
 

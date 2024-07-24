@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.api
+package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehand
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstand
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
+import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
