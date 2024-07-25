@@ -11,7 +11,8 @@ class TildelNesteOppgaveFilterTest {
     fun `Skal kunne initialisere et søkefilter fra en url streng`() {
         val queryString =
             """emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"""
-        TildelNesteOppgaveFilter.fra(queryString) shouldBe
+        val saksbehandlerTilgangEgneAnsatte = false
+        TildelNesteOppgaveFilter.fra(queryString, saksbehandlerTilgangEgneAnsatte) shouldBe
             TildelNesteOppgaveFilter(
                 periode =
                     Periode(
@@ -19,16 +20,19 @@ class TildelNesteOppgaveFilterTest {
                         tom = LocalDate.of(2023, 1, 1),
                     ),
                 emneknagg = setOf("knagg1", "knagg2"),
+                saksbehandlerTilgangEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
             )
     }
 
     @Test
     fun `Skal håndtere tom streng`() {
         val queryString = ""
-        TildelNesteOppgaveFilter.fra(queryString) shouldBe
+        val saksbehandlerTilgangEgneAnsatte = false
+        TildelNesteOppgaveFilter.fra(queryString, saksbehandlerTilgangEgneAnsatte) shouldBe
             TildelNesteOppgaveFilter(
                 periode = Periode.UBEGRENSET_PERIODE,
                 emneknagg = setOf(),
+                saksbehandlerTilgangEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
             )
     }
 }

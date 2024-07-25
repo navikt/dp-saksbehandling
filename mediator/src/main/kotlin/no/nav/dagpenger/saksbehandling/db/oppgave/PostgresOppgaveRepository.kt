@@ -166,11 +166,15 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                 SET    saksbehandler_ident = :saksbehandler_ident
                      , tilstand            = 'UNDER_BEHANDLING'
                 WHERE id = (SELECT   oppg.id
-                            FROM     oppgave_v1 oppg
+                            FROM     oppgave_v1    oppg
+                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
+                            JOIN     person_v1     pers ON pers.id = beha.person_id
                             WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
                             AND      oppg.saksbehandler_ident IS NULL
                             AND      oppg.opprettet >= :fom
-                            AND      oppg.opprettet <  :tom_pluss_1_dag 
+                            AND      oppg.opprettet <  :tom_pluss_1_dag
+                            AND    ( pers.skjermes_som_egne_ansatte = false
+                                  OR :har_tilgang_til_egne_ansatte )
                 """ + emneknaggClause + orderByReturningStatement
 
             val oppgaveId =
@@ -182,6 +186,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                                 "saksbehandler_ident" to saksbehandlerIdent,
                                 "fom" to filter.periode.fom,
                                 "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
+                                "har_tilgang_til_egne_ansatte" to filter.saksbehandlerTilgangEgneAnsatte,
                             ),
                     ).map { row ->
                         row.uuidOrNull("id")

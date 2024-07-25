@@ -6,6 +6,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -41,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
+import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
@@ -80,7 +83,12 @@ internal fun Application.oppgaveApi(
                 route("neste") {
                     put {
                         val dto = call.receive<NesteOppgaveDTO>()
-                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams)
+                        var saksbehandlerTilgangEgneAnsatte: Boolean = false
+                        val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
+                        if (saksbehandler != null) {
+                            saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(Configuration.egneAnsatteADGruppe)
+                        }
+                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams, saksbehandlerTilgangEgneAnsatte)
 
                         val oppgave =
                             oppgaveMediator.tildelNesteOppgaveTil(
