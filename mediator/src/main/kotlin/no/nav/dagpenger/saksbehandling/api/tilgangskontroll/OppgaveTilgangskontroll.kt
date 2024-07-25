@@ -50,12 +50,12 @@ class EgneAnsatteTilgangskontroll(
 
 class IngenTilgangTilOppgaveException(message: String) : RuntimeException(message)
 
-fun Route.oppgaveTilgangsKontroll(
+fun Route.oppgaveTilgangskontroll(
     tilgangskontroll: Set<OppgaveTilgangskontroll>,
     block: Route.() -> Unit,
 ) {
     intercept(ApplicationCallPipeline.Call) {
-        //Midlertidig hack
+        // Midlertidig hack
         if (call.request.uri.contains("legg-tilbake")) {
             proceed()
             return@intercept

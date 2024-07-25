@@ -32,7 +32,7 @@ import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangsKontroll
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
@@ -104,12 +104,12 @@ internal fun Application.oppgaveApi(
                     }
                 }
                 route("{oppgaveId}") {
-                    val egneAnsatteTilgangsKontroll =
+                    val egneAnsatteTilgangskontroll =
                         EgneAnsatteTilgangskontroll(
                             tillatteGrupper = setOf(Configuration.egneAnsatteADGruppe),
                             skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
                         )
-                    oppgaveTilgangsKontroll(setOf(egneAnsatteTilgangsKontroll)) {
+                    oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll)) {
                         get {
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
