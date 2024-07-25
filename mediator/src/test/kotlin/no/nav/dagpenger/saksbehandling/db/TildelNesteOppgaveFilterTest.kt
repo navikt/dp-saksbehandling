@@ -20,7 +20,7 @@ class TildelNesteOppgaveFilterTest {
                         tom = LocalDate.of(2023, 1, 1),
                     ),
                 emneknagg = setOf("knagg1", "knagg2"),
-                saksbehandlerTilgangEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
+                harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
             )
     }
 
@@ -32,7 +32,7 @@ class TildelNesteOppgaveFilterTest {
             TildelNesteOppgaveFilter(
                 periode = Periode.UBEGRENSET_PERIODE,
                 emneknagg = setOf(),
-                saksbehandlerTilgangEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
+                harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
             )
     }
 }

@@ -173,7 +173,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                             AND      oppg.saksbehandler_ident IS NULL
                             AND      oppg.opprettet >= :fom
                             AND      oppg.opprettet <  :tom_pluss_1_dag
-                            AND    ( pers.skjermes_som_egne_ansatte = false
+                            AND    ( NOT pers.skjermes_som_egne_ansatte
                                   OR :har_tilgang_til_egne_ansatte )
                 """ + emneknaggClause + orderByReturningStatement
 
@@ -186,7 +186,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                                 "saksbehandler_ident" to saksbehandlerIdent,
                                 "fom" to filter.periode.fom,
                                 "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
-                                "har_tilgang_til_egne_ansatte" to filter.saksbehandlerTilgangEgneAnsatte,
+                                "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
                             ),
                     ).map { row ->
                         row.uuidOrNull("id")
@@ -427,9 +427,9 @@ private fun TransactionalSession.lagre(person: Person) {
             statement =
                 """
                 INSERT INTO person_v1
-                    (id, ident) 
+                    (id, ident, skjermes_som_egne_ansatte) 
                 VALUES
-                    (:id, :ident) 
+                    (:id, :ident, :skjermes_som_egne_ansatte) 
                 ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte
                 """.trimIndent(),
             paramMap =

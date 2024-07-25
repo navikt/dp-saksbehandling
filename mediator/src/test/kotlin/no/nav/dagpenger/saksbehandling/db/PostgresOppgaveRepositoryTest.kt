@@ -87,6 +87,69 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Finn neste ledige oppgave som ikke gjelder egne ansatte`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+
+            val eldsteOppgaveMedSkjermingAvEgenAnsatt =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(5),
+                    person = Person(ident = "12345123451", skjermesSomEgneAnsatte = true),
+                )
+            repo.lagre(eldsteOppgaveMedSkjermingAvEgenAnsatt)
+
+            val eldsteOppgaveUtenSkjermingAvEgenAnsatt =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(1),
+                    person = Person(ident = "11111222222", skjermesSomEgneAnsatte = false),
+                )
+            repo.lagre(eldsteOppgaveUtenSkjermingAvEgenAnsatt)
+
+            val nyesteOppgaveUtenSkjermingAvEgenAnsatt =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå,
+                    person = Person(ident = "11111333333", skjermesSomEgneAnsatte = false),
+                )
+            repo.lagre(nyesteOppgaveUtenSkjermingAvEgenAnsatt)
+
+            val navIdentUtenTilgangTilEgneAnsatte = "NAVIdent2"
+            val nesteOppgave =
+                repo.tildelNesteOppgaveTil(
+                    saksbehandlerIdent = navIdentUtenTilgangTilEgneAnsatte,
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            harTilgangTilEgneAnsatte = false,
+                        ),
+                )!!
+            nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
+            nesteOppgave.saksbehandlerIdent shouldBe navIdentUtenTilgangTilEgneAnsatte
+            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+
+            val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
+
+            val nesteOppgaveMedTilgang =
+                repo.tildelNesteOppgaveTil(
+                    saksbehandlerIdent = navIdentMedTilgangTilEgneAnsatte,
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            harTilgangTilEgneAnsatte = true,
+                        ),
+                )!!
+
+            nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingAvEgenAnsatt.oppgaveId
+            nesteOppgaveMedTilgang.saksbehandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
+            nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+        }
+    }
+
+    @Test
     fun `Ved tildeling av neste oppgave, skal man ut fra filteret finne eldste ledige oppgave klar til behandling og oppdatere den`() {
         withMigratedDb { ds ->
             val testSaksbehandler = "NAVIdent"

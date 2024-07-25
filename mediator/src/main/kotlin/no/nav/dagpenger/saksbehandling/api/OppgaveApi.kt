@@ -22,7 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -83,10 +83,10 @@ internal fun Application.oppgaveApi(
                 route("neste") {
                     put {
                         val dto = call.receive<NesteOppgaveDTO>()
-                        var saksbehandlerTilgangEgneAnsatte: Boolean = false
                         val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
+                        var saksbehandlerTilgangEgneAnsatte = false
                         if (saksbehandler != null) {
-                            saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(Configuration.egneAnsatteADGruppe)
+                            saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(egneAnsatteADGruppe)
                         }
                         val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams, saksbehandlerTilgangEgneAnsatte)
 
@@ -114,7 +114,7 @@ internal fun Application.oppgaveApi(
                 route("{oppgaveId}") {
                     val egneAnsatteTilgangskontroll =
                         EgneAnsatteTilgangskontroll(
-                            tillatteGrupper = setOf(Configuration.egneAnsatteADGruppe),
+                            tillatteGrupper = setOf(egneAnsatteADGruppe),
                             skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
                         )
                     oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll)) {

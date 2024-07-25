@@ -173,7 +173,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Hent alle oppgaver fom, tom, mine og tilstand`() {
+    fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every {

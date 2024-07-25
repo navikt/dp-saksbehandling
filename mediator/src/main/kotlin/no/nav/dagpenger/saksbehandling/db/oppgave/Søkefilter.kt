@@ -47,7 +47,7 @@ class FilterBuilder {
 data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagg: Set<String>,
-    val saksbehandlerTilgangEgneAnsatte: Boolean = false,
+    val harTilgangTilEgneAnsatte: Boolean = false,
 ) {
     companion object {
         fun fra(
@@ -59,7 +59,7 @@ data class TildelNesteOppgaveFilter(
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknagg = builder.emneknagg() ?: emptySet(),
-                saksbehandlerTilgangEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
+                harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
             )
         }
     }
