@@ -385,8 +385,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne hente alle oppgaver for en gitt person`() {
-        val ola = Person(ident = "12345678910")
-        val kari = Person(ident = "10987654321")
+        val ola = Person(ident = "12345678910", skjermesSomEgneAnsatte = false)
+        val kari = Person(ident = "10987654321", skjermesSomEgneAnsatte = false)
 
         val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling)
         val oppgave2TilOla = lagOppgave(person = ola, tilstand = FerdigBehandlet)

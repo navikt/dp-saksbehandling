@@ -32,7 +32,7 @@ internal class VedtakFattetMottakTest {
             behandling =
                 Behandling(
                     behandlingId = behandlingId,
-                    person = Person(id = UUIDv7.ny(), ident = testIdent),
+                    person = Person(id = UUIDv7.ny(), ident = testIdent, skjermesSomEgneAnsatte = false),
                     opprettet = opprettet,
                 ),
         )

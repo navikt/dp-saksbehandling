@@ -18,7 +18,7 @@ import javax.sql.DataSource
 class PostgresTriggerTest {
     @Test
     fun `Når en oppgave endres så skal endret_tidspunkt oppdateres`() {
-        val testPerson = Person(ident = "12345678901")
+        val testPerson = Person(ident = "12345678901", skjermesSomEgneAnsatte = false)
         val opprettet = LocalDateTime.now()
         val testBehandling = Behandling(behandlingId = UUIDv7.ny(), testPerson, opprettet = opprettet)
         val testOppgave =

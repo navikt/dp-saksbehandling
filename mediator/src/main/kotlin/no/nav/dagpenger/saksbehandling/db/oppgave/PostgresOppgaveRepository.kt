@@ -338,7 +338,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                 ${
                                 """
                                 SELECT  pers.id AS person_id, 
-                                        pers.ident AS person_ident, 
+                                        pers.ident AS person_ident,
+                                        pers.skjermes_som_egne_ansatte,
                                         oppg.id AS oppgave_id, 
                                         oppg.tilstand, 
                                         oppg.opprettet AS oppgave_opprettet, 
@@ -633,6 +634,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
                 Person(
                     id = this.uuid("person_id"),
                     ident = this.string("person_ident"),
+                    skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
                 ),
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId),

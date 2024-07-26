@@ -413,6 +413,7 @@ class OppgaveApiTest {
                             Person(
                                 id = UUIDv7.ny(),
                                 ident = TEST_IDENT,
+                                skjermesSomEgneAnsatte = false,
                             ),
                         hendelse =
                             SøknadsbehandlingOpprettetHendelse(
