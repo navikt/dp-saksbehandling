@@ -42,12 +42,12 @@ internal class BehandlingOpprettetMottak(
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
 
-            val erBeskyttetPerson =
+            val erAdresseBeskyttetPerson =
                 runBlocking {
                     pdlKlient.erAdressebeskyttet(ident).getOrThrow()
                 }
 
-            if (!erBeskyttetPerson) {
+            if (!erAdresseBeskyttetPerson) {
                 oppgaveMediator.opprettOppgaveForBehandling(
                     SøknadsbehandlingOpprettetHendelse(
                         søknadId = søknadId,
