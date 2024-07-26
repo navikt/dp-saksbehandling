@@ -2,14 +2,13 @@ package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.parseAuthorizationHeader
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.principal
 import io.ktor.server.plugins.swagger.swaggerUI
-import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -23,6 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -33,6 +33,8 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
@@ -41,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
+import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
@@ -80,7 +83,12 @@ internal fun Application.oppgaveApi(
                 route("neste") {
                     put {
                         val dto = call.receive<NesteOppgaveDTO>()
-                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams)
+                        val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
+                        var saksbehandlerTilgangEgneAnsatte = false
+                        if (saksbehandler != null) {
+                            saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(egneAnsatteADGruppe)
+                        }
+                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams, saksbehandlerTilgangEgneAnsatte)
 
                         val oppgave =
                             oppgaveMediator.tildelNesteOppgaveTil(
@@ -93,20 +101,36 @@ internal fun Application.oppgaveApi(
                         }
                     }
                 }
+
                 route("{oppgaveId}") {
-                    get {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
-                        call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
-                    }
-                    route("tildel") {
-                        put {
-                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                            try {
-                                val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
-                                call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
-                            } catch (e: Oppgave.AlleredeTildeltException) {
-                                call.respond(HttpStatusCode.Conflict) { e.message.toString() }
+                    val egneAnsatteTilgangskontroll =
+                        EgneAnsatteTilgangskontroll(
+                            tillatteGrupper = setOf(egneAnsatteADGruppe),
+                            skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
+                        )
+                    oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll)) {
+                        get {
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
+                            call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                        }
+                        route("tildel") {
+                            put {
+                                val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                                try {
+                                    val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
+                                    call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                                } catch (e: Oppgave.AlleredeTildeltException) {
+                                    call.respond(HttpStatusCode.Conflict) { e.message.toString() }
+                                }
+                            }
+                        }
+                        route("utsett") {
+                            put {
+                                val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
+                                logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
+                                oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
+                                call.respond(HttpStatusCode.NoContent)
                             }
                         }
                     }
@@ -114,14 +138,6 @@ internal fun Application.oppgaveApi(
                         put {
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
                             oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                    route("utsett") {
-                        put {
-                            val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
-                            logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
-                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
@@ -240,8 +256,3 @@ internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
     parameters[pathParam]?.let {
         UUID.fromString(it)
     } ?: throw IllegalArgumentException("Kunne ikke finne oppgaveId i path")
-
-internal fun ApplicationRequest.jwt(): String =
-    this.parseAuthorizationHeader().let { authHeader ->
-        (authHeader as? HttpAuthHeader.Single)?.blob ?: throw IllegalArgumentException("JWT not found")
-    }

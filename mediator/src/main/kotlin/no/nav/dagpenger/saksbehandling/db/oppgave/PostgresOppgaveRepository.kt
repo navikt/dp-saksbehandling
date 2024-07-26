@@ -53,7 +53,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     Person(
                         id = row.uuid("id"),
                         ident = row.string("ident"),
-                        egenAnsatt = row.boolean("egenansatt"),
+                        skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
                     )
                 }.asSingle,
             )
@@ -166,11 +166,15 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                 SET    saksbehandler_ident = :saksbehandler_ident
                      , tilstand            = 'UNDER_BEHANDLING'
                 WHERE id = (SELECT   oppg.id
-                            FROM     oppgave_v1 oppg
+                            FROM     oppgave_v1    oppg
+                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
+                            JOIN     person_v1     pers ON pers.id = beha.person_id
                             WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
                             AND      oppg.saksbehandler_ident IS NULL
                             AND      oppg.opprettet >= :fom
-                            AND      oppg.opprettet <  :tom_pluss_1_dag 
+                            AND      oppg.opprettet <  :tom_pluss_1_dag
+                            AND    ( NOT pers.skjermes_som_egne_ansatte
+                                  OR :har_tilgang_til_egne_ansatte )
                 """ + emneknaggClause + orderByReturningStatement
 
             val oppgaveId =
@@ -182,6 +186,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                                 "saksbehandler_ident" to saksbehandlerIdent,
                                 "fom" to filter.periode.fom,
                                 "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
+                                "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
                             ),
                     ).map { row ->
                         row.uuidOrNull("id")
@@ -251,6 +256,26 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
         }
     }
 
+    override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    SELECT pers.skjermes_som_egne_ansatte
+                    FROM   person_v1     pers
+                    JOIN   behandling_v1 beha ON beha.person_id = pers.id
+                    JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
+                    WHERE  oppg.id = :oppgave_id
+                    """.trimMargin(),
+                    mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    row.boolean("skjermes_som_egne_ansatte")
+                }.asSingle,
+            )
+        }
+    }
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(
@@ -313,7 +338,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                 ${
                                 """
                                 SELECT  pers.id AS person_id, 
-                                        pers.ident AS person_ident, 
+                                        pers.ident AS person_ident,
+                                        pers.skjermes_som_egne_ansatte,
                                         oppg.id AS oppgave_id, 
                                         oppg.tilstand, 
                                         oppg.opprettet AS oppgave_opprettet, 
@@ -381,7 +407,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                     statement =
                         """
                         UPDATE person_v1
-                        SET    egenansatt = :skjermet
+                        SET    skjermes_som_egne_ansatte = :skjermet
                         WHERE  ident = :fnr
                         """.trimIndent(),
                     paramMap =
@@ -402,16 +428,16 @@ private fun TransactionalSession.lagre(person: Person) {
             statement =
                 """
                 INSERT INTO person_v1
-                    (id, ident) 
+                    (id, ident, skjermes_som_egne_ansatte) 
                 VALUES
-                    (:id, :ident) 
-                ON CONFLICT (id) DO update SET egenansatt = :egenansatt
+                    (:id, :ident, :skjermes_som_egne_ansatte) 
+                ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte
                 """.trimIndent(),
             paramMap =
                 mapOf(
                     "id" to person.id,
                     "ident" to person.ident,
-                    "egenansatt" to person.egenAnsatt,
+                    "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
                 ),
         ).asUpdate,
     )
@@ -608,6 +634,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
                 Person(
                     id = this.uuid("person_id"),
                     ident = this.string("person_ident"),
+                    skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
                 ),
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId),

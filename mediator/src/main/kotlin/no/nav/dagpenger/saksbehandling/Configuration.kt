@@ -20,8 +20,10 @@ internal object Configuration {
                 "KAFKA_CONSUMER_GROUP_ID" to "dp-saksbehandling-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
                 "KAFKA_RESET_POLICY" to "latest",
-                "GRUPPE_BESLUTTER" to "123",
+                // TODO Fiks AD-gruppe for behandling av egen ansatt
+                "GRUPPE_EGNE_ANSATTE" to "EgneAnsatteADGruppe",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
+                "GRUPPE_BESLUTTER" to "BeslutterADGruppe",
                 "JOURNALPOSTID_API_URL" to "http://dp-oppslag-journalpost-id/v1/journalpost",
                 "JOURNALPOSTID_API_SCOOPE" to "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
@@ -60,6 +62,7 @@ internal object Configuration {
     }
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
+    val egneAnsatteADGruppe by lazy { properties[Key("GRUPPE_EGNE_ANSATTE", stringType)] }
 
     val azureAdClient: CachedOauth2Client by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)

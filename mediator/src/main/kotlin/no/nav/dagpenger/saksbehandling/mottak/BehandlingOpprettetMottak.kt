@@ -1,13 +1,11 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
-import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
-import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.MessageProblems
@@ -18,7 +16,6 @@ import no.nav.helse.rapids_rivers.asLocalDateTime
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
-    private val skjermingKlient: SkjermingKlient,
     private val pdlKlient: PDLKlient,
 ) : River.PacketListener {
     companion object {
@@ -47,17 +44,7 @@ internal class BehandlingOpprettetMottak(
 
             val erBeskyttetPerson =
                 runBlocking {
-                    val erSkjermetPerson =
-                        async {
-                            skjermingKlient.erSkjermetPerson(ident).getOrThrow()
-                        }
-
-                    val erAdressebeskyttetPerson =
-                        async {
-                            pdlKlient.erAdressebeskyttet(ident).getOrThrow()
-                        }
-
-                    erSkjermetPerson.await() || erAdressebeskyttetPerson.await()
+                    pdlKlient.erAdressebeskyttet(ident).getOrThrow()
                 }
 
             if (!erBeskyttetPerson) {

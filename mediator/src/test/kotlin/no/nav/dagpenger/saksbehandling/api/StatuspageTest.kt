@@ -11,6 +11,7 @@ import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
@@ -161,6 +162,37 @@ class StatuspageTest {
                       "title": "Dato/tid feil",
                       "detail": "$message",
                       "status": 400,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Error håndtering av Ikke`() {
+        testApplication {
+            val message = "Ingen tilgang til oppgave"
+            val path = "/IngenTilgangTilOppgaveException"
+            application {
+                apiConfig()
+                routing {
+                    get(path) {
+                        throw IngenTilgangTilOppgaveException(message)
+                    }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.Forbidden
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:ingen-tilgang-til-oppgave",
+                      "title": "Ingen tilgang til oppgave",
+                      "detail": "$message",
+                      "status": 403,
                       "instance": "$path"
                     }
                     """.trimIndent()

@@ -45,4 +45,6 @@ interface OppgaveRepository {
         behandlingId: UUID,
         ikkeRelevantEmneknagg: String,
     ): Boolean
+
+    fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
 }

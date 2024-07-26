@@ -118,7 +118,7 @@ class OppgaveMediator(
         return runBlocking {
             Person(
                 ident = ident,
-                egenAnsatt = skjermingKlient.erSkjermetPerson(ident).getOrThrow(),
+                skjermesSomEgneAnsatte = skjermingKlient.erSkjermetPerson(ident).getOrThrow(),
             )
         }
     }

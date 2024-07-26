@@ -238,7 +238,7 @@ class OppgaveTilstandTest {
     private val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            person = Person(id = UUIDv7.ny(), ident = "12345678910"),
+            person = Person(id = UUIDv7.ny(), ident = "12345678910", skjermesSomEgneAnsatte = false),
             opprettet = LocalDateTime.now(),
         )
 

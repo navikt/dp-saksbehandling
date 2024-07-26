@@ -45,27 +45,27 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne oppdatere egenansatt status på en person`() {
+    fun `Skal kunne oppdatere egen ansatt skjerming på en person`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testPerson)
             repo.finnPerson(testPerson.ident) shouldBe testPerson
 
-            val oppdatertPerson = testPerson.copy(egenAnsatt = true)
+            val oppdatertPerson = testPerson.copy(skjermesSomEgneAnsatte = true)
             repo.lagre(oppdatertPerson)
             repo.finnPerson(oppdatertPerson.ident) shouldBe oppdatertPerson
         }
     }
 
     @Test
-    fun `Skal kunne oppdatere bare egenansatt status på en person`() {
+    fun `Skal kunne oppdatere bare egen ansatt skjerming på en person`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testPerson)
-            repo.hentPerson(testPerson.ident).egenAnsatt shouldBe false
+            repo.hentPerson(testPerson.ident).skjermesSomEgneAnsatte shouldBe false
 
             repo.oppdaterSkjermingStatus(testPerson.ident, true)
-            repo.hentPerson(testPerson.ident).egenAnsatt shouldBe true
+            repo.hentPerson(testPerson.ident).skjermesSomEgneAnsatte shouldBe true
         }
     }
 
@@ -83,6 +83,69 @@ class PostgresOppgaveRepositoryTest {
                         emneknagg = emptySet(),
                     ),
             ) shouldBe null
+        }
+    }
+
+    @Test
+    fun `Finn neste ledige oppgave som ikke gjelder egne ansatte`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+
+            val eldsteOppgaveMedSkjermingAvEgenAnsatt =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(5),
+                    person = Person(ident = "12345123451", skjermesSomEgneAnsatte = true),
+                )
+            repo.lagre(eldsteOppgaveMedSkjermingAvEgenAnsatt)
+
+            val eldsteOppgaveUtenSkjermingAvEgenAnsatt =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(1),
+                    person = Person(ident = "11111222222", skjermesSomEgneAnsatte = false),
+                )
+            repo.lagre(eldsteOppgaveUtenSkjermingAvEgenAnsatt)
+
+            val nyesteOppgaveUtenSkjermingAvEgenAnsatt =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå,
+                    person = Person(ident = "11111333333", skjermesSomEgneAnsatte = false),
+                )
+            repo.lagre(nyesteOppgaveUtenSkjermingAvEgenAnsatt)
+
+            val navIdentUtenTilgangTilEgneAnsatte = "NAVIdent2"
+            val nesteOppgave =
+                repo.tildelNesteOppgaveTil(
+                    saksbehandlerIdent = navIdentUtenTilgangTilEgneAnsatte,
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            harTilgangTilEgneAnsatte = false,
+                        ),
+                )!!
+            nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
+            nesteOppgave.saksbehandlerIdent shouldBe navIdentUtenTilgangTilEgneAnsatte
+            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+
+            val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
+
+            val nesteOppgaveMedTilgang =
+                repo.tildelNesteOppgaveTil(
+                    saksbehandlerIdent = navIdentMedTilgangTilEgneAnsatte,
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            harTilgangTilEgneAnsatte = true,
+                        ),
+                )!!
+
+            nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingAvEgenAnsatt.oppgaveId
+            nesteOppgaveMedTilgang.saksbehandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
+            nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
         }
     }
 
@@ -322,8 +385,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne hente alle oppgaver for en gitt person`() {
-        val ola = Person(ident = "12345678910")
-        val kari = Person(ident = "10987654321")
+        val ola = Person(ident = "12345678910", skjermesSomEgneAnsatte = false)
+        val kari = Person(ident = "10987654321", skjermesSomEgneAnsatte = false)
 
         val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling)
         val oppgave2TilOla = lagOppgave(person = ola, tilstand = FerdigBehandlet)
