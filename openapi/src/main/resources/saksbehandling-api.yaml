@@ -279,7 +279,8 @@ components:
         mellomnavn:
           type: string
         fodselsdato:
-          type: date
+          type: string
+          format: date
         alder:
           type: integer
         statsborgerskap:
