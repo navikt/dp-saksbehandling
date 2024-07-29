@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utsending.mottak
 
+import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -34,13 +35,19 @@ class UtsendingMottak(rapidsConnection: RapidsConnection, private val utsendingM
                 id = packet["sak"]["id"].asText(),
                 kontekst = packet["sak"]["kontekst"].asText(),
             )
-        utsendingMediator.mottaStartUtsending(
-            StartUtsendingHendelse(
-                oppgaveId = oppgaveId,
-                behandlingId = behandlingId,
-                ident = ident,
-                sak = sak,
-            ),
-        )
+       withLoggingContext(
+            "oppgaveId" to "$oppgaveId",
+            "behandlingId" to "$behandlingId",
+            "sak" to sak.id,
+        ) {
+            utsendingMediator.mottaStartUtsending(
+                StartUtsendingHendelse(
+                    oppgaveId = oppgaveId,
+                    behandlingId = behandlingId,
+                    ident = ident,
+                    sak = sak,
+                ),
+            )
+        }
     }
 }
