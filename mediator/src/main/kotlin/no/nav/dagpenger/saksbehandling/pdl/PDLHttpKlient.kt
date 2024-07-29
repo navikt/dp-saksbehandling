@@ -19,7 +19,6 @@ import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTRO
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.pdl.createPersonOppslag
-import kotlin.time.measureTimedValue
 
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -65,22 +64,19 @@ internal class PDLHttpKlient(
 
     private suspend fun hentPerson(ident: String): Result<PDLPerson> {
         return kotlin.runCatching {
-            val invoke = tokenSupplier.invoke()
-            measureTimedValue {
-                hentPersonClient.hentPerson(
-                    ident,
-                    mapOf(
-                        HttpHeaders.Authorization to "Bearer $invoke",
-                        // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
-                        "behandlingsnummer" to "B286",
-                        "TEMA" to "DAG",
-                    ),
-                )
-            }.let { timedValue ->
-                logger.info { "Henting av personopplysninger tok ${timedValue.duration.inWholeMilliseconds} ms" }
-                timedValue.value
-            }
-        }.onFailure { e -> sikkerLogg.error(e) { "Feil ved henting av personopplysninger for ident $ident" } }
+            hentPersonClient.hentPerson(
+                ident,
+                mapOf(
+                    HttpHeaders.Authorization to "Bearer ${tokenSupplier.invoke()}",
+                    // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
+                    "behandlingsnummer" to "B286",
+                    "TEMA" to "DAG",
+                ),
+            )
+        }.onFailure { e ->
+            logger.error { "Feil ved henting av personopplysninger fra PDL. Se sikkerlogg" }
+            sikkerLogg.error(e) { "Feil ved henting av personopplysninger for ident $ident" }
+        }
     }
 }
 

@@ -13,7 +13,6 @@ import io.prometheus.client.CollectorRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import java.util.UUID
-import kotlin.time.measureTimedValue
 
 private val logger = KotlinLogging.logger {}
 
@@ -26,16 +25,14 @@ class JournalpostIdHttpClient(
         val urlString = "$journalpostIdApiUrl/$søknadId"
         logger.info { "Henter journalpostId fra $urlString" }
 
-        return measureTimedValue {
-            kotlin.runCatching {
-                httpClient.get(urlString = urlString) {
-                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
-                    accept(ContentType.Text.Plain)
-                }.bodyAsText()
-            }.onFailure { throwable -> logger.error(throwable) { "Kall til journalpostId-api feilet." } }
-        }.also {
-            logger.info { "Kall til journalpost api tok ${it.duration.inWholeMilliseconds} ms" }
-        }.value
+        return kotlin.runCatching {
+            httpClient.get(urlString = urlString) {
+                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                accept(ContentType.Text.Plain)
+            }.bodyAsText()
+        }.onFailure { throwable ->
+            logger.error(throwable) { "Kall til journalpostId-api feilet for søknad med id: $søknadId" }
+        }
     }
 }
 
