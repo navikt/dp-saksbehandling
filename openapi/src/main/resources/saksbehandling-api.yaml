@@ -296,6 +296,7 @@ components:
         - fodselsdato
         - alder
         - kjonn
+        - skjermesSomEgneAnsatte
 
     OppgaveOversikt:
       type: object
