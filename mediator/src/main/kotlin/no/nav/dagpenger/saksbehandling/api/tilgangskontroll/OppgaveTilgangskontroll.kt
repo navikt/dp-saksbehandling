@@ -77,12 +77,12 @@ fun Route.oppgaveTilgangskontroll(
                 tilgangskontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
             when (feilendeValidering) {
                 null -> {
-                    logger.info { "Saksbehandler $saksbehandler har tilgang til oppgave med id $oppgaveId" }
+                    logger.info { "Saksbehandler ${saksbehandler.navIdent} har tilgang til oppgave med id $oppgaveId" }
                     proceed()
                 }
 
                 else -> {
-                    logger.info { "Saksbehandler $saksbehandler har IKKE tilgang til oppgave med id $oppgaveId" }
+                    logger.info { "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId" }
                     throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
                 }
             }
