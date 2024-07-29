@@ -55,7 +55,7 @@ class OppgaveApiTest {
     @Test
     fun `GET på oppgaver uten query parameters`() {
         val oppgave1 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = TEST_NAV_IDENT)
-        val oppgave2 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = null)
+        val oppgave2 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = null, skjermesSomEgneAnsatte = true)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every {
@@ -87,6 +87,7 @@ class OppgaveApiTest {
                       "emneknagger": [
                         "Søknadsbehandling"
                       ],
+                      "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
                       "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
                     },
@@ -97,6 +98,7 @@ class OppgaveApiTest {
                     "emneknagger": [
                     "Søknadsbehandling"
                     ],
+                    "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
                     }
                     ]

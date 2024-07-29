@@ -314,6 +314,8 @@ components:
           type: array
           items:
             type: string
+        skjermesSomEgneAnsatte:
+          type: boolean
         tilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
       required:
@@ -323,6 +325,7 @@ components:
         - tidspunktOpprettet
         - tilstand
         - emneknagger
+        - skjermesSomEgneAnsatte
 
     Oppgave:
       type: object

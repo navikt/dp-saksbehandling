@@ -250,6 +250,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         emneknagger = this.emneknagger.toList(),
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         saksbehandlerIdent = this.saksbehandlerIdent,
+        skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
     )
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =
