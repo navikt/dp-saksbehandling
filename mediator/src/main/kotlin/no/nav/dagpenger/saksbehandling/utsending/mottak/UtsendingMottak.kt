@@ -35,7 +35,7 @@ class UtsendingMottak(rapidsConnection: RapidsConnection, private val utsendingM
                 id = packet["sak"]["id"].asText(),
                 kontekst = packet["sak"]["kontekst"].asText(),
             )
-       withLoggingContext(
+        withLoggingContext(
             "oppgaveId" to "$oppgaveId",
             "behandlingId" to "$behandlingId",
             "sak" to sak.id,
