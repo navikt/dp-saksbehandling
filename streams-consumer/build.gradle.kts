@@ -8,6 +8,6 @@ dependencies {
     implementation(libs.ktor.server.cio)
     implementation(libs.konfig)
 
-    testImplementation("org.apache.kafka:kafka-streams-test-utils:3.7.1")
+    testImplementation("org.apache.kafka:kafka-streams-test-utils:3.8.0")
     testImplementation(libs.bundles.kotest.assertions)
 }
