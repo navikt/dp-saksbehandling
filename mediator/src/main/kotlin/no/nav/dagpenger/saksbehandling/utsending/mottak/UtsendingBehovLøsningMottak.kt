@@ -57,10 +57,6 @@ class UtsendingBehovLøsningMottak(
         withLoggingContext(
             "oppgaveId" to oppgaveId,
         ) {
-            if (oppgaveId in setOf("01904f1f-0c8d-7216-890b-8fd8b6ae2494")) {
-                return
-            }
-
             val typeLøsning =
                 packet.get("@behov").first().asText().also {
                     logger.info { "Mottok løsning for behov: $it" }
