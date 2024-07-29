@@ -80,7 +80,7 @@ class OppgaveApiTest {
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
-                     [{
+                    [{
                       "oppgaveId": "${oppgave1.oppgaveId}",
                       "behandlingId": "${oppgave1.behandlingId}",
                       "personIdent": "${oppgave1.ident}",
@@ -92,13 +92,13 @@ class OppgaveApiTest {
                       "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
                     },
                     {
-                    "oppgaveId": "${oppgave2.oppgaveId}",
-                    "behandlingId": "${oppgave2.behandlingId}",
-                    "personIdent": "${oppgave2.ident}",
-                    "emneknagger": [
-                    "Søknadsbehandling"
-                    ],
-                    "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
+                      "oppgaveId": "${oppgave2.oppgaveId}",
+                      "behandlingId": "${oppgave2.behandlingId}",
+                      "personIdent": "${oppgave2.ident}",
+                      "emneknagger": [
+                        "Søknadsbehandling"
+                      ],
+                      "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
                     }
                     ]
@@ -239,20 +239,21 @@ class OppgaveApiTest {
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
-                     {
-                    "behandlingId": "${oppgave.behandlingId}",
-                    "personIdent": "$TEST_IDENT",
-                    "person": {
-                      "ident": "$TEST_IDENT",
-                      "fornavn": "PETTER",
-                      "etternavn": "SMART",
-                      "fodselsdato": "2000-01-01",
-                      "kjonn": "UKJENT",
-                      "statsborgerskap": "NOR"
-                    },
-                    "saksbehandlerIdent": "$TEST_NAV_IDENT",
-                    "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                    {
+                      "behandlingId": "${oppgave.behandlingId}",
+                      "personIdent": "$TEST_IDENT",
+                      "person": {
+                        "ident": "$TEST_IDENT",
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
+                        "statsborgerskap": "NOR",
+                        "skjermesSomEgneAnsatte": ${oppgave.behandling.person.skjermesSomEgneAnsatte}
+                      },
+                      "saksbehandlerIdent": "$TEST_NAV_IDENT",
+                      "emneknagger": ["Søknadsbehandling"],
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                     }
                     """.trimIndent()
             }
@@ -306,19 +307,20 @@ class OppgaveApiTest {
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
-                     {
-                    "behandlingId": "${testOppgave.behandlingId}",
-                    "personIdent": "$TEST_IDENT",
-                    "person": {
-                      "ident": "$TEST_IDENT",
-                      "fornavn": "PETTER",
-                      "etternavn": "SMART",
-                      "fodselsdato": "2000-01-01",
-                      "kjonn": "UKJENT",
-                      "statsborgerskap": "NOR"
-                    },
-                    "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                    {
+                      "behandlingId": "${testOppgave.behandlingId}",
+                      "personIdent": "$TEST_IDENT",
+                      "person": {
+                        "ident": "$TEST_IDENT",
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
+                        "statsborgerskap": "NOR",
+                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
+                      },
+                      "emneknagger": ["Søknadsbehandling"],
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                     }
                     """.trimIndent()
             }
@@ -415,7 +417,7 @@ class OppgaveApiTest {
                             Person(
                                 id = UUIDv7.ny(),
                                 ident = TEST_IDENT,
-                                skjermesSomEgneAnsatte = false,
+                                skjermesSomEgneAnsatte = true,
                             ),
                         hendelse =
                             SøknadsbehandlingOpprettetHendelse(
@@ -443,20 +445,21 @@ class OppgaveApiTest {
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
-                     {
-                    "behandlingId": "${testOppgave.behandlingId}",
-                    "personIdent": "12345612345",
-                    "person": {
-                      "ident": "12345612345",
-                      "fornavn": "PETTER",
-                      "etternavn": "SMART",
-                      "fodselsdato": "2000-01-01",
-                      "kjonn": "UKJENT",
-                      "statsborgerskap": "NOR"
-                    },
-                    "emneknagger": ["Søknadsbehandling"],
-                    "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}",
-                    "journalpostIder": ["123456789"]
+                    {
+                      "behandlingId": "${testOppgave.behandlingId}",
+                      "personIdent": "${testOppgave.behandling.person.ident}",
+                      "person": {
+                        "ident": "${testOppgave.behandling.person.ident}",
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
+                        "statsborgerskap": "NOR",
+                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
+                      },
+                      "emneknagger": ["Søknadsbehandling"],
+                      "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}",
+                      "journalpostIder": ["123456789"]
                     }
                     """.trimIndent()
             }

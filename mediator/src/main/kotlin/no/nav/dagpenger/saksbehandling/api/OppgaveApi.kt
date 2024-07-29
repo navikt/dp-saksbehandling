@@ -215,6 +215,7 @@ fun lagOppgaveDTO(
                         PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
                     },
                 statsborgerskap = person.statsborgerskap,
+                skjermesSomEgneAnsatte = oppgave.behandling.person.skjermesSomEgneAnsatte,
             ),
         saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,

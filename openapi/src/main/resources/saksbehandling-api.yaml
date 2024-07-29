@@ -287,6 +287,8 @@ components:
           type: string
         kjonn:
           $ref: '#/components/schemas/Kjonn'
+        skjermesSomEgneAnsatte:
+          type: boolean
       required:
         - ident
         - fornavn
