@@ -54,8 +54,19 @@ import java.time.LocalDateTime
 class OppgaveApiTest {
     @Test
     fun `GET på oppgaver uten query parameters`() {
-        val oppgave1 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = TEST_NAV_IDENT)
-        val oppgave2 = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING, saksbehandlerIdent = null, skjermesSomEgneAnsatte = true)
+        val iMorgen = LocalDate.now().plusDays(1)
+        val oppgave1 =
+            lagTestOppgaveMedTilstand(
+                KLAR_TIL_BEHANDLING,
+                saksbehandlerIdent = TEST_NAV_IDENT,
+                utsattTil = iMorgen,
+            )
+        val oppgave2 =
+            lagTestOppgaveMedTilstand(
+                KLAR_TIL_BEHANDLING,
+                saksbehandlerIdent = null,
+                skjermesSomEgneAnsatte = true,
+            )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every {
@@ -89,7 +100,8 @@ class OppgaveApiTest {
                       ],
                       "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
-                      "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}"
+                      "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}",
+                      "utsattTilDato": "${oppgave1.utsattTil()}"
                     },
                     {
                       "oppgaveId": "${oppgave2.oppgaveId}",

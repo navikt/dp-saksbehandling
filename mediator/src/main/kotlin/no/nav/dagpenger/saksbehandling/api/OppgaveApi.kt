@@ -245,13 +245,14 @@ class InternDataException(message: String) : RuntimeException(message)
 internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
-        personIdent = this.ident,
         behandlingId = this.behandlingId,
+        personIdent = this.ident,
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
+        skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         saksbehandlerIdent = this.saksbehandlerIdent,
-        skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
+        utsattTilDato = this.utsattTil(),
     )
 
 internal fun ApplicationCall.finnUUID(pathParam: String): UUID =

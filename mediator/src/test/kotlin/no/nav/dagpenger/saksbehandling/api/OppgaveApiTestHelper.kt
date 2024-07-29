@@ -80,6 +80,7 @@ internal object OppgaveApiTestHelper {
         tilstand: Oppgave.Tilstand.Type,
         saksbehandlerIdent: String? = null,
         behandling: Behandling,
+        utsattTil: LocalDate? = null,
     ): Oppgave {
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
@@ -97,7 +98,7 @@ internal object OppgaveApiTestHelper {
                     PAA_VENT -> TODO()
                 },
             behandling = behandling,
-            utsattTil = null,
+            utsattTil = utsattTil,
         )
     }
 
@@ -105,6 +106,7 @@ internal object OppgaveApiTestHelper {
         tilstand: Oppgave.Tilstand.Type,
         saksbehandlerIdent: String? = null,
         skjermesSomEgneAnsatte: Boolean = false,
+        utsattTil: LocalDate? = null,
     ): Oppgave {
         val behandling =
             Behandling(
@@ -112,7 +114,7 @@ internal object OppgaveApiTestHelper {
                 person = Person(id = UUIDv7.ny(), ident = TEST_IDENT, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
                 opprettet = LocalDateTime.now(),
             )
-        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling)
+        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil)
     }
 
     val testPerson =

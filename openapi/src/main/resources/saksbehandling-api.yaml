@@ -322,6 +322,9 @@ components:
           type: boolean
         tilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
+        utsattTilDato:
+          type: string
+          format: date
       required:
         - oppgaveId
         - behandlingId
