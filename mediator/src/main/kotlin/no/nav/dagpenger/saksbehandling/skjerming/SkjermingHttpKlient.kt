@@ -11,7 +11,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import mu.KotlinLogging
-import kotlin.time.measureTimedValue
 
 private val logger = KotlinLogging.logger { }
 
@@ -21,20 +20,14 @@ internal class SkjermingHttpKlient(
     private val httpClient: HttpClient = createHttpClient(engine = CIO.create { }),
 ) : SkjermingKlient {
     override suspend fun erSkjermetPerson(ident: String): Result<Boolean> {
-        val token = tokenProvider.invoke()
-        return measureTimedValue {
-            kotlin.runCatching {
-                httpClient.post(urlString = skjermingApiUrl) {
-                    header(HttpHeaders.Authorization, "Bearer $token")
-                    contentType(ContentType.Application.Json)
-                    accept(ContentType.Text.Plain)
-                    setBody(SkjermingRequest(ident))
-                }.bodyAsText().toBoolean()
-            }
-                .onFailure { throwable -> logger.error(throwable) { "Kall til skjerming feilet" } }
-        }.also {
-            logger.info { "Kall til skjerming api tok ${it.duration.inWholeMilliseconds} ms" }
-        }.value
+        return kotlin.runCatching {
+            httpClient.post(urlString = skjermingApiUrl) {
+                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                contentType(ContentType.Application.Json)
+                accept(ContentType.Text.Plain)
+                setBody(SkjermingRequest(ident))
+            }.bodyAsText().toBoolean()
+        }.onFailure { throwable -> logger.error(throwable) { "Kall til skjerming feilet" } }
     }
 
     private data class SkjermingRequest(val personident: String)
