@@ -33,7 +33,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val oppgaveRepository = PostgresOppgaveRepository(PostgresDataSourceBuilder.dataSource)
     private val utsendingRepository = PostgresUtsendingRepository(PostgresDataSourceBuilder.dataSource)
-    private val skjermingHttpKlient =
+    private val skjermingKlient =
         SkjermingHttpKlient(
             skjermingApiUrl = Configuration.skjermingApiUrl,
             tokenProvider = Configuration.skjermingTokenProvider,
@@ -50,7 +50,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.journalpostTokenProvider,
         )
 
-    private val oppgaveMediator = OppgaveMediator(oppgaveRepository, skjermingHttpKlient)
+    private val oppgaveMediator = OppgaveMediator(oppgaveRepository, skjermingKlient)
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
 
@@ -73,7 +73,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             }.build().also { rapidsConnection ->
                 utsendingMediator.setRapidsConnection(rapidsConnection)
                 VedtakFattetMottak(rapidsConnection, oppgaveMediator)
-                BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, pdlKlient)
+                BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, pdlKlient, skjermingKlient)
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
                 ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
                 UtsendingMottak(rapidsConnection, utsendingMediator)

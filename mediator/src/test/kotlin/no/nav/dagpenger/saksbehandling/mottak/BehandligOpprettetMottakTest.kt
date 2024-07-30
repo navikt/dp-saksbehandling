@@ -7,6 +7,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
+import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
@@ -33,8 +34,13 @@ class BehandligOpprettetMottakTest {
             coEvery { it.erAdressebeskyttet(testIdent) }.returns(Result.success(false))
         }
 
+    val skjermetKlientMock =
+        mockk<SkjermingKlient>().also {
+            coEvery { it.erSkjermetPerson(testIdent) }.returns(Result.success(false))
+        }
+
     init {
-        BehandlingOpprettetMottak(testRapid, oppgaveMediatorMock, pdlKlientMock)
+        BehandlingOpprettetMottak(testRapid, oppgaveMediatorMock, pdlKlientMock, skjermetKlientMock)
     }
 
     @Test
@@ -50,6 +56,47 @@ class BehandligOpprettetMottakTest {
         val adressebeskyttetIdent = "11111222222"
 
         coEvery { pdlKlientMock.erAdressebeskyttet(adressebeskyttetIdent) }.returns(Result.success(true))
+        coEvery { skjermetKlientMock.erSkjermetPerson(adressebeskyttetIdent) }.returns(Result.success(false))
+
+        testRapid.sendTestMessage(behandlingOpprettetMelding(adressebeskyttetIdent))
+
+        verify(exactly = 0) {
+            oppgaveMediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
+        }
+
+        testRapid.inspektør.size shouldBe 1
+        val message = testRapid.inspektør.message(0)
+        message["@event_name"].asText() shouldBe "avbryt_behandling"
+        message["behandlingId"].asUUID() shouldBe behandlingId
+        message["søknadId"].asUUID() shouldBe søknadId
+        message["ident"].asText() shouldBe adressebeskyttetIdent
+    }
+
+    @Test
+    fun `Avbryt behandling og ikke lag oppgave som gjelder personer som skjermes som egne ansatte`() {
+        val adressebeskyttetIdent = "11111222222"
+        coEvery { pdlKlientMock.erAdressebeskyttet(adressebeskyttetIdent) }.returns(Result.success(false))
+        coEvery { skjermetKlientMock.erSkjermetPerson(adressebeskyttetIdent) }.returns(Result.success(true))
+
+        testRapid.sendTestMessage(behandlingOpprettetMelding(adressebeskyttetIdent))
+
+        verify(exactly = 0) {
+            oppgaveMediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
+        }
+
+        testRapid.inspektør.size shouldBe 1
+        val message = testRapid.inspektør.message(0)
+        message["@event_name"].asText() shouldBe "avbryt_behandling"
+        message["behandlingId"].asUUID() shouldBe behandlingId
+        message["søknadId"].asUUID() shouldBe søknadId
+        message["ident"].asText() shouldBe adressebeskyttetIdent
+    }
+
+    @Test
+    fun `Avbryt behandling og ikke lag oppgave som gjelder personer som skjermes som egne ansatte og er adressebeskyttet`() {
+        val adressebeskyttetIdent = "11111222222"
+        coEvery { pdlKlientMock.erAdressebeskyttet(adressebeskyttetIdent) }.returns(Result.success(true))
+        coEvery { skjermetKlientMock.erSkjermetPerson(adressebeskyttetIdent) }.returns(Result.success(true))
 
         testRapid.sendTestMessage(behandlingOpprettetMelding(adressebeskyttetIdent))
 
