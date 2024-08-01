@@ -105,17 +105,4 @@ private fun TransactionalSession.settOppgaverTilKlarForBehandling(utgåtteOppgav
     ).also {
         logger.info { "Oppgaver oppdatert: ${it.sum()}" }
     }
-    this.batchPreparedStatement(
-        //language=PostgreSQL
-        statement =
-            """
-            UPDATE oppgave_v1
-            SET    tilstand = '${Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING.name}',
-                   utsatt_til = null
-            WHERE id = ?
-            """.trimIndent(),
-        params = utgåtteOppgaver,
-    ).also {
-        logger.info { "Oppgaver oppdatert: ${it.sum()}" }
-    }
 }
