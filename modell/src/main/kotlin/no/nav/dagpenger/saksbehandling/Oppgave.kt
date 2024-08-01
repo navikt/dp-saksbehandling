@@ -104,10 +104,6 @@ data class Oppgave private constructor(
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
-    fun settTilbakeTilKlarTilBehandling() {
-        tilstand.settTilbakeTilKlarTilBehandling(this)
-    }
-
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -237,12 +233,6 @@ data class Oppgave private constructor(
             oppgave.utsattTil = null
         }
 
-        override fun settTilbakeTilKlarTilBehandling(oppgave: Oppgave) {
-            oppgave.tilstand = KlarTilBehandling
-            oppgave.saksbehandlerIdent = null
-            oppgave.utsattTil = null
-        }
-
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
@@ -332,10 +322,6 @@ data class Oppgave private constructor(
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
-        }
-
-        fun settTilbakeTilKlarTilBehandling(oppgave: Oppgave) {
-            ulovligTilstandsendring("Kan ikke sette oppgave tilbake til klar til behandling i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(message: String): Nothing {

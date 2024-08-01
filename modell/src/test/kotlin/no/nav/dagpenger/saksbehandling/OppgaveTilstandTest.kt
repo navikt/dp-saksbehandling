@@ -171,28 +171,6 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `En utsatt oppgave skal kunne settes tilbake til KLAR TIL Behandling`() {
-        val saksbehandlerIdent = "Z080808"
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
-        val utSattTil = LocalDate.now().plusDays(1)
-
-        oppgave.utsett(
-            UtsettOppgaveHendelse(
-                oppgaveId = oppgave.oppgaveId,
-                navIdent = saksbehandlerIdent,
-                utsattTil = utSattTil,
-                beholdOppgave = false,
-            ),
-        )
-
-        oppgave.settTilbakeTilKlarTilBehandling()
-
-        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
-        oppgave.utsattTil() shouldBe null
-        oppgave.saksbehandlerIdent shouldBe null
-    }
-
-    @Test
     fun `Fjern ansvar fra en oppgave med tilstand PAA_VENT`() {
         val saksbehandlerIdent = "Z080808"
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
