@@ -17,8 +17,8 @@ internal class SkjermingConsumer(
         fnr: String,
         skjermetStatus: Boolean,
     ) {
-        repository.oppdaterSkjermingStatus(fnr, skjermetStatus).also {
-            when (it) {
+        repository.oppdaterSkjermingStatus(fnr, skjermetStatus).also { raderOppdatert ->
+            when (raderOppdatert) {
                 0 -> {
                     logger.debug { "Ingen person oppdatert med ny skjerming status" }
                     counter.inc("Ukjent")
