@@ -1,9 +1,10 @@
 package no.dagpenger.saksbehandling.streams.skjerming
 
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import no.dagpenger.saksbehandling.streams.kafka.stringSerde
+import no.dagpenger.saksbehandling.streams.kafka.specificAvroSerde
 import no.dagpenger.saksbehandling.streams.kafka.topology
 import no.nav.person.pdl.leesah.Personhendelse
 import no.nav.person.pdl.leesah.adressebeskyttelse.Adressebeskyttelse
@@ -26,13 +27,14 @@ fun StreamsBuilder.adressebeskyttetStream(
 private val loggPakke: (String, Personhendelse) -> Unit = { fnr, personHendelse ->
     logger.info { "Mottok melding om skjermet person $fnr med hendelse ${personHendelse.adressebeskyttelse.gradering}" }
 }
+private val personhendelseSerde =
+    specificAvroSerde<Personhendelse>(config = mapOf(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://localhost:8081"))
 
 class LeesahTopologyTest {
     @Test
     fun `Skal håndtere melding på topicen`() {
         runBlocking {
             val testHandler = TestHandler()
-
             val inputTopic =
                 TopologyTestDriver(
                     topology {
@@ -40,20 +42,19 @@ class LeesahTopologyTest {
                     },
                 ).createInputTopic(
                     "topic",
-                    stringSerde.serializer(),
-                    stringSerde.serializer(),
+                    Serdes.String().serializer(),
+                    personhendelseSerde.serializer(),
                 )
-            val personhendelse: Personhendelse = Personhendelse.newBuilder().setAdressebeskyttelse(
-                Adressebeskyttelse(Gradering.STRENGT_FORTROLIG_UTLAND)
-            ).build()
-
+            val personhendelse: Personhendelse =
+                Personhendelse.newBuilder().setAdressebeskyttelse(
+                    Adressebeskyttelse(Gradering.STRENGT_FORTROLIG_UTLAND),
+                ).build()
             inputTopic.pipeInput("123", personhendelse)
-
             testHandler.mutableMap shouldBe
-                    mapOf(
-                        "123" to true,
-                        "456" to false,
-                    )
+                mapOf(
+                    "123" to true,
+                    "456" to false,
+                )
         }
     }
 

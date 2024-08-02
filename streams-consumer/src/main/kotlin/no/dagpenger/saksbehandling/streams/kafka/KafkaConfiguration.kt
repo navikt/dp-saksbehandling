@@ -5,6 +5,8 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import io.confluent.kafka.schemaregistry.client.SchemaRegistryClientConfig
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.common.security.auth.SecurityProtocol
@@ -26,6 +28,23 @@ object KafkaConfiguration {
             SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG to configurations[Key("KAFKA_TRUSTSTORE_PATH", stringType)],
             SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG to configurations[Key("KAFKA_CREDSTORE_PASSWORD", stringType)],
             SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG to "jks",
+        )
+    }
+
+    fun kafkaSchemaRegistryConfiguration(): Map<String, String> {
+        val configurations = systemProperties() overriding EnvironmentVariables
+        return mapOf(
+            AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG to
+                configurations[
+                    Key(
+                        "KAFKA_SCHEMA_REGISTRY",
+                        stringType,
+                    ),
+                ],
+            AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE to "USER_INFO",
+            SchemaRegistryClientConfig.USER_INFO_CONFIG to
+                configurations[Key("KAFKA_SCHEMA_REGISTRY_USER", stringType)] +
+                ":${configurations[Key("KAFKA_SCHEMA_REGISTRY_PASSWORD", stringType)]}",
         )
     }
 }
