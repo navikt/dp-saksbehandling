@@ -25,6 +25,12 @@ sourceSets {
     }
 }
 
+ktlint {
+    filter {
+        exclude { element -> element.file.path.contains("generated/") }
+    }
+}
+
 dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
 }
