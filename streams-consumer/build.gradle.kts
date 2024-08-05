@@ -15,15 +15,18 @@ avro {
     outputCharacterEncoding.set("UTF-8")
 }
 
+val kafkaVersion = "3.7.0"
+val confluentVersion = "7.6.1"
+
 dependencies {
-    api("org.apache.kafka:kafka-streams:3.8.0")
-    implementation("io.confluent:kafka-streams-avro-serde:7.7.0")
+    api("org.apache.kafka:kafka-streams:$kafkaVersion")
+    implementation("io.confluent:kafka-streams-avro-serde:$confluentVersion")
     implementation("org.apache.avro:avro:1.11.3")
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
     implementation(libs.ktor.server.cio)
 
-    testImplementation("org.apache.kafka:kafka-streams-test-utils:3.8.0")
+    testImplementation("org.apache.kafka:kafka-streams-test-utils:$kafkaVersion")
     testImplementation(libs.bundles.kotest.assertions)
 }
 

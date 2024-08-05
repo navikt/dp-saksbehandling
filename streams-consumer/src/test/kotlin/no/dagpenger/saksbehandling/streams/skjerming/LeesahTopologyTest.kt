@@ -28,7 +28,9 @@ private val loggPakke: (String, Personhendelse) -> Unit = { fnr, personHendelse 
     logger.info { "Mottok melding om skjermet person $fnr med hendelse ${personHendelse.adressebeskyttelse.gradering}" }
 }
 private val personhendelseSerde =
-    specificAvroSerde<Personhendelse>(config = mapOf(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://localhost:8081"))
+    specificAvroSerde<Personhendelse>(
+        config = mapOf(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG to "http://localhost:8081"),
+    )
 
 class LeesahTopologyTest {
     @Test
