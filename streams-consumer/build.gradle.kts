@@ -1,6 +1,6 @@
 plugins {
     id("common")
-    id("com.github.davidmc24.gradle.plugin.avro") version "1.4.0"
+    id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
 }
 
 repositories {
