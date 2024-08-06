@@ -108,30 +108,31 @@ internal fun Application.oppgaveApi(
                             tillatteGrupper = setOf(egneAnsatteADGruppe),
                             skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
                         )
-                    oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll)) {
-                        get {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
-                            call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
-                        }
-                        route("tildel") {
-                            put {
-                                val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
-                                try {
-                                    val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
-                                    call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
-                                } catch (e: Oppgave.AlleredeTildeltException) {
-                                    call.respond(HttpStatusCode.Conflict) { e.message.toString() }
-                                }
+                    get {
+                        oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll))
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
+                        call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                    }
+                    route("tildel") {
+                        put {
+                            oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll))
+                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                            try {
+                                val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
+                                call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                            } catch (e: Oppgave.AlleredeTildeltException) {
+                                call.respond(HttpStatusCode.Conflict) { e.message.toString() }
                             }
                         }
-                        route("utsett") {
-                            put {
-                                val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
-                                logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
-                                oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
-                                call.respond(HttpStatusCode.NoContent)
-                            }
+                    }
+                    route("utsett") {
+                        put {
+                            oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll))
+                            val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
+                            logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
+                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
+                            call.respond(HttpStatusCode.NoContent)
                         }
                     }
                     route("legg-tilbake") {
