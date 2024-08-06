@@ -1,7 +1,7 @@
-package no.dagpenger.saksbehandling.streams.skjerming
+package no.nav.dagpenger.saksbehandling.streams.skjerming
 
 import mu.KotlinLogging
-import no.dagpenger.saksbehandling.streams.kafka.stringSerde
+import no.nav.dagpenger.saksbehandling.streams.kafka.stringSerde
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.Consumed
 

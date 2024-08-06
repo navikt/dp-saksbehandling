@@ -1,5 +1,5 @@
 // shamelessly copied from navikt/hm-personhendelse
-package no.dagpenger.saksbehandling.streams.kafka
+package no.nav.dagpenger.saksbehandling.streams.kafka
 
 import io.ktor.events.EventHandler
 import io.ktor.server.application.Application

@@ -1,5 +1,6 @@
-package no.dagpenger.saksbehandling.streams.kafka
+package no.nav.dagpenger.saksbehandling.streams.kafka
 
+import com.natpryce.konfig.ConfigurationMap
 import com.natpryce.konfig.ConfigurationProperties.Companion.systemProperties
 import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
@@ -14,6 +15,15 @@ import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.state.BuiltInDslStoreSuppliers.InMemoryDslStoreSuppliers
 
 object KafkaConfiguration {
+    private val defaultProperties =
+        ConfigurationMap(
+            mapOf(
+                "KAFKA_SCHEMA_REGISTRY" to "mock://localhost:8081",
+                "KAFKA_SCHEMA_REGISTRY_USER" to "username",
+                "KAFKA_SCHEMA_REGISTRY_PASSWORD" to "password",
+            ),
+        )
+
     fun kafkaStreamsConfiguration(applicationId: String): Map<String, String> {
         val configurations = systemProperties() overriding EnvironmentVariables
         return mapOf(
@@ -32,15 +42,10 @@ object KafkaConfiguration {
     }
 
     fun kafkaSchemaRegistryConfiguration(): Map<String, String> {
-        val configurations = systemProperties() overriding EnvironmentVariables
+        val configurations = systemProperties() overriding EnvironmentVariables overriding defaultProperties
         return mapOf(
             AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG to
-                configurations[
-                    Key(
-                        "KAFKA_SCHEMA_REGISTRY",
-                        stringType,
-                    ),
-                ],
+                configurations[Key("KAFKA_SCHEMA_REGISTRY", stringType)],
             AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE to "USER_INFO",
             SchemaRegistryClientConfig.USER_INFO_CONFIG to
                 configurations[Key("KAFKA_SCHEMA_REGISTRY_USER", stringType)] +

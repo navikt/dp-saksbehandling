@@ -2,9 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import io.ktor.server.application.install
 import mu.KotlinLogging
-import no.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
-import no.dagpenger.saksbehandling.streams.kafka.kafkaStreams
-import no.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
@@ -22,6 +19,9 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
 import no.nav.dagpenger.saksbehandling.statistikk.statistikkApi
+import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
+import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
+import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak

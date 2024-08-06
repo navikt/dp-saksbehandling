@@ -1,9 +1,9 @@
-package no.dagpenger.saksbehandling.streams.skjerming
+package no.nav.dagpenger.saksbehandling.streams.skjerming
 
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import no.dagpenger.saksbehandling.streams.kafka.stringSerde
-import no.dagpenger.saksbehandling.streams.kafka.topology
+import no.nav.dagpenger.saksbehandling.streams.kafka.stringSerde
+import no.nav.dagpenger.saksbehandling.streams.kafka.topology
 import org.apache.kafka.streams.TopologyTestDriver
 import org.junit.jupiter.api.Test
 
