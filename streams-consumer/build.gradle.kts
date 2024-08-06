@@ -17,7 +17,7 @@ avro {
 
 dependencies {
     api("org.apache.kafka:kafka-streams:3.8.0")
-    implementation("org.apache.avro:avro:1.11.3")
+    implementation("org.apache.avro:avro:1.12.0")
     implementation(libs.kotlin.logging)
     implementation(libs.ktor.server.cio)
     implementation(libs.konfig)
