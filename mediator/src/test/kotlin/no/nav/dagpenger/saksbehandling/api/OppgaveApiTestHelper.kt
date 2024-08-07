@@ -8,6 +8,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -111,7 +112,13 @@ internal object OppgaveApiTestHelper {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                person = Person(id = UUIDv7.ny(), ident = TEST_IDENT, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
+                person =
+                    Person(
+                        id = UUIDv7.ny(),
+                        ident = TEST_IDENT,
+                        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                        adresseBeskyttelseGradering = UGRADERT,
+                    ),
                 opprettet = LocalDateTime.now(),
             )
         return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil)
@@ -127,5 +134,6 @@ internal object OppgaveApiTestHelper {
             alder = 0,
             statsborgerskap = "NOR",
             kjønn = PDLPerson.Kjonn.UKJENT,
+            adresseBeskyttelseGradering = UGRADERT,
         )
 }

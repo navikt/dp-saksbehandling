@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -216,7 +217,13 @@ class OppgaveTilstandTest {
     private val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            person = Person(id = UUIDv7.ny(), ident = "12345678910", skjermesSomEgneAnsatte = false),
+            person =
+                Person(
+                    id = UUIDv7.ny(),
+                    ident = "12345678910",
+                    skjermesSomEgneAnsatte = false,
+                    adresseBeskyttelseGradering = UGRADERT,
+                ),
             opprettet = LocalDateTime.now(),
         )
 

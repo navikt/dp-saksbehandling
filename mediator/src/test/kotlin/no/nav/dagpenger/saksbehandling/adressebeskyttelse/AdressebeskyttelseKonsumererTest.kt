@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 import io.mockk.mockk
 import io.mockk.verify
 import io.prometheus.client.CollectorRegistry
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG
 import org.junit.jupiter.api.Test
 
 internal class AdressebeskyttelseKonsumererTest {
@@ -16,10 +17,10 @@ internal class AdressebeskyttelseKonsumererTest {
                 registry = CollectorRegistry.defaultRegistry,
             )
 
-        adressebeskyttelseKonsumerer.oppdaterAdressebeskyttelseStatus("12345678901", Gradering.STRENGT_FORTROLIG)
+        adressebeskyttelseKonsumerer.oppdaterAdressebeskyttelseStatus("12345678901", STRENGT_FORTROLIG)
 
         verify(exactly = 1) {
-            registry.oppdaterAdressebeskyttetStatus("12345678901", Gradering.STRENGT_FORTROLIG)
+            registry.oppdaterAdressebeskyttetStatus("12345678901", STRENGT_FORTROLIG)
         }
     }
 }

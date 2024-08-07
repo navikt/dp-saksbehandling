@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -10,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 
 private val logger = KotlinLogging.logger {}
@@ -17,6 +19,7 @@ private val logger = KotlinLogging.logger {}
 class OppgaveMediator(
     private val repository: OppgaveRepository,
     private val skjermingKlient: SkjermingKlient,
+    private val pdlKlient: PDLKlient,
 ) : OppgaveRepository by repository {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
@@ -116,9 +119,20 @@ class OppgaveMediator(
 
     private fun lagPerson(ident: String): Person {
         return runBlocking {
+            val skjermesSomEgneAnsatte =
+                async {
+                    skjermingKlient.erSkjermetPerson(ident).getOrThrow()
+                }
+
+            val adresseBeskyttelseGradering =
+                async {
+                    pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
+                }
+
             Person(
                 ident = ident,
-                skjermesSomEgneAnsatte = skjermingKlient.erSkjermetPerson(ident).getOrThrow(),
+                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte.await(),
+                adresseBeskyttelseGradering = adresseBeskyttelseGradering.await(),
             )
         }
     }

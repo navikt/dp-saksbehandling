@@ -50,7 +50,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.journalpostTokenProvider,
         )
 
-    private val oppgaveMediator = OppgaveMediator(oppgaveRepository, skjermingKlient)
+    private val oppgaveMediator = OppgaveMediator(oppgaveRepository, skjermingKlient, pdlKlient)
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
 

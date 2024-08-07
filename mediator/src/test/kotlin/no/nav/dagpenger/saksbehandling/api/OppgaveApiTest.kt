@@ -19,6 +19,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -430,6 +431,7 @@ class OppgaveApiTest {
                                 id = UUIDv7.ny(),
                                 ident = TEST_IDENT,
                                 skjermesSomEgneAnsatte = true,
+                                adresseBeskyttelseGradering = UGRADERT,
                             ),
                         hendelse =
                             SøknadsbehandlingOpprettetHendelse(

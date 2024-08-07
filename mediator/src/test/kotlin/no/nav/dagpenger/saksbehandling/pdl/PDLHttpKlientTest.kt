@@ -8,6 +8,7 @@ import io.ktor.http.headersOf
 import io.prometheus.client.CollectorRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.helper.fileAsText
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -66,16 +67,21 @@ class PDLHttpKlientTest {
                 )
             }
 
+        val ident = "12345612345"
         runBlocking {
-            PDLHttpKlient(
-                url = "http://localhost:8080",
-                tokenSupplier = { "token" },
-                httpClient =
-                    defaultHttpClient(
-                        collectorRegistry = CollectorRegistry(),
-                        engine = mockEngine,
-                    ),
-            ).erAdressebeskyttet("12345612345").getOrThrow() shouldBe forventet
+            val pdlHttpKlient =
+                PDLHttpKlient(
+                    url = "http://localhost:8080",
+                    tokenSupplier = { "token" },
+                    httpClient =
+                        defaultHttpClient(
+                            collectorRegistry = CollectorRegistry(),
+                            engine = mockEngine,
+                        ),
+                )
+            pdlHttpKlient.erAdressebeskyttet(ident).getOrThrow() shouldBe forventet
+            pdlHttpKlient.person(ident)
+                .getOrThrow().adresseBeskyttelseGradering shouldBe AdresseBeskyttelseGradering.valueOf(gradering)
         }
     }
 

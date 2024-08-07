@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db
 
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -16,6 +17,7 @@ val testPerson =
     Person(
         ident = "12345678901",
         skjermesSomEgneAnsatte = false,
+        adresseBeskyttelseGradering = UGRADERT,
     )
 val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 

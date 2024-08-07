@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Counter
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
 
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -15,7 +16,7 @@ internal class AdressebeskyttelseKonsumerer(
 
     fun oppdaterAdressebeskyttelseStatus(
         fnr: String,
-        gradering: Gradering,
+        gradering: AdresseBeskyttelseGradering,
     ) {
         repository.oppdaterAdressebeskyttetStatus(fnr, gradering).also { raderOppdatert ->
             when (raderOppdatert) {

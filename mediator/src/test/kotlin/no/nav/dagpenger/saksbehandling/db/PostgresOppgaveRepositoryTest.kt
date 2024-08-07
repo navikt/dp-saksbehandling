@@ -5,6 +5,8 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -70,6 +72,18 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne oppdatere adresse beskyttet status på en person`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testPerson)
+            repo.hentPerson(testPerson.ident).adresseBeskyttelseGradering shouldBe UGRADERT
+
+            repo.oppdaterAdressebeskyttetStatus(testPerson.ident, STRENGT_FORTROLIG)
+            repo.hentPerson(testPerson.ident).adresseBeskyttelseGradering shouldBe STRENGT_FORTROLIG
+        }
+    }
+
+    @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -95,7 +109,12 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
-                    person = Person(ident = "12345123451", skjermesSomEgneAnsatte = true),
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = true,
+                            adresseBeskyttelseGradering = UGRADERT,
+                        ),
                 )
             repo.lagre(eldsteOppgaveMedSkjermingAvEgenAnsatt)
 
@@ -103,7 +122,12 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
-                    person = Person(ident = "11111222222", skjermesSomEgneAnsatte = false),
+                    person =
+                        Person(
+                            ident = "11111222222",
+                            skjermesSomEgneAnsatte = false,
+                            adresseBeskyttelseGradering = UGRADERT,
+                        ),
                 )
             repo.lagre(eldsteOppgaveUtenSkjermingAvEgenAnsatt)
 
@@ -111,7 +135,12 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå,
-                    person = Person(ident = "11111333333", skjermesSomEgneAnsatte = false),
+                    person =
+                        Person(
+                            ident = "11111333333",
+                            skjermesSomEgneAnsatte = false,
+                            adresseBeskyttelseGradering = UGRADERT,
+                        ),
                 )
             repo.lagre(nyesteOppgaveUtenSkjermingAvEgenAnsatt)
 
@@ -385,8 +414,18 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne hente alle oppgaver for en gitt person`() {
-        val ola = Person(ident = "12345678910", skjermesSomEgneAnsatte = false)
-        val kari = Person(ident = "10987654321", skjermesSomEgneAnsatte = false)
+        val ola =
+            Person(
+                ident = "12345678910",
+                skjermesSomEgneAnsatte = false,
+                adresseBeskyttelseGradering = UGRADERT,
+            )
+        val kari =
+            Person(
+                ident = "10987654321",
+                skjermesSomEgneAnsatte = false,
+                adresseBeskyttelseGradering = UGRADERT,
+            )
 
         val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling)
         val oppgave2TilOla = lagOppgave(person = ola, tilstand = FerdigBehandlet)

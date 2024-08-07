@@ -19,6 +19,7 @@ import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTRO
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.pdl.createPersonOppslag
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
 
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -58,9 +59,18 @@ internal class PDLHttpKlient(
                     statsborgerskap = pdlPerson.statsborgerskap,
                     kjønn = pdlPerson.kjonn,
                     fødselsdato = pdlPerson.fodselsdato,
+                    adresseBeskyttelseGradering = pdlPerson.adresseeBeskyttelseGradering(),
                 )
             }
     }
+
+    private fun PDLPerson.adresseeBeskyttelseGradering() =
+        when (this.adresseBeskyttelse) {
+            FORTROLIG -> AdresseBeskyttelseGradering.FORTROLIG
+            STRENGT_FORTROLIG -> AdresseBeskyttelseGradering.STRENGT_FORTROLIG
+            STRENGT_FORTROLIG_UTLAND -> AdresseBeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+            UGRADERT -> AdresseBeskyttelseGradering.UGRADERT
+        }
 
     private suspend fun hentPerson(ident: String): Result<PDLPerson> {
         return kotlin.runCatching {

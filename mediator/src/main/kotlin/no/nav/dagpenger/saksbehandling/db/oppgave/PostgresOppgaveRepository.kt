@@ -5,10 +5,12 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -25,7 +27,10 @@ import kotlin.time.measureTime
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 private val logger = KotlinLogging.logger {}
 
-class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRepository, SkjermingRepository {
+class PostgresOppgaveRepository(private val dataSource: DataSource) :
+    OppgaveRepository,
+    SkjermingRepository,
+    AdressebeskyttelseRepository {
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
@@ -54,6 +59,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                         id = row.uuid("id"),
                         ident = row.string("ident"),
                         skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
+                        adresseBeskyttelseGradering = row.adresseBeskyttelseGradering(),
                     )
                 }.asSingle,
             )
@@ -340,6 +346,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                                 SELECT  pers.id AS person_id, 
                                         pers.ident AS person_ident,
                                         pers.skjermes_som_egne_ansatte,
+                                        pers.adressebeskyttelse_gradering,
                                         oppg.id AS oppgave_id, 
                                         oppg.tilstand, 
                                         oppg.opprettet AS oppgave_opprettet, 
@@ -414,6 +421,30 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                         mapOf(
                             "fnr" to fnr,
                             "skjermet" to skjermet,
+                        ),
+                ).asUpdate,
+            )
+        }
+    }
+
+    override fun oppdaterAdressebeskyttetStatus(
+        fnr: String,
+        adresseBeskyttelseGradering: AdresseBeskyttelseGradering,
+    ): Int {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        UPDATE person_v1
+                        SET    adressebeskyttelse_gradering = :adresseBeskyttelseGradering
+                        WHERE  ident = :fnr
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "fnr" to fnr,
+                            "adresseBeskyttelseGradering" to adresseBeskyttelseGradering.name,
                         ),
                 ).asUpdate,
             )
@@ -635,6 +666,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
                     id = this.uuid("person_id"),
                     ident = this.string("person_ident"),
                     skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
+                    adresseBeskyttelseGradering = this.adresseBeskyttelseGradering(),
                 ),
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId),
@@ -656,6 +688,10 @@ private fun Row.rehydrerOppgave(): Oppgave {
         behandling = behandling,
         utsattTil = this.localDateOrNull("utsatt_til"),
     )
+}
+
+private fun Row.adresseBeskyttelseGradering(): AdresseBeskyttelseGradering {
+    return AdresseBeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
 }
 
 class DataNotFoundException(message: String) : RuntimeException(message)

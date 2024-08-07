@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -32,7 +33,13 @@ internal class VedtakFattetMottakTest {
             behandling =
                 Behandling(
                     behandlingId = behandlingId,
-                    person = Person(id = UUIDv7.ny(), ident = testIdent, skjermesSomEgneAnsatte = false),
+                    person =
+                        Person(
+                            id = UUIDv7.ny(),
+                            ident = testIdent,
+                            skjermesSomEgneAnsatte = false,
+                            adresseBeskyttelseGradering = UGRADERT,
+                        ),
                     opprettet = opprettet,
                 ),
         )
