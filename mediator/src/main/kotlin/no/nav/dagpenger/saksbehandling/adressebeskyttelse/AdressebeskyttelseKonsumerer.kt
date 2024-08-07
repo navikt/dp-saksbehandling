@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.Counter
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")

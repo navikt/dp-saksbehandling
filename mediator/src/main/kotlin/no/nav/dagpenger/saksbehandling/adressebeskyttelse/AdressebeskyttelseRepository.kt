@@ -4,7 +4,7 @@ internal enum class Gradering {
     STRENGT_FORTROLIG_UTLAND,
     STRENGT_FORTROLIG,
     FORTROLIG,
-    UGRADERT
+    UGRADERT,
 }
 
 internal interface AdressebeskyttelseRepository {
