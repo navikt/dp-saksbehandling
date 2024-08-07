@@ -15,6 +15,7 @@ fun StreamsBuilder.adressebeskyttetStream(
 ): Unit =
     this.stream(topic, Consumed.with(stringSerde, specificAvroSerde<Personhendelse>()))
         .peek(loggPakke)
+        .filter { _, personhendelse -> personhendelse.opplysningstype == "ADRESSEBESKYTTELSE_V1" }
         .foreach(håndter)
 
 private val loggPakke: (String, Personhendelse) -> Unit = { fnr, personHendelse ->
