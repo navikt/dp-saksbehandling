@@ -450,6 +450,10 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             )
         }
     }
+
+    override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
+        TODO("Not yet implemented")
+    }
 }
 
 private fun TransactionalSession.lagre(person: Person) {

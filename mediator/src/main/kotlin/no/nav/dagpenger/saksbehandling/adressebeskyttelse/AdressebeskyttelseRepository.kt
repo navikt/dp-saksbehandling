@@ -7,4 +7,6 @@ internal interface AdressebeskyttelseRepository {
         fnr: String,
         adresseBeskyttelseGradering: AdresseBeskyttelseGradering,
     ): Int
+
+    fun eksistererIDPsystem(fnrs: Set<String>): Set<String>
 }
