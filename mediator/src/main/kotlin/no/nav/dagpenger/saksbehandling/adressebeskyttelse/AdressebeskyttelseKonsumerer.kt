@@ -20,9 +20,9 @@ internal class AdressebeskyttelseKonsumerer(
         fnr: String,
         historiskeFnr: Set<String>,
     ) {
-        val fnrs = historiskeFnr.toMutableSet() + fnr
-        repository.eksistererIDPsystem(fnrs).forEach {
-            runBlocking {
+        runBlocking {
+            val fnrs = historiskeFnr.toMutableSet() + fnr
+            repository.eksistererIDPsystem(fnrs).forEach {
                 pdlKlient.person(it).getOrThrow().adresseBeskyttelseGradering.let { gradering ->
                     repository.oppdaterAdressebeskyttetStatus(
                         it,
