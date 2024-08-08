@@ -14,11 +14,15 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 val testPerson =
+    lagPerson()
+
+fun lagPerson(ident: String = "12345678901") =
     Person(
-        ident = "12345678901",
+        ident = ident,
         skjermesSomEgneAnsatte = false,
         adresseBeskyttelseGradering = UGRADERT,
     )
+
 val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 
 fun lagOppgave(

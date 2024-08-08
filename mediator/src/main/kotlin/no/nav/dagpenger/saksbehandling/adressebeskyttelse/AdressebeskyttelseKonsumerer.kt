@@ -22,14 +22,14 @@ internal class AdressebeskyttelseKonsumerer(
     ) {
         runBlocking {
             val fnrs = historiskeFnr.toMutableSet() + fnr
-            repository.eksistererIDPsystem(fnrs).forEach {
-                pdlKlient.person(it).getOrThrow().adresseBeskyttelseGradering.let { gradering ->
+            repository.eksistererIDPsystem(fnrs).forEach { fnr ->
+                pdlKlient.person(fnr).getOrThrow().adresseBeskyttelseGradering.let { gradering ->
                     repository.oppdaterAdressebeskyttetStatus(
-                        it,
+                        fnr,
                         gradering,
                     )
                     logger.info { "Person oppdatert med ny gradering av adressebeskyttelsestatus" }
-                    sikkerLogg.info { "Person($it) oppdatert med ny gradering av adressebeskyttelsestatus($gradering)" }
+                    sikkerLogg.info { "Person($fnr) oppdatert med ny gradering av adressebeskyttelsestatus($gradering)" }
                     counter.inc("$gradering")
                 }
             }

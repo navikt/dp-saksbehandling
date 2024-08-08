@@ -452,7 +452,22 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
-        TODO("Not yet implemented")
+        val identer = fnrs.joinToString { "'$it'" }
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT ident
+                        FROM   person_v1
+                        WHERE  ident IN ($identer)
+                        """.trimIndent(),
+                ).map { row ->
+                    row.string("ident")
+                }.asList,
+            ).toSet()
+        }
     }
 }
 

@@ -689,4 +689,17 @@ class PostgresOppgaveRepositoryTest {
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
+
+    @Test
+    fun `Sjekk om fnre eksisterer i vårt system`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            val (fnr1, fnr2, fnr3) = Triple("12345678910", "10987654321", "12345678931")
+
+            repo.lagre(lagPerson(fnr1))
+            repo.lagre(lagPerson(fnr2))
+            repo.lagre(lagPerson("12345678941"))
+            repo.eksistererIDPsystem(setOf(fnr1, fnr2, fnr3)) shouldBe setOf(fnr1, fnr2)
+        }
+    }
 }
