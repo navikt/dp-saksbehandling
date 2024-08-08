@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-internal class AdressebeskyttelseKonsumererTest {
+internal class AdressebeskyttelseConsumerTest {
     @Test
     fun `test oppdaterAdressebeskyttelseStatus`() {
         val registry =
@@ -26,13 +26,13 @@ internal class AdressebeskyttelseKonsumererTest {
                 io.mockk.coEvery { pdlKlient.person("2") } returns testPersonResultat("2", UGRADERT)
             }
 
-        val adressebeskyttelseKonsumerer =
-            AdressebeskyttelseKonsumerer(
+        val adressebeskyttelseConsumer =
+            AdressebeskyttelseConsumer(
                 repository = registry,
                 pdlKlient = pdlKlient,
                 registry = CollectorRegistry.defaultRegistry,
             )
-        adressebeskyttelseKonsumerer.oppdaterAdressebeskyttelseStatus("1", setOf("2", "1"))
+        adressebeskyttelseConsumer.oppdaterAdressebeskyttelseStatus("1", setOf("2", "1"))
 
         verify(exactly = 1) {
             registry.oppdaterAdressebeskyttetStatus("1", STRENGT_FORTROLIG)

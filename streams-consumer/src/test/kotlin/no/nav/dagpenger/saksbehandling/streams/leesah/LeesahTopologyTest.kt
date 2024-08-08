@@ -32,15 +32,15 @@ internal class LeesahTopologyTest {
                     personhendelseSerde.serializer(),
                 )
             val ident = "123"
-            val personhendelse = lagPersonhendelse()
+            val personhendelse = lagPersonhendelse(historiskeIdenter = listOf("123", "456"))
             inputTopic.pipeInput(ident, personhendelse)
 
             eventually(5.seconds) {
-                testHandler.mutableMap[ident] shouldBe personhendelse
+                testHandler.mutableMap[ident] shouldBe setOf("123", "456")
             }
 
             val ident2 = "1234"
-            inputTopic.pipeInput(ident2, lagPersonhendelse("test"))
+            inputTopic.pipeInput(ident2, lagPersonhendelse("test", listOf("123")))
 
             delay(5000)
             testHandler.mutableMap[ident2] shouldBe null
@@ -48,20 +48,23 @@ internal class LeesahTopologyTest {
     }
 
     private class TestHandler {
-        val mutableMap = mutableMapOf<String, Personhendelse>()
+        val mutableMap = mutableMapOf<String, Set<String>>()
 
         fun handle(
             fnr: String,
-            personhendelse: Personhendelse,
+            historiskeFnrs: Set<String>,
         ) {
-            mutableMap[fnr] = personhendelse
+            mutableMap[fnr] = historiskeFnrs
         }
     }
 
-    private fun lagPersonhendelse(opplysningstype: String = "ADRESSEBESKYTTELSE_V1"): Personhendelse? =
+    private fun lagPersonhendelse(
+        opplysningstype: String = "ADRESSEBESKYTTELSE_V1",
+        historiskeIdenter: List<String>,
+    ): Personhendelse? =
         Personhendelse.newBuilder()
             .setHendelseId("123")
-            .setPersonidenter(listOf("123"))
+            .setPersonidenter(historiskeIdenter)
             .setMaster("PDL")
             .setOpprettet(Instant.now())
             .setOpplysningstype(opplysningstype)

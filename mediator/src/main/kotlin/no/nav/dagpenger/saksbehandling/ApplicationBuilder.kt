@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import io.ktor.server.application.install
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
@@ -21,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
 import no.nav.dagpenger.saksbehandling.statistikk.statistikkApi
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
+import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
@@ -53,6 +55,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val oppgaveMediator = OppgaveMediator(oppgaveRepository, skjermingKlient, pdlKlient)
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
+    private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
@@ -67,6 +70,10 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                             skjermetPersonStatus(
                                 Configuration.skjermingPersonStatusTopic,
                                 skjermingConsumer::oppdaterSkjermetStatus,
+                            )
+                            adressebeskyttetStream(
+                                Configuration.leesahTopic,
+                                adressebeskyttelseConsumer::oppdaterAdressebeskyttelseStatus,
                             )
                         }
                 }

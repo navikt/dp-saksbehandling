@@ -9,7 +9,7 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
-internal class AdressebeskyttelseKonsumerer(
+internal class AdressebeskyttelseConsumer(
     private val repository: AdressebeskyttelseRepository,
     private val pdlKlient: PDLKlient,
     registry: CollectorRegistry = CollectorRegistry.defaultRegistry,
