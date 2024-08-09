@@ -74,10 +74,8 @@ object Configuration {
         )
     }
 
-    val skjermingsConsumerId = "dp-saksbehandling-skjerming-consumer-v0.0.4"
+    val kafkaStreamsConsumerId = "dp-saksbehandling-streams-consumer-v1"
     val kafkaStreamProperties by lazy {
-        KafkaConfiguration.kafkaStreamsConfiguration(
-            applicationId = skjermingsConsumerId,
-        )
+        KafkaConfiguration.kafkaStreamsConfiguration(consumerId = kafkaStreamsConsumerId)
     }
 }
