@@ -20,6 +20,7 @@ internal class AdressebeskyttelseConsumer(
         fnr: String,
         historiskeFnr: Set<String>,
     ) {
+        logger.info { "Starter oppdatering avdressebeskyttelse status" }
         runBlocking {
             val fnrs = historiskeFnr.toMutableSet() + fnr
             sikkerLogg.info { "Sjekker om $fnrs eksisterer i db" }
