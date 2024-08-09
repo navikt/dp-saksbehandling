@@ -21,21 +21,23 @@ internal class AdressebeskyttelseConsumer(
         historiskeFnr: Set<String>,
     ) {
         logger.info { "Starter oppdatering avdressebeskyttelse status" }
-        runBlocking {
-            val fnrs = historiskeFnr.toMutableSet() + fnr
-            sikkerLogg.info { "Sjekker om $fnrs eksisterer i db" }
-            repository.eksistererIDPsystem(fnrs).forEach { fnr ->
-                sikkerLogg.info { "$fnr eksisterer i db. Henter adressebeskyttelsestatus for personen" }
-                pdlKlient.person(fnr).getOrThrow().adresseBeskyttelseGradering.let { gradering ->
-                    sikkerLogg.info { "Person $fnr har adressebeskyttelsestatus: $gradering" }
-                    repository.oppdaterAdressebeskyttetStatus(
-                        fnr,
-                        gradering,
-                    )
-                    logger.info { "Person oppdatert med ny gradering av adressebeskyttelsestatus" }
-                    sikkerLogg.info { "Person($fnr) oppdatert med ny gradering av adressebeskyttelsestatus($gradering)" }
-                    counter.inc("$gradering")
-                }
+        val fnrs = historiskeFnr.toMutableSet() + fnr
+        sikkerLogg.info { "Sjekker om $fnrs eksisterer i db" }
+        repository.eksistererIDPsystem(fnrs).forEach { fnr ->
+            sikkerLogg.info { "$fnr eksisterer i db. Henter adressebeskyttelsestatus for personen" }
+            val adresseBeskyttelseGradering = runBlocking {
+                pdlKlient.person(fnr).getOrThrow().adresseBeskyttelseGradering
+            }
+
+            adresseBeskyttelseGradering.let { gradering ->
+                sikkerLogg.info { "Person $fnr har adressebeskyttelsestatus: $gradering" }
+                repository.oppdaterAdressebeskyttetStatus(
+                    fnr,
+                    gradering,
+                )
+                logger.info { "Person oppdatert med ny gradering av adressebeskyttelsestatus" }
+                sikkerLogg.info { "Person($fnr) oppdatert med ny gradering av adressebeskyttelsestatus($gradering)" }
+                counter.inc("$gradering")
             }
             sikkerLogg.info { "Ferdig med å oppdatere adressebeskyttelsestatus" }
         }
