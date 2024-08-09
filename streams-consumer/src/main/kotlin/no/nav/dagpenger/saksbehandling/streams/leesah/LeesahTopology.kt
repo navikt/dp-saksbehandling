@@ -8,6 +8,7 @@ import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.Consumed
 
 private val sikkerLogger = KotlinLogging.logger { "tjenestekall" }
+private val logger = KotlinLogging.logger { }
 
 fun StreamsBuilder.adressebeskyttetStream(
     topic: String,
@@ -15,6 +16,9 @@ fun StreamsBuilder.adressebeskyttetStream(
 ): Unit =
     this.stream(topic, Consumed.with(stringSerde, specificAvroSerde<Personhendelse>()))
         .filter { _, personhendelse -> personhendelse.opplysningstype == "ADRESSEBESKYTTELSE_V1" }
-        .peek { _, personhendelse -> sikkerLogger.debug { "Personhendelse: $personhendelse" } }
+        .peek { _, personhendelse ->
+            sikkerLogger.info { "Personhendelse: $personhendelse" }
+            logger.info { "Mottok personhendelse til prosessering, ${personhendelse.opplysningstype}" }
+        }
         .mapValues { _, personhendelse -> personhendelse.personidenter.toSet() }
         .foreach(håndter)
