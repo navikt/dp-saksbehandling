@@ -12,7 +12,7 @@ private val logger = KotlinLogging.logger { }
 
 fun StreamsBuilder.adressebeskyttetStream(
     topic: String,
-    håndter: (String, Set<String>) -> Unit,
+    håndter: (Set<String>) -> Unit,
 ): Unit =
     this.stream(topic, Consumed.with(stringSerde, specificAvroSerde<Personhendelse>()))
         .filter { _, personhendelse -> personhendelse.opplysningstype == "ADRESSEBESKYTTELSE_V1" }
@@ -21,4 +21,4 @@ fun StreamsBuilder.adressebeskyttetStream(
             logger.info { "Mottok personhendelse til prosessering, ${personhendelse.opplysningstype}" }
         }
         .mapValues { _, personhendelse -> personhendelse.personidenter.toSet() }
-        .foreach(håndter)
+        .foreach { _, personidenter -> håndter(personidenter) }

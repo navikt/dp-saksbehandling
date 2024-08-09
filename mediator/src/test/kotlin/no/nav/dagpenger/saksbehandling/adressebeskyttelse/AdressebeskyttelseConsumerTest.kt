@@ -32,7 +32,7 @@ internal class AdressebeskyttelseConsumerTest {
                 pdlKlient = pdlKlient,
                 registry = CollectorRegistry.defaultRegistry,
             )
-        adressebeskyttelseConsumer.oppdaterAdressebeskyttelseStatus("1", setOf("2", "1"))
+        adressebeskyttelseConsumer.oppdaterAdressebeskyttelseStatus(setOf("2", "1"))
 
         verify(exactly = 1) {
             registry.oppdaterAdressebeskyttetStatus("1", STRENGT_FORTROLIG)

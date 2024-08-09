@@ -36,25 +36,27 @@ internal class LeesahTopologyTest {
             inputTopic.pipeInput(ident, personhendelse)
 
             eventually(5.seconds) {
-                testHandler.mutableMap[ident] shouldBe setOf("123", "456")
+                testHandler.mutableMap shouldBe setOf("123", "456")
             }
 
             val ident2 = "1234"
+            testHandler.reset()
             inputTopic.pipeInput(ident2, lagPersonhendelse("test", listOf("123")))
 
             delay(5000)
-            testHandler.mutableMap[ident2] shouldBe null
+            testHandler.mutableMap shouldBe null
         }
     }
 
     private class TestHandler {
-        val mutableMap = mutableMapOf<String, Set<String>>()
+        var mutableMap: Set<String>? = null
 
-        fun handle(
-            fnr: String,
-            historiskeFnrs: Set<String>,
-        ) {
-            mutableMap[fnr] = historiskeFnrs
+        fun handle(identer: Set<String>) {
+            mutableMap = identer
+        }
+
+        fun reset() {
+            mutableMap = null
         }
     }
 
