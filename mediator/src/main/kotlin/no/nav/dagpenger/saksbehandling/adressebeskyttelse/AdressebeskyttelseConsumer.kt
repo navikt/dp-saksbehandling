@@ -23,7 +23,9 @@ internal class AdressebeskyttelseConsumer(
         runBlocking {
             val fnrs = historiskeFnr.toMutableSet() + fnr
             repository.eksistererIDPsystem(fnrs).forEach { fnr ->
+                sikkerLogg.info { "$fnr eksisterer i db. Henter adressebeskyttelsestatus for personen" }
                 pdlKlient.person(fnr).getOrThrow().adresseBeskyttelseGradering.let { gradering ->
+                    sikkerLogg.info { "Person $fnr har adressebeskyttelsestatus: $gradering" }
                     repository.oppdaterAdressebeskyttetStatus(
                         fnr,
                         gradering,

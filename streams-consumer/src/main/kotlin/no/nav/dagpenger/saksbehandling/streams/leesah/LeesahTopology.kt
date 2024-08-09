@@ -7,7 +7,7 @@ import no.nav.person.pdl.leesah.Personhendelse
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.Consumed
 
-private val sikkerLogger = KotlinLogging.logger { "tjenestekall" }
+private val sikkerLogger = KotlinLogging.logger("tjenestekall")
 private val logger = KotlinLogging.logger { }
 
 fun StreamsBuilder.adressebeskyttetStream(
