@@ -9,6 +9,7 @@ import java.util.UUID
 
 class AdressebeskyttelseTilgangskontroll(
     private val strengtFortroligGruppe: String,
+    private val strengtFortroligUtlandGruppe: String,
     private val fortroligGruppe: String,
     private val adressebeskyttelseGraderingFun: (oppgaveId: UUID) -> AdresseBeskyttelseGradering,
 ) : OppgaveTilgangskontroll {
@@ -19,7 +20,7 @@ class AdressebeskyttelseTilgangskontroll(
         val gradering = adressebeskyttelseGraderingFun(oppgaveId)
         return when (gradering) {
             UGRADERT -> true
-            STRENGT_FORTROLIG_UTLAND -> saksbehandler.grupper.contains(strengtFortroligGruppe)
+            STRENGT_FORTROLIG_UTLAND -> saksbehandler.grupper.contains(strengtFortroligUtlandGruppe)
             STRENGT_FORTROLIG -> saksbehandler.grupper.contains(strengtFortroligGruppe)
             FORTROLIG -> saksbehandler.grupper.contains(fortroligGruppe)
         }

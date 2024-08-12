@@ -6,40 +6,91 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 
 class AdressebeskyttelseTilgangskontrollTest {
+    private val fortroligGruppe = "Fortrolig"
+    private val strengtFortroligGruppe = "StrengtFortrolig"
+    private val strengtFortroligUtlandGruppe = "StrengtFortroligUtland"
+
     @Test
     fun `Saksbehandler har alltid tilgang dersom oppgaven tilhører en person som ikke er adressebeskyttet`() {
-        val fortroligGruppe = "Fortrolig"
-        val strengtFortroligGruppe = "StrengtFortrolig"
         AdressebeskyttelseTilgangskontroll(
-            fortroligGruppe = fortroligGruppe,
             strengtFortroligGruppe = strengtFortroligGruppe,
+            strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
+            fortroligGruppe = fortroligGruppe,
             adressebeskyttelseGraderingFun = { AdresseBeskyttelseGradering.UGRADERT },
         ).let { tilgangskontroll ->
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe true
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe true
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(strengtFortroligGruppe))) shouldBe true
+            tilgangskontroll.harTilgang(
+                UUIDv7.ny(),
+                Saksbehandler("ident", setOf(strengtFortroligGruppe)),
+            ) shouldBe true
+            tilgangskontroll.harTilgang(
+                UUIDv7.ny(),
+                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe)),
+            ) shouldBe true
         }
     }
 
-/*
     @Test
-    fun `Saksbehandler har tilgang dersom person er skjermet og saksbehandler er i en gruppe som har tilgang`() {
+    fun `Saksbehandler har ikke tilgang dersom hen ikke har fortrolig`() {
         AdressebeskyttelseTilgangskontroll(
-            tillatteGrupper = setOf("A", "B"),
-            skjermesSomEgneAnsatteFun = { PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTROLIG },
-        ).let {
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("B"))) shouldBe true
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A", "B"))) shouldBe true
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A", "B", "C"))) shouldBe true
+            strengtFortroligGruppe = strengtFortroligGruppe,
+            strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
+            fortroligGruppe = fortroligGruppe,
+            adressebeskyttelseGraderingFun = { AdresseBeskyttelseGradering.FORTROLIG },
+        ).let { tilgangskontroll ->
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe true
+            tilgangskontroll.harTilgang(
+                UUIDv7.ny(),
+                Saksbehandler("ident", setOf(strengtFortroligGruppe)),
+            ) shouldBe false
+            tilgangskontroll.harTilgang(
+                UUIDv7.ny(),
+                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe)),
+            ) shouldBe false
         }
     }
-*/
 
     @Test
-    fun `Saksbehandler har IKKE tilgang dersom person er skjermet og saksbehandler IKKE er i en gruppe som har tilgang`() {
-        EgneAnsatteTilgangskontroll(
-            tillatteGrupper = setOf("A", "B"),
-            skjermesSomEgneAnsatteFun = { true },
-        ).harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"))) shouldBe false
+    fun `Saksbehandler har ikke tilgang dersom hen ikke har strengtFortrolig`() {
+        AdressebeskyttelseTilgangskontroll(
+            strengtFortroligGruppe = strengtFortroligGruppe,
+            strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
+            fortroligGruppe = fortroligGruppe,
+            adressebeskyttelseGraderingFun = { AdresseBeskyttelseGradering.STRENGT_FORTROLIG },
+        ).let { tilgangskontroll ->
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe false
+            tilgangskontroll.harTilgang(
+                UUIDv7.ny(),
+                Saksbehandler("ident", setOf(strengtFortroligGruppe)),
+            ) shouldBe true
+            tilgangskontroll.harTilgang(
+                UUIDv7.ny(),
+                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe)),
+            ) shouldBe false
+        }
+    }
+
+    @Test
+    fun `Saksbehandler har ikke tilgang dersom hen ikke har strengtFortroligUtland`() {
+        AdressebeskyttelseTilgangskontroll(
+            strengtFortroligGruppe = strengtFortroligGruppe,
+            strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
+            fortroligGruppe = fortroligGruppe,
+            adressebeskyttelseGraderingFun = { AdresseBeskyttelseGradering.STRENGT_FORTROLIG_UTLAND },
+        ).let { tilgangskontroll ->
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe false
+            tilgangskontroll.harTilgang(
+                UUIDv7.ny(),
+                Saksbehandler("ident", setOf(strengtFortroligGruppe)),
+            ) shouldBe false
+            tilgangskontroll.harTilgang(
+                UUIDv7.ny(),
+                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe)),
+            ) shouldBe true
+        }
     }
 }
