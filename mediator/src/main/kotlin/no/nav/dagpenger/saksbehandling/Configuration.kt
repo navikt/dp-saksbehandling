@@ -24,6 +24,9 @@ object Configuration {
                 "GRUPPE_EGNE_ANSATTE" to "EgneAnsatteADGruppe",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
                 "GRUPPE_BESLUTTER" to "BeslutterADGruppe",
+                "GRUPPE_FORTROLIG" to "FortroligADGruppe",
+                "GRUPPE_STRENGT_FORTROLIG_UTLAND" to "StrengtFortroligUtlandADGruppe",
+                "GRUPPE_STRENGT_FORTROLIG" to "StrengtFortroligADGruppe",
                 "JOURNALPOSTID_API_URL" to "http://dp-oppslag-journalpost-id/v1/journalpost",
                 "JOURNALPOSTID_API_SCOOPE" to "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
@@ -65,6 +68,9 @@ object Configuration {
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
     val egneAnsatteADGruppe by lazy { properties[Key("GRUPPE_EGNE_ANSATTE", stringType)] }
+    val strengtFortroligADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG", stringType)] }
+    val strengtFortroligUtlandADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG_UTLAND", stringType)] }
+    val fortroligADGruppe by lazy { properties[Key("GRUPPE_FORTROLIG", stringType)] }
 
     val azureAdClient: CachedOauth2Client by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)

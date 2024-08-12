@@ -13,6 +13,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
@@ -69,6 +70,7 @@ class OppgaveApiTilgangskontrollTest {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.personSkjermesSomEgneAnsatte(any()) } returns true
+                every { it.adresseGraderingForPerson(any()) } returns UGRADERT
                 every { it.tildelOppgave(any()) } returns testOppgave
                 every { it.hentOppgave(any()) } returns testOppgave
                 every { it.utsettOppgave(any()) } just Runs
