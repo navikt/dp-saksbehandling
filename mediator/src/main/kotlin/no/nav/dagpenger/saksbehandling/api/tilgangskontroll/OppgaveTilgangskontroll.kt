@@ -1,13 +1,12 @@
 package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
-import io.ktor.server.request.uri
 import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
+import io.ktor.util.pipeline.PipelineContext
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import java.util.UUID
@@ -50,42 +49,30 @@ class EgneAnsatteTilgangskontroll(
 
 class IngenTilgangTilOppgaveException(message: String) : RuntimeException(message)
 
-fun Route.oppgaveTilgangskontroll(
-    tilgangskontroll: Set<OppgaveTilgangskontroll>,
-    block: Route.() -> Unit,
-) {
-    intercept(ApplicationCallPipeline.Call) {
-        // Midlertidig hack
-        if (call.request.uri.contains("legg-tilbake")) {
-            proceed()
-            return@intercept
-        }
+suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangskontroll: Set<OppgaveTilgangskontroll>) {
+    val oppgaveId = call.parameters["oppgaveId"]?.let { UUID.fromString(it) }
+    if (oppgaveId == null) {
+        call.respond(HttpStatusCode.BadRequest, "Manglende oppgaveId")
+        finish()
+    }
+    val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
+    if (saksbehandler == null) {
+        call.respond(HttpStatusCode.BadRequest, "Manglende saksbehandler")
+        finish()
+    }
 
-        val oppgaveId = call.parameters["oppgaveId"]?.let { UUID.fromString(it) }
-        if (oppgaveId == null) {
-            call.respond(HttpStatusCode.BadRequest, "Manglende oppgaveId")
-            finish()
-        }
-        val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
-        if (saksbehandler == null) {
-            call.respond(HttpStatusCode.BadRequest, "Manglende saksbehandler")
-            finish()
-        }
+    if (oppgaveId != null && saksbehandler != null) {
+        val feilendeValidering =
+            tilgangskontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
+        when (feilendeValidering) {
+            null -> {
+                proceed()
+            }
 
-        if (oppgaveId != null && saksbehandler != null) {
-            val feilendeValidering =
-                tilgangskontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
-            when (feilendeValidering) {
-                null -> {
-                    proceed()
-                }
-
-                else -> {
-                    logger.info { "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId" }
-                    throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
-                }
+            else -> {
+                logger.info { "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId" }
+                throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
             }
         }
     }
-    block()
 }
