@@ -55,10 +55,10 @@ internal object OppgaveApiTestHelper {
         header(HttpHeaders.Authorization, "Bearer $token")
     }
 
-    fun gyldigSaksbehandlerToken(): String =
+    fun gyldigSaksbehandlerToken(adGrupper: List<String> = emptyList()): String =
         mockAzure.lagTokenMedClaims(
             mapOf(
-                "groups" to listOf("SaksbehandlerADGruppe"),
+                "groups" to listOf("SaksbehandlerADGruppe") + adGrupper,
                 "NAVident" to TEST_NAV_IDENT,
             ),
         )
@@ -74,6 +74,7 @@ internal object OppgaveApiTestHelper {
     fun lagMediatorMock(): OppgaveMediator {
         return mockk<OppgaveMediator>().also {
             every { it.personSkjermesSomEgneAnsatte(any()) } returns false
+            every { it.adresseGraderingForPerson(any()) } returns UGRADERT
         }
     }
 

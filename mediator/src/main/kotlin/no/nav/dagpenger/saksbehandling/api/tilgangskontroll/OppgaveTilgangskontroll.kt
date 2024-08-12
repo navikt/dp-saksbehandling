@@ -41,7 +41,9 @@ suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangs
 
     if (oppgaveId != null && saksbehandler != null) {
         val feilendeValidering =
-            tilgangskontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
+            tilgangskontroll.firstOrNull { oppgaveTilgangskontroll ->
+                oppgaveTilgangskontroll.harTilgang(oppgaveId, saksbehandler) == false
+            }
         when (feilendeValidering) {
             null -> {
                 proceed()

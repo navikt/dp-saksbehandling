@@ -13,7 +13,11 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
@@ -31,6 +35,13 @@ import java.time.LocalDate
 
 class OppgaveApiTilgangskontrollTest {
     private val mockAzure = mockAzure()
+    private val tilgangskontrollAdGrupper =
+        listOf(
+            Configuration.strengtFortroligADGruppe,
+            Configuration.strengtFortroligUtlandADGruppe,
+            Configuration.egneAnsatteADGruppe,
+            Configuration.fortroligADGruppe,
+        )
 
     @Test
     fun `Skal avvise kall uten autoriserte AD grupper`() {
@@ -47,10 +58,14 @@ class OppgaveApiTilgangskontrollTest {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also { oppgaveMediator ->
                 every { oppgaveMediator.personSkjermesSomEgneAnsatte(any()) } returns true
+                every { oppgaveMediator.adresseGraderingForPerson(any()) } returns UGRADERT
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            val saksbehandlerTokenUtenEgneAnsatteTilgang = gyldigSaksbehandlerToken()
+            val saksbehandlerTokenUtenEgneAnsatteTilgang =
+                gyldigSaksbehandlerToken(
+                    tilgangskontrollAdGrupper - Configuration.egneAnsatteADGruppe,
+                )
             client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
                 .status shouldBe HttpStatusCode.Forbidden
 
@@ -58,6 +73,84 @@ class OppgaveApiTilgangskontrollTest {
                 .status shouldBe HttpStatusCode.Forbidden
 
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
+                .status shouldBe HttpStatusCode.Forbidden
+        }
+    }
+
+    @Test
+    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse FORTROLIG dersom saksbehandler ikke har riktig adgruppe`() {
+        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
+
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also { oppgaveMediator ->
+                every { oppgaveMediator.personSkjermesSomEgneAnsatte(any()) } returns false
+                every { oppgaveMediator.adresseGraderingForPerson(any()) } returns FORTROLIG
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            val saksbehandlerTokenUtenFortrolig =
+                gyldigSaksbehandlerToken(
+                    tilgangskontrollAdGrupper - Configuration.fortroligADGruppe,
+                )
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+        }
+    }
+
+    @Test
+    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse STRENGT_FORTROLIG dersom saksbehandler ikke har riktig adgruppe`() {
+        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
+
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also { oppgaveMediator ->
+                every { oppgaveMediator.personSkjermesSomEgneAnsatte(any()) } returns false
+                every { oppgaveMediator.adresseGraderingForPerson(any()) } returns STRENGT_FORTROLIG
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            val saksbehandlerTokenUtenFortrolig =
+                gyldigSaksbehandlerToken(
+                    tilgangskontrollAdGrupper - Configuration.strengtFortroligADGruppe,
+                )
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+        }
+    }
+
+    @Test
+    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse STRENGT_FORTROLIG_UTLAND dersom saksbehandler ikke har riktig adgruppe`() {
+        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
+
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also { oppgaveMediator ->
+                every { oppgaveMediator.personSkjermesSomEgneAnsatte(any()) } returns false
+                every { oppgaveMediator.adresseGraderingForPerson(any()) } returns STRENGT_FORTROLIG_UTLAND
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            val saksbehandlerTokenUtenFortrolig =
+                gyldigSaksbehandlerToken(
+                    tilgangskontrollAdGrupper - Configuration.strengtFortroligUtlandADGruppe,
+                )
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
                 .status shouldBe HttpStatusCode.Forbidden
         }
     }
