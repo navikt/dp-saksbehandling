@@ -702,4 +702,14 @@ class PostgresOppgaveRepositoryTest {
             repo.eksistererIDPsystem(setOf(fnr1, fnr2, fnr3)) shouldBe setOf(fnr1, fnr2)
         }
     }
+
+    @Test
+    fun `Hent adressegraderingsbeskyttelse for person gitt oppgave`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            val oppgave = lagOppgave(person = lagPerson(addresseBeskyttelseGradering = STRENGT_FORTROLIG))
+            repo.lagre(oppgave)
+            repo.adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
+        }
+    }
 }

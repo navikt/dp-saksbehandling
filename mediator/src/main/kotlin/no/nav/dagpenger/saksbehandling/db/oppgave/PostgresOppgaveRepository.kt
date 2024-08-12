@@ -280,6 +280,26 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
+    override fun adresseGraderingForPerson(oppgaveId: UUID): AdresseBeskyttelseGradering {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    SELECT pers.adressebeskyttelse_gradering
+                    FROM   person_v1     pers
+                    JOIN   behandling_v1 beha ON beha.person_id = pers.id
+                    JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
+                    WHERE  oppg.id = :oppgave_id
+                    """.trimMargin(),
+                    mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    AdresseBeskyttelseGradering.valueOf(row.string("adressebeskyttelse_gradering"))
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
+    }
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(
@@ -470,16 +490,17 @@ private fun TransactionalSession.lagre(person: Person) {
             statement =
                 """
                 INSERT INTO person_v1
-                    (id, ident, skjermes_som_egne_ansatte) 
+                    (id, ident, skjermes_som_egne_ansatte, adressebeskyttelse_gradering) 
                 VALUES
-                    (:id, :ident, :skjermes_som_egne_ansatte) 
-                ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte
+                    (:id, :ident, :skjermes_som_egne_ansatte, :adressebeskyttelse_gradering) 
+                ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte , adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
                 """.trimIndent(),
             paramMap =
                 mapOf(
                     "id" to person.id,
                     "ident" to person.ident,
                     "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
+                    "adressebeskyttelse_gradering" to person.adresseBeskyttelseGradering.name,
                 ),
         ).asUpdate,
     )

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db
 
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -16,12 +17,14 @@ import java.util.UUID
 val testPerson =
     lagPerson()
 
-fun lagPerson(ident: String = "12345678901") =
-    Person(
-        ident = ident,
-        skjermesSomEgneAnsatte = false,
-        adresseBeskyttelseGradering = UGRADERT,
-    )
+fun lagPerson(
+    ident: String = "12345678901",
+    addresseBeskyttelseGradering: AdresseBeskyttelseGradering = UGRADERT,
+) = Person(
+    ident = ident,
+    skjermesSomEgneAnsatte = false,
+    adresseBeskyttelseGradering = addresseBeskyttelseGradering,
+)
 
 val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 
