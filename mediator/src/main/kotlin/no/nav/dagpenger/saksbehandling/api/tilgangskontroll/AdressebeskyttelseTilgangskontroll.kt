@@ -16,14 +16,19 @@ class AdressebeskyttelseTilgangskontroll(
     override fun harTilgang(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
-    ): Boolean {
-        val gradering = adressebeskyttelseGraderingFun(oppgaveId)
-        return when (gradering) {
-            UGRADERT -> true
-            STRENGT_FORTROLIG_UTLAND -> saksbehandler.grupper.contains(strengtFortroligUtlandGruppe)
-            STRENGT_FORTROLIG -> saksbehandler.grupper.contains(strengtFortroligGruppe)
-            FORTROLIG -> saksbehandler.grupper.contains(fortroligGruppe)
-        }
+    ): Boolean = tilganger(saksbehandler).contains(adressebeskyttelseGraderingFun(oppgaveId))
+
+    fun tilganger(saksbehandler: Saksbehandler): Set<AdressebeskyttelseGradering> {
+        return (
+            saksbehandler.grupper.map {
+                when (it) {
+                    strengtFortroligGruppe -> STRENGT_FORTROLIG
+                    strengtFortroligUtlandGruppe -> STRENGT_FORTROLIG_UTLAND
+                    fortroligGruppe -> FORTROLIG
+                    else -> UGRADERT
+                }
+            } + UGRADERT
+        ).toSet()
     }
 
     override fun feilmelding(

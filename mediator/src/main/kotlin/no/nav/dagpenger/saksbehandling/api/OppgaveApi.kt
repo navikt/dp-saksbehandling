@@ -67,6 +67,19 @@ internal fun Application.oppgaveApi(
             oppgaveDTO
         }
     routing {
+        val adressebeskyttelseTilgangskontroll =
+            AdressebeskyttelseTilgangskontroll(
+                strengtFortroligGruppe = Configuration.strengtFortroligADGruppe,
+                strengtFortroligUtlandGruppe = Configuration.strengtFortroligUtlandADGruppe,
+                fortroligGruppe = Configuration.fortroligADGruppe,
+                adressebeskyttelseGraderingFun = oppgaveMediator::adresseGraderingForPerson,
+            )
+
+        val egneAnsatteTilgangskontroll =
+            EgneAnsatteTilgangskontroll(
+                tillatteGrupper = setOf(egneAnsatteADGruppe),
+                skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
+            )
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
 
         authenticate("azureAd") {
@@ -92,22 +105,9 @@ internal fun Application.oppgaveApi(
                         val saksbehandlerTilgangerAdressebeskyttelser = mutableSetOf<AdressebeskyttelseGradering>()
                         if (saksbehandler != null) {
                             saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(egneAnsatteADGruppe)
-                            saksbehandlerTilgangerAdressebeskyttelser +=
-                                saksbehandler.grupper.filter {
-                                    it in
-                                        setOf(
-                                            Configuration.fortroligADGruppe,
-                                            Configuration.strengtFortroligADGruppe,
-                                            Configuration.strengtFortroligUtlandADGruppe,
-                                        )
-                                }.map {
-                                    when (it) {
-                                        Configuration.fortroligADGruppe -> AdressebeskyttelseGradering.FORTROLIG
-                                        Configuration.strengtFortroligADGruppe -> AdressebeskyttelseGradering.STRENGT_FORTROLIG
-                                        Configuration.strengtFortroligUtlandADGruppe -> AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
-                                        else -> AdressebeskyttelseGradering.UGRADERT
-                                    }
-                                }
+                            saksbehandlerTilgangerAdressebeskyttelser.addAll(
+                                adressebeskyttelseTilgangskontroll.tilganger(saksbehandler),
+                            )
                         }
 
                         val søkefilter =
@@ -130,19 +130,7 @@ internal fun Application.oppgaveApi(
                 }
 
                 route("{oppgaveId}") {
-                    val tilgangskontroller =
-                        setOf(
-                            EgneAnsatteTilgangskontroll(
-                                tillatteGrupper = setOf(egneAnsatteADGruppe),
-                                skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
-                            ),
-                            AdressebeskyttelseTilgangskontroll(
-                                strengtFortroligGruppe = Configuration.strengtFortroligADGruppe,
-                                strengtFortroligUtlandGruppe = Configuration.strengtFortroligUtlandADGruppe,
-                                fortroligGruppe = Configuration.fortroligADGruppe,
-                                adressebeskyttelseGraderingFun = oppgaveMediator::adresseGraderingForPerson,
-                            ),
-                        )
+                    val tilgangskontroller = setOf(adressebeskyttelseTilgangskontroll, egneAnsatteTilgangskontroll)
 
                     get {
                         oppgaveTilgangskontroll(tilgangskontroller)
