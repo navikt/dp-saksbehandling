@@ -21,6 +21,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.*
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
@@ -87,10 +89,33 @@ internal fun Application.oppgaveApi(
                         val dto = call.receive<NesteOppgaveDTO>()
                         val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
                         var saksbehandlerTilgangEgneAnsatte = false
+                        val saksbehandlerTilgangerAdressebeskyttelser = mutableSetOf<AdresseBeskyttelseGradering>()
                         if (saksbehandler != null) {
                             saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(egneAnsatteADGruppe)
+                            saksbehandlerTilgangerAdressebeskyttelser +=
+                                saksbehandler.grupper.filter {
+                                    it in
+                                        setOf(
+                                            Configuration.fortroligADGruppe,
+                                            Configuration.strengtFortroligADGruppe,
+                                            Configuration.strengtFortroligUtlandADGruppe,
+                                        )
+                                }.map {
+                                    when (it) {
+                                        Configuration.fortroligADGruppe -> FORTROLIG
+                                        Configuration.strengtFortroligADGruppe -> STRENGT_FORTROLIG
+                                        Configuration.strengtFortroligUtlandADGruppe -> STRENGT_FORTROLIG_UTLAND
+                                        else -> UGRADERT
+                                    }
+                                }
                         }
-                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams, saksbehandlerTilgangEgneAnsatte)
+
+                        val søkefilter =
+                            TildelNesteOppgaveFilter.fra(
+                                dto.queryParams,
+                                saksbehandlerTilgangEgneAnsatte,
+                                saksbehandlerTilgangerAdressebeskyttelser,
+                            )
 
                         val oppgave =
                             oppgaveMediator.tildelNesteOppgaveTil(

@@ -20,6 +20,6 @@ class EgneAnsatteTilgangskontroll(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): String {
-        return "${saksbehandler.navIdent} har ikke tilgang til oppgave $oppgaveId"
+        return "${saksbehandler.navIdent} har ikke tilgang til oppgave for egne ansatte. OppgaveId: $oppgaveId"
     }
 }

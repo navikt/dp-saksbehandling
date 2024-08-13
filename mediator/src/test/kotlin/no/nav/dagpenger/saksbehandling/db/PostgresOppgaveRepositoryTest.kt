@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -95,6 +96,7 @@ class PostgresOppgaveRepositoryTest {
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
                         emneknagg = emptySet(),
+                        harTilgangTilAdressebeskyttede = FORTROLIG,
                     ),
             ) shouldBe null
         }
@@ -153,6 +155,7 @@ class PostgresOppgaveRepositoryTest {
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
                             harTilgangTilEgneAnsatte = false,
+                            harTilgangTilAdressebeskyttede = FORTROLIG,
                         ),
                 )!!
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
@@ -169,10 +172,91 @@ class PostgresOppgaveRepositoryTest {
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
                             harTilgangTilEgneAnsatte = true,
+                            harTilgangTilAdressebeskyttede = FORTROLIG,
                         ),
                 )!!
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingAvEgenAnsatt.oppgaveId
+            nesteOppgaveMedTilgang.saksbehandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
+            nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+        }
+    }
+
+    @Test
+    fun `Finn neste ledige oppgave som ikke gjelder adressebeskyttede personer`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+
+            val eldsteOppgaveMedAdressebeskyttelse =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(5),
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = false,
+                            adresseBeskyttelseGradering = FORTROLIG,
+                        ),
+                )
+            repo.lagre(eldsteOppgaveMedAdressebeskyttelse)
+
+            val eldsteOppgaveUtenAdressebeskyttelse =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(1),
+                    person =
+                        Person(
+                            ident = "11111222222",
+                            skjermesSomEgneAnsatte = false,
+                            adresseBeskyttelseGradering = UGRADERT,
+                        ),
+                )
+            repo.lagre(eldsteOppgaveUtenAdressebeskyttelse)
+
+            val nyesteOppgaveUtenAdressebeskyttelse =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå,
+                    person =
+                        Person(
+                            ident = "11111333333",
+                            skjermesSomEgneAnsatte = false,
+                            adresseBeskyttelseGradering = UGRADERT,
+                        ),
+                )
+            repo.lagre(nyesteOppgaveUtenAdressebeskyttelse)
+
+            val navIdentUtenTilgangTilAdressebeskyttede = "NAVIdent2"
+            val nesteOppgave =
+                repo.tildelNesteOppgaveTil(
+                    saksbehandlerIdent = navIdentUtenTilgangTilAdressebeskyttede,
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            harTilgangTilEgneAnsatte = false,
+                            harTilgangTilAdressebeskyttede = setOf(FORTROLIG),
+                        ),
+                )!!
+            nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenAdressebeskyttelse.oppgaveId
+            nesteOppgave.saksbehandlerIdent shouldBe navIdentUtenTilgangTilAdressebeskyttede
+            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+
+            val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
+
+            val nesteOppgaveMedTilgang =
+                repo.tildelNesteOppgaveTil(
+                    saksbehandlerIdent = navIdentMedTilgangTilEgneAnsatte,
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            harTilgangTilEgneAnsatte = true,
+                            harTilgangTilAdressebeskyttede = FORTROLIG,
+                        ),
+                )!!
+
+            nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedAdressebeskyttelse.oppgaveId
             nesteOppgaveMedTilgang.saksbehandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
             nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
         }
@@ -234,6 +318,7 @@ class PostgresOppgaveRepositoryTest {
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
+                    harTilgangTilAdressebeskyttede = FORTROLIG,
                 )
             val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
             nesteOppgave!!.oppgaveId shouldBe nestEldsteLedigeOppgave.oppgaveId
@@ -244,6 +329,7 @@ class PostgresOppgaveRepositoryTest {
                 TildelNesteOppgaveFilter(
                     periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
                     emneknagg = emptySet(),
+                    harTilgangTilAdressebeskyttede = FORTROLIG,
                 )
             val nesteOppgave2 = repo.tildelNesteOppgaveTil(testSaksbehandler, filter2)
             nesteOppgave2!!.oppgaveId shouldBe yngsteLedigeOppgave.oppgaveId

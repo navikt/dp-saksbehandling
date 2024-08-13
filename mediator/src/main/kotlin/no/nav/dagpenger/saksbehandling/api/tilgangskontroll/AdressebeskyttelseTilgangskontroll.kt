@@ -30,6 +30,6 @@ class AdressebeskyttelseTilgangskontroll(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): String {
-        return "${saksbehandler.navIdent} har ikke tilgang til oppgave $oppgaveId"
+        return "${saksbehandler.navIdent} har ikke tilgang til adressebeskyttet oppgave. OppgaveId: $oppgaveId"
     }
 }

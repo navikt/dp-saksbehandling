@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import org.junit.jupiter.api.Test
@@ -21,6 +22,7 @@ class TildelNesteOppgaveFilterTest {
                     ),
                 emneknagg = setOf("knagg1", "knagg2"),
                 harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
+                harTilgangTilAdressebeskyttede = AdresseBeskyttelseGradering.FORTROLIG,
             )
     }
 
@@ -33,6 +35,7 @@ class TildelNesteOppgaveFilterTest {
                 periode = Periode.UBEGRENSET_PERIODE,
                 emneknagg = setOf(),
                 harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
+                harTilgangTilAdressebeskyttede = AdresseBeskyttelseGradering.FORTROLIG,
             )
     }
 }
