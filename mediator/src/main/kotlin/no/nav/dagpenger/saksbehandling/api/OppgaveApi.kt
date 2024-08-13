@@ -49,6 +49,7 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal fun Application.oppgaveApi(
     oppgaveMediator: OppgaveMediator,
@@ -112,7 +113,9 @@ internal fun Application.oppgaveApi(
                         oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll))
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
-                        call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                        val oppgaveDTO = oppgaveDTO(oppgave)
+                        sikkerlogger.info("${oppgaveDTO.person.ident} har statsborgerskap: ${oppgaveDTO.person.statsborgerskap}")
+                        call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
                     route("tildel") {
                         put {
