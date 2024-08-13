@@ -22,7 +22,6 @@ import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.*
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
@@ -102,10 +101,10 @@ internal fun Application.oppgaveApi(
                                         )
                                 }.map {
                                     when (it) {
-                                        Configuration.fortroligADGruppe -> FORTROLIG
-                                        Configuration.strengtFortroligADGruppe -> STRENGT_FORTROLIG
-                                        Configuration.strengtFortroligUtlandADGruppe -> STRENGT_FORTROLIG_UTLAND
-                                        else -> UGRADERT
+                                        Configuration.fortroligADGruppe -> AdresseBeskyttelseGradering.FORTROLIG
+                                        Configuration.strengtFortroligADGruppe -> AdresseBeskyttelseGradering.STRENGT_FORTROLIG
+                                        Configuration.strengtFortroligUtlandADGruppe -> AdresseBeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+                                        else -> AdresseBeskyttelseGradering.UGRADERT
                                     }
                                 }
                         }

@@ -49,7 +49,7 @@ data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagg: Set<String>,
     val harTilgangTilEgneAnsatte: Boolean = false,
-    val harTilgangTilAdressebeskyttede: Set<AdresseBeskyttelseGradering>,
+    val harTilgangTilAdressebeskyttelser: Set<AdresseBeskyttelseGradering>,
 ) {
     companion object {
         fun fra(
@@ -63,7 +63,7 @@ data class TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknagg = builder.emneknagg() ?: emptySet(),
                 harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
-                harTilgangTilAdressebeskyttede = adresseBeskyttelseGradering,
+                harTilgangTilAdressebeskyttelser = adresseBeskyttelseGradering,
             )
         }
     }

@@ -180,7 +180,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                             AND    ( NOT pers.skjermes_som_egne_ansatte
                                   OR :har_tilgang_til_egne_ansatte )
                 """ + emneknaggClause + orderByReturningStatement
-
             val oppgaveId =
                 session.run(
                     queryOf(
