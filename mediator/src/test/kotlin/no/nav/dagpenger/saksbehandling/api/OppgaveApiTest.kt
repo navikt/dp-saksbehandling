@@ -37,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstandOgBehandling
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
+import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -100,7 +101,7 @@ class OppgaveApiTest {
                         "Søknadsbehandling"
                       ],
                       "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
-                      "adressebeskyttelseGradering": ${oppgave1.behandling.person.adressebeskyttelseGradering},
+                      "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
                       "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}",
                       "utsattTilDato": "${oppgave1.utsattTil()}"
@@ -113,7 +114,7 @@ class OppgaveApiTest {
                         "Søknadsbehandling"
                       ],
                       "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
-                      "adressebeskyttelseGradering": ${oppgave2.behandling.person.adressebeskyttelseGradering},
+                      "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
                     }
                     ]
@@ -332,7 +333,8 @@ class OppgaveApiTest {
                         "fodselsdato": "2000-01-01",
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR",
-                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
+                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte},
+                        "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}"
                       },
                       "emneknagger": ["Søknadsbehandling"],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
