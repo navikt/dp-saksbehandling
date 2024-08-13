@@ -11,9 +11,13 @@ class EgneAnsatteTilgangskontroll(
         saksbehandler: Saksbehandler,
     ): Boolean {
         return when (skjermesSomEgneAnsatteFun(oppgaveId)) {
-            true -> saksbehandler.grupper.any { it in tillatteGrupper }
+            true -> harTilgang(saksbehandler)
             else -> true
         }
+    }
+
+    fun harTilgang(saksbehandler: Saksbehandler): Boolean {
+        return saksbehandler.grupper.any { it in tillatteGrupper }
     }
 
     override fun feilmelding(

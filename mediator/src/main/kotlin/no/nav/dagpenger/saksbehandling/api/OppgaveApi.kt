@@ -99,22 +99,14 @@ internal fun Application.oppgaveApi(
                 }
                 route("neste") {
                     put {
+                        val saksbehandler = requireNotNull(call.principal<JWTPrincipal>()?.saksbehandler)
                         val dto = call.receive<NesteOppgaveDTO>()
-                        val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
-                        var saksbehandlerTilgangEgneAnsatte = false
-                        val saksbehandlerTilgangerAdressebeskyttelser = mutableSetOf<AdressebeskyttelseGradering>()
-                        if (saksbehandler != null) {
-                            saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(egneAnsatteADGruppe)
-                            saksbehandlerTilgangerAdressebeskyttelser.addAll(
-                                adressebeskyttelseTilgangskontroll.tilganger(saksbehandler),
-                            )
-                        }
 
                         val søkefilter =
                             TildelNesteOppgaveFilter.fra(
-                                dto.queryParams,
-                                saksbehandlerTilgangEgneAnsatte,
-                                saksbehandlerTilgangerAdressebeskyttelser,
+                                queryString = dto.queryParams,
+                                saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(saksbehandler),
+                                adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(saksbehandler),
                             )
 
                         val oppgave =
