@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import io.ktor.http.Parameters
 import io.ktor.util.StringValues
 import io.ktor.util.StringValuesBuilderImpl
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.defaultOppgaveListTilstander
 import java.time.LocalDate
@@ -49,13 +49,13 @@ data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagg: Set<String>,
     val harTilgangTilEgneAnsatte: Boolean = false,
-    val harTilgangTilAdressebeskyttelser: Set<AdresseBeskyttelseGradering>,
+    val harTilgangTilAdressebeskyttelser: Set<AdressebeskyttelseGradering>,
 ) {
     companion object {
         fun fra(
             queryString: String,
             saksbehandlerTilgangEgneAnsatte: Boolean,
-            adresseBeskyttelseGradering: Set<AdresseBeskyttelseGradering>,
+            adresseBeskyttelseGradering: Set<AdressebeskyttelseGradering>,
         ): TildelNesteOppgaveFilter {
             val builder = FilterBuilder(queryString)
 

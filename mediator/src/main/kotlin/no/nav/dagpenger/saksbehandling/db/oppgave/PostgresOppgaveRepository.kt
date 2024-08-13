@@ -5,7 +5,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
@@ -57,7 +57,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         id = row.uuid("id"),
                         ident = row.string("ident"),
                         skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
-                        adresseBeskyttelseGradering = row.adresseBeskyttelseGradering(),
+                        adressebeskyttelseGradering = row.adresseBeskyttelseGradering(),
                     )
                 }.asSingle,
             )
@@ -279,7 +279,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun adresseGraderingForPerson(oppgaveId: UUID): AdresseBeskyttelseGradering {
+    override fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering {
         return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -293,7 +293,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     """.trimMargin(),
                     mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
-                    AdresseBeskyttelseGradering.valueOf(row.string("adressebeskyttelse_gradering"))
+                    AdressebeskyttelseGradering.valueOf(row.string("adressebeskyttelse_gradering"))
                 }.asSingle,
             )
         } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
@@ -440,7 +440,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
 
     override fun oppdaterAdressebeskyttetStatus(
         fnr: String,
-        adresseBeskyttelseGradering: AdresseBeskyttelseGradering,
+        adresseBeskyttelseGradering: AdressebeskyttelseGradering,
     ): Int {
         return sessionOf(dataSource).use { session ->
             session.run(
@@ -499,7 +499,7 @@ private fun TransactionalSession.lagre(person: Person) {
                     "id" to person.id,
                     "ident" to person.ident,
                     "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
-                    "adressebeskyttelse_gradering" to person.adresseBeskyttelseGradering.name,
+                    "adressebeskyttelse_gradering" to person.adressebeskyttelseGradering.name,
                 ),
         ).asUpdate,
     )
@@ -697,7 +697,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
                     id = this.uuid("person_id"),
                     ident = this.string("person_ident"),
                     skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-                    adresseBeskyttelseGradering = this.adresseBeskyttelseGradering(),
+                    adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
                 ),
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId),
@@ -721,8 +721,8 @@ private fun Row.rehydrerOppgave(): Oppgave {
     )
 }
 
-private fun Row.adresseBeskyttelseGradering(): AdresseBeskyttelseGradering {
-    return AdresseBeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
+private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
+    return AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
 }
 
 class DataNotFoundException(message: String) : RuntimeException(message)

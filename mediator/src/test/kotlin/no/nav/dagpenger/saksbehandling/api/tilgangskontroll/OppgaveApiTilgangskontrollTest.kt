@@ -13,10 +13,10 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator

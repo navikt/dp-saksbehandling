@@ -1,11 +1,11 @@
 package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 
 internal interface AdressebeskyttelseRepository {
     fun oppdaterAdressebeskyttetStatus(
         fnr: String,
-        adresseBeskyttelseGradering: AdresseBeskyttelseGradering,
+        adresseBeskyttelseGradering: AdressebeskyttelseGradering,
     ): Int
 
     fun eksistererIDPsystem(fnrs: Set<String>): Set<String>

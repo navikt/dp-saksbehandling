@@ -132,7 +132,7 @@ class OppgaveMediator(
             Person(
                 ident = ident,
                 skjermesSomEgneAnsatte = skjermesSomEgneAnsatte.await(),
-                adresseBeskyttelseGradering = adresseBeskyttelseGradering.await(),
+                adressebeskyttelseGradering = adresseBeskyttelseGradering.await(),
             )
         }
     }

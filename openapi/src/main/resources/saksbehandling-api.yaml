@@ -289,6 +289,8 @@ components:
           $ref: '#/components/schemas/Kjonn'
         skjermesSomEgneAnsatte:
           type: boolean
+        adressebeskyttelseGradering:
+          $ref: '#/components/schemas/AdressebeskyttelseGradering'
       required:
         - ident
         - fornavn
@@ -297,6 +299,7 @@ components:
         - alder
         - kjonn
         - skjermesSomEgneAnsatte
+        - adressebeskyttelseGradering
 
     OppgaveOversikt:
       type: object
@@ -320,6 +323,8 @@ components:
             type: string
         skjermesSomEgneAnsatte:
           type: boolean
+        adressebeskyttelseGradering:
+          $ref: '#/components/schemas/AdressebeskyttelseGradering'
         tilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
         utsattTilDato:
@@ -332,6 +337,7 @@ components:
         - tidspunktOpprettet
         - tilstand
         - emneknagger
+        - adressebeskyttelseGradering
         - skjermesSomEgneAnsatte
 
     Oppgave:
@@ -388,6 +394,14 @@ components:
         - UNDER_BEHANDLING
         - FERDIG_BEHANDLET
         - PAA_VENT
+
+    AdressebeskyttelseGradering:
+      type: string
+      enum:
+        - UGRADERT
+        - FORTROLIG
+        - STRENGT_FORTROLIG
+        - STRENGT_FORTROLIG_UTLAND
 
     PersonIdent:
       type: object

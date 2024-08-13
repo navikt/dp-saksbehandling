@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.pdl
 
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import java.time.LocalDate
 
 data class PDLPersonIntern(
@@ -13,5 +13,5 @@ data class PDLPersonIntern(
     val alder: Int,
     val statsborgerskap: String?,
     val kjønn: PDLPerson.Kjonn,
-    val adresseBeskyttelseGradering: AdresseBeskyttelseGradering,
+    val adresseBeskyttelseGradering: AdressebeskyttelseGradering,
 )

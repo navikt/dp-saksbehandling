@@ -5,9 +5,9 @@ import io.mockk.mockk
 import io.mockk.verify
 import io.prometheus.client.CollectorRegistry
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
@@ -44,7 +44,7 @@ internal class AdressebeskyttelseConsumerTest {
 
     private fun testPersonResultat(
         fnr: String,
-        adresseBeskyttelseGradering: AdresseBeskyttelseGradering,
+        adresseBeskyttelseGradering: AdressebeskyttelseGradering,
     ): Result<PDLPersonIntern> {
         return Result.success(
             PDLPersonIntern(

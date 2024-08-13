@@ -19,7 +19,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -100,6 +100,7 @@ class OppgaveApiTest {
                         "Søknadsbehandling"
                       ],
                       "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
+                      "adressebeskyttelseGradering": ${oppgave1.behandling.person.adressebeskyttelseGradering},
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
                       "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}",
                       "utsattTilDato": "${oppgave1.utsattTil()}"
@@ -112,6 +113,7 @@ class OppgaveApiTest {
                         "Søknadsbehandling"
                       ],
                       "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
+                      "adressebeskyttelseGradering": ${oppgave2.behandling.person.adressebeskyttelseGradering},
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
                     }
                     ]
@@ -431,7 +433,7 @@ class OppgaveApiTest {
                                 id = UUIDv7.ny(),
                                 ident = TEST_IDENT,
                                 skjermesSomEgneAnsatte = true,
-                                adresseBeskyttelseGradering = UGRADERT,
+                                adressebeskyttelseGradering = UGRADERT,
                             ),
                         hendelse =
                             SøknadsbehandlingOpprettetHendelse(

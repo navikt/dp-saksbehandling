@@ -5,9 +5,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -78,10 +78,10 @@ class PostgresOppgaveRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testPerson)
-            repo.hentPerson(testPerson.ident).adresseBeskyttelseGradering shouldBe UGRADERT
+            repo.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe UGRADERT
 
             repo.oppdaterAdressebeskyttetStatus(testPerson.ident, STRENGT_FORTROLIG)
-            repo.hentPerson(testPerson.ident).adresseBeskyttelseGradering shouldBe STRENGT_FORTROLIG
+            repo.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe STRENGT_FORTROLIG
         }
     }
 
@@ -116,7 +116,7 @@ class PostgresOppgaveRepositoryTest {
                         Person(
                             ident = "12345123451",
                             skjermesSomEgneAnsatte = true,
-                            adresseBeskyttelseGradering = UGRADERT,
+                            adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
             repo.lagre(eldsteOppgaveMedSkjermingAvEgenAnsatt)
@@ -129,7 +129,7 @@ class PostgresOppgaveRepositoryTest {
                         Person(
                             ident = "11111222222",
                             skjermesSomEgneAnsatte = false,
-                            adresseBeskyttelseGradering = UGRADERT,
+                            adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
             repo.lagre(eldsteOppgaveUtenSkjermingAvEgenAnsatt)
@@ -142,7 +142,7 @@ class PostgresOppgaveRepositoryTest {
                         Person(
                             ident = "11111333333",
                             skjermesSomEgneAnsatte = false,
-                            adresseBeskyttelseGradering = UGRADERT,
+                            adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
             repo.lagre(nyesteOppgaveUtenSkjermingAvEgenAnsatt)
@@ -197,7 +197,7 @@ class PostgresOppgaveRepositoryTest {
                         Person(
                             ident = "12345123451",
                             skjermesSomEgneAnsatte = false,
-                            adresseBeskyttelseGradering = FORTROLIG,
+                            adressebeskyttelseGradering = FORTROLIG,
                         ),
                 )
             repo.lagre(eldsteOppgaveMedAdressebeskyttelse)
@@ -210,7 +210,7 @@ class PostgresOppgaveRepositoryTest {
                         Person(
                             ident = "11111222222",
                             skjermesSomEgneAnsatte = false,
-                            adresseBeskyttelseGradering = UGRADERT,
+                            adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
             repo.lagre(eldsteOppgaveUtenAdressebeskyttelse)
@@ -223,7 +223,7 @@ class PostgresOppgaveRepositoryTest {
                         Person(
                             ident = "11111333333",
                             skjermesSomEgneAnsatte = false,
-                            adresseBeskyttelseGradering = UGRADERT,
+                            adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
             repo.lagre(nyesteOppgaveUtenAdressebeskyttelse)
@@ -506,13 +506,13 @@ class PostgresOppgaveRepositoryTest {
             Person(
                 ident = "12345678910",
                 skjermesSomEgneAnsatte = false,
-                adresseBeskyttelseGradering = UGRADERT,
+                adressebeskyttelseGradering = UGRADERT,
             )
         val kari =
             Person(
                 ident = "10987654321",
                 skjermesSomEgneAnsatte = false,
-                adresseBeskyttelseGradering = UGRADERT,
+                adressebeskyttelseGradering = UGRADERT,
             )
 
         val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling)

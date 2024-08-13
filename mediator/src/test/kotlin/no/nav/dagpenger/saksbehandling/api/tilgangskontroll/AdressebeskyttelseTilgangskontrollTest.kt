@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 
@@ -16,7 +16,7 @@ class AdressebeskyttelseTilgangskontrollTest {
             strengtFortroligGruppe = strengtFortroligGruppe,
             strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
             fortroligGruppe = fortroligGruppe,
-            adressebeskyttelseGraderingFun = { AdresseBeskyttelseGradering.UGRADERT },
+            adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.UGRADERT },
         ).let { tilgangskontroll ->
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe true
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe true
@@ -37,7 +37,7 @@ class AdressebeskyttelseTilgangskontrollTest {
             strengtFortroligGruppe = strengtFortroligGruppe,
             strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
             fortroligGruppe = fortroligGruppe,
-            adressebeskyttelseGraderingFun = { AdresseBeskyttelseGradering.FORTROLIG },
+            adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.FORTROLIG },
         ).let { tilgangskontroll ->
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe true
@@ -58,7 +58,7 @@ class AdressebeskyttelseTilgangskontrollTest {
             strengtFortroligGruppe = strengtFortroligGruppe,
             strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
             fortroligGruppe = fortroligGruppe,
-            adressebeskyttelseGraderingFun = { AdresseBeskyttelseGradering.STRENGT_FORTROLIG },
+            adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.STRENGT_FORTROLIG },
         ).let { tilgangskontroll ->
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe false
@@ -79,7 +79,7 @@ class AdressebeskyttelseTilgangskontrollTest {
             strengtFortroligGruppe = strengtFortroligGruppe,
             strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
             fortroligGruppe = fortroligGruppe,
-            adressebeskyttelseGraderingFun = { AdresseBeskyttelseGradering.STRENGT_FORTROLIG_UTLAND },
+            adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND },
         ).let { tilgangskontroll ->
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
             tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe false

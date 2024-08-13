@@ -8,7 +8,7 @@ import io.ktor.http.headersOf
 import io.prometheus.client.CollectorRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.helper.fileAsText
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -81,7 +81,7 @@ class PDLHttpKlientTest {
                 )
             pdlHttpKlient.erAdressebeskyttet(ident).getOrThrow() shouldBe forventet
             pdlHttpKlient.person(ident)
-                .getOrThrow().adresseBeskyttelseGradering shouldBe AdresseBeskyttelseGradering.valueOf(gradering)
+                .getOrThrow().adresseBeskyttelseGradering shouldBe AdressebeskyttelseGradering.valueOf(gradering)
         }
     }
 

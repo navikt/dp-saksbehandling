@@ -1,17 +1,17 @@
 package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import java.util.UUID
 
 class AdressebeskyttelseTilgangskontroll(
     private val strengtFortroligGruppe: String,
     private val strengtFortroligUtlandGruppe: String,
     private val fortroligGruppe: String,
-    private val adressebeskyttelseGraderingFun: (oppgaveId: UUID) -> AdresseBeskyttelseGradering,
+    private val adressebeskyttelseGraderingFun: (oppgaveId: UUID) -> AdressebeskyttelseGradering,
 ) : OppgaveTilgangskontroll {
     override fun harTilgang(
         oppgaveId: UUID,

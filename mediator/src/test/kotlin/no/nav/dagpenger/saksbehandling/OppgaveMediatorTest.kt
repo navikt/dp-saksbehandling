@@ -50,7 +50,7 @@ class OppgaveMediatorTest {
                         alder = 20,
                         statsborgerskap = null,
                         kjønn = PDLPerson.Kjonn.KVINNE,
-                        adresseBeskyttelseGradering = AdresseBeskyttelseGradering.UGRADERT,
+                        adresseBeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
                     ),
                 )
         }

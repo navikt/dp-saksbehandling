@@ -8,7 +8,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -118,7 +118,7 @@ internal object OppgaveApiTestHelper {
                         id = UUIDv7.ny(),
                         ident = TEST_IDENT,
                         skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
-                        adresseBeskyttelseGradering = UGRADERT,
+                        adressebeskyttelseGradering = UGRADERT,
                     ),
                 opprettet = LocalDateTime.now(),
             )

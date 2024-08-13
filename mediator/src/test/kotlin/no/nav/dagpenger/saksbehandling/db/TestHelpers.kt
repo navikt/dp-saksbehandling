@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db
 
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -19,11 +19,11 @@ val testPerson =
 
 fun lagPerson(
     ident: String = "12345678901",
-    addresseBeskyttelseGradering: AdresseBeskyttelseGradering = UGRADERT,
+    addresseBeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
 ) = Person(
     ident = ident,
     skjermesSomEgneAnsatte = false,
-    adresseBeskyttelseGradering = addresseBeskyttelseGradering,
+    adressebeskyttelseGradering = addresseBeskyttelseGradering,
 )
 
 val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)

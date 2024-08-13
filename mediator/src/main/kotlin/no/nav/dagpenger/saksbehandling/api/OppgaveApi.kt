@@ -21,12 +21,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.saksbehandling.AdresseBeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -88,7 +89,7 @@ internal fun Application.oppgaveApi(
                         val dto = call.receive<NesteOppgaveDTO>()
                         val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
                         var saksbehandlerTilgangEgneAnsatte = false
-                        val saksbehandlerTilgangerAdressebeskyttelser = mutableSetOf<AdresseBeskyttelseGradering>()
+                        val saksbehandlerTilgangerAdressebeskyttelser = mutableSetOf<AdressebeskyttelseGradering>()
                         if (saksbehandler != null) {
                             saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(egneAnsatteADGruppe)
                             saksbehandlerTilgangerAdressebeskyttelser +=
@@ -101,10 +102,10 @@ internal fun Application.oppgaveApi(
                                         )
                                 }.map {
                                     when (it) {
-                                        Configuration.fortroligADGruppe -> AdresseBeskyttelseGradering.FORTROLIG
-                                        Configuration.strengtFortroligADGruppe -> AdresseBeskyttelseGradering.STRENGT_FORTROLIG
-                                        Configuration.strengtFortroligUtlandADGruppe -> AdresseBeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
-                                        else -> AdresseBeskyttelseGradering.UGRADERT
+                                        Configuration.fortroligADGruppe -> AdressebeskyttelseGradering.FORTROLIG
+                                        Configuration.strengtFortroligADGruppe -> AdressebeskyttelseGradering.STRENGT_FORTROLIG
+                                        Configuration.strengtFortroligUtlandADGruppe -> AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+                                        else -> AdressebeskyttelseGradering.UGRADERT
                                     }
                                 }
                         }
@@ -252,6 +253,13 @@ fun lagOppgaveDTO(
                     },
                 statsborgerskap = person.statsborgerskap,
                 skjermesSomEgneAnsatte = oppgave.behandling.person.skjermesSomEgneAnsatte,
+                adressebeskyttelseGradering =
+                    when (oppgave.behandling.person.adressebeskyttelseGradering) {
+                        AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
+                        AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
+                        AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
+                        AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
+                    },
             ),
         saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
@@ -286,6 +294,13 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
         skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
+        adressebeskyttelseGradering =
+            when (this.behandling.person.adressebeskyttelseGradering) {
+                AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
+                AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
+                AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
+                AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
+            },
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         saksbehandlerIdent = this.saksbehandlerIdent,
         utsattTilDato = this.utsattTil(),
