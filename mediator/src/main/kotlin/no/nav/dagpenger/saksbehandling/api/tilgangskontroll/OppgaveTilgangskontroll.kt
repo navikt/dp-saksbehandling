@@ -51,7 +51,8 @@ suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangs
 
             else -> {
                 logger.info {
-                    "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId. Tilganger: ${saksbehandler.grupper}"
+                    "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId." +
+                        " Tilganger: ${saksbehandler.grupper}"
                 }
                 throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
             }
