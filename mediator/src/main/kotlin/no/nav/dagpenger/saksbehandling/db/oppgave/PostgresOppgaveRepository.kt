@@ -144,6 +144,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     ): Oppgave? {
         sessionOf(dataSource).use { session ->
             val emneknagger = filter.emneknagg.joinToString { "'$it'" }
+            val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
             val emneknaggClause =
                 if (filter.emneknagg.isNotEmpty()) {
                     """
@@ -179,6 +180,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                             AND      oppg.opprettet <  :tom_pluss_1_dag
                             AND    ( NOT pers.skjermes_som_egne_ansatte
                                   OR :har_tilgang_til_egne_ansatte )
+                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                 """ + emneknaggClause + orderByReturningStatement
             val oppgaveId =
                 session.run(

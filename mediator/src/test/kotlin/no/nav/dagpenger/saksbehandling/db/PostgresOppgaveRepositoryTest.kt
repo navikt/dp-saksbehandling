@@ -26,7 +26,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
@@ -184,7 +183,6 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    @Disabled
     fun `Finn neste ledige oppgave som ikke gjelder adressebeskyttede personer`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -215,19 +213,6 @@ class PostgresOppgaveRepositoryTest {
                 )
             repo.lagre(eldsteOppgaveUtenAdressebeskyttelse)
 
-            val nyesteOppgaveUtenAdressebeskyttelse =
-                lagOppgave(
-                    tilstand = KlarTilBehandling,
-                    opprettet = opprettetNå,
-                    person =
-                        Person(
-                            ident = "11111333333",
-                            skjermesSomEgneAnsatte = false,
-                            adressebeskyttelseGradering = UGRADERT,
-                        ),
-                )
-            repo.lagre(nyesteOppgaveUtenAdressebeskyttelse)
-
             val navIdentUtenTilgangTilAdressebeskyttede = "NAVIdent2"
             val nesteOppgave =
                 repo.tildelNesteOppgaveTil(
@@ -237,9 +222,10 @@ class PostgresOppgaveRepositoryTest {
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
                             harTilgangTilEgneAnsatte = false,
-                            harTilgangTilAdressebeskyttelser = setOf(FORTROLIG),
+                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                         ),
-                )!!
+                )
+            requireNotNull(nesteOppgave)
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenAdressebeskyttelse.oppgaveId
             nesteOppgave.saksbehandlerIdent shouldBe navIdentUtenTilgangTilAdressebeskyttede
             nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -254,7 +240,7 @@ class PostgresOppgaveRepositoryTest {
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
                             harTilgangTilEgneAnsatte = true,
-                            harTilgangTilAdressebeskyttelser = setOf(FORTROLIG),
+                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT, FORTROLIG),
                         ),
                 )!!
 
@@ -320,7 +306,7 @@ class PostgresOppgaveRepositoryTest {
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
-                    harTilgangTilAdressebeskyttelser = setOf(FORTROLIG),
+                    harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
             val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
             nesteOppgave!!.oppgaveId shouldBe nestEldsteLedigeOppgave.oppgaveId
@@ -331,7 +317,7 @@ class PostgresOppgaveRepositoryTest {
                 TildelNesteOppgaveFilter(
                     periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
                     emneknagg = emptySet(),
-                    harTilgangTilAdressebeskyttelser = setOf(FORTROLIG),
+                    harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
             val nesteOppgave2 = repo.tildelNesteOppgaveTil(testSaksbehandler, filter2)
             nesteOppgave2!!.oppgaveId shouldBe yngsteLedigeOppgave.oppgaveId
