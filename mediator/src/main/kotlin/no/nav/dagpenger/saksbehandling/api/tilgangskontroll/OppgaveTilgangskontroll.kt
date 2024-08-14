@@ -23,9 +23,14 @@ interface OppgaveTilgangskontroll {
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): String
+
+    fun feilType(
+        oppgaveId: UUID,
+        saksbehandler: Saksbehandler,
+    ): String
 }
 
-class IngenTilgangTilOppgaveException(message: String) : RuntimeException(message)
+class IngenTilgangTilOppgaveException(message: String, val type: String) : RuntimeException(message)
 
 suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangskontroll: Set<OppgaveTilgangskontroll>) {
     val oppgaveId = call.parameters["oppgaveId"]?.let { UUID.fromString(it) }
@@ -54,7 +59,10 @@ suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangs
                     "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId." +
                         " Tilganger: ${saksbehandler.grupper}"
                 }
-                throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
+                throw IngenTilgangTilOppgaveException(
+                    feilendeValidering.feilmelding(oppgaveId, saksbehandler),
+                    feilendeValidering.feilType(oppgaveId, saksbehandler),
+                )
             }
         }
     }

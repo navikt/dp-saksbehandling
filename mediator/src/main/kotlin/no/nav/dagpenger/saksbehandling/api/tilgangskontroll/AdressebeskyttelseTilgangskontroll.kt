@@ -37,4 +37,9 @@ class AdressebeskyttelseTilgangskontroll(
     ): String {
         return "${saksbehandler.navIdent} har ikke tilgang til adressebeskyttet oppgave. OppgaveId: $oppgaveId"
     }
+
+    override fun feilType(
+        oppgaveId: UUID,
+        saksbehandler: Saksbehandler,
+    ): String = adressebeskyttelseGraderingFun(oppgaveId).name.lowercase().replace("_", "-")
 }

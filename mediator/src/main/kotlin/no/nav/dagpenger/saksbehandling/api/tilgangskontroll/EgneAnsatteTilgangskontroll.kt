@@ -26,4 +26,9 @@ class EgneAnsatteTilgangskontroll(
     ): String {
         return "${saksbehandler.navIdent} har ikke tilgang til oppgave for egne ansatte. OppgaveId: $oppgaveId"
     }
+
+    override fun feilType(
+        oppgaveId: UUID,
+        saksbehandler: Saksbehandler,
+    ): String = "egne-ansatte"
 }

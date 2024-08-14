@@ -93,4 +93,19 @@ class AdressebeskyttelseTilgangskontrollTest {
             ) shouldBe true
         }
     }
+
+    @Test
+    fun `Skrive ut feil type`() {
+        AdressebeskyttelseTilgangskontroll(
+            strengtFortroligGruppe = strengtFortroligGruppe,
+            strengtFortroligUtlandGruppe = strengtFortroligUtlandGruppe,
+            fortroligGruppe = fortroligGruppe,
+            adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND },
+        ).let { tilgangskontroll ->
+            tilgangskontroll.feilType(
+                UUIDv7.ny(),
+                Saksbehandler("ident", emptySet()),
+            ) shouldBe "strengt-fortrolig-utland"
+        }
+    }
 }

@@ -140,7 +140,7 @@ fun Application.apiConfig() {
                             status = HttpStatusCode.Forbidden.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-tilgang-til-oppgave")
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-tilgang-til-oppgave:${cause.type}")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Forbidden, problem)
