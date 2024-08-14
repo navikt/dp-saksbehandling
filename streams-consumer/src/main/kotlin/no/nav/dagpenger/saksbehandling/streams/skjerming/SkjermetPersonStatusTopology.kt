@@ -12,4 +12,3 @@ fun StreamsBuilder.skjermetPersonStatus(
         .stream(topic, Consumed.with(stringSerde, stringSerde))
         .mapValues { _, value -> value.toBoolean() }
         .foreach(håndter)
-
