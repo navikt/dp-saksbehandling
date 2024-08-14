@@ -41,6 +41,12 @@ spec:
       value: {{azure.grupper.beslutter}}
     - name: GRUPPE_EGNE_ANSATTE
       value: {{azure.grupper.egne_ansatte}}
+    - name: GRUPPE_FORTROLIG
+      value: {{azure.grupper.adressebeskyttelse_fortrolig}}
+    - name: GRUPPE_STRENGT_FORTROLIG
+      value: {{azure.grupper.adressebeskyttelse_strengt_fortrolig}}
+    - name: GRUPPE_STRENGT_FORTROLIG_UTLAND
+      value: {{azure.grupper.adressebeskyttelse_strengt_fortrolig_utland}}
     - name: PDL_API_URL
       value: https://{{pdl.host}}
     - name: PDL_API_SCOPE
