@@ -11,7 +11,7 @@ internal val pdlKlient = PDLHttpKlient(
     tokenSupplier = Configuration.pdlTokenProvider,
 )
 
-private val logger = KotlinLogging.logger { }
+private val logger = KotlinLogging.logger {  }
 
 suspend fun adressebeskyttelseMigrering() {
     logger.info { "Starter migrering av adressebeskyttelse" }
@@ -30,20 +30,7 @@ suspend fun adressebeskyttelseMigrering() {
         val adresseBeskyttelse = pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
         sessionOf(PostgresDataSourceBuilder.dataSource).use { session ->
             session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                    """
-                        UPDATE person_v1
-                        SET    adressebeskyttelse_gradering = :adresseBeskyttelseGradering
-                        WHERE  ident = :fnr
-                        """.trimIndent(),
-                    paramMap =
-                    mapOf(
-                        "fnr" to ident,
-                        "adresseBeskyttelseGradering" to adresseBeskyttelse.name,
-                    ),
-                ).asUpdate,
+                queryOf("UPDATE person_v1 SET adressebeskyttelse = ? WHERE ident = ?", adresseBeskyttelse, ident).asExecute
             )
         }
     }
