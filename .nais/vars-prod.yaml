@@ -4,7 +4,9 @@ azure:
     saksbehandler: "2e9c63d8-322e-4c1f-b500-a0abb812761c" # 0000-GA-Dagpenger-Saksbehandler
     beslutter: "70d54cad-53a3-4788-bbe3-565096f01da7" # 0000-GA-Dagpenger-Beslutter
     egne_ansatte: "e750ceb5-b70b-4d94-b4fa-9d22467b786b" # 0000-GA-Egne_ansatte
-
+    adressebeskyttelse_fortrolig: "9ec6487d-f37a-4aad-a027-cd221c1ac32b"  # 0000-GA-Fortrolig_Adresse
+    adressebeskyttelse_strengt_fortrolig: "ad7b87a6-9180-467c-affc-20a566b0fec0"  # 0000-GA-Strengt_Fortrolig_Adresse,
+    adressebeskyttelse_strengt_fortrolig_utland: "d9555b40-e0ab-4c6d-ba0b-0f1b9ecc252b" #0000-GA-Person-EndreStrengtFortroligUtland
 db:
   highAvailability: true
   pointInTimeRecovery: true

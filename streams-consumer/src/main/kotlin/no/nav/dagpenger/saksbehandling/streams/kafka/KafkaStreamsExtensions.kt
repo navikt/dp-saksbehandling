@@ -1,5 +1,5 @@
 // shamelessly copied from navikt/hm-personhendelse
-package no.dagpenger.saksbehandling.streams.kafka
+package no.nav.dagpenger.saksbehandling.streams.kafka
 
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsBuilder

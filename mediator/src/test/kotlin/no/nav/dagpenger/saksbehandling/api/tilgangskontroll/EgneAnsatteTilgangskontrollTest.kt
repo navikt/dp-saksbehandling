@@ -36,4 +36,17 @@ class EgneAnsatteTilgangskontrollTest {
             skjermesSomEgneAnsatteFun = { true },
         ).harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"))) shouldBe false
     }
+
+    @Test
+    fun `Skrive ut feil type`() {
+        EgneAnsatteTilgangskontroll(
+            tillatteGrupper = setOf("A", "B"),
+            skjermesSomEgneAnsatteFun = { true },
+        ).let { tilgangskontroll ->
+            tilgangskontroll.feilType(
+                UUIDv7.ny(),
+                Saksbehandler("ident", emptySet()),
+            ) shouldBe "egne-ansatte"
+        }
+    }
 }

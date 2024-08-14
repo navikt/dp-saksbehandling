@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db
 
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -13,10 +15,17 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 val testPerson =
-    Person(
-        ident = "12345678901",
-        skjermesSomEgneAnsatte = false,
-    )
+    lagPerson()
+
+fun lagPerson(
+    ident: String = "12345678901",
+    addresseBeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
+) = Person(
+    ident = ident,
+    skjermesSomEgneAnsatte = false,
+    adressebeskyttelseGradering = addresseBeskyttelseGradering,
+)
+
 val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 
 fun lagOppgave(

@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling.db
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import org.junit.jupiter.api.Test
@@ -12,7 +14,13 @@ class TildelNesteOppgaveFilterTest {
         val queryString =
             """emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"""
         val saksbehandlerTilgangEgneAnsatte = false
-        TildelNesteOppgaveFilter.fra(queryString, saksbehandlerTilgangEgneAnsatte) shouldBe
+        TildelNesteOppgaveFilter.fra(
+            queryString, saksbehandlerTilgangEgneAnsatte,
+            adresseBeskyttelseGradering =
+                setOf(
+                    UGRADERT,
+                ),
+        ) shouldBe
             TildelNesteOppgaveFilter(
                 periode =
                     Periode(
@@ -21,6 +29,7 @@ class TildelNesteOppgaveFilterTest {
                     ),
                 emneknagg = setOf("knagg1", "knagg2"),
                 harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
+                harTilgangTilAdressebeskyttelser = setOf(AdressebeskyttelseGradering.UGRADERT),
             )
     }
 
@@ -28,11 +37,12 @@ class TildelNesteOppgaveFilterTest {
     fun `Skal håndtere tom streng`() {
         val queryString = ""
         val saksbehandlerTilgangEgneAnsatte = false
-        TildelNesteOppgaveFilter.fra(queryString, saksbehandlerTilgangEgneAnsatte) shouldBe
+        TildelNesteOppgaveFilter.fra(queryString, saksbehandlerTilgangEgneAnsatte, adresseBeskyttelseGradering = setOf(UGRADERT)) shouldBe
             TildelNesteOppgaveFilter(
                 periode = Periode.UBEGRENSET_PERIODE,
                 emneknagg = setOf(),
                 harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
+                harTilgangTilAdressebeskyttelser = setOf(AdressebeskyttelseGradering.UGRADERT),
             )
     }
 }

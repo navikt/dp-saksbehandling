@@ -19,6 +19,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -36,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstandOgBehandling
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
+import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -99,6 +101,7 @@ class OppgaveApiTest {
                         "Søknadsbehandling"
                       ],
                       "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
+                      "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
                       "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}",
                       "utsattTilDato": "${oppgave1.utsattTil()}"
@@ -111,6 +114,7 @@ class OppgaveApiTest {
                         "Søknadsbehandling"
                       ],
                       "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
+                      "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
                     }
                     ]
@@ -329,7 +333,8 @@ class OppgaveApiTest {
                         "fodselsdato": "2000-01-01",
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR",
-                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
+                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte},
+                        "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}"
                       },
                       "emneknagger": ["Søknadsbehandling"],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
@@ -430,6 +435,7 @@ class OppgaveApiTest {
                                 id = UUIDv7.ny(),
                                 ident = TEST_IDENT,
                                 skjermesSomEgneAnsatte = true,
+                                adressebeskyttelseGradering = UGRADERT,
                             ),
                         hendelse =
                             SøknadsbehandlingOpprettetHendelse(

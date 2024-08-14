@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
@@ -18,7 +19,12 @@ import javax.sql.DataSource
 class PostgresTriggerTest {
     @Test
     fun `Når en oppgave endres så skal endret_tidspunkt oppdateres`() {
-        val testPerson = Person(ident = "12345678901", skjermesSomEgneAnsatte = false)
+        val testPerson =
+            Person(
+                ident = "12345678901",
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            )
         val opprettet = LocalDateTime.now()
         val testBehandling = Behandling(behandlingId = UUIDv7.ny(), testPerson, opprettet = opprettet)
         val testOppgave =

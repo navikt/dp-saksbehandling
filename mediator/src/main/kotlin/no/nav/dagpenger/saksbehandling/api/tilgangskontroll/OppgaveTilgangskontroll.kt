@@ -23,31 +23,14 @@ interface OppgaveTilgangskontroll {
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
     ): String
-}
 
-class EgneAnsatteTilgangskontroll(
-    private val tillatteGrupper: Set<String>,
-    private val skjermesSomEgneAnsatteFun: (UUID) -> Boolean?,
-) : OppgaveTilgangskontroll {
-    override fun harTilgang(
+    fun feilType(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
-    ): Boolean {
-        return when (skjermesSomEgneAnsatteFun(oppgaveId)) {
-            true -> saksbehandler.grupper.any { it in tillatteGrupper }
-            else -> true
-        }
-    }
-
-    override fun feilmelding(
-        oppgaveId: UUID,
-        saksbehandler: Saksbehandler,
-    ): String {
-        return "${saksbehandler.navIdent} har ikke tilgang til oppgave $oppgaveId"
-    }
+    ): String
 }
 
-class IngenTilgangTilOppgaveException(message: String) : RuntimeException(message)
+class IngenTilgangTilOppgaveException(message: String, val type: String) : RuntimeException(message)
 
 suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangskontroll: Set<OppgaveTilgangskontroll>) {
     val oppgaveId = call.parameters["oppgaveId"]?.let { UUID.fromString(it) }
@@ -63,15 +46,23 @@ suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangs
 
     if (oppgaveId != null && saksbehandler != null) {
         val feilendeValidering =
-            tilgangskontroll.firstOrNull { it.harTilgang(oppgaveId, saksbehandler) == false }
+            tilgangskontroll.firstOrNull { oppgaveTilgangskontroll ->
+                oppgaveTilgangskontroll.harTilgang(oppgaveId, saksbehandler) == false
+            }
         when (feilendeValidering) {
             null -> {
                 proceed()
             }
 
             else -> {
-                logger.info { "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId" }
-                throw IngenTilgangTilOppgaveException(feilendeValidering.feilmelding(oppgaveId, saksbehandler))
+                logger.info {
+                    "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId." +
+                        " Tilganger: ${saksbehandler.grupper}"
+                }
+                throw IngenTilgangTilOppgaveException(
+                    feilendeValidering.feilmelding(oppgaveId, saksbehandler),
+                    feilendeValidering.feilType(oppgaveId, saksbehandler),
+                )
             }
         }
     }

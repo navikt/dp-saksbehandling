@@ -5,10 +5,12 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -20,12 +22,13 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
-import kotlin.time.measureTime
 
-private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 private val logger = KotlinLogging.logger {}
 
-class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRepository, SkjermingRepository {
+class PostgresOppgaveRepository(private val dataSource: DataSource) :
+    OppgaveRepository,
+    SkjermingRepository,
+    AdressebeskyttelseRepository {
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
@@ -54,6 +57,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                         id = row.uuid("id"),
                         ident = row.string("ident"),
                         skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
+                        adressebeskyttelseGradering = row.adresseBeskyttelseGradering(),
                     )
                 }.asSingle,
             )
@@ -140,6 +144,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
     ): Oppgave? {
         sessionOf(dataSource).use { session ->
             val emneknagger = filter.emneknagg.joinToString { "'$it'" }
+            val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
             val emneknaggClause =
                 if (filter.emneknagg.isNotEmpty()) {
                     """
@@ -175,8 +180,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
                             AND      oppg.opprettet <  :tom_pluss_1_dag
                             AND    ( NOT pers.skjermes_som_egne_ansatte
                                   OR :har_tilgang_til_egne_ansatte )
+                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                 """ + emneknaggClause + orderByReturningStatement
-
             val oppgaveId =
                 session.run(
                     queryOf(
@@ -276,6 +281,26 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
         }
     }
 
+    override fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                    SELECT pers.adressebeskyttelse_gradering
+                    FROM   person_v1     pers
+                    JOIN   behandling_v1 beha ON beha.person_id = pers.id
+                    JOIN   oppgave_v1    oppg ON oppg.behandling_id = beha.id
+                    WHERE  oppg.id = :oppgave_id
+                    """.trimMargin(),
+                    mapOf("oppgave_id" to oppgaveId),
+                ).map { row ->
+                    AdressebeskyttelseGradering.valueOf(row.string("adressebeskyttelse_gradering"))
+                }.asSingle,
+            )
+        } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
+    }
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(
@@ -298,101 +323,96 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
 
     override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
         var oppgaver: List<Oppgave>
-        measureTime {
-            oppgaver =
-                sessionOf(dataSource).use { session ->
-                    val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
 
-                    val saksBehandlerClause =
-                        søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" }
-                            ?: ""
+        oppgaver =
+            sessionOf(dataSource).use { session ->
+                val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
 
-                    val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
+                val saksBehandlerClause =
+                    søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" }
+                        ?: ""
 
-                    val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id" } ?: ""
+                val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
 
-                    val behandlingIdClause =
-                        søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
+                val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id" } ?: ""
 
-                    val emneknagger = søkeFilter.emneknagg.joinToString { "'$it'" }
-                    val emneknaggClause =
-                        if (søkeFilter.emneknagg.isNotEmpty()) {
-                            """
-                            AND EXISTS(
-                                SELECT 1
-                                FROM   emneknagg_v1 emne
-                                WHERE  emne.oppgave_id = oppg.id
-                                AND    emne.emneknagg IN ($emneknagger)
-                            )
-                            """.trimIndent()
-                        } else {
-                            ""
-                        }
+                val behandlingIdClause =
+                    søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
 
-                    // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
-                    //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
-                    //language=PostgreSQL
-                    val sql =
-                        StringBuilder(
-                            """
+                val emneknagger = søkeFilter.emneknagg.joinToString { "'$it'" }
+                val emneknaggClause =
+                    if (søkeFilter.emneknagg.isNotEmpty()) {
+                        """
+                        AND EXISTS(
+                            SELECT 1
+                            FROM   emneknagg_v1 emne
+                            WHERE  emne.oppgave_id = oppg.id
+                            AND    emne.emneknagg IN ($emneknagger)
+                        )
+                        """.trimIndent()
+                    } else {
+                        ""
+                    }
+
+                // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
+                //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
+                //language=PostgreSQL
+                val sql =
+                    StringBuilder(
+                        """
                 ${
-                                """
-                                SELECT  pers.id AS person_id, 
-                                        pers.ident AS person_ident,
-                                        pers.skjermes_som_egne_ansatte,
-                                        oppg.id AS oppgave_id, 
-                                        oppg.tilstand, 
-                                        oppg.opprettet AS oppgave_opprettet, 
-                                        oppg.behandling_id, 
-                                        oppg.saksbehandler_ident,
-                                        oppg.utsatt_til,
-                                        beha.opprettet AS behandling_opprettet
-                                FROM    oppgave_v1    oppg
-                                JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                                JOIN    person_v1     pers ON pers.id = beha.person_id
-                                """.trimIndent()
-                            }
+                            """
+                            SELECT  pers.id AS person_id, 
+                                    pers.ident AS person_ident,
+                                    pers.skjermes_som_egne_ansatte,
+                                    pers.adressebeskyttelse_gradering,
+                                    oppg.id AS oppgave_id, 
+                                    oppg.tilstand, 
+                                    oppg.opprettet AS oppgave_opprettet, 
+                                    oppg.behandling_id, 
+                                    oppg.saksbehandler_ident,
+                                    oppg.utsatt_til,
+                                    beha.opprettet AS behandling_opprettet
+                            FROM    oppgave_v1    oppg
+                            JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                            JOIN    person_v1     pers ON pers.id = beha.person_id
+                            """.trimIndent()
+                        }
                 WHERE  oppg.tilstand IN ($tilstander)
                 AND    oppg.opprettet >= :fom
                 AND    oppg.opprettet <  :tom_pluss_1_dag
             """,
-                        )
-                            .append(
-                                saksBehandlerClause,
-                                personIdentClause,
-                                oppgaveIdClause,
-                                behandlingIdClause,
-                                emneknaggClause,
-                            )
-                            .toString()
-
-                    val queryOf =
-                        queryOf(
-                            statement = sql,
-                            paramMap =
-                                mapOf(
-                                    "tilstander" to tilstander,
-                                    "fom" to søkeFilter.periode.fom,
-                                    "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
-                                    "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                                    "person_ident" to søkeFilter.personIdent,
-                                    "oppgave_id" to søkeFilter.oppgaveId,
-                                    "behandling_id" to søkeFilter.behandlingId,
-                                    "emneknagger" to emneknagger,
-                                ),
-                        )
-                    session.run(
-                        queryOf.map { row ->
-                            row.rehydrerOppgave()
-                        }.asList,
                     )
-                }
-        }.also { duration ->
-            sikkerlogg.info {
-                "Søk etter oppgaver tok ${duration.inWholeMilliseconds} ms, antall oppgaver: ${oppgaver.size}" +
-                    " og med søkefilter: $søkeFilter"
+                        .append(
+                            saksBehandlerClause,
+                            personIdentClause,
+                            oppgaveIdClause,
+                            behandlingIdClause,
+                            emneknaggClause,
+                        )
+                        .toString()
+
+                val queryOf =
+                    queryOf(
+                        statement = sql,
+                        paramMap =
+                            mapOf(
+                                "tilstander" to tilstander,
+                                "fom" to søkeFilter.periode.fom,
+                                "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
+                                "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                                "person_ident" to søkeFilter.personIdent,
+                                "oppgave_id" to søkeFilter.oppgaveId,
+                                "behandling_id" to søkeFilter.behandlingId,
+                                "emneknagger" to emneknagger,
+                            ),
+                    )
+                session.run(
+                    queryOf.map { row ->
+                        row.rehydrerOppgave()
+                    }.asList,
+                )
             }
-        }
         return oppgaver
     }
 
@@ -419,6 +439,49 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) : OppgaveRep
             )
         }
     }
+
+    override fun oppdaterAdressebeskyttetStatus(
+        fnr: String,
+        adresseBeskyttelseGradering: AdressebeskyttelseGradering,
+    ): Int {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        UPDATE person_v1
+                        SET    adressebeskyttelse_gradering = :adresseBeskyttelseGradering
+                        WHERE  ident = :fnr
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "fnr" to fnr,
+                            "adresseBeskyttelseGradering" to adresseBeskyttelseGradering.name,
+                        ),
+                ).asUpdate,
+            )
+        }
+    }
+
+    override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
+        val identer = fnrs.joinToString { "'$it'" }
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT ident
+                        FROM   person_v1
+                        WHERE  ident IN ($identer)
+                        """.trimIndent(),
+                ).map { row ->
+                    row.string("ident")
+                }.asList,
+            ).toSet()
+        }
+    }
 }
 
 private fun TransactionalSession.lagre(person: Person) {
@@ -428,16 +491,17 @@ private fun TransactionalSession.lagre(person: Person) {
             statement =
                 """
                 INSERT INTO person_v1
-                    (id, ident, skjermes_som_egne_ansatte) 
+                    (id, ident, skjermes_som_egne_ansatte, adressebeskyttelse_gradering) 
                 VALUES
-                    (:id, :ident, :skjermes_som_egne_ansatte) 
-                ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte
+                    (:id, :ident, :skjermes_som_egne_ansatte, :adressebeskyttelse_gradering) 
+                ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte , adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
                 """.trimIndent(),
             paramMap =
                 mapOf(
                     "id" to person.id,
                     "ident" to person.ident,
                     "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
+                    "adressebeskyttelse_gradering" to person.adressebeskyttelseGradering.name,
                 ),
         ).asUpdate,
     )
@@ -635,6 +699,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
                     id = this.uuid("person_id"),
                     ident = this.string("person_ident"),
                     skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
+                    adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
                 ),
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId),
@@ -656,6 +721,10 @@ private fun Row.rehydrerOppgave(): Oppgave {
         behandling = behandling,
         utsattTil = this.localDateOrNull("utsatt_til"),
     )
+}
+
+private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
+    return AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
 }
 
 class DataNotFoundException(message: String) : RuntimeException(message)

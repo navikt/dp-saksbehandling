@@ -170,7 +170,8 @@ class StatuspageTest {
     }
 
     @Test
-    fun `Error håndtering av Ikke`() {
+    fun `Error håndtering av IngenTilgangTilOppgaveException`() {
+        val type = "egne-ansatte"
         testApplication {
             val message = "Ingen tilgang til oppgave"
             val path = "/IngenTilgangTilOppgaveException"
@@ -178,7 +179,7 @@ class StatuspageTest {
                 apiConfig()
                 routing {
                     get(path) {
-                        throw IngenTilgangTilOppgaveException(message)
+                        throw IngenTilgangTilOppgaveException(message, type)
                     }
                 }
             }
@@ -189,7 +190,7 @@ class StatuspageTest {
                     //language=JSON
                     """
                     {
-                      "type": "dagpenger.nav.no/saksbehandling:problem:ingen-tilgang-til-oppgave",
+                      "type": "dagpenger.nav.no/saksbehandling:problem:ingen-tilgang-til-oppgave:$type",
                       "title": "Ingen tilgang til oppgave",
                       "detail": "$message",
                       "status": 403,

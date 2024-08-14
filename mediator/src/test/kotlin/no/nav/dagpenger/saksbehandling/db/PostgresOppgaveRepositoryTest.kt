@@ -5,6 +5,9 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -70,6 +73,18 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne oppdatere adresse beskyttet status på en person`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testPerson)
+            repo.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe UGRADERT
+
+            repo.oppdaterAdressebeskyttetStatus(testPerson.ident, STRENGT_FORTROLIG)
+            repo.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe STRENGT_FORTROLIG
+        }
+    }
+
+    @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -81,6 +96,7 @@ class PostgresOppgaveRepositoryTest {
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
                         emneknagg = emptySet(),
+                        harTilgangTilAdressebeskyttelser = setOf(FORTROLIG),
                     ),
             ) shouldBe null
         }
@@ -95,7 +111,12 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
-                    person = Person(ident = "12345123451", skjermesSomEgneAnsatte = true),
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = true,
+                            adressebeskyttelseGradering = UGRADERT,
+                        ),
                 )
             repo.lagre(eldsteOppgaveMedSkjermingAvEgenAnsatt)
 
@@ -103,7 +124,12 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
-                    person = Person(ident = "11111222222", skjermesSomEgneAnsatte = false),
+                    person =
+                        Person(
+                            ident = "11111222222",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                        ),
                 )
             repo.lagre(eldsteOppgaveUtenSkjermingAvEgenAnsatt)
 
@@ -111,7 +137,12 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå,
-                    person = Person(ident = "11111333333", skjermesSomEgneAnsatte = false),
+                    person =
+                        Person(
+                            ident = "11111333333",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                        ),
                 )
             repo.lagre(nyesteOppgaveUtenSkjermingAvEgenAnsatt)
 
@@ -124,6 +155,7 @@ class PostgresOppgaveRepositoryTest {
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
                             harTilgangTilEgneAnsatte = false,
+                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                         ),
                 )!!
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
@@ -140,10 +172,79 @@ class PostgresOppgaveRepositoryTest {
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
                             harTilgangTilEgneAnsatte = true,
+                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                         ),
                 )!!
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingAvEgenAnsatt.oppgaveId
+            nesteOppgaveMedTilgang.saksbehandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
+            nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+        }
+    }
+
+    @Test
+    fun `Finn neste ledige oppgave som ikke gjelder adressebeskyttede personer`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+
+            val eldsteOppgaveMedAdressebeskyttelse =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(5),
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = FORTROLIG,
+                        ),
+                )
+            repo.lagre(eldsteOppgaveMedAdressebeskyttelse)
+
+            val eldsteOppgaveUtenAdressebeskyttelse =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(1),
+                    person =
+                        Person(
+                            ident = "11111222222",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                        ),
+                )
+            repo.lagre(eldsteOppgaveUtenAdressebeskyttelse)
+
+            val navIdentUtenTilgangTilAdressebeskyttede = "NAVIdent2"
+            val nesteOppgave =
+                repo.tildelNesteOppgaveTil(
+                    saksbehandlerIdent = navIdentUtenTilgangTilAdressebeskyttede,
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            harTilgangTilEgneAnsatte = false,
+                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                        ),
+                )
+            requireNotNull(nesteOppgave)
+            nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenAdressebeskyttelse.oppgaveId
+            nesteOppgave.saksbehandlerIdent shouldBe navIdentUtenTilgangTilAdressebeskyttede
+            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+
+            val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
+
+            val nesteOppgaveMedTilgang =
+                repo.tildelNesteOppgaveTil(
+                    saksbehandlerIdent = navIdentMedTilgangTilEgneAnsatte,
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            harTilgangTilEgneAnsatte = true,
+                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT, FORTROLIG),
+                        ),
+                )!!
+
+            nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedAdressebeskyttelse.oppgaveId
             nesteOppgaveMedTilgang.saksbehandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
             nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
         }
@@ -205,6 +306,7 @@ class PostgresOppgaveRepositoryTest {
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
+                    harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
             val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
             nesteOppgave!!.oppgaveId shouldBe nestEldsteLedigeOppgave.oppgaveId
@@ -215,6 +317,7 @@ class PostgresOppgaveRepositoryTest {
                 TildelNesteOppgaveFilter(
                     periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
                     emneknagg = emptySet(),
+                    harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
             val nesteOppgave2 = repo.tildelNesteOppgaveTil(testSaksbehandler, filter2)
             nesteOppgave2!!.oppgaveId shouldBe yngsteLedigeOppgave.oppgaveId
@@ -385,8 +488,18 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne hente alle oppgaver for en gitt person`() {
-        val ola = Person(ident = "12345678910", skjermesSomEgneAnsatte = false)
-        val kari = Person(ident = "10987654321", skjermesSomEgneAnsatte = false)
+        val ola =
+            Person(
+                ident = "12345678910",
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            )
+        val kari =
+            Person(
+                ident = "10987654321",
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            )
 
         val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling)
         val oppgave2TilOla = lagOppgave(person = ola, tilstand = FerdigBehandlet)
@@ -648,6 +761,29 @@ class PostgresOppgaveRepositoryTest {
             repo.lagre(oppgave)
             repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
+        }
+    }
+
+    @Test
+    fun `Sjekk om fnre eksisterer i vårt system`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            val (fnr1, fnr2, fnr3) = Triple("12345678910", "10987654321", "12345678931")
+
+            repo.lagre(lagPerson(fnr1))
+            repo.lagre(lagPerson(fnr2))
+            repo.lagre(lagPerson("12345678941"))
+            repo.eksistererIDPsystem(setOf(fnr1, fnr2, fnr3)) shouldBe setOf(fnr1, fnr2)
+        }
+    }
+
+    @Test
+    fun `Hent adressegraderingsbeskyttelse for person gitt oppgave`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            val oppgave = lagOppgave(person = lagPerson(addresseBeskyttelseGradering = STRENGT_FORTROLIG))
+            repo.lagre(oppgave)
+            repo.adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
         }
     }
 }

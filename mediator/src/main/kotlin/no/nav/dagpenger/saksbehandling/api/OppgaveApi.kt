@@ -21,10 +21,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -33,6 +36,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -64,6 +68,19 @@ internal fun Application.oppgaveApi(
             oppgaveDTO
         }
     routing {
+        val adressebeskyttelseTilgangskontroll =
+            AdressebeskyttelseTilgangskontroll(
+                strengtFortroligGruppe = Configuration.strengtFortroligADGruppe,
+                strengtFortroligUtlandGruppe = Configuration.strengtFortroligUtlandADGruppe,
+                fortroligGruppe = Configuration.fortroligADGruppe,
+                adressebeskyttelseGraderingFun = oppgaveMediator::adresseGraderingForPerson,
+            )
+
+        val egneAnsatteTilgangskontroll =
+            EgneAnsatteTilgangskontroll(
+                tillatteGrupper = setOf(egneAnsatteADGruppe),
+                skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
+            )
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
 
         authenticate("azureAd") {
@@ -83,13 +100,15 @@ internal fun Application.oppgaveApi(
                 }
                 route("neste") {
                     put {
+                        val saksbehandler = requireNotNull(call.principal<JWTPrincipal>()?.saksbehandler)
                         val dto = call.receive<NesteOppgaveDTO>()
-                        val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
-                        var saksbehandlerTilgangEgneAnsatte = false
-                        if (saksbehandler != null) {
-                            saksbehandlerTilgangEgneAnsatte = saksbehandler.grupper.contains(egneAnsatteADGruppe)
-                        }
-                        val søkefilter = TildelNesteOppgaveFilter.fra(dto.queryParams, saksbehandlerTilgangEgneAnsatte)
+
+                        val søkefilter =
+                            TildelNesteOppgaveFilter.fra(
+                                queryString = dto.queryParams,
+                                saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(saksbehandler),
+                                adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(saksbehandler),
+                            )
 
                         val oppgave =
                             oppgaveMediator.tildelNesteOppgaveTil(
@@ -104,13 +123,10 @@ internal fun Application.oppgaveApi(
                 }
 
                 route("{oppgaveId}") {
-                    val egneAnsatteTilgangskontroll =
-                        EgneAnsatteTilgangskontroll(
-                            tillatteGrupper = setOf(egneAnsatteADGruppe),
-                            skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
-                        )
+                    val tilgangskontroller = setOf(adressebeskyttelseTilgangskontroll, egneAnsatteTilgangskontroll)
+
                     get {
-                        oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll))
+                        oppgaveTilgangskontroll(tilgangskontroller)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
                         val oppgaveDTO = oppgaveDTO(oppgave)
@@ -119,7 +135,7 @@ internal fun Application.oppgaveApi(
                     }
                     route("tildel") {
                         put {
-                            oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll))
+                            oppgaveTilgangskontroll(tilgangskontroller)
                             val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
                             try {
                                 val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
@@ -131,7 +147,7 @@ internal fun Application.oppgaveApi(
                     }
                     route("utsett") {
                         put {
-                            oppgaveTilgangskontroll(setOf(egneAnsatteTilgangskontroll))
+                            oppgaveTilgangskontroll(tilgangskontroller)
                             val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
                             logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
                             oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
@@ -220,6 +236,13 @@ fun lagOppgaveDTO(
                     },
                 statsborgerskap = person.statsborgerskap,
                 skjermesSomEgneAnsatte = oppgave.behandling.person.skjermesSomEgneAnsatte,
+                adressebeskyttelseGradering =
+                    when (oppgave.behandling.person.adressebeskyttelseGradering) {
+                        AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
+                        AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
+                        AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
+                        AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
+                    },
             ),
         saksbehandlerIdent = oppgave.saksbehandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
@@ -254,6 +277,13 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
         skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
+        adressebeskyttelseGradering =
+            when (this.behandling.person.adressebeskyttelseGradering) {
+                AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
+                AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
+                AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
+                AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
+            },
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         saksbehandlerIdent = this.saksbehandlerIdent,
         utsattTilDato = this.utsattTil(),

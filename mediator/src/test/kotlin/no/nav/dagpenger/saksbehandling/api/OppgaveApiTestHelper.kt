@@ -8,6 +8,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -54,10 +55,10 @@ internal object OppgaveApiTestHelper {
         header(HttpHeaders.Authorization, "Bearer $token")
     }
 
-    fun gyldigSaksbehandlerToken(): String =
+    fun gyldigSaksbehandlerToken(adGrupper: List<String> = emptyList()): String =
         mockAzure.lagTokenMedClaims(
             mapOf(
-                "groups" to listOf("SaksbehandlerADGruppe"),
+                "groups" to listOf("SaksbehandlerADGruppe") + adGrupper,
                 "NAVident" to TEST_NAV_IDENT,
             ),
         )
@@ -73,6 +74,7 @@ internal object OppgaveApiTestHelper {
     fun lagMediatorMock(): OppgaveMediator {
         return mockk<OppgaveMediator>().also {
             every { it.personSkjermesSomEgneAnsatte(any()) } returns false
+            every { it.adresseGraderingForPerson(any()) } returns UGRADERT
         }
     }
 
@@ -111,7 +113,13 @@ internal object OppgaveApiTestHelper {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                person = Person(id = UUIDv7.ny(), ident = TEST_IDENT, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
+                person =
+                    Person(
+                        id = UUIDv7.ny(),
+                        ident = TEST_IDENT,
+                        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                        adressebeskyttelseGradering = UGRADERT,
+                    ),
                 opprettet = LocalDateTime.now(),
             )
         return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil)
@@ -127,5 +135,6 @@ internal object OppgaveApiTestHelper {
             alder = 0,
             statsborgerskap = "NOR",
             kjønn = PDLPerson.Kjonn.UKJENT,
+            adresseBeskyttelseGradering = UGRADERT,
         )
 }
