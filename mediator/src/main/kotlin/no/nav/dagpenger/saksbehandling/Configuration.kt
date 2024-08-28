@@ -47,23 +47,22 @@ object Configuration {
     val journalpostIdApiUrl: String = properties[Key("JOURNALPOSTID_API_URL", stringType)]
     val journalpostApiScope: String = properties[Key("JOURNALPOSTID_API_SCOOPE", stringType)]
 
-    val journalpostTokenProvider = {
-        azureAdClient.clientCredentials(journalpostApiScope).accessToken
-    }
+    val journalpostTokenProvider = { clientCredentialsTokenProvider(journalpostApiScope) }
 
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingApiScope: String = properties[Key("SKJERMING_API_SCOPE", stringType)]
     val skjermingPersonStatusTopic: String = properties[Key("SKJERMING_TOPIC", stringType)]
     val leesahTopic: String = properties[Key("LEESAH_TOPIC", stringType)]
-    val skjermingTokenProvider = {
-        azureAdClient.clientCredentials(skjermingApiScope).accessToken
+    val skjermingTokenProvider = { clientCredentialsTokenProvider(skjermingApiScope) }
+
+    private val clientCredentialsTokenProvider = { scope: String ->
+        azureAdClient.clientCredentials(scope).accessToken
+            ?: throw RuntimeException("Failed to get access token")
     }
 
     val pdlUrl: String = properties[Key("PDL_API_URL", stringType)]
     val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
-    val pdlTokenProvider = {
-        azureAdClient.clientCredentials(pdlApiScope).accessToken
-    }
+    val pdlTokenProvider = { clientCredentialsTokenProvider(pdlApiScope) }
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
     val egneAnsatteADGruppe by lazy { properties[Key("GRUPPE_EGNE_ANSATTE", stringType)] }
