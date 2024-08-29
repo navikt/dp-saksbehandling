@@ -2,20 +2,15 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import javax.sql.DataSource
 
 interface StatistikkTjeneste {
-    fun hentStatistikk(navIdent: String): Statistikk
+    fun hentStatistikk(navIdent: String): StatistikkDTO
 }
 
-data class Statistikk(
-    val dag: Int = 0,
-    val uke: Int = 0,
-    val totalt: Int = 0,
-)
-
 class PostgresStatistikkTjeneste(private val dataSource: DataSource) : StatistikkTjeneste {
-    override fun hentStatistikk(navIdent: String): Statistikk {
+    override fun hentStatistikk(navIdent: String): StatistikkDTO {
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
@@ -44,13 +39,13 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                     """,
                     paramMap = mapOf("navIdent" to navIdent),
                 ).map { row ->
-                    Statistikk(
+                    StatistikkDTO(
                         dag = row.int("dag"),
                         uke = row.int("uke"),
                         totalt = row.int("total"),
                     )
                 }.asSingle,
             )
-        } ?: Statistikk()
+        } ?: StatistikkDTO()
     }
 }

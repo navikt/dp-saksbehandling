@@ -264,7 +264,19 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-
+  /statistikk:
+    get:
+      summary: Hent statistikk
+      description: Henter statistikk for innlogget saksbehandler.
+      responses:
+        '200':
+          description: Statistikk hentet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistikk'
+        '401':
+          description: Uautorisert tilgang
 components:
   schemas:
     Person:
@@ -430,6 +442,26 @@ components:
       required:
         - utsettTilDato
         - beholdOppgave
+
+    Statistikk:
+      type: object
+      properties:
+        dag:
+          type: integer
+          default: 0
+          description: Antall behandlede oppgaver i løpet av dagen.
+          example: 5
+        uke:
+          type: integer
+          default: 0
+          description: Antall behandlede oppgaver i løpet av uken.
+          example: 30
+        totalt:
+          type: integer
+          default: 0
+          description: Totalt antall behandlede oppgaver.
+          example: 200
+
     HttpProblem:
       type: object
       properties:
