@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
-import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -72,17 +71,6 @@ internal class VedtakFattetMottakTest {
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
-        }
-        testRapid.inspektør.size shouldBe 1
-        testRapid.inspektør.message(0).let { jsonNode ->
-            jsonNode.path("@event_name").asText() shouldBe "start_utsending"
-            jsonNode["oppgaveId"].asUUID() shouldBe oppgave.oppgaveId
-            jsonNode["ident"].asText() shouldBe testIdent
-            jsonNode["behandlingId"].asUUID() shouldBe behandlingId
-            jsonNode["sak"].let { sakIdNode ->
-                sakIdNode["id"].asText() shouldBe sak.id
-                sakIdNode["kontekst"].asText() shouldBe sak.kontekst
-            }
         }
     }
 }
