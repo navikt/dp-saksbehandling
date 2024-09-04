@@ -130,7 +130,6 @@ internal fun Application.oppgaveApi(
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
                         val oppgaveDTO = oppgaveDTO(oppgave)
-                        sikkerlogger.info("${oppgaveDTO.person.ident} har statsborgerskap: ${oppgaveDTO.person.statsborgerskap}")
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
                     route("tildel") {
