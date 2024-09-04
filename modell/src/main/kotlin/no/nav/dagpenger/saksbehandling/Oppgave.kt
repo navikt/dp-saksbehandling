@@ -61,8 +61,8 @@ data class Oppgave private constructor(
             tilstand: Tilstand,
             behandling: Behandling,
             utsattTil: LocalDate?,
-        ): Oppgave {
-            return Oppgave(
+        ): Oppgave =
+            Oppgave(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
                 ident = ident,
@@ -73,7 +73,6 @@ data class Oppgave private constructor(
                 behandling = behandling,
                 utsattTil = utsattTil,
             )
-        }
     }
 
     val emneknagger: Set<String>
@@ -187,6 +186,13 @@ data class Oppgave private constructor(
             oppgave.utsattTil = utsettOppgaveHendelse.utsattTil
         }
 
+        override fun oppgaveKlarTilBehandling(
+            oppgave: Oppgave,
+            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+        ) {
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId}" }
+        }
+
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
@@ -195,7 +201,9 @@ data class Oppgave private constructor(
         }
     }
 
-    class AlleredeTildeltException(message: String) : RuntimeException(message)
+    class AlleredeTildeltException(
+        message: String,
+    ) : RuntimeException(message)
 
     object FerdigBehandlet : Tilstand {
         override val type: Type = FERDIG_BEHANDLET
@@ -244,9 +252,13 @@ data class Oppgave private constructor(
     interface Tilstand {
         val type: Type
 
-        class UlovligTilstandsendringException(message: String) : RuntimeException(message)
+        class UlovligTilstandsendringException(
+            message: String,
+        ) : RuntimeException(message)
 
-        class UgyldigTilstandException(message: String) : RuntimeException(message)
+        class UgyldigTilstandException(
+            message: String,
+        ) : RuntimeException(message)
 
         companion object {
             fun fra(type: Type) =
@@ -259,11 +271,12 @@ data class Oppgave private constructor(
                 }
 
             fun fra(type: String) =
-                kotlin.runCatching {
-                    fra(Type.valueOf(type))
-                }.getOrElse { t ->
-                    throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: $type ${t.message}")
-                }
+                kotlin
+                    .runCatching {
+                        fra(Type.valueOf(type))
+                    }.getOrElse { t ->
+                        throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: $type ${t.message}")
+                    }
         }
 
         enum class Type {
