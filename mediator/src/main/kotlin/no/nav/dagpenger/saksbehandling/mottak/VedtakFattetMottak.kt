@@ -20,6 +20,7 @@ internal class VedtakFattetMottak(
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "vedtak_fattet") }
             validate { it.requireKey("ident", "søknadId", "behandlingId", "opplysninger") }
+            validate { it.rejectKey("meldingOmVedtakProdusent") }
         }
     }
 
@@ -46,6 +47,8 @@ internal class VedtakFattetMottak(
                     sak = sak,
                 ),
             )
+            packet["meldingOmVedtakProdusent"] = "Arena"
+            context.publish(packet.toJson())
         }
     }
 }

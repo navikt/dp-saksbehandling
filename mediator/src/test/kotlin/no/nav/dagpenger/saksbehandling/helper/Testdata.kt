@@ -45,6 +45,43 @@ internal fun vedtakFattetHendelse(
     }"""
 }
 
+internal fun vedtakFattetHendelseMedMeldingOmVedtakProdusent(
+    ident: String,
+    søknadId: UUID,
+    behandlingId: UUID,
+    sakId: Int,
+): String {
+    //language=JSON
+    return """{
+      "@event_name": "vedtak_fattet",
+      "søknadId": "$søknadId",
+      "meldingOmVedtakProdusent": "Arena",
+      "behandlingId": "$behandlingId",
+      "ident": "$ident",
+      "opplysninger": [
+        {
+          "opplysningstype": {
+            "datatype": {
+              "klasse": "int"
+            },
+            "id": "fagsakId",
+            "navn": "fagsakId"
+          },
+          "verdi": $sakId
+        },
+        {
+          "opplysningstype": {
+            "datatype": {
+              "klasse": "int"
+            },
+            "id": "hubba",
+            "navn": "bubba"
+          },
+          "verdi": 14
+        }]
+    }"""
+}
+
 internal fun distribuertDokumentBehovLøsning(
     oppgaveId: UUID,
     journalpostId: String,

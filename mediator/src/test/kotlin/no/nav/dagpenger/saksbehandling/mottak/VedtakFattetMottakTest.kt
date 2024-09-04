@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -11,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelseMedMeldingOmVedtakProdusent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -71,6 +73,28 @@ internal class VedtakFattetMottakTest {
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
+        }
+
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).apply {
+            this["@event_name"].asText() shouldBe "vedtak_fattet"
+            this["meldingOmVedtakProdusent"].asText() shouldBe "Arena"
+        }
+    }
+
+    @Test
+    fun `Skal ikke behandle vedtak fattet hendelser allerede beriket med meldingOmVedtakProdusent`() {
+        every { oppgaveMediatorMock.ferdigstillOppgave(any()) } returns oppgave
+        testRapid.sendTestMessage(
+            vedtakFattetHendelseMedMeldingOmVedtakProdusent(
+                ident = testIdent,
+                søknadId = søknadId,
+                behandlingId = behandlingId,
+                sakId = sak.id.toInt(),
+            ),
+        )
+        verify(exactly = 0) {
+            oppgaveMediatorMock.ferdigstillOppgave(any())
         }
     }
 }
