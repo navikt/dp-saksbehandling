@@ -21,6 +21,7 @@ internal fun vedtakFattetHendelse(
       "søknadId": "$søknadId",
       "behandlingId": "$behandlingId",
       "ident": "$ident",
+      "automatisk": true,
       "opplysninger": [
         {
           "opplysningstype": {
@@ -58,6 +59,7 @@ internal fun vedtakFattetHendelseMedMeldingOmVedtakProdusent(
       "meldingOmVedtakProdusent": "Arena",
       "behandlingId": "$behandlingId",
       "ident": "$ident",
+      "automatisk": true,
       "opplysninger": [
         {
           "opplysningstype": {

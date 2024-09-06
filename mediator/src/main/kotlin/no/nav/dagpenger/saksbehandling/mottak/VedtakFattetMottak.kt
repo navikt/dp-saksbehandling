@@ -19,7 +19,7 @@ internal class VedtakFattetMottak(
     companion object {
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "vedtak_fattet") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId", "opplysninger") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId", "opplysninger", "automatisk") }
             validate { it.rejectKey("meldingOmVedtakProdusent") }
         }
     }
@@ -36,9 +36,13 @@ internal class VedtakFattetMottak(
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
         val sak = packet.sak()
+        val automatiskBehandlet = packet["automatisk"].asBoolean()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            logger.info { "Mottok vedtak fattet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+            logger.info {
+                "Mottok vedtak fattet hendelse for søknadId $søknadId og behandlingId $behandlingId. " +
+                    "Automatisk behandlet: $automatiskBehandlet"
+            }
             oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,

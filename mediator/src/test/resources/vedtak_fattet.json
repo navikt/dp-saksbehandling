@@ -2,6 +2,7 @@
   "@event_name": "vedtak_fattet",
   "utfall": false,
   "harAvklart": "Krav på dagpenger",
+  "automatisk": true,
   "opplysninger": [
     {
       "id": "019026a4-0e51-7074-aa2e-e9dbae184d5d",
