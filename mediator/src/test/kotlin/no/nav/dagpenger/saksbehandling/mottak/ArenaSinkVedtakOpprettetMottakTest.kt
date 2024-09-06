@@ -43,6 +43,23 @@ class ArenaSinkVedtakOpprettetMottakTest {
     }
 
     @Test
+    fun `Ikke send start_utsending event når vedtakstatus != IVERK`() {
+        ArenaSinkVedtakOpprettetMottak(
+            testRapid,
+            oppgaveRepository,
+            sendStartUtsendingEvents = true,
+        )
+
+        val vedtakOpprettetMenIkkeIverksattMelding = arenaSinkVedtakOpprettetHendelse.replace(VEDTAKSTATUS_IVERKSATT, "Muse Mikk")
+        testRapid.sendTestMessage(vedtakOpprettetMenIkkeIverksattMelding)
+        verify(exactly = 1) {
+            oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
+        }
+
+        testRapid.inspektør.size shouldBe 0
+    }
+
+    @Test
     fun `Skal ikke sende ut start utsending events når featureflag er false`() {
         ArenaSinkVedtakOpprettetMottak(
             testRapid,
@@ -64,7 +81,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
           "søknadId": "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
           "sakId": $sakId,
           "vedtakId": 0,
-          "vedtakstatus": "",
+          "vedtakstatus": "IVERK",
           "rettighet": "PERM",
           "utfall": false,
           "kilde": {
