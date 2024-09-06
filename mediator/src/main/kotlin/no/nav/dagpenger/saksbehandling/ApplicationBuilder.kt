@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandling
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
+import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
@@ -86,6 +87,12 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 UtsendingMottak(rapidsConnection, utsendingMediator)
                 UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
                 AvklaringIkkeRelevantMottak(rapidsConnection, oppgaveMediator)
+                ArenaSinkVedtakOpprettetMottak(
+                    rapidsConnection,
+                    oppgaveRepository,
+                    // vi er ikke klare til å sende ut start_utsending events enda
+                    sendStartUtsendingEvents = false,
+                )
             }
 
     init {
