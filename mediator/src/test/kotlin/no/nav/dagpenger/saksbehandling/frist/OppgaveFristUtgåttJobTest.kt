@@ -18,39 +18,39 @@ class OppgaveFristUtgåttJobTest {
             val saksbehandlerIdent = "Z123456"
             val repo = PostgresOppgaveRepository(ds)
 
-            val idag = LocalDate.now()
-            val igår = idag.minusDays(1)
+            val iDag = LocalDate.now()
+            val iMorgen = iDag.plusDays(1)
 
-            val oppgave =
+            val oppgave1 =
                 lagOppgave(
                     tilstand = PaaVent,
-                    utsattTil = igår,
+                    utsattTil = iDag,
                     saksbehandlerIdent = null,
                 )
             val oppgave2 =
                 lagOppgave(
                     tilstand = PaaVent,
-                    utsattTil = igår,
+                    utsattTil = iDag,
                     saksbehandlerIdent = saksbehandlerIdent,
                 )
 
             val oppgave3 =
                 lagOppgave(
                     tilstand = PaaVent,
-                    utsattTil = idag,
+                    utsattTil = iMorgen,
                     saksbehandlerIdent = saksbehandlerIdent,
                 )
 
-            repo.lagre(oppgave)
+            repo.lagre(oppgave1)
             repo.lagre(oppgave2)
             repo.lagre(oppgave3)
 
             settOppgaverMedUtgåttFristTilKlarTilBehandling(
                 dataSource = ds,
-                frist = idag,
+                frist = iDag,
             )
 
-            repo.hentOppgave(oppgave.oppgaveId).let { oppgave ->
+            repo.hentOppgave(oppgave1.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe KlarTilBehandling
                 oppgave.emneknagger shouldContain "Tidligere utsatt"
                 oppgave.saksbehandlerIdent shouldBe null

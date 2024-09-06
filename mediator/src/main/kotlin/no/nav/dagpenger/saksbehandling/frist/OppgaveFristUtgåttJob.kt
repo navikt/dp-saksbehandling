@@ -56,7 +56,7 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
                             SELECT id
                             FROM oppgave_v1
                             WHERE tilstand = :tilstand
-                                AND utsatt_til < :frist
+                                AND utsatt_til <= :frist
                             """.trimIndent(),
                         paramMap =
                             mapOf(
