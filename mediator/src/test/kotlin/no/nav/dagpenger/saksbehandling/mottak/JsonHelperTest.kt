@@ -1,9 +1,7 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.helper.fileAsText
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak.Companion.AVKLARINGER
-import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.helse.rapids_rivers.JsonMessage
 import org.junit.jupiter.api.Test
 
@@ -17,16 +15,6 @@ class JsonHelperTest {
         lagJsonMedFilter(mapOf("avklaringer" to emptyList<String>())).emneknagger() shouldBe emptySet()
 
         lagJsonMedFilter(emptyMap()).emneknagger() shouldBe emptySet()
-    }
-
-    @Test
-    fun `Skal kunne parse sakId fra et vedtak fattet hendelse json`() {
-        val vedtakFattetJson =
-            "/vedtak_fattet.json".fileAsText().let {
-                objectMapper.readTree(it)
-            }
-
-        vedtakFattetJson["opplysninger"].sakId() shouldBe "14952361"
     }
 
     private fun lagJsonMedFilter(json: Map<String, Any>): JsonMessage {

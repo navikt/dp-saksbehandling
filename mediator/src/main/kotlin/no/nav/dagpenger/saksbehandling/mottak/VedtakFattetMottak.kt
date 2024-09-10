@@ -19,7 +19,7 @@ internal class VedtakFattetMottak(
     companion object {
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "vedtak_fattet") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId", "opplysninger", "automatisk") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId", "fagsakId", "automatisk") }
             validate { it.rejectKey("meldingOmVedtakProdusent") }
         }
     }
@@ -57,4 +57,4 @@ internal class VedtakFattetMottak(
     }
 }
 
-private fun JsonMessage.sak(): Sak = Sak(id = this["opplysninger"].sakId())
+private fun JsonMessage.sak(): Sak = Sak(id = this["fagsakId"].asText())

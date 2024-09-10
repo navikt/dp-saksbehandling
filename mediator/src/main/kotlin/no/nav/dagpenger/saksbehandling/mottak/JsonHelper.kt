@@ -14,15 +14,6 @@ fun JsonMessage.emneknagger(): Set<String> {
     }
 }
 
-fun JsonNode.sakId(): String {
-    return this.single {
-        val jsonNode = it["opplysningstype"]["id"]
-        jsonNode.erTekst() && jsonNode.asText() == "fagsakId"
-    }.let { fagsakNode ->
-        fagsakNode["verdi"].asInt().toString()
-    }
-}
-
 private fun JsonNode.avklaringstyper(): Set<String> {
     return this.filter {
         it["type"].erTekst()

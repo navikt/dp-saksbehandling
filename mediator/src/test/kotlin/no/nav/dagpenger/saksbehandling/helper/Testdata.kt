@@ -22,27 +22,7 @@ internal fun vedtakFattetHendelse(
       "behandlingId": "$behandlingId",
       "ident": "$ident",
       "automatisk": true,
-      "opplysninger": [
-        {
-          "opplysningstype": {
-            "datatype": {
-              "klasse": "int"
-            },
-            "id": "fagsakId",
-            "navn": "fagsakId"
-          },
-          "verdi": $sakId
-        },
-        {
-          "opplysningstype": {
-            "datatype": {
-              "klasse": "int"
-            },
-            "id": "hubba",
-            "navn": "bubba"
-          },
-          "verdi": 14
-        }]
+      "fagsakId": $sakId
     }"""
 }
 
@@ -59,28 +39,8 @@ internal fun vedtakFattetHendelseMedMeldingOmVedtakProdusent(
       "meldingOmVedtakProdusent": "Arena",
       "behandlingId": "$behandlingId",
       "ident": "$ident",
-      "automatisk": true,
-      "opplysninger": [
-        {
-          "opplysningstype": {
-            "datatype": {
-              "klasse": "int"
-            },
-            "id": "fagsakId",
-            "navn": "fagsakId"
-          },
-          "verdi": $sakId
-        },
-        {
-          "opplysningstype": {
-            "datatype": {
-              "klasse": "int"
-            },
-            "id": "hubba",
-            "navn": "bubba"
-          },
-          "verdi": 14
-        }]
+      "fagsakId": $sakId,
+      "automatisk": true
     }"""
 }
 
