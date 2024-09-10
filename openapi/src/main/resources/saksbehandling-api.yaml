@@ -81,6 +81,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
   /oppgave/{oppgaveId}:
+    get:
+      summary: Hent en oppgave ved hjelp av dens ID
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med detaljer om oppgaven
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oppgave'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/ferdigstill:
     put:
       summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending hvis brev inngår i request
       parameters:
@@ -113,29 +137,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-    get:
-      summary: Hent en oppgave ved hjelp av dens ID
-      parameters:
-        - in: path
-          name: oppgaveId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Vellykket respons med detaljer om oppgaven
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Oppgave'
-        '404':
-          description: Oppgaven ble ikke funnet
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-
   /oppgave/{oppgaveId}/utsett:
     put:
       summary: Saksbehandler blir tildelt ansvaret for oppgaven
