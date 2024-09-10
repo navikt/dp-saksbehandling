@@ -54,7 +54,7 @@ internal class VedtakFattetMottakTest {
 
     @Test
     fun `Skal behandle vedtak fattet hendelse`() {
-        every { oppgaveMediatorMock.ferdigstillOppgave(any()) } returns oppgave
+        every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
@@ -84,7 +84,7 @@ internal class VedtakFattetMottakTest {
 
     @Test
     fun `Skal ikke behandle vedtak fattet hendelser allerede beriket med meldingOmVedtakProdusent`() {
-        every { oppgaveMediatorMock.ferdigstillOppgave(any()) } returns oppgave
+        every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
         testRapid.sendTestMessage(
             vedtakFattetHendelseMedMeldingOmVedtakProdusent(
                 ident = testIdent,
@@ -94,7 +94,7 @@ internal class VedtakFattetMottakTest {
             ),
         )
         verify(exactly = 0) {
-            oppgaveMediatorMock.ferdigstillOppgave(any())
+            oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>())
         }
     }
 }
