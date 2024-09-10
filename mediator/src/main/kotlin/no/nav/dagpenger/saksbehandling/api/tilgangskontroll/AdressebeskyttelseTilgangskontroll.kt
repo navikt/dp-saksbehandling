@@ -19,8 +19,9 @@ class AdressebeskyttelseTilgangskontroll(
     ): Boolean = tilganger(saksbehandler).contains(adressebeskyttelseGraderingFun(oppgaveId))
 
     fun tilganger(saksbehandler: Saksbehandler): Set<AdressebeskyttelseGradering> {
+        val grupper = saksbehandler.grupper
         return (
-            saksbehandler.grupper.map {
+            grupper.map {
                 when (it) {
                     strengtFortroligGruppe -> STRENGT_FORTROLIG
                     strengtFortroligUtlandGruppe -> STRENGT_FORTROLIG_UTLAND

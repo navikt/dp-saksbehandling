@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -94,6 +95,12 @@ class OppgaveMediator(
             oppgave.ferdigstill(vedtakFattetHendelse)
             lagre(oppgave)
         }
+    }
+
+    data class GodkjentBehandlingHendelse(val oppgaveId: UUID)
+
+    fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
+        logger.info { "Mottatt godkjent behandling hendelse for oppgave: ${godkjentBehandlingHendelse.oppgaveId}" }
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {

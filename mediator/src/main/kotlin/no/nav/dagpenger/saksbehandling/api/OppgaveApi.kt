@@ -9,7 +9,9 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 import io.ktor.server.plugins.swagger.swaggerUI
+import io.ktor.server.request.contentType
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -17,6 +19,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.ktor.util.pipeline.PipelineContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
@@ -27,6 +30,7 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
@@ -160,6 +164,23 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
+                    route("ferdigstill") {
+                        put {
+                            oppgaveTilgangskontroll(tilgangskontroller)
+                            val meldingOmVedtak = call.receiveText()
+                            try {
+                                if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
+                                val oppgaveId = call.finnUUID("oppgaveId")
+                                oppgaveMediator.ferdigstillOppgave(GodkjentBehandlingHendelse(oppgaveId))
+                                call.respond(HttpStatusCode.NoContent)
+                            } catch (e: UgyldigContentType) {
+                                val feilmelding = "Feil ved mottak av melding om vedtak: ${e.message}"
+                                logger.error(e) { feilmelding }
+                                sikkerlogger.error(e) { "$feilmelding for $meldingOmVedtak" }
+                                call.respond(HttpStatusCode.UnsupportedMediaType)
+                            }
+                        }
+                    }
                 }
             }
             route("behandling/{behandlingId}/oppgaveId") {
@@ -180,6 +201,11 @@ internal fun Application.oppgaveApi(
         }
     }
 }
+
+class UgyldigContentType(message: String) : RuntimeException(message)
+
+private val PipelineContext<Unit, ApplicationCall>.htmlContentType: Boolean
+    get() = call.request.contentType().match(ContentType.Text.Html)
 
 private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandling): Set<String> {
     return when (val hendelse = behandling.hendelse) {

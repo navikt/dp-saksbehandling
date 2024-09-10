@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken
@@ -74,6 +75,9 @@ class OppgaveApiTilgangskontrollTest {
 
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
                 .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
+                .status shouldBe HttpStatusCode.Forbidden
         }
     }
 
@@ -99,6 +103,9 @@ class OppgaveApiTilgangskontrollTest {
                 .status shouldBe HttpStatusCode.Forbidden
 
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
                 .status shouldBe HttpStatusCode.Forbidden
         }
     }
@@ -126,6 +133,9 @@ class OppgaveApiTilgangskontrollTest {
 
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
                 .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
         }
     }
 
@@ -152,6 +162,9 @@ class OppgaveApiTilgangskontrollTest {
 
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
                 .status shouldBe HttpStatusCode.Forbidden
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
+                .status shouldBe HttpStatusCode.Forbidden
         }
     }
 
@@ -167,6 +180,7 @@ class OppgaveApiTilgangskontrollTest {
                 every { it.tildelOppgave(any()) } returns testOppgave
                 every { it.hentOppgave(any()) } returns testOppgave
                 every { it.utsettOppgave(any()) } just Runs
+                every { it.ferdigstillOppgave(any<GodkjentBehandlingHendelse>()) } just Runs
             }
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
@@ -192,6 +206,10 @@ class OppgaveApiTilgangskontrollTest {
                 )
             }
                 .status shouldBe HttpStatusCode.NoContent
+
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") {
+                autentisert(token = gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken())
+            }.status shouldBe HttpStatusCode.NoContent
         }
     }
 

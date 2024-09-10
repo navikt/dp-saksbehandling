@@ -12,6 +12,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -26,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
@@ -225,6 +227,33 @@ class OppgaveApiTest {
                         )
                     oppgaver.size shouldBe 2
                 }
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en oppgave`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
+        val godkjentBehandlingHendelse = GodkjentBehandlingHendelse(oppgave.oppgaveId)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+            }
+        val pdlMock = mockk<PDLKlient>()
+        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+
+        val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
+        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
+                autentisert()
+                setBody(meldingOmVedtakHtml)
+                contentType(ContentType.Text.Html)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            verify(exactly = 1) {
+                oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse)
+            }
         }
     }
 
