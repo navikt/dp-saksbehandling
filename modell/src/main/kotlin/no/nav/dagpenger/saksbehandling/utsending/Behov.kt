@@ -17,6 +17,7 @@ data class ArkiverbartBrevBehov(
     override val oppgaveId: UUID,
     private val html: String,
     private val ident: String,
+    private val sak: Sak,
 ) : Behov() {
     companion object {
         const val BEHOV_NAVN = "PdfBehov"
@@ -35,6 +36,11 @@ data class ArkiverbartBrevBehov(
             "ident" to ident,
             "dokumentNavn" to "vedtak.pdf",
             "kontekst" to "oppgave/$oppgaveId",
+            "sak" to
+                mapOf(
+                    "id" to sak.id,
+                    "kontekst" to sak.kontekst,
+                ),
         )
 
     private fun String.toBase64() = Base64.getEncoder().encodeToString(this.toByteArray(Charsets.UTF_8))

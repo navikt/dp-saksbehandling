@@ -125,6 +125,7 @@ data class Utsending(
                 oppgaveId = utsending.oppgaveId,
                 html = utsending.brev ?: throw IllegalStateException("Brev mangler"),
                 ident = utsending.ident,
+                sak = utsending.sak ?: throw IllegalStateException("Sak mangler"),
             )
 
         override fun mottaUrnTilPdfAvBrev(

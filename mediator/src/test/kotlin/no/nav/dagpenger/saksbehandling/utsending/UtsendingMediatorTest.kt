@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
-import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
+import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Sak
@@ -134,7 +134,7 @@ class UtsendingMediatorTest {
 
             rapid.inspektør.size shouldBe 1
             val htmlBrevAsBase64 = Base64.getEncoder().encode(htmlBrev.toByteArray()).toString(Charsets.UTF_8)
-            rapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            rapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
                 //language=JSON
                 """
                 {
@@ -146,7 +146,11 @@ class UtsendingMediatorTest {
                    "dokumentNavn": "vedtak.pdf",
                    "kontekst": "oppgave/$oppgaveId",
                    "oppgaveId": "$oppgaveId",
-                   "ident": "${oppgave.ident}"
+                   "ident": "${oppgave.ident}",
+                   "sak": {
+                      "id": "${sak.id}",
+                      "kontekst": "${sak.kontekst}"
+                  }
                 }
                 """.trimIndent()
 
@@ -157,7 +161,7 @@ class UtsendingMediatorTest {
             utsending.tilstand().type shouldBe AvventerJournalføring
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
             rapid.inspektør.size shouldBe 2
-            rapid.inspektør.message(1).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            rapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
                 //language=JSON
                 """
                 {
@@ -182,7 +186,7 @@ class UtsendingMediatorTest {
             utsending.tilstand().type shouldBe AvventerDistribuering
             utsending.journalpostId() shouldBe journalpostId
             rapid.inspektør.size shouldBe 3
-            rapid.inspektør.message(2).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            rapid.inspektør.message(2).toString() shouldEqualSpecifiedJson
                 //language=JSON
                 """
                 {
