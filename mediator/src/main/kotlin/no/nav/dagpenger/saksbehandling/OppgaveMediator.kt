@@ -15,7 +15,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -64,7 +63,7 @@ class OppgaveMediator(
             null -> {
                 logger.warn {
                     "Fant ikke oppgave for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
-                            "Gjør derfor ingenting med hendelsen"
+                        "Gjør derfor ingenting med hendelsen"
                 }
             }
 
