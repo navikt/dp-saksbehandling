@@ -260,6 +260,35 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Skal kunne ferdigstille en oppgave med melding om vedtak i Arena`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
+        val godkjentBehandlingHendelse = GodkjentBehandlingHendelse(oppgave.oppgaveId)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+                every { it.personSkjermesSomEgneAnsatte(any()) } returns false
+                every { it.adresseGraderingForPerson(any()) } returns UGRADERT
+            }
+        val pdlMock = mockk<PDLKlient>()
+        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+
+        val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
+        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak-arena") {
+                autentisert()
+                setBody(meldingOmVedtakHtml)
+                contentType(ContentType.Text.Html)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            verify(exactly = 1) {
+                oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse)
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne hente og få tildelt neste oppgave`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
         val oppgaveMediatorMock =
