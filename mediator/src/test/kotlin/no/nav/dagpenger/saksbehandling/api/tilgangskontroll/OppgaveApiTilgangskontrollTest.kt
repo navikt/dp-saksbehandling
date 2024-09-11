@@ -3,9 +3,11 @@ package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.put
+import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.ContentType.Application
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.mockk.Runs
@@ -33,7 +35,11 @@ import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
+import java.util.stream.Stream
 
 class OppgaveApiTilgangskontrollTest {
     private val mockAzure = mockAzure()
@@ -45,6 +51,19 @@ class OppgaveApiTilgangskontrollTest {
             Configuration.fortroligADGruppe,
         )
 
+    companion object {
+        @JvmStatic
+        private fun endepunktOgHttpMetodeProvider(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of("", HttpMethod.Get),
+                Arguments.of("/tildel", HttpMethod.Put),
+                Arguments.of("/utsett", HttpMethod.Put),
+                Arguments.of("/ferdigstill/melding-om-vedtak", HttpMethod.Put),
+                Arguments.of("/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
+            )
+        }
+    }
+
     @Test
     fun `Skal avvise kall uten autoriserte AD grupper`() {
         withOppgaveApi {
@@ -53,8 +72,12 @@ class OppgaveApiTilgangskontrollTest {
         }
     }
 
-    @Test
-    fun `Avvis kall til oppgaver som gjelder egne ansatte dersom saksbehandler ikke har riktig adgruppe`() {
+    @ParameterizedTest
+    @MethodSource("endepunktOgHttpMetodeProvider")
+    fun `Avvis kall til oppgaver som gjelder egne ansatte dersom saksbehandler ikke har riktig adgruppe`(
+        endepunkt: String,
+        httpMethod: HttpMethod,
+    ) {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         val oppgaveMediatorMock =
@@ -68,27 +91,19 @@ class OppgaveApiTilgangskontrollTest {
                 gyldigSaksbehandlerToken(
                     tilgangskontrollAdGrupper - Configuration.egneAnsatteADGruppe,
                 )
-            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
-                autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang)
-            }.status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak-arena") {
+            client.request("/oppgave/${testOppgave.oppgaveId}$endepunkt") {
+                method = httpMethod
                 autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang)
             }.status shouldBe HttpStatusCode.Forbidden
         }
     }
 
-    @Test
-    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse FORTROLIG dersom saksbehandler ikke har riktig adgruppe`() {
+    @ParameterizedTest
+    @MethodSource("endepunktOgHttpMetodeProvider")
+    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse FORTROLIG dersom saksbehandler ikke har riktig adgruppe`(
+        endepunkt: String,
+        httpMethod: HttpMethod,
+    ) {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         val oppgaveMediatorMock =
@@ -102,27 +117,19 @@ class OppgaveApiTilgangskontrollTest {
                 gyldigSaksbehandlerToken(
                     tilgangskontrollAdGrupper - Configuration.fortroligADGruppe,
                 )
-            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
-                autentisert(token = saksbehandlerTokenUtenFortrolig)
-            }.status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak-arena") {
+            client.request("/oppgave/${testOppgave.oppgaveId}$endepunkt") {
+                method = httpMethod
                 autentisert(token = saksbehandlerTokenUtenFortrolig)
             }.status shouldBe HttpStatusCode.Forbidden
         }
     }
 
-    @Test
-    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse STRENGT_FORTROLIG dersom saksbehandler ikke har riktig adgruppe`() {
+    @ParameterizedTest
+    @MethodSource("endepunktOgHttpMetodeProvider")
+    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse STRENGT_FORTROLIG dersom saksbehandler ikke har riktig adgruppe`(
+        endepunkt: String,
+        httpMethod: HttpMethod,
+    ) {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         val oppgaveMediatorMock =
@@ -136,27 +143,19 @@ class OppgaveApiTilgangskontrollTest {
                 gyldigSaksbehandlerToken(
                     tilgangskontrollAdGrupper - Configuration.strengtFortroligADGruppe,
                 )
-            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
-                autentisert(token = saksbehandlerTokenUtenFortrolig)
-            }.status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak-arena") {
+            client.request("/oppgave/${testOppgave.oppgaveId}$endepunkt") {
+                method = httpMethod
                 autentisert(token = saksbehandlerTokenUtenFortrolig)
             }.status shouldBe HttpStatusCode.Forbidden
         }
     }
 
-    @Test
-    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse STRENGT_FORTROLIG_UTLAND dersom saksbehandler ikke har riktig adgruppe`() {
+    @ParameterizedTest
+    @MethodSource("endepunktOgHttpMetodeProvider")
+    fun `Avvis kall til oppgaver som gjelder adressebeskyttelse STRENGT_FORTROLIG_UTLAND dersom saksbehandler ikke har riktig adgruppe`(
+        endepunkt: String,
+        httpMethod: HttpMethod,
+    ) {
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         val oppgaveMediatorMock =
@@ -170,20 +169,8 @@ class OppgaveApiTilgangskontrollTest {
                 gyldigSaksbehandlerToken(
                     tilgangskontrollAdGrupper - Configuration.strengtFortroligUtlandADGruppe,
                 )
-            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
-                autentisert(token = saksbehandlerTokenUtenFortrolig)
-            }.status shouldBe HttpStatusCode.Forbidden
-
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak-arena") {
+            client.request("/oppgave/${testOppgave.oppgaveId}$endepunkt") {
+                method = httpMethod
                 autentisert(token = saksbehandlerTokenUtenFortrolig)
             }.status shouldBe HttpStatusCode.Forbidden
         }
