@@ -6,6 +6,8 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hubba
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -62,7 +64,7 @@ class OppgaveMediator(
             null -> {
                 logger.warn {
                     "Fant ikke oppgave for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
-                        "Gjør derfor ingenting med hendelsen"
+                            "Gjør derfor ingenting med hendelsen"
                 }
             }
 
@@ -97,13 +99,9 @@ class OppgaveMediator(
         }
     }
 
-    data class GodkjentBehandlingHendelse(val oppgaveId: UUID, val meldingOmVedtak: String)
-
     fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
         logger.info { "Mottatt godkjent behandling hendelse for oppgave: ${godkjentBehandlingHendelse.oppgaveId}" }
     }
-
-    data class Hubba(val oppgaveId: UUID)
 
     fun ferdigstillOppgave(hubba: Hubba) {
         logger.info { "Mottatt godkjent behandling hendelse for oppgave: ${hubba.oppgaveId}" }

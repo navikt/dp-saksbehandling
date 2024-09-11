@@ -23,7 +23,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.OppgaveMediator.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.OppgaveMediator.Hubba
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
