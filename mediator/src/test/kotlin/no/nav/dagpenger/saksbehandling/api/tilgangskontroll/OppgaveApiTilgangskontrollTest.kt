@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.OppgaveMediator.Hubba
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken
@@ -189,6 +190,7 @@ class OppgaveApiTilgangskontrollTest {
                 every { it.hentOppgave(any()) } returns testOppgave
                 every { it.utsettOppgave(any()) } just Runs
                 every { it.ferdigstillOppgave(any<GodkjentBehandlingHendelse>()) } just Runs
+                every { it.ferdigstillOppgave(any<Hubba>()) } just Runs
             }
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
@@ -247,9 +249,10 @@ class OppgaveApiTilgangskontrollTest {
         } just runs
 
         withOppgaveApi(oppgaveMediatorMock, mockk<PDLKlient>()) {
-            client.put("/oppgave/${testOppgaveForEgenAnsatt.oppgaveId}/legg-tilbake") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
+            client.put("/oppgave/${testOppgaveForEgenAnsatt.oppgaveId}/legg-tilbake") { autentisert() }
+                .also { response ->
+                    response.status shouldBe HttpStatusCode.NoContent
+                }
         }
     }
 }

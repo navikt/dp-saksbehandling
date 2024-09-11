@@ -28,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.OppgaveMediator.Hubba
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
@@ -56,6 +57,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppgaveApiTest {
+    val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
+
     @Test
     fun `GET på oppgaver uten query parameters`() {
         val iMorgen = LocalDate.now().plusDays(1)
@@ -233,7 +236,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
-        val godkjentBehandlingHendelse = GodkjentBehandlingHendelse(oppgave.oppgaveId)
+        val godkjentBehandlingHendelse = GodkjentBehandlingHendelse(oppgave.oppgaveId, meldingOmVedtakHtml)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
@@ -243,7 +246,6 @@ class OppgaveApiTest {
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
 
-        val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
             client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
                 autentisert()
@@ -281,7 +283,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne ferdigstille en oppgave med melding om vedtak i Arena`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
-        val godkjentBehandlingHendelse = GodkjentBehandlingHendelse(oppgave.oppgaveId)
+        val godkjentBehandlingHendelse = Hubba(oppgave.oppgaveId)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs

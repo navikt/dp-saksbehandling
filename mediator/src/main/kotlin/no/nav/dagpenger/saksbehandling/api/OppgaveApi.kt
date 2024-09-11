@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.OppgaveMediator.Hubba
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
@@ -171,7 +172,12 @@ internal fun Application.oppgaveApi(
                             try {
                                 if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
                                 val oppgaveId = call.finnUUID("oppgaveId")
-                                oppgaveMediator.ferdigstillOppgave(GodkjentBehandlingHendelse(oppgaveId))
+                                oppgaveMediator.ferdigstillOppgave(
+                                    GodkjentBehandlingHendelse(
+                                        meldingOmVedtak = meldingOmVedtak,
+                                        oppgaveId = oppgaveId,
+                                    ),
+                                )
                                 call.respond(HttpStatusCode.NoContent)
                             } catch (e: UgyldigContentType) {
                                 val feilmelding = "Feil ved mottak av melding om vedtak: ${e.message}"
@@ -185,7 +191,7 @@ internal fun Application.oppgaveApi(
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller)
                             val oppgaveId = call.finnUUID("oppgaveId")
-                            oppgaveMediator.ferdigstillOppgave(GodkjentBehandlingHendelse(oppgaveId))
+                            oppgaveMediator.ferdigstillOppgave(Hubba(oppgaveId))
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }

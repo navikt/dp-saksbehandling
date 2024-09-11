@@ -97,10 +97,16 @@ class OppgaveMediator(
         }
     }
 
-    data class GodkjentBehandlingHendelse(val oppgaveId: UUID)
+    data class GodkjentBehandlingHendelse(val oppgaveId: UUID, val meldingOmVedtak: String)
 
     fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
         logger.info { "Mottatt godkjent behandling hendelse for oppgave: ${godkjentBehandlingHendelse.oppgaveId}" }
+    }
+
+    data class Hubba(val oppgaveId: UUID)
+
+    fun ferdigstillOppgave(hubba: Hubba) {
+        logger.info { "Mottatt godkjent behandling hendelse for oppgave: ${hubba.oppgaveId}" }
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
