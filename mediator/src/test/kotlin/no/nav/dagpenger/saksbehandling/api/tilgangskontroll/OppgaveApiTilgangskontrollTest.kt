@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.ContentType.Application
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -76,7 +77,9 @@ class OppgaveApiTilgangskontrollTest {
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
                 .status shouldBe HttpStatusCode.Forbidden
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") { autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang) }
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+                autentisert(token = saksbehandlerTokenUtenEgneAnsatteTilgang)
+            }
                 .status shouldBe HttpStatusCode.Forbidden
         }
     }
@@ -105,8 +108,9 @@ class OppgaveApiTilgangskontrollTest {
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
                 .status shouldBe HttpStatusCode.Forbidden
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+                autentisert(token = saksbehandlerTokenUtenFortrolig)
+            }.status shouldBe HttpStatusCode.Forbidden
         }
     }
 
@@ -134,8 +138,9 @@ class OppgaveApiTilgangskontrollTest {
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
                 .status shouldBe HttpStatusCode.Forbidden
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+                autentisert(token = saksbehandlerTokenUtenFortrolig)
+            }.status shouldBe HttpStatusCode.Forbidden
         }
     }
 
@@ -163,8 +168,9 @@ class OppgaveApiTilgangskontrollTest {
             client.put("/oppgave/${testOppgave.oppgaveId}/utsett") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
                 .status shouldBe HttpStatusCode.Forbidden
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") { autentisert(token = saksbehandlerTokenUtenFortrolig) }
-                .status shouldBe HttpStatusCode.Forbidden
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+                autentisert(token = saksbehandlerTokenUtenFortrolig)
+            }.status shouldBe HttpStatusCode.Forbidden
         }
     }
 
@@ -207,8 +213,9 @@ class OppgaveApiTilgangskontrollTest {
             }
                 .status shouldBe HttpStatusCode.NoContent
 
-            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill") {
+            client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
                 autentisert(token = gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken())
+                contentType(ContentType.Text.Html)
             }.status shouldBe HttpStatusCode.NoContent
         }
     }

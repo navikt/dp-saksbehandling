@@ -164,7 +164,24 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
-                    route("ferdigstill") {
+                    route("ferdigstill/melding-om-vedtak") {
+                        put {
+                            oppgaveTilgangskontroll(tilgangskontroller)
+                            val meldingOmVedtak = call.receiveText()
+                            try {
+                                if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
+                                val oppgaveId = call.finnUUID("oppgaveId")
+                                oppgaveMediator.ferdigstillOppgave(GodkjentBehandlingHendelse(oppgaveId))
+                                call.respond(HttpStatusCode.NoContent)
+                            } catch (e: UgyldigContentType) {
+                                val feilmelding = "Feil ved mottak av melding om vedtak: ${e.message}"
+                                logger.error(e) { feilmelding }
+                                sikkerlogger.error(e) { "$feilmelding for $meldingOmVedtak" }
+                                call.respond(HttpStatusCode.UnsupportedMediaType)
+                            }
+                        }
+                    }
+                    route("ferdigstill/melding-om-vedtak-arena") {
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller)
                             val meldingOmVedtak = call.receiveText()
