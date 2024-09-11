@@ -104,9 +104,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-  /oppgave/{oppgaveId}/ferdigstill:
+  /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak:
     put:
-      summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending hvis brev inngår i request
+      summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending.
       parameters:
         - in: path
           name: oppgaveId
@@ -115,8 +115,7 @@ paths:
             type: string
             format: uuid
       requestBody:
-        description: Hvis melding om vedtak ikke er i request body, så lager Arena melding om vedtak.
-        required: false
+        required: true
         content:
           text/html:
             schema:
@@ -133,6 +132,25 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
         '415':
           description: Unsupported Media Type - Innholdstypen må være text/html
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+  /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak-arena:
+    put:
+      summary: Ferdigstill en Oppgave ved å la arena lage melding om vedtak.
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Oppgaven er ferdig behandlet og utsending av melding om vedtak håndteres i Arena
+        '404':
+          description: Oppgaven ble ikke funnet
           content:
             application/problem+json:
               schema:
