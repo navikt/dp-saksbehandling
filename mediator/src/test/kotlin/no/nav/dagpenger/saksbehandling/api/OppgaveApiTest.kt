@@ -260,6 +260,25 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Ferdigstilling av en oppgave feiler dersom content type ikke er HTML `() {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.personSkjermesSomEgneAnsatte(any()) } returns false
+                every { it.adresseGraderingForPerson(any()) } returns UGRADERT
+            }
+        val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
+        withOppgaveApi(oppgaveMediatorMock, mockk()) {
+            client.put("/oppgave/${UUIDv7.ny()}/ferdigstill/melding-om-vedtak") {
+                autentisert()
+                setBody(meldingOmVedtakHtml)
+                contentType(ContentType.Text.Plain)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.UnsupportedMediaType
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne ferdigstille en oppgave med melding om vedtak i Arena`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
         val godkjentBehandlingHendelse = GodkjentBehandlingHendelse(oppgave.oppgaveId)
