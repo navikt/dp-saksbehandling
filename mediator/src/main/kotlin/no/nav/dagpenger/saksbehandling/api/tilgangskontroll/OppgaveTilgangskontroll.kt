@@ -3,8 +3,6 @@ package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.util.pipeline.PipelineContext
 import mu.KotlinLogging
@@ -38,11 +36,13 @@ suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangs
         call.respond(HttpStatusCode.BadRequest, "Manglende oppgaveId")
         finish()
     }
-    val saksbehandler = call.principal<JWTPrincipal>()?.saksbehandler
-    if (saksbehandler == null) {
-        call.respond(HttpStatusCode.BadRequest, "Manglende saksbehandler")
-        finish()
-    }
+    val saksbehandler =
+        runCatching {
+            call.saksbehandler()
+        }.onFailure {
+            call.respond(HttpStatusCode.BadRequest, "Manglende saksbehandler")
+            finish()
+        }.getOrNull()
 
     if (oppgaveId != null && saksbehandler != null) {
         val feilendeValidering =

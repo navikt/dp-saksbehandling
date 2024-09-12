@@ -9,15 +9,19 @@ import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.request.ApplicationRequest
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
 
-internal val JWTPrincipal.navIdent get(): String = requireNavIdent(this)
-internal val JWTPrincipal.saksbehandler
-    get(): Saksbehandler {
-        val grupper = this.payload.claims["groups"]?.asList(String::class.java)?.toSet() ?: setOf()
-        return Saksbehandler(
-            navIdent = this.navIdent,
-            grupper = grupper,
+internal fun ApplicationCall.saksbehandler(): Saksbehandler {
+    return requireNotNull(this.authentication.principal<JWTPrincipal>()) {
+        "Ikke autentisert"
+    }.let {
+        Saksbehandler(
+            navIdent = it.navIdent,
+            grupper = it.payload.claims["groups"]?.asList(String::class.java)?.toSet() ?: setOf(),
+            token = this.request.jwt(),
         )
     }
+}
+
+internal val JWTPrincipal.navIdent get(): String = requireNavIdent(this)
 
 private fun requireNavIdent(credential: JWTPayloadHolder): String =
     requireNotNull(credential.payload.claims["NAVident"]?.asString()) { "Token må inneholde 'NAVident' claim" }

@@ -6,8 +6,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.contentType
 import io.ktor.server.request.receive
@@ -105,7 +103,7 @@ internal fun Application.oppgaveApi(
                 }
                 route("neste") {
                     put {
-                        val saksbehandler = requireNotNull(call.principal<JWTPrincipal>()?.saksbehandler)
+                        val saksbehandler = call.saksbehandler()
                         val dto = call.receive<NesteOppgaveDTO>()
 
                         val søkefilter =
