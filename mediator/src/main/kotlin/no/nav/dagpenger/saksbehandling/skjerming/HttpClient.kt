@@ -15,7 +15,6 @@ fun createHttpClient(
     engine: HttpClientEngine,
 ) = HttpClient(engine) {
     expectSuccess = true
-
     install(PrometheusMetricsPlugin) {
         this.baseName = "dp_saksbehandling_skjerming_http_klient"
         this.registry = collectorRegistry
