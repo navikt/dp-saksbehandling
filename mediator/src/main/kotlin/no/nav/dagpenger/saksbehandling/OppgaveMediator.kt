@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 
 private val logger = KotlinLogging.logger {}
 
@@ -22,6 +23,7 @@ class OppgaveMediator(
     private val repository: OppgaveRepository,
     private val skjermingKlient: SkjermingKlient,
     private val pdlKlient: PDLKlient,
+    private val utsendingMediator: UtsendingMediator,
 ) : OppgaveRepository by repository {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
@@ -101,7 +103,11 @@ class OppgaveMediator(
     fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
         repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
             // behandlingClient.godkjennBehandling(godkjentBehandlingHendelse.behandlingId)
-            // utsendingMediator.opprettUtsending(oppgaveId, brev, ident)
+            utsendingMediator.opprettUtsending(
+                oppgave.oppgaveId,
+                godkjentBehandlingHendelse.meldingOmVedtak,
+                oppgave.ident,
+            )
             oppgave.ferdigstill(godkjentBehandlingHendelse)
             repository.lagre(oppgave)
         }

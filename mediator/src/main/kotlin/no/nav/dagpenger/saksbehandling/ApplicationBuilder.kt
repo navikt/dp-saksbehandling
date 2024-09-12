@@ -52,8 +52,14 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.journalpostTokenProvider,
         )
 
-    private val oppgaveMediator = OppgaveMediator(repository = oppgaveRepository, skjermingKlient = skjermingKlient, pdlKlient = pdlKlient)
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
+    private val oppgaveMediator =
+        OppgaveMediator(
+            repository = oppgaveRepository,
+            skjermingKlient = skjermingKlient,
+            pdlKlient = pdlKlient,
+            utsendingMediator = utsendingMediator,
+        )
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
 

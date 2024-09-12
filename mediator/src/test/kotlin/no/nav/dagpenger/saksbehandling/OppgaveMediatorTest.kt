@@ -28,6 +28,8 @@ import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -65,7 +67,7 @@ class OppgaveMediatorTest {
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
         withMigratedDb { datasource ->
             val repo = PostgresOppgaveRepository(datasource)
-            val oppgaveMediator = OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock)
+            val oppgaveMediator = OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock, mockk())
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =
@@ -85,7 +87,7 @@ class OppgaveMediatorTest {
             val testEmneknagger = setOf("a", "b", "c")
 
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock, pdlKlientMock)
+                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock, pdlKlientMock, mockk())
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
             AvklaringIkkeRelevantMottak(testRapid, oppgaveMediator)
@@ -128,7 +130,7 @@ class OppgaveMediatorTest {
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock, pdlKlientMock)
+                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock, pdlKlientMock, mockk())
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
             VedtakFattetMottak(testRapid, oppgaveMediator)
@@ -192,10 +194,16 @@ class OppgaveMediatorTest {
     }
 
     @Test
-    fun `Livssyklus for oppgave ferdigstilles med brev fra saksbehandler`() {
+    fun `Livssyklus for oppgave ferdigstilles med melding om vedtak fra saksbehandler`() {
         withMigratedDb { datasource ->
+            val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock, pdlKlientMock)
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    utsendingMediator = utsendingMediator,
+                )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
 
@@ -253,6 +261,11 @@ class OppgaveMediatorTest {
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+
+            val utsending = utsendingMediator.hent(ferdigbehandletOppgave.oppgaveId)
+            utsending.brev() shouldBe meldingOmVedtak
+            utsending.oppgaveId shouldBe ferdigbehandletOppgave.oppgaveId
+            utsending.ident shouldBe ferdigbehandletOppgave.ident
         }
     }
 
@@ -264,6 +277,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     skjermingKlient = skjermingKlientMock,
                     pdlKlient = pdlKlientMock,
+                    utsendingMediator = mockk(),
                 )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
@@ -311,6 +325,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     skjermingKlient = skjermingKlientMock,
                     pdlKlient = pdlKlientMock,
+                    utsendingMediator = mockk(),
                 )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)

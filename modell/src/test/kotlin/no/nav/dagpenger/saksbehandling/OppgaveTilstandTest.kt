@@ -105,7 +105,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå til FERDIG_BEHANDLET fra UNDER_BEHANDLING`() {
+    fun `Skal gå til FERDIG_BEHANDLET fra UNDER_BEHANDLING vha GodkjentBehandlingHendelse`() {
         val oppgave = lagOppgave(type = UNDER_BEHANDLING, saksbehandlerIdent = "HuggaBugga")
 
         oppgave.ferdigstill(
