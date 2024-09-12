@@ -57,6 +57,8 @@ spec:
       value: {{skjerming.scope}}
     - name: JOURNALPOSTID_API_SCOOPE
       value: {{ journalpostid.scope }}
+    - name: DP_BEHANDLING_API_SCOPE
+      value: {{ dp-behandling.scope }}
   azure:
     application:
       enabled: true
@@ -83,6 +85,8 @@ spec:
         - application: skjermede-personer-pip
           namespace: nom
         - application: dp-oppslag-journalpost-id
+          namespace: teamdagpenger
+        - application: dp-behandling
           namespace: teamdagpenger
       external:
         - host: {{pdl.host}}

@@ -30,4 +30,7 @@ skjerming:
   url: "http://skjermede-personer-pip.nom/skjermet"
   scope: "api://prod-gcp.nom.skjermede-personer-pip/.default"
 
+dp-behandling:
+  scope: "api://prod-gcp.teamdagpenger.dp-behandling/.default"
+
 wonderwalled: true
