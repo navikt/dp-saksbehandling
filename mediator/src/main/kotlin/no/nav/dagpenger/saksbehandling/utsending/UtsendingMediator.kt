@@ -6,9 +6,9 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendel
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.RapidsConnection
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -20,10 +20,18 @@ class UtsendingMediator(private val repository: UtsendingRepository) {
         this.rapidsConnection = rapidsConnection
     }
 
-    fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
-        val utsending = repository.hentEllerOpprettUtsending(vedtaksbrevHendelse.oppgaveId)
-        utsending.mottaBrev(vedtaksbrevHendelse)
-        lagreOgPubliserBehov(utsending)
+    fun opprettUtsending(
+        oppgaveId: UUID,
+        brev: String,
+        ident: String,
+    ) {
+        val utsending =
+            Utsending(
+                oppgaveId = oppgaveId,
+                ident = ident,
+                brev = brev,
+            )
+        repository.lagre(utsending)
     }
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {

@@ -29,7 +29,6 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
-import no.nav.dagpenger.saksbehandling.utsending.utsendingApi
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -53,7 +52,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.journalpostTokenProvider,
         )
 
-    private val oppgaveMediator = OppgaveMediator(oppgaveRepository, skjermingKlient, pdlKlient)
+    private val oppgaveMediator = OppgaveMediator(repository = oppgaveRepository, skjermingKlient = skjermingKlient, pdlKlient = pdlKlient)
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
@@ -63,7 +62,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             .withKtorModule {
                 this.apiConfig()
                 this.oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
-                this.utsendingApi(utsendingMediator)
                 this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
                 this.install(KafkaStreamsPlugin) {
                     kafkaStreams =

@@ -15,6 +15,7 @@ class PostgresUtsendingRepositoryTest {
         withMigratedDb { ds ->
 
             val oppgave = lagreOppgave(ds)
+            val brev = "vedtaksbrev.html"
             val sak = Sak("id", "fagsystem")
 
             val repository = PostgresUtsendingRepository(ds)
@@ -22,6 +23,7 @@ class PostgresUtsendingRepositoryTest {
             val utsending =
                 Utsending(
                     oppgaveId = oppgave.oppgaveId,
+                    brev = brev,
                     sak = sak,
                     ident = oppgave.ident,
                     distribusjonId = distribusjonId,

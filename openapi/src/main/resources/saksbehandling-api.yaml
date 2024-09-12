@@ -283,38 +283,6 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-  /utsending/{oppgaveId}/send-brev:
-    post:
-      summary: Mottar brev som HTML for utsending
-      parameters:
-        - in: path
-          name: oppgaveId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          text/html:
-            schema:
-              type: string
-              description: Brevet i HTML-format
-      responses:
-        '202':
-          description: Mottatt brev
-        '404':
-          description: Oppgaven ble ikke funnet
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-        '415':
-          description: Unsupported Media Type - Innholdstypen må være text/html
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
   /statistikk:
     get:
       summary: Hent statistikk

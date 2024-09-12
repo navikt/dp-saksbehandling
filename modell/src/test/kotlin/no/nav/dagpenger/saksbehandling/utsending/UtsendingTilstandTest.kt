@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendel
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import org.junit.jupiter.api.Test
 
 class UtsendingTilstandTest {
@@ -20,12 +19,8 @@ class UtsendingTilstandTest {
 
     @Test
     fun `Lovlige tilstandsendringer`() {
-        val utsending = Utsending(oppgaveId = oppgaveId, ident = ident)
-        utsending.brev() shouldBe null
-        utsending.tilstand() shouldBe Utsending.Opprettet
-
-        utsending.mottaBrev(VedtaksbrevHendelse(oppgaveId, brev = "Dette er et vedtaksbrev"))
-        utsending.brev() shouldBe "Dette er et vedtaksbrev"
+        val meldingOmVedtak = "<html><body>Dette er et vedtaksbrev</body></html>"
+        val utsending = Utsending(oppgaveId = oppgaveId, ident = ident, brev = meldingOmVedtak)
         utsending.tilstand() shouldBe Utsending.VenterPåVedtak
 
         utsending.startUtsending(
@@ -61,7 +56,7 @@ class UtsendingTilstandTest {
 
     @Test
     fun `Ugyldig tilstandsendring`() {
-        val utsending = Utsending(oppgaveId = oppgaveId, ident = ident)
+        val utsending = Utsending(oppgaveId = oppgaveId, ident = ident, brev = "html")
 
         shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
             utsending.mottaJournalførtKvittering(JournalførtHendelse(oppgaveId, journalpostId = "123456"))

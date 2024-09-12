@@ -8,8 +8,6 @@ interface UtsendingRepository {
 
     fun hent(oppgaveId: UUID): Utsending
 
-    fun hentEllerOpprettUtsending(oppgaveId: UUID): Utsending
-
     fun finnUtsendingFor(oppgaveId: UUID): Utsending?
 }
 

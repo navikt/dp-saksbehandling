@@ -9,7 +9,6 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendel
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -19,13 +18,13 @@ data class Utsending(
     val oppgaveId: UUID,
     val ident: String,
     private var sak: Sak? = null,
-    private var brev: String? = null,
+    private val brev: String,
     private var pdfUrn: URN? = null,
     private var journalpostId: String? = null,
     private var distribusjonId: String? = null,
-    private var tilstand: Tilstand = Opprettet,
+    private var tilstand: Tilstand = VenterPåVedtak,
 ) {
-    fun brev(): String? = brev
+    fun brev(): String = brev
 
     fun pdfUrn(): URN? = pdfUrn
 
@@ -50,7 +49,7 @@ data class Utsending(
             oppgaveId: UUID,
             ident: String,
             tilstand: Tilstand,
-            brev: String?,
+            brev: String,
             pdfUrn: String?,
             journalpostId: String?,
             distribusjonId: String?,
@@ -74,11 +73,6 @@ data class Utsending(
         tilstand.mottaStartUtsendingHendelse(this, startUtsendingHendelse)
     }
 
-    fun mottaBrev(vedtaksbrevHendelse: VedtaksbrevHendelse) {
-        this.brev = vedtaksbrevHendelse.brev
-        tilstand.mottaBrev(this, vedtaksbrevHendelse)
-    }
-
     fun mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse: ArkiverbartBrevHendelse) {
         pdfUrn = arkiverbartBrevHendelse.pdfUrn
         tilstand.mottaUrnTilPdfAvBrev(this, arkiverbartBrevHendelse)
@@ -90,18 +84,6 @@ data class Utsending(
 
     fun mottaDistribuertKvittering(distribuertHendelse: DistribuertHendelse) {
         tilstand.mottaDistribuertKvittering(this, distribuertHendelse)
-    }
-
-    object Opprettet : Tilstand {
-        override val type = Tilstand.Type.Opprettet
-
-        override fun mottaBrev(
-            utsending: Utsending,
-            vedtaksbrevHendelse: VedtaksbrevHendelse,
-        ) {
-            logger.info { "Mottok brev for oppgaveId: ${vedtaksbrevHendelse.oppgaveId}" }
-            utsending.tilstand = VenterPåVedtak
-        }
     }
 
     object VenterPåVedtak : Tilstand {
@@ -123,7 +105,7 @@ data class Utsending(
         override fun behov(utsending: Utsending) =
             ArkiverbartBrevBehov(
                 oppgaveId = utsending.oppgaveId,
-                html = utsending.brev ?: throw IllegalStateException("Brev mangler"),
+                html = utsending.brev,
                 ident = utsending.ident,
                 sak = utsending.sak ?: throw IllegalStateException("Sak mangler"),
             )
@@ -213,13 +195,6 @@ data class Utsending(
     interface Tilstand {
         fun behov(utsending: Utsending): Behov = IngenBehov
 
-        fun mottaBrev(
-            utsending: Utsending,
-            vedtaksbrevHendelse: VedtaksbrevHendelse,
-        ) {
-            throw UlovligUtsendingTilstandsendring("Kan ikke motta brev i tilstand: ${this.type}")
-        }
-
         fun mottaUrnTilPdfAvBrev(
             utsending: Utsending,
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
@@ -251,7 +226,6 @@ data class Utsending(
         val type: Type
 
         enum class Type {
-            Opprettet,
             VenterPåVedtak,
             AvventerArkiverbarVersjonAvBrev,
             AvventerJournalføring,

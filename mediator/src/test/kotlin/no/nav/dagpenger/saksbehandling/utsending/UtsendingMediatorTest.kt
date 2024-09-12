@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
-import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
@@ -16,7 +15,6 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtaksbrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -27,62 +25,6 @@ class UtsendingMediatorTest {
     private val rapid = TestRapid()
 
     @Test
-    fun `Vedtaksbrev starter utsendingen`() {
-        withMigratedDb { datasource ->
-            val oppgaveId = lagreOppgave(datasource).oppgaveId
-            val utsendingRepository = PostgresUtsendingRepository(datasource)
-            val utsendingMediator =
-                UtsendingMediator(repository = utsendingRepository).also { it.setRapidsConnection(rapid) }
-
-            val brev = "vedtaksbrev.html"
-            val vedtaksbrevHendelse = VedtaksbrevHendelse(oppgaveId, brev)
-            utsendingMediator.mottaBrev(vedtaksbrevHendelse)
-
-            val utsending = utsendingRepository.hent(oppgaveId)
-            utsending.oppgaveId shouldBe oppgaveId
-            utsending.tilstand().type shouldBe VenterPåVedtak
-            utsending.brev() shouldBe brev
-        }
-    }
-
-    @Test
-    fun `Må ha et brev før vi starter utsending`() {
-        withMigratedDb { datasource ->
-            val oppgave = lagreOppgave(datasource)
-            val oppgaveId = oppgave.oppgaveId
-            val behandlingId = oppgave.behandlingId
-
-            val utsendingRepository = PostgresUtsendingRepository(datasource)
-            val utsendingMediator =
-                UtsendingMediator(repository = utsendingRepository).also { it.setRapidsConnection(rapid) }
-            UtsendingMottak(
-                rapidsConnection = rapid,
-                utsendingMediator = utsendingMediator,
-            )
-
-            shouldNotThrowAny {
-                rapid.sendTestMessage(
-                    //language=JSON
-                    """
-                {
-                    "@event_name": "start_utsending",
-                    "oppgaveId": "$oppgaveId",
-                    "behandlingId": "$behandlingId",
-                    "ident": "12345678901",
-                    "sak": {
-                        "id": "sakId",
-                        "kontekst": "fagsystem"
-                    }
-                }
-                """,
-                )
-            }
-            rapid.inspektør.size shouldBe 0
-            utsendingRepository.finnUtsendingFor(oppgaveId) shouldBe null
-        }
-    }
-
-    @Test
     fun `livssyklus for en utsending`() {
         withMigratedDb { datasource ->
             val oppgave = lagreOppgave(datasource)
@@ -91,7 +33,9 @@ class UtsendingMediatorTest {
 
             val utsendingRepository = PostgresUtsendingRepository(datasource)
             val utsendingMediator =
-                UtsendingMediator(repository = utsendingRepository).also { it.setRapidsConnection(rapid) }
+                UtsendingMediator(repository = utsendingRepository).also {
+                    it.setRapidsConnection(rapid)
+                }
             UtsendingMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
@@ -103,11 +47,10 @@ class UtsendingMediatorTest {
             )
 
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
-            utsendingMediator.mottaBrev(VedtaksbrevHendelse(oppgaveId, htmlBrev))
+            utsendingMediator.opprettUtsending(oppgaveId, htmlBrev, oppgave.ident)
 
             var utsending = utsendingRepository.hent(oppgaveId)
             utsending.oppgaveId shouldBe oppgaveId
-
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe htmlBrev
 

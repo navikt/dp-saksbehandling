@@ -10,7 +10,6 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
-import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Opprettet
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import java.util.UUID
 import javax.sql.DataSource
@@ -58,10 +57,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         return finnUtsendingFor(oppgaveId) ?: throw UtsendingIkkeFunnet("Fant ikke utsending for oppgaveId: $oppgaveId")
     }
 
-    override fun hentEllerOpprettUtsending(oppgaveId: UUID): Utsending {
-        return finnUtsendingFor(oppgaveId) ?: oppretteUtsending(oppgaveId)
-    }
-
     override fun finnUtsendingFor(oppgaveId: UUID): Utsending? {
         sessionOf(ds).use { session ->
             return session.run(
@@ -90,7 +85,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                 ).map { row ->
                     val tilstand =
                         when (Tilstand.Type.valueOf(row.string("tilstand"))) {
-                            Opprettet -> Utsending.Opprettet
                             VenterPåVedtak -> Utsending.VenterPåVedtak
                             AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev
                             AvventerJournalføring -> Utsending.AvventerJournalføring
@@ -105,7 +99,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         oppgaveId = row.uuid("oppgave_id"),
                         ident = row.string("ident"),
                         tilstand = tilstand,
-                        brev = row.stringOrNull("brev"),
+                        brev = row.string("brev"),
                         pdfUrn = row.stringOrNull("pdf_urn"),
                         journalpostId = row.stringOrNull("journalpost_id"),
                         distribusjonId = row.stringOrNull("distribusjon_id"),
@@ -114,14 +108,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                 }.asSingle,
             )
         }
-    }
-
-    private fun oppretteUtsending(oppgaveId: UUID): Utsending {
-        return Utsending(
-            tilstand = Utsending.Opprettet,
-            oppgaveId = oppgaveId,
-            ident = hentIdentForOppgaveId(oppgaveId),
-        ).also { lagre(it) }
     }
 
     private fun hentIdentForOppgaveId(oppgaveId: UUID): String {

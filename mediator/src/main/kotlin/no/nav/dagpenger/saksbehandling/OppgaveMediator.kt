@@ -99,7 +99,12 @@ class OppgaveMediator(
     }
 
     fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
-        logger.info { "Mottatt godkjent behandling hendelse for oppgave: ${godkjentBehandlingHendelse.oppgaveId}" }
+        repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
+            // behandlingClient.godkjennBehandling(godkjentBehandlingHendelse.behandlingId)
+            // utsendingMediator.opprettUtsending(oppgaveId, brev, ident)
+            // oppgave.ferdigstill(godkjentBehandlingHendelse)
+            repository.lagre(oppgave)
+        }
     }
 
     fun ferdigstillOppgave(hubba: Hubba) {
