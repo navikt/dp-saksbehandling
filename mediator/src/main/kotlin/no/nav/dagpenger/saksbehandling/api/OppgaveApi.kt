@@ -174,6 +174,7 @@ internal fun Application.oppgaveApi(
                                     GodkjentBehandlingHendelse(
                                         meldingOmVedtak = meldingOmVedtak,
                                         oppgaveId = oppgaveId,
+                                        saksbehandlerToken = "token",
                                     ),
                                 )
                                 call.respond(HttpStatusCode.NoContent)

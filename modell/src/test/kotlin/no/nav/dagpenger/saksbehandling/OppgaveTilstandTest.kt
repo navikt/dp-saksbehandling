@@ -113,6 +113,7 @@ class OppgaveTilstandTest {
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "Melding om vedtak",
+                    saksbehandlerToken = "token",
                 ),
         )
 

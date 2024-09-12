@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -23,6 +24,7 @@ class OppgaveMediator(
     private val repository: OppgaveRepository,
     private val skjermingKlient: SkjermingKlient,
     private val pdlKlient: PDLKlient,
+    private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
 ) : OppgaveRepository by repository {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
@@ -102,7 +104,12 @@ class OppgaveMediator(
 
     fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
         repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
-            // behandlingClient.godkjennBehandling(godkjentBehandlingHendelse.behandlingId)
+
+            behandlingKlient.godkjennBehandling(
+                behandlingId = oppgave.behandlingId,
+                ident = oppgave.ident,
+                saksbehandlerToken = godkjentBehandlingHendelse.saksbehandlerToken,
+            )
             utsendingMediator.opprettUtsending(
                 oppgave.oppgaveId,
                 godkjentBehandlingHendelse.meldingOmVedtak,

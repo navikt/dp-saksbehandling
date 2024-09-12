@@ -28,6 +28,8 @@ object Configuration {
                 "GRUPPE_STRENGT_FORTROLIG" to "StrengtFortroligADGruppe",
                 "JOURNALPOSTID_API_URL" to "http://dp-oppslag-journalpost-id/v1/journalpost",
                 "JOURNALPOSTID_API_SCOOPE" to "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default",
+                "DP_BEHANDLING_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-behandling/.default",
+                "DP_BEHANDLING_API_URL" to "http://dp-behandling/behandling",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
                 "SKJERMING_TOPIC" to "nom.skjermede-personer-status-v1",
@@ -76,6 +78,17 @@ object Configuration {
             tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
             authType = azureAdConfig.clientSecret(),
         )
+    }
+
+    val dbBehandlingApiUrl by lazy { properties[Key("DP_BEHANDLING_API_URL", stringType)] }
+
+    val dpBehandlingOboExchanger: (String) -> String by lazy {
+        val scope = properties[Key("DP_BEHANDLING_API_SCOPE", stringType)]
+        { token: String ->
+            val accessToken = azureAdClient.onBehalfOf(token, scope).accessToken
+            requireNotNull(accessToken) { "Failed to get access token" }
+            accessToken
+        }
     }
 
     val kafkaStreamsConsumerId = "dp-saksbehandling-streams-consumer-v1"

@@ -3,13 +3,16 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -57,6 +60,10 @@ class OppgaveMediatorTest {
                     ),
                 )
         }
+    private val behandlingKlientMock =
+        mockk<BehandlingKlient>().also {
+            every { it.godkjennBehandling(any(), any(), any()) } returns Result.success(Unit)
+        }
     private val skjermingKlientMock =
         mockk<SkjermingKlient>(relaxed = true).also {
             coEvery { it.erSkjermetPerson(any()) } returns Result.success(false)
@@ -67,7 +74,7 @@ class OppgaveMediatorTest {
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
         withMigratedDb { datasource ->
             val repo = PostgresOppgaveRepository(datasource)
-            val oppgaveMediator = OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock, mockk())
+            val oppgaveMediator = OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock, behandlingKlientMock, mockk())
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =
@@ -87,7 +94,13 @@ class OppgaveMediatorTest {
             val testEmneknagger = setOf("a", "b", "c")
 
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock, pdlKlientMock, mockk())
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlientMock,
+                    pdlKlientMock,
+                    behandlingKlientMock,
+                    mockk(),
+                )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
             AvklaringIkkeRelevantMottak(testRapid, oppgaveMediator)
@@ -130,7 +143,13 @@ class OppgaveMediatorTest {
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
-                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock, pdlKlientMock, mockk())
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlientMock,
+                    pdlKlientMock,
+                    behandlingKlientMock,
+                    mockk(),
+                )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
             VedtakFattetMottak(testRapid, oppgaveMediator)
@@ -195,6 +214,18 @@ class OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for oppgave ferdigstilles med melding om vedtak fra saksbehandler`() {
+        val behandlingId = UUIDv7.ny()
+        val saksbehandlerToken = "token"
+        val behandlingClientMock =
+            mockk<BehandlingKlient>().also {
+                every {
+                    it.godkjennBehandling(
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.success(Unit)
+            }
         withMigratedDb { datasource ->
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
@@ -202,13 +233,13 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     skjermingKlient = skjermingKlientMock,
                     pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingClientMock,
                     utsendingMediator = utsendingMediator,
                 )
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
 
             val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
             val søknadsbehandlingOpprettetHendelse =
                 SøknadsbehandlingOpprettetHendelse(
                     søknadId = søknadId,
@@ -256,8 +287,13 @@ class OppgaveMediatorTest {
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = meldingOmVedtak,
+                    saksbehandlerToken = saksbehandlerToken,
                 ),
             )
+
+            verify(exactly = 1) {
+                behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
+            }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
@@ -277,6 +313,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     skjermingKlient = skjermingKlientMock,
                     pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
                 )
 
@@ -325,6 +362,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     skjermingKlient = skjermingKlientMock,
                     pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
                 )
 

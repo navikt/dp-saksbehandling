@@ -236,7 +236,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
-        val godkjentBehandlingHendelse = GodkjentBehandlingHendelse(oppgave.oppgaveId, meldingOmVedtakHtml)
+        val godkjentBehandlingHendelse = GodkjentBehandlingHendelse(oppgave.oppgaveId, meldingOmVedtakHtml, saksbehandlerToken = "token")
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
