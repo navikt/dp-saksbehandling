@@ -102,7 +102,7 @@ class OppgaveMediator(
         repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
             // behandlingClient.godkjennBehandling(godkjentBehandlingHendelse.behandlingId)
             // utsendingMediator.opprettUtsending(oppgaveId, brev, ident)
-            // oppgave.ferdigstill(godkjentBehandlingHendelse)
+            oppgave.ferdigstill(godkjentBehandlingHendelse)
             repository.lagre(oppgave)
         }
     }

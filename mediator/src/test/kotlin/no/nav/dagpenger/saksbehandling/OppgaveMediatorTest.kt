@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -182,6 +183,71 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     sakId = sak.id.toInt(),
+                ),
+            )
+
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+        }
+    }
+
+    @Test
+    fun `Livssyklus for oppgave ferdigstilles med brev fra saksbehandler`() {
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(repository = PostgresOppgaveRepository(datasource), skjermingKlientMock, pdlKlientMock)
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val behandlingId = UUIDv7.ny()
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                )
+
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).let { oppgaver ->
+                oppgaver.size shouldBe 1
+                oppgaver.single().behandling.hendelse shouldBe søknadsbehandlingOpprettetHendelse
+            }
+
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+
+            oppgaverKlarTilBehandling.size shouldBe 1
+            val oppgave = oppgaverKlarTilBehandling.single()
+            oppgave.behandlingId shouldBe behandlingId
+            oppgave.emneknagger shouldContainAll emneknagger
+
+            oppgaveMediator.tildelOppgave(
+                OppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    navIdent = "NAVIdent",
+                ),
+            )
+
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            tildeltOppgave.saksbehandlerIdent shouldBe "NAVIdent"
+
+            val meldingOmVedtak = "<H1>Hei</H1><p>Her er et brev</p>"
+            oppgaveMediator.ferdigstillOppgave(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = meldingOmVedtak,
                 ),
             )
 

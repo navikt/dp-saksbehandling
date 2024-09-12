@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -89,6 +90,10 @@ data class Oppgave private constructor(
 
     fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse) {
         tilstand.ferdigstill(this, vedtakFattetHendelse)
+    }
+
+    fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
+        tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
     fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
@@ -196,6 +201,13 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
             oppgave.tilstand = FerdigBehandlet
         }
@@ -314,6 +326,13 @@ data class Oppgave private constructor(
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke ferdigstille oppgave i tilstand $type for ${vedtakFattetHendelse.javaClass.simpleName}")
+        }
+
+        fun ferdigstill(
+            oppgave: Oppgave,
+            godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
+        ) {
+            ulovligTilstandsendring("Kan ikke ferdigstille oppgave i tilstand $type for ${godkjentBehandlingHendelse.javaClass.simpleName}")
         }
 
         fun fjernAnsvar(

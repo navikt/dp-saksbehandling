@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -101,6 +102,22 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
         oppgave.saksbehandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Skal gå til FERDIG_BEHANDLET fra UNDER_BEHANDLING`() {
+        val oppgave = lagOppgave(type = UNDER_BEHANDLING, saksbehandlerIdent = "HuggaBugga")
+
+        oppgave.ferdigstill(
+            godkjentBehandlingHendelse =
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "Melding om vedtak",
+                ),
+        )
+
+        oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+        oppgave.saksbehandlerIdent shouldBe "HuggaBugga"
     }
 
     @Test
