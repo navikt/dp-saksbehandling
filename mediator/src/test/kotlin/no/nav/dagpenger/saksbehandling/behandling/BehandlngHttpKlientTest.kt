@@ -7,6 +7,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpStatusCode
+import io.prometheus.client.CollectorRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
@@ -27,6 +28,7 @@ class BehandlngHttpKlientTest {
             tokenProvider = tokenProvider,
             httpClient =
                 createHttpClient(
+                    collectorRegistry = CollectorRegistry(),
                     engine =
                         MockEngine { request: HttpRequestData ->
                             requestData = request

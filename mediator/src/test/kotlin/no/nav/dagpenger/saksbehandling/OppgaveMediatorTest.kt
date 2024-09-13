@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
@@ -74,7 +75,8 @@ class OppgaveMediatorTest {
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
         withMigratedDb { datasource ->
             val repo = PostgresOppgaveRepository(datasource)
-            val oppgaveMediator = OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock, behandlingKlientMock, mockk())
+            val oppgaveMediator =
+                OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock, behandlingKlientMock, mockk())
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =
@@ -302,6 +304,78 @@ class OppgaveMediatorTest {
             utsending.brev() shouldBe meldingOmVedtak
             utsending.oppgaveId shouldBe ferdigbehandletOppgave.oppgaveId
             utsending.ident shouldBe ferdigbehandletOppgave.ident
+        }
+    }
+
+    @Test
+    fun `Livssyklus for oppgave ferdigstilles med brev håndtering i Arena`() {
+        val behandlingId = UUIDv7.ny()
+        val saksbehandlerToken = "token"
+        val behandlingClientMock =
+            mockk<BehandlingKlient>().also {
+                every {
+                    it.godkjennBehandling(
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.success(Unit)
+            }
+        withMigratedDb { datasource ->
+            val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingClientMock,
+                    utsendingMediator = utsendingMediator,
+                )
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                )
+
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+            oppgaveMediator.tildelOppgave(
+                OppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    navIdent = "NAVIdent",
+                ),
+            )
+
+            oppgaveMediator.ferdigstillOppgave(
+                GodkjennBehandlingMedBrevIArena(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandlerToken = saksbehandlerToken,
+                ),
+            )
+
+            verify(exactly = 1) {
+                behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
+            }
+
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+
+            utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId)
         }
     }
 

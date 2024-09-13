@@ -5,6 +5,7 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.accept
 import io.ktor.client.request.header
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.runBlocking
@@ -37,6 +38,7 @@ internal class BehandlngHttpKlient(
                 httpClient.post(urlString = "$dpBehandlingApiUrl/$behandlingId/godkjenn") {
                     header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                     accept(ContentType.Application.Json)
+                    setBody("""{"ident":"$ident"}""")
                 }
             }.let {}
         }.onFailure { logger.error(it) { "Kall til dp-behandling feilet ${it.message}" } }
