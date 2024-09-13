@@ -10,7 +10,7 @@ import io.ktor.http.HttpStatusCode
 import io.prometheus.client.CollectorRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
+import no.nav.dagpenger.saksbehandling.behandling.BehandlngHttpKlient.Companion.lagBehandlingHttpKlient
 import java.util.UUID
 import kotlin.test.Test
 
@@ -27,8 +27,7 @@ class BehandlngHttpKlientTest {
             dpBehandlingApiUrl = "http://localhost",
             tokenProvider = tokenProvider,
             httpClient =
-                createHttpClient(
-                    collectorRegistry = CollectorRegistry(),
+                lagBehandlingHttpKlient(
                     engine =
                         MockEngine { request: HttpRequestData ->
                             requestData = request
@@ -46,6 +45,7 @@ class BehandlngHttpKlientTest {
                                     )
                             }
                         },
+                    collectRegistry = CollectorRegistry(),
                 ),
         )
 

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.behandling
 
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.accept
 import io.ktor.client.request.header
@@ -8,6 +9,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.prometheus.client.CollectorRegistry
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
@@ -26,8 +28,21 @@ interface BehandlingKlient {
 internal class BehandlngHttpKlient(
     private val dpBehandlingApiUrl: String,
     private val tokenProvider: (String) -> String,
-    private val httpClient: HttpClient = createHttpClient(engine = CIO.create { }),
+    private val httpClient: HttpClient = lagBehandlingHttpKlient(),
 ) : BehandlingKlient {
+    companion object {
+        fun lagBehandlingHttpKlient(
+            engine: HttpClientEngine = CIO.create {},
+            collectRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+        ): HttpClient {
+            return createHttpClient(
+                engine = engine,
+                metricsBaseName = "dp_saksbehandling_behandling_http_klient",
+                collectorRegistry = collectRegistry,
+            )
+        }
+    }
+
     override fun godkjennBehandling(
         behandlingId: UUID,
         ident: String,

@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.prometheus.client.CollectorRegistry
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient.Companion.lagSkjermingHttpKlient
 import org.junit.jupiter.api.Test
 
 class SkjermingKlientTest {
@@ -25,11 +26,7 @@ class SkjermingKlientTest {
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient =
-                    createHttpClient(
-                        collectorRegistry = CollectorRegistry(),
-                        engine = mockEngine,
-                    ),
+                httpClient = lagSkjermingHttpKlient(mockEngine, CollectorRegistry()),
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
@@ -51,11 +48,7 @@ class SkjermingKlientTest {
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient =
-                    createHttpClient(
-                        collectorRegistry = CollectorRegistry(),
-                        engine = mockEngine,
-                    ),
+                httpClient = lagSkjermingHttpKlient(mockEngine, CollectorRegistry()),
             ).erSkjermetPerson("12345612345")
         }
 
@@ -72,11 +65,7 @@ class SkjermingKlientTest {
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient =
-                    createHttpClient(
-                        collectorRegistry = CollectorRegistry(),
-                        engine = mockEngine,
-                    ),
+                httpClient = lagSkjermingHttpKlient(mockEngine, CollectorRegistry()),
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
@@ -99,11 +88,7 @@ class SkjermingKlientTest {
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient =
-                    createHttpClient(
-                        collectorRegistry = CollectorRegistry(),
-                        engine = mockEngine,
-                    ),
+                httpClient = lagSkjermingHttpKlient(mockEngine, CollectorRegistry()),
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
@@ -123,11 +108,7 @@ class SkjermingKlientTest {
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient =
-                    createHttpClient(
-                        collectorRegistry = collectorRegistry,
-                        engine = mockEngine,
-                    ),
+                httpClient = lagSkjermingHttpKlient(mockEngine, collectorRegistry),
             )
         runBlocking {
             repeat(5) {

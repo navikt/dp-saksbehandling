@@ -12,11 +12,12 @@ import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 
 fun createHttpClient(
     collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+    metricsBaseName: String,
     engine: HttpClientEngine,
 ) = HttpClient(engine) {
     expectSuccess = true
     install(PrometheusMetricsPlugin) {
-        this.baseName = "dp_saksbehandling_skjerming_http_klient"
+        this.baseName = metricsBaseName
         this.registry = collectorRegistry
     }
     install(ContentNegotiation) {
