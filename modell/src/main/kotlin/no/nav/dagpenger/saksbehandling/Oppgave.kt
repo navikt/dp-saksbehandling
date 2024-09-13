@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -94,6 +95,10 @@ data class Oppgave private constructor(
 
     fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
         tilstand.ferdigstill(this, godkjentBehandlingHendelse)
+    }
+
+    fun ferdigstill(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
+        tilstand.ferdigstill(this, godkjennBehandlingMedBrevIArena)
     }
 
     fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
@@ -208,6 +213,13 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
             oppgave.tilstand = FerdigBehandlet
         }
@@ -333,6 +345,15 @@ data class Oppgave private constructor(
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke ferdigstille oppgave i tilstand $type for ${godkjentBehandlingHendelse.javaClass.simpleName}")
+        }
+
+        fun ferdigstill(
+            oppgave: Oppgave,
+            godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
+        ) {
+            ulovligTilstandsendring(
+                "Kan ikke ferdigstille oppgave i tilstand $type for ${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
+            )
         }
 
         fun fjernAnsvar(

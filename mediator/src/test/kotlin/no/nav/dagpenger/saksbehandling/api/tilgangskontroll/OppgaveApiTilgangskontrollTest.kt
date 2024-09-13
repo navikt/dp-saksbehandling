@@ -31,8 +31,8 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.mockAzure
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.Hubba
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import org.junit.jupiter.api.Test
@@ -190,7 +190,7 @@ class OppgaveApiTilgangskontrollTest {
                 every { it.hentOppgave(any()) } returns testOppgave
                 every { it.utsettOppgave(any()) } just Runs
                 every { it.ferdigstillOppgave(any<GodkjentBehandlingHendelse>()) } just Runs
-                every { it.ferdigstillOppgave(any<Hubba>()) } just Runs
+                every { it.ferdigstillOppgave(any<GodkjennBehandlingMedBrevIArena>()) } just Runs
             }
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {

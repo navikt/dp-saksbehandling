@@ -42,8 +42,8 @@ import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangsk
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.Hubba
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -170,11 +170,12 @@ internal fun Application.oppgaveApi(
                             try {
                                 if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
                                 val oppgaveId = call.finnUUID("oppgaveId")
+                                val saksbehandler = call.saksbehandler()
                                 oppgaveMediator.ferdigstillOppgave(
                                     GodkjentBehandlingHendelse(
                                         meldingOmVedtak = meldingOmVedtak,
                                         oppgaveId = oppgaveId,
-                                        saksbehandlerToken = "token",
+                                        saksbehandlerToken = saksbehandler.token,
                                     ),
                                 )
                                 call.respond(HttpStatusCode.NoContent)
@@ -189,8 +190,14 @@ internal fun Application.oppgaveApi(
                     route("ferdigstill/melding-om-vedtak-arena") {
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller)
+                            val saksbehandler = call.saksbehandler()
                             val oppgaveId = call.finnUUID("oppgaveId")
-                            oppgaveMediator.ferdigstillOppgave(Hubba(oppgaveId))
+                            oppgaveMediator.ferdigstillOppgave(
+                                GodkjennBehandlingMedBrevIArena(
+                                    oppgaveId = oppgaveId,
+                                    saksbehandlerToken = saksbehandler.token,
+                                ),
+                            )
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
