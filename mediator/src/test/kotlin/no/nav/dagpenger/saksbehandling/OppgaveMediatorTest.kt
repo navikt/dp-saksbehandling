@@ -375,7 +375,7 @@ class OppgaveMediatorTest {
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
 
-            utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId)
+            utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
         }
     }
 
