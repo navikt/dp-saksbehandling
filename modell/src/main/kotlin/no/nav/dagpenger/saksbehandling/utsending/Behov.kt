@@ -61,6 +61,7 @@ data class JournalføringBehov(
         mapOf(
             "pdfUrn" to pdfUrn.toString(),
             "ident" to ident,
+            "tittel" to "Vedtak om dagpenger",
             "sak" to
                 mapOf(
                     "id" to sak.id,

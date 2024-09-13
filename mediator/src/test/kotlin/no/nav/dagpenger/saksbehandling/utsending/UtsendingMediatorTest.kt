@@ -112,6 +112,7 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${JournalføringBehov.BEHOV_NAVN}"
                   ],
+                  "tittel" : "Vedtak om dagpenger",
                   "ident": "${oppgave.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "oppgaveId": "$oppgaveId",
