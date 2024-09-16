@@ -51,6 +51,7 @@ internal class VedtakFattetMottak(
                     sak = sak,
                 ),
             )
+            // Brukes for helautomatisk vedtak der Arena skal sende brev
             packet["meldingOmVedtakProdusent"] = "Arena"
             context.publish(packet.toJson())
         }

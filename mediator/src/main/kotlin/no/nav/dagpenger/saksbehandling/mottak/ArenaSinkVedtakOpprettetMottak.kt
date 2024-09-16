@@ -4,10 +4,12 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import java.util.UUID
 
 private val logg = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -17,7 +19,7 @@ const val VEDTAKSTATUS_IVERKSATT = "IVERK"
 class ArenaSinkVedtakOpprettetMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveRepository: OppgaveRepository,
-    private val sendStartUtsendingEvents: Boolean,
+    private val utsendingRepository: UtsendingRepository,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -56,15 +58,22 @@ class ArenaSinkVedtakOpprettetMottak(
         ) {
             logg.info("Mottok arenasink_vedtak_opprettet hendelse for behandlingId $behandlingId")
             sikkerlogg.info("Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}")
-            if (sendStartUtsendingEvents) {
-                if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
+            if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
+                if (harUtsending(oppgave.oppgaveId)) {
                     context.publish(lagStartUtsendingEvent(oppgave, sakId))
                 } else {
-                    logg.info("Vedtakstatus er $vedtakstatus. Sender ikke start_utsending event for behandlingId $behandlingId")
+                    logg.info(
+                        "Fant ingen utsending for behandlingId $behandlingId og oppgaveId: ${oppgave.oppgaveId}." +
+                            " Sender ikke start_utsending event",
+                    )
                 }
+            } else {
+                logg.info("Vedtakstatus er $vedtakstatus. Sender ikke start_utsending event for behandlingId $behandlingId")
             }
         }
     }
+
+    private fun harUtsending(oppgaveId: UUID) = utsendingRepository.finnUtsendingFor(oppgaveId) != null
 
     private fun lagStartUtsendingEvent(
         oppgave: Oppgave,

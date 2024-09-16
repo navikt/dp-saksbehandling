@@ -100,8 +100,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 ArenaSinkVedtakOpprettetMottak(
                     rapidsConnection,
                     oppgaveRepository,
-                    // vi er ikke klare til å sende ut start_utsending events enda
-                    sendStartUtsendingEvents = false,
+                    utsendingRepository,
                 )
             }
 
