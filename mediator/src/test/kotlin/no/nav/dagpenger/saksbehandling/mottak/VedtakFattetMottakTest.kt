@@ -81,7 +81,7 @@ internal class VedtakFattetMottakTest {
 
         testRapid.inspektør.size shouldBe 1
         testRapid.inspektør.message(0).apply {
-            this["@event_name"].asText() shouldBe "vedtak_fattet"
+            this["@event_name"].asText() shouldBe "vedtak_fattet_til_arena"
             this["meldingOmVedtakProdusent"].asText() shouldBe "Arena"
         }
     }
@@ -112,7 +112,7 @@ internal class VedtakFattetMottakTest {
 
         testRapid.inspektør.size shouldBe 1
         testRapid.inspektør.message(0).apply {
-            this["@event_name"].asText() shouldBe "vedtak_fattet"
+            this["@event_name"].asText() shouldBe "vedtak_fattet_til_arena"
             this["meldingOmVedtakProdusent"].asText() shouldBe "Dagpenger"
         }
     }
