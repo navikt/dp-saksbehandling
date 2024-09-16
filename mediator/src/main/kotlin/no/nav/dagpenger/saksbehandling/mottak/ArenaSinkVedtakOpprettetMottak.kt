@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -19,7 +19,7 @@ const val VEDTAKSTATUS_IVERKSATT = "IVERK"
 class ArenaSinkVedtakOpprettetMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveRepository: OppgaveRepository,
-    private val utsendingRepository: UtsendingRepository,
+    private val utsendingMediator: UtsendingMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -73,7 +73,7 @@ class ArenaSinkVedtakOpprettetMottak(
         }
     }
 
-    private fun harUtsending(oppgaveId: UUID) = utsendingRepository.finnUtsendingFor(oppgaveId) != null
+    private fun harUtsending(oppgaveId: UUID) = utsendingMediator.finnUtsendingFor(oppgaveId) != null
 
     private fun lagStartUtsendingEvent(
         oppgave: Oppgave,

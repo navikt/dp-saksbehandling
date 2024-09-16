@@ -100,7 +100,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 ArenaSinkVedtakOpprettetMottak(
                     rapidsConnection,
                     oppgaveRepository,
-                    utsendingRepository,
+                    utsendingMediator,
                 )
             }
 
