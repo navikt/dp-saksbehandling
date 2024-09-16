@@ -52,10 +52,13 @@ internal class BehandlngHttpKlient(
             runBlocking {
                 httpClient.post(urlString = "$dpBehandlingApiUrl/$behandlingId/godkjenn") {
                     header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
                     accept(ContentType.Application.Json)
-                    setBody("""{"ident":"$ident"}""")
+                    setBody(Request(ident))
                 }
             }.let {}
         }.onFailure { logger.error(it) { "Kall til dp-behandling feilet ${it.message}" } }
     }
 }
+
+private data class Request(val ident: String)

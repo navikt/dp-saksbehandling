@@ -53,7 +53,10 @@ class BehandlngHttpKlientTest {
     fun `godkjennBehandling should return success`(): Unit =
         runBlocking {
             behandlingKlient.godkjennBehandling(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
-            requireNotNull(requestData).body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
+            }
         }
 
     @Test
