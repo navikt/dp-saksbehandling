@@ -6,12 +6,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Sak
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.testPerson
-import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
@@ -29,21 +25,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
     fun `Skal ta imot arenasink_vedtak_opprettet hendelser`() {
         val utsendingRepository =
             mockk<UtsendingMediator>().also {
-                every { it.finnUtsendingFor(oppgaveId = testOppgave.oppgaveId) } returns
-                    Utsending(
-                        id = UUIDv7.ny(),
-                        oppgaveId = testOppgave.oppgaveId,
-                        ident = testPerson.ident,
-                        sak =
-                            Sak(
-                                id = sakId,
-                                kontekst = "Arena",
-                            ),
-                        brev = "electram",
-                        pdfUrn = null,
-                        journalpostId = null,
-                        distribusjonId = null,
-                    )
+                every { it.utsendingFinnesForOppgave(oppgaveId = testOppgave.oppgaveId) } returns true
             }
 
         ArenaSinkVedtakOpprettetMottak(
@@ -90,7 +72,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
         ArenaSinkVedtakOpprettetMottak(
             testRapid,
             oppgaveRepository,
-            mockk<UtsendingMediator>().also { coEvery { it.finnUtsendingFor(testOppgave.oppgaveId) } returns null },
+            mockk<UtsendingMediator>().also { coEvery { it.utsendingFinnesForOppgave(testOppgave.oppgaveId) } returns false },
         )
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
         verify(exactly = 1) {

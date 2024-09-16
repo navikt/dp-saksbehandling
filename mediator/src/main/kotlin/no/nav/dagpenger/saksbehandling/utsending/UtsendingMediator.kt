@@ -37,19 +37,9 @@ class UtsendingMediator(
     }
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
-        val utsending = repository.finnUtsendingFor(startUtsendingHendelse.oppgaveId)
-        when (utsending != null) {
-            true -> {
-                utsending.startUtsending(startUtsendingHendelse)
-                lagreOgPubliserBehov(utsending)
-            }
-
-            false ->
-                logger.info {
-                    "Fant ingen utsending for behandlingId:${startUtsendingHendelse.behandlingId}," +
-                        " oppgaveId=${startUtsendingHendelse.oppgaveId}."
-                }
-        }
+        val utsending = repository.hent(startUtsendingHendelse.oppgaveId)
+        utsending.startUtsending(startUtsendingHendelse)
+        lagreOgPubliserBehov(utsending)
     }
 
     fun mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse: ArkiverbartBrevHendelse) {

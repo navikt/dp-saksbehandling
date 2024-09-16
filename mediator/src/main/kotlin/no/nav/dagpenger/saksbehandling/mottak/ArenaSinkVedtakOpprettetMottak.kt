@@ -9,7 +9,6 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
-import java.util.UUID
 
 private val logg = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -59,7 +58,7 @@ class ArenaSinkVedtakOpprettetMottak(
             logg.info("Mottok arenasink_vedtak_opprettet hendelse for behandlingId $behandlingId")
             sikkerlogg.info("Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}")
             if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
-                if (harUtsending(oppgave.oppgaveId)) {
+                if (utsendingMediator.utsendingFinnesForOppgave(oppgave.oppgaveId)) {
                     context.publish(lagStartUtsendingEvent(oppgave, sakId))
                 } else {
                     logg.info(
@@ -72,8 +71,6 @@ class ArenaSinkVedtakOpprettetMottak(
             }
         }
     }
-
-    private fun harUtsending(oppgaveId: UUID) = utsendingMediator.finnUtsendingFor(oppgaveId) != null
 
     private fun lagStartUtsendingEvent(
         oppgave: Oppgave,
