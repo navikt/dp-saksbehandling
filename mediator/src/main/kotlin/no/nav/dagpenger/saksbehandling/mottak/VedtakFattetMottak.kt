@@ -61,11 +61,9 @@ internal class VedtakFattetMottak(
     }
 
     private fun vedtakProdusent(behandlingId: UUID): String {
-        return oppgaveMediator.hentOppgaveFor(behandlingId).let { oppgave ->
-            when (utsendingMediator.finnUtsendingFor(oppgave.oppgaveId)) {
-                null -> "Arena"
-                else -> "Dagpenger"
-            }
+        return when (utsendingMediator.utsendingFinnesForBehandling(behandlingId)) {
+            true -> "Dagpenger"
+            false -> "Arena"
         }
     }
 }

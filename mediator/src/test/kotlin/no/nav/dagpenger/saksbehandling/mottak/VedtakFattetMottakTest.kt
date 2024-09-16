@@ -49,15 +49,16 @@ internal class VedtakFattetMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
     private val utsendingMediatorMock = mockk<UtsendingMediator>()
+//    private val utsendingRepositoryMock = mockk<UtsendingRepository>(relaxed = true)
 
     init {
         VedtakFattetMottak(testRapid, oppgaveMediatorMock, utsendingMediatorMock)
     }
 
     @Test
-    fun `Skal behandle vedtak fattet hendelse`() {
+    fun `Skal behandle vedtak fattet hendelse når utsending ikke finnes`() {
         every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
-        every { utsendingMediatorMock.utsendingFinnesForOppgave(oppgaveId = oppgave.oppgaveId) } returns false
+        every { utsendingMediatorMock.utsendingFinnesForBehandling(behandlingId = oppgave.behandlingId) } returns false
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
@@ -86,9 +87,9 @@ internal class VedtakFattetMottakTest {
     }
 
     @Test
-    fun `Skal behandle vedtak fattet hendelse 2`() {
+    fun `Skal behandle vedtak fattet hendelse når utsending finnes`() {
         every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
-        every { utsendingMediatorMock.utsendingFinnesForOppgave(oppgaveId = oppgave.oppgaveId) } returns true
+        every { utsendingMediatorMock.utsendingFinnesForBehandling(behandlingId = oppgave.behandlingId) } returns true
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
