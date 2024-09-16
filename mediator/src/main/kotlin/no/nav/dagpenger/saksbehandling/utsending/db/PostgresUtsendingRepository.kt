@@ -57,6 +57,41 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         return finnUtsendingFor(oppgaveId) ?: throw UtsendingIkkeFunnet("Fant ikke utsending for oppgaveId: $oppgaveId")
     }
 
+    override fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean {
+        return sessionOf(ds).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT 1
+                        FROM utsending_v1 uts
+                        JOIN oppgave_v1 opp ON uts.oppgave_id = opp.id
+                        WHERE opp.behandling_id = :behandling_id
+                        """.trimIndent(),
+                    paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row -> row.intOrNull(1) }.asSingle,
+            ) != null
+        }
+    }
+
+    override fun utsendingFinnesForOppgave(oppgaveId: UUID): Boolean {
+        return sessionOf(ds).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT 1
+                        FROM utsending_v1
+                        WHERE oppgave_id = :oppgave_id
+                        """.trimIndent(),
+                    paramMap = mapOf("oppgave_id" to oppgaveId),
+                ).map { row -> row.intOrNull(1) }.asSingle,
+            ) != null
+        }
+    }
+
     override fun finnUtsendingFor(oppgaveId: UUID): Utsending? {
         sessionOf(ds).use { session ->
             return session.run(

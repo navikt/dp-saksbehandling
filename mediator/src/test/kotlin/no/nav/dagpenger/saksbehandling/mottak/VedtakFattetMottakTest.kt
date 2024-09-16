@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelseMedMeldingOmVedtakProdusent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -47,14 +48,16 @@ internal class VedtakFattetMottakTest {
 
     private val testRapid = TestRapid()
     private val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
+    private val utsendingMediatorMock = mockk<UtsendingMediator>()
 
     init {
-        VedtakFattetMottak(testRapid, oppgaveMediatorMock)
+        VedtakFattetMottak(testRapid, oppgaveMediatorMock, utsendingMediatorMock)
     }
 
     @Test
     fun `Skal behandle vedtak fattet hendelse`() {
         every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
+        every { utsendingMediatorMock.utsendingFinnesForOppgave(oppgaveId = oppgave.oppgaveId) } returns false
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
@@ -79,6 +82,37 @@ internal class VedtakFattetMottakTest {
         testRapid.inspektør.message(0).apply {
             this["@event_name"].asText() shouldBe "vedtak_fattet"
             this["meldingOmVedtakProdusent"].asText() shouldBe "Arena"
+        }
+    }
+
+    @Test
+    fun `Skal behandle vedtak fattet hendelse 2`() {
+        every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
+        every { utsendingMediatorMock.utsendingFinnesForOppgave(oppgaveId = oppgave.oppgaveId) } returns true
+        testRapid.sendTestMessage(
+            vedtakFattetHendelse(
+                ident = testIdent,
+                søknadId = søknadId,
+                behandlingId = behandlingId,
+                sakId = sak.id.toInt(),
+            ),
+        )
+
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = behandlingId,
+                søknadId = søknadId,
+                ident = testIdent,
+                sak = sak,
+            )
+        verify(exactly = 1) {
+            oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
+        }
+
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).apply {
+            this["@event_name"].asText() shouldBe "vedtak_fattet"
+            this["meldingOmVedtakProdusent"].asText() shouldBe "Dagpenger"
         }
     }
 

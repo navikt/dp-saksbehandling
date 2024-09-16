@@ -5,16 +5,19 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
 internal class VedtakFattetMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
+    private val utsendingMediator: UtsendingMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -52,8 +55,17 @@ internal class VedtakFattetMottak(
                 ),
             )
             // Brukes for helautomatisk vedtak der Arena skal sende brev
-            packet["meldingOmVedtakProdusent"] = "Arena"
+            packet["meldingOmVedtakProdusent"] = vedtakProdusent(behandlingId)
             context.publish(packet.toJson())
+        }
+    }
+
+    private fun vedtakProdusent(behandlingId: UUID): String {
+        return oppgaveMediator.hentOppgaveFor(behandlingId).let { oppgave ->
+            when (utsendingMediator.finnUtsendingFor(oppgave.oppgaveId)) {
+                null -> "Arena"
+                else -> "Dagpenger"
+            }
         }
     }
 }

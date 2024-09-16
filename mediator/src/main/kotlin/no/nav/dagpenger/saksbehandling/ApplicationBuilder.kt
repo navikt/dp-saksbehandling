@@ -90,7 +90,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 }
             }.build().also { rapidsConnection ->
                 utsendingMediator.setRapidsConnection(rapidsConnection)
-                VedtakFattetMottak(rapidsConnection, oppgaveMediator)
+                VedtakFattetMottak(rapidsConnection, oppgaveMediator, utsendingMediator)
                 BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, pdlKlient, skjermingKlient)
                 BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
                 ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)

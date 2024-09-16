@@ -152,9 +152,10 @@ class OppgaveMediatorTest {
                     behandlingKlientMock,
                     mockk(),
                 )
+            val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-            VedtakFattetMottak(testRapid, oppgaveMediator)
+            VedtakFattetMottak(testRapid, oppgaveMediator, utsendingMediator)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
