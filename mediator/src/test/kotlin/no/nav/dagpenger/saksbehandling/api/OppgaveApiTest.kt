@@ -234,9 +234,9 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
+    fun `Skal kunne ferdigstille en oppgave med melding om vedtak dersom saksbehandler er Kathrine`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken()
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = "G151133")
         val godkjentBehandlingHendelse =
             GodkjentBehandlingHendelse(oppgave.oppgaveId, meldingOmVedtakHtml, saksbehandlerToken = saksbehandlerToken)
         val oppgaveMediatorMock =
@@ -273,7 +273,7 @@ class OppgaveApiTest {
         val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
         withOppgaveApi(oppgaveMediatorMock, mockk()) {
             client.put("/oppgave/${UUIDv7.ny()}/ferdigstill/melding-om-vedtak") {
-                autentisert()
+                autentisert(gyldigSaksbehandlerToken(navIdent = "G151133"))
                 setBody(meldingOmVedtakHtml)
                 contentType(ContentType.Text.Plain)
             }.let { response ->
