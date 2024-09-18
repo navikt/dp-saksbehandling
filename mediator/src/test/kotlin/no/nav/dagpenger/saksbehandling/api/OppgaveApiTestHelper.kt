@@ -55,19 +55,22 @@ internal object OppgaveApiTestHelper {
         header(HttpHeaders.Authorization, "Bearer $token")
     }
 
-    fun gyldigSaksbehandlerToken(adGrupper: List<String> = emptyList()): String =
+    fun gyldigSaksbehandlerToken(
+        adGrupper: List<String> = emptyList(),
+        navIdent: String = TEST_NAV_IDENT,
+    ): String =
         mockAzure.lagTokenMedClaims(
             mapOf(
                 "groups" to listOf("SaksbehandlerADGruppe") + adGrupper,
-                "NAVident" to TEST_NAV_IDENT,
+                "NAVident" to navIdent,
             ),
         )
 
-    fun gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken(): String =
+    fun gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken(navIdent: String = TEST_NAV_IDENT): String =
         mockAzure.lagTokenMedClaims(
             mapOf(
                 "groups" to listOf("SaksbehandlerADGruppe", "EgneAnsatteADGruppe"),
-                "NAVident" to TEST_NAV_IDENT,
+                "NAVident" to navIdent,
             ),
         )
 

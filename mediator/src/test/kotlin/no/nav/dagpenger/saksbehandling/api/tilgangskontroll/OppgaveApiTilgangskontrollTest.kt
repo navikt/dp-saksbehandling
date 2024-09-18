@@ -218,7 +218,7 @@ class OppgaveApiTilgangskontrollTest {
                 .status shouldBe HttpStatusCode.NoContent
 
             client.put("/oppgave/${testOppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
-                autentisert(token = gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken())
+                autentisert(token = gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken(navIdent = "G151133"))
                 contentType(ContentType.Text.Html)
             }.status shouldBe HttpStatusCode.NoContent
 
