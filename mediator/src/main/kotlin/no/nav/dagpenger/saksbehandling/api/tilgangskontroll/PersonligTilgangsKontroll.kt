@@ -6,7 +6,7 @@ object PersonligTilgangsKontroll : OppgaveTilgangskontroll {
     override fun harTilgang(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
-    ): Boolean = saksbehandler.navIdent.uppercase() in listOf("G151133","Z994251", "Z993298", "Z994854")
+    ): Boolean = saksbehandler.navIdent.uppercase() in listOf("G151133", "Z994251", "Z993298", "Z994854")
 
     override fun feilmelding(
         oppgaveId: UUID,
