@@ -171,6 +171,7 @@ internal fun Application.oppgaveApi(
                             try {
                                 if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
                                 val oppgaveId = call.finnUUID("oppgaveId")
+                                sikkerlogger.info { "Motatt melding om vedtak for oppgave $oppgaveId: $meldingOmVedtak" }
                                 val saksbehandler = call.saksbehandler()
                                 oppgaveMediator.ferdigstillOppgave(
                                     GodkjentBehandlingHendelse(
