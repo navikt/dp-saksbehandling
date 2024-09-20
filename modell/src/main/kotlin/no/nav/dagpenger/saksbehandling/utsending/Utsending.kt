@@ -93,7 +93,10 @@ data class Utsending(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
-            logger.info { "Mottok start_utsending for oppgaveId: ${startUtsendingHendelse.oppgaveId}" }
+            logger.info {
+                "Mottok start_utsending hendelse for behandlingId ${startUtsendingHendelse.behandlingId} og" +
+                    " oppgaveId ${startUtsendingHendelse.oppgaveId}"
+            }
             utsending.tilstand = AvventerArkiverbarVersjonAvBrev
             utsending.sak = startUtsendingHendelse.sak
         }
