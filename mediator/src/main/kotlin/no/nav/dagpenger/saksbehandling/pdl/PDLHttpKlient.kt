@@ -10,7 +10,7 @@ import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpHeaders
 import io.ktor.serialization.jackson.jackson
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import no.nav.dagpenger.pdl.PDLPerson
@@ -91,7 +91,7 @@ internal class PDLHttpKlient(
 }
 
 internal fun defaultHttpClient(
-    collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+    collectorRegistry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
     engine: HttpClientEngine = CIO.create {},
 ) = HttpClient(engine) {
     expectSuccess = true

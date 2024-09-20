@@ -1,14 +1,18 @@
 package no.nav.dagpenger.saksbehandling.pdl
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondBadRequest
 import io.ktor.http.headersOf
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
+import io.prometheus.metrics.model.snapshots.CounterSnapshot
+import io.prometheus.metrics.model.snapshots.HistogramSnapshot
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.getSnapShot
 import no.nav.dagpenger.saksbehandling.helper.fileAsText
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -20,7 +24,7 @@ class PDLHttpKlientTest {
     @Test
     fun `Skal hente persondata fra PDL`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respond(
                     pdlResponse("UGRADERT"),
                     headers = headersOf("Content-Type", "application/json"),
@@ -34,7 +38,7 @@ class PDLHttpKlientTest {
                     tokenSupplier = { "token" },
                     httpClient =
                         defaultHttpClient(
-                            collectorRegistry = CollectorRegistry(),
+                            collectorRegistry = PrometheusRegistry(),
                             engine = mockEngine,
                         ),
                 ).person("12345612345").getOrThrow()
@@ -60,7 +64,7 @@ class PDLHttpKlientTest {
         forventet: Boolean,
     ) {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respond(
                     pdlResponse(gradering),
                     headers = headersOf("Content-Type", "application/json"),
@@ -75,7 +79,7 @@ class PDLHttpKlientTest {
                     tokenSupplier = { "token" },
                     httpClient =
                         defaultHttpClient(
-                            collectorRegistry = CollectorRegistry(),
+                            collectorRegistry = PrometheusRegistry(),
                             engine = mockEngine,
                         ),
                 )
@@ -88,7 +92,7 @@ class PDLHttpKlientTest {
     @Test
     fun `Skal returnere failure dersom vi ikke finner personen`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respond(
                     """{"errors": [{"message": "Fant ikke person med identifikator 12345612345"}]}""",
                     headers = headersOf("Content-Type", "application/json"),
@@ -101,7 +105,7 @@ class PDLHttpKlientTest {
                 tokenSupplier = { "token" },
                 httpClient =
                     defaultHttpClient(
-                        collectorRegistry = CollectorRegistry(),
+                        collectorRegistry = PrometheusRegistry(),
                         engine = mockEngine,
                     ),
             ).erAdressebeskyttet("12345612345").isFailure shouldBe true
@@ -111,7 +115,7 @@ class PDLHttpKlientTest {
     @Test
     fun `Skal returnere failure dersom respons fra PDL ikke er 200`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respondBadRequest()
             }
 
@@ -121,7 +125,7 @@ class PDLHttpKlientTest {
                 tokenSupplier = { "token" },
                 httpClient =
                     defaultHttpClient(
-                        collectorRegistry = CollectorRegistry(),
+                        collectorRegistry = PrometheusRegistry(),
                         engine = mockEngine,
                     ),
             ).erAdressebeskyttet("12345612345").isFailure shouldBe true
@@ -131,15 +135,15 @@ class PDLHttpKlientTest {
     @Test
     fun `PDL klienthen har metrics`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respond(
                     pdlResponse("UGRADERT"),
                     headers = headersOf("Content-Type", "application/json"),
                 )
             }
 
+        val registry = PrometheusRegistry()
         runBlocking {
-            val registry = CollectorRegistry()
             val pdlHttpKlient =
                 PDLHttpKlient(
                     url = "http://localhost:8080",
@@ -154,12 +158,15 @@ class PDLHttpKlientTest {
             repeat(5) {
                 pdlHttpKlient.person("12345612345")
             }
+            registry.getSnapShot<CounterSnapshot> {
+                it == "dp_saksbehandling_pdl_http_klient_status"
+            }.let { counterSnapshot ->
+                counterSnapshot.dataPoints.single { it.labels["status"] == "200" }.value shouldBe 5.0
+            }
 
-            registry.getSampleValue(
-                "dp_saksbehandling_pdl_http_klient_status_total",
-                listOf("status").toTypedArray(),
-                listOf("200").toTypedArray(),
-            ) shouldBe 5.0
+            shouldNotThrowAny {
+                registry.getSnapShot<HistogramSnapshot> { it == "dp_saksbehandling_pdl_http_klient_duration" }
+            }
         }
     }
 

@@ -11,7 +11,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger { }
@@ -24,12 +24,12 @@ internal class SkjermingHttpKlient(
     companion object {
         fun lagSkjermingHttpKlient(
             engine: HttpClientEngine = CIO.create {},
-            collectoRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+            registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
         ): HttpClient {
             return createHttpClient(
                 engine = engine,
                 metricsBaseName = "dp_saksbehandling_skjerming_http_klient",
-                collectorRegistry = collectoRegistry,
+                prometheusRegistry = registry,
             )
         }
     }

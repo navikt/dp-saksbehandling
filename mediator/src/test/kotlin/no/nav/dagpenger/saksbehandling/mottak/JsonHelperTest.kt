@@ -1,8 +1,8 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak.Companion.AVKLARINGER
-import no.nav.helse.rapids_rivers.JsonMessage
 import org.junit.jupiter.api.Test
 
 class JsonHelperTest {

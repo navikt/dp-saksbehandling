@@ -9,7 +9,7 @@ import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 import java.util.UUID
@@ -34,13 +34,13 @@ class JournalpostIdHttpClient(
 }
 
 fun httpClient(
-    collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+    prometheusRegistry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
     engine: HttpClientEngine = CIO.create { },
 ) = HttpClient(engine) {
     expectSuccess = true
 
     install(PrometheusMetricsPlugin) {
         this.baseName = "dp_saksbehandling_joark_http_klient"
-        this.registry = collectorRegistry
+        this.registry = prometheusRegistry
     }
 }

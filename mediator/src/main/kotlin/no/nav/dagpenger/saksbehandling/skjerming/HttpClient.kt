@@ -7,18 +7,18 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.jackson.jackson
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
 
 fun createHttpClient(
-    collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+    prometheusRegistry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
     metricsBaseName: String,
     engine: HttpClientEngine,
 ) = HttpClient(engine) {
     expectSuccess = true
     install(PrometheusMetricsPlugin) {
         this.baseName = metricsBaseName
-        this.registry = collectorRegistry
+        this.registry = prometheusRegistry
     }
     install(ContentNegotiation) {
         jackson {

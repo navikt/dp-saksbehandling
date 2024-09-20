@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     id("common")
     application
@@ -21,6 +22,7 @@ dependencies {
 
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
+    implementation("io.prometheus:prometheus-metrics-core:1.3.1")
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
@@ -42,6 +44,7 @@ dependencies {
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.bundles.postgres.test)
     testImplementation("io.ktor:ktor-client-mock:${libs.versions.ktor.get()}")
+    testImplementation(libs.rapids.and.rivers.test)
 }
 application {
     mainClass.set("no.nav.dagpenger.saksbehandling.AppKt")

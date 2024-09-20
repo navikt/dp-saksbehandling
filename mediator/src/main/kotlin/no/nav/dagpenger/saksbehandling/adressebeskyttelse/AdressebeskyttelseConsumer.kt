@@ -1,14 +1,14 @@
 package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 
-import io.prometheus.client.CollectorRegistry
-import io.prometheus.client.Counter
+import io.prometheus.metrics.core.metrics.Counter
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 
 internal class AdressebeskyttelseConsumer(
     private val repository: AdressebeskyttelseRepository,
     private val pdlKlient: PDLKlient,
-    registry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+    registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
 ) {
     private val counter: Counter = registry.lagCounter()
 
@@ -26,11 +26,10 @@ internal class AdressebeskyttelseConsumer(
         }
     }
 
-    private fun Counter.inc(status: String) = this.labels(status).inc()
+    private fun Counter.inc(status: String) = this.labelValues(status).inc()
 
-    private fun CollectorRegistry.lagCounter(): Counter =
-        Counter.build()
-            .namespace("dagpenger")
+    private fun PrometheusRegistry.lagCounter(): Counter =
+        Counter.builder()
             .name("dp_saksbehandling_adressebeskyttelse_oppdateringer")
             .labelNames("status")
             .help("Antall oppdateringer av adressebeskyttelsestatus")

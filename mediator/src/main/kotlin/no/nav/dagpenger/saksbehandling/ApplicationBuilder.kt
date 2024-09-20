@@ -1,6 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.KafkaRapid
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.ktor.server.application.install
+import io.ktor.server.engine.ApplicationEngine
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
@@ -31,7 +34,6 @@ import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
 import no.nav.helse.rapids_rivers.RapidApplication
-import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val oppgaveRepository = PostgresOppgaveRepository(PostgresDataSourceBuilder.dataSource)
@@ -70,8 +72,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
 
     private val rapidsConnection: RapidsConnection =
-        RapidApplication.Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
-            .withKtorModule {
+        RapidApplication.create(configuration) { applicationEngine: ApplicationEngine, _: KafkaRapid ->
+            with(applicationEngine.application) {
                 this.apiConfig()
                 this.oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
                 this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
@@ -88,21 +90,22 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                             )
                         }
                 }
-            }.build().also { rapidsConnection ->
-                utsendingMediator.setRapidsConnection(rapidsConnection)
-                VedtakFattetMottak(rapidsConnection, oppgaveMediator, utsendingMediator)
-                BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, pdlKlient, skjermingKlient)
-                BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
-                ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
-                UtsendingMottak(rapidsConnection, utsendingMediator)
-                UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
-                AvklaringIkkeRelevantMottak(rapidsConnection, oppgaveMediator)
-                ArenaSinkVedtakOpprettetMottak(
-                    rapidsConnection,
-                    oppgaveRepository,
-                    utsendingMediator,
-                )
             }
+        }.also { rapidsConnection ->
+            utsendingMediator.setRapidsConnection(rapidsConnection)
+            VedtakFattetMottak(rapidsConnection, oppgaveMediator, utsendingMediator)
+            BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, pdlKlient, skjermingKlient)
+            BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
+            ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
+            UtsendingMottak(rapidsConnection, utsendingMediator)
+            UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
+            AvklaringIkkeRelevantMottak(rapidsConnection, oppgaveMediator)
+            ArenaSinkVedtakOpprettetMottak(
+                rapidsConnection,
+                oppgaveRepository,
+                utsendingMediator,
+            )
+        }
 
     init {
         rapidsConnection.register(this)

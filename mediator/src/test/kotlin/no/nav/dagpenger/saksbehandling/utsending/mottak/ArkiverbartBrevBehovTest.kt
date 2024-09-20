@@ -6,7 +6,7 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import org.junit.jupiter.api.Test
-import org.postgresql.shaded.com.ongres.scram.common.bouncycastle.base64.Base64
+import java.util.Base64
 
 class ArkiverbartBrevBehovTest {
     private val oppgaveId = UUIDv7.ny()
@@ -18,7 +18,7 @@ class ArkiverbartBrevBehovTest {
         val html = "<H1>Hugga</H1><p>bubba</p>"
         val behov = ArkiverbartBrevBehov(oppgaveId, html, ident, sak)
         behov.data()["htmlBase64"].let { base64Html ->
-            Base64.decode(base64Html as String).toString(Charsets.UTF_8) shouldBe html
+            Base64.getDecoder().decode(base64Html as String).toString(Charsets.UTF_8) shouldBe html
         }
     }
 

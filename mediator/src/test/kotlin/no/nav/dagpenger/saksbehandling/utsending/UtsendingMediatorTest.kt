@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Sak
@@ -17,7 +18,6 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterP
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
-import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.Test
 import java.util.Base64
 

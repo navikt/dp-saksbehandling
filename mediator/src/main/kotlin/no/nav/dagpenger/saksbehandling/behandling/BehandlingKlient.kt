@@ -9,7 +9,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.skjerming.createHttpClient
@@ -33,12 +33,12 @@ internal class BehandlngHttpKlient(
     companion object {
         fun lagBehandlingHttpKlient(
             engine: HttpClientEngine = CIO.create {},
-            collectRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+            registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
         ): HttpClient {
             return createHttpClient(
                 engine = engine,
                 metricsBaseName = "dp_saksbehandling_behandling_http_klient",
-                collectorRegistry = collectRegistry,
+                prometheusRegistry = registry,
             )
         }
     }

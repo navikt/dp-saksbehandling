@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
@@ -30,7 +30,7 @@ internal class AdressebeskyttelseConsumerTest {
             AdressebeskyttelseConsumer(
                 repository = registry,
                 pdlKlient = pdlKlient,
-                registry = CollectorRegistry.defaultRegistry,
+                registry = PrometheusRegistry(),
             )
         adressebeskyttelseConsumer.oppdaterAdressebeskyttelseStatus(setOf("2", "1"))
 

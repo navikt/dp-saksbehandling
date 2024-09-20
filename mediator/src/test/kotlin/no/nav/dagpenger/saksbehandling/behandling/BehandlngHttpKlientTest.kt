@@ -7,7 +7,7 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.toByteArray
 import io.ktor.client.request.HttpRequestData
 import io.ktor.http.HttpStatusCode
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.behandling.BehandlngHttpKlient.Companion.lagBehandlingHttpKlient
@@ -45,7 +45,7 @@ class BehandlngHttpKlientTest {
                                     )
                             }
                         },
-                    collectRegistry = CollectorRegistry(),
+                    registry = PrometheusRegistry(),
                 ),
         )
 

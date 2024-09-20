@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.journalpostid
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.MockEngine
@@ -7,8 +8,11 @@ import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondBadRequest
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headersOf
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
+import io.prometheus.metrics.model.snapshots.CounterSnapshot
+import io.prometheus.metrics.model.snapshots.HistogramSnapshot
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -31,7 +35,7 @@ class JournalpostIdHttpClientTest {
                 tokenProvider = { "tøken" },
                 httpClient =
                     httpClient(
-                        collectorRegistry = CollectorRegistry(),
+                        prometheusRegistry = PrometheusRegistry(),
                         engine = mockEngine,
                     ),
             )
@@ -55,7 +59,7 @@ class JournalpostIdHttpClientTest {
                 tokenProvider = { "tøken" },
                 httpClient =
                     httpClient(
-                        collectorRegistry = CollectorRegistry(),
+                        prometheusRegistry = PrometheusRegistry(),
                         engine = mockEngine,
                     ),
             )
@@ -73,14 +77,14 @@ class JournalpostIdHttpClientTest {
                 respondBadRequest()
             }
 
-        val collectorRegistry = CollectorRegistry()
+        val collectorRegistry = PrometheusRegistry()
         val journalpostIdClient =
             JournalpostIdHttpClient(
                 journalpostIdApiUrl = "http://localhost:8080/$søknadId",
                 tokenProvider = { "tøken" },
                 httpClient =
                     httpClient(
-                        collectorRegistry = collectorRegistry,
+                        prometheusRegistry = collectorRegistry,
                         engine = mockEngine,
                     ),
             )
@@ -90,10 +94,14 @@ class JournalpostIdHttpClientTest {
             }
         }
 
-        collectorRegistry.getSampleValue(
-            "dp_saksbehandling_joark_http_klient_status_total",
-            listOf("status").toTypedArray(),
-            listOf("400").toTypedArray(),
-        ) shouldBe 5.0
+        collectorRegistry.getSnapShot<CounterSnapshot> {
+            it == "dp_saksbehandling_joark_http_klient_status"
+        }.let { counterSnapshot ->
+            counterSnapshot.dataPoints.single { it.labels["status"] == "400" }.value shouldBe 5.0
+        }
+
+        shouldNotThrowAny {
+            collectorRegistry.getSnapShot<HistogramSnapshot> { it == "dp_saksbehandling_joark_http_klient_duration" }
+        }
     }
 }

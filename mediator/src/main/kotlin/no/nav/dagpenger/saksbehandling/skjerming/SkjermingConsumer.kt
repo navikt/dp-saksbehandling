@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.skjerming
 
-import io.prometheus.client.CollectorRegistry
-import io.prometheus.client.Counter
+import io.prometheus.metrics.core.metrics.Counter
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger { }
@@ -9,7 +9,7 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class SkjermingConsumer(
     private val repository: SkjermingRepository,
-    registry: CollectorRegistry = CollectorRegistry.defaultRegistry,
+    registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
 ) {
     private val counter: Counter = registry.lagCounter()
 
@@ -39,12 +39,11 @@ internal class SkjermingConsumer(
         }
     }
 
-    private fun Counter.inc(status: String) = this.labels(status).inc()
+    private fun Counter.inc(status: String) = this.labelValues(status).inc()
 
-    private fun CollectorRegistry.lagCounter(): Counter =
+    private fun PrometheusRegistry.lagCounter(): Counter =
         Counter
-            .build()
-            .namespace("dagpenger")
+            .builder()
             .name("dp_saksbehandling_skjerming_oppdateringer")
             .labelNames("status")
             .help("Antall oppdateringer av skjerming status")

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.skjerming
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -7,8 +8,11 @@ import io.ktor.client.engine.mock.respondError
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
+import io.prometheus.metrics.model.snapshots.CounterSnapshot
+import io.prometheus.metrics.model.snapshots.HistogramSnapshot
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.getSnapShot
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient.Companion.lagSkjermingHttpKlient
 import org.junit.jupiter.api.Test
 
@@ -19,14 +23,14 @@ class SkjermingKlientTest {
     @Test
     fun `Skal returnere success og skjermet true`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respond("true", headers = headersOf("Content-Type", "application/json"))
             }
         val skjermingHttpKlient =
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient = lagSkjermingHttpKlient(mockEngine, CollectorRegistry()),
+                httpClient = lagSkjermingHttpKlient(mockEngine, PrometheusRegistry()),
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
@@ -48,7 +52,7 @@ class SkjermingKlientTest {
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient = lagSkjermingHttpKlient(mockEngine, CollectorRegistry()),
+                httpClient = lagSkjermingHttpKlient(mockEngine, PrometheusRegistry()),
             ).erSkjermetPerson("12345612345")
         }
 
@@ -58,14 +62,14 @@ class SkjermingKlientTest {
     @Test
     fun `Skal returnere success og skjermet false`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respond("false", headers = headersOf("Content-Type", "application/json"))
             }
         val skjermingHttpKlient =
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient = lagSkjermingHttpKlient(mockEngine, CollectorRegistry()),
+                httpClient = lagSkjermingHttpKlient(mockEngine, PrometheusRegistry()),
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
@@ -77,7 +81,7 @@ class SkjermingKlientTest {
     @Test
     fun `Skal returnere failure`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respondError(
                     status = HttpStatusCode.BadRequest,
                     content = "{}",
@@ -88,7 +92,7 @@ class SkjermingKlientTest {
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
                 tokenProvider = testTokenProvider,
-                httpClient = lagSkjermingHttpKlient(mockEngine, CollectorRegistry()),
+                httpClient = lagSkjermingHttpKlient(mockEngine, PrometheusRegistry()),
             )
         val skjermingResultat: Result<Boolean> =
             runBlocking {
@@ -100,10 +104,10 @@ class SkjermingKlientTest {
     @Test
     fun `har http klient metrikker`() {
         val mockEngine =
-            MockEngine { request ->
+            MockEngine { _ ->
                 respond("false", headers = headersOf("Content-Type", "application/json"))
             }
-        val collectorRegistry = CollectorRegistry()
+        val collectorRegistry = PrometheusRegistry()
         val skjermingHttpKlient =
             SkjermingHttpKlient(
                 skjermingApiUrl = baseUrl,
@@ -115,10 +119,15 @@ class SkjermingKlientTest {
                 skjermingHttpKlient.erSkjermetPerson("12345612345")
             }
         }
-        collectorRegistry.getSampleValue(
-            "dp_saksbehandling_skjerming_http_klient_status_total",
-            listOf("status").toTypedArray(),
-            listOf("200").toTypedArray(),
-        ) shouldBe 5.0
+
+        collectorRegistry.getSnapShot<CounterSnapshot> {
+            it == "dp_saksbehandling_skjerming_http_klient_status"
+        }.let { counterSnapshot ->
+            counterSnapshot.dataPoints.single { it.labels["status"] == "200" }.value shouldBe 5.0
+        }
+
+        shouldNotThrowAny {
+            collectorRegistry.getSnapShot<HistogramSnapshot> { it == "dp_saksbehandling_skjerming_http_klient_duration" }
+        }
     }
 }
