@@ -32,6 +32,7 @@ class OppgaveFristUtgåttJobTest {
                     tilstand = PaaVent,
                     utsattTil = iDag,
                     saksbehandlerIdent = saksbehandlerIdent,
+                    emneknagger = setOf("Tidligere utsatt"),
                 )
 
             val oppgave3 =

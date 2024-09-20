@@ -82,12 +82,15 @@ private fun TransactionalSession.leggPåUtsattTidligereEmneknagg(utgåtteOppgave
         //language=PostgreSQL
         statement =
             """
-            INSERT INTO emneknagg_v1 (oppgave_id, emneknagg)
-            VALUES (?, 'Tidligere utsatt')
+            INSERT INTO emneknagg_v1
+                (oppgave_id, emneknagg) 
+            VALUES
+                (:oppgave_id, 'Tidligere utsatt')
+            ON CONFLICT ON CONSTRAINT emneknagg_oppgave_unique DO NOTHING
             """.trimIndent(),
         params = utgåtteOppgaver,
     ).also {
-        logger.info { "emneknagger oppdatert: ${it.sum()}" }
+        logger.info { "Emneknagger oppdatert: ${it.sum()}" }
     }
 }
 
