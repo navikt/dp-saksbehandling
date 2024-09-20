@@ -9,13 +9,13 @@ import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 
-private val logger = KotlinLogging.logger {}
-
 internal class AvklaringIkkeRelevantMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
+        private val logger = KotlinLogging.logger {}
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "avklaring_lukket") }
             validate { it.requireKey("ident", "kode", "behandlingId") }
@@ -40,13 +40,14 @@ internal class AvklaringIkkeRelevantMottak(
             "behandlingId" to "$behandlingId",
             "avklaringId" to avklaringId,
         ) {
+            logger.info { "Mottok avklaring_lukket hendelse for behandlingId=$behandlingId og avklaringId=$avklaringId" }
             val hendelse =
                 IkkeRelevantAvklaringHendelse(
                     ident = ident,
                     behandlingId = behandlingId,
                     ikkeRelevantEmneknagg = ikkeRelevantEmneknagg,
                 )
-            logger.info { "Mottok hendelse om ikke relevant avklaring $hendelse" }
+            sikkerlogg.info { "Mottok avklaring_lukket hendelse: $hendelse" }
             oppgaveMediator.fjernEmneknagg(hendelse)
         }
     }

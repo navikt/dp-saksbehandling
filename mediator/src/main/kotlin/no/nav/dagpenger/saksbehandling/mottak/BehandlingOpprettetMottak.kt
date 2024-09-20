@@ -42,7 +42,7 @@ internal class BehandlingOpprettetMottak(
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            logger.info { "Mottok behandling opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+            logger.info { "Mottok behandling_opprettet hendelse for søknadId $søknadId og behandlingId $behandlingId" }
 
             val erAdresseBeskyttetPerson =
                 runBlocking {
@@ -76,7 +76,7 @@ internal class BehandlingOpprettetMottak(
                             ),
                     ).toJson(),
                 )
-                logger.info { "Avbryt behandling med id: $behandlingId" }
+                logger.info { "Publiserte avbryt_behandling hendelse for behandlingId $behandlingId og søknadId $søknadId" }
             }
         }
     }
@@ -85,6 +85,6 @@ internal class BehandlingOpprettetMottak(
         problems: MessageProblems,
         context: MessageContext,
     ) {
-        logger.error { "Forstod ikke behandling opprettet hendelse. \n $problems" }
+        logger.error { "Forstod ikke behandling_opprettet hendelse. \n $problems" }
     }
 }

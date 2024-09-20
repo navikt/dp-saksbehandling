@@ -15,6 +15,7 @@ internal class ForslagTilVedtakMottak(
 ) : River.PacketListener {
     companion object {
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+        private val logger = KotlinLogging.logger {}
 
         const val AVKLARINGER = "avklaringer"
 
@@ -39,6 +40,7 @@ internal class ForslagTilVedtakMottak(
         val emneknagger = packet.emneknagger()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+            logger.info { "Mottok forslag_til_vedtak hendelse for søknadId $søknadId og behandlingId $behandlingId" }
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
@@ -46,7 +48,7 @@ internal class ForslagTilVedtakMottak(
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 )
-            sikkerlogg.info { "Mottok hendelse om forslag til vedtak $forslagTilVedtakHendelse" }
+            sikkerlogg.info { "Mottok forslag_til_vedtak hendelse: $forslagTilVedtakHendelse" }
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
     }

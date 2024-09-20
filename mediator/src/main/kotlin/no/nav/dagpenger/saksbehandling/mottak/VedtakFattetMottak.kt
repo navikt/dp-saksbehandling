@@ -43,7 +43,7 @@ internal class VedtakFattetMottak(
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info {
-                "Mottok vedtak fattet hendelse for søknadId $søknadId og behandlingId $behandlingId. " +
+                "Mottok vedtak_fattet hendelse for søknadId $søknadId og behandlingId $behandlingId. " +
                     "Automatisk behandlet: $automatiskBehandlet"
             }
             oppgaveMediator.ferdigstillOppgave(
@@ -57,6 +57,9 @@ internal class VedtakFattetMottak(
             packet["@event_name"] = "vedtak_fattet_til_arena"
             packet["meldingOmVedtakProdusent"] = vedtakProdusent(behandlingId)
             context.publish(packet.toJson())
+            logger.info {
+                "Publiserte vedtak_fattet_til_arena hendelse for søknadId $søknadId og behandlingId $behandlingId"
+            }
         }
     }
 

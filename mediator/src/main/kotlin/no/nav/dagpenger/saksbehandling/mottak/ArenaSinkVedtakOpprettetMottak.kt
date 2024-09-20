@@ -60,6 +60,9 @@ class ArenaSinkVedtakOpprettetMottak(
             if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
                 if (utsendingMediator.utsendingFinnesForOppgave(oppgave.oppgaveId)) {
                     context.publish(lagStartUtsendingEvent(oppgave, sakId))
+                    logg.info {
+                        "Publiserte start_utsending hendelse for behandlingId $behandlingId og oppgaveId ${oppgave.oppgaveId}"
+                    }
                 } else {
                     logg.info(
                         "Fant ingen utsending for behandlingId $behandlingId og oppgaveId: ${oppgave.oppgaveId}." +
@@ -67,7 +70,7 @@ class ArenaSinkVedtakOpprettetMottak(
                     )
                 }
             } else {
-                logg.info("Vedtakstatus er $vedtakstatus. Sender ikke start_utsending event for behandlingId $behandlingId")
+                logg.info("Vedtakstatus fra Arena er $vedtakstatus. Sender ikke start_utsending event for behandlingId $behandlingId")
             }
         }
     }
