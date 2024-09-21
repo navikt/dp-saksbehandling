@@ -19,7 +19,7 @@ object Configuration {
                 "RAPID_APP_NAME" to APP_NAME,
                 "KAFKA_CONSUMER_GROUP_ID" to "dp-saksbehandling-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
-                "KAFKA_RESET_POLICY" to "latest",
+                "KAFKA_RESET_POLICY" to "LATEST",
                 "GRUPPE_EGNE_ANSATTE" to "EgneAnsatteADGruppe",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
                 "GRUPPE_BESLUTTER" to "BeslutterADGruppe",
