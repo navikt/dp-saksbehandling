@@ -88,6 +88,8 @@ spec:
           namespace: teamdagpenger
         - application: dp-behandling
           namespace: teamdagpenger
+        - application: norg2
+          namespace: org
       external:
         - host: {{pdl.host}}
   gcp:
