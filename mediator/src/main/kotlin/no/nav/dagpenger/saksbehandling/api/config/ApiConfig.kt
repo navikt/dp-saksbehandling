@@ -23,7 +23,6 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
-import org.slf4j.event.Level
 import java.net.URI
 import java.time.format.DateTimeParseException
 
@@ -40,7 +39,6 @@ fun Application.apiConfig() {
                 "metrics",
             ).contains(call.request.document())
         }
-        level = Level.DEBUG
         format { call ->
             val status = call.response.status()?.value ?: "Unhandled"
             val method = call.request.httpMethod.value
