@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 
 internal class AdressebeskyttelseConsumer(
@@ -19,7 +20,7 @@ internal class AdressebeskyttelseConsumer(
                     pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
                 }
 
-            adresseBeskyttelseGradering.let { gradering ->
+            adresseBeskyttelseGradering.let { gradering: AdressebeskyttelseGradering ->
                 repository.oppdaterAdressebeskyttetStatus(ident, gradering)
                 counter.inc("$gradering")
             }

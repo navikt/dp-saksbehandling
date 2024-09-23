@@ -1,13 +1,16 @@
 package no.nav.dagpenger.saksbehandling.adressebeskyttelse
 
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import io.prometheus.metrics.model.snapshots.CounterSnapshot
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.getSnapShot
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import org.junit.jupiter.api.Test
@@ -16,7 +19,7 @@ import java.time.LocalDate
 internal class AdressebeskyttelseConsumerTest {
     @Test
     fun `test oppdaterAdressebeskyttelseStatus`() {
-        val registry =
+        val repository =
             mockk<AdressebeskyttelseRepository>(relaxed = true).also {
                 every { it.eksistererIDPsystem(setOf("1", "2")) } returns setOf("1", "2")
             }
@@ -26,19 +29,25 @@ internal class AdressebeskyttelseConsumerTest {
                 io.mockk.coEvery { pdlKlient.person("2") } returns testPersonResultat("2", UGRADERT)
             }
 
+        val registry = PrometheusRegistry()
         val adressebeskyttelseConsumer =
             AdressebeskyttelseConsumer(
-                repository = registry,
+                repository = repository,
                 pdlKlient = pdlKlient,
-                registry = PrometheusRegistry(),
+                registry = registry,
             )
         adressebeskyttelseConsumer.oppdaterAdressebeskyttelseStatus(setOf("2", "1"))
 
         verify(exactly = 1) {
-            registry.oppdaterAdressebeskyttetStatus("1", STRENGT_FORTROLIG)
+            repository.oppdaterAdressebeskyttetStatus("1", STRENGT_FORTROLIG)
         }
         verify(exactly = 1) {
-            registry.oppdaterAdressebeskyttetStatus("2", UGRADERT)
+            repository.oppdaterAdressebeskyttetStatus("2", UGRADERT)
+        }
+
+        registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_adressebeskyttelse_oppdateringer" }.let { snapshot ->
+            snapshot.dataPoints.single { it.labels["status"] == STRENGT_FORTROLIG.name }.value shouldBe 1.0
+            snapshot.dataPoints.single { it.labels["status"] == UGRADERT.name }.value shouldBe 1.0
         }
     }
 
