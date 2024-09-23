@@ -39,7 +39,6 @@ import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.PersonligTilgangsKontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
@@ -166,7 +165,7 @@ internal fun Application.oppgaveApi(
                     }
                     route("ferdigstill/melding-om-vedtak") {
                         put {
-                            oppgaveTilgangskontroll(tilgangskontroller + PersonligTilgangsKontroll)
+                            oppgaveTilgangskontroll(tilgangskontroller)
                             val meldingOmVedtak = call.receiveText()
                             try {
                                 if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
