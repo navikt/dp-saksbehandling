@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import de.slub.urn.URN
+import io.prometheus.metrics.core.metrics.Counter
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -44,6 +46,13 @@ data class Utsending(
     }
 
     companion object {
+        private val counter =
+            Counter.builder()
+                .name("dp_saksbehandling_utsending_vedtaksbrev")
+                .labelNames("type")
+                .help("Antall vedtaksbrev sendt ut av type")
+                .register(PrometheusRegistry.defaultRegistry)
+
         fun rehydrer(
             id: UUID,
             oppgaveId: UUID,
@@ -84,6 +93,7 @@ data class Utsending(
 
     fun mottaDistribuertKvittering(distribuertHendelse: DistribuertHendelse) {
         tilstand.mottaDistribuertKvittering(this, distribuertHendelse)
+        counter.labelValues("avslagMinsteinntekt").inc()
     }
 
     object VenterPåVedtak : Tilstand {
