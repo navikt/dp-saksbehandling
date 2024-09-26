@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
@@ -295,6 +296,38 @@ class OppgaveTilstandTest {
             }
         }
     }
+
+    @Test
+    fun `Skal gå fra tilstand UNDER_KONTROLL til FERDIG_BEHANDLET`() {
+        val beslutterIdent = "Z080808"
+        val oppgave = lagOppgave(UNDER_KONTROLL, beslutterIdent)
+
+        oppgave.ferdigstill(
+            godkjentBehandlingHendelse =
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "Melding om vedtak",
+                    saksbehandlerToken = "token",
+                ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
+        oppgave.saksbehandlerIdent shouldBe beslutterIdent
+
+        val oppgave2 = lagOppgave(UNDER_KONTROLL, beslutterIdent)
+
+        oppgave2.ferdigstill(
+            godkjennBehandlingMedBrevIArena =
+                GodkjennBehandlingMedBrevIArena(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandlerToken = "økøk",
+                ),
+        )
+
+        oppgave2.tilstand() shouldBe Oppgave.FerdigBehandlet
+        oppgave2.saksbehandlerIdent shouldBe beslutterIdent
+    }
+
 
     private val behandling =
         Behandling(

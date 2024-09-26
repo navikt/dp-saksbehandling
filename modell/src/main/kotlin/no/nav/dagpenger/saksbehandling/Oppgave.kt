@@ -307,6 +307,20 @@ data class Oppgave private constructor(
 
     object UnderKontroll : Tilstand {
         override val type: Type = UNDER_KONTROLL
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
+        ) {
+            oppgave.tilstand = FerdigBehandlet
+        }
     }
 
     interface Tilstand {
