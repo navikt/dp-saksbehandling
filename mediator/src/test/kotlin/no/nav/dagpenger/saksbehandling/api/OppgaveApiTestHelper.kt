@@ -22,7 +22,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -105,6 +107,7 @@ internal object OppgaveApiTestHelper {
                     FERDIG_BEHANDLET -> FerdigBehandlet
                     PAA_VENT -> PaaVent
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
+                    UNDER_KONTROLL -> UnderKontroll
                 },
             behandling = behandling,
             utsattTil = utsattTil,

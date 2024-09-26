@@ -22,6 +22,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -249,6 +251,21 @@ class OppgaveTilstandTest {
         oppgave.saksbehandlerIdent shouldBe null
     }
 
+    @ParameterizedTest
+    @EnumSource(Type::class)
+    fun `Ulovlige tilstandsendringer til KLAR_TIL_KONTROLL`(tilstandstype: Type) {
+        val saksbehandlerIdent = "Z080808"
+        val oppgave = lagOppgave(type = tilstandstype, saksbehandlerIdent)
+
+        if (tilstandstype != UNDER_BEHANDLING) {
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.gjørKlarTilKontroll(
+                    TilKontrollHendelse(),
+                )
+            }
+        }
+    }
+
     @Test
     fun `Skal gå fra tilstand KLAR_TIL_KONTROLL til UNDER_KONTROLL`() {
         val beslutterIdent = "Z080808"
@@ -262,6 +279,21 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll
         oppgave.saksbehandlerIdent shouldBe beslutterIdent
+    }
+
+    @ParameterizedTest
+    @EnumSource(Type::class)
+    fun `Ulovlige tilstandsendringer til UNDER_KONTROLL`(tilstandstype: Type) {
+        val oppgave = lagOppgave(type = tilstandstype, "hubba")
+        if (tilstandstype != KLAR_TIL_KONTROLL) {
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.tildelTotrinnskontroll(
+                    ToTrinnskontrollHendelse(
+                        beslutterIdent = "hubba",
+                    ),
+                )
+            }
+        }
     }
 
     private val behandling =
