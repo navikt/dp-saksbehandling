@@ -12,11 +12,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
@@ -247,6 +249,21 @@ class OppgaveTilstandTest {
         oppgave.saksbehandlerIdent shouldBe null
     }
 
+    @Test
+    fun `Skal gå fra tilstand KLAR_TIL_KONTROLL til UNDER_KONTROLL`() {
+        val beslutterIdent = "Z080808"
+        val oppgave = lagOppgave(KLAR_TIL_KONTROLL, null)
+
+        oppgave.tildelTotrinnskontroll(
+            ToTrinnskontrollHendelse(
+                beslutterIdent = beslutterIdent,
+            ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.saksbehandlerIdent shouldBe beslutterIdent
+    }
+
     private val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
@@ -272,6 +289,7 @@ class OppgaveTilstandTest {
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
                 PAA_VENT -> Oppgave.PaaVent
                 KLAR_TIL_KONTROLL -> Oppgave.KlarTilKontroll
+                UNDER_KONTROLL -> Oppgave.UnderKontroll
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),

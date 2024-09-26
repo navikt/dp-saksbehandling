@@ -8,11 +8,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
@@ -117,6 +119,10 @@ data class Oppgave private constructor(
 
     fun gjørKlarTilKontroll(tilKontrollHendelse: TilKontrollHendelse) {
         tilstand.gjørKlarTilKontroll(this, tilKontrollHendelse)
+    }
+
+    fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
+        tilstand.tildelTotrinnskontroll(this, toTrinnskontrollHendelse)
     }
 
     object Opprettet : Tilstand {
@@ -289,6 +295,18 @@ data class Oppgave private constructor(
 
     object KlarTilKontroll : Tilstand {
         override val type: Type = KLAR_TIL_KONTROLL
+
+        override fun tildelTotrinnskontroll(
+            oppgave: Oppgave,
+            toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
+        ) {
+            oppgave.tilstand = UnderKontroll
+            oppgave.saksbehandlerIdent = toTrinnskontrollHendelse.beslutterIdent
+        }
+    }
+
+    object UnderKontroll : Tilstand {
+        override val type: Type = UNDER_KONTROLL
     }
 
     interface Tilstand {
@@ -311,6 +329,7 @@ data class Oppgave private constructor(
                     FERDIG_BEHANDLET -> FerdigBehandlet
                     PAA_VENT -> PaaVent
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
+                    UNDER_KONTROLL -> UnderKontroll
                 }
 
             fun fra(type: String) =
@@ -329,6 +348,7 @@ data class Oppgave private constructor(
             FERDIG_BEHANDLET,
             PAA_VENT,
             KLAR_TIL_KONTROLL,
+            UNDER_KONTROLL,
             ;
 
             companion object {
@@ -402,6 +422,13 @@ data class Oppgave private constructor(
             tilKontrollHendelse: TilKontrollHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type")
+        }
+
+        fun tildelTotrinnskontroll(
+            oppgave: Oppgave,
+            toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
+        ) {
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om å tildele totrinnskontroll i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(message: String): Nothing {
