@@ -328,6 +328,23 @@ class OppgaveTilstandTest {
         oppgave2.saksbehandlerIdent shouldBe beslutterIdent
     }
 
+    @Test
+    fun `Skal gå fra tilstand UNDER_KONTROLL til UNDER_BEHANDLING`() {
+        val beslutterIdent = "Z080808"
+        val saksbehandlerIdent = "Z080809"
+        val oppgave = lagOppgave(UNDER_KONTROLL, beslutterIdent)
+
+        oppgave.sendTilbakeFraKontroll(
+            oppgaveAnsvarHendelse =
+                OppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    navIdent = saksbehandlerIdent,
+                ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+    }
 
     private val behandling =
         Behandling(

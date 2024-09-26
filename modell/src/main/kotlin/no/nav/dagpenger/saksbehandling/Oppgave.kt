@@ -125,6 +125,10 @@ data class Oppgave private constructor(
         tilstand.tildelTotrinnskontroll(this, toTrinnskontrollHendelse)
     }
 
+    fun sendTilbakeFraKontroll(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+        tilstand.sendTilbakeFraKontroll(this, oppgaveAnsvarHendelse)
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -321,6 +325,14 @@ data class Oppgave private constructor(
         ) {
             oppgave.tilstand = FerdigBehandlet
         }
+
+        override fun sendTilbakeFraKontroll(
+            oppgave: Oppgave,
+            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+        ) {
+            oppgave.tilstand = UnderBehandling
+            oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
+        }
     }
 
     interface Tilstand {
@@ -443,6 +455,13 @@ data class Oppgave private constructor(
             toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å tildele totrinnskontroll i tilstand $type")
+        }
+
+        fun sendTilbakeFraKontroll(
+            oppgave: Oppgave,
+            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+        ) {
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(message: String): Nothing {
