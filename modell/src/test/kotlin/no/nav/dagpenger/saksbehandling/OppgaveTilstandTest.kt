@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -15,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
@@ -232,6 +234,19 @@ class OppgaveTilstandTest {
         oppgave.saksbehandlerIdent shouldBe null
     }
 
+    @Test
+    fun `Skal gå fra tilstand UNDER_BEHANDLING til KLAR_TIL_KONTROLL`() {
+        val saksbehandlerIdent = "Z080808"
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+
+        oppgave.gjørKlarTilKontroll(
+            TilKontrollHendelse(),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
+        oppgave.saksbehandlerIdent shouldBe null
+    }
+
     private val behandling =
         Behandling(
             behandlingId = UUIDv7.ny(),
@@ -256,6 +271,7 @@ class OppgaveTilstandTest {
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
                 PAA_VENT -> Oppgave.PaaVent
+                KLAR_TIL_KONTROLL -> Oppgave.KlarTilKontroll
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
