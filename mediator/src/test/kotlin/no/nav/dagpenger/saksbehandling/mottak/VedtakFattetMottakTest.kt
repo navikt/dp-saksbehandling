@@ -132,4 +132,19 @@ internal class VedtakFattetMottakTest {
             oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>())
         }
     }
+
+    @Test
+    fun `Leser ny versjon av vedtak_fattet innhold`() {
+        every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
+        every { utsendingMediatorMock.utsendingFinnesForBehandling(any()) } returns true
+        val vedtakFattetFil = "/vedtak_fattet.json"
+        val vedtakFattet = this.javaClass.getResource(vedtakFattetFil)?.readText() ?: throw AssertionError("Fant ikke fil $vedtakFattetFil")
+        testRapid.sendTestMessage(vedtakFattet)
+
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).apply {
+            this["@event_name"].asText() shouldBe "vedtak_fattet_til_arena"
+            this["meldingOmVedtakProdusent"].asText() shouldBe "Dagpenger"
+        }
+    }
 }
