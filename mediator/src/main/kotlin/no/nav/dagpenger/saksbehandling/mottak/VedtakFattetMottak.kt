@@ -22,7 +22,7 @@ internal class VedtakFattetMottak(
     companion object {
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "vedtak_fattet") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId", "fagsakId", "automatisk") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId", "fagsakId") }
             validate { it.rejectKey("meldingOmVedtakProdusent") }
         }
     }
@@ -39,12 +39,10 @@ internal class VedtakFattetMottak(
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
         val sak = packet.sak()
-        val automatiskBehandlet = packet["automatisk"].asBoolean()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info {
-                "Mottok vedtak_fattet hendelse for søknadId $søknadId og behandlingId $behandlingId. " +
-                    "Automatisk behandlet: $automatiskBehandlet"
+                "Mottok vedtak_fattet hendelse for søknadId $søknadId og behandlingId $behandlingId. "
             }
             oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
@@ -63,12 +61,11 @@ internal class VedtakFattetMottak(
         }
     }
 
-    private fun vedtakProdusent(behandlingId: UUID): String {
-        return when (utsendingMediator.utsendingFinnesForBehandling(behandlingId)) {
+    private fun vedtakProdusent(behandlingId: UUID): String =
+        when (utsendingMediator.utsendingFinnesForBehandling(behandlingId)) {
             true -> "Dagpenger"
             false -> "Arena"
         }
-    }
 }
 
 private fun JsonMessage.sak(): Sak = Sak(id = this["fagsakId"].asText())

@@ -21,7 +21,6 @@ internal fun vedtakFattetHendelse(
       "søknadId": "$søknadId",
       "behandlingId": "$behandlingId",
       "ident": "$ident",
-      "automatisk": true,
       "fagsakId": $sakId
     }"""
 }
@@ -40,7 +39,6 @@ internal fun vedtakFattetHendelseMedMeldingOmVedtakProdusent(
       "behandlingId": "$behandlingId",
       "ident": "$ident",
       "fagsakId": $sakId,
-      "automatisk": true
     }"""
 }
 
