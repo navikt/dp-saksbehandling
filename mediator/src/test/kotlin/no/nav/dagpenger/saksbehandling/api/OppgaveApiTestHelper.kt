@@ -13,9 +13,12 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -100,7 +103,8 @@ internal object OppgaveApiTestHelper {
                     KLAR_TIL_BEHANDLING -> KlarTilBehandling
                     UNDER_BEHANDLING -> UnderBehandling
                     FERDIG_BEHANDLET -> FerdigBehandlet
-                    PAA_VENT -> TODO()
+                    PAA_VENT -> PaaVent
+                    KLAR_TIL_KONTROLL -> KlarTilKontroll
                 },
             behandling = behandling,
             utsattTil = utsattTil,

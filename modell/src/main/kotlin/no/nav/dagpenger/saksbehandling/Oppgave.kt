@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -11,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
@@ -113,6 +115,10 @@ data class Oppgave private constructor(
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
+    fun gjørKlarTilKontroll(tilKontrollHendelse: TilKontrollHendelse) {
+        tilstand.gjørKlarTilKontroll(this, tilKontrollHendelse)
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -159,6 +165,14 @@ data class Oppgave private constructor(
 
     object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
+
+        override fun gjørKlarTilKontroll(
+            oppgave: Oppgave,
+            tilKontrollHendelse: TilKontrollHendelse,
+        ) {
+            oppgave.tilstand = KlarTilKontroll
+            oppgave.saksbehandlerIdent = null
+        }
 
         override fun fjernAnsvar(
             oppgave: Oppgave,
@@ -273,6 +287,10 @@ data class Oppgave private constructor(
         }
     }
 
+    object KlarTilKontroll : Tilstand {
+        override val type: Type = KLAR_TIL_KONTROLL
+    }
+
     interface Tilstand {
         val type: Type
 
@@ -292,6 +310,7 @@ data class Oppgave private constructor(
                     UNDER_BEHANDLING -> UnderBehandling
                     FERDIG_BEHANDLET -> FerdigBehandlet
                     PAA_VENT -> PaaVent
+                    KLAR_TIL_KONTROLL -> KlarTilKontroll
                 }
 
             fun fra(type: String) =
@@ -309,6 +328,7 @@ data class Oppgave private constructor(
             UNDER_BEHANDLING,
             FERDIG_BEHANDLET,
             PAA_VENT,
+            KLAR_TIL_KONTROLL,
             ;
 
             companion object {
@@ -375,6 +395,13 @@ data class Oppgave private constructor(
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
+        }
+
+        fun gjørKlarTilKontroll(
+            oppgave: Oppgave,
+            tilKontrollHendelse: TilKontrollHendelse,
+        ) {
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(message: String): Nothing {
