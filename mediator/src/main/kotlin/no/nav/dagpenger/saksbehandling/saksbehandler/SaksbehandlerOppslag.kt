@@ -104,10 +104,10 @@ internal class SaksbehandlerOppslagImpl(
     )
 
     private data class KontaktInformasjon(
-        val postAdresse: PostAdresse?,
+        val postadresse: PostAdresse?,
     ) {
         fun formatertPostAdresse(): String {
-            return postAdresse?.formatertPostAdresse() ?: ""
+            return postadresse?.formatertPostAdresse() ?: ""
         }
 
         data class PostAdresse(
