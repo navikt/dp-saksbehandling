@@ -34,6 +34,7 @@ skjerming:
 dp-behandling:
   scope: "api://dev-gcp.teamdagpenger.dp-behandling/.default"
 
+
 wonderwalled: true
 
 

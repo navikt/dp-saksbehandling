@@ -384,6 +384,8 @@ components:
           type: string
         saksbehandlerIdent:
           type: string
+        saksbehandler:
+          $ref: '#/components/schemas/Saksbehandler'
         person:
           $ref: '#/components/schemas/Person'
         tidspunktOpprettet:
@@ -461,6 +463,33 @@ components:
       required:
         - utsettTilDato
         - beholdOppgave
+
+    Saksbehandler:
+      type: object
+      properties:
+        ident:
+          type: string
+        fornavn:
+          type: string
+        etternavn:
+          type: string
+        enhet:
+          type: object
+          properties:
+            navn:
+              type: string
+            enhetNr:
+              type: string
+            postadresse:
+              type: string
+          required:
+            - navn
+            - enhetNr
+            - postadresse
+      required:
+        - ident
+        - fornavn
+        - etternavn
 
     Statistikk:
       type: object

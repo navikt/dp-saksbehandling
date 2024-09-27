@@ -30,6 +30,7 @@ object Configuration {
                 "JOURNALPOSTID_API_SCOOPE" to "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default",
                 "DP_BEHANDLING_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-behandling/.default",
                 "DP_BEHANDLING_API_URL" to "http://dp-behandling/behandling",
+                "NORG2_API_URL" to "http://norg2.org/norg2",
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
                 "SKJERMING_TOPIC" to "nom.skjermede-personer-status-v1",
@@ -45,6 +46,9 @@ object Configuration {
         properties.list().reversed().fold(emptyMap()) { map, pair ->
             map + pair.second
         }
+
+    val msGraphBaseUrl: String = "https://graph.microsoft.com"
+    val norg2BaseUrl: String = properties[Key("NORG2_API_URL", stringType)]
 
     val journalpostIdApiUrl: String = properties[Key("JOURNALPOSTID_API_URL", stringType)]
     val journalpostApiScope: String = properties[Key("JOURNALPOSTID_API_SCOOPE", stringType)]
@@ -89,6 +93,9 @@ object Configuration {
             requireNotNull(accessToken) { "Failed to get access token" }
             accessToken
         }
+    }
+    val entraTokenProvider: () -> String by lazy {
+        { clientCredentialsTokenProvider("https://graph.microsoft.com/.default") }
     }
 
     val kafkaStreamsConsumerId = "dp-saksbehandling-streams-consumer-v1"

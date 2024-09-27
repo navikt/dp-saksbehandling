@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
@@ -75,7 +76,12 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         RapidApplication.create(configuration) { applicationEngine: ApplicationEngine, _: KafkaRapid ->
             with(applicationEngine.application) {
                 this.apiConfig()
-                this.oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
+                this.oppgaveApi(
+                    oppgaveMediator,
+                    pdlKlient,
+                    journalpostIdClient,
+                    SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider),
+                )
                 this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
                 this.install(KafkaStreamsPlugin) {
                     kafkaStreams =

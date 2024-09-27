@@ -59,6 +59,7 @@ spec:
       value: {{ journalpostid.scope }}
     - name: DP_BEHANDLING_API_SCOPE
       value: {{ dp-behandling.scope }}
+
   azure:
     application:
       enabled: true
@@ -92,6 +93,7 @@ spec:
           namespace: org
       external:
         - host: {{pdl.host}}
+        - host: graph.microsoft.com
   gcp:
     sqlInstances:
       - collation: nb_NO.UTF8

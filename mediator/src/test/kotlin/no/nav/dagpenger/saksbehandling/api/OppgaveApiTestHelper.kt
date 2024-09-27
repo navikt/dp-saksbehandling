@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -45,12 +46,13 @@ internal object OppgaveApiTestHelper {
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         pdlKlient: PDLKlient = mockk(relaxed = true),
         journalpostIdClient: JournalpostIdClient = mockk(relaxed = true),
+        saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
             application {
                 apiConfig()
-                oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient)
+                oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient, saksbehandlerOppslag)
             }
             test()
         }

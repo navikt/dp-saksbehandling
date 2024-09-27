@@ -36,6 +36,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.api.models.SaksbehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
@@ -53,6 +54,7 @@ import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
@@ -62,12 +64,17 @@ internal fun Application.oppgaveApi(
     oppgaveMediator: OppgaveMediator,
     pdlKlient: PDLKlient,
     journalpostIdClient: JournalpostIdClient,
+    saksbehandlerOppslag: SaksbehandlerOppslag,
 ) {
     suspend fun oppgaveDTO(oppgave: Oppgave): OppgaveDTO =
         coroutineScope {
             val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
             val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
-            val oppgaveDTO = lagOppgaveDTO(oppgave, person.await(), journalpostIder.await())
+            val saksbehandlerDTO =
+                oppgave.saksbehandlerIdent?.let { saksbehandlerIdent ->
+                    async { saksbehandlerOppslag.hentSaksbehandler(saksbehandlerIdent) }
+                }
+            val oppgaveDTO = lagOppgaveDTO(oppgave, person.await(), journalpostIder.await(), saksbehandlerDTO?.await())
             oppgaveDTO
         }
     routing {
@@ -207,8 +214,7 @@ internal fun Application.oppgaveApi(
             route("behandling/{behandlingId}/oppgaveId") {
                 get {
                     val behandlingId = call.finnUUID("behandlingId")
-                    val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)
-                    when (oppgaveId) {
+                    when (val oppgaveId: UUID? = oppgaveMediator.hentOppgaveIdFor(behandlingId = behandlingId)) {
                         null -> call.respond(HttpStatusCode.NotFound)
                         else ->
                             call.respondText(
@@ -260,6 +266,7 @@ fun lagOppgaveDTO(
     oppgave: Oppgave,
     person: PDLPersonIntern,
     journalpostIder: Set<String>,
+    saksbehandlerDTO: SaksbehandlerDTO? = null,
 ): OppgaveDTO =
 
     OppgaveDTO(
@@ -296,6 +303,7 @@ fun lagOppgaveDTO(
         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
         journalpostIder = journalpostIder.toList(),
         utsattTilDato = oppgave.utsattTil(),
+        saksbehandler = saksbehandlerDTO,
     )
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
