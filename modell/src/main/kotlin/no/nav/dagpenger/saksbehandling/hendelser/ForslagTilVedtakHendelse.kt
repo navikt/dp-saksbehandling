@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
+import no.nav.dagpenger.saksbehandling.Aktør
 import java.util.UUID
 
 data class ForslagTilVedtakHendelse(
@@ -7,4 +8,5 @@ data class ForslagTilVedtakHendelse(
     val søknadId: UUID,
     val behandlingId: UUID,
     val emneknagger: Set<String> = emptySet(),
-)
+    private val aktør: Aktør
+): Hendelse(aktør)

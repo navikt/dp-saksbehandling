@@ -1,3 +1,5 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-class TilbakeTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.Aktør
+
+class TilbakeTilKontrollHendelse(aktør: Aktør) : Hendelse(aktør)

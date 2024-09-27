@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-class TilKontrollHendelse() {
+import no.nav.dagpenger.saksbehandling.Aktør
+
+class TilKontrollHendelse(aktør: Aktør) : Hendelse(aktør) {
     // todo ta med OppgaveAnsvar??? Kanskje?
 }

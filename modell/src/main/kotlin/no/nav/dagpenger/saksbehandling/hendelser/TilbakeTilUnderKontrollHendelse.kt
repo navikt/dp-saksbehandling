@@ -1,3 +1,5 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-data class TilbakeTilUnderKontrollHendelse(val beslutterIdent: String)
+import no.nav.dagpenger.saksbehandling.Aktør
+
+data class TilbakeTilUnderKontrollHendelse(val beslutterIdent: String) : Hendelse(Aktør.Beslutter(beslutterIdent))

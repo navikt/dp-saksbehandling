@@ -181,14 +181,14 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ) {
-            oppgave.tilstand = KlarTilBehandling
+             oppgave.endreTilstand(KlarTilBehandling,forslagTilVedtakHendelse)
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            oppgave.endreTilstand(FerdigBehandlet,vedtakFattetHendelse)
         }
     }
 
@@ -215,7 +215,6 @@ data class Oppgave private constructor(
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
-            oppgave.tilstand = FerdigBehandlet
         }
     }
 
@@ -226,7 +225,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             tilKontrollHendelse: TilKontrollHendelse,
         ) {
-            oppgave.tilstand = KlarTilKontroll
+            oppgave.endreTilstand(KlarTilKontroll, tilKontrollHendelse)
             oppgave.saksbehandlerIdent = null
         }
 
@@ -234,7 +233,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            oppgave.tilstand = KlarTilBehandling
+            oppgave.endreTilstand(KlarTilBehandling, oppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = null
         }
 
@@ -257,7 +256,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
-            oppgave.tilstand = PaaVent
+            oppgave.endreTilstand(PaaVent, utsettOppgaveHendelse)
             oppgave.saksbehandlerIdent =
                 when (utsettOppgaveHendelse.beholdOppgave) {
                     true -> utsettOppgaveHendelse.navIdent
@@ -277,7 +276,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
         ) {
-            oppgave.tilstand = UnderKontroll
+            oppgave.endreTilstand(UnderKontroll,tilbakeTilUnderKontrollHendelse)
             oppgave.saksbehandlerIdent = tilbakeTilUnderKontrollHendelse.beslutterIdent
         }
 
@@ -285,21 +284,21 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            oppgave.endreTilstand(FerdigBehandlet,vedtakFattetHendelse)
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            oppgave.endreTilstand(FerdigBehandlet,godkjentBehandlingHendelse)
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            oppgave.endreTilstand(FerdigBehandlet,godkjennBehandlingMedBrevIArena)
         }
     }
 
@@ -329,7 +328,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            oppgave.tilstand = UnderBehandling
+            oppgave.endreTilstand(UnderBehandling, oppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
             oppgave.utsattTil = null
         }
@@ -338,7 +337,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            oppgave.tilstand = KlarTilBehandling
+            oppgave.endreTilstand(KlarTilBehandling, oppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = null
             oppgave.utsattTil = null
         }
@@ -347,7 +346,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
         }
     }
 
@@ -370,21 +369,21 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
-            oppgave.tilstand = FerdigBehandlet
+            oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
         }
 
         override fun sendTilbakeTilUnderBehandling(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            oppgave.tilstand = UnderBehandling
+            oppgave.endreTilstand(UnderBehandling, oppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
         }
 
@@ -392,7 +391,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse,
         ) {
-            oppgave.tilstand = KlarTilKontroll
+            oppgave.endreTilstand(KlarTilKontroll, tilbakeTilKontrollHendelse)
             oppgave.saksbehandlerIdent = null
         }
     }
