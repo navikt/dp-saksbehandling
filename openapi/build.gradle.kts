@@ -32,7 +32,7 @@ ktlint {
 }
 
 dependencies {
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.18.0")
 }
 
 openApiGenerate {
