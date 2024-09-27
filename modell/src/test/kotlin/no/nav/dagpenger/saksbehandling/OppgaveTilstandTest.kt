@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -334,7 +335,7 @@ class OppgaveTilstandTest {
         val saksbehandlerIdent = "Z080809"
         val oppgave = lagOppgave(UNDER_KONTROLL, beslutterIdent)
 
-        oppgave.sendTilbakeFraKontroll(
+        oppgave.sendTilbakeTilUnderBehandling(
             oppgaveAnsvarHendelse =
                 OppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -344,6 +345,20 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+    }
+
+    @Test
+    fun `Skal gå fra tilstand UNDER_KONTROLL til KLAR_TIL_KONTROLL`() {
+        val beslutterIdent = "Z080808"
+        val oppgave = lagOppgave(UNDER_KONTROLL, beslutterIdent)
+
+        oppgave.sendTilbakeTilKlarTilKontroll(
+            tilbakeTilKontrollHendelse =
+                TilbakeTilKontrollHendelse(),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
+        oppgave.saksbehandlerIdent shouldBe null
     }
 
     private val behandling =

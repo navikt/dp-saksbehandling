@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -125,8 +126,12 @@ data class Oppgave private constructor(
         tilstand.tildelTotrinnskontroll(this, toTrinnskontrollHendelse)
     }
 
-    fun sendTilbakeFraKontroll(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        tilstand.sendTilbakeFraKontroll(this, oppgaveAnsvarHendelse)
+    fun sendTilbakeTilUnderBehandling(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
+        tilstand.sendTilbakeTilUnderBehandling(this, oppgaveAnsvarHendelse)
+    }
+
+    fun sendTilbakeTilKlarTilKontroll(tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse) {
+        tilstand.sendTilbakeTilKlarTilKontroll(this, tilbakeTilKontrollHendelse)
     }
 
     object Opprettet : Tilstand {
@@ -326,12 +331,20 @@ data class Oppgave private constructor(
             oppgave.tilstand = FerdigBehandlet
         }
 
-        override fun sendTilbakeFraKontroll(
+        override fun sendTilbakeTilUnderBehandling(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
             oppgave.tilstand = UnderBehandling
             oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
+        }
+
+        override fun sendTilbakeTilKlarTilKontroll(
+            oppgave: Oppgave,
+            tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse,
+        ) {
+            oppgave.tilstand = KlarTilKontroll
+            oppgave.saksbehandlerIdent = null
         }
     }
 
@@ -457,11 +470,18 @@ data class Oppgave private constructor(
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å tildele totrinnskontroll i tilstand $type")
         }
 
-        fun sendTilbakeFraKontroll(
+        fun sendTilbakeTilUnderBehandling(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type")
+        }
+
+        fun sendTilbakeTilKlarTilKontroll(
+            oppgave: Oppgave,
+            tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse,
+        ) {
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake til klar til kontroll i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(message: String): Nothing {
