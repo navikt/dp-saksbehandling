@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -134,6 +135,10 @@ data class Oppgave private constructor(
         tilstand.sendTilbakeTilKlarTilKontroll(this, tilbakeTilKontrollHendelse)
     }
 
+    fun sendTilbakeTilUnderKontroll(tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse) {
+        tilstand.sendTilbakeTilUnderKontroll(this, tilbakeTilUnderKontrollHendelse)
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -230,6 +235,14 @@ data class Oppgave private constructor(
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ) {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId}" }
+        }
+
+        override fun sendTilbakeTilUnderKontroll(
+            oppgave: Oppgave,
+            tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
+        ) {
+            oppgave.tilstand = UnderKontroll
+            oppgave.saksbehandlerIdent = tilbakeTilUnderKontrollHendelse.beslutterIdent
         }
 
         override fun ferdigstill(
@@ -482,6 +495,13 @@ data class Oppgave private constructor(
             tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake til klar til kontroll i tilstand $type")
+        }
+
+        fun sendTilbakeTilUnderKontroll(
+            oppgave: Oppgave,
+            tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
+        ) {
+            ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake til under kontroll i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(message: String): Nothing {

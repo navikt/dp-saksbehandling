@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -277,6 +278,20 @@ class OppgaveTilstandTest {
             ToTrinnskontrollHendelse(
                 beslutterIdent = beslutterIdent,
             ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.saksbehandlerIdent shouldBe beslutterIdent
+    }
+
+    @Test
+    fun `Skal gå fra tilstand UNDER_BEHANDLING til UNDER_KONTROLL`() {
+        val beslutterIdent = "Z080808"
+        val saksbehandlerIdent = "Z999999"
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
+
+        oppgave.sendTilbakeTilUnderKontroll(
+            TilbakeTilUnderKontrollHendelse(beslutterIdent),
         )
 
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll
