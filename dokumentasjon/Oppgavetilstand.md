@@ -1,12 +1,19 @@
 ### Tilstander i Oppgave
 
-
-### 1. Tilstander og tilstandsendringer
 ```mermaid
-graph RL
-  A["OPPRETTET"] --> B["KLAR_TIL_BEHANDLING"] --> C["UNDER_BEHANDLING"] --> D["FERDIG_BEHANDLET"]
-  C["UNDER_BEHANDLING"] --> |"Saksbehandler frasier seg oppgave"| B["KLAR_TIL_BEHANDLING"]
-  
-  A["OPPRETTET"] --> D["FERDIG_BEHANDLET"]
-  B["KLAR_TIL_BEHANDLING"] --> D["FERDIG_BEHANDLET"]
+stateDiagram-v2
+    direction LR
+
+    Opprettet --> KlarTilBehandling : oppgaveKlarTilBehandling()
+    KlarTilBehandling --> UnderBehandling : tildel()
+    UnderBehandling --> KlarTilBehandling : fjernAnsvar()
+    UnderBehandling --> KlarTilKontroll : gjørKlarTilKontroll()
+    UnderBehandling --> PaaVent : utsett()
+    UnderBehandling --> FerdigBehandlet : ferdigstill()
+    KlarTilKontroll --> UnderKontroll : tildelTotrinnskontroll()
+    UnderKontroll --> FerdigBehandlet : ferdigstill()
+    UnderKontroll --> UnderBehandling : sendTilbakeTilUnderBehandling()
+    UnderKontroll --> KlarTilKontroll : sendTilbakeTilKlarTilKontroll()
+    PaaVent --> UnderBehandling : tildel()
+    PaaVent --> KlarTilBehandling : fjernAnsvar()
 ```
