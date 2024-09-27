@@ -54,7 +54,7 @@ internal class SaksbehandlerOppslagImpl(
 
     private val histogram =
         Histogram.builder()
-            .name("dp_saksbehahandling_saksbehandler_oppslag_duration")
+            .name("dp_saksbehandling_saksbehandler_oppslag_duration")
             .help("Tid brukt på oppslag av saksbehandler")
             .register(prometheusRegistry)
 

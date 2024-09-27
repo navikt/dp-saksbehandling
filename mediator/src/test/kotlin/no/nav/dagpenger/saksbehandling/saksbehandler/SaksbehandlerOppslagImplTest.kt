@@ -92,7 +92,7 @@ class SaksbehandlerOppslagImplTest {
             val result: SaksbehandlerDTO = saksbehandlerOppslag.hentSaksbehandler(saksbehandler.ident)
             result shouldBe saksbehandler
             registry.getSnapShot<HistogramSnapshot> {
-                it == "dp_saksbehahandling_saksbehandler_oppslag_duration"
+                it == "dp_saksbehandling_saksbehandler_oppslag_duration"
             }.dataPoints.size shouldBe 1
         }
 }
