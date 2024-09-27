@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-sealed class Hendelse
+import no.nav.dagpenger.saksbehandling.Aktør
 
-data object TomHendelse : Hendelse()
+sealed class Hendelse(val utførtAv: Aktør)
+
+data object TomHendelse : Hendelse(Aktør.System.dpSaksbehandling)

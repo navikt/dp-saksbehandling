@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
@@ -30,13 +31,15 @@ data class Oppgave private constructor(
     val opprettet: LocalDateTime,
     // TODO: Bedre navn ala brukerIdent
     val ident: String,
-    var saksbehandlerIdent: String? = null,
+    var saksbehandlerIdent: String? = null, // endre navn på dette
     val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = Opprettet,
     val behandling: Behandling,
     private var utsattTil: LocalDate? = null,
 ) {
+    private val tilstandslogg = Tilstandslogg()
+
     constructor(
         oppgaveId: UUID,
         ident: String,
@@ -139,6 +142,38 @@ data class Oppgave private constructor(
         tilstand.sendTilbakeTilUnderKontroll(this, tilbakeTilUnderKontrollHendelse)
     }
 
+    private fun endreTilstand(
+        nyTilstand: Tilstand,
+        hendelse: Hendelse,
+    ) {
+        logger.info { "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} basert på hendelse: ${hendelse.javaClass.simpleName} " }
+        this.tilstand = nyTilstand
+        this.tilstandslogg.leggTil(nyTilstand, hendelse)
+    }
+
+    fun sisteSaksbehandler(): String? {
+        return tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING }?.let {
+            it.hendelse.utførtAv.let { aktør ->
+                when (aktør) {
+                    is Aktør.Saksbehandler -> aktør.navIdent
+                    else -> null
+                }
+            }
+        }
+    }
+
+    fun sisteBeslutter(): String? {
+        return tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL }?.let {
+            it.hendelse.utførtAv.let { aktør ->
+                when (aktør) {
+                    is Aktør.Saksbehandler -> aktør.navIdent
+                    is Aktør.Beslutter -> aktør.navIdent
+                    else -> null
+                }
+            }
+        }
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
@@ -164,7 +199,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
         ) {
-            oppgave.tilstand = UnderBehandling
+            oppgave.endreTilstand(UnderBehandling, oppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
         }
 
@@ -179,6 +214,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
+            oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
             oppgave.tilstand = FerdigBehandlet
         }
     }
@@ -209,7 +245,7 @@ data class Oppgave private constructor(
             if (oppgave.saksbehandlerIdent != oppgaveAnsvarHendelse.navIdent) {
                 sikkerlogg.warn {
                     "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${oppgaveAnsvarHendelse.navIdent}. " +
-                        "Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}."
+                            "Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}."
                 }
                 throw AlleredeTildeltException(
                     "Kan ikke tildele oppgave til annen saksbehandler.Oppgave er allerede tildelt.",
@@ -281,7 +317,7 @@ data class Oppgave private constructor(
             logger.warn { "Ferdigstiller allerede ferdib behandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
             sikkerlogg.warn {
                 "Ferdigstiller allerede ferdib behandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
-                    "med vedtakFattetHendelse: $vedtakFattetHendelse "
+                        "med vedtakFattetHendelse: $vedtakFattetHendelse "
             }
         }
     }
@@ -322,7 +358,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
         ) {
-            oppgave.tilstand = UnderKontroll
+            oppgave.endreTilstand(UnderKontroll, toTrinnskontrollHendelse)
             oppgave.saksbehandlerIdent = toTrinnskontrollHendelse.beslutterIdent
         }
     }

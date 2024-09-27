@@ -67,6 +67,7 @@ class OppgaveTilstandTest {
                 behandlingId = UUIDv7.ny(),
             ),
         )
+
         oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
     }
 
@@ -374,6 +375,54 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
         oppgave.saksbehandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Siste saksbehandler test`() {
+        val oppgave = lagOppgave(OPPRETTET)
+        oppgave.oppgaveKlarTilBehandling(
+            ForslagTilVedtakHendelse(
+                ident = testIdent,
+                søknadId = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+            ),
+        )
+
+        oppgave.sisteSaksbehandler() shouldBe null
+
+        val saksBehandler = "saksbehandler 1"
+        oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksBehandler))
+        oppgave.sisteSaksbehandler() shouldBe saksBehandler
+
+        oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, saksBehandler))
+        oppgave.sisteSaksbehandler() shouldBe saksBehandler
+
+        val saksBehandler2 = "saksbehandler 2"
+        oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksBehandler2))
+        oppgave.sisteSaksbehandler() shouldBe saksBehandler2
+
+        val beslutter1 = "beslutter 1"
+        oppgave.gjørKlarTilKontroll(TilKontrollHendelse())
+        oppgave.tildelTotrinnskontroll(ToTrinnskontrollHendelse(beslutterIdent = beslutter1))
+        oppgave.sisteBeslutter() shouldBe beslutter1
+
+        oppgave.sendTilbakeTilUnderBehandling(OppgaveAnsvarHendelse(oppgaveId, saksBehandler2))
+        oppgave.sisteBeslutter() shouldBe beslutter1
+
+        val beslutter2 = "beslutter 1"
+        oppgave.gjørKlarTilKontroll(TilKontrollHendelse())
+        oppgave.tildelTotrinnskontroll(ToTrinnskontrollHendelse(beslutterIdent = beslutter2))
+        oppgave.sisteBeslutter() shouldBe beslutter2
+
+        oppgave.ferdigstill(
+            godkjentBehandlingHendelse =
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "Melding om vedtak",
+                    saksbehandlerToken = "token",
+                ),
+        )
+
     }
 
     private val behandling =

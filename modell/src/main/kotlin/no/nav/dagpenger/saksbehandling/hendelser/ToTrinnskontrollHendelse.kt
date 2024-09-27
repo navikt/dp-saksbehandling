@@ -1,3 +1,5 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-data class ToTrinnskontrollHendelse(val beslutterIdent: String)
+import no.nav.dagpenger.saksbehandling.Aktør
+
+data class ToTrinnskontrollHendelse(val beslutterIdent: String) : Hendelse(Aktør.Beslutter(beslutterIdent))
