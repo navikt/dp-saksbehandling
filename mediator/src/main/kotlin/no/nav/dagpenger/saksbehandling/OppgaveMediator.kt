@@ -10,7 +10,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -78,16 +78,16 @@ class OppgaveMediator(
         }
     }
 
-    fun fristillOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId).let { oppgave ->
-            oppgave.fjernAnsvar(oppgaveAnsvarHendelse)
+    fun fristillOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
+        repository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).let { oppgave ->
+            oppgave.fjernAnsvar(settOppgaveAnsvarHendelse)
             repository.lagre(oppgave)
         }
     }
 
-    fun tildelOppgave(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse): Oppgave {
-        return repository.hentOppgave(oppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
-            oppgave.tildel(oppgaveAnsvarHendelse)
+    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave {
+        return repository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
+            oppgave.tildel(settOppgaveAnsvarHendelse)
             repository.lagre(oppgave)
         }
     }

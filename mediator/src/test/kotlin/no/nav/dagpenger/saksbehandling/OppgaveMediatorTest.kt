@@ -23,7 +23,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
@@ -195,10 +195,10 @@ class OppgaveMediatorTest {
             oppgave.emneknagger shouldContainAll emneknagger
 
             oppgaveMediator.tildelOppgave(
-                OppgaveAnsvarHendelse(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    navIdent = "NAVIdent",
-                    aktør = saksbehandler,
+                    ansvarligIdent = "NAVIdent",
+                    utførtAv = saksbehandler,
                 ),
             )
 
@@ -281,10 +281,10 @@ class OppgaveMediatorTest {
             oppgave.emneknagger shouldContainAll emneknagger
 
             oppgaveMediator.tildelOppgave(
-                OppgaveAnsvarHendelse(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    navIdent = "NAVIdent",
-                    aktør = saksbehandler,
+                    ansvarligIdent = "NAVIdent",
+                    utførtAv = saksbehandler,
                 ),
             )
 
@@ -365,10 +365,10 @@ class OppgaveMediatorTest {
 
             val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
             oppgaveMediator.tildelOppgave(
-                OppgaveAnsvarHendelse(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    navIdent = "NAVIdent",
-                    aktør = saksbehandler,
+                    ansvarligIdent = "NAVIdent",
+                    utførtAv = saksbehandler,
                 ),
             )
 
@@ -473,10 +473,10 @@ class OppgaveMediatorTest {
             val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
 
             oppgaveMediator.tildelOppgave(
-                OppgaveAnsvarHendelse(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    navIdent = "NAVIdent",
-                    aktør = saksbehandler,
+                    ansvarligIdent = "NAVIdent",
+                    utførtAv = saksbehandler,
                 ),
             )
 

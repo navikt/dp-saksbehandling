@@ -46,7 +46,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
@@ -263,12 +263,12 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendel
     )
 }
 
-private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse {
+private fun ApplicationCall.oppgaveAnsvarHendelse(): SettOppgaveAnsvarHendelse {
     val navIdent = this.navIdent()
-    return OppgaveAnsvarHendelse(
+    return SettOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        navIdent = navIdent,
-        aktør = Aktør.Saksbehandler(navIdent),
+        ansvarligIdent = navIdent,
+        utførtAv = Aktør.Saksbehandler(navIdent),
     )
 }
 

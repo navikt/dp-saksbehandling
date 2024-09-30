@@ -18,7 +18,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
@@ -41,11 +41,11 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler.navIdent)
 
         shouldNotThrow<Oppgave.AlleredeTildeltException> {
-            oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
         }
         val enAnnenSaksbehandler = Aktør.Saksbehandler("enAnnenSaksbehandler")
         shouldThrow<Oppgave.AlleredeTildeltException> {
-            oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, enAnnenSaksbehandler.navIdent, enAnnenSaksbehandler))
+            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, enAnnenSaksbehandler.navIdent, enAnnenSaksbehandler))
         }
     }
 
@@ -53,7 +53,7 @@ class OppgaveTilstandTest {
     fun `Skal ikke kunne tildele oppgave i tilstand Opprettet`() {
         val oppgave = lagOppgave(OPPRETTET)
         shouldThrow<UlovligTilstandsendringException> {
-            oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
         }
     }
 
@@ -110,7 +110,7 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(type = KLAR_TIL_BEHANDLING)
 
         shouldNotThrowAny {
-            oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+            oppgave.fjernAnsvar(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
         }
 
         oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -151,11 +151,11 @@ class OppgaveTilstandTest {
             )
         }
         shouldThrow<UlovligTilstandsendringException> {
-            oppgave.fjernAnsvar(OppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler.navIdent, saksbehandler))
+            oppgave.fjernAnsvar(SettOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler.navIdent, saksbehandler))
         }
 
         shouldThrow<UlovligTilstandsendringException> {
-            oppgave.tildel(OppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler.navIdent, saksbehandler))
+            oppgave.tildel(SettOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler.navIdent, saksbehandler))
         }
     }
 
@@ -178,7 +178,7 @@ class OppgaveTilstandTest {
         oppgave.utsattTil() shouldBe utsattTil
         oppgave.saksbehandlerIdent shouldBe null
 
-        oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+        oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
 
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.utsattTil() shouldBe null
@@ -221,10 +221,10 @@ class OppgaveTilstandTest {
         )
 
         oppgave.fjernAnsvar(
-            OppgaveAnsvarHendelse(
+            SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                navIdent = saksbehandler.navIdent,
-                aktør = saksbehandler,
+                ansvarligIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
             ),
         )
 
@@ -238,10 +238,10 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(KLAR_TIL_BEHANDLING, saksbehandler.navIdent)
 
         oppgave.fjernAnsvar(
-            OppgaveAnsvarHendelse(
+            SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                navIdent = saksbehandler.navIdent,
-                aktør = saksbehandler,
+                ansvarligIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
             ),
         )
 
@@ -277,17 +277,18 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra tilstand KLAR_TIL_KONTROLL til UNDER_KONTROLL`() {
-        val beslutterIdent = "Z080808"
+        val beslutter = Aktør.Beslutter("beslutterIdent")
         val oppgave = lagOppgave(KLAR_TIL_KONTROLL, null)
 
         oppgave.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
-                beslutterIdent = beslutterIdent,
+                ansvarligIdent = beslutter.navIdent,
+                utførtAv = beslutter,
             ),
         )
 
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll
-        oppgave.saksbehandlerIdent shouldBe beslutterIdent
+        oppgave.saksbehandlerIdent shouldBe beslutter.navIdent
     }
 
     @Test
@@ -307,12 +308,14 @@ class OppgaveTilstandTest {
     @ParameterizedTest
     @EnumSource(Type::class)
     fun `Ulovlige tilstandsendringer til UNDER_KONTROLL`(tilstandstype: Type) {
-        val oppgave = lagOppgave(type = tilstandstype, "hubba")
+        val beslutter = Aktør.Beslutter("beslutterIdent")
+        val oppgave = lagOppgave(type = tilstandstype, beslutter.navIdent)
         if (tilstandstype != KLAR_TIL_KONTROLL) {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.tildelTotrinnskontroll(
                     ToTrinnskontrollHendelse(
-                        beslutterIdent = "hubba",
+                        ansvarligIdent = beslutter.navIdent,
+                        utførtAv = beslutter,
                     ),
                 )
             }
@@ -359,11 +362,11 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(UNDER_KONTROLL, beslutter.navIdent)
 
         oppgave.sendTilbakeTilUnderBehandling(
-            oppgaveAnsvarHendelse =
-                OppgaveAnsvarHendelse(
+            settOppgaveAnsvarHendelse =
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    navIdent = saksbehandlerIdent,
-                    aktør = beslutter,
+                    ansvarligIdent = saksbehandlerIdent,
+                    utførtAv = beslutter,
                 ),
         )
 
@@ -399,32 +402,42 @@ class OppgaveTilstandTest {
 
         oppgave.sisteSaksbehandler() shouldBe null
 
-        val saksbehandlerAktør1 = Aktør.Saksbehandler("saksbehandler 1")
-        oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerAktør1.navIdent, saksbehandlerAktør1))
-        oppgave.sisteSaksbehandler() shouldBe saksbehandlerAktør1.navIdent
+        val saksbehandler1 = Aktør.Saksbehandler("saksbehandler 1")
+        oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler1.navIdent, saksbehandler1))
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
 
-        oppgave.fjernAnsvar(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerAktør1.navIdent, saksbehandlerAktør1))
-        oppgave.sisteSaksbehandler() shouldBe saksbehandlerAktør1.navIdent
+        oppgave.fjernAnsvar(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler1.navIdent, saksbehandler1))
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
 
-        val saksbehandlerAktør2 = Aktør.Saksbehandler("saksbehandler 2")
-        oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerAktør2.navIdent, saksbehandlerAktør2))
-        oppgave.sisteSaksbehandler() shouldBe saksbehandlerAktør2.navIdent
+        val saksbehandler2 = Aktør.Saksbehandler("saksbehandler 2")
+        oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, saksbehandler2))
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
-        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(utførtAv = saksbehandlerAktør2))
+        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(utførtAv = saksbehandler2))
 
-        val beslutterAktør1 = Aktør.Beslutter("beslutter 1")
-        oppgave.tildelTotrinnskontroll(ToTrinnskontrollHendelse(beslutterIdent = beslutterAktør1.navIdent))
-        oppgave.sisteBeslutter() shouldBe beslutterAktør1.navIdent
+        val beslutter1 = Aktør.Beslutter("beslutter 1")
+        oppgave.tildelTotrinnskontroll(
+            ToTrinnskontrollHendelse(
+                ansvarligIdent = beslutter1.navIdent,
+                utførtAv = beslutter1,
+            ),
+        )
+        oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
 
-        oppgave.sendTilbakeTilUnderBehandling(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerAktør2.navIdent, beslutterAktør1))
-        oppgave.sisteBeslutter() shouldBe beslutterAktør1.navIdent
-        oppgave.sisteSaksbehandler() shouldBe saksbehandlerAktør2.navIdent
+        oppgave.sendTilbakeTilUnderBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, beslutter1))
+        oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
-        val beslutterAktør2 = Aktør.Beslutter("beslutter 2")
-        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(utførtAv = saksbehandlerAktør2))
-        oppgave.tildelTotrinnskontroll(ToTrinnskontrollHendelse(beslutterIdent = beslutterAktør2.navIdent))
-        oppgave.sisteBeslutter() shouldBe beslutterAktør2.navIdent
-        oppgave.sisteSaksbehandler() shouldBe saksbehandlerAktør2.navIdent
+        val beslutter2 = Aktør.Beslutter("beslutter 2")
+        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(utførtAv = saksbehandler2))
+        oppgave.tildelTotrinnskontroll(
+            ToTrinnskontrollHendelse(
+                ansvarligIdent = beslutter2.navIdent,
+                utførtAv = beslutter1,
+            ),
+        )
+        oppgave.sisteBeslutter() shouldBe beslutter2.navIdent
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
@@ -432,7 +445,7 @@ class OppgaveTilstandTest {
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "Melding om vedtak",
                     saksbehandlerToken = "token",
-                    aktør = beslutterAktør2,
+                    aktør = beslutter2,
                 ),
         )
     }

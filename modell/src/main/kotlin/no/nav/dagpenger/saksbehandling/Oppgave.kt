@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
@@ -111,12 +111,12 @@ data class Oppgave private constructor(
         tilstand.ferdigstill(this, godkjennBehandlingMedBrevIArena)
     }
 
-    fun fjernAnsvar(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        tilstand.fjernAnsvar(this, oppgaveAnsvarHendelse)
+    fun fjernAnsvar(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
+        tilstand.fjernAnsvar(this, settOppgaveAnsvarHendelse)
     }
 
-    fun tildel(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        tilstand.tildel(this, oppgaveAnsvarHendelse)
+    fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
+        tilstand.tildel(this, settOppgaveAnsvarHendelse)
     }
 
     fun utsett(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
@@ -131,8 +131,8 @@ data class Oppgave private constructor(
         tilstand.tildelTotrinnskontroll(this, toTrinnskontrollHendelse)
     }
 
-    fun sendTilbakeTilUnderBehandling(oppgaveAnsvarHendelse: OppgaveAnsvarHendelse) {
-        tilstand.sendTilbakeTilUnderBehandling(this, oppgaveAnsvarHendelse)
+    fun sendTilbakeTilUnderBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
+        tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
     }
 
     fun sendTilbakeTilKlarTilKontroll(tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse) {
@@ -156,21 +156,23 @@ data class Oppgave private constructor(
     }
 
     fun sisteSaksbehandler(): String? {
-        return tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING }?.let {
-            (it.hendelse as OppgaveAnsvarHendelse).navIdent
+        return kotlin.runCatching {
+            tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING }?.let {
+                (it.hendelse as SettOppgaveAnsvarHendelse).ansvarligIdent
+            }
         }
+            .onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
+            .getOrThrow()
     }
 
     fun sisteBeslutter(): String? {
-        return tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL }?.let {
-            it.hendelse.utførtAv.let { aktør ->
-                when (aktør) {
-                    is Aktør.Saksbehandler -> aktør.navIdent
-                    is Aktør.Beslutter -> aktør.navIdent
-                    else -> null
-                }
+        return kotlin.runCatching {
+            tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL }?.let {
+                (it.hendelse as ToTrinnskontrollHendelse).ansvarligIdent
             }
         }
+            .onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
+            .getOrThrow()
     }
 
     object Opprettet : Tilstand {
@@ -196,15 +198,15 @@ data class Oppgave private constructor(
 
         override fun tildel(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            oppgave.endreTilstand(UnderBehandling, oppgaveAnsvarHendelse)
-            oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
+            oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
+            oppgave.saksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
         override fun fjernAnsvar(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.saksbehandlerIdent = null
         }
@@ -230,19 +232,19 @@ data class Oppgave private constructor(
 
         override fun fjernAnsvar(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilBehandling, oppgaveAnsvarHendelse)
+            oppgave.endreTilstand(KlarTilBehandling, settOppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = null
         }
 
         override fun tildel(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            if (oppgave.saksbehandlerIdent != oppgaveAnsvarHendelse.navIdent) {
+            if (oppgave.saksbehandlerIdent != settOppgaveAnsvarHendelse.ansvarligIdent) {
                 sikkerlogg.warn {
-                    "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${oppgaveAnsvarHendelse.navIdent}. " +
+                    "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${settOppgaveAnsvarHendelse.ansvarligIdent}. " +
                         "Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}."
                 }
                 throw AlleredeTildeltException(
@@ -325,18 +327,18 @@ data class Oppgave private constructor(
 
         override fun tildel(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            oppgave.endreTilstand(UnderBehandling, oppgaveAnsvarHendelse)
-            oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
+            oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
+            oppgave.saksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
             oppgave.utsattTil = null
         }
 
         override fun fjernAnsvar(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilBehandling, oppgaveAnsvarHendelse)
+            oppgave.endreTilstand(KlarTilBehandling, settOppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = null
             oppgave.utsattTil = null
         }
@@ -357,7 +359,7 @@ data class Oppgave private constructor(
             toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
         ) {
             oppgave.endreTilstand(UnderKontroll, toTrinnskontrollHendelse)
-            oppgave.saksbehandlerIdent = toTrinnskontrollHendelse.beslutterIdent
+            oppgave.saksbehandlerIdent = toTrinnskontrollHendelse.ansvarligIdent
         }
     }
 
@@ -380,10 +382,10 @@ data class Oppgave private constructor(
 
         override fun sendTilbakeTilUnderBehandling(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            oppgave.endreTilstand(UnderBehandling, oppgaveAnsvarHendelse)
-            oppgave.saksbehandlerIdent = oppgaveAnsvarHendelse.navIdent
+            oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
+            oppgave.saksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
         override fun sendTilbakeTilKlarTilKontroll(
@@ -484,14 +486,14 @@ data class Oppgave private constructor(
 
         fun fjernAnsvar(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $type")
         }
 
         fun tildel(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type")
         }
@@ -519,7 +521,7 @@ data class Oppgave private constructor(
 
         fun sendTilbakeTilUnderBehandling(
             oppgave: Oppgave,
-            oppgaveAnsvarHendelse: OppgaveAnsvarHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type")
         }

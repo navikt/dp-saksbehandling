@@ -47,7 +47,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
@@ -398,10 +398,10 @@ class OppgaveApiTest {
 
         coEvery {
             oppgaveMediatorMock.tildelOppgave(
-                OppgaveAnsvarHendelse(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
-                    navIdent = SAKSBEHANDLER_IDENT,
-                    aktør = saksbehandler,
+                    ansvarligIdent = SAKSBEHANDLER_IDENT,
+                    utførtAv = saksbehandler,
                 ),
             )
         } returns testOppgave
@@ -445,10 +445,10 @@ class OppgaveApiTest {
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery {
             oppgaveMediatorMock.fristillOppgave(
-                OppgaveAnsvarHendelse(
-                    testOppgave.oppgaveId,
-                    SAKSBEHANDLER_IDENT,
-                    aktør = saksbehandler,
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = testOppgave.oppgaveId,
+                    ansvarligIdent = SAKSBEHANDLER_IDENT,
+                    utførtAv = saksbehandler,
                 ),
             )
         } just runs
@@ -461,10 +461,10 @@ class OppgaveApiTest {
 
         verify(exactly = 1) {
             oppgaveMediatorMock.fristillOppgave(
-                OppgaveAnsvarHendelse(
-                    testOppgave.oppgaveId,
-                    SAKSBEHANDLER_IDENT,
-                    aktør = saksbehandler,
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = testOppgave.oppgaveId,
+                    ansvarligIdent = SAKSBEHANDLER_IDENT,
+                    utførtAv = saksbehandler,
                 ),
             )
         }
