@@ -145,7 +145,7 @@ internal fun Application.oppgaveApi(
                     route("tildel") {
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller)
-                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                            val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse()
                             try {
                                 val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
                                 call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
@@ -165,7 +165,7 @@ internal fun Application.oppgaveApi(
                     }
                     route("legg-tilbake") {
                         put {
-                            val oppgaveAnsvarHendelse = call.oppgaveAnsvarHendelse()
+                            val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse()
                             oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
@@ -263,7 +263,7 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendel
     )
 }
 
-private fun ApplicationCall.oppgaveAnsvarHendelse(): SettOppgaveAnsvarHendelse {
+private fun ApplicationCall.settOppgaveAnsvarHendelse(): SettOppgaveAnsvarHendelse {
     val navIdent = this.navIdent()
     return SettOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
