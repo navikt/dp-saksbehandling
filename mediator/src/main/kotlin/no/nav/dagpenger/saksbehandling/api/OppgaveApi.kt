@@ -23,6 +23,7 @@ import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
@@ -47,7 +48,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
@@ -179,11 +179,14 @@ internal fun Application.oppgaveApi(
                                 val oppgaveId = call.finnUUID("oppgaveId")
                                 sikkerlogger.info { "Motatt melding om vedtak for oppgave $oppgaveId: $meldingOmVedtak" }
                                 val saksbehandler = call.saksbehandler()
+
+                                // TODO fix saksbehandler vs beslutter
                                 oppgaveMediator.ferdigstillOppgave(
                                     GodkjentBehandlingHendelse(
                                         meldingOmVedtak = meldingOmVedtak,
                                         oppgaveId = oppgaveId,
                                         saksbehandlerToken = saksbehandler.token,
+                                        aktør = Aktør.Saksbehandler(navIdent = saksbehandler.navIdent),
                                     ),
                                 )
                                 call.respond(HttpStatusCode.NoContent)
@@ -204,6 +207,7 @@ internal fun Application.oppgaveApi(
                                 GodkjennBehandlingMedBrevIArena(
                                     oppgaveId = oppgaveId,
                                     saksbehandlerToken = saksbehandler.token,
+                                    aktør = Aktør.Saksbehandler(navIdent = saksbehandler.navIdent),
                                 ),
                             )
                             call.respond(HttpStatusCode.NoContent)
@@ -243,8 +247,7 @@ private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandli
                 emptySet()
             }
         }
-
-        TomHendelse -> emptySet()
+        else -> emptySet()
     }
 }
 
@@ -256,11 +259,18 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendel
         navIdent = this.navIdent(),
         utsattTil = utsettOppgaveDto.utsettTilDato,
         beholdOppgave = utsettOppgaveDto.beholdOppgave,
+        aktør = Aktør.Saksbehandler(this.navIdent()),
     )
 }
 
-private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse =
-    OppgaveAnsvarHendelse(this.finnUUID("oppgaveId"), this.navIdent())
+private fun ApplicationCall.oppgaveAnsvarHendelse(): OppgaveAnsvarHendelse {
+    val navIdent = this.navIdent()
+    return OppgaveAnsvarHendelse(
+        oppgaveId = this.finnUUID("oppgaveId"),
+        navIdent = navIdent,
+        aktør = Aktør.Saksbehandler(navIdent),
+    )
+}
 
 fun lagOppgaveDTO(
     oppgave: Oppgave,

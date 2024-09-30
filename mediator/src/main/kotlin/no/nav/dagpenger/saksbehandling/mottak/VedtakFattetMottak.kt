@@ -51,7 +51,7 @@ internal class VedtakFattetMottak(
                     søknadId = søknadId,
                     ident = ident,
                     sak = sak,
-                    aktør = Aktør.System.dpBehandling
+                    aktør = Aktør.System.dpBehandling,
                 ),
             )
             packet["@event_name"] = "vedtak_fattet_til_arena"

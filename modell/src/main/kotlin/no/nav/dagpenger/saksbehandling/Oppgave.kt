@@ -29,9 +29,10 @@ private val logger = KotlinLogging.logger {}
 data class Oppgave private constructor(
     val oppgaveId: UUID,
     val opprettet: LocalDateTime,
-    // TODO: Bedre navn ala brukerIdent
+    // TODO: Bedre navn a'la borgerIdent?
     val ident: String,
-    var saksbehandlerIdent: String? = null, // endre navn på dette
+    // TODO: Bedre navn a'la behandlerIdent?
+    var saksbehandlerIdent: String? = null,
     val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = Opprettet,
@@ -146,7 +147,10 @@ data class Oppgave private constructor(
         nyTilstand: Tilstand,
         hendelse: Hendelse,
     ) {
-        logger.info { "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} basert på hendelse: ${hendelse.javaClass.simpleName} " }
+        logger.info {
+            "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} " +
+                "basert på hendelse: ${hendelse.javaClass.simpleName} "
+        }
         this.tilstand = nyTilstand
         this.tilstandslogg.leggTil(nyTilstand, hendelse)
     }
@@ -181,14 +185,14 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ) {
-             oppgave.endreTilstand(KlarTilBehandling,forslagTilVedtakHendelse)
+            oppgave.endreTilstand(KlarTilBehandling, forslagTilVedtakHendelse)
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            oppgave.endreTilstand(FerdigBehandlet,vedtakFattetHendelse)
+            oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
         }
     }
 
@@ -244,7 +248,7 @@ data class Oppgave private constructor(
             if (oppgave.saksbehandlerIdent != oppgaveAnsvarHendelse.navIdent) {
                 sikkerlogg.warn {
                     "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${oppgaveAnsvarHendelse.navIdent}. " +
-                            "Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}."
+                        "Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}."
                 }
                 throw AlleredeTildeltException(
                     "Kan ikke tildele oppgave til annen saksbehandler.Oppgave er allerede tildelt.",
@@ -276,7 +280,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
         ) {
-            oppgave.endreTilstand(UnderKontroll,tilbakeTilUnderKontrollHendelse)
+            oppgave.endreTilstand(UnderKontroll, tilbakeTilUnderKontrollHendelse)
             oppgave.saksbehandlerIdent = tilbakeTilUnderKontrollHendelse.beslutterIdent
         }
 
@@ -284,21 +288,21 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            oppgave.endreTilstand(FerdigBehandlet,vedtakFattetHendelse)
+            oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
-            oppgave.endreTilstand(FerdigBehandlet,godkjentBehandlingHendelse)
+            oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
-            oppgave.endreTilstand(FerdigBehandlet,godkjennBehandlingMedBrevIArena)
+            oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
         }
     }
 
@@ -316,7 +320,7 @@ data class Oppgave private constructor(
             logger.warn { "Ferdigstiller allerede ferdib behandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
             sikkerlogg.warn {
                 "Ferdigstiller allerede ferdib behandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
-                        "med vedtakFattetHendelse: $vedtakFattetHendelse "
+                    "med vedtakFattetHendelse: $vedtakFattetHendelse "
             }
         }
     }

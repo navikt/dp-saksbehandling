@@ -48,7 +48,7 @@ internal class ForslagTilVedtakMottak(
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
-                    aktør = Aktør.System.dpBehandling
+                    aktør = Aktør.System.dpBehandling,
                 )
             sikkerlogg.info { "Mottok forslag_til_vedtak hendelse: $forslagTilVedtakHendelse" }
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)

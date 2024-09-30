@@ -6,5 +6,5 @@ import java.util.UUID
 data class GodkjennBehandlingMedBrevIArena(
     val oppgaveId: UUID,
     val saksbehandlerToken: String,
-    private val aktør: Aktør
-): Hendelse(aktør)
+    private val aktør: Aktør,
+) : Hendelse(aktør)

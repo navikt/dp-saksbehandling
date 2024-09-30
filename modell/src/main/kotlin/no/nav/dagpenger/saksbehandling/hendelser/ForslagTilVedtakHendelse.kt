@@ -8,5 +8,5 @@ data class ForslagTilVedtakHendelse(
     val søknadId: UUID,
     val behandlingId: UUID,
     val emneknagger: Set<String> = emptySet(),
-    private val aktør: Aktør
-): Hendelse(aktør)
+    private val aktør: Aktør,
+) : Hendelse(aktør)
