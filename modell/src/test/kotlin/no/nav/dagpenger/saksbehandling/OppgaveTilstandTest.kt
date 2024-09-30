@@ -83,7 +83,6 @@ class OppgaveTilstandTest {
                     søknadId = UUIDv7.ny(),
                     ident = testIdent,
                     sak = sak,
-                    aktør = Aktør.Saksbehandler("sbIdent"),
                 ),
             )
             oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
@@ -98,7 +97,6 @@ class OppgaveTilstandTest {
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         sak = sak,
-                        aktør = Aktør.System.dpBehandling,
                     ),
                 )
             }

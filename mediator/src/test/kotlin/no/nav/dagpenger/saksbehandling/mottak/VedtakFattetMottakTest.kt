@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -75,7 +74,6 @@ internal class VedtakFattetMottakTest {
                 søknadId = søknadId,
                 ident = testIdent,
                 sak = sak,
-                aktør = Aktør.System.dpBehandling,
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
@@ -107,7 +105,6 @@ internal class VedtakFattetMottakTest {
                 søknadId = søknadId,
                 ident = testIdent,
                 sak = sak,
-                aktør = Aktør.System.dpBehandling,
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)

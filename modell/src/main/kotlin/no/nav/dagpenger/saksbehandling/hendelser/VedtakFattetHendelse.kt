@@ -9,5 +9,5 @@ data class VedtakFattetHendelse(
     val søknadId: UUID,
     val ident: String,
     val sak: Sak,
-    private val aktør: Aktør,
+    private val aktør: Aktør = Aktør.System.dpBehandling,
 ) : Hendelse(aktør)

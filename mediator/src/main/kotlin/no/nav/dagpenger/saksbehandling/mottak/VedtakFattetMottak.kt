@@ -6,7 +6,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -51,7 +50,6 @@ internal class VedtakFattetMottak(
                     søknadId = søknadId,
                     ident = ident,
                     sak = sak,
-                    aktør = Aktør.System.dpBehandling,
                 ),
             )
             packet["@event_name"] = "vedtak_fattet_til_arena"
