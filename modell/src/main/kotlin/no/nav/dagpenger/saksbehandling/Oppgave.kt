@@ -157,12 +157,7 @@ data class Oppgave private constructor(
 
     fun sisteSaksbehandler(): String? {
         return tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING }?.let {
-            it.hendelse.utførtAv.let { aktør ->
-                when (aktør) {
-                    is Aktør.Saksbehandler -> aktør.navIdent
-                    else -> null
-                }
-            }
+            (it.hendelse as OppgaveAnsvarHendelse).navIdent
         }
     }
 
