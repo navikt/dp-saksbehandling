@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
@@ -244,8 +245,8 @@ class OppgaveApiTilgangskontrollTest {
             oppgaveMediatorMock.fristillOppgave(
                 OppgaveAnsvarHendelse(
                     testOppgaveForEgenAnsatt.oppgaveId,
-                    OppgaveApiTestHelper.TEST_NAV_IDENT,
-                    aktør = Aktør.Saksbehandler("navIdent"),
+                    OppgaveApiTestHelper.SAKSBEHANDLER_IDENT,
+                    aktør = Aktør.Saksbehandler(SAKSBEHANDLER_IDENT),
                 ),
             )
         } just runs

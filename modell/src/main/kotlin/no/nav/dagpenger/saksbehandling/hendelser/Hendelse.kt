@@ -6,4 +6,6 @@ sealed class Hendelse(val utførtAv: Aktør)
 
 sealed class AnsvarHendelse(utførtAv: Aktør, val ansvarligIdent: String?) : Hendelse(utførtAv)
 
-data object TomHendelse : Hendelse(Aktør.System.dpSaksbehandling)
+data object TomHendelse : Hendelse(Aktør.System.dpSaksbehandling) {
+    fun tilJson(): String = "{}"
+}

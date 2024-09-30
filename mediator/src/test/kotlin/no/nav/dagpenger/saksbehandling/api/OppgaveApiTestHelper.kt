@@ -38,7 +38,7 @@ import java.time.LocalDateTime
 
 internal object OppgaveApiTestHelper {
     const val TEST_IDENT = "12345612345"
-    const val TEST_NAV_IDENT = "Z999999"
+    const val SAKSBEHANDLER_IDENT = "Z999999"
     private val mockAzure = mockAzure()
     private val fødselsdato = LocalDate.of(2000, 1, 1)
 
@@ -64,7 +64,7 @@ internal object OppgaveApiTestHelper {
 
     fun gyldigSaksbehandlerToken(
         adGrupper: List<String> = emptyList(),
-        navIdent: String = TEST_NAV_IDENT,
+        navIdent: String = SAKSBEHANDLER_IDENT,
     ): String =
         mockAzure.lagTokenMedClaims(
             mapOf(
@@ -73,7 +73,7 @@ internal object OppgaveApiTestHelper {
             ),
         )
 
-    fun gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken(navIdent: String = TEST_NAV_IDENT): String =
+    fun gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken(navIdent: String = SAKSBEHANDLER_IDENT): String =
         mockAzure.lagTokenMedClaims(
             mapOf(
                 "groups" to listOf("SaksbehandlerADGruppe", "EgneAnsatteADGruppe"),

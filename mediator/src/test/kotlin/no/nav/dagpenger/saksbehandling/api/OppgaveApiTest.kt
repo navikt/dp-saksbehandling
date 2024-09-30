@@ -30,8 +30,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_NAV_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagMediatorMock
@@ -59,7 +59,7 @@ import java.time.LocalDateTime
 
 class OppgaveApiTest {
     val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
-    private val saksbehandler = Aktør.Saksbehandler("navIdent")
+    private val saksbehandler = Aktør.Saksbehandler(SAKSBEHANDLER_IDENT)
 
     @Test
     fun `GET på oppgaver uten query parameters`() {
@@ -67,7 +67,7 @@ class OppgaveApiTest {
         val oppgave1 =
             lagTestOppgaveMedTilstand(
                 KLAR_TIL_BEHANDLING,
-                saksbehandlerIdent = TEST_NAV_IDENT,
+                saksbehandlerIdent = SAKSBEHANDLER_IDENT,
                 utsattTil = iMorgen,
             )
         val oppgave2 =
@@ -210,7 +210,7 @@ class OppgaveApiTest {
                                     tom = LocalDate.parse("2023-01-01"),
                                 ),
                             tilstand = setOf(UNDER_BEHANDLING),
-                            saksbehandlerIdent = TEST_NAV_IDENT,
+                            saksbehandlerIdent = SAKSBEHANDLER_IDENT,
                         ),
                     )
                 } returns
@@ -236,15 +236,15 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak dersom saksbehandler er Kathrine`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = "G151133")
+    fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
         val godkjentBehandlingHendelse =
             GodkjentBehandlingHendelse(
                 oppgave.oppgaveId,
                 meldingOmVedtakHtml,
                 saksbehandlerToken = saksbehandlerToken,
-                aktør = saksbehandler,
+                aktør = Aktør.Saksbehandler(SAKSBEHANDLER_IDENT),
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
@@ -291,7 +291,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne ferdigstille en oppgave med melding om vedtak i Arena`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken()
         val godkjennBehandlingMedBrevIArena =
             GodkjennBehandlingMedBrevIArena(
@@ -322,10 +322,10 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne hente og få tildelt neste oppgave`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.tildelNesteOppgaveTil(TEST_NAV_IDENT, any()) } returns oppgave
+                every { it.tildelNesteOppgaveTil(SAKSBEHANDLER_IDENT, any()) } returns oppgave
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -359,7 +359,7 @@ class OppgaveApiTest {
                         "statsborgerskap": "NOR",
                         "skjermesSomEgneAnsatte": ${oppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
-                      "saksbehandlerIdent": "$TEST_NAV_IDENT",
+                      "saksbehandlerIdent": "$SAKSBEHANDLER_IDENT",
                       "emneknagger": ["Søknadsbehandling"],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                     }
@@ -372,7 +372,7 @@ class OppgaveApiTest {
     fun `404 når det ikke finnes noen neste oppgave for saksbehandler`() {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.tildelNesteOppgaveTil(TEST_NAV_IDENT, any()) } returns null
+                every { it.tildelNesteOppgaveTil(SAKSBEHANDLER_IDENT, any()) } returns null
             }
         val pdlMock = mockk<PDLKlient>()
 
@@ -400,7 +400,7 @@ class OppgaveApiTest {
             oppgaveMediatorMock.tildelOppgave(
                 OppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
-                    navIdent = TEST_NAV_IDENT,
+                    navIdent = SAKSBEHANDLER_IDENT,
                     aktør = saksbehandler,
                 ),
             )
@@ -447,7 +447,7 @@ class OppgaveApiTest {
             oppgaveMediatorMock.fristillOppgave(
                 OppgaveAnsvarHendelse(
                     testOppgave.oppgaveId,
-                    TEST_NAV_IDENT,
+                    SAKSBEHANDLER_IDENT,
                     aktør = saksbehandler,
                 ),
             )
@@ -463,7 +463,7 @@ class OppgaveApiTest {
             oppgaveMediatorMock.fristillOppgave(
                 OppgaveAnsvarHendelse(
                     testOppgave.oppgaveId,
-                    TEST_NAV_IDENT,
+                    SAKSBEHANDLER_IDENT,
                     aktør = saksbehandler,
                 ),
             )
@@ -478,7 +478,7 @@ class OppgaveApiTest {
         val utsettOppgaveHendelse =
             UtsettOppgaveHendelse(
                 oppgaveId = testOppgave.oppgaveId,
-                navIdent = TEST_NAV_IDENT,
+                navIdent = SAKSBEHANDLER_IDENT,
                 utsattTil = utsettTilDato,
                 beholdOppgave = true,
                 aktør = saksbehandler,

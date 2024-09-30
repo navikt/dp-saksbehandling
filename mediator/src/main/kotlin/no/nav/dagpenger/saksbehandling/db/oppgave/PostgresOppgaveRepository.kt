@@ -16,7 +16,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_P
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
-import no.nav.dagpenger.saksbehandling.serder.fraJson
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import org.postgresql.util.PGobject
@@ -539,7 +538,7 @@ private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
 private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
         "TomHendelse" -> return TomHendelse
-        "SøknadsbehandlingOpprettetHendelse" -> fraJson<SøknadsbehandlingOpprettetHendelse>(this.string("hendelse_data"))
+        "SøknadsbehandlingOpprettetHendelse" -> SøknadsbehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
         else -> throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
     }
 }

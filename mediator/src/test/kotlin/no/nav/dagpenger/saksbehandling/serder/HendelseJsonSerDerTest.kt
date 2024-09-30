@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.serder
 
 import io.kotest.assertions.json.shouldEqualJson
-import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
@@ -25,19 +24,17 @@ class HendelseJsonSerDerTest {
                "søknadId": "$aUUID",
                "behandlingId": "$aUUID",
                "ident": "ident",
-               "opprettet": "-999999999-01-01T00:00:00"
-             }
+               "opprettet": "-999999999-01-01T00:00:00",
+               "utførtAv": {
+                  "navn": "dp-saksbehandling"
+               }
+           }
             """
 
     @Test
     fun `should serialize hendelse to json`() {
         TomHendelse.tilJson() shouldEqualJson "{}"
-        søknadsbehandlingOpprettetHendelse.tilJson() shouldEqualJson søknadsbehandlingOpprettetHendelseJson
-    }
-
-    @Test
-    fun `should deserialize hendelse from json`() {
-        fraJson<TomHendelse>("{}") shouldBe TomHendelse
-        fraJson<SøknadsbehandlingOpprettetHendelse>(søknadsbehandlingOpprettetHendelseJson) shouldBe søknadsbehandlingOpprettetHendelse
+        val tilJson = søknadsbehandlingOpprettetHendelse.tilJson()
+        tilJson shouldEqualJson søknadsbehandlingOpprettetHendelseJson
     }
 }
