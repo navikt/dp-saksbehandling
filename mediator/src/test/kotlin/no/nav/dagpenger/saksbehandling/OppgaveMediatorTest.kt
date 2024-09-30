@@ -85,7 +85,6 @@ class OppgaveMediatorTest {
                     ident = "ad",
                     søknadId = UUIDv7.ny(),
                     behandlingId = UUIDv7.ny(),
-                    aktør = saksbehandler,
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).size shouldBe 0
@@ -126,7 +125,6 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = testEmneknagger,
-                    aktør = saksbehandler,
                 ),
             )
 
@@ -183,7 +181,6 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
-                    aktør = Aktør.System.dpBehandling,
                 ),
             )
 
@@ -269,7 +266,6 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
-                    aktør = Aktør.System.dpBehandling,
                 ),
             )
 
@@ -359,7 +355,6 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
-                    aktør = saksbehandler,
                 ),
             )
 
@@ -424,7 +419,6 @@ class OppgaveMediatorTest {
                     ident = testIdent,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    aktør = Aktør.System.dpBehandling,
                 ),
             )
             val oppgaver = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
@@ -476,7 +470,6 @@ class OppgaveMediatorTest {
                     ident = testIdent,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    aktør = Aktør.System.dpBehandling,
                 ),
             )
 

@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.mottak
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -31,7 +30,6 @@ class ForslagTilVedtakMottakTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = setOf("EØSArbeid", "HarRapportertInntektNesteMåned", "SykepengerSiste36Måneder"),
-                    aktør = Aktør.System.dpBehandling,
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }

@@ -6,7 +6,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 
@@ -48,7 +47,6 @@ internal class ForslagTilVedtakMottak(
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
-                    aktør = Aktør.System.dpBehandling,
                 )
             sikkerlogg.info { "Mottok forslag_til_vedtak hendelse: $forslagTilVedtakHendelse" }
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
