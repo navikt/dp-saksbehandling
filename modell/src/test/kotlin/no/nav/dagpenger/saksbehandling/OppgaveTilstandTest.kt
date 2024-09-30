@@ -17,8 +17,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
@@ -254,7 +254,7 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler.navIdent)
 
         oppgave.gjørKlarTilKontroll(
-            TilKontrollHendelse(aktør = saksbehandler),
+            KlarTilKontrollHendelse(utførtAv = saksbehandler),
         )
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
@@ -269,7 +269,7 @@ class OppgaveTilstandTest {
         if (tilstandstype != UNDER_BEHANDLING) {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.gjørKlarTilKontroll(
-                    TilKontrollHendelse(aktør = Aktør.System.dpSaksbehandling),
+                    KlarTilKontrollHendelse(utførtAv = Aktør.System.dpSaksbehandling),
                 )
             }
         }
@@ -410,7 +410,7 @@ class OppgaveTilstandTest {
         oppgave.tildel(OppgaveAnsvarHendelse(oppgaveId, saksbehandlerAktør2.navIdent, saksbehandlerAktør2))
         oppgave.sisteSaksbehandler() shouldBe saksbehandlerAktør2.navIdent
 
-        oppgave.gjørKlarTilKontroll(TilKontrollHendelse(aktør = saksbehandlerAktør2))
+        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(utførtAv = saksbehandlerAktør2))
 
         val beslutterAktør1 = Aktør.Beslutter("beslutter 1")
         oppgave.tildelTotrinnskontroll(ToTrinnskontrollHendelse(beslutterIdent = beslutterAktør1.navIdent))
@@ -421,7 +421,7 @@ class OppgaveTilstandTest {
         oppgave.sisteSaksbehandler() shouldBe saksbehandlerAktør2.navIdent
 
         val beslutterAktør2 = Aktør.Beslutter("beslutter 2")
-        oppgave.gjørKlarTilKontroll(TilKontrollHendelse(aktør = saksbehandlerAktør2))
+        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(utførtAv = saksbehandlerAktør2))
         oppgave.tildelTotrinnskontroll(ToTrinnskontrollHendelse(beslutterIdent = beslutterAktør2.navIdent))
         oppgave.sisteBeslutter() shouldBe beslutterAktør2.navIdent
         oppgave.sisteSaksbehandler() shouldBe saksbehandlerAktør2.navIdent

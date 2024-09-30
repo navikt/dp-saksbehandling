@@ -21,6 +21,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -58,6 +59,7 @@ import java.time.LocalDateTime
 
 class OppgaveApiTest {
     val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
+    private val saksbehandler = Aktør.Saksbehandler("navIdent")
 
     @Test
     fun `GET på oppgaver uten query parameters`() {
@@ -238,7 +240,12 @@ class OppgaveApiTest {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, TEST_NAV_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = "G151133")
         val godkjentBehandlingHendelse =
-            GodkjentBehandlingHendelse(oppgave.oppgaveId, meldingOmVedtakHtml, saksbehandlerToken = saksbehandlerToken)
+            GodkjentBehandlingHendelse(
+                oppgave.oppgaveId,
+                meldingOmVedtakHtml,
+                saksbehandlerToken = saksbehandlerToken,
+                aktør = saksbehandler,
+            )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
@@ -290,6 +297,7 @@ class OppgaveApiTest {
             GodkjennBehandlingMedBrevIArena(
                 oppgaveId = oppgave.oppgaveId,
                 saksbehandlerToken = saksbehandlerToken,
+                aktør = saksbehandler,
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
@@ -393,6 +401,7 @@ class OppgaveApiTest {
                 OppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
                     navIdent = TEST_NAV_IDENT,
+                    aktør = saksbehandler,
                 ),
             )
         } returns testOppgave
@@ -439,6 +448,7 @@ class OppgaveApiTest {
                 OppgaveAnsvarHendelse(
                     testOppgave.oppgaveId,
                     TEST_NAV_IDENT,
+                    aktør = saksbehandler,
                 ),
             )
         } just runs
@@ -454,6 +464,7 @@ class OppgaveApiTest {
                 OppgaveAnsvarHendelse(
                     testOppgave.oppgaveId,
                     TEST_NAV_IDENT,
+                    aktør = saksbehandler,
                 ),
             )
         }
@@ -470,6 +481,7 @@ class OppgaveApiTest {
                 navIdent = TEST_NAV_IDENT,
                 utsattTil = utsettTilDato,
                 beholdOppgave = true,
+                aktør = saksbehandler,
             )
 
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave

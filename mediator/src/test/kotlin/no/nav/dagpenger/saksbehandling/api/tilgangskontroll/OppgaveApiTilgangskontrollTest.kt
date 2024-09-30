@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -244,6 +245,7 @@ class OppgaveApiTilgangskontrollTest {
                 OppgaveAnsvarHendelse(
                     testOppgaveForEgenAnsatt.oppgaveId,
                     OppgaveApiTestHelper.TEST_NAV_IDENT,
+                    aktør = Aktør.Saksbehandler("navIdent"),
                 ),
             )
         } just runs

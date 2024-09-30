@@ -13,8 +13,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
@@ -123,8 +123,8 @@ data class Oppgave private constructor(
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
-    fun gjørKlarTilKontroll(tilKontrollHendelse: TilKontrollHendelse) {
-        tilstand.gjørKlarTilKontroll(this, tilKontrollHendelse)
+    fun gjørKlarTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
+        tilstand.gjørKlarTilKontroll(this, klarTilKontrollHendelse)
     }
 
     fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
@@ -222,9 +222,9 @@ data class Oppgave private constructor(
 
         override fun gjørKlarTilKontroll(
             oppgave: Oppgave,
-            tilKontrollHendelse: TilKontrollHendelse,
+            klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilKontroll, tilKontrollHendelse)
+            oppgave.endreTilstand(KlarTilKontroll, klarTilKontrollHendelse)
             oppgave.saksbehandlerIdent = null
         }
 
@@ -505,7 +505,7 @@ data class Oppgave private constructor(
 
         fun gjørKlarTilKontroll(
             oppgave: Oppgave,
-            tilKontrollHendelse: TilKontrollHendelse,
+            klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type")
         }

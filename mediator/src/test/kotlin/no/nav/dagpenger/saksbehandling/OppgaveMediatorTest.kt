@@ -42,6 +42,7 @@ import java.time.LocalDateTime
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
+    private val saksbehandler = Aktør.Saksbehandler("saksbehandlerIdent")
     private val sak = Sak("12342", "Arena")
     private val testRapid = TestRapid()
     private val pdlKlientMock =
@@ -84,6 +85,7 @@ class OppgaveMediatorTest {
                     ident = "ad",
                     søknadId = UUIDv7.ny(),
                     behandlingId = UUIDv7.ny(),
+                    aktør = saksbehandler,
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).size shouldBe 0
@@ -124,6 +126,7 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = testEmneknagger,
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -180,6 +183,7 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -194,6 +198,7 @@ class OppgaveMediatorTest {
                 OppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -264,6 +269,7 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -278,6 +284,7 @@ class OppgaveMediatorTest {
                 OppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -291,6 +298,7 @@ class OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = meldingOmVedtak,
                     saksbehandlerToken = saksbehandlerToken,
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -351,6 +359,7 @@ class OppgaveMediatorTest {
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -359,6 +368,7 @@ class OppgaveMediatorTest {
                 OppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -366,6 +376,7 @@ class OppgaveMediatorTest {
                 GodkjennBehandlingMedBrevIArena(
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandlerToken = saksbehandlerToken,
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -409,7 +420,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
             oppgaveMediator.settOppgaveKlarTilBehandling(
-                ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
+                ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId, aktør = saksbehandler),
             )
             val oppgaver = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
             oppgaver.size shouldBe 1
@@ -456,7 +467,7 @@ class OppgaveMediatorTest {
                     ),
             )
             oppgaveMediator.settOppgaveKlarTilBehandling(
-                ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId),
+                ForslagTilVedtakHendelse(ident = testIdent, søknadId = søknadId, behandlingId = behandlingId, aktør = saksbehandler),
             )
 
             val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
@@ -465,6 +476,7 @@ class OppgaveMediatorTest {
                 OppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     navIdent = "NAVIdent",
+                    aktør = saksbehandler,
                 ),
             )
 
@@ -475,6 +487,7 @@ class OppgaveMediatorTest {
                     navIdent = "NAVIdent",
                     utsattTil = utSattTil,
                     beholdOppgave = false,
+                    aktør = saksbehandler,
                 ),
             )
 
