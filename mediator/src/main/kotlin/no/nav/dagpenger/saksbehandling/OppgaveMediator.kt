@@ -95,6 +95,13 @@ class OppgaveMediator(
         }
     }
 
+    fun gjørKlarTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
+        repository.hentOppgave(klarTilKontrollHendelse.oppgaveId).also { oppgave ->
+            oppgave.gjørKlarTilKontroll(klarTilKontrollHendelse)
+            repository.lagre(oppgave)
+        }
+    }
+
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
         logger.info {
             "Mottatt vedtak fattet hendelse for behandling med id ${vedtakFattetHendelse.behandlingId}. Oppgave ferdigstilt."
@@ -175,9 +182,5 @@ class OppgaveMediator(
                 adressebeskyttelseGradering = adresseBeskyttelseGradering.await(),
             )
         }
-    }
-
-    fun gjørKlarTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
-        TODO("Not yet implemented")
     }
 }
