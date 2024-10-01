@@ -181,6 +181,7 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
+
                     route("ferdigstill/melding-om-vedtak") {
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller)

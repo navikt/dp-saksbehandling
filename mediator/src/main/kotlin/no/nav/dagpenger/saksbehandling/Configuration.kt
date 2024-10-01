@@ -71,6 +71,7 @@ object Configuration {
     val pdlTokenProvider = { clientCredentialsTokenProvider(pdlApiScope) }
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
+    val beslutterADGruppe by lazy { properties[Key("GRUPPE_BESLUTTER", stringType)] }
     val egneAnsatteADGruppe by lazy { properties[Key("GRUPPE_EGNE_ANSATTE", stringType)] }
     val strengtFortroligADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG", stringType)] }
     val strengtFortroligUtlandADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG_UTLAND", stringType)] }
