@@ -40,6 +40,7 @@ import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.SaksbehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterTilgangsKontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -181,6 +182,12 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
+                    route("kontroller") {
+                        put {
+                            oppgaveTilgangskontroll(tilgangskontroller + BeslutterTilgangsKontroll)
+                            call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
 
                     route("ferdigstill/melding-om-vedtak") {
                         put {
@@ -259,6 +266,7 @@ private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandli
                 emptySet()
             }
         }
+
         else -> emptySet()
     }
 }

@@ -73,6 +73,17 @@ internal object OppgaveApiTestHelper {
             ),
         )
 
+    fun gyldigBeslutterToken(
+        adGrupper: List<String> = emptyList(),
+        navIdent: String = SAKSBEHANDLER_IDENT,
+    ): String =
+        mockAzure.lagTokenMedClaims(
+            mapOf(
+                "groups" to listOf("BeslutterADGruppe", "SaksbehandlerADGruppe") + adGrupper,
+                "NAVident" to navIdent,
+            ),
+        )
+
     fun gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken(navIdent: String = SAKSBEHANDLER_IDENT): String =
         mockAzure.lagTokenMedClaims(
             mapOf(

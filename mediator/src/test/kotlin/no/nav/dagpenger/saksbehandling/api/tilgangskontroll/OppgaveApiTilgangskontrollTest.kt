@@ -24,9 +24,11 @@ import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigBeslutterToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstand
@@ -255,6 +257,25 @@ class OppgaveApiTilgangskontrollTest {
                 .also { response ->
                     response.status shouldBe HttpStatusCode.NoContent
                 }
+        }
+    }
+
+    @Test
+    fun `Kun beslutter skal ha tilgang til kontroller endepunktet`() {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also { oppgaveMediator ->
+                every { oppgaveMediator.personSkjermesSomEgneAnsatte(any()) } returns false
+                every { oppgaveMediator.adresseGraderingForPerson(any()) } returns UGRADERT
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+//            client.put("oppgave/${UUIDv7.ny()}/kontroller") {
+//                autentisert(token = gyldigSaksbehandlerToken())
+//            }.status shouldBe HttpStatusCode.Forbidden
+
+            client.put("oppgave/${UUIDv7.ny()}/kontroller") {
+                autentisert(token = gyldigBeslutterToken())
+            }.status shouldBe HttpStatusCode.NoContent
         }
     }
 }
