@@ -10,6 +10,7 @@ import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -23,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -71,6 +73,66 @@ class OppgaveMediatorTest {
             coEvery { it.erSkjermetPerson(any()) } returns Result.success(false)
         }
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
+
+    @Test
+    fun `Skal kunne sette oppgave til klar-til-kontroll`() {
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlientMock,
+                    pdlKlientMock,
+                    behandlingKlientMock,
+                    mockk(),
+                )
+            val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+            VedtakFattetMottak(testRapid, oppgaveMediator, utsendingMediator)
+
+            val søknadId = UUIDv7.ny()
+            val behandlingId = UUIDv7.ny()
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                )
+
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.gjørKlarTilKontroll(
+                KlarTilKontrollHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
+            oppgaveTilKontroll.saksbehandlerIdent shouldBe null
+            oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
+        }
+    }
 
     @Test
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {

@@ -236,7 +236,7 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler.navIdent)
 
         oppgave.gjørKlarTilKontroll(
-            KlarTilKontrollHendelse(utførtAv = saksbehandler),
+            KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
         )
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
@@ -251,7 +251,7 @@ class OppgaveTilstandTest {
         if (tilstandstype != UNDER_BEHANDLING) {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.gjørKlarTilKontroll(
-                    KlarTilKontrollHendelse(utførtAv = Aktør.System.dpSaksbehandling),
+                    KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = Aktør.System.dpSaksbehandling),
                 )
             }
         }
@@ -373,6 +373,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Finn saksbehandler og beslutter på oppgaven`() {
         val oppgave = lagOppgave(OPPRETTET)
+        val oppgaveId = oppgave.oppgaveId
         oppgave.oppgaveKlarTilBehandling(
             ForslagTilVedtakHendelse(
                 ident = testIdent,
@@ -395,7 +396,7 @@ class OppgaveTilstandTest {
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, saksbehandler2))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
-        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(utførtAv = saksbehandler2))
+        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
 
         val beslutter1 = Aktør.Beslutter("beslutter 1")
         oppgave.tildelTotrinnskontroll(
@@ -411,7 +412,7 @@ class OppgaveTilstandTest {
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         val beslutter2 = Aktør.Beslutter("beslutter 2")
-        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(utførtAv = saksbehandler2))
+        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
         oppgave.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
                 ansvarligIdent = beslutter2.navIdent,
