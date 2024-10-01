@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -111,8 +112,8 @@ data class Oppgave private constructor(
         tilstand.ferdigstill(this, godkjennBehandlingMedBrevIArena)
     }
 
-    fun fjernAnsvar(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
-        tilstand.fjernAnsvar(this, settOppgaveAnsvarHendelse)
+    fun fjernAnsvar(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
+        tilstand.fjernAnsvar(this, fjernOppgaveAnsvarHendelse)
     }
 
     fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
@@ -204,13 +205,6 @@ data class Oppgave private constructor(
             oppgave.saksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
-        override fun fjernAnsvar(
-            oppgave: Oppgave,
-            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
-        ) {
-            oppgave.saksbehandlerIdent = null
-        }
-
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
@@ -232,9 +226,9 @@ data class Oppgave private constructor(
 
         override fun fjernAnsvar(
             oppgave: Oppgave,
-            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
+            fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilBehandling, settOppgaveAnsvarHendelse)
+            oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = null
         }
 
@@ -336,9 +330,9 @@ data class Oppgave private constructor(
 
         override fun fjernAnsvar(
             oppgave: Oppgave,
-            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
+            fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilBehandling, settOppgaveAnsvarHendelse)
+            oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
             oppgave.saksbehandlerIdent = null
             oppgave.utsattTil = null
         }
@@ -486,7 +480,7 @@ data class Oppgave private constructor(
 
         fun fjernAnsvar(
             oppgave: Oppgave,
-            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
+            fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $type")
         }

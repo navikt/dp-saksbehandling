@@ -6,6 +6,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -78,11 +79,12 @@ class OppgaveMediator(
         }
     }
 
-    fun fristillOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
-        repository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).let { oppgave ->
-            oppgave.fjernAnsvar(settOppgaveAnsvarHendelse)
-            repository.lagre(oppgave)
-        }
+    fun fristillOppgave(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
+        repository.hentOppgave(fjernOppgaveAnsvarHendelse.oppgaveId)
+            .let { oppgave ->
+                oppgave.fjernAnsvar(fjernOppgaveAnsvarHendelse)
+                repository.lagre(oppgave)
+            }
     }
 
     fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave {

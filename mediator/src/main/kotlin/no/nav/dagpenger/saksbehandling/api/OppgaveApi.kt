@@ -44,6 +44,7 @@ import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangsk
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -165,7 +166,7 @@ internal fun Application.oppgaveApi(
                     }
                     route("legg-tilbake") {
                         put {
-                            val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse()
+                            val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse()
                             oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
@@ -268,6 +269,14 @@ private fun ApplicationCall.settOppgaveAnsvarHendelse(): SettOppgaveAnsvarHendel
     return SettOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         ansvarligIdent = navIdent,
+        utførtAv = Aktør.Saksbehandler(navIdent),
+    )
+}
+
+private fun ApplicationCall.fjernOppgaveAnsvarHendelse(): FjernOppgaveAnsvarHendelse {
+    val navIdent = this.navIdent()
+    return FjernOppgaveAnsvarHendelse(
+        oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = Aktør.Saksbehandler(navIdent),
     )
 }

@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -105,10 +106,10 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå til KlarTilBehandling fra UnderBehandling`() {
-        val oppgave = lagOppgave(type = KLAR_TIL_BEHANDLING)
+        val oppgave = lagOppgave(type = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler.navIdent)
 
         shouldNotThrowAny {
-            oppgave.fjernAnsvar(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+            oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler))
         }
 
         oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -149,7 +150,7 @@ class OppgaveTilstandTest {
             )
         }
         shouldThrow<UlovligTilstandsendringException> {
-            oppgave.fjernAnsvar(SettOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler.navIdent, saksbehandler))
+            oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler))
         }
 
         shouldThrow<UlovligTilstandsendringException> {
@@ -219,31 +220,14 @@ class OppgaveTilstandTest {
         )
 
         oppgave.fjernAnsvar(
-            SettOppgaveAnsvarHendelse(
+            FjernOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = saksbehandler.navIdent,
                 utførtAv = saksbehandler,
             ),
         )
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
         oppgave.utsattTil() shouldBe null
-        oppgave.saksbehandlerIdent shouldBe null
-    }
-
-    @Test
-    fun `Fjern ansvar fra en oppgave med tilstand KLAR_TIL_BEHANDLING`() {
-        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING, saksbehandler.navIdent)
-
-        oppgave.fjernAnsvar(
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = saksbehandler.navIdent,
-                utførtAv = saksbehandler,
-            ),
-        )
-
-        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
         oppgave.saksbehandlerIdent shouldBe null
     }
 
@@ -404,7 +388,7 @@ class OppgaveTilstandTest {
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler1.navIdent, saksbehandler1))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
 
-        oppgave.fjernAnsvar(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler1.navIdent, saksbehandler1))
+        oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler1))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
 
         val saksbehandler2 = Aktør.Saksbehandler("saksbehandler 2")

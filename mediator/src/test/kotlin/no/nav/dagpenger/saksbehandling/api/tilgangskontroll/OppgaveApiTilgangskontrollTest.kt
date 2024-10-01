@@ -33,9 +33,9 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.mockAzure
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -243,9 +243,8 @@ class OppgaveApiTilgangskontrollTest {
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgaveForEgenAnsatt
         coEvery {
             oppgaveMediatorMock.fristillOppgave(
-                SettOppgaveAnsvarHendelse(
+                FjernOppgaveAnsvarHendelse(
                     oppgaveId = testOppgaveForEgenAnsatt.oppgaveId,
-                    ansvarligIdent = SAKSBEHANDLER_IDENT,
                     utførtAv = Aktør.Saksbehandler(SAKSBEHANDLER_IDENT),
                 ),
             )

@@ -45,6 +45,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -445,9 +446,8 @@ class OppgaveApiTest {
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery {
             oppgaveMediatorMock.fristillOppgave(
-                SettOppgaveAnsvarHendelse(
+                FjernOppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
-                    ansvarligIdent = SAKSBEHANDLER_IDENT,
                     utførtAv = saksbehandler,
                 ),
             )
@@ -461,9 +461,8 @@ class OppgaveApiTest {
 
         verify(exactly = 1) {
             oppgaveMediatorMock.fristillOppgave(
-                SettOppgaveAnsvarHendelse(
+                FjernOppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
-                    ansvarligIdent = SAKSBEHANDLER_IDENT,
                     utførtAv = saksbehandler,
                 ),
             )
