@@ -103,6 +103,32 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+  /oppgave/{oppgaveId}/innstill:
+    put:
+      summary: Saksbehandler sender oppgaven til kontroll og innstiller vedtaket
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '204':
+          description: Vellykket respons
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven er allerede sendt til kontroll
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak:
     put:
