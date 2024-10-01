@@ -47,6 +47,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -171,6 +172,15 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
+                    route("innstill") {
+                        put {
+                            oppgaveTilgangskontroll(tilgangskontroller)
+                            val klarTilKontrollHendelse = call.klarTilKontrollHendelse()
+                            logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
+                            oppgaveMediator.gjørKlarTilKontroll(klarTilKontrollHendelse)
+                            call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
                     route("ferdigstill/melding-om-vedtak") {
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller)
@@ -276,6 +286,14 @@ private fun ApplicationCall.settOppgaveAnsvarHendelse(): SettOppgaveAnsvarHendel
 private fun ApplicationCall.fjernOppgaveAnsvarHendelse(): FjernOppgaveAnsvarHendelse {
     val navIdent = this.navIdent()
     return FjernOppgaveAnsvarHendelse(
+        oppgaveId = this.finnUUID("oppgaveId"),
+        utførtAv = Aktør.Saksbehandler(navIdent),
+    )
+}
+
+private fun ApplicationCall.klarTilKontrollHendelse(): KlarTilKontrollHendelse {
+    val navIdent = this.navIdent()
+    return KlarTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = Aktør.Saksbehandler(navIdent),
     )
