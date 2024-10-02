@@ -269,10 +269,12 @@ class OppgaveApiTilgangskontrollTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-//            client.put("oppgave/${UUIDv7.ny()}/kontroller") {
-//                autentisert(token = gyldigSaksbehandlerToken())
-//            }.status shouldBe HttpStatusCode.Forbidden
+            client.put("oppgave/${UUIDv7.ny()}/kontroller") {
+                autentisert(token = gyldigSaksbehandlerToken())
+            }.status shouldBe HttpStatusCode.Forbidden
+        }
 
+        withOppgaveApi(oppgaveMediatorMock) {
             client.put("oppgave/${UUIDv7.ny()}/kontroller") {
                 autentisert(token = gyldigBeslutterToken())
             }.status shouldBe HttpStatusCode.NoContent
