@@ -27,12 +27,15 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigBeslutterToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagMediatorMock
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstand
@@ -50,6 +53,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -434,6 +438,65 @@ class OppgaveApiTest {
                       "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                     }
                     """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Beslutter skal kunne ta en kontrolloppgave`() {
+        val oppgaveMediatorMock = lagMediatorMock()
+        val oppgaveId = UUIDv7.ny()
+
+        coEvery {
+            oppgaveMediatorMock.tildelTotrinnskontroll(
+                ToTrinnskontrollHendelse(
+                    oppgaveId = oppgaveId,
+                    ansvarligIdent = BESLUTTER_IDENT,
+                    utførtAv = Aktør.Beslutter(BESLUTTER_IDENT),
+                ),
+            )
+        } just runs
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/$oppgaveId/kontroller") { autentisert(token = gyldigBeslutterToken()) }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+        }
+    }
+
+    @Test
+    fun `Feilstatuser når beslutter forsøker å ta en kontrolloppgave`() {
+        val oppgaveMediatorMock = lagMediatorMock()
+        val oppgaveSomIkkeFinnes = UUIDv7.ny()
+        val oppgaveSomAlleredeErUnderKontroll = UUIDv7.ny()
+
+        coEvery {
+            oppgaveMediatorMock.tildelTotrinnskontroll(
+                ToTrinnskontrollHendelse(
+                    oppgaveId = oppgaveSomIkkeFinnes,
+                    ansvarligIdent = BESLUTTER_IDENT,
+                    utførtAv = Aktør.Beslutter(BESLUTTER_IDENT),
+                ),
+            )
+        } throws DataNotFoundException("Oppgave ikke funnet")
+
+        coEvery {
+            oppgaveMediatorMock.tildelTotrinnskontroll(
+                ToTrinnskontrollHendelse(
+                    oppgaveId = oppgaveSomAlleredeErUnderKontroll,
+                    ansvarligIdent = BESLUTTER_IDENT,
+                    utførtAv = Aktør.Beslutter(BESLUTTER_IDENT),
+                ),
+            )
+        } throws UlovligTilstandsendringException("Oppgaven er allerede under kontroll")
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/$oppgaveSomIkkeFinnes/kontroller") { autentisert(token = gyldigBeslutterToken()) }.also { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+            }
+            client.put("/oppgave/$oppgaveSomAlleredeErUnderKontroll/kontroller") { autentisert(token = gyldigBeslutterToken()) }.also {
+                    response ->
+                response.status shouldBe HttpStatusCode.Conflict
             }
         }
     }
