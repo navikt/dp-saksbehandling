@@ -16,6 +16,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
@@ -26,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigBeslutterToken
@@ -38,6 +40,7 @@ import no.nav.dagpenger.saksbehandling.api.mockAzure
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -262,22 +265,31 @@ class OppgaveApiTilgangskontrollTest {
 
     @Test
     fun `Kun beslutter skal ha tilgang til kontroller endepunktet`() {
+        val oppgaveId = UUIDv7.ny()
+        val toTrinnskontrollHendelse: ToTrinnskontrollHendelse =
+            ToTrinnskontrollHendelse(
+                oppgaveId = oppgaveId,
+                ansvarligIdent = BESLUTTER_IDENT,
+                utførtAv = Aktør.Beslutter(BESLUTTER_IDENT),
+            )
+
         val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also { oppgaveMediator ->
-                every { oppgaveMediator.personSkjermesSomEgneAnsatte(any()) } returns false
-                every { oppgaveMediator.adresseGraderingForPerson(any()) } returns UGRADERT
+            mockk<OppgaveMediator>().also { it ->
+                every { it.personSkjermesSomEgneAnsatte(any()) } returns false
+                every { it.adresseGraderingForPerson(any()) } returns UGRADERT
+                every { it.tildelTotrinnskontroll(toTrinnskontrollHendelse) } just Runs
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("oppgave/${UUIDv7.ny()}/kontroller") {
+            client.put("oppgave/$oppgaveId/kontroller") {
                 autentisert(token = gyldigSaksbehandlerToken())
             }.status shouldBe HttpStatusCode.Forbidden
-        }
 
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.put("oppgave/${UUIDv7.ny()}/kontroller") {
+            client.put("oppgave/$oppgaveId/kontroller") {
                 autentisert(token = gyldigBeslutterToken())
             }.status shouldBe HttpStatusCode.NoContent
         }
+
+        verify(exactly = 1) { oppgaveMediatorMock.tildelTotrinnskontroll(toTrinnskontrollHendelse) }
     }
 }

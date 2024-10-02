@@ -264,11 +264,11 @@ class OppgaveTilstandTest {
 
         oppgave.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
+                oppgaveId = oppgave.oppgaveId,
                 ansvarligIdent = beslutter.navIdent,
                 utførtAv = beslutter,
             ),
         )
-
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll
         oppgave.saksbehandlerIdent shouldBe beslutter.navIdent
     }
@@ -296,6 +296,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.tildelTotrinnskontroll(
                     ToTrinnskontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
                         ansvarligIdent = beslutter.navIdent,
                         utførtAv = beslutter,
                     ),
@@ -401,6 +402,7 @@ class OppgaveTilstandTest {
         val beslutter1 = Aktør.Beslutter("beslutter 1")
         oppgave.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
+                oppgaveId = oppgave.oppgaveId,
                 ansvarligIdent = beslutter1.navIdent,
                 utførtAv = beslutter1,
             ),
@@ -415,6 +417,7 @@ class OppgaveTilstandTest {
         oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
         oppgave.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
+                oppgaveId = oppgave.oppgaveId,
                 ansvarligIdent = beslutter2.navIdent,
                 utførtAv = beslutter1,
             ),

@@ -51,6 +51,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
@@ -185,6 +186,8 @@ internal fun Application.oppgaveApi(
                     route("kontroller") {
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller + BeslutterTilgangsKontroll)
+                            val toTrinnskontrollHendelse = call.tildelKontrollHendelse()
+                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
@@ -297,6 +300,15 @@ private fun ApplicationCall.fjernOppgaveAnsvarHendelse(): FjernOppgaveAnsvarHend
     return FjernOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = Aktør.Saksbehandler(navIdent),
+    )
+}
+
+private fun ApplicationCall.tildelKontrollHendelse(): ToTrinnskontrollHendelse {
+    val beslutterIdent = this.navIdent()
+    return ToTrinnskontrollHendelse(
+        oppgaveId = this.finnUUID("oppgaveId"),
+        ansvarligIdent = beslutterIdent,
+        utførtAv = Aktør.Beslutter(beslutterIdent),
     )
 }
 
