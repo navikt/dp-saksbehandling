@@ -166,7 +166,10 @@ class OppgaveMediator(
     }
 
     fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
-        TODO("Not yet implemented")
+        repository.hentOppgave(toTrinnskontrollHendelse.oppgaveId).also { oppgave ->
+            oppgave.tildelTotrinnskontroll(toTrinnskontrollHendelse)
+            repository.lagre(oppgave)
+        }
     }
 
     private fun lagPerson(ident: String): Person {
