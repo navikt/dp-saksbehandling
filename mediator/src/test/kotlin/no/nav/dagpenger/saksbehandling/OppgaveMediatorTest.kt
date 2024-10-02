@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -27,8 +28,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
@@ -41,10 +42,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
+import javax.sql.DataSource
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
     private val saksbehandler = Aktør.Saksbehandler("saksbehandlerIdent")
+    private val beslutter = Aktør.Saksbehandler("beslutterIdent")
     private val sak = Sak("12342", "Arena")
     private val testRapid = TestRapid()
     private val pdlKlientMock =
@@ -76,51 +79,16 @@ class OppgaveMediatorTest {
 
     @Test
     fun `Skal kunne sette oppgave til klar-til-kontroll`() {
-        withMigratedDb { datasource ->
+        withMigratedDb { dataSource ->
+            val oppgave = dataSource.lagTestoppgave(UNDER_BEHANDLING)
             val oppgaveMediator =
                 OppgaveMediator(
-                    repository = PostgresOppgaveRepository(datasource),
+                    repository = PostgresOppgaveRepository(dataSource),
                     skjermingKlientMock,
                     pdlKlientMock,
                     behandlingKlientMock,
                     mockk(),
                 )
-            val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-            VedtakFattetMottak(testRapid, oppgaveMediator, utsendingMediator)
-
-            val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                )
-
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-
-            oppgaveMediator.settOppgaveKlarTilBehandling(
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    emneknagger = emneknagger,
-                ),
-            )
-
-            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
-
-            oppgaveMediator.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
-                    utførtAv = saksbehandler,
-                ),
-            )
-
             oppgaveMediator.gjørKlarTilKontroll(
                 KlarTilKontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -132,6 +100,34 @@ class OppgaveMediatorTest {
             oppgaveTilKontroll.saksbehandlerIdent shouldBe null
             // TODO når persistering av loggen er ok
             // oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
+        }
+    }
+
+    @Test
+    fun `Skal kunne ta en oppgave under kontroll`() {
+        withMigratedDb { dataSource ->
+            val oppgave = dataSource.lagTestoppgave(KLAR_TIL_KONTROLL)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(dataSource),
+                    skjermingKlientMock,
+                    pdlKlientMock,
+                    behandlingKlientMock,
+                    mockk(),
+                )
+            oppgaveMediator.tildelTotrinnskontroll(
+                ToTrinnskontrollHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+            val oppgaveUnderKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            oppgaveUnderKontroll.tilstand().type shouldBe UNDER_KONTROLL
+            oppgaveUnderKontroll.saksbehandlerIdent shouldBe beslutter.navIdent
+            // TODO når persistering av loggen er ok
+            // oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
+            // oppgaveTilKontroll.sisteBeslutter() shouldBe beslutter
         }
     }
 
@@ -159,6 +155,8 @@ class OppgaveMediatorTest {
         withMigratedDb { datasource ->
             val testEmneknagger = setOf("a", "b", "c")
 
+            val oppgave = datasource.lagTestoppgave(tilstand = OPPRETTET)
+
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
@@ -168,40 +166,26 @@ class OppgaveMediatorTest {
                     mockk(),
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-            AvklaringIkkeRelevantMottak(testRapid, oppgaveMediator)
-
-            val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                )
-
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = oppgave.behandlingId,
                     emneknagger = testEmneknagger,
                 ),
             )
 
-            oppgaveMediator.finnOppgaveFor(behandlingId)!!.emneknagger shouldContainAll testEmneknagger
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId).emneknagger shouldContainAll testEmneknagger
 
             oppgaveMediator.fjernEmneknagg(
                 IkkeRelevantAvklaringHendelse(
                     ident = testIdent,
-                    behandlingId = behandlingId,
+                    behandlingId = oppgave.behandlingId,
                     ikkeRelevantEmneknagg = "a",
                 ),
             )
 
-            oppgaveMediator.finnOppgaveFor(behandlingId)!!.emneknagger shouldContainAll testEmneknagger.minus("a")
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId).emneknagger shouldContainAll testEmneknagger.minus("a")
         }
     }
 
@@ -559,5 +543,84 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT).size shouldBe 1
         }
+    }
+
+    private fun DataSource.lagTestoppgave(tilstand: Oppgave.Tilstand.Type): Oppgave {
+        val oppgaveMediator =
+            OppgaveMediator(
+                repository = PostgresOppgaveRepository(this),
+                skjermingKlientMock,
+                pdlKlientMock,
+                behandlingKlientMock,
+                mockk(),
+            )
+        val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
+
+        BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+        VedtakFattetMottak(testRapid, oppgaveMediator, utsendingMediator)
+
+        val søknadId = UUIDv7.ny()
+        val behandlingId = UUIDv7.ny()
+        val søknadsbehandlingOpprettetHendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = søknadId,
+                behandlingId = behandlingId,
+                ident = testIdent,
+                opprettet = LocalDateTime.now(),
+            )
+
+        oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+
+        val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).single()
+
+        if (tilstand == OPPRETTET) {
+            return oppgave
+        }
+
+        oppgaveMediator.settOppgaveKlarTilBehandling(
+            ForslagTilVedtakHendelse(
+                ident = testIdent,
+                søknadId = søknadId,
+                behandlingId = behandlingId,
+                emneknagger = emneknagger,
+            ),
+        )
+
+        if (tilstand == KLAR_TIL_BEHANDLING) {
+            return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+        }
+
+        oppgaveMediator.tildelOppgave(
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                ansvarligIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
+            ),
+        )
+
+        if (tilstand == UNDER_BEHANDLING) {
+            return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+        }
+
+        oppgaveMediator.gjørKlarTilKontroll(
+            KlarTilKontrollHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                utførtAv = saksbehandler,
+            ),
+        )
+
+        if (tilstand == KLAR_TIL_KONTROLL) {
+            return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+        }
+
+        oppgaveMediator.tildelTotrinnskontroll(
+            ToTrinnskontrollHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                ansvarligIdent = beslutter.navIdent,
+                utførtAv = beslutter,
+            ),
+        )
+
+        return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
     }
 }
