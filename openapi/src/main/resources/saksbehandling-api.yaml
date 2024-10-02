@@ -130,6 +130,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /oppgave/{oppgaveId}/kontroller:
+    put:
+      summary: Beslutter tar oppgaven til kontroll
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Beslutter har tatt oppgaven til kontroll
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven er allerede tatt til kontroll
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
   /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak:
     put:
       summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending.
@@ -183,7 +208,7 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
   /oppgave/{oppgaveId}/utsett:
     put:
-      summary: Saksbehandler blir tildelt ansvaret for oppgaven
+      summary: Saksbehandler utsetter oppgaven
       parameters:
         - in: path
           name: oppgaveId
