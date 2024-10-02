@@ -8,6 +8,7 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -17,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -25,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_P
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -422,6 +425,22 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente en oppgave`() {
         val testOppgave = lagOppgave()
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testOppgave)
+            val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
+            oppgaveFraDatabase shouldBe testOppgave
+        }
+    }
+
+    @Test
+    fun `Skal kunne lagre og hente tilstandslogg for en spesifikk oppgave`() {
+        val saksbehandler = Aktør.Saksbehandler(saksbehandlerIdent)
+        val tilstandslogg =
+            Tilstandslogg().also {
+                it.leggTil(KlarTilBehandling, KlarTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler))
+            }
+        val testOppgave = lagOppgave(tilstandslogg = tilstandslogg, oppgaveId = oppgaveIdTest)
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)

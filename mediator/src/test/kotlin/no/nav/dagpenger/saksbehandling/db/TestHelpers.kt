@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -36,9 +37,11 @@ fun lagOppgave(
     behandling: Behandling = lagBehandling(person = person),
     emneknagger: Set<String> = emptySet(),
     utsattTil: LocalDate? = null,
+    tilstandslogg: Tilstandslogg = Tilstandslogg(),
+    oppgaveId: UUID = UUIDv7.ny(),
 ): Oppgave {
     return Oppgave.rehydrer(
-        oppgaveId = UUIDv7.ny(),
+        oppgaveId = oppgaveId,
         ident = person.ident,
         saksbehandlerIdent = saksbehandlerIdent,
         behandlingId = behandling.behandlingId,
@@ -47,6 +50,7 @@ fun lagOppgave(
         tilstand = tilstand,
         behandling = behandling,
         utsattTil = utsattTil,
+        tilstandslogg = tilstandslogg,
     )
 }
 

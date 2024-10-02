@@ -99,7 +99,7 @@ class OppgaveMediatorTest {
             oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgaveTilKontroll.saksbehandlerIdent shouldBe null
             // TODO når persistering av loggen er ok
-            // oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
+            oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
         }
     }
 

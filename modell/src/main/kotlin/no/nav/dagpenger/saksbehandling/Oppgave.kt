@@ -39,9 +39,8 @@ data class Oppgave private constructor(
     private var tilstand: Tilstand = Opprettet,
     val behandling: Behandling,
     private var utsattTil: LocalDate? = null,
+    private val _tilstandslogg: Tilstandslogg = Tilstandslogg(),
 ) {
-    private val tilstandslogg = Tilstandslogg()
-
     constructor(
         oppgaveId: UUID,
         ident: String,
@@ -50,6 +49,7 @@ data class Oppgave private constructor(
         opprettet: LocalDateTime,
         tilstand: Tilstand = Opprettet,
         behandling: Behandling,
+        tilstandslogg: Tilstandslogg = Tilstandslogg(),
     ) : this(
         oppgaveId = oppgaveId,
         ident = ident,
@@ -59,6 +59,7 @@ data class Oppgave private constructor(
         behandlingId = behandlingId,
         tilstand = tilstand,
         behandling = behandling,
+        _tilstandslogg = tilstandslogg,
     )
 
     companion object {
@@ -74,6 +75,7 @@ data class Oppgave private constructor(
             tilstand: Tilstand,
             behandling: Behandling,
             utsattTil: LocalDate?,
+            tilstandslogg: Tilstandslogg = Tilstandslogg(),
         ): Oppgave =
             Oppgave(
                 oppgaveId = oppgaveId,
@@ -85,11 +87,14 @@ data class Oppgave private constructor(
                 tilstand = tilstand,
                 behandling = behandling,
                 utsattTil = utsattTil,
+                _tilstandslogg = tilstandslogg,
             )
     }
 
     val emneknagger: Set<String>
         get() = _emneknagger.toSet()
+    val tilstandslogg: Tilstandslogg
+        get() = _tilstandslogg
 
     fun tilstand() = this.tilstand
 
@@ -153,12 +158,12 @@ data class Oppgave private constructor(
                 "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
-        this.tilstandslogg.leggTil(nyTilstand, hendelse)
+        this._tilstandslogg.leggTil(nyTilstand, hendelse)
     }
 
     fun sisteSaksbehandler(): String? {
         return kotlin.runCatching {
-            tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING }?.let {
+            _tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING }?.let {
                 (it.hendelse as SettOppgaveAnsvarHendelse).ansvarligIdent
             }
         }
@@ -168,7 +173,7 @@ data class Oppgave private constructor(
 
     fun sisteBeslutter(): String? {
         return kotlin.runCatching {
-            tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL }?.let {
+            _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL }?.let {
                 (it.hendelse as ToTrinnskontrollHendelse).ansvarligIdent
             }
         }

@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
@@ -663,6 +664,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
         ).asUpdate,
     )
     lagre(oppgave.oppgaveId, oppgave.emneknagger)
+    lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
 }
 
 private fun TransactionalSession.lagre(
@@ -682,6 +684,38 @@ private fun TransactionalSession.lagre(
                     ON CONFLICT ON CONSTRAINT emneknagg_oppgave_unique DO NOTHING
                     """.trimIndent(),
                 paramMap = mapOf("oppgave_id" to oppgaveId, "emneknagg" to emneknagg),
+            ).asUpdate,
+        )
+    }
+}
+
+private fun TransactionalSession.lagre(
+    oppgaveId: UUID,
+    tilstandslogg: Tilstandslogg,
+) {
+    tilstandslogg.forEach { tilstandsendring ->
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO oppgave_tilstand_logg_v1
+                        (id, oppgave_id, tilstand, hendelse)
+                    VALUES
+                        (:id, :oppgave_id, :tilstand, :hendelse)
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "id" to tilstandsendring.id,
+                        "oppgave_id" to oppgaveId,
+                        "tilstand" to tilstandsendring.tilstand.name,
+                        "hendelse" to
+                            PGobject().also {
+                                it.type = "JSONB"
+                                it.value = tilstandsendring.hendelse.tilJson()
+                            },
+                    ),
             ).asUpdate,
         )
     }
