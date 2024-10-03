@@ -7,6 +7,11 @@ import java.util.UUID
 data class Tilstandslogg(
     private val tilstandsendringer: MutableList<Tilstandsendring> = mutableListOf(),
 ) : List<Tilstandsendring> by tilstandsendringer {
+    companion object {
+        fun rehydrer(tilstandsendringer: List<Tilstandsendring>): Tilstandslogg =
+            Tilstandslogg(tilstandsendringer.sortedBy { it.tidspunkt }.toMutableList())
+    }
+
     fun leggTil(
         nyTilstand: Oppgave.Tilstand,
         hendelse: Hendelse,

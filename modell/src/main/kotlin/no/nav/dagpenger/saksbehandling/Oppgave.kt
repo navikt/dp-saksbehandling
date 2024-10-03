@@ -16,7 +16,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -32,8 +32,7 @@ data class Oppgave private constructor(
     val opprettet: LocalDateTime,
     // TODO: Bedre navn a'la borgerIdent?
     val ident: String,
-    // TODO: Bedre navn a'la behandlerIdent?
-    var saksbehandlerIdent: String? = null,
+    var behandlerIdent: String? = null,
     val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = Opprettet,
@@ -53,7 +52,7 @@ data class Oppgave private constructor(
     ) : this(
         oppgaveId = oppgaveId,
         ident = ident,
-        saksbehandlerIdent = null,
+        behandlerIdent = null,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         behandlingId = behandlingId,
@@ -81,7 +80,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
                 ident = ident,
-                saksbehandlerIdent = saksbehandlerIdent,
+                behandlerIdent = saksbehandlerIdent,
                 behandlingId = behandlingId,
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,
@@ -141,7 +140,7 @@ data class Oppgave private constructor(
         tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
     }
 
-    fun sendTilbakeTilKlarTilKontroll(tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse) {
+    fun sendTilbakeTilKlarTilKontroll(tilbakeTilKontrollHendelse: TilbakeTilKlarTilKontrollHendelse) {
         tilstand.sendTilbakeTilKlarTilKontroll(this, tilbakeTilKontrollHendelse)
     }
 
@@ -207,7 +206,7 @@ data class Oppgave private constructor(
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
-            oppgave.saksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
+            oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
         override fun ferdigstill(
@@ -226,7 +225,7 @@ data class Oppgave private constructor(
             klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {
             oppgave.endreTilstand(KlarTilKontroll, klarTilKontrollHendelse)
-            oppgave.saksbehandlerIdent = null
+            oppgave.behandlerIdent = null
         }
 
         override fun fjernAnsvar(
@@ -234,17 +233,17 @@ data class Oppgave private constructor(
             fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
-            oppgave.saksbehandlerIdent = null
+            oppgave.behandlerIdent = null
         }
 
         override fun tildel(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            if (oppgave.saksbehandlerIdent != settOppgaveAnsvarHendelse.ansvarligIdent) {
+            if (oppgave.behandlerIdent != settOppgaveAnsvarHendelse.ansvarligIdent) {
                 sikkerlogg.warn {
                     "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${settOppgaveAnsvarHendelse.ansvarligIdent}. " +
-                        "Oppgave er allerede tildelt ${oppgave.saksbehandlerIdent}."
+                        "Oppgave er allerede tildelt ${oppgave.behandlerIdent}."
                 }
                 throw AlleredeTildeltException(
                     "Kan ikke tildele oppgave til annen saksbehandler.Oppgave er allerede tildelt.",
@@ -257,7 +256,7 @@ data class Oppgave private constructor(
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
             oppgave.endreTilstand(PaaVent, utsettOppgaveHendelse)
-            oppgave.saksbehandlerIdent =
+            oppgave.behandlerIdent =
                 when (utsettOppgaveHendelse.beholdOppgave) {
                     true -> utsettOppgaveHendelse.navIdent
                     false -> null
@@ -277,7 +276,7 @@ data class Oppgave private constructor(
             tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
         ) {
             oppgave.endreTilstand(UnderKontroll, tilbakeTilUnderKontrollHendelse)
-            oppgave.saksbehandlerIdent = tilbakeTilUnderKontrollHendelse.beslutterIdent
+            oppgave.behandlerIdent = tilbakeTilUnderKontrollHendelse.ansvarligIdent
         }
 
         override fun ferdigstill(
@@ -329,7 +328,7 @@ data class Oppgave private constructor(
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
-            oppgave.saksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
+            oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
             oppgave.utsattTil = null
         }
 
@@ -338,7 +337,7 @@ data class Oppgave private constructor(
             fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
-            oppgave.saksbehandlerIdent = null
+            oppgave.behandlerIdent = null
             oppgave.utsattTil = null
         }
 
@@ -358,7 +357,7 @@ data class Oppgave private constructor(
             toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
         ) {
             oppgave.endreTilstand(UnderKontroll, toTrinnskontrollHendelse)
-            oppgave.saksbehandlerIdent = toTrinnskontrollHendelse.ansvarligIdent
+            oppgave.behandlerIdent = toTrinnskontrollHendelse.ansvarligIdent
         }
     }
 
@@ -384,15 +383,15 @@ data class Oppgave private constructor(
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             oppgave.endreTilstand(UnderBehandling, settOppgaveAnsvarHendelse)
-            oppgave.saksbehandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
+            oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
         override fun sendTilbakeTilKlarTilKontroll(
             oppgave: Oppgave,
-            tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse,
+            tilbakeTilKontrollHendelse: TilbakeTilKlarTilKontrollHendelse,
         ) {
             oppgave.endreTilstand(KlarTilKontroll, tilbakeTilKontrollHendelse)
-            oppgave.saksbehandlerIdent = null
+            oppgave.behandlerIdent = null
         }
     }
 
@@ -527,7 +526,7 @@ data class Oppgave private constructor(
 
         fun sendTilbakeTilKlarTilKontroll(
             oppgave: Oppgave,
-            tilbakeTilKontrollHendelse: TilbakeTilKontrollHendelse,
+            tilbakeTilKontrollHendelse: TilbakeTilKlarTilKontrollHendelse,
         ) {
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake til klar til kontroll i tilstand $type")
         }

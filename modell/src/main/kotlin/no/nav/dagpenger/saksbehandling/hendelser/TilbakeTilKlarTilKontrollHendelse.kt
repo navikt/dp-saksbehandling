@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.hendelser
 
 import java.util.UUID
 
-data class KlarTilKontrollHendelse(
+data class TilbakeTilKlarTilKontrollHendelse(
     val oppgaveId: UUID,
     override val utførtAv: String,
-) : Hendelse(utførtAv)
+) : Hendelse(utførtAv = utførtAv)

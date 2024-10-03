@@ -1,5 +1,13 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-import no.nav.dagpenger.saksbehandling.Aktør
+import java.util.UUID
 
-data class TilbakeTilUnderKontrollHendelse(val beslutterIdent: String) : Hendelse(Aktør.Beslutter(beslutterIdent))
+data class TilbakeTilUnderKontrollHendelse(
+    val oppgaveId: UUID,
+    override val utførtAv: String,
+    override val ansvarligIdent: String,
+) :
+    AnsvarHendelse(
+            utførtAv = utførtAv,
+            ansvarligIdent = ansvarligIdent,
+        )

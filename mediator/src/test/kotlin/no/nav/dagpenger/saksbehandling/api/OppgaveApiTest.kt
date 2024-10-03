@@ -21,7 +21,6 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -64,7 +63,7 @@ import java.time.LocalDateTime
 
 class OppgaveApiTest {
     val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
-    private val saksbehandler = Aktør.Saksbehandler(SAKSBEHANDLER_IDENT)
+    private val saksbehandler = SAKSBEHANDLER_IDENT
 
     @Test
     fun `GET på oppgaver uten query parameters`() {
@@ -115,7 +114,7 @@ class OppgaveApiTest {
                       "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
                       "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
-                      "saksbehandlerIdent": "${oppgave1.saksbehandlerIdent}",
+                      "saksbehandlerIdent": "${oppgave1.behandlerIdent}",
                       "utsattTilDato": "${oppgave1.utsattTil()}"
                     },
                     {
@@ -249,7 +248,7 @@ class OppgaveApiTest {
                 oppgave.oppgaveId,
                 meldingOmVedtakHtml,
                 saksbehandlerToken = saksbehandlerToken,
-                aktør = Aktør.Saksbehandler(SAKSBEHANDLER_IDENT),
+                utførtAv = SAKSBEHANDLER_IDENT,
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
@@ -302,7 +301,7 @@ class OppgaveApiTest {
             GodkjennBehandlingMedBrevIArena(
                 oppgaveId = oppgave.oppgaveId,
                 saksbehandlerToken = saksbehandlerToken,
-                aktør = saksbehandler,
+                utførtAv = saksbehandler,
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
@@ -452,7 +451,7 @@ class OppgaveApiTest {
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgaveId,
                     ansvarligIdent = BESLUTTER_IDENT,
-                    utførtAv = Aktør.Beslutter(BESLUTTER_IDENT),
+                    utførtAv = BESLUTTER_IDENT,
                 ),
             )
         } just runs
@@ -475,7 +474,7 @@ class OppgaveApiTest {
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgaveSomIkkeFinnes,
                     ansvarligIdent = BESLUTTER_IDENT,
-                    utførtAv = Aktør.Beslutter(BESLUTTER_IDENT),
+                    utførtAv = BESLUTTER_IDENT,
                 ),
             )
         } throws DataNotFoundException("Oppgave ikke funnet")
@@ -485,7 +484,7 @@ class OppgaveApiTest {
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgaveSomAlleredeErUnderKontroll,
                     ansvarligIdent = BESLUTTER_IDENT,
-                    utførtAv = Aktør.Beslutter(BESLUTTER_IDENT),
+                    utførtAv = BESLUTTER_IDENT,
                 ),
             )
         } throws UlovligTilstandsendringException("Oppgaven er allerede under kontroll")
@@ -543,7 +542,7 @@ class OppgaveApiTest {
                 navIdent = SAKSBEHANDLER_IDENT,
                 utsattTil = utsettTilDato,
                 beholdOppgave = true,
-                aktør = saksbehandler,
+                utførtAv = saksbehandler,
             )
 
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave

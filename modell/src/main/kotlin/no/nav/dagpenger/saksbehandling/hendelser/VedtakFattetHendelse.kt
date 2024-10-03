@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Sak
 import java.util.UUID
 
@@ -9,5 +8,5 @@ data class VedtakFattetHendelse(
     val søknadId: UUID,
     val ident: String,
     val sak: Sak,
-    private val aktør: Aktør = Aktør.System.dpBehandling,
-) : Hendelse(aktør)
+    override val utførtAv: String = "dp-behandling",
+) : Hendelse(utførtAv)

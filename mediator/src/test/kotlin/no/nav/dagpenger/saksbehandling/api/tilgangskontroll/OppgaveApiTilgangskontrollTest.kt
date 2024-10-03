@@ -21,7 +21,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -250,7 +249,7 @@ class OppgaveApiTilgangskontrollTest {
             oppgaveMediatorMock.fristillOppgave(
                 FjernOppgaveAnsvarHendelse(
                     oppgaveId = testOppgaveForEgenAnsatt.oppgaveId,
-                    utførtAv = Aktør.Saksbehandler(SAKSBEHANDLER_IDENT),
+                    utførtAv = SAKSBEHANDLER_IDENT,
                 ),
             )
         } just runs
@@ -270,7 +269,7 @@ class OppgaveApiTilgangskontrollTest {
             ToTrinnskontrollHendelse(
                 oppgaveId = oppgaveId,
                 ansvarligIdent = BESLUTTER_IDENT,
-                utførtAv = Aktør.Beslutter(BESLUTTER_IDENT),
+                utførtAv = BESLUTTER_IDENT,
             )
 
         val oppgaveMediatorMock =

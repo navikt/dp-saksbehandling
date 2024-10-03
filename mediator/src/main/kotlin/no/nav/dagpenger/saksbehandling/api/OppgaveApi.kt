@@ -23,7 +23,6 @@ import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Aktør
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
@@ -75,7 +74,7 @@ internal fun Application.oppgaveApi(
             val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
             val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
             val saksbehandlerDTO =
-                oppgave.saksbehandlerIdent?.let { saksbehandlerIdent ->
+                oppgave.behandlerIdent?.let { saksbehandlerIdent ->
                     async { saksbehandlerOppslag.hentSaksbehandler(saksbehandlerIdent) }
                 }
             val oppgaveDTO = lagOppgaveDTO(oppgave, person.await(), journalpostIder.await(), saksbehandlerDTO?.await())
@@ -208,7 +207,7 @@ internal fun Application.oppgaveApi(
                                         meldingOmVedtak = meldingOmVedtak,
                                         oppgaveId = oppgaveId,
                                         saksbehandlerToken = saksbehandler.token,
-                                        aktør = Aktør.Saksbehandler(navIdent = saksbehandler.navIdent),
+                                        utførtAv = saksbehandler.navIdent,
                                     ),
                                 )
                                 call.respond(HttpStatusCode.NoContent)
@@ -229,7 +228,7 @@ internal fun Application.oppgaveApi(
                                 GodkjennBehandlingMedBrevIArena(
                                     oppgaveId = oppgaveId,
                                     saksbehandlerToken = saksbehandler.token,
-                                    aktør = Aktør.Saksbehandler(navIdent = saksbehandler.navIdent),
+                                    utførtAv = saksbehandler.navIdent,
                                 ),
                             )
                             call.respond(HttpStatusCode.NoContent)
@@ -276,13 +275,13 @@ private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandli
 
 private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendelse {
     val utsettOppgaveDto = this.receive<UtsettOppgaveDTO>()
-
+    val navIdent = this.navIdent()
     return UtsettOppgaveHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        navIdent = this.navIdent(),
+        navIdent = navIdent,
         utsattTil = utsettOppgaveDto.utsettTilDato,
         beholdOppgave = utsettOppgaveDto.beholdOppgave,
-        aktør = Aktør.Saksbehandler(this.navIdent()),
+        utførtAv = navIdent,
     )
 }
 
@@ -291,7 +290,7 @@ private fun ApplicationCall.settOppgaveAnsvarHendelse(): SettOppgaveAnsvarHendel
     return SettOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         ansvarligIdent = navIdent,
-        utførtAv = Aktør.Saksbehandler(navIdent),
+        utførtAv = navIdent,
     )
 }
 
@@ -299,7 +298,7 @@ private fun ApplicationCall.fjernOppgaveAnsvarHendelse(): FjernOppgaveAnsvarHend
     val navIdent = this.navIdent()
     return FjernOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = Aktør.Saksbehandler(navIdent),
+        utførtAv = navIdent,
     )
 }
 
@@ -308,7 +307,7 @@ private fun ApplicationCall.tildelKontrollHendelse(): ToTrinnskontrollHendelse {
     return ToTrinnskontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         ansvarligIdent = beslutterIdent,
-        utførtAv = Aktør.Beslutter(beslutterIdent),
+        utførtAv = beslutterIdent,
     )
 }
 
@@ -316,7 +315,7 @@ private fun ApplicationCall.klarTilKontrollHendelse(): KlarTilKontrollHendelse {
     val navIdent = this.navIdent()
     return KlarTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = Aktør.Saksbehandler(navIdent),
+        utførtAv = navIdent,
     )
 }
 
@@ -355,7 +354,7 @@ fun lagOppgaveDTO(
                         AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
                     },
             ),
-        saksbehandlerIdent = oppgave.saksbehandlerIdent,
+        saksbehandlerIdent = oppgave.behandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
@@ -397,7 +396,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
             },
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
-        saksbehandlerIdent = this.saksbehandlerIdent,
+        saksbehandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
     )
 

@@ -54,19 +54,19 @@ class OppgaveFristUtgåttJobTest {
             repo.hentOppgave(oppgave1.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe KlarTilBehandling
                 oppgave.emneknagger shouldContain "Tidligere utsatt"
-                oppgave.saksbehandlerIdent shouldBe null
+                oppgave.behandlerIdent shouldBe null
             }
 
             repo.hentOppgave(oppgave2.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe KlarTilBehandling
                 oppgave.emneknagger shouldContain "Tidligere utsatt"
-                oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+                oppgave.behandlerIdent shouldBe saksbehandlerIdent
             }
 
             repo.hentOppgave(oppgave3.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe PaaVent
                 oppgave.emneknagger shouldNotContain "Tidligere utsatt"
-                oppgave.saksbehandlerIdent shouldBe saksbehandlerIdent
+                oppgave.behandlerIdent shouldBe saksbehandlerIdent
             }
         }
 }

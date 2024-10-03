@@ -46,8 +46,8 @@ import javax.sql.DataSource
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
-    private val saksbehandler = Aktør.Saksbehandler("saksbehandlerIdent")
-    private val beslutter = Aktør.Saksbehandler("beslutterIdent")
+    private val saksbehandler = "saksbehandlerIdent"
+    private val beslutter = "beslutterIdent"
     private val sak = Sak("12342", "Arena")
     private val testRapid = TestRapid()
     private val pdlKlientMock =
@@ -97,7 +97,7 @@ class OppgaveMediatorTest {
             )
             val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
-            oppgaveTilKontroll.saksbehandlerIdent shouldBe null
+            oppgaveTilKontroll.behandlerIdent shouldBe null
             // TODO når persistering av loggen er ok
             oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
         }
@@ -118,13 +118,13 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelTotrinnskontroll(
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = beslutter.navIdent,
+                    ansvarligIdent = beslutter,
                     utførtAv = beslutter,
                 ),
             )
             val oppgaveUnderKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             oppgaveUnderKontroll.tilstand().type shouldBe UNDER_KONTROLL
-            oppgaveUnderKontroll.saksbehandlerIdent shouldBe beslutter.navIdent
+            oppgaveUnderKontroll.behandlerIdent shouldBe beslutter
             // TODO når persistering av loggen er ok
             // oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
             // oppgaveTilKontroll.sisteBeslutter() shouldBe beslutter
@@ -241,14 +241,14 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
+                    ansvarligIdent = saksbehandler,
                     utførtAv = saksbehandler,
                 ),
             )
 
             val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
-            tildeltOppgave.saksbehandlerIdent shouldBe saksbehandler.navIdent
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler
 
             testRapid.sendTestMessage(
                 vedtakFattetHendelse(
@@ -326,14 +326,14 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
+                    ansvarligIdent = saksbehandler,
                     utførtAv = saksbehandler,
                 ),
             )
 
             val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
-            tildeltOppgave.saksbehandlerIdent shouldBe saksbehandler.navIdent
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler
 
             val meldingOmVedtak = "<H1>Hei</H1><p>Her er et brev</p>"
             oppgaveMediator.ferdigstillOppgave(
@@ -341,7 +341,7 @@ class OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = meldingOmVedtak,
                     saksbehandlerToken = saksbehandlerToken,
-                    aktør = saksbehandler,
+                    utførtAv = saksbehandler,
                 ),
             )
 
@@ -409,7 +409,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
+                    ansvarligIdent = saksbehandler,
                     utførtAv = saksbehandler,
                 ),
             )
@@ -418,7 +418,7 @@ class OppgaveMediatorTest {
                 GodkjennBehandlingMedBrevIArena(
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandlerToken = saksbehandlerToken,
-                    aktør = saksbehandler,
+                    utførtAv = saksbehandler,
                 ),
             )
 
@@ -525,7 +525,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
+                    ansvarligIdent = saksbehandler,
                     utførtAv = saksbehandler,
                 ),
             )
@@ -534,10 +534,10 @@ class OppgaveMediatorTest {
             oppgaveMediator.utsettOppgave(
                 UtsettOppgaveHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    navIdent = saksbehandler.navIdent,
+                    navIdent = saksbehandler,
                     utsattTil = utSattTil,
                     beholdOppgave = false,
-                    aktør = saksbehandler,
+                    utførtAv = saksbehandler,
                 ),
             )
 
@@ -593,7 +593,7 @@ class OppgaveMediatorTest {
         oppgaveMediator.tildelOppgave(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = saksbehandler.navIdent,
+                ansvarligIdent = saksbehandler,
                 utførtAv = saksbehandler,
             ),
         )
@@ -616,7 +616,7 @@ class OppgaveMediatorTest {
         oppgaveMediator.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = beslutter.navIdent,
+                ansvarligIdent = beslutter,
                 utførtAv = beslutter,
             ),
         )
