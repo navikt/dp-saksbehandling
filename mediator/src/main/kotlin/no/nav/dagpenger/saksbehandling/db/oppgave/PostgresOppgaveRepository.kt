@@ -10,13 +10,26 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import org.postgresql.util.PGobject
@@ -536,11 +549,34 @@ private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
     )
 }
 
+private fun Row.regydrerTilstandsendringHendelse(): Hendelse {
+    return when (val hendelseType = this.string("hendelse_type")) {
+        "SettOppgaveAnsvarHendelse" -> SettOppgaveAnsvarHendelse(
+            oppgaveId = TODO(),
+            ansvarligIdent = TODO(),
+            utførtAv = TODO()
+        )
+        "ToTrinnskontrollHendelse" -> TODO()
+        "BehandlingAvbruttHendelse" -> TODO()
+        is FjernOppgaveAnsvarHendelse -> TODO()
+        is ForslagTilVedtakHendelse -> TODO()
+        is GodkjennBehandlingMedBrevIArena -> TODO()
+        is GodkjentBehandlingHendelse -> TODO()
+        is KlarTilKontrollHendelse -> TODO()
+        is SøknadsbehandlingOpprettetHendelse -> TODO()
+        is TilbakeTilKontrollHendelse -> TODO()
+        is TilbakeTilUnderKontrollHendelse -> TODO()
+        TomHendelse -> TODO()
+        is UtsettOppgaveHendelse -> TODO()
+        is VedtakFattetHendelse -> TODO()
+    }
+}
+
 private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
         "TomHendelse" -> return TomHendelse
         "SøknadsbehandlingOpprettetHendelse" -> SøknadsbehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
-        else -> throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
+       else -> throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
     }
 }
 
@@ -580,6 +616,30 @@ private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
             }.asList,
         )
     }.toSet()
+}
+
+private fun hentTilstandsloggForOppgave(oppgaveId: UUID): Tilstandslogg {
+    return sessionOf(dataSource).use { session ->
+        session.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                """
+                    SELECT id, oppgave_id, tilstand, hendelse, tidspunkt
+                    FROM   oppgave_tilstand_logg_v1
+                    WHERE  oppgave_id = :oppgave_id
+                    """.trimIndent(),
+                paramMap = mapOf("oppgave_id" to oppgaveId),
+            ).map { row ->
+                Tilstandsendring(
+                    id = row.uuid("id"),
+                    tilstand = Type.valueOf(row.string("tilstand")),
+                    hendelse = row.rehydrerHendelse(),
+                    tidspunkt = TODO()
+                )
+            }.asList,
+        )
+    }
 }
 
 private fun TransactionalSession.lagreHendelse(
@@ -700,9 +760,9 @@ private fun TransactionalSession.lagre(
                 statement =
                     """
                     INSERT INTO oppgave_tilstand_logg_v1
-                        (id, oppgave_id, tilstand, hendelse)
+                        (id, oppgave_id, tilstand, hendelse, tidspunkt)
                     VALUES
-                        (:id, :oppgave_id, :tilstand, :hendelse)
+                        (:id, :oppgave_id, :tilstand, :hendelse, :tidspunkt)
                     ON CONFLICT DO NOTHING
                     """.trimIndent(),
                 paramMap =
@@ -715,6 +775,7 @@ private fun TransactionalSession.lagre(
                                 it.type = "JSONB"
                                 it.value = tilstandsendring.hendelse.tilJson()
                             },
+                        "tidspunkt" to tilstandsendring.tidspunkt,
                     ),
             ).asUpdate,
         )
@@ -753,6 +814,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
         tilstand = tilstand,
         behandling = behandling,
         utsattTil = this.localDateOrNull("utsatt_til"),
+        tilstandslogg = hentTilstandsloggForOppgave(oppgaveId),
     )
 }
 
@@ -761,3 +823,23 @@ private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
 }
 
 class DataNotFoundException(message: String) : RuntimeException(message)
+
+fun main() {
+    var a : Hendelse
+    when(a ) {
+        is SettOppgaveAnsvarHendelse -> TODO()
+        is ToTrinnskontrollHendelse -> TODO()
+        is BehandlingAvbruttHendelse -> TODO()
+        is FjernOppgaveAnsvarHendelse -> TODO()
+        is ForslagTilVedtakHendelse -> TODO()
+        is GodkjennBehandlingMedBrevIArena -> TODO()
+        is GodkjentBehandlingHendelse -> TODO()
+        is KlarTilKontrollHendelse -> TODO()
+        is SøknadsbehandlingOpprettetHendelse -> TODO()
+        is TilbakeTilKontrollHendelse -> TODO()
+        is TilbakeTilUnderKontrollHendelse -> TODO()
+        TomHendelse -> TODO()
+        is UtsettOppgaveHendelse -> TODO()
+        is VedtakFattetHendelse -> TODO()
+    }
+}
