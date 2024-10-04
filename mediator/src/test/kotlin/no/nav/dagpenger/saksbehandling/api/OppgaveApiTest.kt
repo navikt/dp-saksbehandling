@@ -353,7 +353,6 @@ class OppgaveApiTest {
                     """
                     {
                       "behandlingId": "${oppgave.behandlingId}",
-                      "personIdent": "$TEST_IDENT",
                       "person": {
                         "ident": "$TEST_IDENT",
                         "fornavn": "PETTER",
@@ -363,7 +362,6 @@ class OppgaveApiTest {
                         "statsborgerskap": "NOR",
                         "skjermesSomEgneAnsatte": ${oppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
-                      "saksbehandlerIdent": "$SAKSBEHANDLER_IDENT",
                       "emneknagger": ["Søknadsbehandling"],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                     }
@@ -422,7 +420,6 @@ class OppgaveApiTest {
                     """
                     {
                       "behandlingId": "${testOppgave.behandlingId}",
-                      "personIdent": "$TEST_IDENT",
                       "person": {
                         "ident": "$TEST_IDENT",
                         "fornavn": "PETTER",
@@ -622,7 +619,6 @@ class OppgaveApiTest {
                     """
                     {
                       "behandlingId": "${testOppgave.behandlingId}",
-                      "personIdent": "${testOppgave.behandling.person.ident}",
                       "person": {
                         "ident": "${testOppgave.behandling.person.ident}",
                         "fornavn": "PETTER",
