@@ -13,7 +13,7 @@ data class SøknadsbehandlingOpprettetHendelse(
     val behandlingId: UUID,
     val ident: String,
     val opprettet: LocalDateTime,
-    override val utførtAv: String = "dp-saksbehandling",
+    override val utførtAv: String = "dp-behandling",
 ) : Hendelse(utførtAv) {
     companion object {
         private val objectMapper: ObjectMapper =
