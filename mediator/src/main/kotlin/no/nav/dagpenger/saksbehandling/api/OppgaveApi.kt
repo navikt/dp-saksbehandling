@@ -329,7 +329,6 @@ fun lagOppgaveDTO(
     OppgaveDTO(
         oppgaveId = oppgave.oppgaveId,
         behandlingId = oppgave.behandlingId,
-        personIdent = oppgave.ident,
         person =
             PersonDTO(
                 ident = person.ident,
@@ -354,7 +353,6 @@ fun lagOppgaveDTO(
                         AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
                     },
             ),
-        saksbehandlerIdent = oppgave.behandlerIdent,
         tidspunktOpprettet = oppgave.opprettet,
         emneknagger = oppgave.emneknagger.toList(),
         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
