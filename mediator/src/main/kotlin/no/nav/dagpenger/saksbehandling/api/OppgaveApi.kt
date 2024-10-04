@@ -379,7 +379,7 @@ fun lagOppgaveDTO(
         saksbehandler = tildeltBehandlerDTO,
         tildeltBehandler = tildeltBehandlerDTO,
         sisteSaksbehandler = sisteSaksbehandlerDTO,
-        sisteBesluttter = sisteBeslutterDTO,
+        sisteBeslutter = sisteBeslutterDTO,
     )
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
@@ -393,6 +393,8 @@ private fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
         is Oppgave.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
         is Oppgave.PaaVent -> OppgaveTilstandDTO.PAA_VENT
+        is Oppgave.KlarTilKontroll -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
+        is Oppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
         else -> throw InternDataException("Ukjent tilstand: $this")
     }
 }

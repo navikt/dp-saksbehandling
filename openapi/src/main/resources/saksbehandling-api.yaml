@@ -437,7 +437,7 @@ components:
           $ref: '#/components/schemas/Behandler'
         sisteSaksbehandler:
           $ref: '#/components/schemas/Behandler'
-        sisteBesluttter:
+        sisteBeslutter:
           $ref: '#/components/schemas/Behandler'
         person:
           $ref: '#/components/schemas/Person'
@@ -477,6 +477,8 @@ components:
       enum:
         - KLAR_TIL_BEHANDLING
         - UNDER_BEHANDLING
+        - KLAR_TIL_KONTROLL
+        - UNDER_KONTROLL
         - FERDIG_BEHANDLET
         - PAA_VENT
 

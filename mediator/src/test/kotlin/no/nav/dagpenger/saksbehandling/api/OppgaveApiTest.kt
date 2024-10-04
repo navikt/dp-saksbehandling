@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
@@ -580,12 +581,12 @@ class OppgaveApiTest {
         val oppgaveMediatorMock = lagMediatorMock()
         val pdlMock = mockk<PDLKlient>()
         val journalpostIdClientMock = mockk<JournalpostIdClient>()
-        val saksbehandlerOppslag = mockk<SaksbehandlerOppslag>()
+        val saksbehandlerOppslagMock = mockk<SaksbehandlerOppslag>()
 
         val testOppgave =
             lagTestOppgaveMedTilstandOgBehandling(
-                tilstand = FERDIG_BEHANDLET,
-                tildeltBehandlerIdent = SAKSBEHANDLER_IDENT,
+                tilstand = UNDER_KONTROLL,
+                tildeltBehandlerIdent = BESLUTTER_IDENT,
                 behandling =
                     Behandling(
                         behandlingId = UUIDv7.ny(),
@@ -610,7 +611,7 @@ class OppgaveApiTest {
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
         coEvery { journalpostIdClientMock.hentJournalpostId(any()) } returns Result.success("123456789")
-        coEvery { saksbehandlerOppslag.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
+        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
             BehandlerDTO(
                 ident = SAKSBEHANDLER_IDENT,
                 fornavn = "Saksbehandler fornavn",
@@ -622,7 +623,7 @@ class OppgaveApiTest {
                         postadresse = "Adresseveien 3, 0101 ADRESSA",
                     ),
             )
-        coEvery { saksbehandlerOppslag.hentSaksbehandler(BESLUTTER_IDENT) } returns
+        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(BESLUTTER_IDENT) } returns
             BehandlerDTO(
                 ident = BESLUTTER_IDENT,
                 fornavn = "Saksbeandler fornavn",
@@ -639,6 +640,7 @@ class OppgaveApiTest {
             oppgaveMediator = oppgaveMediatorMock,
             pdlKlient = pdlMock,
             journalpostIdClient = journalpostIdClientMock,
+            saksbehandlerOppslag = saksbehandlerOppslagMock,
         ) {
             client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
@@ -659,7 +661,7 @@ class OppgaveApiTest {
                         "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": ["Søknadsbehandling"],
-                      "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}",
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
                       "journalpostIder": ["123456789"],
                       "saksbehandler": {
                         "ident": "$BESLUTTER_IDENT"
