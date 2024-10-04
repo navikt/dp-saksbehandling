@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 data class Tilstandslogg(
@@ -29,5 +30,5 @@ data class Tilstandsendring(
     val id: UUID = UUIDv7.ny(),
     val tilstand: Oppgave.Tilstand.Type,
     val hendelse: Hendelse,
-    val tidspunkt: LocalDateTime = LocalDateTime.now(),
+    val tidspunkt: LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
 )

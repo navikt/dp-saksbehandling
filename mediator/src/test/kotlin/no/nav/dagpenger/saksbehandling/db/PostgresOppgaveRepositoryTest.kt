@@ -11,14 +11,15 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
-import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.temporal.ChronoUnit
 
 class PostgresOppgaveRepositoryTest {
     private val saksbehandler = "saksbehandler"
@@ -167,7 +169,7 @@ class PostgresOppgaveRepositoryTest {
                 )!!
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
             nesteOppgave.behandlerIdent shouldBe navIdentUtenTilgangTilEgneAnsatte
-            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
 
@@ -185,7 +187,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingAvEgenAnsatt.oppgaveId
             nesteOppgaveMedTilgang.behandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
-            nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -235,7 +237,7 @@ class PostgresOppgaveRepositoryTest {
             requireNotNull(nesteOppgave)
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenAdressebeskyttelse.oppgaveId
             nesteOppgave.behandlerIdent shouldBe navIdentUtenTilgangTilAdressebeskyttede
-            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
 
@@ -253,7 +255,7 @@ class PostgresOppgaveRepositoryTest {
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedAdressebeskyttelse.oppgaveId
             nesteOppgaveMedTilgang.behandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
-            nesteOppgaveMedTilgang.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -318,7 +320,7 @@ class PostgresOppgaveRepositoryTest {
             val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
             nesteOppgave!!.oppgaveId shouldBe nestEldsteLedigeOppgave.oppgaveId
             nesteOppgave.behandlerIdent shouldBe testSaksbehandler
-            nesteOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.UNDER_BEHANDLING
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val filter2 =
                 TildelNesteOppgaveFilter(
@@ -439,26 +441,48 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre og hente tilstandslogg for en spesifikk oppgave`() {
+        val nå = LocalDateTime.now()
+
         val tilstandslogg =
-            Tilstandslogg().also {
-                it.leggTil(KlarTilKontroll.type, KlarTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler))
-                it.leggTil(UnderKontroll.type, ToTrinnskontrollHendelse(oppgaveId = oppgaveIdTest, beslutter, beslutter))
-                it.leggTil(
-                    FerdigBehandlet.type,
-                    GodkjentBehandlingHendelse(
-                        oppgaveId = oppgaveIdTest,
-                        meldingOmVedtak = "<h1>This is HTML</h1>",
-                        saksbehandlerToken = "token",
-                        utførtAv = beslutter,
+            Tilstandslogg(
+                mutableListOf(
+                    Tilstandsendring(
+                        tilstand = KLAR_TIL_KONTROLL,
+                        hendelse = KlarTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler),
+                        tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
                     ),
-                )
-            }
+                    Tilstandsendring(
+                        tilstand = UNDER_KONTROLL,
+                        hendelse = ToTrinnskontrollHendelse(oppgaveId = oppgaveIdTest, beslutter, beslutter),
+                        tidspunkt = nå.minusDays(1).truncatedTo(ChronoUnit.SECONDS),
+                    ),
+                    Tilstandsendring(
+                        tilstand = FERDIG_BEHANDLET,
+                        hendelse =
+                            GodkjentBehandlingHendelse(
+                                oppgaveId = oppgaveIdTest,
+                                meldingOmVedtak = "<h1>This is HTML</h1>",
+                                saksbehandlerToken = "token",
+                                utførtAv = beslutter,
+                            ),
+                        tidspunkt = nå.truncatedTo(ChronoUnit.SECONDS),
+                    ),
+                ),
+            )
         val testOppgave = lagOppgave(tilstandslogg = tilstandslogg, oppgaveId = oppgaveIdTest)
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
-            oppgaveFraDatabase.tilstandslogg shouldBe testOppgave.tilstandslogg
+            oppgaveFraDatabase.tilstandslogg.size shouldBe testOppgave.tilstandslogg.size
+            oppgaveFraDatabase.tilstandslogg.forEachIndexed { index, tilstandsendring ->
+                val testOppgaveTilstandsendring = testOppgave.tilstandslogg[index]
+                tilstandsendring.tilstand shouldBe testOppgaveTilstandsendring.tilstand
+                tilstandsendring.id shouldBe testOppgaveTilstandsendring.id
+                tilstandsendring.hendelse shouldBe testOppgaveTilstandsendring.hendelse
+                tilstandsendring.tidspunkt.truncatedTo(ChronoUnit.MILLIS) shouldBe
+                    testOppgaveTilstandsendring.tidspunkt.truncatedTo(ChronoUnit.MILLIS)
+            }
         }
     }
 
