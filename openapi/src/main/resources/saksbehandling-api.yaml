@@ -103,7 +103,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-  /oppgave/{oppgaveId}/innstill:
+  /oppgave/{oppgaveId}/klar-til-kontroll:
     put:
       summary: Saksbehandler sender oppgaven til kontroll og innstiller vedtaket
       parameters:

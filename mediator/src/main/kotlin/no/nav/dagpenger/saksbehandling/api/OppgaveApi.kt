@@ -173,7 +173,7 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
-                    route("innstill") {
+                    route("klar-til-kontroll") {
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller)
                             val klarTilKontrollHendelse = call.klarTilKontrollHendelse()
