@@ -433,6 +433,12 @@ components:
           format: uuid
         saksbehandler:
           $ref: '#/components/schemas/Saksbehandler'
+        tildeltBehandler:
+          $ref: '#/components/schemas/Behandler'
+        sisteSaksbehandler:
+          $ref: '#/components/schemas/Behandler'
+        sisteBesluttter:
+          $ref: '#/components/schemas/Behandler'
         person:
           $ref: '#/components/schemas/Person'
         tidspunktOpprettet:
@@ -511,6 +517,33 @@ components:
         - beholdOppgave
 
     Saksbehandler:
+      type: object
+      properties:
+        ident:
+          type: string
+        fornavn:
+          type: string
+        etternavn:
+          type: string
+        enhet:
+          type: object
+          properties:
+            navn:
+              type: string
+            enhetNr:
+              type: string
+            postadresse:
+              type: string
+          required:
+            - navn
+            - enhetNr
+            - postadresse
+      required:
+        - ident
+        - fornavn
+        - etternavn
+
+    Behandler:
       type: object
       properties:
         ident:
