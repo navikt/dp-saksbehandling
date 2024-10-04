@@ -8,8 +8,6 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -40,9 +38,6 @@ internal class SaksbehandlerOppslagImpl(
     private val httpClient =
         HttpClient(engine = engine) {
             expectSuccess = true
-            install(Logging) {
-                level = LogLevel.HEADERS
-            }
             install(ContentNegotiation) {
                 jackson {
                     registerModule(JavaTimeModule())
