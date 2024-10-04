@@ -157,7 +157,7 @@ data class Oppgave private constructor(
                 "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
-        this._tilstandslogg.leggTil(nyTilstand, hendelse)
+        this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
     }
 
     fun sisteSaksbehandler(): String? {

@@ -8,16 +8,21 @@ data class Tilstandslogg(
     private val tilstandsendringer: MutableList<Tilstandsendring> = mutableListOf(),
 ) : List<Tilstandsendring> by tilstandsendringer {
     companion object {
-        fun rehydrer(tilstandsendringer: List<Tilstandsendring>): Tilstandslogg =
-            Tilstandslogg(tilstandsendringer.sortedBy { it.tidspunkt }.toMutableList())
+        fun rehydrer(tilstandsendringer: List<Tilstandsendring>): Tilstandslogg = Tilstandslogg(tilstandsendringer.toMutableList())
+    }
+
+    init {
+        tilstandsendringer.sorterEtterTidspunkt()
     }
 
     fun leggTil(
-        nyTilstand: Oppgave.Tilstand,
+        nyTilstand: Oppgave.Tilstand.Type,
         hendelse: Hendelse,
     ) {
-        tilstandsendringer.add(0, Tilstandsendring(tilstand = nyTilstand.type, hendelse = hendelse))
+        tilstandsendringer.add(0, Tilstandsendring(tilstand = nyTilstand, hendelse = hendelse))
     }
+
+    private fun MutableList<Tilstandsendring>.sorterEtterTidspunkt(): Unit = this.sortByDescending { it.tidspunkt }
 }
 
 data class Tilstandsendring(

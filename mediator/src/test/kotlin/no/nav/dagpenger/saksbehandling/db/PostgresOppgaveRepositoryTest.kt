@@ -441,10 +441,10 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne lagre og hente tilstandslogg for en spesifikk oppgave`() {
         val tilstandslogg =
             Tilstandslogg().also {
-                it.leggTil(KlarTilKontroll, KlarTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler))
-                it.leggTil(UnderKontroll, ToTrinnskontrollHendelse(oppgaveId = oppgaveIdTest, beslutter, beslutter))
+                it.leggTil(KlarTilKontroll.type, KlarTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler))
+                it.leggTil(UnderKontroll.type, ToTrinnskontrollHendelse(oppgaveId = oppgaveIdTest, beslutter, beslutter))
                 it.leggTil(
-                    FerdigBehandlet,
+                    FerdigBehandlet.type,
                     GodkjentBehandlingHendelse(
                         oppgaveId = oppgaveIdTest,
                         meldingOmVedtak = "<h1>This is HTML</h1>",
