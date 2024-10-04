@@ -27,8 +27,12 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Tilstandsendring
+import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -102,16 +106,18 @@ internal object OppgaveApiTestHelper {
 
     fun lagTestOppgaveMedTilstandOgBehandling(
         tilstand: Oppgave.Tilstand.Type,
-        saksbehandlerIdent: String? = null,
+        tildeltBehandlerIdent: String? = null,
         behandling: Behandling,
         utsattTil: LocalDate? = null,
     ): Oppgave {
+        val oppgaveId = UUIDv7.ny()
+        val nå = LocalDateTime.now()
         return Oppgave.rehydrer(
-            oppgaveId = UUIDv7.ny(),
+            oppgaveId = oppgaveId,
             ident = TEST_IDENT,
-            saksbehandlerIdent = saksbehandlerIdent,
+            behandlerIdent = tildeltBehandlerIdent,
             behandlingId = behandling.behandlingId,
-            opprettet = LocalDateTime.now(),
+            opprettet = nå,
             emneknagger = setOf("Søknadsbehandling"),
             tilstand =
                 when (tilstand) {
@@ -125,6 +131,31 @@ internal object OppgaveApiTestHelper {
                 },
             behandling = behandling,
             utsattTil = utsattTil,
+            tilstandslogg =
+                Tilstandslogg.rehydrer(
+                    listOf(
+                        Tilstandsendring(
+                            tilstand = UNDER_BEHANDLING,
+                            hendelse =
+                                SettOppgaveAnsvarHendelse(
+                                    oppgaveId = oppgaveId,
+                                    ansvarligIdent = SAKSBEHANDLER_IDENT,
+                                    utførtAv = SAKSBEHANDLER_IDENT,
+                                ),
+                            tidspunkt = nå.minusDays(2),
+                        ),
+                        Tilstandsendring(
+                            tilstand = UNDER_KONTROLL,
+                            hendelse =
+                                ToTrinnskontrollHendelse(
+                                    oppgaveId = oppgaveId,
+                                    ansvarligIdent = BESLUTTER_IDENT,
+                                    utførtAv = BESLUTTER_IDENT,
+                                ),
+                            tidspunkt = nå.minusDays(1),
+                        ),
+                    ),
+                ),
         )
     }
 

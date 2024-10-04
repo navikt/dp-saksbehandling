@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -36,7 +37,6 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
-import no.nav.dagpenger.saksbehandling.api.models.SaksbehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterTilgangsKontroll
@@ -73,11 +73,27 @@ internal fun Application.oppgaveApi(
         coroutineScope {
             val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
             val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
-            val saksbehandlerDTO =
-                oppgave.behandlerIdent?.let { saksbehandlerIdent ->
+            val tildeltBehandlerDTO =
+                oppgave.behandlerIdent?.let { behandlerIdent ->
+                    async { saksbehandlerOppslag.hentSaksbehandler(behandlerIdent) }
+                }
+            val sisteSaksbehandlerDTO =
+                oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
                     async { saksbehandlerOppslag.hentSaksbehandler(saksbehandlerIdent) }
                 }
-            val oppgaveDTO = lagOppgaveDTO(oppgave, person.await(), journalpostIder.await(), saksbehandlerDTO?.await())
+            val sisteBeslutterDTO =
+                oppgave.sisteBeslutter()?.let { beslutterIdent ->
+                    async { saksbehandlerOppslag.hentSaksbehandler(beslutterIdent) }
+                }
+            val oppgaveDTO =
+                lagOppgaveDTO(
+                    oppgave = oppgave,
+                    person = person.await(),
+                    journalpostIder = journalpostIder.await(),
+                    tildeltBehandlerDTO = tildeltBehandlerDTO?.await(),
+                    sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
+                    sisteBeslutterDTO = sisteBeslutterDTO?.await(),
+                )
             oppgaveDTO
         }
     routing {
@@ -323,7 +339,9 @@ fun lagOppgaveDTO(
     oppgave: Oppgave,
     person: PDLPersonIntern,
     journalpostIder: Set<String>,
-    saksbehandlerDTO: SaksbehandlerDTO? = null,
+    tildeltBehandlerDTO: BehandlerDTO? = null,
+    sisteSaksbehandlerDTO: BehandlerDTO? = null,
+    sisteBeslutterDTO: BehandlerDTO? = null,
 ): OppgaveDTO =
 
     OppgaveDTO(
@@ -358,7 +376,10 @@ fun lagOppgaveDTO(
         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
         journalpostIder = journalpostIder.toList(),
         utsattTilDato = oppgave.utsattTil(),
-        saksbehandler = saksbehandlerDTO,
+        saksbehandler = tildeltBehandlerDTO,
+        tildeltBehandler = tildeltBehandlerDTO,
+        sisteSaksbehandler = sisteSaksbehandlerDTO,
+        sisteBesluttter = sisteBeslutterDTO,
     )
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {

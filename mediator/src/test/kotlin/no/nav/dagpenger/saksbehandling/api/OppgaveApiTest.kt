@@ -42,6 +42,8 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -56,6 +58,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -577,9 +580,12 @@ class OppgaveApiTest {
         val oppgaveMediatorMock = lagMediatorMock()
         val pdlMock = mockk<PDLKlient>()
         val journalpostIdClientMock = mockk<JournalpostIdClient>()
+        val saksbehandlerOppslag = mockk<SaksbehandlerOppslag>()
+
         val testOppgave =
             lagTestOppgaveMedTilstandOgBehandling(
                 tilstand = FERDIG_BEHANDLET,
+                tildeltBehandlerIdent = SAKSBEHANDLER_IDENT,
                 behandling =
                     Behandling(
                         behandlingId = UUIDv7.ny(),
@@ -604,6 +610,30 @@ class OppgaveApiTest {
         coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
         coEvery { journalpostIdClientMock.hentJournalpostId(any()) } returns Result.success("123456789")
+        coEvery { saksbehandlerOppslag.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
+            BehandlerDTO(
+                ident = SAKSBEHANDLER_IDENT,
+                fornavn = "Saksbehandler fornavn",
+                etternavn = "Saksbehandler etternavn",
+                enhet =
+                    BehandlerEnhetDTO(
+                        navn = "Enhet navn",
+                        enhetNr = "1234",
+                        postadresse = "Adresseveien 3, 0101 ADRESSA",
+                    ),
+            )
+        coEvery { saksbehandlerOppslag.hentSaksbehandler(BESLUTTER_IDENT) } returns
+            BehandlerDTO(
+                ident = BESLUTTER_IDENT,
+                fornavn = "Saksbeandler fornavn",
+                etternavn = "Saksbehandler etternavn",
+                enhet =
+                    BehandlerEnhetDTO(
+                        navn = "Enhet navn",
+                        enhetNr = "1234",
+                        postadresse = "Adresseveien 3, 0101 ADRESSA",
+                    ),
+            )
 
         withOppgaveApi(
             oppgaveMediator = oppgaveMediatorMock,
@@ -630,7 +660,19 @@ class OppgaveApiTest {
                       },
                       "emneknagger": ["Søknadsbehandling"],
                       "tilstand": "${OppgaveTilstandDTO.FERDIG_BEHANDLET}",
-                      "journalpostIder": ["123456789"]
+                      "journalpostIder": ["123456789"],
+                      "saksbehandler": {
+                        "ident": "$BESLUTTER_IDENT"
+                      },
+                      "tildeltBehandler": {
+                        "ident": "$BESLUTTER_IDENT"
+                      },
+                      "sisteSaksbehandler": {
+                        "ident": "$SAKSBEHANDLER_IDENT"
+                      },
+                      "sisteBeslutter": {
+                        "ident": "$BESLUTTER_IDENT"
+                      }
                     }
                     """.trimIndent()
             }

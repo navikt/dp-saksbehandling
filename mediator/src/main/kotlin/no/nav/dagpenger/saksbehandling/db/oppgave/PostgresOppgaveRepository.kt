@@ -813,7 +813,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
     return Oppgave.rehydrer(
         oppgaveId = oppgaveId,
         ident = this.string("person_ident"),
-        saksbehandlerIdent = this.stringOrNull("saksbehandler_ident"),
+        behandlerIdent = this.stringOrNull("saksbehandler_ident"),
         behandlingId = behandlingId,
         opprettet = this.localDateTime("oppgave_opprettet"),
         emneknagger = hentEmneknaggerForOppgave(oppgaveId),

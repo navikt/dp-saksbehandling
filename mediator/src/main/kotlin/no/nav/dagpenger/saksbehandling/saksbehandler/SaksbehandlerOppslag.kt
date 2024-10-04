@@ -19,13 +19,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.api.models.SaksbehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.SaksbehandlerEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 
 private val logger = KotlinLogging.logger { }
 
 internal interface SaksbehandlerOppslag {
-    suspend fun hentSaksbehandler(navIdent: String): SaksbehandlerDTO
+    suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO
 }
 
 internal class SaksbehandlerOppslagImpl(
@@ -53,7 +53,7 @@ internal class SaksbehandlerOppslagImpl(
             .help("Tid brukt på oppslag av saksbehandler")
             .register(prometheusRegistry)
 
-    override suspend fun hentSaksbehandler(navIdent: String): SaksbehandlerDTO {
+    override suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO {
         return coroutineScope {
             val timer = histogram.startTimer()
             val user =
@@ -78,12 +78,12 @@ internal class SaksbehandlerOppslagImpl(
                     }.body<KontaktInformasjon>()
                 }
 
-            SaksbehandlerDTO(
+            BehandlerDTO(
                 ident = navIdent,
                 fornavn = user.givenName,
                 etternavn = user.surname,
                 enhet =
-                    SaksbehandlerEnhetDTO(
+                    BehandlerEnhetDTO(
                         navn = enhet.await().navn,
                         enhetNr = enhetsNr,
                         postadresse = kontaktInformasjon.await().formatertPostAdresse(),

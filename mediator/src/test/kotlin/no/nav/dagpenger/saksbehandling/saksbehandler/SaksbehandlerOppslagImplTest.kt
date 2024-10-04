@@ -11,20 +11,20 @@ import io.ktor.http.headersOf
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.HistogramSnapshot
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.api.models.SaksbehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.SaksbehandlerEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 
 class SaksbehandlerOppslagImplTest {
     val enhet =
-        SaksbehandlerEnhetDTO(
+        BehandlerEnhetDTO(
             navn = "Test Enhet",
             enhetNr = "1234",
             postadresse = "Postboks 5678, Test, 1234 Oslo",
         )
     private val saksbehandler =
-        SaksbehandlerDTO(
+        BehandlerDTO(
             ident = "navIdent",
             fornavn = "sonet",
             etternavn = "electram",
@@ -89,7 +89,7 @@ class SaksbehandlerOppslagImplTest {
     @Test
     fun `test hentSaksbehandler happy days `(): Unit =
         runBlocking {
-            val result: SaksbehandlerDTO = saksbehandlerOppslag.hentSaksbehandler(saksbehandler.ident)
+            val result: BehandlerDTO = saksbehandlerOppslag.hentSaksbehandler(saksbehandler.ident)
             result shouldBe saksbehandler
             registry.getSnapShot<HistogramSnapshot> {
                 it == "dp_saksbehandling_saksbehandler_oppslag_duration"

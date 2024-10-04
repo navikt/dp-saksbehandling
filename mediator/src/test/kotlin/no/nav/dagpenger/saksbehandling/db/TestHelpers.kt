@@ -43,7 +43,7 @@ fun lagOppgave(
     return Oppgave.rehydrer(
         oppgaveId = oppgaveId,
         ident = person.ident,
-        saksbehandlerIdent = saksbehandlerIdent,
+        behandlerIdent = saksbehandlerIdent,
         behandlingId = behandling.behandlingId,
         opprettet = opprettet,
         emneknagger = emneknagger,

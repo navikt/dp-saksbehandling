@@ -67,7 +67,7 @@ data class Oppgave private constructor(
         fun rehydrer(
             oppgaveId: UUID,
             ident: String,
-            saksbehandlerIdent: String?,
+            behandlerIdent: String?,
             behandlingId: UUID,
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
@@ -80,7 +80,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
                 ident = ident,
-                behandlerIdent = saksbehandlerIdent,
+                behandlerIdent = behandlerIdent,
                 behandlingId = behandlingId,
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,

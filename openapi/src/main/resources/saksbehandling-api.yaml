@@ -432,7 +432,7 @@ components:
           type: string
           format: uuid
         saksbehandler:
-          $ref: '#/components/schemas/Saksbehandler'
+          $ref: '#/components/schemas/Behandler'
         tildeltBehandler:
           $ref: '#/components/schemas/Behandler'
         sisteSaksbehandler:
@@ -515,33 +515,6 @@ components:
       required:
         - utsettTilDato
         - beholdOppgave
-
-    Saksbehandler:
-      type: object
-      properties:
-        ident:
-          type: string
-        fornavn:
-          type: string
-        etternavn:
-          type: string
-        enhet:
-          type: object
-          properties:
-            navn:
-              type: string
-            enhetNr:
-              type: string
-            postadresse:
-              type: string
-          required:
-            - navn
-            - enhetNr
-            - postadresse
-      required:
-        - ident
-        - fornavn
-        - etternavn
 
     Behandler:
       type: object

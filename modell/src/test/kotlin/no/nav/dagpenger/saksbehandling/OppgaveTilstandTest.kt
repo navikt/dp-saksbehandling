@@ -106,7 +106,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå til KlarTilBehandling fra UnderBehandling`() {
-        val oppgave = lagOppgave(type = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler)
+        val oppgave = lagOppgave(type = UNDER_BEHANDLING, behandlerIdent = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler))
@@ -119,7 +119,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal gå til FERDIG_BEHANDLET fra UNDER_BEHANDLING vha GodkjentBehandlingHendelse`() {
         val saksbehandler = "sbIdent"
-        val oppgave = lagOppgave(type = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler)
+        val oppgave = lagOppgave(type = UNDER_BEHANDLING, behandlerIdent = saksbehandler)
 
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
@@ -457,7 +457,7 @@ class OppgaveTilstandTest {
 
     private fun lagOppgave(
         type: Type,
-        saksbehandlerIdent: String? = null,
+        behandlerIdent: String? = null,
     ): Oppgave {
         val tilstand =
             when (type) {
@@ -476,7 +476,7 @@ class OppgaveTilstandTest {
             emneknagger = setOf(),
             opprettet = LocalDateTime.now(),
             tilstand = tilstand,
-            saksbehandlerIdent = saksbehandlerIdent,
+            behandlerIdent = behandlerIdent,
             behandling = behandling,
             utsattTil = null,
         )
