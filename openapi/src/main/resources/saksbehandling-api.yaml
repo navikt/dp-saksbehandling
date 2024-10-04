@@ -431,10 +431,6 @@ components:
         behandlingId:
           type: string
           format: uuid
-        personIdent:
-          type: string
-        saksbehandlerIdent:
-          type: string
         saksbehandler:
           $ref: '#/components/schemas/Saksbehandler'
         person:
