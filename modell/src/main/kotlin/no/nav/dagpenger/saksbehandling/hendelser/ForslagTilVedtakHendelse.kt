@@ -7,5 +7,5 @@ data class ForslagTilVedtakHendelse(
     val søknadId: UUID,
     val behandlingId: UUID,
     val emneknagger: Set<String> = emptySet(),
-    override val utførtAv: String = "dp-saksbehandling",
+    override val utførtAv: String = "dp-behandling",
 ) : Hendelse(utførtAv)

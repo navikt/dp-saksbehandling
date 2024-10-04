@@ -6,5 +6,5 @@ data class BehandlingAvbruttHendelse(
     val behandlingId: UUID,
     val søknadId: UUID,
     val ident: String,
-    override val utførtAv: String = "dp-saksbehandling",
+    override val utførtAv: String = "dp-behandling",
 ) : Hendelse(utførtAv)

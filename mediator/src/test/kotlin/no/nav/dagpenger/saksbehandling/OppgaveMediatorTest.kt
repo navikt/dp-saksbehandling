@@ -98,7 +98,6 @@ class OppgaveMediatorTest {
             val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgaveTilKontroll.behandlerIdent shouldBe null
-            // TODO når persistering av loggen er ok
             oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
         }
     }
@@ -125,9 +124,8 @@ class OppgaveMediatorTest {
             val oppgaveUnderKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             oppgaveUnderKontroll.tilstand().type shouldBe UNDER_KONTROLL
             oppgaveUnderKontroll.behandlerIdent shouldBe beslutter
-            // TODO når persistering av loggen er ok
-            // oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
-            // oppgaveTilKontroll.sisteBeslutter() shouldBe beslutter
+            oppgaveUnderKontroll.sisteSaksbehandler() shouldBe saksbehandler
+            oppgaveUnderKontroll.sisteBeslutter() shouldBe beslutter
         }
     }
 
