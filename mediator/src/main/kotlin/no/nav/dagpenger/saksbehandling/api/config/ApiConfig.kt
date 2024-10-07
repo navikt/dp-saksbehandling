@@ -16,6 +16,7 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
@@ -142,6 +143,20 @@ fun Application.apiConfig() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Forbidden, problem)
+                }
+
+                is AlleredeTildeltException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Oppgaven eies av en annen. Operasjon kan ikke utføres.",
+                            detail = cause.message,
+                            status = HttpStatusCode.Conflict.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:oppgave-eies-av-annen-behandler")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.Conflict, problem)
                 }
 
                 else -> {

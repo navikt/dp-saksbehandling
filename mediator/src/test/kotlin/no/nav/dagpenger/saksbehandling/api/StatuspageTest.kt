@@ -8,6 +8,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
@@ -225,6 +226,35 @@ class StatuspageTest {
                       "title": "Uhåndtert feil",
                       "detail": "$message",
                       "status": 500,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Error håndtering av AlleredeTildeltException`() {
+        testApplication {
+            val message = "Oppgaven eies av noen andre"
+            val path = "/AlleredeTildeltException"
+            application {
+                apiConfig()
+                routing {
+                    get(path) { throw Oppgave.AlleredeTildeltException(message) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.Conflict
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:oppgave-eies-av-annen-behandler",
+                      "title": "Oppgaven eies av en annen. Operasjon kan ikke utføres.",
+                      "detail": "$message",
+                      "status": 409,
                       "instance": "$path"
                     }
                     """.trimIndent()

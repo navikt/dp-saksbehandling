@@ -165,12 +165,8 @@ internal fun Application.oppgaveApi(
                         put {
                             oppgaveTilgangskontroll(tilgangskontroller)
                             val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse()
-                            try {
-                                val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
-                                call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
-                            } catch (e: Oppgave.AlleredeTildeltException) {
-                                call.respond(HttpStatusCode.Conflict) { e.message.toString() }
-                            }
+                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
+                            call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
                         }
                     }
                     route("utsett") {

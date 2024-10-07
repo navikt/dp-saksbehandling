@@ -246,7 +246,7 @@ data class Oppgave private constructor(
                         "Oppgave er allerede tildelt ${oppgave.behandlerIdent}."
                 }
                 throw AlleredeTildeltException(
-                    "Kan ikke tildele oppgave til annen saksbehandler.Oppgave er allerede tildelt.",
+                    "Kan ikke tildele oppgave til annen saksbehandler. Oppgaven er allerede tildelt.",
                 )
             }
         }
@@ -290,6 +290,15 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
+            if (oppgave.behandlerIdent != godkjentBehandlingHendelse.utførtAv) {
+                sikkerlogg.warn {
+                    "Kan ikke stjele oppgave under behandling med id ${oppgave.oppgaveId} fra ${oppgave.behandlerIdent} til " +
+                        "${godkjentBehandlingHendelse.utførtAv}. "
+                }
+                throw AlleredeTildeltException(
+                    "Kan ikke stjele oppgave under behandling. Oppgaven er allerede tildelt.",
+                )
+            }
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
@@ -312,9 +321,9 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            logger.warn { "Ferdigstiller allerede ferdib behandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
+            logger.warn { "Ferdigstiller allerede ferdigbehandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
             sikkerlogg.warn {
-                "Ferdigstiller allerede ferdib behandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
+                "Ferdigstiller allerede ferdigbehandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
                     "med vedtakFattetHendelse: $vedtakFattetHendelse "
             }
         }
@@ -368,6 +377,15 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
+            if (oppgave.behandlerIdent != godkjentBehandlingHendelse.utførtAv) {
+                sikkerlogg.warn {
+                    "Kan ikke stjele oppgave under kontroll med id ${oppgave.oppgaveId} fra ${oppgave.behandlerIdent} til " +
+                        "${godkjentBehandlingHendelse.utførtAv}. "
+                }
+                throw AlleredeTildeltException(
+                    "Kan ikke stjele oppgave under-kontroll. Oppgaven er allerede tildelt.",
+                )
+            }
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
