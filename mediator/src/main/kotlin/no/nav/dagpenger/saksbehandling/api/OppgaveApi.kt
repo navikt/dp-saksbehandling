@@ -24,10 +24,8 @@ import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.Configuration.egneAnsatteADGruppe
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -38,12 +36,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterTilgangsKontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.oppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
-import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -64,7 +57,7 @@ private val logger = KotlinLogging.logger { }
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal fun Application.oppgaveApi(
-    oppgaveMediator: OppgaveMediator,
+    oppgaveMediator: SecureOppgaveMediator,
     pdlKlient: PDLKlient,
     journalpostIdClient: JournalpostIdClient,
     saksbehandlerOppslag: SaksbehandlerOppslag,
@@ -97,19 +90,6 @@ internal fun Application.oppgaveApi(
             oppgaveDTO
         }
     routing {
-        val adressebeskyttelseTilgangskontroll =
-            AdressebeskyttelseTilgangskontroll(
-                strengtFortroligGruppe = Configuration.strengtFortroligADGruppe,
-                strengtFortroligUtlandGruppe = Configuration.strengtFortroligUtlandADGruppe,
-                fortroligGruppe = Configuration.fortroligADGruppe,
-                adressebeskyttelseGraderingFun = oppgaveMediator::adresseGraderingForPerson,
-            )
-
-        val egneAnsatteTilgangskontroll =
-            EgneAnsatteTilgangskontroll(
-                tillatteGrupper = setOf(egneAnsatteADGruppe),
-                skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
-            )
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
 
         authenticate("azureAd") {
@@ -132,17 +112,10 @@ internal fun Application.oppgaveApi(
                         val saksbehandler = call.saksbehandler()
                         val dto = call.receive<NesteOppgaveDTO>()
 
-                        val søkefilter =
-                            TildelNesteOppgaveFilter.fra(
-                                queryString = dto.queryParams,
-                                saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(saksbehandler),
-                                adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(saksbehandler),
-                            )
-
                         val oppgave =
                             oppgaveMediator.tildelNesteOppgaveTil(
-                                saksbehandlerIdent = call.navIdent(),
-                                filter = søkefilter,
+                                saksbehandler = saksbehandler,
+                                queryString = dto.queryParams,
                             )
                         when (oppgave) {
                             null -> call.respond(HttpStatusCode.NotFound)
@@ -152,60 +125,58 @@ internal fun Application.oppgaveApi(
                 }
 
                 route("{oppgaveId}") {
-                    val tilgangskontroller = setOf(adressebeskyttelseTilgangskontroll, egneAnsatteTilgangskontroll)
-
                     get {
-                        oppgaveTilgangskontroll(tilgangskontroller)
+                        val saksbehandler = call.saksbehandler()
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId)
+                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
                         val oppgaveDTO = oppgaveDTO(oppgave)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
                     route("tildel") {
                         put {
-                            oppgaveTilgangskontroll(tilgangskontroller)
+                            val saksbehandler = call.saksbehandler()
                             val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse()
-                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
+                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse, saksbehandler)
                             call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
                         }
                     }
                     route("utsett") {
                         put {
-                            oppgaveTilgangskontroll(tilgangskontroller)
+                            val saksbehandler = call.saksbehandler()
                             val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
                             logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
-                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
+                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse, saksbehandler)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
                     route("legg-tilbake") {
                         put {
+                            val saksbehandler = call.saksbehandler()
                             val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse()
-                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
+                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse, saksbehandler)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
                     route("klar-til-kontroll") {
                         put {
-                            oppgaveTilgangskontroll(tilgangskontroller)
+                            val saksbehandler = call.saksbehandler()
                             val klarTilKontrollHendelse = call.klarTilKontrollHendelse()
                             logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
-                            oppgaveMediator.gjørKlarTilKontroll(klarTilKontrollHendelse)
+                            oppgaveMediator.gjørKlarTilKontroll(klarTilKontrollHendelse, saksbehandler)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
                     route("kontroller") {
                         put {
-                            oppgaveTilgangskontroll(tilgangskontroller + BeslutterTilgangsKontroll)
+                            val saksbehandler = call.saksbehandler()
                             val toTrinnskontrollHendelse = call.tildelKontrollHendelse()
-                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
+                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse, saksbehandler)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
 
                     route("ferdigstill/melding-om-vedtak") {
                         put {
-                            oppgaveTilgangskontroll(tilgangskontroller)
                             val meldingOmVedtak = call.receiveText()
                             try {
                                 if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
@@ -221,6 +192,7 @@ internal fun Application.oppgaveApi(
                                         saksbehandlerToken = saksbehandler.token,
                                         utførtAv = saksbehandler.navIdent,
                                     ),
+                                    saksbehandler,
                                 )
                                 call.respond(HttpStatusCode.NoContent)
                             } catch (e: UgyldigContentType) {
@@ -233,7 +205,6 @@ internal fun Application.oppgaveApi(
                     }
                     route("ferdigstill/melding-om-vedtak-arena") {
                         put {
-                            oppgaveTilgangskontroll(tilgangskontroller)
                             val saksbehandler = call.saksbehandler()
                             val oppgaveId = call.finnUUID("oppgaveId")
                             oppgaveMediator.ferdigstillOppgave(
@@ -242,6 +213,7 @@ internal fun Application.oppgaveApi(
                                     saksbehandlerToken = saksbehandler.token,
                                     utførtAv = saksbehandler.navIdent,
                                 ),
+                                saksbehandler,
                             )
                             call.respond(HttpStatusCode.NoContent)
                         }

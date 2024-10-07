@@ -50,4 +50,6 @@ interface OppgaveRepository {
     fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
 
     fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering
+
+    fun behandlerForOppgave(oppgaveId: UUID): String?
 }
