@@ -7,6 +7,8 @@ import javax.sql.DataSource
 
 interface StatistikkTjeneste {
     fun hentStatistikk(navIdent: String): StatistikkDTO
+
+    fun hentAntallBrevSendt(): Int
 }
 
 class PostgresStatistikkTjeneste(private val dataSource: DataSource) : StatistikkTjeneste {
@@ -47,5 +49,21 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                 }.asSingle,
             )
         } ?: StatistikkDTO()
+    }
+
+    override fun hentAntallBrevSendt(): Int {
+        return sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        select  count(*)  as count from utsending_v1 where  tilstand =  'Distribuert' ;
+                    """,
+                    paramMap = mapOf(),
+                ).map { row ->
+                    row.int("count")
+                }.asSingle,
+            )
+        } ?: 0
     }
 }
