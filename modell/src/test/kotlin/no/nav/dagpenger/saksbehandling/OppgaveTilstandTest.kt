@@ -310,7 +310,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand UNDER_KONTROLL til FERDIG_BEHANDLET`() {
+    fun `Skal kunne ferdigstille med brev i ny løsning fra UNDER_KONTROLL`() {
         val beslutter = "Z080808"
         val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
         oppgave.ferdigstill(
@@ -325,20 +325,23 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
         oppgave.behandlerIdent shouldBe beslutter
+    }
 
-        val oppgave2 = lagOppgave(UNDER_KONTROLL, beslutter)
+    @Test
+    fun `Skal ikke kunne ferdigstille med brev i Arena fra UNDER_KONTROLL`() {
+        val beslutter = "Z080808"
+        val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
 
-        oppgave2.ferdigstill(
-            godkjennBehandlingMedBrevIArena =
-                GodkjennBehandlingMedBrevIArena(
-                    oppgaveId = oppgave.oppgaveId,
-                    saksbehandlerToken = "økøk",
-                    utførtAv = beslutter,
-                ),
-        )
-
-        oppgave2.tilstand() shouldBe Oppgave.FerdigBehandlet
-        oppgave2.behandlerIdent shouldBe beslutter
+        shouldThrow<UlovligTilstandsendringException> {
+            oppgave.ferdigstill(
+                godkjennBehandlingMedBrevIArena =
+                    GodkjennBehandlingMedBrevIArena(
+                        oppgaveId = oppgave.oppgaveId,
+                        saksbehandlerToken = "token",
+                        utførtAv = beslutter,
+                    ),
+            )
+        }
     }
 
     @Test

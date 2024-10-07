@@ -371,13 +371,6 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
-        override fun ferdigstill(
-            oppgave: Oppgave,
-            godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
-        ) {
-            oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
-        }
-
         override fun sendTilbakeTilUnderBehandling(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
