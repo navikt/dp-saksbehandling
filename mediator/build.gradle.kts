@@ -25,6 +25,7 @@ dependencies {
     implementation("io.prometheus:prometheus-metrics-core:1.3.1")
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
+    implementation("io.ktor:ktor-server-html-builder:$ktorVersion")
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
     implementation(libs.bundles.postgres)
     implementation(libs.dp.biblioteker.oauth2.klient)
