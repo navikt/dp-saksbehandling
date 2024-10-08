@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterRolleTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.FerdigstillOppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveBehandlerTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveTilgangskontroll
@@ -39,6 +40,10 @@ class SecureOppgaveMediator(
     private val behandlerTilgangskontroll: OppgaveBehandlerTilgangskontroll =
         OppgaveBehandlerTilgangskontroll(
             behandlerFunc = oppgaveMediator::behandlerForOppgave,
+        ),
+    private val ferdigstillOppgaveTilgangskontroll: FerdigstillOppgaveTilgangskontroll =
+        FerdigstillOppgaveTilgangskontroll(
+            oppgaveFunc = oppgaveMediator::hentOppgave,
         ),
 ) {
     fun finnOppgaverFor(ident: String): List<Oppgave> {
@@ -174,8 +179,7 @@ class SecureOppgaveMediator(
                 listOf(
                     egneAnsatteTilgangskontroll,
                     adressebeskyttelseTilgangskontroll,
-                    beslutterTilgangskontroll,
-                    behandlerTilgangskontroll,
+                    ferdigstillOppgaveTilgangskontroll,
                 ),
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
@@ -193,8 +197,7 @@ class SecureOppgaveMediator(
                 listOf(
                     egneAnsatteTilgangskontroll,
                     adressebeskyttelseTilgangskontroll,
-                    beslutterTilgangskontroll,
-                    behandlerTilgangskontroll,
+                    ferdigstillOppgaveTilgangskontroll,
                 ),
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,

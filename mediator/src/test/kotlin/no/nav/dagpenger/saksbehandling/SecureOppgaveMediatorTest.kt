@@ -1,8 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
-    import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -14,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppga
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
@@ -78,6 +80,7 @@ class SecureOppgaveMediatorTest {
             )
 
         private val oppgaveUtenBeskyttelse = UUIDv7.ny()
+        private val oppgaveUtenBeskyttelse2 = UUIDv7.ny()
         private val oppgaveMedFortroligAdresse = UUIDv7.ny()
         private val oppgaveMedStrengtFortroligAdresse = UUIDv7.ny()
         private val oppgaveMedStrengtFortroligUtlandAdresse = UUIDv7.ny()
@@ -89,6 +92,7 @@ class SecureOppgaveMediatorTest {
                 oppgaveMedStrengtFortroligAdresse -> AdressebeskyttelseGradering.STRENGT_FORTROLIG
                 oppgaveMedStrengtFortroligUtlandAdresse -> AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
                 oppgaveUtenBeskyttelse -> UGRADERT
+                oppgaveUtenBeskyttelse2 -> UGRADERT
                 oppgaveMedEgneAnsatteSkjerming -> UGRADERT
                 else -> throw IllegalArgumentException("Ukjent oppgaveId: $oppgaveId")
             }
@@ -322,6 +326,91 @@ class SecureOppgaveMediatorTest {
         } else {
             shouldThrow<IngenTilgangTilOppgaveException> {
                 mediator.tildelTotrinnskontroll(hendelse, saksbehandler)
+            }
+        }
+    }
+
+    @Test
+    fun `tilgangskontroll for ferdigstilling av oppgave som er under behandling`() {
+        val oppgaveUnderBehandling =
+            lagOppgave(
+                oppgaveId = oppgaveUtenBeskyttelse,
+                tilstand = Oppgave.UnderBehandling,
+                saksbehandlerIdent = saksbehandlerUtenEkstraTilganger.navIdent,
+            )
+        val godkjentBehandlingHendelse =
+            GodkjentBehandlingHendelse(
+                oppgaveId = oppgaveUnderBehandling.oppgaveId,
+                meldingOmVedtak = "html",
+                saksbehandlerToken = "token",
+                utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
+            )
+        lageMediatorMock {
+            every { hentOppgave(oppgaveUnderBehandling.oppgaveId) } returns oppgaveUnderBehandling
+            every { ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+        }.let {
+            shouldNotThrowAny {
+                it.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerUtenEkstraTilganger)
+            }
+
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                it.ferdigstillOppgave(
+                    godkjentBehandlingHendelse,
+                    superSaksbehandler,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `tilgangskontroll for ferdigstilling av oppgave som er under kontroll`() {
+        val oppgaveUnderKontroll =
+            lagOppgave(
+                oppgaveId = oppgaveUtenBeskyttelse,
+                tilstand = Oppgave.UnderKontroll,
+                saksbehandlerIdent = beslutterUtenEkstraTilganger.navIdent,
+            )
+
+        val oppgaveUnderKontrollEidAvSaksbehandler =
+            lagOppgave(
+                oppgaveId = oppgaveUtenBeskyttelse2,
+                tilstand = Oppgave.UnderKontroll,
+                saksbehandlerIdent = saksbehandlerUtenEkstraTilganger.navIdent,
+            )
+
+        val godkjentBehandlingHendelse =
+            GodkjentBehandlingHendelse(
+                oppgaveId = oppgaveUnderKontroll.oppgaveId,
+                meldingOmVedtak = "html",
+                saksbehandlerToken = "token",
+                utførtAv = beslutterUtenEkstraTilganger.navIdent,
+            )
+        lageMediatorMock {
+            every { hentOppgave(oppgaveUnderKontroll.oppgaveId) } returns oppgaveUnderKontroll
+            every { hentOppgave(oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId) } returns oppgaveUnderKontrollEidAvSaksbehandler
+            every { ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+        }.let {
+            shouldNotThrowAny {
+                it.ferdigstillOppgave(godkjentBehandlingHendelse, beslutterUtenEkstraTilganger)
+            }
+
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                it.ferdigstillOppgave(
+                    godkjentBehandlingHendelse,
+                    superSaksbehandler,
+                )
+            }
+
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                it.ferdigstillOppgave(
+                    GodkjentBehandlingHendelse(
+                        oppgaveId = oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId,
+                        meldingOmVedtak = "html",
+                        saksbehandlerToken = "token",
+                        utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
+                    ),
+                    saksbehandlerUtenEkstraTilganger,
+                )
             }
         }
     }
