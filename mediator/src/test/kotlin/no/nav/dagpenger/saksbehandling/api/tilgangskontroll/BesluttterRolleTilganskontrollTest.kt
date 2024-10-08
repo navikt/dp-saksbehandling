@@ -4,10 +4,10 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 
-class BeslutterTilgangsKontrollTest {
+class BesluttterRolleTilganskontrollTest {
     @Test
     fun `beslutter har tilgang`() {
-        BeslutterTilgangskontroll.harTilgang(
+        BeslutterRolleTilgangskontroll.harTilgang(
             oppgaveId = UUIDv7.ny(),
             saksbehandler =
                 Saksbehandler(
@@ -20,7 +20,7 @@ class BeslutterTilgangsKontrollTest {
 
     @Test
     fun `saksbehandler  har ikke tilgang`() {
-        BeslutterTilgangskontroll.harTilgang(
+        BeslutterRolleTilgangskontroll.harTilgang(
             oppgaveId = UUIDv7.ny(),
             saksbehandler =
                 Saksbehandler(

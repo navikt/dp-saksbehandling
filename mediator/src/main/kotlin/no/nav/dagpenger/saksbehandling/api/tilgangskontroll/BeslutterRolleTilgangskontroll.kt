@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 import no.nav.dagpenger.saksbehandling.Configuration
 import java.util.UUID
 
-object BeslutterTilgangskontroll :
+object BeslutterRolleTilgangskontroll :
     OppgaveTilgangskontroll {
     override fun harTilgang(
         oppgaveId: UUID,
@@ -23,5 +23,5 @@ object BeslutterTilgangskontroll :
     override fun feilType(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
-    ): String = "BeslutterTilgangskontroll"
+    ): String = "BeslutterRolleTilgangskontroll"
 }

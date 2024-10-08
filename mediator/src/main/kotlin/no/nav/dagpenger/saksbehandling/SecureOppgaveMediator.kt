@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterTilgangskontroll
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterRolleTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveBehandlerTilgangskontroll
@@ -30,7 +30,7 @@ class SecureOppgaveMediator(
             fortroligGruppe = Configuration.fortroligADGruppe,
             adressebeskyttelseGraderingFun = oppgaveMediator::adresseGraderingForPerson,
         ),
-    private val beslutterTilgangskontroll: BeslutterTilgangskontroll = BeslutterTilgangskontroll,
+    private val beslutterTilgangskontroll: BeslutterRolleTilgangskontroll = BeslutterRolleTilgangskontroll,
     private val egneAnsatteTilgangskontroll: EgneAnsatteTilgangskontroll =
         EgneAnsatteTilgangskontroll(
             tillatteGrupper = setOf(Configuration.egneAnsatteADGruppe),
