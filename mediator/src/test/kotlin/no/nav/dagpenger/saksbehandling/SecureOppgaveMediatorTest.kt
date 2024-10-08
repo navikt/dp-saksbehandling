@@ -1,10 +1,12 @@
 package no.nav.dagpenger.saksbehandling
 
+    import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
@@ -12,11 +14,15 @@ import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppga
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.time.LocalDate
 import java.util.UUID
 import java.util.stream.Stream
 
@@ -50,6 +56,13 @@ class SecureOppgaveMediatorTest {
                 "token",
             )
 
+        private val beslutterUtenEkstraTilganger =
+            Saksbehandler(
+                "beslutterUtenEkstraTilganger",
+                setOf("BeslutterADGruppe", "SaksbehandlerADGruppe"),
+                "token",
+            )
+
         private val superSaksbehandler =
             Saksbehandler(
                 "superSaksbehandler",
@@ -64,10 +77,10 @@ class SecureOppgaveMediatorTest {
                 "token",
             )
 
+        private val oppgaveUtenBeskyttelse = UUIDv7.ny()
         private val oppgaveMedFortroligAdresse = UUIDv7.ny()
         private val oppgaveMedStrengtFortroligAdresse = UUIDv7.ny()
         private val oppgaveMedStrengtFortroligUtlandAdresse = UUIDv7.ny()
-        private val oppgaveUtenBeskyttelse = UUIDv7.ny()
         private val oppgaveMedEgneAnsatteSkjerming = UUIDv7.ny()
 
         private val adressebeskyttelseGraderingFunc = { oppgaveId: UUID ->
@@ -104,13 +117,29 @@ class SecureOppgaveMediatorTest {
                 Arguments.of(saksbehanderMedStrengtFortroligAdresseTilgang, oppgaveUtenBeskyttelse, true),
                 Arguments.of(saksbehanderMedStrengtFortroligAdresseTilgang, oppgaveMedFortroligAdresse, false),
                 Arguments.of(saksbehanderMedStrengtFortroligAdresseTilgang, oppgaveMedStrengtFortroligAdresse, true),
-                Arguments.of(saksbehanderMedStrengtFortroligAdresseTilgang, oppgaveMedStrengtFortroligUtlandAdresse, false),
+                Arguments.of(
+                    saksbehanderMedStrengtFortroligAdresseTilgang,
+                    oppgaveMedStrengtFortroligUtlandAdresse,
+                    false,
+                ),
                 Arguments.of(saksbehanderMedStrengtFortroligAdresseTilgang, oppgaveMedEgneAnsatteSkjerming, false),
                 Arguments.of(saksbehanderMedStrengtFortroligUtlandAdresseTilgang, oppgaveUtenBeskyttelse, true),
                 Arguments.of(saksbehanderMedStrengtFortroligUtlandAdresseTilgang, oppgaveMedFortroligAdresse, false),
-                Arguments.of(saksbehanderMedStrengtFortroligUtlandAdresseTilgang, oppgaveMedStrengtFortroligAdresse, false),
-                Arguments.of(saksbehanderMedStrengtFortroligUtlandAdresseTilgang, oppgaveMedStrengtFortroligUtlandAdresse, true),
-                Arguments.of(saksbehanderMedStrengtFortroligUtlandAdresseTilgang, oppgaveMedEgneAnsatteSkjerming, false),
+                Arguments.of(
+                    saksbehanderMedStrengtFortroligUtlandAdresseTilgang,
+                    oppgaveMedStrengtFortroligAdresse,
+                    false,
+                ),
+                Arguments.of(
+                    saksbehanderMedStrengtFortroligUtlandAdresseTilgang,
+                    oppgaveMedStrengtFortroligUtlandAdresse,
+                    true,
+                ),
+                Arguments.of(
+                    saksbehanderMedStrengtFortroligUtlandAdresseTilgang,
+                    oppgaveMedEgneAnsatteSkjerming,
+                    false,
+                ),
                 Arguments.of(saksbehandlerMedEgneAnsatteTilgang, oppgaveUtenBeskyttelse, true),
                 Arguments.of(saksbehandlerMedEgneAnsatteTilgang, oppgaveMedFortroligAdresse, false),
                 Arguments.of(saksbehandlerMedEgneAnsatteTilgang, oppgaveMedStrengtFortroligAdresse, false),
@@ -121,6 +150,20 @@ class SecureOppgaveMediatorTest {
                 Arguments.of(superSaksbehandler, oppgaveMedStrengtFortroligAdresse, true),
                 Arguments.of(superSaksbehandler, oppgaveMedStrengtFortroligUtlandAdresse, true),
                 Arguments.of(superSaksbehandler, oppgaveMedEgneAnsatteSkjerming, true),
+            )
+        }
+
+        @JvmStatic
+        private fun beslutterTest(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of(beslutterUtenEkstraTilganger, oppgaveUtenBeskyttelse, true),
+                Arguments.of(beslutterUtenEkstraTilganger, oppgaveMedEgneAnsatteSkjerming, false),
+                Arguments.of(beslutterUtenEkstraTilganger, oppgaveMedFortroligAdresse, false),
+                Arguments.of(beslutterUtenEkstraTilganger, oppgaveMedStrengtFortroligAdresse, false),
+                Arguments.of(beslutterUtenEkstraTilganger, oppgaveMedStrengtFortroligUtlandAdresse, false),
+                Arguments.of(saksbehandlerUtenEkstraTilganger, oppgaveUtenBeskyttelse, false),
+                Arguments.of(saksbehandlerMedEgneAnsatteTilgang, oppgaveMedEgneAnsatteSkjerming, false),
+                Arguments.of(superSaksbehandler, oppgaveUtenBeskyttelse, true),
             )
         }
 
@@ -156,7 +199,7 @@ class SecureOppgaveMediatorTest {
         val testOppgave = lagOppgave(oppgaveId = oppgaveId)
         val mediator =
             lageMediatorMock {
-                coEvery { hentOppgave(oppgaveId) } returns testOppgave
+                every { hentOppgave(oppgaveId) } returns testOppgave
             }
         if (forventetTilgang) {
             mediator.hentOppgave(oppgaveId, saksbehandler) shouldBe testOppgave
@@ -169,7 +212,7 @@ class SecureOppgaveMediatorTest {
 
     @ParameterizedTest
     @MethodSource("tester")
-    fun `Tilgangskontroll for tildeloppgave`(
+    fun `Tilgangskontroll for tildel oppgave`(
         saksbehandler: Saksbehandler,
         oppgaveId: UUID,
         forventetTilgang: Boolean,
@@ -183,7 +226,7 @@ class SecureOppgaveMediatorTest {
             )
         val mediator =
             lageMediatorMock {
-                coEvery { tildelOppgave(hendelse) } returns testOppgave
+                every { tildelOppgave(hendelse) } returns testOppgave
             }
 
         if (forventetTilgang) {
@@ -191,6 +234,94 @@ class SecureOppgaveMediatorTest {
         } else {
             shouldThrow<IngenTilgangTilOppgaveException> {
                 mediator.tildelOppgave(hendelse, saksbehandler)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("tester")
+    fun `Tilgangskontroll for utsett oppgave`(
+        saksbehandler: Saksbehandler,
+        oppgaveId: UUID,
+        forventetTilgang: Boolean,
+    ) {
+        val hendelse =
+            UtsettOppgaveHendelse(
+                oppgaveId = oppgaveId,
+                navIdent = saksbehandler.navIdent,
+                utsattTil = LocalDate.now().plusDays(1),
+                beholdOppgave = false,
+                utførtAv = saksbehandler.navIdent,
+            )
+        val mediator =
+            lageMediatorMock {
+                every { utsettOppgave(hendelse) } just runs
+            }
+
+        if (forventetTilgang) {
+            shouldNotThrowAny {
+                mediator.utsettOppgave(hendelse, saksbehandler)
+            }
+        } else {
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                mediator.utsettOppgave(hendelse, saksbehandler)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("tester")
+    fun `Tilgangskontroll for gjør klar til kontroll`(
+        saksbehandler: Saksbehandler,
+        oppgaveId: UUID,
+        forventetTilgang: Boolean,
+    ) {
+        val hendelse =
+            KlarTilKontrollHendelse(
+                oppgaveId = oppgaveId,
+                utførtAv = saksbehandler.navIdent,
+            )
+        val mediator =
+            lageMediatorMock {
+                every { gjørKlarTilKontroll(hendelse) } just runs
+            }
+
+        if (forventetTilgang) {
+            shouldNotThrowAny {
+                mediator.gjørKlarTilKontroll(hendelse, saksbehandler)
+            }
+        } else {
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                mediator.gjørKlarTilKontroll(hendelse, saksbehandler)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("beslutterTest")
+    fun `Tilgangskontroll for utfør totrinnskontroll`(
+        saksbehandler: Saksbehandler,
+        oppgaveId: UUID,
+        forventetTilgang: Boolean,
+    ) {
+        val hendelse =
+            ToTrinnskontrollHendelse(
+                oppgaveId = oppgaveId,
+                ansvarligIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler.navIdent,
+            )
+        val mediator =
+            lageMediatorMock {
+                every { tildelTotrinnskontroll(hendelse) } just runs
+            }
+
+        if (forventetTilgang) {
+            shouldNotThrowAny {
+                mediator.tildelTotrinnskontroll(hendelse, saksbehandler)
+            }
+        } else {
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                mediator.tildelTotrinnskontroll(hendelse, saksbehandler)
             }
         }
     }
