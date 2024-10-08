@@ -1,12 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
-import io.ktor.server.response.respond
-import io.ktor.util.pipeline.PipelineContext
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -29,41 +23,3 @@ interface OppgaveTilgangskontroll {
 }
 
 class IngenTilgangTilOppgaveException(message: String, val type: String) : RuntimeException(message)
-
-suspend fun PipelineContext<*, ApplicationCall>.oppgaveTilgangskontroll(tilgangskontroll: Set<OppgaveTilgangskontroll>) {
-    val oppgaveId = call.parameters["oppgaveId"]?.let { UUID.fromString(it) }
-    if (oppgaveId == null) {
-        call.respond(HttpStatusCode.BadRequest, "Manglende oppgaveId")
-        finish()
-    }
-    val saksbehandler =
-        runCatching {
-            call.saksbehandler()
-        }.onFailure {
-            call.respond(HttpStatusCode.BadRequest, "Manglende saksbehandler")
-            finish()
-        }.getOrNull()
-
-    if (oppgaveId != null && saksbehandler != null) {
-        val feilendeValidering =
-            tilgangskontroll.firstOrNull { oppgaveTilgangskontroll ->
-                oppgaveTilgangskontroll.harTilgang(oppgaveId, saksbehandler) == false
-            }
-        when (feilendeValidering) {
-            null -> {
-                proceed()
-            }
-
-            else -> {
-                logger.info {
-                    "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId." +
-                        " Tilganger: ${saksbehandler.grupper}"
-                }
-                throw IngenTilgangTilOppgaveException(
-                    feilendeValidering.feilmelding(oppgaveId, saksbehandler),
-                    feilendeValidering.feilType(oppgaveId, saksbehandler),
-                )
-            }
-        }
-    }
-}

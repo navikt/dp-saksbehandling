@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -48,7 +49,7 @@ internal object OppgaveApiTestHelper {
     private val fødselsdato = LocalDate.of(2000, 1, 1)
 
     fun withOppgaveApi(
-        oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
+        oppgaveMediator: SecureOppgaveMediator = mockk<SecureOppgaveMediator>(relaxed = true),
         pdlKlient: PDLKlient = mockk(relaxed = true),
         journalpostIdClient: JournalpostIdClient = mockk(relaxed = true),
         saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
