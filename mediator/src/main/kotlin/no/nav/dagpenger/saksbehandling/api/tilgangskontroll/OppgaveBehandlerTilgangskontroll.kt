@@ -23,5 +23,5 @@ class OppgaveBehandlerTilgangskontroll(
     override fun feilType(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
-    ): String = "BehandlerTilgangskontroll"
+    ): String = "OppgaveBehandlerTilgangskontroll"
 }
