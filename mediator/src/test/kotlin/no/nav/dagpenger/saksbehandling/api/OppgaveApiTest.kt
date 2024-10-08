@@ -7,9 +7,11 @@ import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
+import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.mockk.Runs
@@ -61,12 +63,54 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.stream.Stream
 
 class OppgaveApiTest {
     val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
     private val saksbehandler = SAKSBEHANDLER_IDENT
+    private val mockAzure = mockAzure()
+    private val ugyldigToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDI" +
+            "yfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+
+    companion object {
+        @JvmStatic
+        private fun endepunktOgHttpMetodeProvider(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of("/oppgave", HttpMethod.Get),
+                Arguments.of("/oppgave/neste", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId", HttpMethod.Get),
+                Arguments.of("/oppgave/oppgaveId/klar-til-kontroll", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/kontroller", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/tildel", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
+                Arguments.of("/person/oppgaver", HttpMethod.Post),
+                Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("endepunktOgHttpMetodeProvider")
+    fun `Skal avvise kall uten gyldig token`(
+        endepunkt: String,
+        httpMethod: HttpMethod,
+    ) {
+        withOppgaveApi {
+            client.request(endepunkt) {
+                method = httpMethod
+                autentisert(token = ugyldigToken)
+            }.status shouldBe HttpStatusCode.Unauthorized
+        }
+    }
 
     @Test
     fun `GET på oppgaver uten query parameters`() {
