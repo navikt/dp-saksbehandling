@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppga
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -382,6 +383,89 @@ class SecureOppgaveMediatorTest {
             GodkjentBehandlingHendelse(
                 oppgaveId = oppgaveUnderKontroll.oppgaveId,
                 meldingOmVedtak = "html",
+                saksbehandlerToken = "token",
+                utførtAv = beslutterUtenEkstraTilganger.navIdent,
+            )
+        lageMediatorMock {
+            every { hentOppgave(oppgaveUnderKontroll.oppgaveId) } returns oppgaveUnderKontroll
+            every { hentOppgave(oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId) } returns oppgaveUnderKontrollEidAvSaksbehandler
+            every { ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+        }.let {
+            shouldNotThrowAny {
+                it.ferdigstillOppgave(godkjentBehandlingHendelse, beslutterUtenEkstraTilganger)
+            }
+
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                it.ferdigstillOppgave(
+                    godkjentBehandlingHendelse,
+                    superSaksbehandler,
+                )
+            }
+
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                it.ferdigstillOppgave(
+                    GodkjentBehandlingHendelse(
+                        oppgaveId = oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId,
+                        meldingOmVedtak = "html",
+                        saksbehandlerToken = "token",
+                        utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
+                    ),
+                    saksbehandlerUtenEkstraTilganger,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `tilgangskontroll for ferdigstilling av oppgave  uten brev som er under behandling`() {
+        val oppgaveUnderBehandling =
+            lagOppgave(
+                oppgaveId = oppgaveUtenBeskyttelse,
+                tilstand = Oppgave.UnderBehandling,
+                saksbehandlerIdent = saksbehandlerUtenEkstraTilganger.navIdent,
+            )
+        val godkjentBehandlingHendelse =
+            GodkjennBehandlingMedBrevIArena(
+                oppgaveId = oppgaveUnderBehandling.oppgaveId,
+                saksbehandlerToken = "token",
+                utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
+            )
+        lageMediatorMock {
+            every { hentOppgave(oppgaveUnderBehandling.oppgaveId) } returns oppgaveUnderBehandling
+            every { ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+        }.let {
+            shouldNotThrowAny {
+                it.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerUtenEkstraTilganger)
+            }
+
+            shouldThrow<IngenTilgangTilOppgaveException> {
+                it.ferdigstillOppgave(
+                    godkjentBehandlingHendelse,
+                    superSaksbehandler,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `tilgangskontroll for ferdigstilling av oppgave uten brev som er under kontroll`() {
+        val oppgaveUnderKontroll =
+            lagOppgave(
+                oppgaveId = oppgaveUtenBeskyttelse,
+                tilstand = Oppgave.UnderKontroll,
+                saksbehandlerIdent = beslutterUtenEkstraTilganger.navIdent,
+            )
+
+        val oppgaveUnderKontrollEidAvSaksbehandler =
+            lagOppgave(
+                oppgaveId = oppgaveUtenBeskyttelse2,
+                tilstand = Oppgave.UnderKontroll,
+                saksbehandlerIdent = saksbehandlerUtenEkstraTilganger.navIdent,
+            )
+
+        val godkjentBehandlingHendelse =
+            GodkjennBehandlingMedBrevIArena(
+                oppgaveId = oppgaveUnderKontroll.oppgaveId,
                 saksbehandlerToken = "token",
                 utførtAv = beslutterUtenEkstraTilganger.navIdent,
             )
