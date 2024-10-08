@@ -28,7 +28,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -38,7 +37,6 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigBeslutterToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagMediatorMock
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstand
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstandOgBehandling
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
@@ -108,7 +106,7 @@ class OppgaveApiTest {
                 val json = response.bodyAsText()
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
-                        """
+                    """
                     [{
                       "oppgaveId": "${oppgave1.oppgaveId}",
                       "behandlingId": "${oppgave1.behandlingId}",
@@ -151,10 +149,10 @@ class OppgaveApiTest {
                         ),
                     )
                 } returns
-                        listOf(
-                            lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                            lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                        )
+                    listOf(
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                    )
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -185,10 +183,10 @@ class OppgaveApiTest {
                         ),
                     )
                 } returns
-                        listOf(
-                            lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                            lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                        )
+                    listOf(
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                    )
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -214,19 +212,19 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode =
-                            Periode(
-                                fom = LocalDate.parse("2021-01-01"),
-                                tom = LocalDate.parse("2023-01-01"),
-                            ),
+                                Periode(
+                                    fom = LocalDate.parse("2021-01-01"),
+                                    tom = LocalDate.parse("2023-01-01"),
+                                ),
                             tilstand = setOf(UNDER_BEHANDLING),
                             saksbehandlerIdent = SAKSBEHANDLER_IDENT,
                         ),
                     )
                 } returns
-                        listOf(
-                            lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
-                            lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
-                        )
+                    listOf(
+                        lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
+                        lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
+                    )
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -280,7 +278,7 @@ class OppgaveApiTest {
     @Test
     fun `Ferdigstilling av en oppgave feiler dersom content type ikke er HTML `() {
         val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
-        withOppgaveApi() {
+        withOppgaveApi {
             client.put("/oppgave/${UUIDv7.ny()}/ferdigstill/melding-om-vedtak") {
                 autentisert(gyldigSaksbehandlerToken(navIdent = "G151133"))
                 setBody(meldingOmVedtakHtml)
@@ -346,7 +344,7 @@ class OppgaveApiTest {
                 val json = response.bodyAsText()
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
-                        """
+                    """
                     {
                       "behandlingId": "${oppgave.behandlingId}",
                       "person": {
@@ -369,12 +367,12 @@ class OppgaveApiTest {
     @Test
     fun `404 når det ikke finnes noen neste oppgave for saksbehandler`() {
         val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
+            mockk<SecureOppgaveMediator>().also {
                 every { it.tildelNesteOppgaveTil(any(), any()) } returns null
             }
         val pdlMock = mockk<PDLKlient>()
 
-        withOppgaveApi() {
+        withOppgaveApi(oppgaveMediator = oppgaveMediatorMock, pdlKlient = pdlMock) {
             client.put("/oppgave/neste") {
                 autentisert()
                 contentType(ContentType.Application.Json)
@@ -401,7 +399,7 @@ class OppgaveApiTest {
                     ansvarligIdent = SAKSBEHANDLER_IDENT,
                     utførtAv = saksbehandler,
                 ),
-                any()
+                any(),
             )
         } returns testOppgave
         val pdlMock = mockk<PDLKlient>()
@@ -414,7 +412,7 @@ class OppgaveApiTest {
                 val json = response.bodyAsText()
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
-                        """
+                    """
                     {
                       "behandlingId": "${testOppgave.behandlingId}",
                       "person": {
@@ -461,7 +459,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Feilstatuser når beslutter forsøker å ta en kontrolloppgave`() {
-        val oppgaveMediatorMock = lagMediatorMock()
+        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
         val oppgaveSomIkkeFinnes = UUIDv7.ny()
         val oppgaveSomAlleredeErUnderKontroll = UUIDv7.ny()
 
@@ -472,6 +470,7 @@ class OppgaveApiTest {
                     ansvarligIdent = BESLUTTER_IDENT,
                     utførtAv = BESLUTTER_IDENT,
                 ),
+                any(),
             )
         } throws DataNotFoundException("Oppgave ikke funnet")
 
@@ -482,6 +481,7 @@ class OppgaveApiTest {
                     ansvarligIdent = BESLUTTER_IDENT,
                     utførtAv = BESLUTTER_IDENT,
                 ),
+                any(),
             )
         } throws UlovligTilstandsendringException("Oppgaven er allerede under kontroll")
 
@@ -499,10 +499,10 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne gi fra seg ansvar for en oppgave`() {
-        val oppgaveMediatorMock = lagMediatorMock()
+        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
-        coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
+        coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
         coEvery {
             oppgaveMediatorMock.fristillOppgave(
                 FjernOppgaveAnsvarHendelse(
@@ -530,7 +530,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne utsette oppgave`() {
-        val oppgaveMediatorMock = lagMediatorMock()
+        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
         val utsettTilDato = LocalDate.now().plusDays(1)
         val utsettOppgaveHendelse =
@@ -542,10 +542,10 @@ class OppgaveApiTest {
                 utførtAv = saksbehandler,
             )
 
-        coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
+        coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
         coEvery {
             oppgaveMediatorMock.utsettOppgave(
-                utsettOppgaveHendelse,
+                utsettOppgaveHendelse, any(),
             )
         } just runs
 
@@ -568,13 +568,13 @@ class OppgaveApiTest {
         }
 
         verify(exactly = 1) {
-            oppgaveMediatorMock.utsettOppgave(utsettOppgaveHendelse)
+            oppgaveMediatorMock.utsettOppgave(utsettOppgaveHendelse, any())
         }
     }
 
     @Test
     fun `Hent oppgave med tilhørende personinfo og journalpostIder `() {
-        val oppgaveMediatorMock = lagMediatorMock()
+        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
         val pdlMock = mockk<PDLKlient>()
         val journalpostIdClientMock = mockk<JournalpostIdClient>()
         val saksbehandlerOppslagMock = mockk<SaksbehandlerOppslag>()
@@ -584,53 +584,53 @@ class OppgaveApiTest {
                 tilstand = UNDER_KONTROLL,
                 tildeltBehandlerIdent = BESLUTTER_IDENT,
                 behandling =
-                Behandling(
-                    behandlingId = UUIDv7.ny(),
-                    opprettet = LocalDateTime.now(),
-                    person =
-                    Person(
-                        id = UUIDv7.ny(),
-                        ident = TEST_IDENT,
-                        skjermesSomEgneAnsatte = true,
-                        adressebeskyttelseGradering = UGRADERT,
-                    ),
-                    hendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = UUIDv7.ny(),
+                    Behandling(
                         behandlingId = UUIDv7.ny(),
-                        ident = TEST_IDENT,
                         opprettet = LocalDateTime.now(),
+                        person =
+                            Person(
+                                id = UUIDv7.ny(),
+                                ident = TEST_IDENT,
+                                skjermesSomEgneAnsatte = true,
+                                adressebeskyttelseGradering = UGRADERT,
+                            ),
+                        hendelse =
+                            SøknadsbehandlingOpprettetHendelse(
+                                søknadId = UUIDv7.ny(),
+                                behandlingId = UUIDv7.ny(),
+                                ident = TEST_IDENT,
+                                opprettet = LocalDateTime.now(),
+                            ),
                     ),
-                ),
             )
 
-        coEvery { oppgaveMediatorMock.hentOppgave(any()) } returns testOppgave
+        coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
         coEvery { journalpostIdClientMock.hentJournalpostId(any()) } returns Result.success("123456789")
         coEvery { saksbehandlerOppslagMock.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
-                BehandlerDTO(
-                    ident = SAKSBEHANDLER_IDENT,
-                    fornavn = "Saksbehandler fornavn",
-                    etternavn = "Saksbehandler etternavn",
-                    enhet =
+            BehandlerDTO(
+                ident = SAKSBEHANDLER_IDENT,
+                fornavn = "Saksbehandler fornavn",
+                etternavn = "Saksbehandler etternavn",
+                enhet =
                     BehandlerEnhetDTO(
                         navn = "Enhet navn",
                         enhetNr = "1234",
                         postadresse = "Adresseveien 3, 0101 ADRESSA",
                     ),
-                )
+            )
         coEvery { saksbehandlerOppslagMock.hentSaksbehandler(BESLUTTER_IDENT) } returns
-                BehandlerDTO(
-                    ident = BESLUTTER_IDENT,
-                    fornavn = "Saksbeandler fornavn",
-                    etternavn = "Saksbehandler etternavn",
-                    enhet =
+            BehandlerDTO(
+                ident = BESLUTTER_IDENT,
+                fornavn = "Saksbeandler fornavn",
+                etternavn = "Saksbehandler etternavn",
+                enhet =
                     BehandlerEnhetDTO(
                         navn = "Enhet navn",
                         enhetNr = "1234",
                         postadresse = "Adresseveien 3, 0101 ADRESSA",
                     ),
-                )
+            )
 
         withOppgaveApi(
             oppgaveMediator = oppgaveMediatorMock,
@@ -644,7 +644,7 @@ class OppgaveApiTest {
                 val json = response.bodyAsText()
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
-                        """
+                    """
                     {
                       "behandlingId": "${testOppgave.behandlingId}",
                       "person": {
@@ -681,8 +681,8 @@ class OppgaveApiTest {
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val oppgaveMediator =
-            lagMediatorMock().also {
-                every { it.hentOppgave(any()) } throws DataNotFoundException("Fant ikke testoppgave")
+            mockk<SecureOppgaveMediator>().also {
+                every { it.hentOppgave(any(), any()) } throws DataNotFoundException("Fant ikke testoppgave")
             }
         withOppgaveApi(oppgaveMediator) {
             client.get("/oppgave/$ikkeEksisterendeOppgaveId") { autentisert() }.also { response ->
@@ -702,12 +702,12 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
         val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
+            mockk<SecureOppgaveMediator>().also {
                 every { it.finnOppgaverFor(TEST_IDENT) } returns
-                        listOf(
-                            lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
-                            lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
-                        )
+                    listOf(
+                        lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
+                        lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
+                    )
             }
         withOppgaveApi(oppgaveMediatorMock) {
             client.post("/person/oppgaver") {
@@ -737,7 +737,7 @@ class OppgaveApiTest {
 
         val oppgaveId = UUIDv7.ny()
         val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
+            mockk<SecureOppgaveMediator>().also {
                 every { it.hentOppgaveIdFor(behandlingIdSomFinnes) } returns oppgaveId
                 every { it.hentOppgaveIdFor(behandlingIdSomIkkeFinnes) } returns null
             }

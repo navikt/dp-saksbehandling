@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 import java.util.UUID
 
-class BehandlerTilgangskontroll(
+class OppgaveBehandlerTilgangskontroll(
     private val behandlerFunc: (oppgaveId: UUID) -> String?,
 ) : OppgaveTilgangskontroll {
     override fun harTilgang(
@@ -10,7 +10,7 @@ class BehandlerTilgangskontroll(
         saksbehandler: Saksbehandler,
     ): Boolean {
         val eier = behandlerFunc(oppgaveId)
-        return eier == null || eier == saksbehandler.navIdent
+        return eier == saksbehandler.navIdent
     }
 
     override fun feilmelding(

@@ -2,10 +2,10 @@ package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BehandlerTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterTilgangsKontroll
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
+import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveBehandlerTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -30,14 +30,14 @@ class SecureOppgaveMediator(
             fortroligGruppe = Configuration.fortroligADGruppe,
             adressebeskyttelseGraderingFun = oppgaveMediator::adresseGraderingForPerson,
         ),
-    private val beslutterTilgangsKontroll: BeslutterTilgangsKontroll = BeslutterTilgangsKontroll,
+    private val beslutterTilgangskontroll: BeslutterTilgangskontroll = BeslutterTilgangskontroll,
     private val egneAnsatteTilgangskontroll: EgneAnsatteTilgangskontroll =
         EgneAnsatteTilgangskontroll(
             tillatteGrupper = setOf(Configuration.egneAnsatteADGruppe),
             skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
         ),
-    private val behandlerTilgangskontroll: BehandlerTilgangskontroll =
-        BehandlerTilgangskontroll(
+    private val behandlerTilgangskontroll: OppgaveBehandlerTilgangskontroll =
+        OppgaveBehandlerTilgangskontroll(
             behandlerFunc = oppgaveMediator::behandlerForOppgave,
         ),
 ) {
@@ -130,17 +130,8 @@ class SecureOppgaveMediator(
         }
     }
 
-    fun fristillOppgave(
-        oppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
-        saksbehandler: Saksbehandler,
-    ) {
-        return sjekkTilgang(
-            kontroller = listOf(egneAnsatteTilgangskontroll, adressebeskyttelseTilgangskontroll),
-            oppgaveId = oppgaveAnsvarHendelse.oppgaveId,
-            saksbehandler = saksbehandler,
-        ) {
-            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
-        }
+    fun fristillOppgave(oppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
+        oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
     }
 
     fun gjørKlarTilKontroll(
@@ -165,7 +156,7 @@ class SecureOppgaveMediator(
                 listOf(
                     egneAnsatteTilgangskontroll,
                     adressebeskyttelseTilgangskontroll,
-                    beslutterTilgangsKontroll,
+                    beslutterTilgangskontroll,
                 ),
             oppgaveId = toTrinnskontrollHendelse.oppgaveId,
             saksbehandler = saksbehandler,
@@ -183,7 +174,7 @@ class SecureOppgaveMediator(
                 listOf(
                     egneAnsatteTilgangskontroll,
                     adressebeskyttelseTilgangskontroll,
-                    beslutterTilgangsKontroll,
+                    beslutterTilgangskontroll,
                     behandlerTilgangskontroll,
                 ),
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
@@ -202,7 +193,7 @@ class SecureOppgaveMediator(
                 listOf(
                     egneAnsatteTilgangskontroll,
                     adressebeskyttelseTilgangskontroll,
-                    beslutterTilgangsKontroll,
+                    beslutterTilgangskontroll,
                     behandlerTilgangskontroll,
                 ),
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,

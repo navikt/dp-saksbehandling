@@ -151,9 +151,8 @@ internal fun Application.oppgaveApi(
                     }
                     route("legg-tilbake") {
                         put {
-                            val saksbehandler = call.saksbehandler()
                             val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse()
-                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse, saksbehandler)
+                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }

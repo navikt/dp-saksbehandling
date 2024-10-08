@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class BeslutterTilgangsKontrollTest {
     @Test
     fun `beslutter har tilgang`() {
-        BeslutterTilgangsKontroll.harTilgang(
+        BeslutterTilgangskontroll.harTilgang(
             oppgaveId = UUIDv7.ny(),
             saksbehandler =
                 Saksbehandler(
@@ -20,7 +20,7 @@ class BeslutterTilgangsKontrollTest {
 
     @Test
     fun `saksbehandler  har ikke tilgang`() {
-        BeslutterTilgangsKontroll.harTilgang(
+        BeslutterTilgangskontroll.harTilgang(
             oppgaveId = UUIDv7.ny(),
             saksbehandler =
                 Saksbehandler(
