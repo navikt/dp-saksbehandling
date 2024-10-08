@@ -291,25 +291,6 @@ class OppgaveTilstandTest {
         oppgave.behandlerIdent shouldBe beslutterIdent
     }
 
-    @Test
-    fun `Skal ikke kunne ferdigstille en oppgave UNDER_BEHANDLING hvis behandler ikke eier oppgaven`() {
-        val saksbehandler = "Z080808"
-        val annenSaksbehandler = "Z091919"
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
-
-        shouldThrow<Oppgave.AlleredeTildeltException> {
-            oppgave.ferdigstill(
-                godkjentBehandlingHendelse =
-                    GodkjentBehandlingHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        saksbehandlerToken = "token",
-                        utførtAv = annenSaksbehandler,
-                        meldingOmVedtak = "Melding om vedtak",
-                    ),
-            )
-        }
-    }
-
     @ParameterizedTest
     @EnumSource(Type::class)
     fun `Ulovlige tilstandsendringer til UNDER_KONTROLL`(tilstandstype: Type) {
@@ -344,25 +325,6 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
         oppgave.behandlerIdent shouldBe beslutter
-    }
-
-    @Test
-    fun `Skal ikke kunne ferdigstille fra UNDER_KONTROLL hvis behandler ikke eier oppgaven`() {
-        val beslutter = "Z080808"
-        val annenBeslutter = "Z091919"
-        val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
-
-        shouldThrow<Oppgave.AlleredeTildeltException> {
-            oppgave.ferdigstill(
-                godkjentBehandlingHendelse =
-                    GodkjentBehandlingHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        saksbehandlerToken = "token",
-                        utførtAv = annenBeslutter,
-                        meldingOmVedtak = "Melding om vedtak",
-                    ),
-            )
-        }
     }
 
     @Test
