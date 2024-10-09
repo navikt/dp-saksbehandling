@@ -462,7 +462,6 @@ class PostgresOppgaveRepositoryTest {
                             GodkjentBehandlingHendelse(
                                 oppgaveId = oppgaveIdTest,
                                 meldingOmVedtak = "<h1>This is HTML</h1>",
-                                saksbehandlerToken = "token",
                                 utførtAv = beslutter,
                             ),
                         tidspunkt = nå.truncatedTo(ChronoUnit.SECONDS),

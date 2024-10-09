@@ -126,7 +126,6 @@ class OppgaveTilstandTest {
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "Melding om vedtak",
-                    saksbehandlerToken = "token",
                     utførtAv = saksbehandler,
                 ),
         )
@@ -318,7 +317,6 @@ class OppgaveTilstandTest {
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "Melding om vedtak",
-                    saksbehandlerToken = "token",
                     utførtAv = beslutter,
                 ),
         )
@@ -337,7 +335,6 @@ class OppgaveTilstandTest {
                 godkjennBehandlingMedBrevIArena =
                     GodkjennBehandlingMedBrevIArena(
                         oppgaveId = oppgave.oppgaveId,
-                        saksbehandlerToken = "token",
                         utførtAv = beslutter,
                     ),
             )
@@ -439,7 +436,6 @@ class OppgaveTilstandTest {
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "Melding om vedtak",
-                    saksbehandlerToken = "token",
                     utførtAv = beslutter2,
                 ),
         )

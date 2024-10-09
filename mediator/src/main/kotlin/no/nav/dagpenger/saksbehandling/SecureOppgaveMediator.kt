@@ -184,7 +184,7 @@ class SecureOppgaveMediator(
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
-            oppgaveMediator.ferdigstillOppgave(godkjentBehandlingHendelse)
+            oppgaveMediator.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandler.token)
         }
     }
 
@@ -202,7 +202,7 @@ class SecureOppgaveMediator(
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
-            oppgaveMediator.ferdigstillOppgave(godkjentBehandlingHendelse)
+            oppgaveMediator.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandler.token)
         }
     }
 

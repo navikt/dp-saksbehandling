@@ -343,12 +343,11 @@ class SecureOppgaveMediatorTest {
             GodkjentBehandlingHendelse(
                 oppgaveId = oppgaveUnderBehandling.oppgaveId,
                 meldingOmVedtak = "html",
-                saksbehandlerToken = "token",
                 utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
             )
         lageMediatorMock {
             every { hentOppgave(oppgaveUnderBehandling.oppgaveId) } returns oppgaveUnderBehandling
-            every { ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+            every { ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
         }.let {
             shouldNotThrowAny {
                 it.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerUtenEkstraTilganger)
@@ -383,13 +382,12 @@ class SecureOppgaveMediatorTest {
             GodkjentBehandlingHendelse(
                 oppgaveId = oppgaveUnderKontroll.oppgaveId,
                 meldingOmVedtak = "html",
-                saksbehandlerToken = "token",
                 utførtAv = beslutterUtenEkstraTilganger.navIdent,
             )
         lageMediatorMock {
             every { hentOppgave(oppgaveUnderKontroll.oppgaveId) } returns oppgaveUnderKontroll
             every { hentOppgave(oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId) } returns oppgaveUnderKontrollEidAvSaksbehandler
-            every { ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+            every { ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
         }.let {
             shouldNotThrowAny {
                 it.ferdigstillOppgave(godkjentBehandlingHendelse, beslutterUtenEkstraTilganger)
@@ -407,7 +405,6 @@ class SecureOppgaveMediatorTest {
                     GodkjentBehandlingHendelse(
                         oppgaveId = oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId,
                         meldingOmVedtak = "html",
-                        saksbehandlerToken = "token",
                         utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
                     ),
                     saksbehandlerUtenEkstraTilganger,
@@ -427,12 +424,11 @@ class SecureOppgaveMediatorTest {
         val godkjentBehandlingHendelse =
             GodkjennBehandlingMedBrevIArena(
                 oppgaveId = oppgaveUnderBehandling.oppgaveId,
-                saksbehandlerToken = "token",
                 utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
             )
         lageMediatorMock {
             every { hentOppgave(oppgaveUnderBehandling.oppgaveId) } returns oppgaveUnderBehandling
-            every { ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+            every { ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
         }.let {
             shouldNotThrowAny {
                 it.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerUtenEkstraTilganger)
@@ -466,13 +462,12 @@ class SecureOppgaveMediatorTest {
         val godkjentBehandlingHendelse =
             GodkjennBehandlingMedBrevIArena(
                 oppgaveId = oppgaveUnderKontroll.oppgaveId,
-                saksbehandlerToken = "token",
                 utførtAv = beslutterUtenEkstraTilganger.navIdent,
             )
         lageMediatorMock {
             every { hentOppgave(oppgaveUnderKontroll.oppgaveId) } returns oppgaveUnderKontroll
             every { hentOppgave(oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId) } returns oppgaveUnderKontrollEidAvSaksbehandler
-            every { ferdigstillOppgave(godkjentBehandlingHendelse) } just Runs
+            every { ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
         }.let {
             shouldNotThrowAny {
                 it.ferdigstillOppgave(godkjentBehandlingHendelse, beslutterUtenEkstraTilganger)
@@ -490,7 +485,6 @@ class SecureOppgaveMediatorTest {
                     GodkjentBehandlingHendelse(
                         oppgaveId = oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId,
                         meldingOmVedtak = "html",
-                        saksbehandlerToken = "token",
                         utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
                     ),
                     saksbehandlerUtenEkstraTilganger,

@@ -338,9 +338,9 @@ class OppgaveMediatorTest {
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = meldingOmVedtak,
-                    saksbehandlerToken = saksbehandlerToken,
                     utførtAv = saksbehandler,
                 ),
+                "token",
             )
 
             verify(exactly = 1) {
@@ -415,9 +415,9 @@ class OppgaveMediatorTest {
             oppgaveMediator.ferdigstillOppgave(
                 GodkjennBehandlingMedBrevIArena(
                     oppgaveId = oppgave.oppgaveId,
-                    saksbehandlerToken = saksbehandlerToken,
                     utførtAv = saksbehandler,
                 ),
+                "token",
             )
 
             verify(exactly = 1) {

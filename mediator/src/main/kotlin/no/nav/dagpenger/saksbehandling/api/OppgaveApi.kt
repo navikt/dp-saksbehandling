@@ -188,7 +188,6 @@ internal fun Application.oppgaveApi(
                                     GodkjentBehandlingHendelse(
                                         meldingOmVedtak = meldingOmVedtak,
                                         oppgaveId = oppgaveId,
-                                        saksbehandlerToken = saksbehandler.token,
                                         utførtAv = saksbehandler.navIdent,
                                     ),
                                     saksbehandler,
@@ -209,7 +208,6 @@ internal fun Application.oppgaveApi(
                             oppgaveMediator.ferdigstillOppgave(
                                 GodkjennBehandlingMedBrevIArena(
                                     oppgaveId = oppgaveId,
-                                    saksbehandlerToken = saksbehandler.token,
                                     utførtAv = saksbehandler.navIdent,
                                 ),
                                 saksbehandler,

@@ -113,13 +113,16 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
+    fun ferdigstillOppgave(
+        godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
+        saksbehandlerToken: String,
+    ) {
         repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
 
             behandlingKlient.godkjennBehandling(
                 behandlingId = oppgave.behandlingId,
                 ident = oppgave.ident,
-                saksbehandlerToken = godkjentBehandlingHendelse.saksbehandlerToken,
+                saksbehandlerToken = saksbehandlerToken,
             )
             utsendingMediator.opprettUtsending(
                 oppgave.oppgaveId,
@@ -131,13 +134,16 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
+    fun ferdigstillOppgave(
+        godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
+        saksbehandlerToken: String,
+    ) {
         repository.hentOppgave(godkjennBehandlingMedBrevIArena.oppgaveId).let { oppgave ->
 
             behandlingKlient.godkjennBehandling(
                 behandlingId = oppgave.behandlingId,
                 ident = oppgave.ident,
-                saksbehandlerToken = godkjennBehandlingMedBrevIArena.saksbehandlerToken,
+                saksbehandlerToken = saksbehandlerToken,
             )
             oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
             repository.lagre(oppgave)

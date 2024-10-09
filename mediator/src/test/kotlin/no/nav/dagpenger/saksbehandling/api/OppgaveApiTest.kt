@@ -294,7 +294,6 @@ class OppgaveApiTest {
             GodkjentBehandlingHendelse(
                 oppgave.oppgaveId,
                 meldingOmVedtakHtml,
-                saksbehandlerToken = saksbehandlerToken,
                 utførtAv = SAKSBEHANDLER_IDENT,
             )
         val oppgaveMediatorMock =
@@ -340,7 +339,6 @@ class OppgaveApiTest {
         val godkjennBehandlingMedBrevIArena =
             GodkjennBehandlingMedBrevIArena(
                 oppgaveId = oppgave.oppgaveId,
-                saksbehandlerToken = saksbehandlerToken,
                 utførtAv = saksbehandler,
             )
         val oppgaveMediatorMock =

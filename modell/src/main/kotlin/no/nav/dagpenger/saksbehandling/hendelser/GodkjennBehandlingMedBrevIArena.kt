@@ -4,6 +4,5 @@ import java.util.UUID
 
 data class GodkjennBehandlingMedBrevIArena(
     val oppgaveId: UUID,
-    val saksbehandlerToken: String,
     override val utførtAv: String,
 ) : Hendelse(utførtAv)
