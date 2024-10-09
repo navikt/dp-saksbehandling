@@ -173,6 +173,7 @@ class SecureOppgaveMediator(
     fun ferdigstillOppgave(
         godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         saksbehandler: Saksbehandler,
+        saksbehandlerToken: String,
     ) {
         return sjekkTilgang(
             kontroller =
@@ -184,13 +185,14 @@ class SecureOppgaveMediator(
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
-            oppgaveMediator.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandler.token)
+            oppgaveMediator.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerToken)
         }
     }
 
     fun ferdigstillOppgave(
         godkjentBehandlingHendelse: GodkjennBehandlingMedBrevIArena,
         saksbehandler: Saksbehandler,
+        saksbehandlerToken: String,
     ) {
         return sjekkTilgang(
             kontroller =
@@ -202,7 +204,7 @@ class SecureOppgaveMediator(
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
-            oppgaveMediator.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandler.token)
+            oppgaveMediator.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerToken)
         }
     }
 

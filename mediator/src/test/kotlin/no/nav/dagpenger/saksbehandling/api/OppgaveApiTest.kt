@@ -298,7 +298,7 @@ class OppgaveApiTest {
             )
         val oppgaveMediatorMock =
             mockk<SecureOppgaveMediator>().also {
-                every { it.ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
+                every { it.ferdigstillOppgave(godkjentBehandlingHendelse, any(), any()) } just Runs
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -313,7 +313,7 @@ class OppgaveApiTest {
             }
 
             verify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse, any())
+                oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse, any(), any())
             }
         }
     }
@@ -343,7 +343,7 @@ class OppgaveApiTest {
             )
         val oppgaveMediatorMock =
             mockk<SecureOppgaveMediator>().also {
-                every { it.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any()) } just Runs
+                every { it.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any(), any()) } just Runs
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -355,7 +355,7 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.NoContent
             }
             verify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any())
+                oppgaveMediatorMock.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any(), any())
             }
         }
     }

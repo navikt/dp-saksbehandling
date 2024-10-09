@@ -11,9 +11,9 @@ class EgneAnsatteTilgangskontrollTest {
             tillatteGrupper = setOf("A", "B"),
             skjermesSomEgneAnsatteFun = { false },
         ).let {
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet(), "token")) shouldBe true
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"), "token")) shouldBe true
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A"), "token")) shouldBe true
+            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe true
+            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"))) shouldBe true
+            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A"))) shouldBe true
         }
     }
 
@@ -23,9 +23,9 @@ class EgneAnsatteTilgangskontrollTest {
             tillatteGrupper = setOf("A", "B"),
             skjermesSomEgneAnsatteFun = { true },
         ).let {
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("B"), "token")) shouldBe true
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A", "B"), "token")) shouldBe true
-            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A", "B", "C"), "token")) shouldBe true
+            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("B"))) shouldBe true
+            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A", "B"))) shouldBe true
+            it.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("A", "B", "C"))) shouldBe true
         }
     }
 
@@ -34,7 +34,7 @@ class EgneAnsatteTilgangskontrollTest {
         EgneAnsatteTilgangskontroll(
             tillatteGrupper = setOf("A", "B"),
             skjermesSomEgneAnsatteFun = { true },
-        ).harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"), "token")) shouldBe false
+        ).harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf("C"))) shouldBe false
     }
 
     @Test
@@ -45,7 +45,7 @@ class EgneAnsatteTilgangskontrollTest {
         ).let { tilgangskontroll ->
             tilgangskontroll.feilType(
                 UUIDv7.ny(),
-                Saksbehandler("ident", emptySet(), "token"),
+                Saksbehandler("ident", emptySet()),
             ) shouldBe "egne-ansatte"
         }
     }

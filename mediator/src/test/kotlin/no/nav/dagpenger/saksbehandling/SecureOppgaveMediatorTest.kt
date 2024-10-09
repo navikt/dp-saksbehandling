@@ -32,38 +32,33 @@ import java.util.stream.Stream
 class SecureOppgaveMediatorTest {
     companion object {
         private val saksbehandlerUtenEkstraTilganger =
-            Saksbehandler("saksbehandlerUtenEkstraTilganger", setOf("SaksbehandlerADGruppe"), "token")
+            Saksbehandler("saksbehandlerUtenEkstraTilganger", setOf("SaksbehandlerADGruppe"))
         private val saksbehandlerMedEgneAnsatteTilgang =
             Saksbehandler(
                 "saksbehandlerMedEgneAnsatteTilgang",
                 setOf("EgneAnsatteADGruppe", "SaksbehandlerADGruppe"),
-                "token",
             )
         private val saksbehanderMedFortroligAdresseTilgang =
             Saksbehandler(
                 "saksbehanderMedFortroligAdresseTilgang",
                 setOf("FortroligADGruppe", "SaksbehandlerADGruppe"),
-                "token",
             )
 
         private val saksbehanderMedStrengtFortroligAdresseTilgang =
             Saksbehandler(
                 "saksbehanderMedStrengtFortroligAdresseTilgang",
                 setOf("StrengtFortroligADGruppe", "SaksbehandlerADGruppe"),
-                "token",
             )
         private val saksbehanderMedStrengtFortroligUtlandAdresseTilgang =
             Saksbehandler(
                 "saksbehanderMedStrengtFortroligUtlandAdresseTilgang",
                 setOf("StrengtFortroligUtlandADGruppe", "SaksbehandlerADGruppe"),
-                "token",
             )
 
         private val beslutterUtenEkstraTilganger =
             Saksbehandler(
                 "beslutterUtenEkstraTilganger",
                 setOf("BeslutterADGruppe", "SaksbehandlerADGruppe"),
-                "token",
             )
 
         private val superSaksbehandler =
@@ -77,7 +72,6 @@ class SecureOppgaveMediatorTest {
                     "StrengtFortroligADGruppe",
                     "StrengtFortroligUtlandADGruppe",
                 ),
-                "token",
             )
 
         private val oppgaveUtenBeskyttelse = UUIDv7.ny()
@@ -350,13 +344,14 @@ class SecureOppgaveMediatorTest {
             every { ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
         }.let {
             shouldNotThrowAny {
-                it.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerUtenEkstraTilganger)
+                it.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerUtenEkstraTilganger, "token")
             }
 
             shouldThrow<IngenTilgangTilOppgaveException> {
                 it.ferdigstillOppgave(
                     godkjentBehandlingHendelse,
                     superSaksbehandler,
+                    "token",
                 )
             }
         }
@@ -390,13 +385,14 @@ class SecureOppgaveMediatorTest {
             every { ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
         }.let {
             shouldNotThrowAny {
-                it.ferdigstillOppgave(godkjentBehandlingHendelse, beslutterUtenEkstraTilganger)
+                it.ferdigstillOppgave(godkjentBehandlingHendelse, beslutterUtenEkstraTilganger, "token")
             }
 
             shouldThrow<IngenTilgangTilOppgaveException> {
                 it.ferdigstillOppgave(
                     godkjentBehandlingHendelse,
                     superSaksbehandler,
+                    "token",
                 )
             }
 
@@ -408,6 +404,7 @@ class SecureOppgaveMediatorTest {
                         utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
                     ),
                     saksbehandlerUtenEkstraTilganger,
+                    "token",
                 )
             }
         }
@@ -431,13 +428,14 @@ class SecureOppgaveMediatorTest {
             every { ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
         }.let {
             shouldNotThrowAny {
-                it.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerUtenEkstraTilganger)
+                it.ferdigstillOppgave(godkjentBehandlingHendelse, saksbehandlerUtenEkstraTilganger, "token")
             }
 
             shouldThrow<IngenTilgangTilOppgaveException> {
                 it.ferdigstillOppgave(
                     godkjentBehandlingHendelse,
                     superSaksbehandler,
+                    "token",
                 )
             }
         }
@@ -470,13 +468,14 @@ class SecureOppgaveMediatorTest {
             every { ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
         }.let {
             shouldNotThrowAny {
-                it.ferdigstillOppgave(godkjentBehandlingHendelse, beslutterUtenEkstraTilganger)
+                it.ferdigstillOppgave(godkjentBehandlingHendelse, beslutterUtenEkstraTilganger, "token")
             }
 
             shouldThrow<IngenTilgangTilOppgaveException> {
                 it.ferdigstillOppgave(
                     godkjentBehandlingHendelse,
                     superSaksbehandler,
+                    "token",
                 )
             }
 
@@ -488,6 +487,7 @@ class SecureOppgaveMediatorTest {
                         utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
                     ),
                     saksbehandlerUtenEkstraTilganger,
+                    "token",
                 )
             }
         }
@@ -495,7 +495,7 @@ class SecureOppgaveMediatorTest {
 
     @Test
     fun `tildel neste oppgave delegerer til noe noe`() {
-        val saksbehandler = Saksbehandler("ident", emptySet(), "token")
+        val saksbehandler = Saksbehandler("ident", emptySet())
 
         val slot = mutableListOf<TildelNesteOppgaveFilter>()
         val oppgaveMediator =

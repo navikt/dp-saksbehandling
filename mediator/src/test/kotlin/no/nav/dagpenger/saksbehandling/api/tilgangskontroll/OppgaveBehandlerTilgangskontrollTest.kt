@@ -8,8 +8,8 @@ class OppgaveBehandlerTilgangskontrollTest {
     @Test
     fun `Bare saksbehandler som er eier av en oppgave har tilgang`() {
         val oppgaveId = UUIDv7.ny()
-        val saksbehandlerA = Saksbehandler("Saksbehandler A", emptySet(), "token")
-        val saksbehandlerB = Saksbehandler("Saksbehandler B", emptySet(), "token")
+        val saksbehandlerA = Saksbehandler("Saksbehandler A", emptySet())
+        val saksbehandlerB = Saksbehandler("Saksbehandler B", emptySet())
         OppgaveBehandlerTilgangskontroll(
             behandlerFunc = { saksbehandlerA.navIdent },
         ).let {

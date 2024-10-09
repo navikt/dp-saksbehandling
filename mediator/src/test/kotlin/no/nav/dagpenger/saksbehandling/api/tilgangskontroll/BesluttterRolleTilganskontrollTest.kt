@@ -13,7 +13,6 @@ class BesluttterRolleTilganskontrollTest {
                 Saksbehandler(
                     navIdent = "123",
                     grupper = setOf("BeslutterADGruppe"),
-                    token = "token",
                 ),
         ) shouldBe true
     }
@@ -26,7 +25,6 @@ class BesluttterRolleTilganskontrollTest {
                 Saksbehandler(
                     navIdent = "123",
                     grupper = setOf("SaksbehandlerADGruppe"),
-                    token = "token",
                 ),
         ) shouldBe false
     }

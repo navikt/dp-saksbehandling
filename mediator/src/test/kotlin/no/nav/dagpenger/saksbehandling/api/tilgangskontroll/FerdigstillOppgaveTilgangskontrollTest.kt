@@ -6,11 +6,11 @@ import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import org.junit.jupiter.api.Test
 
 class FerdigstillOppgaveTilgangskontrollTest {
-    private val saksbehandler = Saksbehandler("saksbehandler", setOf("SaksbehandlerADGruppe"), token = "token")
+    private val saksbehandler = Saksbehandler("saksbehandler", setOf("SaksbehandlerADGruppe"))
     private val beslutter =
-        Saksbehandler("beslutter", setOf("SaksbehandlerADGruppe", "BeslutterADGruppe"), token = "token")
+        Saksbehandler("beslutter", setOf("SaksbehandlerADGruppe", "BeslutterADGruppe"))
     private val annenBeslutter =
-        Saksbehandler("annenBeslutter", setOf("SaksbehandlerADGruppe", "BeslutterADGruppe"), token = "token")
+        Saksbehandler("annenBeslutter", setOf("SaksbehandlerADGruppe", "BeslutterADGruppe"))
 
     @Test
     fun `Dersom en oppgave er i tilstand UNDER_BEHANDLING, skal en saksbehandler ha tilgang dersom de er eier av oppgaven`() {

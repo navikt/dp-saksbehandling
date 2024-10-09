@@ -46,6 +46,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
+import no.nav.dagpenger.saksbehandling.jwt.jwt
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -182,6 +183,7 @@ internal fun Application.oppgaveApi(
                                 val oppgaveId = call.finnUUID("oppgaveId")
                                 sikkerlogger.info { "Motatt melding om vedtak for oppgave $oppgaveId: $meldingOmVedtak" }
                                 val saksbehandler = call.saksbehandler()
+                                val saksbehandlerToken = call.request.jwt()
 
                                 // TODO fix saksbehandler vs beslutter
                                 oppgaveMediator.ferdigstillOppgave(
@@ -191,6 +193,7 @@ internal fun Application.oppgaveApi(
                                         utførtAv = saksbehandler.navIdent,
                                     ),
                                     saksbehandler,
+                                    saksbehandlerToken,
                                 )
                                 call.respond(HttpStatusCode.NoContent)
                             } catch (e: UgyldigContentType) {
@@ -205,12 +208,14 @@ internal fun Application.oppgaveApi(
                         put {
                             val saksbehandler = call.saksbehandler()
                             val oppgaveId = call.finnUUID("oppgaveId")
+                            val saksbehandlerToken = call.request.jwt()
                             oppgaveMediator.ferdigstillOppgave(
                                 GodkjennBehandlingMedBrevIArena(
                                     oppgaveId = oppgaveId,
                                     utførtAv = saksbehandler.navIdent,
                                 ),
                                 saksbehandler,
+                                saksbehandlerToken,
                             )
                             call.respond(HttpStatusCode.NoContent)
                         }

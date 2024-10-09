@@ -16,7 +16,6 @@ internal fun ApplicationCall.saksbehandler(): Saksbehandler {
         Saksbehandler(
             navIdent = it.navIdent,
             grupper = it.payload.claims["groups"]?.asList(String::class.java)?.toSet() ?: setOf(),
-            token = this.request.jwt(),
         )
     }
 }

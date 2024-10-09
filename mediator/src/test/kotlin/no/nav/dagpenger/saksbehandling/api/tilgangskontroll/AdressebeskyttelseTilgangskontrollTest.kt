@@ -18,15 +18,15 @@ class AdressebeskyttelseTilgangskontrollTest {
             fortroligGruppe = fortroligGruppe,
             adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.UGRADERT },
         ).let { tilgangskontroll ->
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet(), "token")) shouldBe true
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe), "token")) shouldBe true
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe true
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe true
             tilgangskontroll.harTilgang(
                 UUIDv7.ny(),
-                Saksbehandler("ident", setOf(strengtFortroligGruppe), "token"),
+                Saksbehandler("ident", setOf(strengtFortroligGruppe)),
             ) shouldBe true
             tilgangskontroll.harTilgang(
                 UUIDv7.ny(),
-                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe), "token"),
+                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe)),
             ) shouldBe true
         }
     }
@@ -39,15 +39,15 @@ class AdressebeskyttelseTilgangskontrollTest {
             fortroligGruppe = fortroligGruppe,
             adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.FORTROLIG },
         ).let { tilgangskontroll ->
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet(), "token")) shouldBe false
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe), "token")) shouldBe true
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe true
             tilgangskontroll.harTilgang(
                 UUIDv7.ny(),
-                Saksbehandler("ident", setOf(strengtFortroligGruppe), "token"),
+                Saksbehandler("ident", setOf(strengtFortroligGruppe)),
             ) shouldBe false
             tilgangskontroll.harTilgang(
                 UUIDv7.ny(),
-                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe), "token"),
+                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe)),
             ) shouldBe false
         }
     }
@@ -60,15 +60,15 @@ class AdressebeskyttelseTilgangskontrollTest {
             fortroligGruppe = fortroligGruppe,
             adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.STRENGT_FORTROLIG },
         ).let { tilgangskontroll ->
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet(), "token")) shouldBe false
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe), "token")) shouldBe false
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe false
             tilgangskontroll.harTilgang(
                 UUIDv7.ny(),
-                Saksbehandler("ident", setOf(strengtFortroligGruppe), "token"),
+                Saksbehandler("ident", setOf(strengtFortroligGruppe)),
             ) shouldBe true
             tilgangskontroll.harTilgang(
                 UUIDv7.ny(),
-                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe), "token"),
+                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe)),
             ) shouldBe false
         }
     }
@@ -81,15 +81,15 @@ class AdressebeskyttelseTilgangskontrollTest {
             fortroligGruppe = fortroligGruppe,
             adressebeskyttelseGraderingFun = { AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND },
         ).let { tilgangskontroll ->
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet(), "token")) shouldBe false
-            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe), "token")) shouldBe false
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", emptySet())) shouldBe false
+            tilgangskontroll.harTilgang(UUIDv7.ny(), Saksbehandler("ident", setOf(fortroligGruppe))) shouldBe false
             tilgangskontroll.harTilgang(
                 UUIDv7.ny(),
-                Saksbehandler("ident", setOf(strengtFortroligGruppe), "token"),
+                Saksbehandler("ident", setOf(strengtFortroligGruppe)),
             ) shouldBe false
             tilgangskontroll.harTilgang(
                 UUIDv7.ny(),
-                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe), "token"),
+                Saksbehandler("ident", setOf(strengtFortroligUtlandGruppe)),
             ) shouldBe true
         }
     }
@@ -104,7 +104,7 @@ class AdressebeskyttelseTilgangskontrollTest {
         ).let { tilgangskontroll ->
             tilgangskontroll.feilType(
                 UUIDv7.ny(),
-                Saksbehandler("ident", emptySet(), "token"),
+                Saksbehandler("ident", emptySet()),
             ) shouldBe "strengt-fortrolig-utland"
         }
     }
