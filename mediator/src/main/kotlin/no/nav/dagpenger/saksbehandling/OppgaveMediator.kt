@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -60,7 +61,10 @@ class OppgaveMediator(
             )
 
         lagre(oppgave)
-        logger.info { "Mottatt søknadsbehandling med id ${behandling.behandlingId}" }
+
+        withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+            logger.info { "Mottatt søknadsbehandling med id ${behandling.behandlingId}" }
+        }
     }
 
     fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
