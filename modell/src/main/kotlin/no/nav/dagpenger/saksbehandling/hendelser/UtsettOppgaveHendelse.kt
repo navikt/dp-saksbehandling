@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import java.time.LocalDate
 import java.util.UUID
 
@@ -8,5 +9,5 @@ data class UtsettOppgaveHendelse(
     val navIdent: String,
     val utsattTil: LocalDate,
     val beholdOppgave: Boolean,
-    override val utførtAv: String,
+    override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

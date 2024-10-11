@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}

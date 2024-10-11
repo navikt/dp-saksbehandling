@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
@@ -72,7 +73,8 @@ import java.util.stream.Stream
 
 class OppgaveApiTest {
     val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
-    private val saksbehandler = SAKSBEHANDLER_IDENT
+    private val saksbehandler = Saksbehandler(SAKSBEHANDLER_IDENT, emptySet())
+    private val beslutter = Saksbehandler(BESLUTTER_IDENT, emptySet())
     private val mockAzure = mockAzure()
     private val ugyldigToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDI" +
@@ -294,7 +296,7 @@ class OppgaveApiTest {
             GodkjentBehandlingHendelse(
                 oppgave.oppgaveId,
                 meldingOmVedtakHtml,
-                utførtAv = SAKSBEHANDLER_IDENT,
+                utførtAv = saksbehandler,
             )
         val oppgaveMediatorMock =
             mockk<SecureOppgaveMediator>().also {
@@ -485,7 +487,7 @@ class OppgaveApiTest {
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgaveId,
                     ansvarligIdent = BESLUTTER_IDENT,
-                    utførtAv = BESLUTTER_IDENT,
+                    utførtAv = beslutter,
                 ),
                 any(),
             )
@@ -509,8 +511,8 @@ class OppgaveApiTest {
             oppgaveMediatorMock.tildelTotrinnskontroll(
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgaveSomIkkeFinnes,
-                    ansvarligIdent = BESLUTTER_IDENT,
-                    utførtAv = BESLUTTER_IDENT,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
                 ),
                 any(),
             )
@@ -520,8 +522,8 @@ class OppgaveApiTest {
             oppgaveMediatorMock.tildelTotrinnskontroll(
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgaveSomAlleredeErUnderKontroll,
-                    ansvarligIdent = BESLUTTER_IDENT,
-                    utførtAv = BESLUTTER_IDENT,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
                 ),
                 any(),
             )
@@ -578,7 +580,7 @@ class OppgaveApiTest {
         val utsettOppgaveHendelse =
             UtsettOppgaveHendelse(
                 oppgaveId = testOppgave.oppgaveId,
-                navIdent = SAKSBEHANDLER_IDENT,
+                navIdent = saksbehandler.navIdent,
                 utsattTil = utsettTilDato,
                 beholdOppgave = true,
                 utførtAv = saksbehandler,
@@ -624,7 +626,7 @@ class OppgaveApiTest {
         val testOppgave =
             lagTestOppgaveMedTilstandOgBehandling(
                 tilstand = UNDER_KONTROLL,
-                tildeltBehandlerIdent = BESLUTTER_IDENT,
+                tildeltBehandlerIdent = beslutter.navIdent,
                 behandling =
                     Behandling(
                         behandlingId = UUIDv7.ny(),
@@ -649,9 +651,9 @@ class OppgaveApiTest {
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
         coEvery { journalpostIdClientMock.hentJournalpostId(any()) } returns Result.success("123456789")
-        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
+        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(saksbehandler.navIdent) } returns
             BehandlerDTO(
-                ident = SAKSBEHANDLER_IDENT,
+                ident = saksbehandler.navIdent,
                 fornavn = "Saksbehandler fornavn",
                 etternavn = "Saksbehandler etternavn",
                 enhet =
@@ -661,9 +663,9 @@ class OppgaveApiTest {
                         postadresse = "Adresseveien 3, 0101 ADRESSA",
                     ),
             )
-        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(BESLUTTER_IDENT) } returns
+        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(beslutter.navIdent) } returns
             BehandlerDTO(
-                ident = BESLUTTER_IDENT,
+                ident = beslutter.navIdent,
                 fornavn = "Saksbeandler fornavn",
                 etternavn = "Saksbehandler etternavn",
                 enhet =
@@ -702,16 +704,16 @@ class OppgaveApiTest {
                       "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
                       "journalpostIder": ["123456789"],
                       "saksbehandler": {
-                        "ident": "$BESLUTTER_IDENT"
+                        "ident": "${beslutter.navIdent}"
                       },
                       "tildeltBehandler": {
-                        "ident": "$BESLUTTER_IDENT"
+                        "ident": "${beslutter.navIdent}"
                       },
                       "sisteSaksbehandler": {
-                        "ident": "$SAKSBEHANDLER_IDENT"
+                        "ident": "${saksbehandler.navIdent}"
                       },
                       "sisteBeslutter": {
-                        "ident": "$BESLUTTER_IDENT"
+                        "ident": "${beslutter.navIdent}"
                       }
                     }
                     """.trimIndent()

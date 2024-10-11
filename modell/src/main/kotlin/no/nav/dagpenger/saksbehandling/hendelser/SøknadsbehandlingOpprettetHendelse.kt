@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.dagpenger.saksbehandling.Applikasjon
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -13,7 +14,7 @@ data class SøknadsbehandlingOpprettetHendelse(
     val behandlingId: UUID,
     val ident: String,
     val opprettet: LocalDateTime,
-    override val utførtAv: String = "dp-behandling",
+    override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
 ) : Hendelse(utførtAv) {
     companion object {
         private val objectMapper: ObjectMapper =

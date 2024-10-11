@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import java.util.UUID
 
 object BeslutterRolleTilgangskontroll :

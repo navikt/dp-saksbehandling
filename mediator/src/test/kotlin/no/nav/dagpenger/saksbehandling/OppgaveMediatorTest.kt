@@ -46,8 +46,8 @@ import javax.sql.DataSource
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
-    private val saksbehandler = "saksbehandlerIdent"
-    private val beslutter = "beslutterIdent"
+    private val saksbehandler = Saksbehandler("saksbehandlerIdent", setOf())
+    private val beslutter = Saksbehandler("beslutterIdent", setOf())
     private val sak = Sak("12342", "Arena")
     private val testRapid = TestRapid()
     private val pdlKlientMock =
@@ -117,7 +117,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelTotrinnskontroll(
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = beslutter,
+                    ansvarligIdent = beslutter.navIdent,
                     utførtAv = beslutter,
                 ),
             )
@@ -239,7 +239,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler,
+                    ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 ),
             )
@@ -324,7 +324,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler,
+                    ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 ),
             )
@@ -407,7 +407,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler,
+                    ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 ),
             )
@@ -523,7 +523,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler,
+                    ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 ),
             )
@@ -532,7 +532,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.utsettOppgave(
                 UtsettOppgaveHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    navIdent = saksbehandler,
+                    navIdent = saksbehandler.navIdent,
                     utsattTil = utSattTil,
                     beholdOppgave = false,
                     utførtAv = saksbehandler,
@@ -591,7 +591,7 @@ class OppgaveMediatorTest {
         oppgaveMediator.tildelOppgave(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = saksbehandler,
+                ansvarligIdent = saksbehandler.navIdent,
                 utførtAv = saksbehandler,
             ),
         )
@@ -614,7 +614,7 @@ class OppgaveMediatorTest {
         oppgaveMediator.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = beslutter,
+                ansvarligIdent = beslutter.navIdent,
                 utførtAv = beslutter,
             ),
         )

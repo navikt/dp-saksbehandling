@@ -7,7 +7,7 @@ import io.ktor.server.auth.jwt.JWTPayloadHolder
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.request.ApplicationRequest
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 
 internal fun ApplicationCall.saksbehandler(): Saksbehandler {
     return requireNotNull(this.authentication.principal<JWTPrincipal>()) {

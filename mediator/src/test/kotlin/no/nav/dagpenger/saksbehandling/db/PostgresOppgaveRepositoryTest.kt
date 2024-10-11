@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -41,8 +42,8 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 class PostgresOppgaveRepositoryTest {
-    private val saksbehandler = "saksbehandler"
-    private val beslutter = "beslutter"
+    private val saksbehandler = Saksbehandler("saksbehandler", emptySet())
+    private val beslutter = Saksbehandler("beslutter", emptySet())
     private val oppgaveIdTest = UUIDv7.ny()
 
     @Test
@@ -288,7 +289,7 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(11),
-                    saksbehandlerIdent = saksbehandler,
+                    saksbehandlerIdent = saksbehandler.navIdent,
                 )
 
             val endaEldreFerdigOppgave =
@@ -453,7 +454,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                     Tilstandsendring(
                         tilstand = UNDER_KONTROLL,
-                        hendelse = ToTrinnskontrollHendelse(oppgaveId = oppgaveIdTest, beslutter, beslutter),
+                        hendelse = ToTrinnskontrollHendelse(oppgaveId = oppgaveIdTest, beslutter.navIdent, beslutter),
                         tidspunkt = nå.minusDays(1).truncatedTo(ChronoUnit.SECONDS),
                     ),
                     Tilstandsendring(
@@ -683,7 +684,7 @@ class PostgresOppgaveRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val oppgaveUnderBehandlingEnUkeGammel =
-                lagOppgave(UnderBehandling, opprettet = enUkeSiden, saksbehandlerIdent = saksbehandler)
+                lagOppgave(UnderBehandling, opprettet = enUkeSiden, saksbehandlerIdent = saksbehandler.navIdent)
             val oppgaveKlarTilBehandlingIDag = lagOppgave(KlarTilBehandling)
             val oppgaveKlarTilBehandlingIGår = lagOppgave(KlarTilBehandling, opprettet = opprettetNå.minusDays(1))
             val oppgaveOpprettetIDag = lagOppgave(Opprettet)

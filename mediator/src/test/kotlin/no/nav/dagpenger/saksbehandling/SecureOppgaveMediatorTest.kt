@@ -12,7 +12,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -221,7 +220,7 @@ class SecureOppgaveMediatorTest {
             SettOppgaveAnsvarHendelse(
                 oppgaveId = testOppgave.oppgaveId,
                 ansvarligIdent = saksbehandler.navIdent,
-                utførtAv = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
             )
         val mediator =
             lageMediatorMock {
@@ -250,7 +249,7 @@ class SecureOppgaveMediatorTest {
                 navIdent = saksbehandler.navIdent,
                 utsattTil = LocalDate.now().plusDays(1),
                 beholdOppgave = false,
-                utførtAv = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
             )
         val mediator =
             lageMediatorMock {
@@ -278,7 +277,7 @@ class SecureOppgaveMediatorTest {
         val hendelse =
             KlarTilKontrollHendelse(
                 oppgaveId = oppgaveId,
-                utførtAv = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
             )
         val mediator =
             lageMediatorMock {
@@ -307,7 +306,7 @@ class SecureOppgaveMediatorTest {
             ToTrinnskontrollHendelse(
                 oppgaveId = oppgaveId,
                 ansvarligIdent = saksbehandler.navIdent,
-                utførtAv = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
             )
         val mediator =
             lageMediatorMock {
@@ -337,7 +336,7 @@ class SecureOppgaveMediatorTest {
             GodkjentBehandlingHendelse(
                 oppgaveId = oppgaveUnderBehandling.oppgaveId,
                 meldingOmVedtak = "html",
-                utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
+                utførtAv = saksbehandlerUtenEkstraTilganger,
             )
         lageMediatorMock {
             every { hentOppgave(oppgaveUnderBehandling.oppgaveId) } returns oppgaveUnderBehandling
@@ -377,7 +376,7 @@ class SecureOppgaveMediatorTest {
             GodkjentBehandlingHendelse(
                 oppgaveId = oppgaveUnderKontroll.oppgaveId,
                 meldingOmVedtak = "html",
-                utførtAv = beslutterUtenEkstraTilganger.navIdent,
+                utførtAv = beslutterUtenEkstraTilganger,
             )
         lageMediatorMock {
             every { hentOppgave(oppgaveUnderKontroll.oppgaveId) } returns oppgaveUnderKontroll
@@ -401,7 +400,7 @@ class SecureOppgaveMediatorTest {
                     GodkjentBehandlingHendelse(
                         oppgaveId = oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId,
                         meldingOmVedtak = "html",
-                        utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
+                        utførtAv = saksbehandlerUtenEkstraTilganger,
                     ),
                     saksbehandlerUtenEkstraTilganger,
                     "token",
@@ -421,7 +420,7 @@ class SecureOppgaveMediatorTest {
         val godkjentBehandlingHendelse =
             GodkjennBehandlingMedBrevIArena(
                 oppgaveId = oppgaveUnderBehandling.oppgaveId,
-                utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
+                utførtAv = saksbehandlerUtenEkstraTilganger,
             )
         lageMediatorMock {
             every { hentOppgave(oppgaveUnderBehandling.oppgaveId) } returns oppgaveUnderBehandling
@@ -460,7 +459,7 @@ class SecureOppgaveMediatorTest {
         val godkjentBehandlingHendelse =
             GodkjennBehandlingMedBrevIArena(
                 oppgaveId = oppgaveUnderKontroll.oppgaveId,
-                utførtAv = beslutterUtenEkstraTilganger.navIdent,
+                utførtAv = beslutterUtenEkstraTilganger,
             )
         lageMediatorMock {
             every { hentOppgave(oppgaveUnderKontroll.oppgaveId) } returns oppgaveUnderKontroll
@@ -484,7 +483,7 @@ class SecureOppgaveMediatorTest {
                     GodkjentBehandlingHendelse(
                         oppgaveId = oppgaveUnderKontrollEidAvSaksbehandler.oppgaveId,
                         meldingOmVedtak = "html",
-                        utførtAv = saksbehandlerUtenEkstraTilganger.navIdent,
+                        utførtAv = saksbehandlerUtenEkstraTilganger,
                     ),
                     saksbehandlerUtenEkstraTilganger,
                     "token",

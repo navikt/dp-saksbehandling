@@ -1,9 +1,12 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
-sealed class Hendelse(open val utførtAv: String)
+import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.Behandler
 
-sealed class AnsvarHendelse(utførtAv: String, open val ansvarligIdent: String?) : Hendelse(utførtAv)
+sealed class Hendelse(open val utførtAv: Behandler)
 
-data object TomHendelse : Hendelse("dp-saksbehandling") {
+sealed class AnsvarHendelse(utførtAv: Behandler, open val ansvarligIdent: String?) : Hendelse(utførtAv)
+
+data object TomHendelse : Hendelse(Applikasjon("dp-saksbehandling")) {
     fun tilJson(): String = "{}"
 }

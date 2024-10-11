@@ -391,6 +391,7 @@ data class Oppgave private constructor(
     interface Tilstand {
         val type: Type
 
+
         class UlovligTilstandsendringException(
             message: String,
         ) : RuntimeException(message)

@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
@@ -141,7 +142,7 @@ internal object OppgaveApiTestHelper {
                                 SettOppgaveAnsvarHendelse(
                                     oppgaveId = oppgaveId,
                                     ansvarligIdent = SAKSBEHANDLER_IDENT,
-                                    utførtAv = SAKSBEHANDLER_IDENT,
+                                    utførtAv = Saksbehandler(SAKSBEHANDLER_IDENT, emptySet()),
                                 ),
                             tidspunkt = nå.minusDays(2),
                         ),
@@ -151,7 +152,7 @@ internal object OppgaveApiTestHelper {
                                 ToTrinnskontrollHendelse(
                                     oppgaveId = oppgaveId,
                                     ansvarligIdent = BESLUTTER_IDENT,
-                                    utførtAv = BESLUTTER_IDENT,
+                                    utførtAv = Saksbehandler(BESLUTTER_IDENT, emptySet()),
                                 ),
                             tidspunkt = nå.minusDays(1),
                         ),

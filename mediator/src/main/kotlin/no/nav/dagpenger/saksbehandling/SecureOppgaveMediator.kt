@@ -8,7 +8,6 @@ import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.FerdigstillOppgaveTi
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveBehandlerTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.Saksbehandler
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse

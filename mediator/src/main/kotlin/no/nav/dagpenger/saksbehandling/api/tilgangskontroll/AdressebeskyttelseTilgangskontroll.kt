@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import java.util.UUID
 
 class AdressebeskyttelseTilgangskontroll(

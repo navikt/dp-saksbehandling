@@ -190,7 +190,7 @@ internal fun Application.oppgaveApi(
                                     GodkjentBehandlingHendelse(
                                         meldingOmVedtak = meldingOmVedtak,
                                         oppgaveId = oppgaveId,
-                                        utførtAv = saksbehandler.navIdent,
+                                        utførtAv = saksbehandler,
                                     ),
                                     saksbehandler,
                                     saksbehandlerToken,
@@ -212,7 +212,7 @@ internal fun Application.oppgaveApi(
                             oppgaveMediator.ferdigstillOppgave(
                                 GodkjennBehandlingMedBrevIArena(
                                     oppgaveId = oppgaveId,
-                                    utførtAv = saksbehandler.navIdent,
+                                    utførtAv = saksbehandler,
                                 ),
                                 saksbehandler,
                                 saksbehandlerToken,
@@ -261,47 +261,47 @@ private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandli
 
 private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendelse {
     val utsettOppgaveDto = this.receive<UtsettOppgaveDTO>()
-    val navIdent = this.navIdent()
+    val saksbehandler = this.saksbehandler()
     return UtsettOppgaveHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        navIdent = navIdent,
+        navIdent = saksbehandler.navIdent,
         utsattTil = utsettOppgaveDto.utsettTilDato,
         beholdOppgave = utsettOppgaveDto.beholdOppgave,
-        utførtAv = navIdent,
+        utførtAv = saksbehandler,
     )
 }
 
 private fun ApplicationCall.settOppgaveAnsvarHendelse(): SettOppgaveAnsvarHendelse {
-    val navIdent = this.navIdent()
+    val saksbehandler = this.saksbehandler()
     return SettOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        ansvarligIdent = navIdent,
-        utførtAv = navIdent,
+        ansvarligIdent = saksbehandler.navIdent,
+        utførtAv = saksbehandler,
     )
 }
 
 private fun ApplicationCall.fjernOppgaveAnsvarHendelse(): FjernOppgaveAnsvarHendelse {
-    val navIdent = this.navIdent()
+    val saksbehandler = this.saksbehandler()
     return FjernOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = navIdent,
+        utførtAv = saksbehandler,
     )
 }
 
 private fun ApplicationCall.tildelKontrollHendelse(): ToTrinnskontrollHendelse {
-    val beslutterIdent = this.navIdent()
+    val saksbehandler = this.saksbehandler()
     return ToTrinnskontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        ansvarligIdent = beslutterIdent,
-        utførtAv = beslutterIdent,
+        ansvarligIdent = saksbehandler.navIdent,
+        utførtAv = saksbehandler,
     )
 }
 
 private fun ApplicationCall.klarTilKontrollHendelse(): KlarTilKontrollHendelse {
-    val navIdent = this.navIdent()
+    val saksbehandler = this.saksbehandler()
     return KlarTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = navIdent,
+        utførtAv = saksbehandler,
     )
 }
 
