@@ -38,7 +38,10 @@ class OppgaveMediator(
             )
 
         if (repository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) {
-            logger.info { "Behandling med id ${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede." }
+            logger.warn {
+                "Mottatt hendelse behandling_opprettet, men behandling med id " +
+                    "${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede."
+            }
             return
         }
 
@@ -63,24 +66,32 @@ class OppgaveMediator(
         lagre(oppgave)
 
         withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
-            logger.info { "Mottatt søknadsbehandling med id ${behandling.behandlingId}" }
+            logger.info {
+                "Mottatt hendelse behandling_opprettet med id ${behandling.behandlingId}. Oppgave opprettet."
+            }
         }
     }
 
     fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        logger.info { "Mottatt forslag til vedtak hendelse for behandling med id ${forslagTilVedtakHendelse.behandlingId}" }
         val oppgave = finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
         when (oppgave) {
             null -> {
                 logger.warn {
-                    "Fant ikke oppgave for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
-                        "Gjør derfor ingenting med hendelsen"
+                    "Mottatt hendelse forslag_til_vedtak for behandling med id " +
+                        "${forslagTilVedtakHendelse.behandlingId}." +
+                        "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
                 }
             }
 
             else -> {
                 oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
                 lagre(oppgave)
+                withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                    logger.info {
+                        "Mottatt hendelse forslag_til_vedtak for behandling med id " +
+                            "${forslagTilVedtakHendelse.behandlingId}. Oppgave er klar til behandling."
+                    }
+                }
             }
         }
     }
@@ -108,12 +119,15 @@ class OppgaveMediator(
     }
 
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
-        logger.info {
-            "Mottatt vedtak fattet hendelse for behandling med id ${vedtakFattetHendelse.behandlingId}. Oppgave ferdigstilt."
-        }
         return hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
             oppgave.ferdigstill(vedtakFattetHendelse)
             lagre(oppgave)
+            withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                logger.info {
+                    "Mottatt hendelse vedtak_fattet for behandling med id ${vedtakFattetHendelse.behandlingId}. " +
+                        "Oppgave ferdigstilt."
+                }
+            }
         }
     }
 
