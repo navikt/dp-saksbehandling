@@ -89,7 +89,7 @@ class OppgaveMediator(
                 withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                     logger.info {
                         "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                            "${forslagTilVedtakHendelse.behandlingId}. Oppgave er klar til behandling."
+                            "${forslagTilVedtakHendelse.behandlingId}. Oppgave er klar til behandling. Emneknagger: ${oppgave.emneknagger.joinToString()}"
                     }
                 }
             }
