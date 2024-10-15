@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
+import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
@@ -255,6 +256,35 @@ class StatuspageTest {
                       "title": "Oppgaven eies av en annen. Operasjon kan ikke utføres.",
                       "detail": "$message",
                       "status": 409,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Error håndtering av GodkjennBehandlingFeiletException`() {
+        testApplication {
+            val message = "Kall mot dp-behandling feilet"
+            val path = "/GodkjennBehandlingFeiletException"
+            application {
+                apiConfig()
+                routing {
+                    get(path) { throw GodkjennBehandlingFeiletException(message) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.InternalServerError
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:godkjenning-av-behandling-feilet",
+                      "title": "Godkjenning av behandling feilet",
+                      "detail": "$message",
+                      "status": 500,
                       "instance": "$path"
                     }
                     """.trimIndent()

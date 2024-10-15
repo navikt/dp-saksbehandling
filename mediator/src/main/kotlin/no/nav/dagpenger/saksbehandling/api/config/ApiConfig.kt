@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
+import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import java.net.URI
@@ -157,6 +158,20 @@ fun Application.apiConfig() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Conflict, problem)
+                }
+
+                is GodkjennBehandlingFeiletException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Godkjenning av behandling feilet",
+                            detail = cause.message,
+                            status = HttpStatusCode.InternalServerError.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:godkjenning-av-behandling-feilet")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.InternalServerError, problem)
                 }
 
                 else -> {

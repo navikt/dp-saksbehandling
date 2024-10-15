@@ -61,4 +61,6 @@ internal class BehandlngHttpKlient(
     }
 }
 
+class GodkjennBehandlingFeiletException(message: String) : RuntimeException(message)
+
 private data class Request(val ident: String)

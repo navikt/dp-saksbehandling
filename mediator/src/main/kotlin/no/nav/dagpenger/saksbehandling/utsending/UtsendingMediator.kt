@@ -26,7 +26,7 @@ class UtsendingMediator(
         oppgaveId: UUID,
         brev: String,
         ident: String,
-    ) {
+    ): UUID {
         val utsending =
             Utsending(
                 oppgaveId = oppgaveId,
@@ -34,6 +34,7 @@ class UtsendingMediator(
                 brev = brev,
             )
         repository.lagre(utsending)
+        return utsending.id
     }
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
