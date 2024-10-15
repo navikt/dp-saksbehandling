@@ -177,9 +177,13 @@ class OppgaveMediator(
                 behandlingId = oppgave.behandlingId,
                 ident = oppgave.ident,
                 saksbehandlerToken = saksbehandlerToken,
-            )
-            oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
-            repository.lagre(oppgave)
+            ).onSuccess {
+                oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
+                repository.lagre(oppgave)
+            }.onFailure {
+                val feil = "Feil ved godkjenning av behandling: ${it.message}"
+                throw GodkjennBehandlingFeiletException(feil)
+            }
         }
     }
 

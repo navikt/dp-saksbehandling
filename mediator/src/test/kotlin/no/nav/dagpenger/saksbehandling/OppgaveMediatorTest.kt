@@ -530,6 +530,80 @@ class OppgaveMediatorTest {
     }
 
     @Test
+    fun `Skal kaste feil dersom godkjenn behandling feiler`() {
+        val behandlingId = UUIDv7.ny()
+        val saksbehandlerToken = "token"
+        val behandlingClientMock =
+            mockk<BehandlingKlient>().also {
+                every {
+                    it.godkjennBehandling(
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.failure(RuntimeException("Feil ved godkjenning av behandling"))
+            }
+        withMigratedDb { datasource ->
+            val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingClientMock,
+                    utsendingMediator = utsendingMediator,
+                )
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                )
+
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            shouldThrow<GodkjennBehandlingFeiletException> {
+                oppgaveMediator.ferdigstillOppgave(
+                    GodkjennBehandlingMedBrevIArena(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                    "token",
+                )
+            }
+
+            verify(exactly = 1) {
+                behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
+            }
+
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+        }
+    }
+
+    @Test
     fun `Livssyklus for søknadsbehandling som blir avbrutt`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
