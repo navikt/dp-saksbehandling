@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -16,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -354,6 +356,102 @@ class OppgaveMediatorTest {
             utsending.brev() shouldBe meldingOmVedtak
             utsending.oppgaveId shouldBe ferdigbehandletOppgave.oppgaveId
             utsending.ident shouldBe ferdigbehandletOppgave.ident
+        }
+    }
+
+    @Test
+    fun `Skal slette utsending hvis godkjenning av behandling feiler`() {
+        val behandlingId = UUIDv7.ny()
+        val saksbehandlerToken = "token"
+        val behandlingClientMock =
+            mockk<BehandlingKlient>().also {
+                every {
+                    it.godkjennBehandling(
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } returns Result.failure(RuntimeException("Feil ved godkjenning av behandling"))
+            }
+
+        withMigratedDb { datasource ->
+            val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingClientMock,
+                    utsendingMediator = utsendingMediator,
+                )
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                )
+
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).let { oppgaver ->
+                oppgaver.size shouldBe 1
+                oppgaver.single().behandling.hendelse shouldBe søknadsbehandlingOpprettetHendelse
+            }
+
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+
+            oppgaverKlarTilBehandling.size shouldBe 1
+            val oppgave = oppgaverKlarTilBehandling.single()
+            oppgave.behandlingId shouldBe behandlingId
+            oppgave.emneknagger shouldContainAll emneknagger
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler
+
+            val meldingOmVedtak = "<H1>Hei</H1><p>Her er et brev</p>"
+
+            shouldThrow<GodkjennBehandlingFeiletException> {
+                oppgaveMediator.ferdigstillOppgave(
+                    GodkjentBehandlingHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        meldingOmVedtak = meldingOmVedtak,
+                        utførtAv = saksbehandler,
+                    ),
+                    "token",
+                )
+            }
+
+            verify(exactly = 1) {
+                behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
+            }
+
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+
+            utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
         }
     }
 

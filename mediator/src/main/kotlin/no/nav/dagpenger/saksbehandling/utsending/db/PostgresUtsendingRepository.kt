@@ -75,6 +75,22 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
+    override fun slettUtsending(utsendingID: UUID): Int {
+        return sessionOf(ds).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        DELETE FROM utsending_v1
+                        WHERE id = :id
+                        """.trimIndent(),
+                    paramMap = mapOf("id" to utsendingID),
+                ).asUpdate,
+            )
+        }
+    }
+
     override fun utsendingFinnesForOppgave(oppgaveId: UUID): Boolean {
         return sessionOf(ds).use { session ->
             session.run(

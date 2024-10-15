@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -138,18 +139,31 @@ class OppgaveMediator(
     ) {
         repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
 
+            val utsendingID =
+                utsendingMediator.opprettUtsending(
+                    oppgave.oppgaveId,
+                    godkjentBehandlingHendelse.meldingOmVedtak,
+                    oppgave.ident,
+                )
+
             behandlingKlient.godkjennBehandling(
                 behandlingId = oppgave.behandlingId,
                 ident = oppgave.ident,
                 saksbehandlerToken = saksbehandlerToken,
-            )
-            utsendingMediator.opprettUtsending(
-                oppgave.oppgaveId,
-                godkjentBehandlingHendelse.meldingOmVedtak,
-                oppgave.ident,
-            )
-            oppgave.ferdigstill(godkjentBehandlingHendelse)
-            repository.lagre(oppgave)
+            ).onSuccess {
+                oppgave.ferdigstill(godkjentBehandlingHendelse)
+                repository.lagre(oppgave)
+            }.onFailure {
+                val feil = "Feil ved godkjenning av behandling: ${it.message}"
+                logger.error { feil }
+                utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
+                    when (rowsDeleted) {
+                        1 -> logger.info { "Slettet utsending med id $utsendingID" }
+                        else -> logger.error { "Fant ikke utsending med id $utsendingID" }
+                    }
+                }
+                throw GodkjennBehandlingFeiletException(feil)
+            }
         }
     }
 

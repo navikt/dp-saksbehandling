@@ -13,6 +13,8 @@ interface UtsendingRepository {
     fun utsendingFinnesForOppgave(oppgaveId: UUID): Boolean
 
     fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean
+
+    fun slettUtsending(utsendingID: UUID): Int
 }
 
 class UtsendingIkkeFunnet(message: String) : RuntimeException(message)
