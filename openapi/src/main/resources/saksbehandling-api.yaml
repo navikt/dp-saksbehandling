@@ -433,11 +433,7 @@ components:
           format: uuid
         saksbehandler:
           $ref: '#/components/schemas/Behandler'
-        tildeltBehandler:
-          $ref: '#/components/schemas/Behandler'
-        sisteSaksbehandler:
-          $ref: '#/components/schemas/Behandler'
-        sisteBeslutter:
+        beslutter:
           $ref: '#/components/schemas/Behandler'
         person:
           $ref: '#/components/schemas/Person'

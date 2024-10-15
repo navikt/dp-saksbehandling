@@ -702,15 +702,9 @@ class OppgaveApiTest {
                       "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
                       "journalpostIder": ["123456789"],
                       "saksbehandler": {
-                        "ident": "$BESLUTTER_IDENT"
-                      },
-                      "tildeltBehandler": {
-                        "ident": "$BESLUTTER_IDENT"
-                      },
-                      "sisteSaksbehandler": {
                         "ident": "$SAKSBEHANDLER_IDENT"
                       },
-                      "sisteBeslutter": {
+                      "beslutter": {
                         "ident": "$BESLUTTER_IDENT"
                       }
                     }
