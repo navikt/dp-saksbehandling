@@ -157,7 +157,8 @@ internal fun Application.oppgaveApi(
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
-                    route("klar-til-kontroll") {
+
+                    route("send-til-kontroll") {
                         put {
                             val saksbehandler = call.saksbehandler()
                             val klarTilKontrollHendelse = call.klarTilKontrollHendelse()

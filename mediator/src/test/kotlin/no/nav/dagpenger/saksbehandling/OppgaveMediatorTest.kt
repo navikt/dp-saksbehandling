@@ -80,7 +80,7 @@ class OppgaveMediatorTest {
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
 
     @Test
-    fun `Skal kunne sette oppgave til klar-til-kontroll`() {
+    fun `Skal kunne sette oppgave til KLAR_TIL_KONTROLL`() {
         withMigratedDb { dataSource ->
             val oppgave = dataSource.lagTestoppgave(UNDER_BEHANDLING)
             val oppgaveMediator =
