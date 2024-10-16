@@ -24,6 +24,7 @@ import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -73,8 +74,9 @@ import java.util.stream.Stream
 
 class OppgaveApiTest {
     val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
-    private val saksbehandler = Saksbehandler(SAKSBEHANDLER_IDENT, emptySet())
-    private val beslutter = Saksbehandler(BESLUTTER_IDENT, emptySet())
+    private val saksbehandler = Saksbehandler(SAKSBEHANDLER_IDENT, setOf(Configuration.saksbehandlerADGruppe))
+    private val beslutter =
+        Saksbehandler(BESLUTTER_IDENT, setOf(Configuration.saksbehandlerADGruppe, Configuration.beslutterADGruppe))
     private val mockAzure = mockAzure()
     private val ugyldigToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDI" +

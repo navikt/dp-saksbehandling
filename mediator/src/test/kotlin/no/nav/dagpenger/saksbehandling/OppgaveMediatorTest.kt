@@ -100,7 +100,7 @@ class OppgaveMediatorTest {
             val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgaveTilKontroll.behandlerIdent shouldBe null
-            oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler
+            oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
         }
     }
 
@@ -125,9 +125,9 @@ class OppgaveMediatorTest {
             )
             val oppgaveUnderKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             oppgaveUnderKontroll.tilstand().type shouldBe UNDER_KONTROLL
-            oppgaveUnderKontroll.behandlerIdent shouldBe beslutter
-            oppgaveUnderKontroll.sisteSaksbehandler() shouldBe saksbehandler
-            oppgaveUnderKontroll.sisteBeslutter() shouldBe beslutter
+            oppgaveUnderKontroll.behandlerIdent shouldBe beslutter.navIdent
+            oppgaveUnderKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+            oppgaveUnderKontroll.sisteBeslutter() shouldBe beslutter.navIdent
         }
     }
 
@@ -248,7 +248,7 @@ class OppgaveMediatorTest {
 
             val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
-            tildeltOppgave.behandlerIdent shouldBe saksbehandler
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
             testRapid.sendTestMessage(
                 vedtakFattetHendelse(
@@ -333,7 +333,7 @@ class OppgaveMediatorTest {
 
             val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
-            tildeltOppgave.behandlerIdent shouldBe saksbehandler
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
             val meldingOmVedtak = "<H1>Hei</H1><p>Her er et brev</p>"
             oppgaveMediator.ferdigstillOppgave(
@@ -422,14 +422,14 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler,
+                    ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 ),
             )
 
             val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
-            tildeltOppgave.behandlerIdent shouldBe saksbehandler
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
             val meldingOmVedtak = "<H1>Hei</H1><p>Her er et brev</p>"
 
@@ -579,7 +579,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler,
+                    ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 ),
             )

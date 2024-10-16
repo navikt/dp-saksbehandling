@@ -25,8 +25,8 @@ class HendelseJsonSerDerTest {
                "behandlingId": "$aUUID",
                "ident": "ident",
                "opprettet": "-999999999-01-01T00:00:00",
-               "utførtAv":  "dp-behandling"
-           }
+               "utførtAv": { "navn": "dp-behandling" }
+            }
             """
 
     @Test
