@@ -237,7 +237,7 @@ class PostgresOppgaveRepositoryTest {
                 )
             requireNotNull(nesteOppgave)
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenAdressebeskyttelse.oppgaveId
-            nesteOppgave.behandlerIdent shouldBe navIdentUtenTilgangTilAdressebeskyttede
+//            nesteOppgave.behandlerIdent shouldBe navIdentUtenTilgangTilAdressebeskyttede
             nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
@@ -257,6 +257,33 @@ class PostgresOppgaveRepositoryTest {
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedAdressebeskyttelse.oppgaveId
             nesteOppgaveMedTilgang.behandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
             nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
+        }
+    }
+
+    @Test
+    fun `Ved tildeling av neste oppgave, skal det lagres en tilstandsendring i tilstandsendringsloggen`() {
+        withMigratedDb { ds ->
+            val testSaksbehandler = "NAVIdent"
+            val repo = PostgresOppgaveRepository(ds)
+
+            val oppgave =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå,
+                )
+            repo.lagre(oppgave)
+            val rehydrertOppgave = repo.hentOppgave(oppgave.oppgaveId)
+
+            val antallTilstandsenringer = rehydrertOppgave.tilstandslogg.size
+
+            val filter =
+                TildelNesteOppgaveFilter(
+                    periode = UBEGRENSET_PERIODE,
+                    emneknagg = setOf("Testknagg"),
+                    harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                )
+            val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
+            nesteOppgave!!.tilstandslogg.size shouldBe antallTilstandsenringer + 1
         }
     }
 

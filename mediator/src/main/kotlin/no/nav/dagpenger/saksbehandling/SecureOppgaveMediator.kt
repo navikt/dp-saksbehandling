@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -54,17 +55,32 @@ class SecureOppgaveMediator(
     }
 
     fun tildelNesteOppgaveTil(
-        saksbehandler: Saksbehandler,
+        nesteOppgaveHendelse: NesteOppgaveHendelse,
         queryString: String,
     ): Oppgave? {
-        return oppgaveMediator.tildelNesteOppgaveTil(
-            saksbehandler.navIdent,
+        val oppgaveId = oppgaveMediator.tildelNesteOppgaveTil(
+            saksbehandlerIdent = nesteOppgaveHendelse.ansvarligIdent,
+            filter =
             TildelNesteOppgaveFilter.fra(
                 queryString = queryString,
-                saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(saksbehandler),
-                adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(saksbehandler),
+                saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
+                adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
             ),
         )
+        return when (oppgaveId){
+            null -> null
+            else -> hentOppgave(oppgaveId, saksbehandler = nesteOppgaveHendelse.utførtAv)
+        }
+
+//        return oppgaveMediator.tildelNesteOppgaveTil(
+//            saksbehandlerIdent = nesteOppgaveHendelse.ansvarligIdent,
+//            filter =
+//                TildelNesteOppgaveFilter.fra(
+//                    queryString = queryString,
+//                    saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
+//                    adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
+//                ),
+//        )
     }
 
     private fun <T> sjekkTilgang(

@@ -156,66 +156,24 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         saksbehandlerIdent: String,
         filter: TildelNesteOppgaveFilter,
     ): Oppgave? {
-        sessionOf(dataSource).use { session ->
-            val emneknagger = filter.emneknagg.joinToString { "'$it'" }
-            val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
-            val emneknaggClause =
-                if (filter.emneknagg.isNotEmpty()) {
-                    """
-                    AND EXISTS(
-                        SELECT 1
-                        FROM   emneknagg_v1 emne
-                        WHERE  emne.oppgave_id = oppg.id
-                        AND    emne.emneknagg IN ($emneknagger)
-                    )
-                    """.trimIndent()
-                } else {
-                    ""
-                }
-            val orderByReturningStatement =
-                """
-                ORDER BY oppg.opprettet
-                FETCH FIRST 1 ROWS ONLY)
-                RETURNING *;
-                """.trimIndent()
 
-            val updateStatement =
-                """
-                UPDATE oppgave_v1
-                SET    saksbehandler_ident = :saksbehandler_ident
-                     , tilstand            = 'UNDER_BEHANDLING'
-                WHERE id = (SELECT   oppg.id
-                            FROM     oppgave_v1    oppg
-                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
-                            JOIN     person_v1     pers ON pers.id = beha.person_id
-                            WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
-                            AND      oppg.saksbehandler_ident IS NULL
-                            AND      oppg.opprettet >= :fom
-                            AND      oppg.opprettet <  :tom_pluss_1_dag
-                            AND    ( NOT pers.skjermes_som_egne_ansatte
-                                  OR :har_tilgang_til_egne_ansatte )
-                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
-                """ + emneknaggClause + orderByReturningStatement
-            val oppgaveId =
-                session.run(
-                    queryOf(
-                        statement = updateStatement,
-                        paramMap =
-                            mapOf(
-                                "saksbehandler_ident" to saksbehandlerIdent,
-                                "fom" to filter.periode.fom,
-                                "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
-                                "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
-                            ),
-                    ).map { row ->
-                        row.uuidOrNull("id")
-                    }.asSingle,
-                )
-            return oppgaveId?.let {
-                hentOppgave(it)
-            }
-        }
     }
+
+//    override fun tildelNesteOppgaveTil(
+//        saksbehandlerIdent: String,
+//        filter: TildelNesteOppgaveFilter,
+//    ): UUID? {
+//        sessionOf(dataSource).use { session ->
+//            session.transaction { tx ->
+//val oppgaveId = tx.hentNesteOppgave(saksbehandlerIdent, filter)
+//                return oppgaveId
+//
+////                return oppgaveId?.let {
+////                    hentOppgave(it)
+////                }
+//            }
+//        }
+//    }
 
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
         return sessionOf(dataSource).use { session ->
@@ -715,6 +673,67 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
         ).asUpdate,
     )
     this.lagreHendelse(behandling.behandlingId, behandling.hendelse)
+}
+
+private fun TransactionalSession.hentNesteOppgave(
+    saksbehandlerIdent: String,
+    filter: TildelNesteOppgaveFilter,
+): UUID? {
+    val emneknagger = filter.emneknagg.joinToString { "'$it'" }
+    val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
+    val emneknaggClause =
+        if (filter.emneknagg.isNotEmpty()) {
+            """
+            AND EXISTS(
+                SELECT 1
+                FROM   emneknagg_v1 emne
+                WHERE  emne.oppgave_id = oppg.id
+                AND    emne.emneknagg IN ($emneknagger)
+            )
+            """.trimIndent()
+        } else {
+            ""
+        }
+    val orderByReturningStatement =
+        """
+        ORDER BY oppg.opprettet
+        FETCH FIRST 1 ROWS ONLY)
+        RETURNING *;
+        """.trimIndent()
+
+    val updateStatement =
+        """
+                UPDATE oppgave_v1
+                SET    saksbehandler_ident = :saksbehandler_ident
+                     , tilstand            = 'UNDER_BEHANDLING'
+                WHERE id = (SELECT   oppg.id
+                            FROM     oppgave_v1    oppg
+                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
+                            JOIN     person_v1     pers ON pers.id = beha.person_id
+                            WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
+                            AND      oppg.saksbehandler_ident IS NULL
+                            AND      oppg.opprettet >= :fom
+                            AND      oppg.opprettet <  :tom_pluss_1_dag
+                            AND    ( NOT pers.skjermes_som_egne_ansatte
+                                  OR :har_tilgang_til_egne_ansatte )
+                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
+                """ + emneknaggClause + orderByReturningStatement
+    val oppgaveId =
+        run(
+            queryOf(
+                statement = updateStatement,
+                paramMap =
+                    mapOf(
+                        "saksbehandler_ident" to saksbehandlerIdent,
+                        "fom" to filter.periode.fom,
+                        "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
+                        "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
+                    ),
+            ).map { row ->
+                row.uuidOrNull("id")
+            }.asSingle,
+        )
+    return oppgaveId
 }
 
 private fun TransactionalSession.lagre(oppgave: Oppgave) {

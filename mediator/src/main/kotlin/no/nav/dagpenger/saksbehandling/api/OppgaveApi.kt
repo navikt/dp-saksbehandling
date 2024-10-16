@@ -41,6 +41,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
@@ -110,12 +111,10 @@ internal fun Application.oppgaveApi(
                 }
                 route("neste") {
                     put {
-                        val saksbehandler = call.saksbehandler()
                         val dto = call.receive<NesteOppgaveDTO>()
-
                         val oppgave =
                             oppgaveMediator.tildelNesteOppgaveTil(
-                                saksbehandler = saksbehandler,
+                                nesteOppgaveHendelse = call.nesteOppgaveHendelse(),
                                 queryString = dto.queryParams,
                             )
                         when (oppgave) {
@@ -302,6 +301,14 @@ private fun ApplicationCall.klarTilKontrollHendelse(): KlarTilKontrollHendelse {
     val saksbehandler = this.saksbehandler()
     return KlarTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
+        utførtAv = saksbehandler,
+    )
+}
+
+private fun ApplicationCall.nesteOppgaveHendelse(): NesteOppgaveHendelse {
+    val saksbehandler = this.saksbehandler()
+    return NesteOppgaveHendelse(
+        ansvarligIdent = saksbehandler.navIdent,
         utførtAv = saksbehandler,
     )
 }
