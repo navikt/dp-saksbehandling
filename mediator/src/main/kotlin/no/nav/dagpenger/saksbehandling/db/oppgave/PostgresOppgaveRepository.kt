@@ -70,7 +70,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         saksbehandlerIdent: String,
         filter: TildelNesteOppgaveFilter,
     ): UUID? {
-        sessionOf(dataSource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val emneknagger = filter.emneknagg.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
@@ -126,7 +126,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                             row.uuidOrNull("id")
                         }.asSingle,
                     )
-                return oppgaveId
+                oppgaveId
             }
         }
     }
