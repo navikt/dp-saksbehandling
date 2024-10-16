@@ -51,6 +51,86 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
+    override fun tildelNesteOppgaveTil(
+        saksbehandlerIdent: String,
+        filter: TildelNesteOppgaveFilter,
+    ): Oppgave? {
+        val oppgaveId = hubba(saksbehandlerIdent, filter)
+
+        val oppgave =
+            when (oppgaveId) {
+                null -> null
+                else -> hentOppgave(oppgaveId)
+            }
+
+        return oppgave
+    }
+
+    private fun hubba(
+        saksbehandlerIdent: String,
+        filter: TildelNesteOppgaveFilter,
+    ): UUID? {
+        sessionOf(dataSource).use { session ->
+            session.transaction { tx ->
+                val emneknagger = filter.emneknagg.joinToString { "'$it'" }
+                val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
+                val emneknaggClause =
+                    if (filter.emneknagg.isNotEmpty()) {
+                        """
+                        AND EXISTS(
+                            SELECT 1
+                            FROM   emneknagg_v1 emne
+                            WHERE  emne.oppgave_id = oppg.id
+                            AND    emne.emneknagg IN ($emneknagger)
+                        )
+                        """.trimIndent()
+                    } else {
+                        ""
+                    }
+                val orderByReturningStatement =
+                    """
+                    ORDER BY oppg.opprettet
+                    FETCH FIRST 1 ROWS ONLY)
+                    RETURNING *;
+                    """.trimIndent()
+
+                val updateStatement =
+                    """
+                UPDATE oppgave_v1
+                SET    saksbehandler_ident = :saksbehandler_ident
+                     , tilstand            = 'UNDER_BEHANDLING'
+                WHERE id = (SELECT   oppg.id
+                            FROM     oppgave_v1    oppg
+                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
+                            JOIN     person_v1     pers ON pers.id = beha.person_id
+                            WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
+                            AND      oppg.saksbehandler_ident IS NULL
+                            AND      oppg.opprettet >= :fom
+                            AND      oppg.opprettet <  :tom_pluss_1_dag
+                            AND    ( NOT pers.skjermes_som_egne_ansatte
+                                  OR :har_tilgang_til_egne_ansatte )
+                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
+                """ + emneknaggClause + orderByReturningStatement
+                val oppgaveId: UUID? =
+                    tx.run(
+                        queryOf(
+                            statement = updateStatement,
+                            paramMap =
+                                mapOf(
+                                    "saksbehandler_ident" to saksbehandlerIdent,
+                                    "fom" to filter.periode.fom,
+                                    "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
+                                    "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
+                                ),
+                        ).map { row ->
+                            row.uuidOrNull("id")
+                        }.asSingle,
+                    )
+                return oppgaveId
+            }
+        }
+    }
+
     override fun finnPerson(ident: String): Person? {
         sessionOf(dataSource).use { session ->
             return session.run(
@@ -152,93 +232,23 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             ),
         )
 
-    override fun tildelNesteOppgaveTil(
-        saksbehandlerIdent: String,
-        filter: TildelNesteOppgaveFilter,
-    ): Oppgave? {
-        return hubba(saksbehandlerIdent, filter)
-    }
-
-    private fun hubba(
-        saksbehandlerIdent: String,
-        filter: TildelNesteOppgaveFilter,
-    ): Oppgave? {
-        sessionOf(dataSource).use { session ->
-            session.transaction { tx ->
-                val emneknagger = filter.emneknagg.joinToString { "'$it'" }
-                val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
-                val emneknaggClause =
-                    if (filter.emneknagg.isNotEmpty()) {
-                        """
-                        AND EXISTS(
-                            SELECT 1
-                            FROM   emneknagg_v1 emne
-                            WHERE  emne.oppgave_id = oppg.id
-                            AND    emne.emneknagg IN ($emneknagger)
-                        )
-                        """.trimIndent()
-                    } else {
-                        ""
-                    }
-                val orderByReturningStatement =
-                    """
-                    ORDER BY oppg.opprettet
-                    FETCH FIRST 1 ROWS ONLY)
-                    RETURNING *;
-                    """.trimIndent()
-
-                val updateStatement =
-                    """
-                UPDATE oppgave_v1
-                SET    saksbehandler_ident = :saksbehandler_ident
-                     , tilstand            = 'UNDER_BEHANDLING'
-                WHERE id = (SELECT   oppg.id
-                            FROM     oppgave_v1    oppg
-                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
-                            JOIN     person_v1     pers ON pers.id = beha.person_id
-                            WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
-                            AND      oppg.saksbehandler_ident IS NULL
-                            AND      oppg.opprettet >= :fom
-                            AND      oppg.opprettet <  :tom_pluss_1_dag
-                            AND    ( NOT pers.skjermes_som_egne_ansatte
-                                  OR :har_tilgang_til_egne_ansatte )
-                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
-                """ + emneknaggClause + orderByReturningStatement
-                val oppgaveId: UUID? =
-                    tx.run(
-                        queryOf(
-                            statement = updateStatement,
-                            paramMap =
-                                mapOf(
-                                    "saksbehandler_ident" to saksbehandlerIdent,
-                                    "fom" to filter.periode.fom,
-                                    "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
-                                    "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
-                                ),
-                        ).map { row ->
-                            row.uuidOrNull("id")
-                        }.asSingle,
-                    )
-                return hentOppgave(tx, oppgaveId!!)
-            }
-        }
-    }
-
     private fun hentOppgave(
         transactionalSession: TransactionalSession,
         oppgaveId: UUID,
     ): Oppgave? {
-        return transactionalSession.transaction { tx ->
-            tx.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement = "SELECT * FROM oppgave_v1 WHERE id = :oppgave_id",
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-                    row.rehydrerOppgave()
-                }.asSingle,
-            )
-        }
+        val oppgave =
+            transactionalSession.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement = "SELECT * FROM oppgave_v1 WHERE id = :oppgave_id",
+                        paramMap = mapOf("oppgave_id" to oppgaveId),
+                    ).map { row ->
+                        row.rehydrerOppgave()
+                    }.asSingle,
+                )
+            }
+        return oppgave
     }
 
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? {

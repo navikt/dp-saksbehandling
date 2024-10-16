@@ -270,6 +270,7 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå,
+                    emneknagger = setOf("Testknagg"),
                 )
             repo.lagre(oppgave)
             val rehydrertOppgave = repo.hentOppgave(oppgave.oppgaveId)
