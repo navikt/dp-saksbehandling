@@ -58,18 +58,19 @@ class SecureOppgaveMediator(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         queryString: String,
     ): Oppgave? {
-        val oppgaveId = oppgaveMediator.tildelNesteOppgaveTil(
-            saksbehandlerIdent = nesteOppgaveHendelse.ansvarligIdent,
-            filter =
-            TildelNesteOppgaveFilter.fra(
-                queryString = queryString,
-                saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
-                adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
-            ),
-        )
-        return when (oppgaveId){
+        val oppgave =
+            oppgaveMediator.tildelNesteOppgaveTil(
+                saksbehandlerIdent = nesteOppgaveHendelse.ansvarligIdent,
+                filter =
+                    TildelNesteOppgaveFilter.fra(
+                        queryString = queryString,
+                        saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
+                        adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
+                    ),
+            )
+        return when (oppgave) {
             null -> null
-            else -> hentOppgave(oppgaveId, saksbehandler = nesteOppgaveHendelse.utførtAv)
+            else -> hentOppgave(oppgave.oppgaveId, saksbehandler = nesteOppgaveHendelse.utførtAv)
         }
 
 //        return oppgaveMediator.tildelNesteOppgaveTil(
