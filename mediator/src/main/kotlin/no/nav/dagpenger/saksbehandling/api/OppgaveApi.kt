@@ -388,6 +388,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
             },
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
         saksbehandlerIdent = this.behandlerIdent,
+        behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
     )
 
