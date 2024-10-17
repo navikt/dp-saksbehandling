@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKlarTilKontrollHendelse
@@ -51,23 +52,15 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun tildelNesteOppgaveTil(
-        saksbehandlerIdent: String,
+    override fun tildelOgHentNesteOppgave(
+        nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
-    ): Oppgave? {
-        val oppgaveId = hubba(saksbehandlerIdent, filter)
-
-        val oppgave =
-            when (oppgaveId) {
-                null -> null
-                else -> hentOppgave(oppgaveId)
-            }
-
-        return oppgave
+    ): Oppgave? = tildelNesteOppgave(nesteOppgaveHendelse, filter)?.let {
+        hentOppgave(it)
     }
 
-    private fun hubba(
-        saksbehandlerIdent: String,
+    private fun tildelNesteOppgave(
+        nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
     ): UUID? {
         return sessionOf(dataSource).use { session ->
@@ -116,16 +109,25 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         queryOf(
                             statement = updateStatement,
                             paramMap =
-                                mapOf(
-                                    "saksbehandler_ident" to saksbehandlerIdent,
-                                    "fom" to filter.periode.fom,
-                                    "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
-                                    "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
-                                ),
+                            mapOf(
+                                "saksbehandler_ident" to nesteOppgaveHendelse.ansvarligIdent,
+                                "fom" to filter.periode.fom,
+                                "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
+                                "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
+                            ),
                         ).map { row ->
                             row.uuidOrNull("id")
                         }.asSingle,
                     )
+                oppgaveId?.let {
+                    tx.lagre(
+                        it,
+                        Tilstandsendring(
+                            tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                            hendelse = nesteOppgaveHendelse,
+                        ),
+                    )
+                }
                 oppgaveId
             }
         }
@@ -137,15 +139,15 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """
+                    """
                         SELECT * 
                         FROM   person_v1
                         WHERE  ident = :ident
                         """.trimIndent(),
                     paramMap =
-                        mapOf(
-                            "ident" to ident,
-                        ),
+                    mapOf(
+                        "ident" to ident,
+                    ),
                 ).map { row ->
                     Person(
                         id = row.uuid("id"),
@@ -158,7 +160,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun hentPerson(ident: String) = finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
+    override fun hentPerson(ident: String) =
+        finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
 
     override fun slettBehandling(behandlingId: UUID) {
         val behandling =
@@ -198,7 +201,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """
+                    """
                         SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
                         FROM   behandling_v1 beha
                         JOIN   person_v1     pers ON pers.id = beha.person_id
@@ -257,7 +260,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """
+                    """
                         SELECT id 
                         FROM   oppgave_v1 
                         WHERE  behandling_id = :behandling_id
@@ -276,11 +279,11 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     override fun finnOppgaveFor(behandlingId: UUID): Oppgave? =
         søk(
             søkeFilter =
-                Søkefilter(
-                    periode = UBEGRENSET_PERIODE,
-                    tilstand = Type.values,
-                    behandlingId = behandlingId,
-                ),
+            Søkefilter(
+                periode = UBEGRENSET_PERIODE,
+                tilstand = Type.values,
+                behandlingId = behandlingId,
+            ),
         ).singleOrNull()
 
     override fun fjerneEmneknagg(
@@ -292,7 +295,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """
+                    """
                         DELETE FROM emneknagg_v1
                         WHERE  oppgave_id = (SELECT oppg.id
                                              FROM   oppgave_v1 oppg
@@ -300,10 +303,10 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         AND    emneknagg = :emneknagg
                         """.trimIndent(),
                     paramMap =
-                        mapOf(
-                            "behandling_id" to behandlingId,
-                            "emneknagg" to ikkeRelevantEmneknagg,
-                        ),
+                    mapOf(
+                        "behandling_id" to behandlingId,
+                        "emneknagg" to ikkeRelevantEmneknagg,
+                    ),
                 ).asUpdate,
             ) > 0
         }
@@ -461,16 +464,16 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     queryOf(
                         statement = sql,
                         paramMap =
-                            mapOf(
-                                "tilstander" to tilstander,
-                                "fom" to søkeFilter.periode.fom,
-                                "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
-                                "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                                "person_ident" to søkeFilter.personIdent,
-                                "oppgave_id" to søkeFilter.oppgaveId,
-                                "behandling_id" to søkeFilter.behandlingId,
-                                "emneknagger" to emneknagger,
-                            ),
+                        mapOf(
+                            "tilstander" to tilstander,
+                            "fom" to søkeFilter.periode.fom,
+                            "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
+                            "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                            "person_ident" to søkeFilter.personIdent,
+                            "oppgave_id" to søkeFilter.oppgaveId,
+                            "behandling_id" to søkeFilter.behandlingId,
+                            "emneknagger" to emneknagger,
+                        ),
                     )
                 session.run(
                     queryOf.map { row ->
@@ -490,16 +493,16 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """
+                    """
                         UPDATE person_v1
                         SET    skjermes_som_egne_ansatte = :skjermet
                         WHERE  ident = :fnr
                         """.trimIndent(),
                     paramMap =
-                        mapOf(
-                            "fnr" to fnr,
-                            "skjermet" to skjermet,
-                        ),
+                    mapOf(
+                        "fnr" to fnr,
+                        "skjermet" to skjermet,
+                    ),
                 ).asUpdate,
             )
         }
@@ -514,16 +517,16 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """
+                    """
                         UPDATE person_v1
                         SET    adressebeskyttelse_gradering = :adresseBeskyttelseGradering
                         WHERE  ident = :fnr
                         """.trimIndent(),
                     paramMap =
-                        mapOf(
-                            "fnr" to fnr,
-                            "adresseBeskyttelseGradering" to adresseBeskyttelseGradering.name,
-                        ),
+                    mapOf(
+                        "fnr" to fnr,
+                        "adresseBeskyttelseGradering" to adresseBeskyttelseGradering.name,
+                    ),
                 ).asUpdate,
             )
         }
@@ -536,7 +539,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 queryOf(
                     //language=PostgreSQL
                     statement =
-                        """
+                    """
                         SELECT ident
                         FROM   person_v1
                         WHERE  ident IN ($identer)
@@ -554,7 +557,7 @@ private fun TransactionalSession.lagre(person: Person) {
         queryOf(
             //language=PostgreSQL
             statement =
-                """
+            """
                 INSERT INTO person_v1
                     (id, ident, skjermes_som_egne_ansatte, adressebeskyttelse_gradering) 
                 VALUES
@@ -562,12 +565,12 @@ private fun TransactionalSession.lagre(person: Person) {
                 ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte , adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
                 """.trimIndent(),
             paramMap =
-                mapOf(
-                    "id" to person.id,
-                    "ident" to person.ident,
-                    "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
-                    "adressebeskyttelse_gradering" to person.adressebeskyttelseGradering.name,
-                ),
+            mapOf(
+                "id" to person.id,
+                "ident" to person.ident,
+                "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
+                "adressebeskyttelse_gradering" to person.adressebeskyttelseGradering.name,
+            ),
         ).asUpdate,
     )
 }
@@ -577,7 +580,7 @@ private fun TransactionalSession.slettPersonUtenBehandlinger(ident: String) {
         queryOf(
             //language=PostgreSQL
             statement =
-                """
+            """
                     DELETE FROM person_v1 pers 
                     WHERE pers.ident = :ident
                     AND NOT EXISTS(
@@ -620,6 +623,7 @@ private fun rehydrerTilstandsendringHendelse(
         "TomHendelse" -> hendelseJson.tilHendelse<TomHendelse>()
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
+        "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
         else -> throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
     }
 }
@@ -638,7 +642,7 @@ private fun finnHendelseForBehandling(behandlingId: UUID): Hendelse {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                    """
+                """
                     SELECT hendelse_type, hendelse_data
                     FROM   hendelse_v1
                     WHERE  behandling_id = :behandling_id
@@ -657,7 +661,7 @@ private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                    """
+                """
                     SELECT emneknagg
                     FROM   emneknagg_v1
                     WHERE  oppgave_id = :oppgave_id
@@ -676,7 +680,7 @@ private fun hentTilstandsloggForOppgave(oppgaveId: UUID): Tilstandslogg {
             queryOf(
                 //language=PostgreSQL
                 statement =
-                    """
+                """
                     SELECT id, oppgave_id, tilstand,hendelse_type, hendelse, tidspunkt
                     FROM   oppgave_tilstand_logg_v1
                     WHERE  oppgave_id = :oppgave_id
@@ -687,10 +691,10 @@ private fun hentTilstandsloggForOppgave(oppgaveId: UUID): Tilstandslogg {
                     id = row.uuid("id"),
                     tilstand = Type.valueOf(row.string("tilstand")),
                     hendelse =
-                        rehydrerTilstandsendringHendelse(
-                            hendelseType = row.string("hendelse_type"),
-                            hendelseJson = row.string("hendelse"),
-                        ),
+                    rehydrerTilstandsendringHendelse(
+                        hendelseType = row.string("hendelse_type"),
+                        hendelseJson = row.string("hendelse"),
+                    ),
                     tidspunkt = row.localDateTime("tidspunkt"),
                 )
             }.asList,
@@ -706,7 +710,7 @@ private fun TransactionalSession.lagreHendelse(
         queryOf(
             //language=PostgreSQL
             statement =
-                """
+            """
                 INSERT INTO hendelse_v1
                     (behandling_id, hendelse_type, hendelse_data)
                 VALUES
@@ -714,15 +718,15 @@ private fun TransactionalSession.lagreHendelse(
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
             paramMap =
-                mapOf(
-                    "behandling_id" to behandlingId,
-                    "hendelse_type" to hendelse.javaClass.simpleName,
-                    "hendelse_data" to
+            mapOf(
+                "behandling_id" to behandlingId,
+                "hendelse_type" to hendelse.javaClass.simpleName,
+                "hendelse_data" to
                         PGobject().also {
                             it.type = "JSONB"
                             it.value = hendelse.tilJson()
                         },
-                ),
+            ),
         ).asUpdate,
     )
 }
@@ -733,7 +737,7 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
         queryOf(
             //language=PostgreSQL
             statement =
-                """
+            """
                 INSERT INTO behandling_v1
                     (id, person_id, opprettet)
                 VALUES
@@ -741,11 +745,11 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
             paramMap =
-                mapOf(
-                    "id" to behandling.behandlingId,
-                    "person_id" to behandling.person.id,
-                    "opprettet" to behandling.opprettet,
-                ),
+            mapOf(
+                "id" to behandling.behandlingId,
+                "person_id" to behandling.person.id,
+                "opprettet" to behandling.opprettet,
+            ),
         ).asUpdate,
     )
     this.lagreHendelse(behandling.behandlingId, behandling.hendelse)
@@ -757,7 +761,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
         queryOf(
             //language=PostgreSQL
             statement =
-                """
+            """
                 INSERT INTO oppgave_v1
                     (id, behandling_id, tilstand, opprettet, saksbehandler_ident, utsatt_til)
                 VALUES
@@ -769,14 +773,14 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
                 
                 """.trimIndent(),
             paramMap =
-                mapOf(
-                    "id" to oppgave.oppgaveId,
-                    "behandling_id" to oppgave.behandlingId,
-                    "tilstand" to oppgave.tilstand().type.name,
-                    "opprettet" to oppgave.opprettet,
-                    "saksbehandler_ident" to oppgave.behandlerIdent,
-                    "utsatt_til" to oppgave.utsattTil(),
-                ),
+            mapOf(
+                "id" to oppgave.oppgaveId,
+                "behandling_id" to oppgave.behandlingId,
+                "tilstand" to oppgave.tilstand().type.name,
+                "opprettet" to oppgave.opprettet,
+                "saksbehandler_ident" to oppgave.behandlerIdent,
+                "utsatt_til" to oppgave.utsattTil(),
+            ),
         ).asUpdate,
     )
     lagre(oppgave.oppgaveId, oppgave.emneknagger)
@@ -792,7 +796,7 @@ private fun TransactionalSession.lagre(
             queryOf(
                 //language=PostgreSQL
                 statement =
-                    """
+                """
                     INSERT INTO emneknagg_v1
                         (oppgave_id, emneknagg) 
                     VALUES
@@ -807,35 +811,42 @@ private fun TransactionalSession.lagre(
 
 private fun TransactionalSession.lagre(
     oppgaveId: UUID,
+    tilstandsendring: Tilstandsendring,
+) {
+    this.run(
+        queryOf(
+            //language=PostgreSQL
+            statement =
+            """
+                INSERT INTO oppgave_tilstand_logg_v1
+                    (id, oppgave_id, tilstand, hendelse_type, hendelse, tidspunkt)
+                VALUES
+                    (:id, :oppgave_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
+                ON CONFLICT DO NOTHING
+                """.trimIndent(),
+            paramMap =
+            mapOf(
+                "id" to tilstandsendring.id,
+                "oppgave_id" to oppgaveId,
+                "tilstand" to tilstandsendring.tilstand.name,
+                "hendelse_type" to tilstandsendring.hendelse.javaClass.simpleName,
+                "hendelse" to
+                        PGobject().also {
+                            it.type = "JSONB"
+                            it.value = tilstandsendring.hendelse.tilJson()
+                        },
+                "tidspunkt" to tilstandsendring.tidspunkt,
+            ),
+        ).asUpdate,
+    )
+}
+
+private fun TransactionalSession.lagre(
+    oppgaveId: UUID,
     tilstandslogg: Tilstandslogg,
 ) {
     tilstandslogg.forEach { tilstandsendring ->
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO oppgave_tilstand_logg_v1
-                        (id, oppgave_id, tilstand, hendelse_type, hendelse, tidspunkt)
-                    VALUES
-                        (:id, :oppgave_id, :tilstand,:hendelse_type, :hendelse, :tidspunkt)
-                    ON CONFLICT DO NOTHING
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "id" to tilstandsendring.id,
-                        "oppgave_id" to oppgaveId,
-                        "tilstand" to tilstandsendring.tilstand.name,
-                        "hendelse_type" to tilstandsendring.hendelse.javaClass.simpleName,
-                        "hendelse" to
-                            PGobject().also {
-                                it.type = "JSONB"
-                                it.value = tilstandsendring.hendelse.tilJson()
-                            },
-                        "tidspunkt" to tilstandsendring.tidspunkt,
-                    ),
-            ).asUpdate,
-        )
+        this.lagre(oppgaveId, tilstandsendring)
     }
 }
 
@@ -846,12 +857,12 @@ private fun Row.rehydrerOppgave(): Oppgave {
         Behandling.rehydrer(
             behandlingId = behandlingId,
             person =
-                Person(
-                    id = this.uuid("person_id"),
-                    ident = this.string("person_ident"),
-                    skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-                    adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
-                ),
+            Person(
+                id = this.uuid("person_id"),
+                ident = this.string("person_ident"),
+                skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
+                adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
+            ),
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId),
         )

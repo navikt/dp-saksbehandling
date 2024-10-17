@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import java.util.UUID
 
 interface OppgaveRepository {
@@ -31,8 +32,8 @@ interface OppgaveRepository {
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
 
-    fun tildelNesteOppgaveTil(
-        saksbehandlerIdent: String,
+    fun tildelOgHentNesteOppgave(
+        nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
     ): Oppgave?
 

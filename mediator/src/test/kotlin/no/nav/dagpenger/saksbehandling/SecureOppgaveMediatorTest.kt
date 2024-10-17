@@ -496,13 +496,17 @@ class SecureOppgaveMediatorTest {
     @Test
     fun `tildel neste oppgave delegerer til noe noe`() {
         val saksbehandler = Saksbehandler("ident", emptySet())
-
+        val nesteOppgaveHendelse =
+            NesteOppgaveHendelse(
+                ansvarligIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
+            )
         val slot = mutableListOf<TildelNesteOppgaveFilter>()
         val oppgaveMediator =
             mockk<OppgaveMediator>().also {
                 every {
-                    it.tildelNesteOppgaveTil(
-                        saksbehandler.navIdent,
+                    it.tildelOgHentNesteOppgave(
+                        nesteOppgaveHendelse,
                         capture(slot),
                     )
                 } returns null
@@ -511,11 +515,7 @@ class SecureOppgaveMediatorTest {
             oppgaveMediator,
         ).let {
             it.tildelNesteOppgaveTil(
-                nesteOppgaveHendelse =
-                    NesteOppgaveHendelse(
-                        ansvarligIdent = saksbehandler.navIdent,
-                        utførtAv = saksbehandler,
-                    ),
+                nesteOppgaveHendelse = nesteOppgaveHendelse,
                 queryString = "",
             ) shouldBe null
         }

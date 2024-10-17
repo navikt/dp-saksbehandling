@@ -59,8 +59,8 @@ class SecureOppgaveMediator(
         queryString: String,
     ): Oppgave? {
         val oppgave =
-            oppgaveMediator.tildelNesteOppgaveTil(
-                saksbehandlerIdent = nesteOppgaveHendelse.ansvarligIdent,
+            oppgaveMediator.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse = nesteOppgaveHendelse,
                 filter =
                     TildelNesteOppgaveFilter.fra(
                         queryString = queryString,

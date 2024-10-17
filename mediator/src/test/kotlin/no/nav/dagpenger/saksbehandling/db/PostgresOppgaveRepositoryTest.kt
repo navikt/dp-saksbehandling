@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import org.junit.jupiter.api.Test
@@ -98,10 +99,18 @@ class PostgresOppgaveRepositoryTest {
     fun `Det finnes ikke flere ledige oppgaver`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-
+            val saksbehandler =
+                Saksbehandler(
+                    navIdent = "NAVIdent2",
+                    grupper = emptySet(),
+                )
             repo.lagre(lagOppgave(tilstand = FerdigBehandlet))
-            repo.tildelNesteOppgaveTil(
-                saksbehandlerIdent = "NAVIdent2",
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
@@ -156,10 +165,18 @@ class PostgresOppgaveRepositoryTest {
                 )
             repo.lagre(nyesteOppgaveUtenSkjermingAvEgenAnsatt)
 
-            val navIdentUtenTilgangTilEgneAnsatte = "NAVIdent2"
+            val saksbehandlerUtenTilgangTilEgneAnsatte =
+                Saksbehandler(
+                    navIdent = "NAVIdent2",
+                    grupper = emptySet(),
+                )
             val nesteOppgave =
-                repo.tildelNesteOppgaveTil(
-                    saksbehandlerIdent = navIdentUtenTilgangTilEgneAnsatte,
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = saksbehandlerUtenTilgangTilEgneAnsatte.navIdent,
+                            utførtAv = saksbehandlerUtenTilgangTilEgneAnsatte,
+                        ),
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
@@ -169,14 +186,21 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )!!
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
-            nesteOppgave.behandlerIdent shouldBe navIdentUtenTilgangTilEgneAnsatte
+            nesteOppgave.behandlerIdent shouldBe saksbehandlerUtenTilgangTilEgneAnsatte.navIdent
             nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
-            val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
-
+            val saksbehandlerMedTilgangTilEgneAnsatte =
+                Saksbehandler(
+                    navIdent = "NAVIdent3",
+                    grupper = emptySet(),
+                )
             val nesteOppgaveMedTilgang =
-                repo.tildelNesteOppgaveTil(
-                    saksbehandlerIdent = navIdentMedTilgangTilEgneAnsatte,
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
+                            utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                        ),
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
@@ -187,7 +211,7 @@ class PostgresOppgaveRepositoryTest {
                 )!!
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingAvEgenAnsatt.oppgaveId
-            nesteOppgaveMedTilgang.behandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
+            nesteOppgaveMedTilgang.behandlerIdent shouldBe saksbehandlerMedTilgangTilEgneAnsatte.navIdent
             nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
@@ -223,10 +247,18 @@ class PostgresOppgaveRepositoryTest {
                 )
             repo.lagre(eldsteOppgaveUtenAdressebeskyttelse)
 
-            val navIdentUtenTilgangTilAdressebeskyttede = "NAVIdent2"
+            val saksbehandlernUtenTilgangTilAdressebeskyttede =
+                Saksbehandler(
+                    navIdent = "NAVIdent2",
+                    grupper = emptySet(),
+                )
             val nesteOppgave =
-                repo.tildelNesteOppgaveTil(
-                    saksbehandlerIdent = navIdentUtenTilgangTilAdressebeskyttede,
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = saksbehandlernUtenTilgangTilAdressebeskyttede.navIdent,
+                            utførtAv = saksbehandlernUtenTilgangTilAdressebeskyttede,
+                        ),
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
@@ -237,14 +269,21 @@ class PostgresOppgaveRepositoryTest {
                 )
             requireNotNull(nesteOppgave)
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenAdressebeskyttelse.oppgaveId
-//            nesteOppgave.behandlerIdent shouldBe navIdentUtenTilgangTilAdressebeskyttede
+            nesteOppgave.behandlerIdent shouldBe saksbehandlernUtenTilgangTilAdressebeskyttede.navIdent
             nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
-            val navIdentMedTilgangTilEgneAnsatte = "NAVIdent3"
-
+            val saksbehandlerMedTilgangTilEgneAnsatte =
+                Saksbehandler(
+                    navIdent = "NAVIdent3",
+                    grupper = emptySet(),
+                )
             val nesteOppgaveMedTilgang =
-                repo.tildelNesteOppgaveTil(
-                    saksbehandlerIdent = navIdentMedTilgangTilEgneAnsatte,
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
+                            utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                        ),
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
@@ -255,7 +294,7 @@ class PostgresOppgaveRepositoryTest {
                 )!!
 
             nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedAdressebeskyttelse.oppgaveId
-            nesteOppgaveMedTilgang.behandlerIdent shouldBe navIdentMedTilgangTilEgneAnsatte
+            nesteOppgaveMedTilgang.behandlerIdent shouldBe saksbehandlerMedTilgangTilEgneAnsatte.navIdent
             nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
@@ -263,9 +302,18 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Ved tildeling av neste oppgave, skal det lagres en tilstandsendring i tilstandsendringsloggen`() {
         withMigratedDb { ds ->
-            val testSaksbehandler = "NAVIdent"
-            val repo = PostgresOppgaveRepository(ds)
 
+            val saksbehandler =
+                Saksbehandler(
+                    navIdent = "NAVIdent",
+                    grupper = emptySet(),
+                )
+            val repo = PostgresOppgaveRepository(ds)
+            val nesteOppgaveHendelse =
+                NesteOppgaveHendelse(
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                )
             val oppgave =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
@@ -275,7 +323,7 @@ class PostgresOppgaveRepositoryTest {
             repo.lagre(oppgave)
             val rehydrertOppgave = repo.hentOppgave(oppgave.oppgaveId)
 
-            val antallTilstandsenringer = rehydrertOppgave.tilstandslogg.size
+            val antallTilstandsendringer = rehydrertOppgave.tilstandslogg.size
 
             val filter =
                 TildelNesteOppgaveFilter(
@@ -283,15 +331,20 @@ class PostgresOppgaveRepositoryTest {
                     emneknagg = setOf("Testknagg"),
                     harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
-            val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
-            nesteOppgave!!.tilstandslogg.size shouldBe antallTilstandsenringer + 1
+            val nesteOppgave = repo.tildelOgHentNesteOppgave(nesteOppgaveHendelse, filter)
+            nesteOppgave!!.tilstandslogg.size shouldBe antallTilstandsendringer + 1
         }
     }
 
     @Test
     fun `Ved tildeling av neste oppgave, skal man ut fra filteret finne eldste ledige oppgave klar til behandling og oppdatere den`() {
         withMigratedDb { ds ->
-            val testSaksbehandler = "NAVIdent"
+
+            val testSaksbehandler =
+                Saksbehandler(
+                    navIdent = "NAVIdent",
+                    grupper = emptySet(),
+                )
             val repo = PostgresOppgaveRepository(ds)
 
             val yngsteLedigeOppgave =
@@ -324,7 +377,7 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(12),
-                    saksbehandlerIdent = testSaksbehandler,
+                    saksbehandlerIdent = testSaksbehandler.navIdent,
                 )
 
             val endaEldreOpprettetOppgave =
@@ -346,9 +399,17 @@ class PostgresOppgaveRepositoryTest {
                     emneknagg = setOf("Testknagg"),
                     harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
-            val nesteOppgave = repo.tildelNesteOppgaveTil(testSaksbehandler, filter)
+            val nesteOppgave =
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = testSaksbehandler.navIdent,
+                            utførtAv = testSaksbehandler,
+                        ),
+                    filter = filter,
+                )
             nesteOppgave!!.oppgaveId shouldBe nestEldsteLedigeOppgave.oppgaveId
-            nesteOppgave.behandlerIdent shouldBe testSaksbehandler
+            nesteOppgave.behandlerIdent shouldBe testSaksbehandler.navIdent
             nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             val filter2 =
@@ -357,7 +418,15 @@ class PostgresOppgaveRepositoryTest {
                     emneknagg = emptySet(),
                     harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
-            val nesteOppgave2 = repo.tildelNesteOppgaveTil(testSaksbehandler, filter2)
+            val nesteOppgave2 =
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = testSaksbehandler.navIdent,
+                            utførtAv = testSaksbehandler,
+                        ),
+                    filter = filter2,
+                )
             nesteOppgave2!!.oppgaveId shouldBe yngsteLedigeOppgave.oppgaveId
         }
     }

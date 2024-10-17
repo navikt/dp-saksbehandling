@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
@@ -106,7 +107,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå til KlarTilBehandling fra UnderBehandling`() {
-        val oppgave = lagOppgave(type = UNDER_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
             oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler))
@@ -119,7 +120,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal gå til FERDIG_BEHANDLET fra UNDER_BEHANDLING vha GodkjentBehandlingHendelse`() {
         val saksbehandler = Saksbehandler("sIdent", emptySet())
-        val oppgave = lagOppgave(type = UNDER_BEHANDLING, behandler = saksbehandler)
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
@@ -245,7 +246,7 @@ class OppgaveTilstandTest {
     @ParameterizedTest
     @EnumSource(Type::class)
     fun `Ulovlige tilstandsendringer til KLAR_TIL_KONTROLL`(tilstandstype: Type) {
-        val oppgave = lagOppgave(type = tilstandstype, saksbehandler)
+        val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler)
 
         if (tilstandstype != UNDER_BEHANDLING) {
             shouldThrow<UlovligTilstandsendringException> {
@@ -297,7 +298,7 @@ class OppgaveTilstandTest {
     @EnumSource(Type::class)
     fun `Ulovlige tilstandsendringer til UNDER_KONTROLL`(tilstandstype: Type) {
         val beslutter = Saksbehandler("beslutterIdent", emptySet())
-        val oppgave = lagOppgave(type = tilstandstype, beslutter)
+        val oppgave = lagOppgave(tilstandType = tilstandstype, beslutter)
         if (tilstandstype != KLAR_TIL_KONTROLL) {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.tildelTotrinnskontroll(
@@ -381,6 +382,37 @@ class OppgaveTilstandTest {
     }
 
     @Test
+    fun `Finn siste saksbehandler når oppgave er tildelt via neste-oppgave funksjon`() {
+        val saksbehandler = Saksbehandler("Z080808", emptySet())
+        val oppgave =
+            lagOppgave(
+                tilstandType = UNDER_BEHANDLING,
+                tilstandslogg =
+                    Tilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = KLAR_TIL_BEHANDLING,
+                            hendelse =
+                                ForslagTilVedtakHendelse(
+                                    ident = "11111155555",
+                                    søknadId = UUIDv7.ny(),
+                                    behandlingId = UUIDv7.ny(),
+                                    emneknagger = emptySet(),
+                                ),
+                        )
+                        it.leggTil(
+                            nyTilstand = UNDER_BEHANDLING,
+                            hendelse =
+                                NesteOppgaveHendelse(
+                                    ansvarligIdent = saksbehandler.navIdent,
+                                    utførtAv = saksbehandler,
+                                ),
+                        )
+                    },
+            )
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+    }
+
+    @Test
     fun `Finn saksbehandler og beslutter på oppgaven`() {
         val oppgave = lagOppgave(OPPRETTET)
         val oppgaveId = oppgave.oppgaveId
@@ -458,11 +490,12 @@ class OppgaveTilstandTest {
         )
 
     private fun lagOppgave(
-        type: Type,
+        tilstandType: Type,
         behandler: Saksbehandler? = null,
+        tilstandslogg: Tilstandslogg = Tilstandslogg(),
     ): Oppgave {
         val tilstand =
-            when (type) {
+            when (tilstandType) {
                 OPPRETTET -> Oppgave.Opprettet
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
@@ -481,6 +514,7 @@ class OppgaveTilstandTest {
             behandlerIdent = behandler?.navIdent,
             behandling = behandling,
             utsattTil = null,
+            tilstandslogg = tilstandslogg,
         )
     }
 }
