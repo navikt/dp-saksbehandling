@@ -57,32 +57,16 @@ class SecureOppgaveMediator(
     fun tildelNesteOppgaveTil(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         queryString: String,
-    ): Oppgave? {
-        val oppgave =
-            oppgaveMediator.tildelOgHentNesteOppgave(
-                nesteOppgaveHendelse = nesteOppgaveHendelse,
-                filter =
-                    TildelNesteOppgaveFilter.fra(
-                        queryString = queryString,
-                        saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
-                        adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
-                    ),
-            )
-        return when (oppgave) {
-            null -> null
-            else -> hentOppgave(oppgave.oppgaveId, saksbehandler = nesteOppgaveHendelse.utførtAv)
-        }
-
-//        return oppgaveMediator.tildelNesteOppgaveTil(
-//            saksbehandlerIdent = nesteOppgaveHendelse.ansvarligIdent,
-//            filter =
-//                TildelNesteOppgaveFilter.fra(
-//                    queryString = queryString,
-//                    saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
-//                    adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
-//                ),
-//        )
-    }
+    ): Oppgave? =
+        oppgaveMediator.tildelOgHentNesteOppgave(
+            nesteOppgaveHendelse = nesteOppgaveHendelse,
+            filter =
+                TildelNesteOppgaveFilter.fra(
+                    queryString = queryString,
+                    saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
+                    adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
+                ),
+        )
 
     private fun <T> sjekkTilgang(
         kontroller: List<OppgaveTilgangskontroll>,
