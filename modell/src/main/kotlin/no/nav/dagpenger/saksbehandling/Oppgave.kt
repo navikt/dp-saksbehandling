@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -163,7 +164,7 @@ data class Oppgave private constructor(
     fun sisteSaksbehandler(): String? {
         return kotlin.runCatching {
             _tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING }?.let {
-                (it.hendelse as SettOppgaveAnsvarHendelse).ansvarligIdent
+                (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
         }
             .onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
