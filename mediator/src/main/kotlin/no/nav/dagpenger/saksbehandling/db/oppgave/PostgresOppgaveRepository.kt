@@ -359,14 +359,15 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     //language=PostgreSQL
                     """
                     SELECT saksbehandler_ident
-                    FROM  oppgave_v1
+                    FROM   oppgave_v1
+                    WHERE  id = :oppgave_id
                     """.trimMargin(),
                     mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
                     row.stringOrNull("saksbehandler_ident")
                 }.asSingle,
             )
-        } ?: throw DataNotFoundException("Fant  oppgave med id $oppgaveId")
+        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
     }
 
     //language=PostgreSQL
