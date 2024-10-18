@@ -352,24 +352,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
     }
 
-    override fun behandlerForOppgave(oppgaveId: UUID): String? {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    """
-                    SELECT saksbehandler_ident
-                    FROM   oppgave_v1
-                    WHERE  id = :oppgave_id
-                    """.trimMargin(),
-                    mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-                    row.stringOrNull("saksbehandler_ident")
-                }.asSingle,
-            )
-        } ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
-    }
-
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(

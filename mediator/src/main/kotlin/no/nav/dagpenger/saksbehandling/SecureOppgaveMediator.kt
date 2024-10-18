@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterRolleTilgan
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.FerdigstillOppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveBehandlerTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
@@ -36,10 +35,6 @@ class SecureOppgaveMediator(
         EgneAnsatteTilgangskontroll(
             tillatteGrupper = setOf(Configuration.egneAnsatteADGruppe),
             skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
-        ),
-    private val behandlerTilgangskontroll: OppgaveBehandlerTilgangskontroll =
-        OppgaveBehandlerTilgangskontroll(
-            behandlerFunc = oppgaveMediator::behandlerForOppgave,
         ),
     private val ferdigstillOppgaveTilgangskontroll: FerdigstillOppgaveTilgangskontroll =
         FerdigstillOppgaveTilgangskontroll(
