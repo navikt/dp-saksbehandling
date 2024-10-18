@@ -354,10 +354,8 @@ fun lagOppgaveDTO(
         tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
         journalpostIder = journalpostIder.toList(),
         utsattTilDato = oppgave.utsattTil(),
-        saksbehandler = tildeltBehandlerDTO,
-        tildeltBehandler = tildeltBehandlerDTO,
-        sisteSaksbehandler = sisteSaksbehandlerDTO,
-        sisteBeslutter = sisteBeslutterDTO,
+        saksbehandler = sisteSaksbehandlerDTO,
+        beslutter = sisteBeslutterDTO,
     )
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
