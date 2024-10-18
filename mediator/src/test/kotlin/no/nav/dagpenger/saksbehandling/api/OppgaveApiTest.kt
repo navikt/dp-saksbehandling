@@ -56,7 +56,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -77,10 +76,14 @@ class OppgaveApiTest {
     private val saksbehandler = Saksbehandler(SAKSBEHANDLER_IDENT, setOf(Configuration.saksbehandlerADGruppe))
     private val beslutter =
         Saksbehandler(BESLUTTER_IDENT, setOf(Configuration.saksbehandlerADGruppe, Configuration.beslutterADGruppe))
-    private val mockAzure = mockAzure()
+
     private val ugyldigToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDI" +
             "yfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+
+    init {
+        mockAzure()
+    }
 
     companion object {
         @JvmStatic
@@ -90,7 +93,6 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/neste", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId", HttpMethod.Get),
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
-                Arguments.of("/oppgave/oppgaveId/kontroller", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
@@ -441,12 +443,8 @@ class OppgaveApiTest {
 
         coEvery {
             oppgaveMediatorMock.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = testOppgave.oppgaveId,
-                    ansvarligIdent = SAKSBEHANDLER_IDENT,
-                    utførtAv = saksbehandler,
-                ),
-                any(),
+                saksbehandler = saksbehandler,
+                oppgaveId = testOppgave.oppgaveId,
             )
         } returns testOppgave
         val pdlMock = mockk<PDLKlient>()

@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -111,6 +112,54 @@ class OppgaveMediator(
             oppgave.tildel(settOppgaveAnsvarHendelse)
             repository.lagre(oppgave)
         }
+    }
+
+    fun tildelOppgave(
+        saksbehandler: Saksbehandler,
+        oppgaveId: UUID,
+    ): Oppgave {
+        val oppgave = repository.hentOppgave(oppgaveId)
+
+        when (oppgave.tilstand()) {
+            is Oppgave.KlarTilBehandling -> {
+                tildelBehandling(oppgave, saksbehandler)
+            }
+            is Oppgave.KlarTilKontroll -> {
+                tildelTotrinnskontroll(oppgave, saksbehandler)
+            }
+            else -> throw IllegalStateException("Kan ikke tildele oppgave i tilstand ${oppgave.tilstand()}")
+        }
+        return oppgave
+    }
+
+    private fun tildelBehandling(
+        oppgave: Oppgave,
+        saksbehandler: Saksbehandler,
+    ) {
+        oppgave.tildel(
+            settOppgaveAnsvarHendelse =
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+        )
+        repository.lagre(oppgave)
+    }
+
+    private fun tildelTotrinnskontroll(
+        oppgave: Oppgave,
+        saksbehandler: Saksbehandler,
+    ) {
+        oppgave.tildelTotrinnskontroll(
+            toTrinnskontrollHendelse =
+                ToTrinnskontrollHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+        )
+        repository.lagre(oppgave)
     }
 
     fun gjørKlarTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {

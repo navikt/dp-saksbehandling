@@ -42,9 +42,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.jwt
@@ -85,7 +83,6 @@ internal fun Application.oppgaveApi(
                     oppgave = oppgave,
                     person = person.await(),
                     journalpostIder = journalpostIder.await(),
-                    tildeltBehandlerDTO = tildeltBehandlerDTO?.await(),
                     sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                     sisteBeslutterDTO = sisteBeslutterDTO?.await(),
                 )
@@ -132,14 +129,16 @@ internal fun Application.oppgaveApi(
                         val oppgaveDTO = oppgaveDTO(oppgave)
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
+
                     route("tildel") {
                         put {
                             val saksbehandler = call.saksbehandler()
-                            val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse()
-                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse, saksbehandler)
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val oppgave = oppgaveMediator.tildelOppgave(saksbehandler, oppgaveId)
                             call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
                         }
                     }
+
                     route("utsett") {
                         put {
                             val saksbehandler = call.saksbehandler()
@@ -163,14 +162,6 @@ internal fun Application.oppgaveApi(
                             val klarTilKontrollHendelse = call.klarTilKontrollHendelse()
                             logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
                             oppgaveMediator.gjørKlarTilKontroll(klarTilKontrollHendelse, saksbehandler)
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                    route("kontroller") {
-                        put {
-                            val saksbehandler = call.saksbehandler()
-                            val toTrinnskontrollHendelse = call.tildelKontrollHendelse()
-                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse, saksbehandler)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
@@ -271,28 +262,10 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendel
     )
 }
 
-private fun ApplicationCall.settOppgaveAnsvarHendelse(): SettOppgaveAnsvarHendelse {
-    val saksbehandler = this.saksbehandler()
-    return SettOppgaveAnsvarHendelse(
-        oppgaveId = this.finnUUID("oppgaveId"),
-        ansvarligIdent = saksbehandler.navIdent,
-        utførtAv = saksbehandler,
-    )
-}
-
 private fun ApplicationCall.fjernOppgaveAnsvarHendelse(): FjernOppgaveAnsvarHendelse {
     val saksbehandler = this.saksbehandler()
     return FjernOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = saksbehandler,
-    )
-}
-
-private fun ApplicationCall.tildelKontrollHendelse(): ToTrinnskontrollHendelse {
-    val saksbehandler = this.saksbehandler()
-    return ToTrinnskontrollHendelse(
-        oppgaveId = this.finnUUID("oppgaveId"),
-        ansvarligIdent = saksbehandler.navIdent,
         utførtAv = saksbehandler,
     )
 }
@@ -317,7 +290,6 @@ fun lagOppgaveDTO(
     oppgave: Oppgave,
     person: PDLPersonIntern,
     journalpostIder: Set<String>,
-    tildeltBehandlerDTO: BehandlerDTO? = null,
     sisteSaksbehandlerDTO: BehandlerDTO? = null,
     sisteBeslutterDTO: BehandlerDTO? = null,
 ): OppgaveDTO =

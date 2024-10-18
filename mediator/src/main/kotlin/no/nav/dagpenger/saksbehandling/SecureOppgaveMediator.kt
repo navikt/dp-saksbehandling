@@ -14,7 +14,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import java.util.UUID
@@ -105,15 +104,15 @@ class SecureOppgaveMediator(
     }
 
     fun tildelOppgave(
-        oppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         saksbehandler: Saksbehandler,
+        oppgaveId: UUID,
     ): Oppgave {
         return sjekkTilgang(
             kontroller = listOf(egneAnsatteTilgangskontroll, adressebeskyttelseTilgangskontroll),
-            oppgaveId = oppgaveAnsvarHendelse.oppgaveId,
+            oppgaveId = oppgaveId,
             saksbehandler = saksbehandler,
         ) {
-            oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
+            oppgaveMediator.tildelOppgave(saksbehandler, oppgaveId)
         }
     }
 

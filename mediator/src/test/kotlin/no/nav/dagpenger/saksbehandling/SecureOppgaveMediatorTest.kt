@@ -229,10 +229,10 @@ class SecureOppgaveMediatorTest {
             }
 
         if (forventetTilgang) {
-            mediator.tildelOppgave(hendelse, saksbehandler) shouldBe testOppgave
+            mediator.tildelOppgave(saksbehandler, testOppgave.oppgaveId) shouldBe testOppgave
         } else {
             shouldThrow<IngenTilgangTilOppgaveException> {
-                mediator.tildelOppgave(hendelse, saksbehandler)
+                mediator.tildelOppgave(saksbehandler, oppgaveId)
             }
         }
     }
