@@ -43,11 +43,11 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
 
         shouldNotThrow<Oppgave.AlleredeTildeltException> {
-            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+            oppgave.tildelBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
         }
         val enAnnenSaksbehandler = Saksbehandler("enAnnenSaksbehandler", emptySet())
         shouldThrow<Oppgave.AlleredeTildeltException> {
-            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, enAnnenSaksbehandler.navIdent, enAnnenSaksbehandler))
+            oppgave.tildelBehandling(SettOppgaveAnsvarHendelse(oppgaveId, enAnnenSaksbehandler.navIdent, enAnnenSaksbehandler))
         }
     }
 
@@ -55,7 +55,7 @@ class OppgaveTilstandTest {
     fun `Skal ikke kunne tildele oppgave i tilstand Opprettet`() {
         val oppgave = lagOppgave(OPPRETTET)
         shouldThrow<UlovligTilstandsendringException> {
-            oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+            oppgave.tildelBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
         }
     }
 
@@ -154,7 +154,7 @@ class OppgaveTilstandTest {
         }
 
         shouldThrow<UlovligTilstandsendringException> {
-            oppgave.tildel(SettOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler.navIdent, saksbehandler))
+            oppgave.tildelBehandling(SettOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler.navIdent, saksbehandler))
         }
     }
 
@@ -177,7 +177,7 @@ class OppgaveTilstandTest {
         oppgave.utsattTil() shouldBe utsattTil
         oppgave.behandlerIdent shouldBe null
 
-        oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
+        oppgave.tildelBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
 
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.utsattTil() shouldBe null
@@ -428,14 +428,14 @@ class OppgaveTilstandTest {
         oppgave.sisteSaksbehandler() shouldBe null
 
         val saksbehandler1 = Saksbehandler("saksbehandler 1", emptySet())
-        oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler1.navIdent, saksbehandler1))
+        oppgave.tildelBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler1.navIdent, saksbehandler1))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
 
         oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler1))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler1.navIdent
 
         val saksbehandler2 = Saksbehandler("saksbehandler 2", emptySet())
-        oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, saksbehandler2))
+        oppgave.tildelBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, saksbehandler2))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))

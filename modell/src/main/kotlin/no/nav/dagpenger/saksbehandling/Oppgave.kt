@@ -121,7 +121,7 @@ data class Oppgave private constructor(
         tilstand.fjernAnsvar(this, fjernOppgaveAnsvarHendelse)
     }
 
-    fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
+    fun tildelBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         tilstand.tildel(this, settOppgaveAnsvarHendelse)
     }
 

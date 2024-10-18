@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.BeslutterRolleTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
@@ -14,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import java.util.UUID
@@ -107,12 +110,53 @@ class SecureOppgaveMediator(
         saksbehandler: Saksbehandler,
         oppgaveId: UUID,
     ): Oppgave {
-        return sjekkTilgang(
-            kontroller = listOf(egneAnsatteTilgangskontroll, adressebeskyttelseTilgangskontroll),
-            oppgaveId = oppgaveId,
-            saksbehandler = saksbehandler,
-        ) {
-            oppgaveMediator.tildelOppgave(saksbehandler, oppgaveId)
+        return oppgaveMediator.hentOppgave(oppgaveId).also { oppgave ->
+            when (oppgave.tilstand().type) {
+                KLAR_TIL_BEHANDLING ->
+                    sjekkTilgang(
+                        kontroller =
+                            listOf(
+                                egneAnsatteTilgangskontroll,
+                                adressebeskyttelseTilgangskontroll,
+                            ),
+                        oppgaveId = oppgaveId,
+                        saksbehandler = saksbehandler,
+                    ) {
+                        oppgaveMediator.tildelOppgave(
+                            oppgave = oppgave,
+                            settOppgaveAnsvarHendelse =
+                                SettOppgaveAnsvarHendelse(
+                                    oppgaveId = oppgave.oppgaveId,
+                                    ansvarligIdent = saksbehandler.navIdent,
+                                    utførtAv = saksbehandler,
+                                ),
+                        )
+                    }
+
+                KLAR_TIL_KONTROLL ->
+                    sjekkTilgang(
+                        kontroller =
+                            listOf(
+                                egneAnsatteTilgangskontroll,
+                                adressebeskyttelseTilgangskontroll,
+                                beslutterTilgangskontroll,
+                            ),
+                        oppgaveId = oppgaveId,
+                        saksbehandler = saksbehandler,
+                    ) {
+                        oppgaveMediator.tildelOppgave(
+                            oppgave = oppgave,
+                            toTrinnskontrollHendelse =
+                                ToTrinnskontrollHendelse(
+                                    oppgaveId = oppgave.oppgaveId,
+                                    ansvarligIdent = saksbehandler.navIdent,
+                                    utførtAv = saksbehandler,
+                                ),
+                        )
+                    }
+
+                else -> throw IllegalArgumentException("Kan ikke tildele oppgave i tilstand ${oppgave.tilstand().type.name}")
+            }
         }
     }
 
@@ -143,24 +187,6 @@ class SecureOppgaveMediator(
             saksbehandler = saksbehandler,
         ) {
             oppgaveMediator.gjørKlarTilKontroll(klarTilKontrollHendelse)
-        }
-    }
-
-    fun tildelTotrinnskontroll(
-        toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
-        saksbehandler: Saksbehandler,
-    ) {
-        return sjekkTilgang(
-            kontroller =
-                listOf(
-                    egneAnsatteTilgangskontroll,
-                    adressebeskyttelseTilgangskontroll,
-                    beslutterTilgangskontroll,
-                ),
-            oppgaveId = toTrinnskontrollHendelse.oppgaveId,
-            saksbehandler = saksbehandler,
-        ) {
-            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
         }
     }
 

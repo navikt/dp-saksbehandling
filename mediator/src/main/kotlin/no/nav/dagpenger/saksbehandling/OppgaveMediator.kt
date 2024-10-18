@@ -22,7 +22,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -107,58 +106,19 @@ class OppgaveMediator(
             }
     }
 
-    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave {
-        return repository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
-            oppgave.tildel(settOppgaveAnsvarHendelse)
-            repository.lagre(oppgave)
-        }
-    }
-
     fun tildelOppgave(
-        saksbehandler: Saksbehandler,
-        oppgaveId: UUID,
-    ): Oppgave {
-        val oppgave = repository.hentOppgave(oppgaveId)
-
-        when (oppgave.tilstand()) {
-            is Oppgave.KlarTilBehandling -> {
-                tildelBehandling(oppgave, saksbehandler)
-            }
-            is Oppgave.KlarTilKontroll -> {
-                tildelTotrinnskontroll(oppgave, saksbehandler)
-            }
-            else -> throw IllegalStateException("Kan ikke tildele oppgave i tilstand ${oppgave.tilstand()}")
-        }
-        return oppgave
-    }
-
-    private fun tildelBehandling(
         oppgave: Oppgave,
-        saksbehandler: Saksbehandler,
+        settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
     ) {
-        oppgave.tildel(
-            settOppgaveAnsvarHendelse =
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
-                    utførtAv = saksbehandler,
-                ),
-        )
+        oppgave.tildelBehandling(settOppgaveAnsvarHendelse = settOppgaveAnsvarHendelse)
         repository.lagre(oppgave)
     }
 
-    private fun tildelTotrinnskontroll(
+    fun tildelOppgave(
         oppgave: Oppgave,
-        saksbehandler: Saksbehandler,
+        toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
     ) {
-        oppgave.tildelTotrinnskontroll(
-            toTrinnskontrollHendelse =
-                ToTrinnskontrollHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
-                    utførtAv = saksbehandler,
-                ),
-        )
+        oppgave.tildelTotrinnskontroll(toTrinnskontrollHendelse = toTrinnskontrollHendelse)
         repository.lagre(oppgave)
     }
 
@@ -257,12 +217,12 @@ class OppgaveMediator(
         }
     }
 
-    fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
-        repository.hentOppgave(toTrinnskontrollHendelse.oppgaveId).also { oppgave ->
-            oppgave.tildelTotrinnskontroll(toTrinnskontrollHendelse)
-            repository.lagre(oppgave)
-        }
-    }
+//    fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
+//        repository.hentOppgave(toTrinnskontrollHendelse.oppgaveId).also { oppgave ->
+//            oppgave.tildelTotrinnskontroll(toTrinnskontrollHendelse)
+//            repository.lagre(oppgave)
+//        }
+//    }
 
     private fun lagPerson(ident: String): Person {
         return runBlocking {

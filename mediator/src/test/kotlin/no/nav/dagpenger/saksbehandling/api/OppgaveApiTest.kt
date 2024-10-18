@@ -57,7 +57,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -256,7 +255,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
+    fun `Hent alle oppgaver fom, tom, mine og tilstand`() {
         val oppgaveMediatorMock =
             mockk<SecureOppgaveMediator>().also {
                 every {
@@ -437,7 +436,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Saksbehandler skal kunne ta en oppgave`() {
+    fun `Saksbehandler skal kunne få tildelt en oppgave som er klar til behandling`() {
         val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
@@ -479,63 +478,75 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Beslutter skal kunne ta en kontrolloppgave`() {
+    fun `Beslutter skal kunne få tildelt en oppgave som er klar til kontroll`() {
         val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
-        val oppgaveId = UUIDv7.ny()
+        val testOppgaveUnderKontroll = lagTestOppgaveMedTilstand(UNDER_KONTROLL)
 
         coEvery {
-            oppgaveMediatorMock.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
-                    oppgaveId = oppgaveId,
-                    ansvarligIdent = BESLUTTER_IDENT,
-                    utførtAv = beslutter,
-                ),
-                any(),
+            oppgaveMediatorMock.tildelOppgave(
+                saksbehandler = beslutter,
+                oppgaveId = testOppgaveUnderKontroll.oppgaveId,
             )
-        } just runs
+        } returns testOppgaveUnderKontroll
 
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/$oppgaveId/kontroller") { autentisert(token = gyldigBeslutterToken()) }
-                .also { response ->
-                    response.status shouldBe HttpStatusCode.NoContent
-                }
+        val pdlMock = mockk<PDLKlient>()
+        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+
+        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
+            client.put("/oppgave/${testOppgaveUnderKontroll.oppgaveId}/tildel") { autentisert(token = gyldigBeslutterToken()) }.also {
+                    response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                //language=JSON
+                json shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                    {
+                      "behandlingId": "${testOppgaveUnderKontroll.behandlingId}",
+                      "person": {
+                        "ident": "$TEST_IDENT",
+                        "fornavn": "${testPerson.fornavn}",
+                        "etternavn": "${testPerson.etternavn}",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "${testPerson.kjønn}",
+                        "statsborgerskap": "${testPerson.statsborgerskap}",
+                        "skjermesSomEgneAnsatte": ${testOppgaveUnderKontroll.behandling.person.skjermesSomEgneAnsatte},
+                        "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}"
+                      },
+                      "emneknagger": ["Søknadsbehandling"],
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}"
+                    }
+                    """.trimIndent()
+            }
         }
     }
 
     @Test
-    fun `Feilstatuser når beslutter forsøker å ta en kontrolloppgave`() {
+    fun `Feilstatuser som kan oppstå når beslutter forsøker å tildele seg en kontrolloppgave`() {
         val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
-        val oppgaveSomIkkeFinnes = UUIDv7.ny()
-        val oppgaveSomAlleredeErUnderKontroll = UUIDv7.ny()
+        val oppgaveIdSomIkkeFinnes = UUIDv7.ny()
+        val oppgaveIdSomAlleredeErUnderKontroll = UUIDv7.ny()
 
         coEvery {
-            oppgaveMediatorMock.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
-                    oppgaveId = oppgaveSomIkkeFinnes,
-                    ansvarligIdent = beslutter.navIdent,
-                    utførtAv = beslutter,
-                ),
-                any(),
+            oppgaveMediatorMock.tildelOppgave(
+                saksbehandler = beslutter,
+                oppgaveId = oppgaveIdSomIkkeFinnes,
             )
         } throws DataNotFoundException("Oppgave ikke funnet")
 
         coEvery {
-            oppgaveMediatorMock.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
-                    oppgaveId = oppgaveSomAlleredeErUnderKontroll,
-                    ansvarligIdent = beslutter.navIdent,
-                    utførtAv = beslutter,
-                ),
-                any(),
+            oppgaveMediatorMock.tildelOppgave(
+                saksbehandler = beslutter,
+                oppgaveId = oppgaveIdSomAlleredeErUnderKontroll,
             )
         } throws UlovligTilstandsendringException("Oppgaven er allerede under kontroll")
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/$oppgaveSomIkkeFinnes/kontroller") { autentisert(token = gyldigBeslutterToken()) }
+            client.put("/oppgave/$oppgaveIdSomIkkeFinnes/tildel") { autentisert(token = gyldigBeslutterToken()) }
                 .also { response ->
                     response.status shouldBe HttpStatusCode.NotFound
                 }
-            client.put("/oppgave/$oppgaveSomAlleredeErUnderKontroll/kontroller") { autentisert(token = gyldigBeslutterToken()) }
+            client.put("/oppgave/$oppgaveIdSomAlleredeErUnderKontroll/tildel") { autentisert(token = gyldigBeslutterToken()) }
                 .also { response ->
                     response.status shouldBe HttpStatusCode.Conflict
                 }
@@ -543,7 +554,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Saksbehandler skal kunne gi fra seg ansvar for en oppgave`() {
+    fun `Saksbehandler skal kunne gi fra seg ansvaret for en oppgave`() {
         val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
@@ -574,7 +585,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Saksbehandler skal kunne utsette oppgave`() {
+    fun `Saksbehandler skal kunne utsette en oppgave`() {
         val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
         val utsettTilDato = LocalDate.now().plusDays(1)

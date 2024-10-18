@@ -9,6 +9,8 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
@@ -61,7 +63,7 @@ class SecureOppgaveMediatorTest {
                 setOf("BeslutterADGruppe", "SaksbehandlerADGruppe"),
             )
 
-        private val superSaksbehandler =
+        private val superSaksbehandlerOgBeslutter =
             Saksbehandler(
                 "superSaksbehandler",
                 setOf(
@@ -144,11 +146,11 @@ class SecureOppgaveMediatorTest {
                 Arguments.of(saksbehandlerMedEgneAnsatteTilgang, oppgaveMedStrengtFortroligAdresse, false),
                 Arguments.of(saksbehandlerMedEgneAnsatteTilgang, oppgaveMedStrengtFortroligUtlandAdresse, false),
                 Arguments.of(saksbehandlerMedEgneAnsatteTilgang, oppgaveMedEgneAnsatteSkjerming, true),
-                Arguments.of(superSaksbehandler, oppgaveUtenBeskyttelse, true),
-                Arguments.of(superSaksbehandler, oppgaveMedFortroligAdresse, true),
-                Arguments.of(superSaksbehandler, oppgaveMedStrengtFortroligAdresse, true),
-                Arguments.of(superSaksbehandler, oppgaveMedStrengtFortroligUtlandAdresse, true),
-                Arguments.of(superSaksbehandler, oppgaveMedEgneAnsatteSkjerming, true),
+                Arguments.of(superSaksbehandlerOgBeslutter, oppgaveUtenBeskyttelse, true),
+                Arguments.of(superSaksbehandlerOgBeslutter, oppgaveMedFortroligAdresse, true),
+                Arguments.of(superSaksbehandlerOgBeslutter, oppgaveMedStrengtFortroligAdresse, true),
+                Arguments.of(superSaksbehandlerOgBeslutter, oppgaveMedStrengtFortroligUtlandAdresse, true),
+                Arguments.of(superSaksbehandlerOgBeslutter, oppgaveMedEgneAnsatteSkjerming, true),
             )
         }
 
@@ -162,7 +164,7 @@ class SecureOppgaveMediatorTest {
                 Arguments.of(beslutterUtenEkstraTilganger, oppgaveMedStrengtFortroligUtlandAdresse, false),
                 Arguments.of(saksbehandlerUtenEkstraTilganger, oppgaveUtenBeskyttelse, false),
                 Arguments.of(saksbehandlerMedEgneAnsatteTilgang, oppgaveMedEgneAnsatteSkjerming, false),
-                Arguments.of(superSaksbehandler, oppgaveUtenBeskyttelse, true),
+                Arguments.of(superSaksbehandlerOgBeslutter, oppgaveUtenBeskyttelse, true),
             )
         }
 
@@ -211,12 +213,12 @@ class SecureOppgaveMediatorTest {
 
     @ParameterizedTest
     @MethodSource("tester")
-    fun `Tilgangskontroll for tildel oppgave`(
+    fun `Tilgangskontroll for tildeling av oppgave til behandling`(
         saksbehandler: Saksbehandler,
         oppgaveId: UUID,
         forventetTilgang: Boolean,
     ) {
-        val testOppgave = lagOppgave(oppgaveId = oppgaveId)
+        val testOppgave = lagOppgave(oppgaveId = oppgaveId, tilstand = KlarTilBehandling)
         val hendelse =
             SettOppgaveAnsvarHendelse(
                 oppgaveId = testOppgave.oppgaveId,
@@ -225,7 +227,8 @@ class SecureOppgaveMediatorTest {
             )
         val mediator =
             lageMediatorMock {
-                every { tildelOppgave(hendelse) } returns testOppgave
+                every { tildelOppgave(testOppgave, hendelse) } just runs
+                every { hentOppgave(oppgaveId) } returns testOppgave
             }
 
         if (forventetTilgang) {
@@ -298,35 +301,37 @@ class SecureOppgaveMediatorTest {
 
     @ParameterizedTest
     @MethodSource("beslutterTest")
-    fun `Tilgangskontroll for utfør totrinnskontroll`(
+    fun `Tilgangskontroll for tildeling av oppgave til kontroll`(
         saksbehandler: Saksbehandler,
         oppgaveId: UUID,
         forventetTilgang: Boolean,
     ) {
+        val testOppgave = lagOppgave(oppgaveId = oppgaveId, tilstand = KlarTilKontroll)
         val hendelse =
             ToTrinnskontrollHendelse(
-                oppgaveId = oppgaveId,
+                oppgaveId = testOppgave.oppgaveId,
                 ansvarligIdent = saksbehandler.navIdent,
                 utførtAv = saksbehandler,
             )
-        val mediator =
+        val secureOppgaveMediator =
             lageMediatorMock {
-                every { tildelTotrinnskontroll(hendelse) } just runs
+                every { tildelOppgave(testOppgave, hendelse) } just runs
+                every { hentOppgave(oppgaveId) } returns testOppgave
             }
 
         if (forventetTilgang) {
             shouldNotThrowAny {
-                mediator.tildelTotrinnskontroll(hendelse, saksbehandler)
+                secureOppgaveMediator.tildelOppgave(saksbehandler, oppgaveId)
             }
         } else {
             shouldThrow<IngenTilgangTilOppgaveException> {
-                mediator.tildelTotrinnskontroll(hendelse, saksbehandler)
+                secureOppgaveMediator.tildelOppgave(saksbehandler, oppgaveId)
             }
         }
     }
 
     @Test
-    fun `tilgangskontroll for ferdigstilling av oppgave som er under behandling`() {
+    fun `Tilgangskontroll for ferdigstilling av oppgave som er under behandling`() {
         val oppgaveUnderBehandling =
             lagOppgave(
                 oppgaveId = oppgaveUtenBeskyttelse,
@@ -350,7 +355,7 @@ class SecureOppgaveMediatorTest {
             shouldThrow<IngenTilgangTilOppgaveException> {
                 it.ferdigstillOppgave(
                     godkjentBehandlingHendelse,
-                    superSaksbehandler,
+                    superSaksbehandlerOgBeslutter,
                     "token",
                 )
             }
@@ -358,7 +363,7 @@ class SecureOppgaveMediatorTest {
     }
 
     @Test
-    fun `tilgangskontroll for ferdigstilling av oppgave som er under kontroll`() {
+    fun `Tilgangskontroll for ferdigstilling av oppgave som er under kontroll`() {
         val oppgaveUnderKontroll =
             lagOppgave(
                 oppgaveId = oppgaveUtenBeskyttelse,
@@ -391,7 +396,7 @@ class SecureOppgaveMediatorTest {
             shouldThrow<IngenTilgangTilOppgaveException> {
                 it.ferdigstillOppgave(
                     godkjentBehandlingHendelse,
-                    superSaksbehandler,
+                    superSaksbehandlerOgBeslutter,
                     "token",
                 )
             }
@@ -411,7 +416,7 @@ class SecureOppgaveMediatorTest {
     }
 
     @Test
-    fun `tilgangskontroll for ferdigstilling av oppgave  uten brev som er under behandling`() {
+    fun `Tilgangskontroll for ferdigstilling av oppgave uten brev som er under behandling`() {
         val oppgaveUnderBehandling =
             lagOppgave(
                 oppgaveId = oppgaveUtenBeskyttelse,
@@ -434,7 +439,7 @@ class SecureOppgaveMediatorTest {
             shouldThrow<IngenTilgangTilOppgaveException> {
                 it.ferdigstillOppgave(
                     godkjentBehandlingHendelse,
-                    superSaksbehandler,
+                    superSaksbehandlerOgBeslutter,
                     "token",
                 )
             }
@@ -442,7 +447,7 @@ class SecureOppgaveMediatorTest {
     }
 
     @Test
-    fun `tilgangskontroll for ferdigstilling av oppgave uten brev som er under kontroll`() {
+    fun `Tilgangskontroll for ferdigstilling av oppgave uten brev som er under kontroll`() {
         val oppgaveUnderKontroll =
             lagOppgave(
                 oppgaveId = oppgaveUtenBeskyttelse,
@@ -474,7 +479,7 @@ class SecureOppgaveMediatorTest {
             shouldThrow<IngenTilgangTilOppgaveException> {
                 it.ferdigstillOppgave(
                     godkjentBehandlingHendelse,
-                    superSaksbehandler,
+                    superSaksbehandlerOgBeslutter,
                     "token",
                 )
             }
@@ -494,7 +499,7 @@ class SecureOppgaveMediatorTest {
     }
 
     @Test
-    fun `tildel neste oppgave delegerer til noe noe`() {
+    fun `Tildel neste oppgave delegerer til noe noe`() {
         val saksbehandler = Saksbehandler("ident", emptySet())
         val nesteOppgaveHendelse =
             NesteOppgaveHendelse(
