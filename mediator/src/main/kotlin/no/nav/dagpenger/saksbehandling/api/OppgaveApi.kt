@@ -114,9 +114,14 @@ internal fun Application.oppgaveApi(
                 route("neste") {
                     put {
                         val dto = call.receive<NesteOppgaveDTO>()
+                        val saksbehandler = applicationCallParser.sakbehandler(call = call)
                         val oppgave =
                             oppgaveMediator.tildelNesteOppgaveTil(
-                                nesteOppgaveHendelse = call.nesteOppgaveHendelse(applicationCallParser.sakbehandler(call = call)),
+                                nesteOppgaveHendelse =
+                                    NesteOppgaveHendelse(
+                                        ansvarligIdent = saksbehandler.navIdent,
+                                        utførtAv = saksbehandler,
+                                    ),
                                 queryString = dto.queryParams,
                             )
                         when (oppgave) {
@@ -299,13 +304,6 @@ private fun ApplicationCall.tildelKontrollHendelse(saksbehandler: Saksbehandler)
 private fun ApplicationCall.klarTilKontrollHendelse(saksbehandler: Saksbehandler): KlarTilKontrollHendelse {
     return KlarTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = saksbehandler,
-    )
-}
-
-private fun ApplicationCall.nesteOppgaveHendelse(saksbehandler: Saksbehandler): NesteOppgaveHendelse {
-    return NesteOppgaveHendelse(
-        ansvarligIdent = saksbehandler.navIdent,
         utførtAv = saksbehandler,
     )
 }
