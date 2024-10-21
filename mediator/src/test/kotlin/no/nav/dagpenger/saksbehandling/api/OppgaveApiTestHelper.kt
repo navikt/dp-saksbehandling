@@ -10,6 +10,7 @@ import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -59,7 +60,13 @@ internal object OppgaveApiTestHelper {
         testApplication {
             application {
                 apiConfig()
-                oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient, saksbehandlerOppslag)
+                oppgaveApi(
+                    oppgaveMediator,
+                    pdlKlient,
+                    journalpostIdClient,
+                    saksbehandlerOppslag,
+                    applicationCallParser,
+                )
             }
             test()
         }

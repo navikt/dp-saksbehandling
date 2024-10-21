@@ -5,6 +5,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.ktor.server.application.install
 import io.ktor.server.engine.ApplicationEngine
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
@@ -82,6 +83,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     pdlKlient,
                     journalpostIdClient,
                     SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider),
+                    applicationCallParser,
                 )
                 this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
                 this.install(KafkaStreamsPlugin) {
