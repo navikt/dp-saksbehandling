@@ -3,6 +3,11 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
+import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import org.junit.jupiter.api.Test
@@ -12,21 +17,21 @@ class OppgaveTilgangTest {
         Saksbehandler(
             navIdent = "saksbehandler",
             grupper = setOf(),
-            tilganger = setOf(TilgangType.SAKSBEHANDLER),
+            tilganger = setOf(SAKSBEHANDLER),
         )
 
     private val beslutter =
         Saksbehandler(
             navIdent = "beslutter",
             grupper = setOf(),
-            tilganger = setOf(TilgangType.BESLUTTER),
+            tilganger = setOf(BESLUTTER),
         )
 
     @Test
     fun `Må ha beslutter tilgang for å ferdigstill oppgave med tilstand UNDDER_KONTROLL`() {
         val oppgave =
-            OppgaveTestHelper.lagOppgave(
-                tilstandType = Oppgave.Tilstand.Type.UNDER_KONTROLL,
+            lagOppgave(
+                tilstandType = UNDER_KONTROLL,
                 behandler = saksbehandler,
             )
 
@@ -57,19 +62,19 @@ class OppgaveTilgangTest {
             Saksbehandler(
                 navIdent = "saksbehandler",
                 grupper = setOf(),
-                tilganger = setOf(TilgangType.SAKSBEHANDLER),
+                tilganger = setOf(SAKSBEHANDLER),
             )
 
         val beslutter =
             Saksbehandler(
                 navIdent = "beslutter",
                 grupper = setOf(),
-                tilganger = setOf(TilgangType.BESLUTTER),
+                tilganger = setOf(BESLUTTER),
             )
 
         val oppgave =
-            OppgaveTestHelper.lagOppgave(
-                tilstandType = Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL,
+            lagOppgave(
+                tilstandType = KLAR_TIL_KONTROLL,
             )
 
         shouldThrow<ManglendeTilgang> {
