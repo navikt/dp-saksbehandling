@@ -235,7 +235,7 @@ class OppgaveTilstandTest {
     fun `Skal gå fra tilstand UNDER_BEHANDLING til KLAR_TIL_KONTROLL`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
 
-        oppgave.gjørKlarTilKontroll(
+        oppgave.sendTilKontroll(
             KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
         )
 
@@ -250,7 +250,7 @@ class OppgaveTilstandTest {
 
         if (tilstandstype != UNDER_BEHANDLING) {
             shouldThrow<UlovligTilstandsendringException> {
-                oppgave.gjørKlarTilKontroll(
+                oppgave.sendTilKontroll(
                     KlarTilKontrollHendelse(
                         oppgaveId = oppgave.oppgaveId,
                         utførtAv = Saksbehandler("ident", emptySet()),
@@ -438,7 +438,7 @@ class OppgaveTilstandTest {
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, saksbehandler2))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
-        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
+        oppgave.sendTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
 
         val beslutter1 = Saksbehandler("beslutter 1", emptySet(), setOf(BESLUTTER))
         oppgave.tildelTotrinnskontroll(
@@ -455,7 +455,7 @@ class OppgaveTilstandTest {
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         val beslutter2 = Saksbehandler("beslutter 2", emptySet(), setOf(BESLUTTER))
-        oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
+        oppgave.sendTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
         oppgave.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
                 oppgaveId = oppgave.oppgaveId,

@@ -170,8 +170,8 @@ data class Oppgave private constructor(
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
-    fun gjørKlarTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
-        tilstand.gjørKlarTilKontroll(this, klarTilKontrollHendelse)
+    fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
+        tilstand.sendTilKontroll(this, klarTilKontrollHendelse)
     }
 
     fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
@@ -262,7 +262,7 @@ data class Oppgave private constructor(
     object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
 
-        override fun gjørKlarTilKontroll(
+        override fun sendTilKontroll(
             oppgave: Oppgave,
             klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {
@@ -549,7 +549,7 @@ data class Oppgave private constructor(
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
         }
 
-        fun gjørKlarTilKontroll(
+        fun sendTilKontroll(
             oppgave: Oppgave,
             klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {

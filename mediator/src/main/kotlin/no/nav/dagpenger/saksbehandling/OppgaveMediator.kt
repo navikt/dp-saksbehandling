@@ -127,9 +127,9 @@ class OppgaveMediator(
         }
     }
 
-    fun gjørKlarTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
+    fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
         repository.hentOppgave(klarTilKontrollHendelse.oppgaveId).also { oppgave ->
-            oppgave.gjørKlarTilKontroll(klarTilKontrollHendelse)
+            oppgave.sendTilKontroll(klarTilKontrollHendelse)
             repository.lagre(oppgave)
         }
     }

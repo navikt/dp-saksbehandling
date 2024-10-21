@@ -92,7 +92,7 @@ class OppgaveMediatorTest {
                     behandlingKlientMock,
                     mockk(),
                 )
-            oppgaveMediator.gjørKlarTilKontroll(
+            oppgaveMediator.sendTilKontroll(
                 KlarTilKontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = saksbehandler,
@@ -773,7 +773,7 @@ class OppgaveMediatorTest {
             return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
         }
 
-        oppgaveMediator.gjørKlarTilKontroll(
+        oppgaveMediator.sendTilKontroll(
             KlarTilKontrollHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 utførtAv = saksbehandler,

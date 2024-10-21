@@ -126,6 +126,64 @@ class OppgaveTilgangTest {
         }
     }
 
+    companion object {
+        @JvmStatic
+        private fun adressebeskyttelseTester(): Stream<Arguments> {
+            return Stream.of(
+                // oppgavens gradering, saksbehandlers tilgang, forventet tilgang
+                Arguments.of(UGRADERT, SAKSBEHANDLER, true),
+                Arguments.of(FORTROLIG, SAKSBEHANDLER, false),
+                Arguments.of(STRENGT_FORTROLIG, SAKSBEHANDLER, false),
+                Arguments.of(STRENGT_FORTROLIG_UTLAND, SAKSBEHANDLER, false),
+                Arguments.of(UGRADERT, FORTROLIG_ADRESSE, true),
+                Arguments.of(FORTROLIG, FORTROLIG_ADRESSE, true),
+                Arguments.of(STRENGT_FORTROLIG, FORTROLIG_ADRESSE, false),
+                Arguments.of(STRENGT_FORTROLIG_UTLAND, FORTROLIG_ADRESSE, false),
+                Arguments.of(UGRADERT, STRENGT_FORTROLIG_ADRESSE, true),
+                Arguments.of(FORTROLIG, STRENGT_FORTROLIG_ADRESSE, false),
+                Arguments.of(STRENGT_FORTROLIG, STRENGT_FORTROLIG_ADRESSE, true),
+                Arguments.of(STRENGT_FORTROLIG_UTLAND, STRENGT_FORTROLIG_ADRESSE, false),
+                Arguments.of(UGRADERT, STRENGT_FORTROLIG_ADRESSE_UTLAND, true),
+                Arguments.of(FORTROLIG, STRENGT_FORTROLIG_ADRESSE_UTLAND, false),
+                Arguments.of(STRENGT_FORTROLIG, STRENGT_FORTROLIG_ADRESSE_UTLAND, false),
+                Arguments.of(STRENGT_FORTROLIG_UTLAND, STRENGT_FORTROLIG_ADRESSE_UTLAND, true),
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("adressebeskyttelseTester")
+    fun `Adressebeskyttelse tilgangser ved henting av oppgave`(
+        adressebeskyttelseGradering: AdressebeskyttelseGradering,
+        saksbehandlerTilgang: TilgangType,
+        forventetTilgang: Boolean,
+    ) {
+        val oppgave = lagOppgave(adressebeskyttelseGradering = adressebeskyttelseGradering)
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+
+        if (forventetTilgang) {
+            shouldNotThrow<ManglendeTilgang> {
+                oppgave.tildel(
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        } else {
+            shouldThrow<ManglendeTilgang> {
+                oppgave.tildel(
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        }
+    }
+
     @Test
     fun `Egne ansatte tilganger ved tildeling av oppgaver`() {
         val egneAnsatteOppgave =
@@ -150,31 +208,6 @@ class OppgaveTilgangTest {
                     ansvarligIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
                     utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
                 ),
-            )
-        }
-    }
-
-    companion object {
-        @JvmStatic
-        private fun adressebeskyttelseTester(): Stream<Arguments> {
-            return Stream.of(
-                // oppgavens gradering, saksbehandlers tilgang, forventet tilgang
-                Arguments.of(UGRADERT, SAKSBEHANDLER, true),
-                Arguments.of(FORTROLIG, SAKSBEHANDLER, false),
-                Arguments.of(STRENGT_FORTROLIG, SAKSBEHANDLER, false),
-                Arguments.of(STRENGT_FORTROLIG_UTLAND, SAKSBEHANDLER, false),
-                Arguments.of(UGRADERT, FORTROLIG_ADRESSE, true),
-                Arguments.of(FORTROLIG, FORTROLIG_ADRESSE, true),
-                Arguments.of(STRENGT_FORTROLIG, FORTROLIG_ADRESSE, false),
-                Arguments.of(STRENGT_FORTROLIG_UTLAND, FORTROLIG_ADRESSE, false),
-                Arguments.of(UGRADERT, STRENGT_FORTROLIG_ADRESSE, true),
-                Arguments.of(FORTROLIG, STRENGT_FORTROLIG_ADRESSE, false),
-                Arguments.of(STRENGT_FORTROLIG, STRENGT_FORTROLIG_ADRESSE, true),
-                Arguments.of(STRENGT_FORTROLIG_UTLAND, STRENGT_FORTROLIG_ADRESSE, false),
-                Arguments.of(UGRADERT, STRENGT_FORTROLIG_ADRESSE_UTLAND, true),
-                Arguments.of(FORTROLIG, STRENGT_FORTROLIG_ADRESSE_UTLAND, false),
-                Arguments.of(STRENGT_FORTROLIG, STRENGT_FORTROLIG_ADRESSE_UTLAND, false),
-                Arguments.of(STRENGT_FORTROLIG_UTLAND, STRENGT_FORTROLIG_ADRESSE_UTLAND, true),
             )
         }
     }
@@ -326,6 +359,35 @@ class OppgaveTilgangTest {
                         utsattTil = LocalDate.MAX,
                         beholdOppgave = true,
                     ),
+                )
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("adressebeskyttelseTester")
+    fun `Adressebeskyttelse tilganger ved send til kontroll av oppgaver`(
+        adressebeskyttelseGradering: AdressebeskyttelseGradering,
+        saksbehandlerTilgang: TilgangType,
+        forventetTilgang: Boolean,
+    ) {
+        val oppgave =
+            lagOppgave(
+                tilstandType = UNDER_BEHANDLING,
+                adressebeskyttelseGradering = adressebeskyttelseGradering,
+            )
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+
+        if (forventetTilgang) {
+            shouldNotThrow<ManglendeTilgang> {
+                oppgave.sendTilKontroll(
+
+                )
+            }
+        } else {
+            shouldThrow<ManglendeTilgang> {
+                oppgave.sendTilKontroll(
+
                 )
             }
         }

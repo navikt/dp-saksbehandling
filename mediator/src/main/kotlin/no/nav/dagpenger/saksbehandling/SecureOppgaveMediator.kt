@@ -91,6 +91,7 @@ class SecureOppgaveMediator(
         }
     }
 
+    // Gjøres i mediatortesten
     fun hentOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
@@ -136,7 +137,7 @@ class SecureOppgaveMediator(
         oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
     }
 
-    fun gjørKlarTilKontroll(
+    fun sendTilKontroll(
         klarTilKontrollHendelse: KlarTilKontrollHendelse,
         saksbehandler: Saksbehandler,
     ) {
@@ -145,7 +146,7 @@ class SecureOppgaveMediator(
             oppgaveId = klarTilKontrollHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
-            oppgaveMediator.gjørKlarTilKontroll(klarTilKontrollHendelse)
+            oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse)
         }
     }
 

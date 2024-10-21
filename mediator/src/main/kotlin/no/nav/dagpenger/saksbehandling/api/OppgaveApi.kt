@@ -170,7 +170,7 @@ internal fun Application.oppgaveApi(
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val klarTilKontrollHendelse = call.klarTilKontrollHendelse(saksbehandler)
                             logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
-                            oppgaveMediator.gjørKlarTilKontroll(klarTilKontrollHendelse, saksbehandler)
+                            oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse, saksbehandler)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
