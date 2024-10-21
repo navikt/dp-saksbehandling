@@ -34,6 +34,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
+import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
+import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
@@ -74,9 +76,20 @@ import java.util.stream.Stream
 
 class OppgaveApiTest {
     val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
-    private val saksbehandler = Saksbehandler(SAKSBEHANDLER_IDENT, setOf(Configuration.saksbehandlerADGruppe))
+    private val saksbehandler =
+        Saksbehandler(
+            SAKSBEHANDLER_IDENT,
+            setOf(Configuration.saksbehandlerADGruppe),
+            setOf(
+                SAKSBEHANDLER,
+            ),
+        )
     private val beslutter =
-        Saksbehandler(BESLUTTER_IDENT, setOf(Configuration.saksbehandlerADGruppe, Configuration.beslutterADGruppe))
+        Saksbehandler(
+            BESLUTTER_IDENT,
+            setOf(Configuration.saksbehandlerADGruppe, Configuration.beslutterADGruppe),
+            setOf(BESLUTTER, SAKSBEHANDLER),
+        )
     private val mockAzure = mockAzure()
     private val ugyldigToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDI" +
