@@ -357,6 +357,9 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
         ) {
+            require(toTrinnskontrollHendelse.utførtAv.tilganger.contains(TilgangType.BESLUTTER)) {
+                throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter tilgang")
+            }
             oppgave.endreTilstand(UnderKontroll, toTrinnskontrollHendelse)
             oppgave.behandlerIdent = toTrinnskontrollHendelse.ansvarligIdent
         }
@@ -369,6 +372,10 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
+            require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(TilgangType.BESLUTTER)) {
+                throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten  beslutter tilgang")
+            }
+
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
@@ -391,6 +398,10 @@ data class Oppgave private constructor(
 
     interface Tilstand {
         val type: Type
+
+        class ManglendeTilgang(
+            message: String,
+        ) : RuntimeException(message)
 
         class UlovligTilstandsendringException(
             message: String,

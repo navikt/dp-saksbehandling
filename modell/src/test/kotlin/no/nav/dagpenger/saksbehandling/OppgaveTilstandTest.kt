@@ -4,7 +4,6 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -14,6 +13,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
+import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class OppgaveTilstandTest {
     private val oppgaveId = UUIDv7.ny()
@@ -262,7 +262,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra tilstand KLAR_TIL_KONTROLL til UNDER_KONTROLL`() {
-        val beslutter = Saksbehandler("beslutterIdent", emptySet())
+        val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
         val oppgave = lagOppgave(KLAR_TIL_KONTROLL, null)
 
         oppgave.tildelTotrinnskontroll(
@@ -314,7 +314,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal kunne ferdigstille med brev i ny løsning fra UNDER_KONTROLL`() {
-        val beslutter = Saksbehandler("Z080808", emptySet())
+        val beslutter = Saksbehandler("Z080808", emptySet(), setOf(BESLUTTER))
         val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
@@ -440,7 +440,7 @@ class OppgaveTilstandTest {
 
         oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
 
-        val beslutter1 = Saksbehandler("beslutter 1", emptySet())
+        val beslutter1 = Saksbehandler("beslutter 1", emptySet(), setOf(BESLUTTER))
         oppgave.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
                 oppgaveId = oppgave.oppgaveId,
@@ -454,7 +454,7 @@ class OppgaveTilstandTest {
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
-        val beslutter2 = Saksbehandler("beslutter 2", emptySet())
+        val beslutter2 = Saksbehandler("beslutter 2", emptySet(), setOf(BESLUTTER))
         oppgave.gjørKlarTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
         oppgave.tildelTotrinnskontroll(
             ToTrinnskontrollHendelse(
@@ -473,48 +473,6 @@ class OppgaveTilstandTest {
                     meldingOmVedtak = "Melding om vedtak",
                     utførtAv = beslutter2,
                 ),
-        )
-    }
-
-    private val behandling =
-        Behandling(
-            behandlingId = UUIDv7.ny(),
-            person =
-                Person(
-                    id = UUIDv7.ny(),
-                    ident = "12345678910",
-                    skjermesSomEgneAnsatte = false,
-                    adressebeskyttelseGradering = UGRADERT,
-                ),
-            opprettet = LocalDateTime.now(),
-        )
-
-    private fun lagOppgave(
-        tilstandType: Type,
-        behandler: Saksbehandler? = null,
-        tilstandslogg: Tilstandslogg = Tilstandslogg(),
-    ): Oppgave {
-        val tilstand =
-            when (tilstandType) {
-                OPPRETTET -> Oppgave.Opprettet
-                KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
-                FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
-                UNDER_BEHANDLING -> Oppgave.UnderBehandling
-                PAA_VENT -> Oppgave.PaaVent
-                KLAR_TIL_KONTROLL -> Oppgave.KlarTilKontroll
-                UNDER_KONTROLL -> Oppgave.UnderKontroll
-            }
-        return Oppgave.rehydrer(
-            oppgaveId = UUIDv7.ny(),
-            ident = "ident",
-            behandlingId = UUIDv7.ny(),
-            emneknagger = setOf(),
-            opprettet = LocalDateTime.now(),
-            tilstand = tilstand,
-            behandlerIdent = behandler?.navIdent,
-            behandling = behandling,
-            utsattTil = null,
-            tilstandslogg = tilstandslogg,
         )
     }
 }
