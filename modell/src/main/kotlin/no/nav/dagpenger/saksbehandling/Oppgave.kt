@@ -171,6 +171,8 @@ data class Oppgave private constructor(
     }
 
     fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
+        egneAnsatteTilgangskontroll(klarTilKontrollHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(klarTilKontrollHendelse.utførtAv)
         tilstand.sendTilKontroll(this, klarTilKontrollHendelse)
     }
 

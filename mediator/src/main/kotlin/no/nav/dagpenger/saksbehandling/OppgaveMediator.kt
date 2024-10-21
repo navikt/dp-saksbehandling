@@ -77,6 +77,10 @@ class OppgaveMediator(
         }
     }
 
+    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
+        return repository.hentAlleOppgaverMedTilstand(tilstand)
+    }
+
     fun hentOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,

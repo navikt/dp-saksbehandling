@@ -5,7 +5,6 @@ import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
@@ -26,7 +25,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
@@ -97,21 +95,6 @@ internal object OppgaveApiTestHelper {
                 "NAVident" to navIdent,
             ),
         )
-
-    fun gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken(navIdent: String = SAKSBEHANDLER_IDENT): String =
-        mockAzure.lagTokenMedClaims(
-            mapOf(
-                "groups" to listOf("SaksbehandlerADGruppe", "EgneAnsatteADGruppe"),
-                "NAVident" to navIdent,
-            ),
-        )
-
-    fun lagMediatorMock(): OppgaveMediator {
-        return mockk<OppgaveMediator>().also {
-            every { it.personSkjermesSomEgneAnsatte(any()) } returns false
-            every { it.adresseGraderingForPerson(any()) } returns UGRADERT
-        }
-    }
 
     fun lagTestOppgaveMedTilstandOgBehandling(
         tilstand: Oppgave.Tilstand.Type,

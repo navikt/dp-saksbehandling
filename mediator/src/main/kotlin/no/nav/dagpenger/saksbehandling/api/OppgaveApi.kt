@@ -70,10 +70,6 @@ internal fun Application.oppgaveApi(
         coroutineScope {
             val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
             val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
-            val tildeltBehandlerDTO =
-                oppgave.behandlerIdent?.let { behandlerIdent ->
-                    async { saksbehandlerOppslag.hentSaksbehandler(behandlerIdent) }
-                }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
                     async { saksbehandlerOppslag.hentSaksbehandler(saksbehandlerIdent) }
@@ -87,7 +83,6 @@ internal fun Application.oppgaveApi(
                     oppgave = oppgave,
                     person = person.await(),
                     journalpostIder = journalpostIder.await(),
-                    tildeltBehandlerDTO = tildeltBehandlerDTO?.await(),
                     sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                     sisteBeslutterDTO = sisteBeslutterDTO?.await(),
                 )
@@ -312,7 +307,6 @@ fun lagOppgaveDTO(
     oppgave: Oppgave,
     person: PDLPersonIntern,
     journalpostIder: Set<String>,
-    tildeltBehandlerDTO: BehandlerDTO? = null,
     sisteSaksbehandlerDTO: BehandlerDTO? = null,
     sisteBeslutterDTO: BehandlerDTO? = null,
 ): OppgaveDTO =

@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -366,7 +367,7 @@ class OppgaveTilgangTest {
 
     @ParameterizedTest
     @MethodSource("adressebeskyttelseTester")
-    fun `Adressebeskyttelse tilganger ved send til kontroll av oppgaver`(
+    fun `Adressebeskyttelse tilganger ved sending av oppgave til kontroll`(
         adressebeskyttelseGradering: AdressebeskyttelseGradering,
         saksbehandlerTilgang: TilgangType,
         forventetTilgang: Boolean,
@@ -381,15 +382,49 @@ class OppgaveTilgangTest {
         if (forventetTilgang) {
             shouldNotThrow<ManglendeTilgang> {
                 oppgave.sendTilKontroll(
-
+                    KlarTilKontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
                 )
             }
         } else {
             shouldThrow<ManglendeTilgang> {
                 oppgave.sendTilKontroll(
-
+                    KlarTilKontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
                 )
             }
+        }
+    }
+
+    @Test
+    fun `Egne ansatte tilganger ved sending av oppgave til kontroll`() {
+        val egneAnsatteOppgave =
+            lagOppgave(
+                UNDER_BEHANDLING,
+                behandler = saksbehandlerUtenEkstraTilganger,
+                skjermesSomEgneAnsatte = true,
+            )
+
+        shouldThrow<ManglendeTilgang> {
+            egneAnsatteOppgave.sendTilKontroll(
+                KlarTilKontrollHendelse(
+                    oppgaveId = egneAnsatteOppgave.oppgaveId,
+                    utførtAv = saksbehandlerUtenEkstraTilganger,
+                ),
+            )
+        }
+
+        shouldNotThrow<ManglendeTilgang> {
+            egneAnsatteOppgave.sendTilKontroll(
+                KlarTilKontrollHendelse(
+                    oppgaveId = egneAnsatteOppgave.oppgaveId,
+                    utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                ),
+            )
         }
     }
 }

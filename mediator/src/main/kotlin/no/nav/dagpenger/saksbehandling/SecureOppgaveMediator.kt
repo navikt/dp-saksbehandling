@@ -137,6 +137,7 @@ class SecureOppgaveMediator(
         oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
     }
 
+    // DONE
     fun sendTilKontroll(
         klarTilKontrollHendelse: KlarTilKontrollHendelse,
         saksbehandler: Saksbehandler,
