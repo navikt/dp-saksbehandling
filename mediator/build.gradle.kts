@@ -22,7 +22,7 @@ dependencies {
 
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
-    implementation("io.prometheus:prometheus-metrics-core:1.3.1")
+    implementation("io.prometheus:prometheus-metrics-core:1.3.2")
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
     implementation("io.ktor:ktor-server-html-builder:$ktorVersion")
