@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -43,8 +44,14 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 class PostgresOppgaveRepositoryTest {
-    private val saksbehandler = Saksbehandler("saksbehandler", emptySet())
-    private val beslutter = Saksbehandler("beslutter", emptySet())
+    private val saksbehandler =
+        Saksbehandler("saksbehandler", setOf("SaksbehandlerADGruppe"), setOf(TilgangType.SAKSBEHANDLER))
+    private val beslutter =
+        Saksbehandler(
+            "beslutter",
+            setOf("SaksbehandlerADGruppe", "BeslutterADGruppe"),
+            setOf(TilgangType.BESLUTTER, TilgangType.SAKSBEHANDLER),
+        )
     private val oppgaveIdTest = UUIDv7.ny()
 
     @Test
