@@ -28,17 +28,17 @@ class SecureOppgaveMediator(
             strengtFortroligGruppe = Configuration.strengtFortroligADGruppe,
             strengtFortroligUtlandGruppe = Configuration.strengtFortroligUtlandADGruppe,
             fortroligGruppe = Configuration.fortroligADGruppe,
-            adressebeskyttelseGraderingFun = oppgaveMediator::adresseGraderingForPerson,
+            adressebeskyttelseGraderingFun = { oppgaveId -> TODO() },
         ),
     private val beslutterTilgangskontroll: BeslutterRolleTilgangskontroll = BeslutterRolleTilgangskontroll,
     private val egneAnsatteTilgangskontroll: EgneAnsatteTilgangskontroll =
         EgneAnsatteTilgangskontroll(
             tillatteGrupper = setOf(Configuration.egneAnsatteADGruppe),
-            skjermesSomEgneAnsatteFun = oppgaveMediator::personSkjermesSomEgneAnsatte,
+            skjermesSomEgneAnsatteFun = { oppgaveId -> TODO() },
         ),
     private val ferdigstillOppgaveTilgangskontroll: FerdigstillOppgaveTilgangskontroll =
         FerdigstillOppgaveTilgangskontroll(
-            oppgaveFunc = oppgaveMediator::hentOppgave,
+            oppgaveFunc = { oppgaveId -> TODO() },
         ),
 ) {
     fun finnOppgaverFor(ident: String): List<Oppgave> {
@@ -100,10 +100,11 @@ class SecureOppgaveMediator(
             oppgaveId = oppgaveId,
             saksbehandler = saksbehandler,
         ) {
-            oppgaveMediator.hentOppgave(oppgaveId)
+            oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
         }
     }
 
+    // DONE
     fun tildelOppgave(
         oppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         saksbehandler: Saksbehandler,
@@ -117,6 +118,7 @@ class SecureOppgaveMediator(
         }
     }
 
+    // DONE
     fun utsettOppgave(
         utsettOppgaveHendelse: UtsettOppgaveHendelse,
         saksbehandler: Saksbehandler,

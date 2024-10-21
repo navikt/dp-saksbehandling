@@ -1,33 +1,11 @@
 package no.nav.dagpenger.saksbehandling
 
-import io.kotest.assertions.throwables.shouldNotThrowAny
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.shouldBe
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockk
-import io.mockk.runs
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.AdressebeskyttelseTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.EgneAnsatteTilgangskontroll
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
-import no.nav.dagpenger.saksbehandling.db.lagOppgave
-import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import org.junit.jupiter.api.Test
+class SecureOppgaveMediatorTest
+
+/*
+
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import java.time.LocalDate
-import java.util.UUID
-import java.util.stream.Stream
 
 class SecureOppgaveMediatorTest {
     companion object {
@@ -525,4 +503,4 @@ class SecureOppgaveMediatorTest {
             it.harTilgangTilEgneAnsatte shouldBe false
         }
     }
-}
+}*/

@@ -13,8 +13,10 @@ import java.time.LocalDateTime
 
 object OppgaveTestHelper {
     internal fun lagOppgave(
-        tilstandType: Type,
+        tilstandType: Type = KLAR_TIL_BEHANDLING,
         behandler: Saksbehandler? = null,
+        skjermesSomEgneAnsatte: Boolean = false,
+        adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
     ): Oppgave {
         val tilstand =
@@ -35,22 +37,27 @@ object OppgaveTestHelper {
             opprettet = LocalDateTime.now(),
             tilstand = tilstand,
             behandlerIdent = behandler?.navIdent,
-            behandling = behandling,
+            behandling =
+                Behandling(
+                    behandlingId = UUIDv7.ny(),
+                    person =
+                        Person(
+                            id = UUIDv7.ny(),
+                            ident = "12345678910",
+                            skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                            adressebeskyttelseGradering = adressebeskyttelseGradering,
+                        ),
+                    opprettet = LocalDateTime.now(),
+                ),
             utsattTil = null,
             tilstandslogg = tilstandslogg,
         )
     }
 
-    private val behandling =
-        Behandling(
-            behandlingId = UUIDv7.ny(),
-            person =
-                Person(
-                    id = UUIDv7.ny(),
-                    ident = "12345678910",
-                    skjermesSomEgneAnsatte = false,
-                    adressebeskyttelseGradering = UGRADERT,
-                ),
-            opprettet = LocalDateTime.now(),
+    internal fun lagSaksbehandler(saksbehandlerTilgang: TilgangType) =
+        Saksbehandler(
+            navIdent = "saksbehandler",
+            grupper = setOf(),
+            tilganger = setOf(saksbehandlerTilgang),
         )
 }

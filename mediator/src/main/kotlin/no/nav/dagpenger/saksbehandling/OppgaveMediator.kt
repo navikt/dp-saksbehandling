@@ -7,6 +7,8 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
+import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -14,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
@@ -22,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -31,7 +35,7 @@ class OppgaveMediator(
     private val pdlKlient: PDLKlient,
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
-) : OppgaveRepository by repository {
+) {
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
             repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: lagPerson(
@@ -64,7 +68,7 @@ class OppgaveMediator(
                 behandling = behandling,
             )
 
-        lagre(oppgave)
+        repository.lagre(oppgave)
 
         withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
             logger.info {
@@ -73,8 +77,18 @@ class OppgaveMediator(
         }
     }
 
+    fun hentOppgave(
+        oppgaveId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Oppgave {
+        return repository.hentOppgave(oppgaveId).also { oppgave ->
+            oppgave.egneAnsatteTilgangskontroll(saksbehandler)
+            // TODO: tilsvarende tilgangskontroll for adressebeskyttelse
+        }
+    }
+
     fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        val oppgave = finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
+        val oppgave = repository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
         when (oppgave) {
             null -> {
                 logger.warn {
@@ -86,7 +100,7 @@ class OppgaveMediator(
 
             else -> {
                 oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
-                lagre(oppgave)
+                repository.lagre(oppgave)
                 withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                     logger.info {
                         "Mottatt hendelse forslag_til_vedtak for behandling med id " +
@@ -121,9 +135,9 @@ class OppgaveMediator(
     }
 
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
-        return hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
+        return repository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
             oppgave.ferdigstill(vedtakFattetHendelse)
-            lagre(oppgave)
+            repository.lagre(oppgave)
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
                     "Mottatt hendelse vedtak_fattet for behandling med id ${vedtakFattetHendelse.behandlingId}. " +
@@ -233,5 +247,24 @@ class OppgaveMediator(
                 adressebeskyttelseGradering = adresseBeskyttelseGradering.await(),
             )
         }
+    }
+
+    fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
+        return repository.hentOppgaveIdFor(behandlingId)
+    }
+
+    fun finnOppgaverFor(ident: String): List<Oppgave> {
+        TODO("Not yet implemented")
+    }
+
+    fun søk(søkefilter: Søkefilter): List<Oppgave> {
+        TODO("Not yet implemented")
+    }
+
+    fun tildelOgHentNesteOppgave(
+        nesteOppgaveHendelse: NesteOppgaveHendelse,
+        filter: TildelNesteOppgaveFilter,
+    ): Oppgave? {
+        TODO("Not yet implemented")
     }
 }

@@ -1,6 +1,10 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -9,6 +13,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
+import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -98,6 +106,34 @@ data class Oppgave private constructor(
 
     fun tilstand() = this.tilstand
 
+    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
+        require(
+            if (this.behandling.person.skjermesSomEgneAnsatte) {
+                saksbehandler.tilganger.contains(EGNE_ANSATTE)
+            } else {
+                true
+            },
+        ) {
+            throw Tilstand.ManglendeTilgang("Saksbehandler har ikke tilgang til egne ansatte")
+        }
+    }
+
+    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) {
+        val adressebeskyttelseGradering = this.behandling.person.adressebeskyttelseGradering
+        require(
+            when (adressebeskyttelseGradering) {
+                FORTROLIG -> saksbehandler.tilganger.contains(FORTROLIG_ADRESSE)
+                STRENGT_FORTROLIG -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE)
+                STRENGT_FORTROLIG_UTLAND -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE_UTLAND)
+                UGRADERT -> true
+            },
+        ) {
+            throw Tilstand.ManglendeTilgang(
+                "Saksbehandler mangler tilgang til adressebeskyttede personer. Adressebeskyttelse: $adressebeskyttelseGradering",
+            )
+        }
+    }
+
     fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
@@ -122,10 +158,15 @@ data class Oppgave private constructor(
     }
 
     fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
+        egneAnsatteTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
+
         tilstand.tildel(this, settOppgaveAnsvarHendelse)
     }
 
     fun utsett(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
+        egneAnsatteTilgangskontroll(utsettOppgaveHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(utsettOppgaveHendelse.utførtAv)
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
