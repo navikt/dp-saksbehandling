@@ -47,13 +47,6 @@ class OppgaveTilgangTest {
             tilganger = setOf(SAKSBEHANDLER, EGNE_ANSATTE),
         )
 
-    private val beslutter =
-        Saksbehandler(
-            navIdent = "beslutter",
-            grupper = setOf(),
-            tilganger = setOf(BESLUTTER),
-        )
-
     @Test
     fun `Må ha beslutter tilgang for å ferdigstill oppgave med tilstand UNDDER_KONTROLL`() {
         val oppgave =
@@ -77,52 +70,13 @@ class OppgaveTilgangTest {
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "<HTML>en melding</HTML>",
-                    utførtAv = beslutter,
+                    utførtAv =
+                        Saksbehandler(
+                            navIdent = "beslutter",
+                            grupper = setOf(),
+                            tilganger = setOf(BESLUTTER),
+                        ),
                 ),
-            )
-        }
-    }
-
-    @Test
-    fun `Må ha beslutter tilgang for å ta oppgave med tilstand KLAR_TIL_KONTROLL`() {
-        val saksbehandler =
-            Saksbehandler(
-                navIdent = "saksbehandler",
-                grupper = setOf(),
-                tilganger = setOf(SAKSBEHANDLER),
-            )
-
-        val beslutter =
-            Saksbehandler(
-                navIdent = "beslutter",
-                grupper = setOf(),
-                tilganger = setOf(BESLUTTER),
-            )
-
-        val oppgave =
-            lagOppgave(
-                tilstandType = KLAR_TIL_KONTROLL,
-            )
-
-        shouldThrow<ManglendeTilgang> {
-            oppgave.tildelTotrinnskontroll(
-                toTrinnskontrollHendelse =
-                    ToTrinnskontrollHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        ansvarligIdent = saksbehandler.navIdent,
-                        utførtAv = saksbehandler,
-                    ),
-            )
-        }
-
-        shouldNotThrowAny {
-            oppgave.tildelTotrinnskontroll(
-                toTrinnskontrollHendelse =
-                    ToTrinnskontrollHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        ansvarligIdent = beslutter.navIdent,
-                        utførtAv = beslutter,
-                    ),
             )
         }
     }
@@ -152,9 +106,91 @@ class OppgaveTilgangTest {
         }
     }
 
+    @Test
+    fun `Egne ansatte tilganger ved tildeling av totrinnskontroll oppgaver`() {
+        val egneAnsatteOppgave =
+            lagOppgave(
+                KLAR_TIL_KONTROLL,
+                skjermesSomEgneAnsatte = true,
+            )
+        val beslutterUtenTilgangTilEgneAnsatte =
+            Saksbehandler(
+                navIdent = "saksbehandler",
+                grupper = setOf(),
+                tilganger = setOf(BESLUTTER),
+            )
+        val beslutterMedtilgangTilEgneAnsatte =
+            Saksbehandler(
+                navIdent = "saksbehandler",
+                grupper = setOf(),
+                tilganger = setOf(BESLUTTER, EGNE_ANSATTE),
+            )
+
+        shouldThrow<ManglendeTilgang> {
+            egneAnsatteOppgave.tildelTotrinnskontroll(
+                ToTrinnskontrollHendelse(
+                    oppgaveId = egneAnsatteOppgave.oppgaveId,
+                    ansvarligIdent = beslutterUtenTilgangTilEgneAnsatte.navIdent,
+                    utførtAv = beslutterUtenTilgangTilEgneAnsatte,
+                ),
+            )
+        }
+        shouldNotThrow<ManglendeTilgang> {
+            egneAnsatteOppgave.tildelTotrinnskontroll(
+                ToTrinnskontrollHendelse(
+                    oppgaveId = egneAnsatteOppgave.oppgaveId,
+                    ansvarligIdent = beslutterMedtilgangTilEgneAnsatte.navIdent,
+                    utførtAv = beslutterMedtilgangTilEgneAnsatte,
+                ),
+            )
+        }
+    }
+
     @ParameterizedTest
     @MethodSource("adressebeskyttelseTester")
-    fun `Adressebeskyttelse tilgangser ved henting av oppgave`(
+    fun `Adressebeskyttelse tilganger ved tildeling av totrinnskontroll oppgave`(
+        adressebeskyttelseGradering: AdressebeskyttelseGradering,
+        saksbehandlerTilgang: TilgangType,
+        forventetTilgang: Boolean,
+    ) {
+        val oppgave =
+            lagOppgave(
+                tilstandType = KLAR_TIL_KONTROLL,
+                adressebeskyttelseGradering = adressebeskyttelseGradering,
+            )
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "saksbehandler",
+                grupper = setOf(),
+                tilganger = setOf(saksbehandlerTilgang, BESLUTTER),
+            )
+
+        if (forventetTilgang) {
+            shouldNotThrow<ManglendeTilgang> {
+                oppgave.tildelTotrinnskontroll(
+                    ToTrinnskontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        } else {
+            shouldThrow<ManglendeTilgang> {
+                oppgave.tildelTotrinnskontroll(
+                    ToTrinnskontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("adressebeskyttelseTester")
+    fun `Adressebeskyttelse tilganger ved henting av oppgave`(
         adressebeskyttelseGradering: AdressebeskyttelseGradering,
         saksbehandlerTilgang: TilgangType,
         forventetTilgang: Boolean,

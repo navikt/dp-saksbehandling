@@ -151,6 +151,7 @@ class SecureOppgaveMediator(
         }
     }
 
+    // DONE
     fun tildelTotrinnskontroll(
         toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
         saksbehandler: Saksbehandler,

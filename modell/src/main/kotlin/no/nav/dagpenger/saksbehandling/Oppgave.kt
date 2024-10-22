@@ -177,6 +177,8 @@ data class Oppgave private constructor(
     }
 
     fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
+        egneAnsatteTilgangskontroll(toTrinnskontrollHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(toTrinnskontrollHendelse.utførtAv)
         tilstand.tildelTotrinnskontroll(this, toTrinnskontrollHendelse)
     }
 
