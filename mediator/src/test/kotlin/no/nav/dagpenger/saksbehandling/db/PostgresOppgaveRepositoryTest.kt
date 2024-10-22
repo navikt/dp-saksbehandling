@@ -36,6 +36,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
+import no.nav.dagpenger.saksbehandling.lagBehandling
+import no.nav.dagpenger.saksbehandling.lagOppgave
+import no.nav.dagpenger.saksbehandling.lagPerson
+import no.nav.dagpenger.saksbehandling.opprettetNå
+import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate

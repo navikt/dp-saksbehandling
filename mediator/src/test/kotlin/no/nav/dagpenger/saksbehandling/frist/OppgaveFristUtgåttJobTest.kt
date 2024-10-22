@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.lagOppgave
+import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDate

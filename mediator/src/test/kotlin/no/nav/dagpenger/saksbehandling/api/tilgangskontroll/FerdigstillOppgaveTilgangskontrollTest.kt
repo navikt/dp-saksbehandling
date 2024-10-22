@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.api.tilgangskontroll
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.db.lagOppgave
+import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 
 class FerdigstillOppgaveTilgangskontrollTest {

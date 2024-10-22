@@ -1,13 +1,7 @@
-package no.nav.dagpenger.saksbehandling.db
+package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDate
