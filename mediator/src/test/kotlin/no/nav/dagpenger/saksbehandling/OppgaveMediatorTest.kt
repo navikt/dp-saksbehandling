@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -51,7 +52,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 import javax.sql.DataSource
 
 class OppgaveMediatorTest {
@@ -102,9 +102,19 @@ class OppgaveMediatorTest {
 
     @Test
     fun `Må ha riktige adressebeskyttelse tilgang for å hente en oppgave med adresse beskyttet person`() {
-        Oppgave.rehydrer(
+        val oppgave = lagOppgave(
+            skjermesSomEgneAnsatte = true
         )
 
+        val oppgaveRe
+
+        OppgaveMediator(
+            repository = mockk<OppgaveRepository>().also { every { it.hentOppgave(any(), any()) } returns it },
+            skjermingKlient = TODO(),
+            pdlKlient = TODO(),
+            behandlingKlient = TODO(),
+            utsendingMediator = TODO()
+        )
 
 
     }
