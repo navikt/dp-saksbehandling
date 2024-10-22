@@ -935,9 +935,9 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             val (fnr1, fnr2, fnr3) = Triple("12345678910", "10987654321", "12345678931")
 
-            repo.lagre(lagPerson(fnr1, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte))
-            repo.lagre(lagPerson(fnr2, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte))
-            repo.lagre(lagPerson("12345678941", skjermesSomEgneAnsatte = skjermesSomEgneAnsatte))
+            repo.lagre(lagPerson(fnr1))
+            repo.lagre(lagPerson(fnr2))
+            repo.lagre(lagPerson("12345678941"))
             repo.eksistererIDPsystem(setOf(fnr1, fnr2, fnr3)) shouldBe setOf(fnr1, fnr2)
         }
     }
@@ -946,10 +946,14 @@ class PostgresOppgaveRepositoryTest {
     fun `Hent adressegraderingsbeskyttelse for person gitt oppgave`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave = lagOppgave(person = lagPerson(
-                addresseBeskyttelseGradering = STRENGT_FORTROLIG,
-                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte
-            ))
+            val oppgave =
+                lagOppgave(
+                    person =
+                        lagPerson(
+                            ident = testPerson.ident,
+                            addresseBeskyttelseGradering = STRENGT_FORTROLIG,
+                        ),
+                )
             repo.lagre(oppgave)
             repo.adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
         }

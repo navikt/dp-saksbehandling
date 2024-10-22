@@ -18,18 +18,18 @@ fun lagPerson(
     skjermesSomEgneAnsatte: Boolean = false,
 ) = Person(
     ident = ident,
-    skjermesSomEgneAnsatte = false,
+    skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
     adressebeskyttelseGradering = addresseBeskyttelseGradering,
 )
 
 val opprettetNå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 
 fun lagOppgave(
-    skjermesSomEgneAnsatte: Boolean = false,
-    adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
     tilstand: Oppgave.Tilstand = KlarTilBehandling,
     opprettet: LocalDateTime = opprettetNå,
     saksbehandlerIdent: String? = null,
+    skjermesSomEgneAnsatte: Boolean = false,
+    adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
     person: Person = lagPerson(addresseBeskyttelseGradering = adressebeskyttelseGradering, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
     behandling: Behandling = lagBehandling(person = person),
     emneknagger: Set<String> = emptySet(),

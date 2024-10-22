@@ -27,7 +27,6 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -76,19 +75,19 @@ class OppgaveMediatorTest {
     private val pdlKlientMock =
         mockk<PDLKlient>(relaxed = true).also {
             coEvery { it.person(any()) } returns
-                    Result.success(
-                        PDLPersonIntern(
-                            ident = "tacimates",
-                            fornavn = "commune",
-                            etternavn = "convallis",
-                            mellomnavn = null,
-                            fødselsdato = LocalDate.of(1984, 3, 1),
-                            alder = 20,
-                            statsborgerskap = null,
-                            kjønn = PDLPerson.Kjonn.KVINNE,
-                            adresseBeskyttelseGradering = UGRADERT,
-                        ),
-                    )
+                Result.success(
+                    PDLPersonIntern(
+                        ident = "tacimates",
+                        fornavn = "commune",
+                        etternavn = "convallis",
+                        mellomnavn = null,
+                        fødselsdato = LocalDate.of(1984, 3, 1),
+                        alder = 20,
+                        statsborgerskap = null,
+                        kjønn = PDLPerson.Kjonn.KVINNE,
+                        adresseBeskyttelseGradering = UGRADERT,
+                    ),
+                )
         }
     private val behandlingKlientMock =
         mockk<BehandlingKlient>().also {
@@ -99,26 +98,6 @@ class OppgaveMediatorTest {
             coEvery { it.erSkjermetPerson(any()) } returns Result.success(false)
         }
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
-
-    @Test
-    fun `Må ha riktige adressebeskyttelse tilgang for å hente en oppgave med adresse beskyttet person`() {
-        val oppgave = lagOppgave(
-            skjermesSomEgneAnsatte = true
-        )
-
-        val oppgaveRe
-
-        OppgaveMediator(
-            repository = mockk<OppgaveRepository>().also { every { it.hentOppgave(any(), any()) } returns it },
-            skjermingKlient = TODO(),
-            pdlKlient = TODO(),
-            behandlingKlient = TODO(),
-            utsendingMediator = TODO()
-        )
-
-
-    }
-
 
     @Test
     fun `Skal kunne sette oppgave til KLAR_TIL_KONTROLL`() {
@@ -228,7 +207,7 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.hentOppgave(
                 oppgave.oppgaveId,
-                testInspektør
+                testInspektør,
             ).emneknagger shouldContainAll testEmneknagger.minus("a")
         }
     }
@@ -666,12 +645,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                ),
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
             )
             oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
@@ -719,12 +698,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                ),
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
             )
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
@@ -759,9 +738,7 @@ class OppgaveMediatorTest {
         }
     }
 
-    private fun DataSource.lagTestoppgave(
-        tilstand: Oppgave.Tilstand.Type,
-    ): Oppgave {
+    private fun DataSource.lagTestoppgave(tilstand: Oppgave.Tilstand.Type): Oppgave {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = PostgresOppgaveRepository(this),
