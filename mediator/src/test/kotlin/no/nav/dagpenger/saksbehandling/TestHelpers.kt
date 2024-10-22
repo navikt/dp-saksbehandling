@@ -8,12 +8,12 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import kotlin.random.Random
 
-val testPerson =
-    lagPerson()
+val testPerson = lagPerson()
 
 fun lagPerson(
-    ident: String = "12345678901",
+    ident: String = lagTilfeldigIdent(),
     addresseBeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
     skjermesSomEgneAnsatte: Boolean = false,
 ) = Person(
@@ -64,3 +64,8 @@ fun lagBehandling(
         hendelse = hendelse,
     )
 }
+
+private fun lagTilfeldigIdent() =
+    (1..11)
+        .map { Random.nextInt(0, 10) }
+        .joinToString("")
