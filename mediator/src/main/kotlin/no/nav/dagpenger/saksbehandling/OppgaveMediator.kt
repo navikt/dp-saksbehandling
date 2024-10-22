@@ -87,7 +87,7 @@ class OppgaveMediator(
     ): Oppgave {
         return repository.hentOppgave(oppgaveId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
-            // TODO: tilsvarende tilgangskontroll for adressebeskyttelse
+            oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
         }
     }
 

@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -17,6 +18,11 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
+import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
+import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
@@ -45,30 +51,44 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 import javax.sql.DataSource
 
 class OppgaveMediatorTest {
     private val testIdent = "12345612345"
     private val saksbehandler = Saksbehandler("saksbehandlerIdent", setOf())
     private val beslutter = Saksbehandler("beslutterIdent", setOf(), setOf(BESLUTTER))
+    private val testInspektør =
+        Saksbehandler(
+            "beslutterIdent",
+            setOf(),
+            setOf(
+                SAKSBEHANDLER,
+                BESLUTTER,
+                EGNE_ANSATTE,
+                FORTROLIG_ADRESSE,
+                STRENGT_FORTROLIG_ADRESSE,
+                STRENGT_FORTROLIG_ADRESSE_UTLAND,
+            ),
+        )
     private val sak = Sak("12342", "Arena")
     private val testRapid = TestRapid()
     private val pdlKlientMock =
         mockk<PDLKlient>(relaxed = true).also {
             coEvery { it.person(any()) } returns
-                Result.success(
-                    PDLPersonIntern(
-                        ident = "tacimates",
-                        fornavn = "commune",
-                        etternavn = "convallis",
-                        mellomnavn = null,
-                        fødselsdato = LocalDate.of(1984, 3, 1),
-                        alder = 20,
-                        statsborgerskap = null,
-                        kjønn = PDLPerson.Kjonn.KVINNE,
-                        adresseBeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-                    ),
-                )
+                    Result.success(
+                        PDLPersonIntern(
+                            ident = "tacimates",
+                            fornavn = "commune",
+                            etternavn = "convallis",
+                            mellomnavn = null,
+                            fødselsdato = LocalDate.of(1984, 3, 1),
+                            alder = 20,
+                            statsborgerskap = null,
+                            kjønn = PDLPerson.Kjonn.KVINNE,
+                            adresseBeskyttelseGradering = UGRADERT,
+                        ),
+                    )
         }
     private val behandlingKlientMock =
         mockk<BehandlingKlient>().also {
@@ -79,6 +99,16 @@ class OppgaveMediatorTest {
             coEvery { it.erSkjermetPerson(any()) } returns Result.success(false)
         }
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
+
+    @Test
+    fun `Må ha riktige adressebeskyttelse tilgang for å hente en oppgave med adresse beskyttet person`() {
+        Oppgave.rehydrer(
+        )
+
+
+
+    }
+
 
     @Test
     fun `Skal kunne sette oppgave til KLAR_TIL_KONTROLL`() {
@@ -98,7 +128,7 @@ class OppgaveMediatorTest {
                     utførtAv = saksbehandler,
                 ),
             )
-            val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgaveTilKontroll.behandlerIdent shouldBe null
             oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
@@ -124,7 +154,7 @@ class OppgaveMediatorTest {
                     utførtAv = beslutter,
                 ),
             )
-            val oppgaveUnderKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val oppgaveUnderKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             oppgaveUnderKontroll.tilstand().type shouldBe UNDER_KONTROLL
             oppgaveUnderKontroll.behandlerIdent shouldBe beslutter.navIdent
             oppgaveUnderKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
@@ -176,7 +206,7 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId).emneknagger shouldContainAll testEmneknagger
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).emneknagger shouldContainAll testEmneknagger
 
             oppgaveMediator.fjernEmneknagg(
                 IkkeRelevantAvklaringHendelse(
@@ -186,7 +216,10 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId).emneknagger shouldContainAll testEmneknagger.minus("a")
+            oppgaveMediator.hentOppgave(
+                oppgave.oppgaveId,
+                testInspektør
+            ).emneknagger shouldContainAll testEmneknagger.minus("a")
         }
     }
 
@@ -247,7 +280,7 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
@@ -260,7 +293,7 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
@@ -332,7 +365,7 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
@@ -350,7 +383,7 @@ class OppgaveMediatorTest {
                 behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
 
             val utsending = utsendingMediator.hent(ferdigbehandletOppgave.oppgaveId)
@@ -428,7 +461,7 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
@@ -449,7 +482,7 @@ class OppgaveMediatorTest {
                 behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
             utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
@@ -523,7 +556,7 @@ class OppgaveMediatorTest {
                 behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
 
             utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
@@ -599,7 +632,7 @@ class OppgaveMediatorTest {
                 behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
@@ -623,12 +656,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
@@ -652,7 +685,7 @@ class OppgaveMediatorTest {
             )
 
             assertThrows<DataNotFoundException> {
-                oppgaveMediator.hentOppgave(oppgaver.single().oppgaveId)
+                oppgaveMediator.hentOppgave(oppgaver.single().oppgaveId, testInspektør)
             }
         }
     }
@@ -676,12 +709,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
@@ -716,7 +749,9 @@ class OppgaveMediatorTest {
         }
     }
 
-    private fun DataSource.lagTestoppgave(tilstand: Oppgave.Tilstand.Type): Oppgave {
+    private fun DataSource.lagTestoppgave(
+        tilstand: Oppgave.Tilstand.Type,
+    ): Oppgave {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = PostgresOppgaveRepository(this),
@@ -758,7 +793,7 @@ class OppgaveMediatorTest {
         )
 
         if (tilstand == KLAR_TIL_BEHANDLING) {
-            return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
         }
 
         oppgaveMediator.tildelOppgave(
@@ -770,7 +805,7 @@ class OppgaveMediatorTest {
         )
 
         if (tilstand == UNDER_BEHANDLING) {
-            return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
         }
 
         oppgaveMediator.sendTilKontroll(
@@ -781,7 +816,7 @@ class OppgaveMediatorTest {
         )
 
         if (tilstand == KLAR_TIL_KONTROLL) {
-            return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
         }
 
         oppgaveMediator.tildelTotrinnskontroll(
@@ -792,6 +827,6 @@ class OppgaveMediatorTest {
             ),
         )
 
-        return oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+        return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
     }
 }
