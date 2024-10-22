@@ -20,7 +20,7 @@ class ForslagTilVedtakMottakTest {
     }
 
     @Test
-    fun `Skal kunne motta forslag til vedtak events`() {
+    fun `Skal kunne motta forslag_til_vedtak hendelse`() {
         testRapid.sendTestMessage(forslagTilVedtakJson)
 
         verify(exactly = 1) {

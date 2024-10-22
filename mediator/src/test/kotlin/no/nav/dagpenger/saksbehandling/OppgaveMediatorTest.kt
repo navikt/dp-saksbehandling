@@ -151,6 +151,48 @@ class OppgaveMediatorTest {
     }
 
     @Test
+    fun `Skal kunne motta flere forslag til vedtak hendelser og oppdatere emneknaggene`() {
+        withMigratedDb { datasource ->
+            val testEmneknagger1 = setOf("a", "b", "c")
+            val testEmneknagger2 = setOf("x", "y")
+
+            val oppgave = datasource.lagTestoppgave(tilstand = OPPRETTET)
+
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
+                )
+
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = oppgave.behandlingId,
+                    emneknagger = testEmneknagger1,
+                ),
+            )
+
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = oppgave.behandlingId,
+                    emneknagger = testEmneknagger2,
+                ),
+            )
+
+            val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+
+            oppdatertOppgave.emneknagger shouldContainAll testEmneknagger1 + testEmneknagger2
+            oppdatertOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+        }
+    }
+
+    @Test
     fun `Skal kunne slette avklaringer når de blir irrelevante`() {
         withMigratedDb { datasource ->
             val testEmneknagger = setOf("a", "b", "c")

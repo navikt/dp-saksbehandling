@@ -202,6 +202,13 @@ data class Oppgave private constructor(
     object KlarTilBehandling : Tilstand {
         override val type: Type = KLAR_TIL_BEHANDLING
 
+        override fun oppgaveKlarTilBehandling(
+            oppgave: Oppgave,
+            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+        ) {
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId}" }
+        }
+
         override fun tildel(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,

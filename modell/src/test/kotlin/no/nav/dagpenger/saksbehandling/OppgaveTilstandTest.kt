@@ -136,6 +136,25 @@ class OppgaveTilstandTest {
     }
 
     @Test
+    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TILBEHANDLING`() {
+        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING)
+        val emneknagger = setOf("knagg1", "knagg2")
+        shouldNotThrow<Exception> {
+            oppgave.oppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = oppgave.behandling.behandlingId,
+                    utførtAv = Applikasjon("dp-behandling"),
+                    emneknagger = emneknagger,
+                ),
+            )
+        }
+        oppgave.emneknagger shouldBe emneknagger
+        oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+    }
+
+    @Test
     fun `Skal ikke endre tilstand på en oppgave når den er ferdigbehandlet`() {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
