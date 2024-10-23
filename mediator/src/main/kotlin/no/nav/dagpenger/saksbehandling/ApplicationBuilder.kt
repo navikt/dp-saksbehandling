@@ -70,7 +70,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             behandlingKlient = behandlingKlient,
             utsendingMediator = utsendingMediator,
         )
-    private val secureOppgaveMediator = SecureOppgaveMediator(oppgaveMediator)
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
 
@@ -79,7 +78,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             with(applicationEngine.application) {
                 this.apiConfig()
                 this.oppgaveApi(
-                    secureOppgaveMediator,
+                    oppgaveMediator,
                     pdlKlient,
                     journalpostIdClient,
                     SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider),

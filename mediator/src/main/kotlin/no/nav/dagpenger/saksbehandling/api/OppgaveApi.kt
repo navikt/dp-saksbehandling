@@ -25,8 +25,8 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -60,7 +60,7 @@ private val logger = KotlinLogging.logger { }
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal fun Application.oppgaveApi(
-    oppgaveMediator: SecureOppgaveMediator,
+    oppgaveMediator: OppgaveMediator,
     pdlKlient: PDLKlient,
     journalpostIdClient: JournalpostIdClient,
     saksbehandlerOppslag: SaksbehandlerOppslag,
@@ -111,7 +111,7 @@ internal fun Application.oppgaveApi(
                         val dto = call.receive<NesteOppgaveDTO>()
                         val saksbehandler = applicationCallParser.sakbehandler(call = call)
                         val oppgave =
-                            oppgaveMediator.tildelNesteOppgaveTil(
+                            oppgaveMediator.tildelOgHentNesteOppgave(
                                 nesteOppgaveHendelse =
                                     NesteOppgaveHendelse(
                                         ansvarligIdent = saksbehandler.navIdent,
@@ -138,7 +138,7 @@ internal fun Application.oppgaveApi(
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
-                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse, saksbehandler)
+                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
                         }
                     }
@@ -147,7 +147,7 @@ internal fun Application.oppgaveApi(
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val utsettOppgaveHendelse = call.utsettOppgaveHendelse(saksbehandler)
                             logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
-                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse, saksbehandler)
+                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
@@ -165,7 +165,7 @@ internal fun Application.oppgaveApi(
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val klarTilKontrollHendelse = call.klarTilKontrollHendelse(saksbehandler)
                             logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
-                            oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse, saksbehandler)
+                            oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
@@ -173,7 +173,7 @@ internal fun Application.oppgaveApi(
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val toTrinnskontrollHendelse = call.tildelKontrollHendelse(saksbehandler)
-                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse, saksbehandler)
+                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
@@ -195,7 +195,6 @@ internal fun Application.oppgaveApi(
                                         oppgaveId = oppgaveId,
                                         utførtAv = saksbehandler,
                                     ),
-                                    saksbehandler,
                                     saksbehandlerToken,
                                 )
                                 call.respond(HttpStatusCode.NoContent)
@@ -217,7 +216,6 @@ internal fun Application.oppgaveApi(
                                     oppgaveId = oppgaveId,
                                     utførtAv = saksbehandler,
                                 ),
-                                saksbehandler,
                                 saksbehandlerToken,
                             )
                             call.respond(HttpStatusCode.NoContent)

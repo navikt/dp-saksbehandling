@@ -31,9 +31,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -145,7 +145,7 @@ class OppgaveApiTest {
                 skjermesSomEgneAnsatte = true,
             )
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
+            mockk<OppgaveMediator>().also {
                 every {
                     it.søk(
                         Søkefilter(
@@ -202,7 +202,7 @@ class OppgaveApiTest {
     @Test
     fun `Hent alle oppgaver med tilstander basert på query parameter`() {
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
+            mockk<OppgaveMediator>().also {
                 every {
                     it.søk(
                         Søkefilter(
@@ -235,7 +235,7 @@ class OppgaveApiTest {
     @Test
     fun `Hent alle oppgaver basert på emneknagg`() {
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
+            mockk<OppgaveMediator>().also {
                 every {
                     it.søk(
                         Søkefilter(
@@ -269,7 +269,7 @@ class OppgaveApiTest {
     @Test
     fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
+            mockk<OppgaveMediator>().also {
                 every {
                     it.søk(
                         Søkefilter(
@@ -315,8 +315,8 @@ class OppgaveApiTest {
                 utførtAv = saksbehandler,
             )
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
-                every { it.ferdigstillOppgave(godkjentBehandlingHendelse, any(), any()) } just Runs
+            mockk<OppgaveMediator>().also {
+                every { it.ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -331,7 +331,7 @@ class OppgaveApiTest {
             }
 
             verify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse, any(), any())
+                oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse, any())
             }
         }
     }
@@ -360,8 +360,8 @@ class OppgaveApiTest {
                 utførtAv = saksbehandler,
             )
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
-                every { it.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any(), any()) } just Runs
+            mockk<OppgaveMediator>().also {
+                every { it.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any()) } just Runs
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -373,7 +373,7 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.NoContent
             }
             verify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any(), any())
+                oppgaveMediatorMock.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any())
             }
         }
     }
@@ -382,8 +382,8 @@ class OppgaveApiTest {
     fun `Skal kunne hente og få tildelt neste oppgave`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
-                every { it.tildelNesteOppgaveTil(any(), any()) } returns oppgave
+            mockk<OppgaveMediator>().also {
+                every { it.tildelOgHentNesteOppgave(any(), any()) } returns oppgave
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -427,8 +427,8 @@ class OppgaveApiTest {
     @Test
     fun `404 når det ikke finnes noen neste oppgave for saksbehandler`() {
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
-                every { it.tildelNesteOppgaveTil(any(), any()) } returns null
+            mockk<OppgaveMediator>().also {
+                every { it.tildelOgHentNesteOppgave(any(), any()) } returns null
             }
         val pdlMock = mockk<PDLKlient>()
 
@@ -449,7 +449,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne ta en oppgave`() {
-        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         coEvery {
@@ -459,7 +459,6 @@ class OppgaveApiTest {
                     ansvarligIdent = SAKSBEHANDLER_IDENT,
                     utførtAv = saksbehandler,
                 ),
-                any(),
             )
         } returns testOppgave
         val pdlMock = mockk<PDLKlient>()
@@ -495,7 +494,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Beslutter skal kunne ta en kontrolloppgave`() {
-        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val oppgaveId = UUIDv7.ny()
 
         coEvery {
@@ -505,7 +504,6 @@ class OppgaveApiTest {
                     ansvarligIdent = BESLUTTER_IDENT,
                     utførtAv = beslutter,
                 ),
-                any(),
             )
         } just runs
 
@@ -519,7 +517,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Feilstatuser når beslutter forsøker å ta en kontrolloppgave`() {
-        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val oppgaveSomIkkeFinnes = UUIDv7.ny()
         val oppgaveSomAlleredeErUnderKontroll = UUIDv7.ny()
 
@@ -530,7 +528,6 @@ class OppgaveApiTest {
                     ansvarligIdent = beslutter.navIdent,
                     utførtAv = beslutter,
                 ),
-                any(),
             )
         } throws DataNotFoundException("Oppgave ikke funnet")
 
@@ -541,7 +538,6 @@ class OppgaveApiTest {
                     ansvarligIdent = beslutter.navIdent,
                     utførtAv = beslutter,
                 ),
-                any(),
             )
         } throws UlovligTilstandsendringException("Oppgaven er allerede under kontroll")
 
@@ -559,7 +555,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne gi fra seg ansvar for en oppgave`() {
-        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
@@ -590,7 +586,7 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne utsette oppgave`() {
-        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
         val utsettTilDato = LocalDate.now().plusDays(1)
         val utsettOppgaveHendelse =
@@ -604,9 +600,7 @@ class OppgaveApiTest {
 
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
         coEvery {
-            oppgaveMediatorMock.utsettOppgave(
-                utsettOppgaveHendelse, any(),
-            )
+            oppgaveMediatorMock.utsettOppgave(utsettOppgaveHendelse)
         } just runs
 
         withOppgaveApi(oppgaveMediator = oppgaveMediatorMock) {
@@ -628,13 +622,13 @@ class OppgaveApiTest {
         }
 
         verify(exactly = 1) {
-            oppgaveMediatorMock.utsettOppgave(utsettOppgaveHendelse, any())
+            oppgaveMediatorMock.utsettOppgave(utsettOppgaveHendelse)
         }
     }
 
     @Test
     fun `Hent oppgave med tilhørende personinfo og journalpostIder `() {
-        val oppgaveMediatorMock = mockk<SecureOppgaveMediator>()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val pdlMock = mockk<PDLKlient>()
         val journalpostIdClientMock = mockk<JournalpostIdClient>()
         val saksbehandlerOppslagMock = mockk<SaksbehandlerOppslag>()
@@ -735,7 +729,7 @@ class OppgaveApiTest {
     fun `Får 404 Not Found ved forsøk på å hente oppgave som ikke finnes`() {
         val ikkeEksisterendeOppgaveId = UUIDv7.ny()
         val oppgaveMediator =
-            mockk<SecureOppgaveMediator>().also {
+            mockk<OppgaveMediator>().also {
                 every { it.hentOppgave(any(), any()) } throws DataNotFoundException("Fant ikke testoppgave")
             }
         withOppgaveApi(oppgaveMediator) {
@@ -756,7 +750,7 @@ class OppgaveApiTest {
     @Test
     fun `Skal kunne hente ut alle oppgaver for en gitt person`() {
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
+            mockk<OppgaveMediator>().also {
                 every { it.finnOppgaverFor(TEST_IDENT) } returns
                     listOf(
                         lagTestOppgaveMedTilstand(FERDIG_BEHANDLET),
@@ -791,7 +785,7 @@ class OppgaveApiTest {
 
         val oppgaveId = UUIDv7.ny()
         val oppgaveMediatorMock =
-            mockk<SecureOppgaveMediator>().also {
+            mockk<OppgaveMediator>().also {
                 every { it.hentOppgaveIdFor(behandlingIdSomFinnes) } returns oppgaveId
                 every { it.hentOppgaveIdFor(behandlingIdSomIkkeFinnes) } returns null
             }
