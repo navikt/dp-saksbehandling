@@ -156,8 +156,6 @@ class OppgaveMediator(
         saksbehandlerToken: String,
     ) {
         repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
-            oppgave.adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
-            oppgave.egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
             oppgave.ferdigstill(godkjentBehandlingHendelse)
 
             val utsendingID =
@@ -192,8 +190,6 @@ class OppgaveMediator(
         saksbehandlerToken: String,
     ) {
         repository.hentOppgave(godkjennBehandlingMedBrevIArena.oppgaveId).let { oppgave ->
-            oppgave.adressebeskyttelseTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
-            oppgave.egneAnsatteTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
             oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
 
             behandlingKlient.godkjennBehandling(

@@ -503,8 +503,10 @@ class OppgaveTilgangTest {
             )
         }
 
-        val saksbehandlerSomVarBeslutter = Saksbehandler("saksbehandler som var beslutter", setOf(), setOf(SAKSBEHANDLER))
-        val oppgaveUnderKontrollUtenBeslutter = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandlerSomVarBeslutter)
+        val saksbehandlerSomVarBeslutter =
+            Saksbehandler("saksbehandler som var beslutter", setOf(), setOf(SAKSBEHANDLER))
+        val oppgaveUnderKontrollUtenBeslutter =
+            lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandlerSomVarBeslutter)
         shouldThrow<ManglendeTilgang> {
             oppgaveUnderKontrollUtenBeslutter.ferdigstill(
                 GodkjentBehandlingHendelse(
@@ -523,6 +525,148 @@ class OppgaveTilgangTest {
                     utførtAv = beslutterSomEierOppgaven,
                 ),
             )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("adressebeskyttelseTester")
+    fun `Saksbehandler må ha tilgang for å ferdigstille en oppgave i nytt system med adressebeskyttelse`(
+        adressebeskyttelseGradering: AdressebeskyttelseGradering,
+        saksbehandlerTilgang: TilgangType,
+        forventetTilgang: Boolean,
+    ) {
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val oppgave =
+            lagOppgave(
+                adressebeskyttelseGradering = adressebeskyttelseGradering,
+                tilstandType = UNDER_BEHANDLING,
+                behandler = saksbehandler,
+            )
+
+        if (forventetTilgang) {
+            shouldNotThrow<ManglendeTilgang> {
+                oppgave.ferdigstill(
+                    GodkjentBehandlingHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        meldingOmVedtak = "<HTML>en melding</HTML>",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        } else {
+            shouldThrow<ManglendeTilgang> {
+                oppgave.ferdigstill(
+                    GodkjentBehandlingHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        meldingOmVedtak = "<HTML>en melding</HTML>",
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `Saksbehandler må ha tilgang til egne ansatte for å ferdigstill en oppgave for egne ansatte`() {
+        val saksbehandlerMedEgneAnsatteTilgang = lagSaksbehandler(saksbehandlerTilgang = EGNE_ANSATTE)
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang = SAKSBEHANDLER)
+
+        shouldThrow<ManglendeTilgang> {
+            val oppgave =
+                lagOppgave(
+                    tilstandType = UNDER_BEHANDLING,
+                    skjermesSomEgneAnsatte = true,
+                    behandler = saksbehandler,
+                )
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = saksbehandler,
+                ),
+            )
+        }
+
+        shouldNotThrow<ManglendeTilgang> {
+            val oppgave =
+                lagOppgave(
+                    tilstandType = UNDER_BEHANDLING,
+                    skjermesSomEgneAnsatte = true,
+                    behandler = saksbehandlerMedEgneAnsatteTilgang,
+                )
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = saksbehandlerMedEgneAnsatteTilgang,
+                ),
+            )
+        }
+
+        shouldThrow<ManglendeTilgang> {
+            val oppgave =
+                lagOppgave(
+                    tilstandType = UNDER_BEHANDLING,
+                    skjermesSomEgneAnsatte = true,
+                    behandler = saksbehandler,
+                )
+            oppgave.ferdigstill(
+                GodkjennBehandlingMedBrevIArena(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
+            )
+        }
+
+        shouldNotThrow<ManglendeTilgang> {
+            val oppgave =
+                lagOppgave(
+                    tilstandType = UNDER_BEHANDLING,
+                    skjermesSomEgneAnsatte = true,
+                    behandler = saksbehandlerMedEgneAnsatteTilgang,
+                )
+            oppgave.ferdigstill(
+                GodkjennBehandlingMedBrevIArena(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandlerMedEgneAnsatteTilgang,
+                ),
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("adressebeskyttelseTester")
+    fun `Saksbehandler må ha tilgang for å ferdigstille en oppgave med brev i Arena med adressebeskyttelse`(
+        adressebeskyttelseGradering: AdressebeskyttelseGradering,
+        saksbehandlerTilgang: TilgangType,
+        forventetTilgang: Boolean,
+    ) {
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val oppgave =
+            lagOppgave(
+                adressebeskyttelseGradering = adressebeskyttelseGradering,
+                tilstandType = UNDER_BEHANDLING,
+                behandler = saksbehandler,
+            )
+
+        if (forventetTilgang) {
+            shouldNotThrow<ManglendeTilgang> {
+                oppgave.ferdigstill(
+                    GodkjennBehandlingMedBrevIArena(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        } else {
+            shouldThrow<ManglendeTilgang> {
+                oppgave.ferdigstill(
+                    GodkjennBehandlingMedBrevIArena(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
         }
     }
 }

@@ -158,10 +158,14 @@ data class Oppgave private constructor(
     }
 
     fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
+        adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
     fun ferdigstill(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
+        adressebeskyttelseTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
+        egneAnsatteTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
         tilstand.ferdigstill(this, godkjennBehandlingMedBrevIArena)
     }
 
