@@ -45,7 +45,7 @@ class OppgaveMediator(
         if (repository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) {
             logger.warn {
                 "Mottatt hendelse behandling_opprettet, men behandling med id " +
-                        "${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede."
+                    "${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede."
             }
             return
         }
@@ -97,8 +97,8 @@ class OppgaveMediator(
             null -> {
                 logger.warn {
                     "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                            "${forslagTilVedtakHendelse.behandlingId}." +
-                            "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
+                        "${forslagTilVedtakHendelse.behandlingId}." +
+                        "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
                 }
             }
 
@@ -108,8 +108,8 @@ class OppgaveMediator(
                 withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                     logger.info {
                         "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                                "${forslagTilVedtakHendelse.behandlingId}. Oppgave er klar til behandling. " +
-                                "Emneknagger: ${oppgave.emneknagger.joinToString()}"
+                            "${forslagTilVedtakHendelse.behandlingId}. Oppgave er klar til behandling. " +
+                            "Emneknagger: ${oppgave.emneknagger.joinToString()}"
                     }
                 }
             }
@@ -145,7 +145,7 @@ class OppgaveMediator(
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
                     "Mottatt hendelse vedtak_fattet for behandling med id ${vedtakFattetHendelse.behandlingId}. " +
-                            "Oppgave ferdigstilt."
+                        "Oppgave ferdigstilt."
                 }
             }
         }
@@ -263,31 +263,11 @@ class OppgaveMediator(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         queryString: String,
     ): Oppgave? {
-
-        val tildelNesteOppgaveFilter = TildelNesteOppgaveFilter.fra(
-            queryString = queryString,
-            saksbehandlerTilgangEgneAnsatte = nesteOppgaveHendelse.utførtAv.tilganger.contains(TilgangType.EGNE_ANSATTE),
-            adresseBeskyttelseGradering = nesteOppgaveHendelse.utførtAv.tilganger.map {
-                when (it) {
-                    TilgangType.FORTROLIG_ADRESSE -> AdressebeskyttelseGradering.FORTROLIG
-                    TilgangType.STRENGT_FORTROLIG_ADRESSE -> AdressebeskyttelseGradering.STRENGT_FORTROLIG
-                    TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND -> AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
-                    else -> {
-                        AdressebeskyttelseGradering.UGRADERT
-                    }
-                }
-
-            }.toSet() + AdressebeskyttelseGradering.UGRADERT
-        )
-
-
-
+        val tildelNesteOppgaveFilter =
+            TildelNesteOppgaveFilter.fra(
+                queryString = queryString,
+                saksbehandler = nesteOppgaveHendelse.utførtAv,
+            )
         return repository.tildelOgHentNesteOppgave(nesteOppgaveHendelse, tildelNesteOppgaveFilter)
-
-//        TildelNesteOppgaveFilter.fra(
-//            queryString = queryString,
-//            saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
-//            adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
-//        ),
     }
 }

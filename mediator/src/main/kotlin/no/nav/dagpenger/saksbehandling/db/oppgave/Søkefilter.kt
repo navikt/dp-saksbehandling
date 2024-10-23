@@ -6,6 +6,8 @@ import io.ktor.util.StringValuesBuilderImpl
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.defaultOppgaveListTilstander
+import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangType
 import java.time.LocalDate
 import java.util.UUID
 
@@ -64,6 +66,32 @@ data class TildelNesteOppgaveFilter(
                 emneknagg = builder.emneknagg() ?: emptySet(),
                 harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
                 harTilgangTilAdressebeskyttelser = adresseBeskyttelseGradering,
+            )
+        }
+
+        fun fra(
+            queryString: String,
+            saksbehandler: Saksbehandler,
+        ): TildelNesteOppgaveFilter {
+            val builder = FilterBuilder(queryString)
+            val adresseGraderingTilganger = mutableSetOf(AdressebeskyttelseGradering.UGRADERT)
+            saksbehandler.tilganger.forEach { tilgang ->
+                when (tilgang) {
+                    TilgangType.FORTROLIG_ADRESSE -> adresseGraderingTilganger.add(AdressebeskyttelseGradering.FORTROLIG)
+                    TilgangType.STRENGT_FORTROLIG_ADRESSE -> adresseGraderingTilganger.add(AdressebeskyttelseGradering.STRENGT_FORTROLIG)
+                    TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND ->
+                        adresseGraderingTilganger.add(
+                            AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND,
+                        )
+                    else -> {}
+                }
+            }
+            val harTilgangTilEgneAnsatte = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE)
+            return TildelNesteOppgaveFilter(
+                periode = Periode.fra(queryString),
+                emneknagg = builder.emneknagg() ?: emptySet(),
+                harTilgangTilEgneAnsatte = harTilgangTilEgneAnsatte,
+                harTilgangTilAdressebeskyttelser = adresseGraderingTilganger,
             )
         }
     }

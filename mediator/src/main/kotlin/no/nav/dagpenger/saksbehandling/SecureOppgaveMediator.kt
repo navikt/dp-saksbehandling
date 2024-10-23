@@ -47,9 +47,8 @@ class SecureOppgaveMediator(
     ): Oppgave? =
         oppgaveMediator.tildelOgHentNesteOppgave(
             nesteOppgaveHendelse = nesteOppgaveHendelse,
-            queryString = queryString
+            queryString = queryString,
         )
-
 
     // DONE, krever ikke sikkerhet, da de bare lister opp oppgavene
     fun finnOppgaverFor(ident: String): List<Oppgave> {
@@ -129,11 +128,11 @@ class SecureOppgaveMediator(
     ) {
         return sjekkTilgang(
             kontroller =
-            listOf(
-                egneAnsatteTilgangskontroll,
-                adressebeskyttelseTilgangskontroll,
-                beslutterTilgangskontroll,
-            ),
+                listOf(
+                    egneAnsatteTilgangskontroll,
+                    adressebeskyttelseTilgangskontroll,
+                    beslutterTilgangskontroll,
+                ),
             oppgaveId = toTrinnskontrollHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
@@ -141,7 +140,7 @@ class SecureOppgaveMediator(
         }
     }
 
-    //DONE
+    // DONE
     fun ferdigstillOppgave(
         godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         saksbehandler: Saksbehandler,
@@ -149,11 +148,11 @@ class SecureOppgaveMediator(
     ) {
         return sjekkTilgang(
             kontroller =
-            listOf(
-                egneAnsatteTilgangskontroll,
-                adressebeskyttelseTilgangskontroll,
-                ferdigstillOppgaveTilgangskontroll,
-            ),
+                listOf(
+                    egneAnsatteTilgangskontroll,
+                    adressebeskyttelseTilgangskontroll,
+                    ferdigstillOppgaveTilgangskontroll,
+                ),
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
@@ -161,7 +160,7 @@ class SecureOppgaveMediator(
         }
     }
 
-    //DONE
+    // DONE
     fun ferdigstillOppgave(
         godkjentBehandlingHendelse: GodkjennBehandlingMedBrevIArena,
         saksbehandler: Saksbehandler,
@@ -169,11 +168,11 @@ class SecureOppgaveMediator(
     ) {
         return sjekkTilgang(
             kontroller =
-            listOf(
-                egneAnsatteTilgangskontroll,
-                adressebeskyttelseTilgangskontroll,
-                ferdigstillOppgaveTilgangskontroll,
-            ),
+                listOf(
+                    egneAnsatteTilgangskontroll,
+                    adressebeskyttelseTilgangskontroll,
+                    ferdigstillOppgaveTilgangskontroll,
+                ),
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
@@ -181,7 +180,7 @@ class SecureOppgaveMediator(
         }
     }
 
-    //DONE
+    // DONE
     fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
         return oppgaveMediator.hentOppgaveIdFor(behandlingId)
     }
@@ -204,7 +203,7 @@ class SecureOppgaveMediator(
             else -> {
                 logger.info {
                     "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId." +
-                            " Tilganger: ${saksbehandler.grupper}"
+                        " Tilganger: ${saksbehandler.grupper}"
                 }
                 throw IngenTilgangTilOppgaveException(
                     feilenedeValideringer.feilmelding(oppgaveId, saksbehandler),
