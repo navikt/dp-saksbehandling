@@ -8,7 +8,6 @@ import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.FerdigstillOppgaveTi
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
 import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.OppgaveTilgangskontroll
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
-import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -48,13 +47,9 @@ class SecureOppgaveMediator(
     ): Oppgave? =
         oppgaveMediator.tildelOgHentNesteOppgave(
             nesteOppgaveHendelse = nesteOppgaveHendelse,
-            filter =
-                TildelNesteOppgaveFilter.fra(
-                    queryString = queryString,
-                    saksbehandlerTilgangEgneAnsatte = egneAnsatteTilgangskontroll.harTilgang(nesteOppgaveHendelse.utførtAv),
-                    adresseBeskyttelseGradering = adressebeskyttelseTilgangskontroll.tilganger(nesteOppgaveHendelse.utførtAv),
-                ),
+            queryString = queryString
         )
+
 
     // DONE, krever ikke sikkerhet, da de bare lister opp oppgavene
     fun finnOppgaverFor(ident: String): List<Oppgave> {
@@ -134,11 +129,11 @@ class SecureOppgaveMediator(
     ) {
         return sjekkTilgang(
             kontroller =
-                listOf(
-                    egneAnsatteTilgangskontroll,
-                    adressebeskyttelseTilgangskontroll,
-                    beslutterTilgangskontroll,
-                ),
+            listOf(
+                egneAnsatteTilgangskontroll,
+                adressebeskyttelseTilgangskontroll,
+                beslutterTilgangskontroll,
+            ),
             oppgaveId = toTrinnskontrollHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
@@ -146,6 +141,7 @@ class SecureOppgaveMediator(
         }
     }
 
+    //DONE
     fun ferdigstillOppgave(
         godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         saksbehandler: Saksbehandler,
@@ -153,11 +149,11 @@ class SecureOppgaveMediator(
     ) {
         return sjekkTilgang(
             kontroller =
-                listOf(
-                    egneAnsatteTilgangskontroll,
-                    adressebeskyttelseTilgangskontroll,
-                    ferdigstillOppgaveTilgangskontroll,
-                ),
+            listOf(
+                egneAnsatteTilgangskontroll,
+                adressebeskyttelseTilgangskontroll,
+                ferdigstillOppgaveTilgangskontroll,
+            ),
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
@@ -165,6 +161,7 @@ class SecureOppgaveMediator(
         }
     }
 
+    //DONE
     fun ferdigstillOppgave(
         godkjentBehandlingHendelse: GodkjennBehandlingMedBrevIArena,
         saksbehandler: Saksbehandler,
@@ -172,11 +169,11 @@ class SecureOppgaveMediator(
     ) {
         return sjekkTilgang(
             kontroller =
-                listOf(
-                    egneAnsatteTilgangskontroll,
-                    adressebeskyttelseTilgangskontroll,
-                    ferdigstillOppgaveTilgangskontroll,
-                ),
+            listOf(
+                egneAnsatteTilgangskontroll,
+                adressebeskyttelseTilgangskontroll,
+                ferdigstillOppgaveTilgangskontroll,
+            ),
             oppgaveId = godkjentBehandlingHendelse.oppgaveId,
             saksbehandler = saksbehandler,
         ) {
@@ -184,6 +181,7 @@ class SecureOppgaveMediator(
         }
     }
 
+    //DONE
     fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
         return oppgaveMediator.hentOppgaveIdFor(behandlingId)
     }
@@ -206,7 +204,7 @@ class SecureOppgaveMediator(
             else -> {
                 logger.info {
                     "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId." +
-                        " Tilganger: ${saksbehandler.grupper}"
+                            " Tilganger: ${saksbehandler.grupper}"
                 }
                 throw IngenTilgangTilOppgaveException(
                     feilenedeValideringer.feilmelding(oppgaveId, saksbehandler),
