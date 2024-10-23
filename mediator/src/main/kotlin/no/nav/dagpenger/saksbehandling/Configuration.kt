@@ -8,6 +8,7 @@ import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config
+import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaConfiguration
 
 object Configuration {
@@ -76,6 +77,18 @@ object Configuration {
     val strengtFortroligADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG", stringType)] }
     val strengtFortroligUtlandADGruppe by lazy { properties[Key("GRUPPE_STRENGT_FORTROLIG_UTLAND", stringType)] }
     val fortroligADGruppe by lazy { properties[Key("GRUPPE_FORTROLIG", stringType)] }
+    val applicationCallParser: ApplicationCallParser by lazy {
+        ApplicationCallParser(
+            TilgangMapper(
+                saksbehandlerGruppe = saksbehandlerADGruppe,
+                beslutteGruppe = beslutterADGruppe,
+                egneAnsatteGruppe = egneAnsatteADGruppe,
+                fortroligAdresseGruppe = fortroligADGruppe,
+                strengtFortroligAdresseGruppe = strengtFortroligADGruppe,
+                strengtFortroligAdresseUtlandGruppe = strengtFortroligUtlandADGruppe,
+            ),
+        )
+    }
 
     val azureAdClient: CachedOauth2Client by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)

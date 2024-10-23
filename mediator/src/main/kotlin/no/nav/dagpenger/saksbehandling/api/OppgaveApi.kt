@@ -25,7 +25,8 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -47,9 +48,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
+import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.jwt.jwt
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
-import no.nav.dagpenger.saksbehandling.jwt.saksbehandler
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -59,19 +60,16 @@ private val logger = KotlinLogging.logger { }
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal fun Application.oppgaveApi(
-    oppgaveMediator: SecureOppgaveMediator,
+    oppgaveMediator: OppgaveMediator,
     pdlKlient: PDLKlient,
     journalpostIdClient: JournalpostIdClient,
     saksbehandlerOppslag: SaksbehandlerOppslag,
+    applicationCallParser: ApplicationCallParser,
 ) {
     suspend fun oppgaveDTO(oppgave: Oppgave): OppgaveDTO =
         coroutineScope {
             val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
             val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
-            val tildeltBehandlerDTO =
-                oppgave.behandlerIdent?.let { behandlerIdent ->
-                    async { saksbehandlerOppslag.hentSaksbehandler(behandlerIdent) }
-                }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
                     async { saksbehandlerOppslag.hentSaksbehandler(saksbehandlerIdent) }
@@ -85,7 +83,6 @@ internal fun Application.oppgaveApi(
                     oppgave = oppgave,
                     person = person.await(),
                     journalpostIder = journalpostIder.await(),
-                    tildeltBehandlerDTO = tildeltBehandlerDTO?.await(),
                     sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                     sisteBeslutterDTO = sisteBeslutterDTO?.await(),
                 )
@@ -112,9 +109,14 @@ internal fun Application.oppgaveApi(
                 route("neste") {
                     put {
                         val dto = call.receive<NesteOppgaveDTO>()
+                        val saksbehandler = applicationCallParser.sakbehandler(call = call)
                         val oppgave =
-                            oppgaveMediator.tildelNesteOppgaveTil(
-                                nesteOppgaveHendelse = call.nesteOppgaveHendelse(),
+                            oppgaveMediator.tildelOgHentNesteOppgave(
+                                nesteOppgaveHendelse =
+                                    NesteOppgaveHendelse(
+                                        ansvarligIdent = saksbehandler.navIdent,
+                                        utførtAv = saksbehandler,
+                                    ),
                                 queryString = dto.queryParams,
                             )
                         when (oppgave) {
@@ -126,7 +128,7 @@ internal fun Application.oppgaveApi(
 
                 route("{oppgaveId}") {
                     get {
-                        val saksbehandler = call.saksbehandler()
+                        val saksbehandler = applicationCallParser.sakbehandler(call)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
                         val oppgaveDTO = oppgaveDTO(oppgave)
@@ -134,24 +136,25 @@ internal fun Application.oppgaveApi(
                     }
                     route("tildel") {
                         put {
-                            val saksbehandler = call.saksbehandler()
-                            val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse()
-                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse, saksbehandler)
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
+                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
                         }
                     }
                     route("utsett") {
                         put {
-                            val saksbehandler = call.saksbehandler()
-                            val utsettOppgaveHendelse = call.utsettOppgaveHendelse()
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val utsettOppgaveHendelse = call.utsettOppgaveHendelse(saksbehandler)
                             logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
-                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse, saksbehandler)
+                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
                     route("legg-tilbake") {
                         put {
-                            val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse()
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse(saksbehandler)
                             oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
@@ -159,18 +162,18 @@ internal fun Application.oppgaveApi(
 
                     route("send-til-kontroll") {
                         put {
-                            val saksbehandler = call.saksbehandler()
-                            val klarTilKontrollHendelse = call.klarTilKontrollHendelse()
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val klarTilKontrollHendelse = call.klarTilKontrollHendelse(saksbehandler)
                             logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
-                            oppgaveMediator.gjørKlarTilKontroll(klarTilKontrollHendelse, saksbehandler)
+                            oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
                     route("kontroller") {
                         put {
-                            val saksbehandler = call.saksbehandler()
-                            val toTrinnskontrollHendelse = call.tildelKontrollHendelse()
-                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse, saksbehandler)
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val toTrinnskontrollHendelse = call.tildelKontrollHendelse(saksbehandler)
+                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
@@ -182,7 +185,7 @@ internal fun Application.oppgaveApi(
                                 if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
                                 val oppgaveId = call.finnUUID("oppgaveId")
                                 sikkerlogger.info { "Motatt melding om vedtak for oppgave $oppgaveId: $meldingOmVedtak" }
-                                val saksbehandler = call.saksbehandler()
+                                val saksbehandler = applicationCallParser.sakbehandler(call)
                                 val saksbehandlerToken = call.request.jwt()
 
                                 // TODO fix saksbehandler vs beslutter
@@ -192,7 +195,6 @@ internal fun Application.oppgaveApi(
                                         oppgaveId = oppgaveId,
                                         utførtAv = saksbehandler,
                                     ),
-                                    saksbehandler,
                                     saksbehandlerToken,
                                 )
                                 call.respond(HttpStatusCode.NoContent)
@@ -206,7 +208,7 @@ internal fun Application.oppgaveApi(
                     }
                     route("ferdigstill/melding-om-vedtak-arena") {
                         put {
-                            val saksbehandler = call.saksbehandler()
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandlerToken = call.request.jwt()
                             oppgaveMediator.ferdigstillOppgave(
@@ -214,7 +216,6 @@ internal fun Application.oppgaveApi(
                                     oppgaveId = oppgaveId,
                                     utførtAv = saksbehandler,
                                 ),
-                                saksbehandler,
                                 saksbehandlerToken,
                             )
                             call.respond(HttpStatusCode.NoContent)
@@ -259,9 +260,8 @@ private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandli
     }
 }
 
-private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendelse {
+private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbehandler): UtsettOppgaveHendelse {
     val utsettOppgaveDto = this.receive<UtsettOppgaveDTO>()
-    val saksbehandler = this.saksbehandler()
     return UtsettOppgaveHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         navIdent = saksbehandler.navIdent,
@@ -271,8 +271,7 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(): UtsettOppgaveHendel
     )
 }
 
-private fun ApplicationCall.settOppgaveAnsvarHendelse(): SettOppgaveAnsvarHendelse {
-    val saksbehandler = this.saksbehandler()
+private fun ApplicationCall.settOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): SettOppgaveAnsvarHendelse {
     return SettOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         ansvarligIdent = saksbehandler.navIdent,
@@ -280,16 +279,14 @@ private fun ApplicationCall.settOppgaveAnsvarHendelse(): SettOppgaveAnsvarHendel
     )
 }
 
-private fun ApplicationCall.fjernOppgaveAnsvarHendelse(): FjernOppgaveAnsvarHendelse {
-    val saksbehandler = this.saksbehandler()
+private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): FjernOppgaveAnsvarHendelse {
     return FjernOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = saksbehandler,
     )
 }
 
-private fun ApplicationCall.tildelKontrollHendelse(): ToTrinnskontrollHendelse {
-    val saksbehandler = this.saksbehandler()
+private fun ApplicationCall.tildelKontrollHendelse(saksbehandler: Saksbehandler): ToTrinnskontrollHendelse {
     return ToTrinnskontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         ansvarligIdent = saksbehandler.navIdent,
@@ -297,18 +294,9 @@ private fun ApplicationCall.tildelKontrollHendelse(): ToTrinnskontrollHendelse {
     )
 }
 
-private fun ApplicationCall.klarTilKontrollHendelse(): KlarTilKontrollHendelse {
-    val saksbehandler = this.saksbehandler()
+private fun ApplicationCall.klarTilKontrollHendelse(saksbehandler: Saksbehandler): KlarTilKontrollHendelse {
     return KlarTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = saksbehandler,
-    )
-}
-
-private fun ApplicationCall.nesteOppgaveHendelse(): NesteOppgaveHendelse {
-    val saksbehandler = this.saksbehandler()
-    return NesteOppgaveHendelse(
-        ansvarligIdent = saksbehandler.navIdent,
         utførtAv = saksbehandler,
     )
 }
@@ -317,7 +305,6 @@ fun lagOppgaveDTO(
     oppgave: Oppgave,
     person: PDLPersonIntern,
     journalpostIder: Set<String>,
-    tildeltBehandlerDTO: BehandlerDTO? = null,
     sisteSaksbehandlerDTO: BehandlerDTO? = null,
     sisteBeslutterDTO: BehandlerDTO? = null,
 ): OppgaveDTO =

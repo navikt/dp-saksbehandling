@@ -8,15 +8,22 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.parseAuthorizationHeader
 import io.ktor.server.request.ApplicationRequest
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangMapper
 
-internal fun ApplicationCall.saksbehandler(): Saksbehandler {
-    return requireNotNull(this.authentication.principal<JWTPrincipal>()) {
-        "Ikke autentisert"
-    }.let {
-        Saksbehandler(
-            navIdent = it.navIdent,
-            grupper = it.payload.claims["groups"]?.asList(String::class.java)?.toSet() ?: setOf(),
-        )
+class ApplicationCallParser(
+    private val tilgangMapper: TilgangMapper,
+) {
+    fun sakbehandler(call: ApplicationCall): Saksbehandler {
+        return requireNotNull(call.authentication.principal<JWTPrincipal>()) {
+            "Ikke autentisert"
+        }.let {
+            val adGrupper = it.payload.claims["groups"]?.asList(String::class.java) ?: emptyList()
+            Saksbehandler(
+                navIdent = it.navIdent,
+                grupper = adGrupper.toSet(),
+                tilganger = tilgangMapper.map(adGrupper),
+            )
+        }
     }
 }
 

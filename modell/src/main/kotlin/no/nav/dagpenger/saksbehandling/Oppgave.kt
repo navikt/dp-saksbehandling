@@ -1,6 +1,10 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -9,6 +13,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
+import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -89,6 +97,18 @@ data class Oppgave private constructor(
                 utsattTil = utsattTil,
                 _tilstandslogg = tilstandslogg,
             )
+
+        private fun requireSammeEier(
+            oppgave: Oppgave,
+            saksbehandler: Saksbehandler,
+        ) {
+            require(oppgave.behandlerIdent == saksbehandler.navIdent) {
+                throw Tilstand.ManglendeTilgang(
+                    "Kan ikke ferdigstille oppgave i tilstand ${UnderBehandling.type} uten å eie oppgaven. " +
+                        "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
+                )
+            }
+        }
     }
 
     val emneknagger: Set<String>
@@ -97,6 +117,34 @@ data class Oppgave private constructor(
         get() = _tilstandslogg
 
     fun tilstand() = this.tilstand
+
+    fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
+        require(
+            if (this.behandling.person.skjermesSomEgneAnsatte) {
+                saksbehandler.tilganger.contains(EGNE_ANSATTE)
+            } else {
+                true
+            },
+        ) {
+            throw Tilstand.ManglendeTilgang("Saksbehandler har ikke tilgang til egne ansatte")
+        }
+    }
+
+    fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) {
+        val adressebeskyttelseGradering = this.behandling.person.adressebeskyttelseGradering
+        require(
+            when (adressebeskyttelseGradering) {
+                FORTROLIG -> saksbehandler.tilganger.contains(FORTROLIG_ADRESSE)
+                STRENGT_FORTROLIG -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE)
+                STRENGT_FORTROLIG_UTLAND -> saksbehandler.tilganger.contains(STRENGT_FORTROLIG_ADRESSE_UTLAND)
+                UGRADERT -> true
+            },
+        ) {
+            throw Tilstand.ManglendeTilgang(
+                "Saksbehandler mangler tilgang til adressebeskyttede personer. Adressebeskyttelse: $adressebeskyttelseGradering",
+            )
+        }
+    }
 
     fun utsattTil() = this.utsattTil
 
@@ -110,10 +158,14 @@ data class Oppgave private constructor(
     }
 
     fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
+        adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
     fun ferdigstill(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
+        adressebeskyttelseTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
+        egneAnsatteTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
         tilstand.ferdigstill(this, godkjennBehandlingMedBrevIArena)
     }
 
@@ -122,18 +174,27 @@ data class Oppgave private constructor(
     }
 
     fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
+        egneAnsatteTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
+
         tilstand.tildel(this, settOppgaveAnsvarHendelse)
     }
 
     fun utsett(utsettOppgaveHendelse: UtsettOppgaveHendelse) {
+        egneAnsatteTilgangskontroll(utsettOppgaveHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(utsettOppgaveHendelse.utførtAv)
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
-    fun gjørKlarTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
-        tilstand.gjørKlarTilKontroll(this, klarTilKontrollHendelse)
+    fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
+        egneAnsatteTilgangskontroll(klarTilKontrollHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(klarTilKontrollHendelse.utførtAv)
+        tilstand.sendTilKontroll(this, klarTilKontrollHendelse)
     }
 
     fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
+        egneAnsatteTilgangskontroll(toTrinnskontrollHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(toTrinnskontrollHendelse.utførtAv)
         tilstand.tildelTotrinnskontroll(this, toTrinnskontrollHendelse)
     }
 
@@ -228,7 +289,7 @@ data class Oppgave private constructor(
     object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
 
-        override fun gjørKlarTilKontroll(
+        override fun sendTilKontroll(
             oppgave: Oppgave,
             klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {
@@ -298,6 +359,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
+            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv)
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
@@ -305,6 +367,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
+            requireSammeEier(oppgave, godkjennBehandlingMedBrevIArena.utførtAv)
             oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
         }
     }
@@ -364,6 +427,9 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
         ) {
+            require(toTrinnskontrollHendelse.utførtAv.tilganger.contains(TilgangType.BESLUTTER)) {
+                throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter tilgang")
+            }
             oppgave.endreTilstand(UnderKontroll, toTrinnskontrollHendelse)
             oppgave.behandlerIdent = toTrinnskontrollHendelse.ansvarligIdent
         }
@@ -376,6 +442,11 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
+            require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(TilgangType.BESLUTTER)) {
+                throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten  beslutter tilgang")
+            }
+            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv)
+
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
@@ -398,6 +469,10 @@ data class Oppgave private constructor(
 
     interface Tilstand {
         val type: Type
+
+        class ManglendeTilgang(
+            message: String,
+        ) : RuntimeException(message)
 
         class UlovligTilstandsendringException(
             message: String,
@@ -504,7 +579,7 @@ data class Oppgave private constructor(
             ulovligTilstandsendring("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
         }
 
-        fun gjørKlarTilKontroll(
+        fun sendTilKontroll(
             oppgave: Oppgave,
             klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {

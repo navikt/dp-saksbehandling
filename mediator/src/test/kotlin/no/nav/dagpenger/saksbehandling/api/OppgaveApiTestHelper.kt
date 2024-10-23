@@ -5,11 +5,11 @@ import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -28,7 +28,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.SecureOppgaveMediator
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -50,7 +49,7 @@ internal object OppgaveApiTestHelper {
     private val fødselsdato = LocalDate.of(2000, 1, 1)
 
     fun withOppgaveApi(
-        oppgaveMediator: SecureOppgaveMediator = mockk<SecureOppgaveMediator>(relaxed = true),
+        oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         pdlKlient: PDLKlient = mockk(relaxed = true),
         journalpostIdClient: JournalpostIdClient = mockk(relaxed = true),
         saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
@@ -59,7 +58,13 @@ internal object OppgaveApiTestHelper {
         testApplication {
             application {
                 apiConfig()
-                oppgaveApi(oppgaveMediator, pdlKlient, journalpostIdClient, saksbehandlerOppslag)
+                oppgaveApi(
+                    oppgaveMediator,
+                    pdlKlient,
+                    journalpostIdClient,
+                    saksbehandlerOppslag,
+                    applicationCallParser,
+                )
             }
             test()
         }
@@ -90,21 +95,6 @@ internal object OppgaveApiTestHelper {
                 "NAVident" to navIdent,
             ),
         )
-
-    fun gyldigSaksbehandlerMedTilgangTilEgneAnsatteToken(navIdent: String = SAKSBEHANDLER_IDENT): String =
-        mockAzure.lagTokenMedClaims(
-            mapOf(
-                "groups" to listOf("SaksbehandlerADGruppe", "EgneAnsatteADGruppe"),
-                "NAVident" to navIdent,
-            ),
-        )
-
-    fun lagMediatorMock(): OppgaveMediator {
-        return mockk<OppgaveMediator>().also {
-            every { it.personSkjermesSomEgneAnsatte(any()) } returns false
-            every { it.adresseGraderingForPerson(any()) } returns UGRADERT
-        }
-    }
 
     fun lagTestOppgaveMedTilstandOgBehandling(
         tilstand: Oppgave.Tilstand.Type,

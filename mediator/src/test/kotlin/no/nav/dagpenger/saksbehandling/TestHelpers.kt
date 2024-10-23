@@ -1,29 +1,24 @@
-package no.nav.dagpenger.saksbehandling.db
+package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import kotlin.random.Random
 
-val testPerson =
-    lagPerson()
+val testPerson = lagPerson()
 
 fun lagPerson(
-    ident: String = "12345678901",
+    ident: String = lagTilfeldigIdent(),
     addresseBeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
+    skjermesSomEgneAnsatte: Boolean = false,
 ) = Person(
     ident = ident,
-    skjermesSomEgneAnsatte = false,
+    skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
     adressebeskyttelseGradering = addresseBeskyttelseGradering,
 )
 
@@ -33,7 +28,9 @@ fun lagOppgave(
     tilstand: Oppgave.Tilstand = KlarTilBehandling,
     opprettet: LocalDateTime = opprettetNå,
     saksbehandlerIdent: String? = null,
-    person: Person = testPerson,
+    skjermesSomEgneAnsatte: Boolean = false,
+    adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
+    person: Person = lagPerson(addresseBeskyttelseGradering = adressebeskyttelseGradering, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
     behandling: Behandling = lagBehandling(person = person),
     emneknagger: Set<String> = emptySet(),
     utsattTil: LocalDate? = null,
@@ -67,3 +64,8 @@ fun lagBehandling(
         hendelse = hendelse,
     )
 }
+
+private fun lagTilfeldigIdent() =
+    (1..11)
+        .map { Random.nextInt(0, 10) }
+        .joinToString("")

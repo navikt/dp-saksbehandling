@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -35,6 +36,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
+import no.nav.dagpenger.saksbehandling.lagBehandling
+import no.nav.dagpenger.saksbehandling.lagOppgave
+import no.nav.dagpenger.saksbehandling.lagPerson
+import no.nav.dagpenger.saksbehandling.opprettetNå
+import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
@@ -43,8 +49,14 @@ import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 class PostgresOppgaveRepositoryTest {
-    private val saksbehandler = Saksbehandler("saksbehandler", emptySet())
-    private val beslutter = Saksbehandler("beslutter", emptySet())
+    private val saksbehandler =
+        Saksbehandler("saksbehandler", setOf("SaksbehandlerADGruppe"), setOf(TilgangType.SAKSBEHANDLER))
+    private val beslutter =
+        Saksbehandler(
+            "beslutter",
+            setOf("SaksbehandlerADGruppe", "BeslutterADGruppe"),
+            setOf(TilgangType.BESLUTTER, TilgangType.SAKSBEHANDLER),
+        )
     private val oppgaveIdTest = UUIDv7.ny()
 
     @Test
@@ -934,7 +946,14 @@ class PostgresOppgaveRepositoryTest {
     fun `Hent adressegraderingsbeskyttelse for person gitt oppgave`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave = lagOppgave(person = lagPerson(addresseBeskyttelseGradering = STRENGT_FORTROLIG))
+            val oppgave =
+                lagOppgave(
+                    person =
+                        lagPerson(
+                            ident = testPerson.ident,
+                            addresseBeskyttelseGradering = STRENGT_FORTROLIG,
+                        ),
+                )
             repo.lagre(oppgave)
             repo.adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
         }
