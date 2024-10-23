@@ -205,7 +205,7 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId)
+            val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
 
             oppdatertOppgave.emneknagger shouldContainAll testEmneknagger1 + testEmneknagger2
             oppdatertOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
