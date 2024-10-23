@@ -97,6 +97,18 @@ data class Oppgave private constructor(
                 utsattTil = utsattTil,
                 _tilstandslogg = tilstandslogg,
             )
+
+        private fun requireSammeEier(
+            oppgave: Oppgave,
+            saksbehandler: Saksbehandler,
+        ) {
+            require(oppgave.behandlerIdent == saksbehandler.navIdent) {
+                throw Tilstand.ManglendeTilgang(
+                    "Kan ikke ferdigstille oppgave i tilstand ${UnderBehandling.type} uten å eie oppgaven. " +
+                        "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
+                )
+            }
+        }
     }
 
     val emneknagger: Set<String>
@@ -336,6 +348,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
+            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv)
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
@@ -420,6 +433,7 @@ data class Oppgave private constructor(
             require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(TilgangType.BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten  beslutter tilgang")
             }
+            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv)
 
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }

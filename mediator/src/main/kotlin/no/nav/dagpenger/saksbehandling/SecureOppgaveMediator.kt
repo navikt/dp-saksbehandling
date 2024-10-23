@@ -41,14 +41,7 @@ class SecureOppgaveMediator(
             oppgaveFunc = { oppgaveId -> TODO() },
         ),
 ) {
-    fun finnOppgaverFor(ident: String): List<Oppgave> {
-        return oppgaveMediator.finnOppgaverFor(ident)
-    }
-
-    fun søk(søkefilter: Søkefilter): List<Oppgave> {
-        return oppgaveMediator.søk(søkefilter)
-    }
-
+    // TODO
     fun tildelNesteOppgaveTil(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         queryString: String,
@@ -63,35 +56,17 @@ class SecureOppgaveMediator(
                 ),
         )
 
-    private fun <T> sjekkTilgang(
-        kontroller: List<OppgaveTilgangskontroll>,
-        oppgaveId: UUID,
-        saksbehandler: Saksbehandler,
-        block: (oppgaveId: UUID) -> T,
-    ): T {
-        val feilenedeValideringer =
-            kontroller.firstOrNull {
-                it.harTilgang(oppgaveId, saksbehandler) == false
-            }
-        return when (feilenedeValideringer) {
-            null -> {
-                block(oppgaveId)
-            }
-
-            else -> {
-                logger.info {
-                    "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId." +
-                        " Tilganger: ${saksbehandler.grupper}"
-                }
-                throw IngenTilgangTilOppgaveException(
-                    feilenedeValideringer.feilmelding(oppgaveId, saksbehandler),
-                    feilenedeValideringer.feilType(oppgaveId, saksbehandler),
-                )
-            }
-        }
+    // DONE, krever ikke sikkerhet, da de bare lister opp oppgavene
+    fun finnOppgaverFor(ident: String): List<Oppgave> {
+        return oppgaveMediator.finnOppgaverFor(ident)
     }
 
-    // Gjøres i mediatortesten
+    // DONE, krever ikke sikkerhet, da de bare lister opp oppgavene
+    fun søk(søkefilter: Søkefilter): List<Oppgave> {
+        return oppgaveMediator.søk(søkefilter)
+    }
+
+    // DONE
     fun hentOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
@@ -133,6 +108,7 @@ class SecureOppgaveMediator(
         }
     }
 
+    // DONE - Man skal alltid kunne gi fra seg en oppgave, uansett hvilke rettigheter
     fun fristillOppgave(oppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
         oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
     }
@@ -210,5 +186,33 @@ class SecureOppgaveMediator(
 
     fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
         return oppgaveMediator.hentOppgaveIdFor(behandlingId)
+    }
+
+    private fun <T> sjekkTilgang(
+        kontroller: List<OppgaveTilgangskontroll>,
+        oppgaveId: UUID,
+        saksbehandler: Saksbehandler,
+        block: (oppgaveId: UUID) -> T,
+    ): T {
+        val feilenedeValideringer =
+            kontroller.firstOrNull {
+                it.harTilgang(oppgaveId, saksbehandler) == false
+            }
+        return when (feilenedeValideringer) {
+            null -> {
+                block(oppgaveId)
+            }
+
+            else -> {
+                logger.info {
+                    "Saksbehandler ${saksbehandler.navIdent} har IKKE tilgang til oppgave med id $oppgaveId." +
+                        " Tilganger: ${saksbehandler.grupper}"
+                }
+                throw IngenTilgangTilOppgaveException(
+                    feilenedeValideringer.feilmelding(oppgaveId, saksbehandler),
+                    feilenedeValideringer.feilType(oppgaveId, saksbehandler),
+                )
+            }
+        }
     }
 }

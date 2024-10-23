@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.assertions.throwables.shouldNotThrow
-import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
@@ -42,44 +41,10 @@ class OppgaveTilgangTest {
 
     val saksbehandlerMedTilgangTilEgneAnsatte =
         Saksbehandler(
-            navIdent = "saksbehandler",
+            navIdent = "saksbehandlerMedTilgangTilEgneAnsatte",
             grupper = setOf(),
             tilganger = setOf(SAKSBEHANDLER, EGNE_ANSATTE),
         )
-
-    @Test
-    fun `Må ha beslutter tilgang for å ferdigstill oppgave med tilstand UNDDER_KONTROLL`() {
-        val oppgave =
-            lagOppgave(
-                tilstandType = UNDER_KONTROLL,
-                behandler = saksbehandlerUtenEkstraTilganger,
-            )
-
-        shouldThrow<ManglendeTilgang> {
-            oppgave.ferdigstill(
-                GodkjentBehandlingHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    meldingOmVedtak = "<HTML>en melding</HTML>",
-                    utførtAv = saksbehandlerUtenEkstraTilganger,
-                ),
-            )
-        }
-
-        shouldNotThrowAny {
-            oppgave.ferdigstill(
-                GodkjentBehandlingHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    meldingOmVedtak = "<HTML>en melding</HTML>",
-                    utførtAv =
-                        Saksbehandler(
-                            navIdent = "beslutter",
-                            grupper = setOf(),
-                            tilganger = setOf(BESLUTTER),
-                        ),
-                ),
-            )
-        }
-    }
 
     companion object {
         @JvmStatic
@@ -459,6 +424,80 @@ class OppgaveTilgangTest {
                 KlarTilKontrollHendelse(
                     oppgaveId = egneAnsatteOppgave.oppgaveId,
                     utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Ferdigstilling av oppgave under behandling krever at utførende saksbehandler også eier oppgaven`() {
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
+        shouldThrow<ManglendeTilgang> {
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                ),
+            )
+        }
+
+        shouldNotThrow<ManglendeTilgang> {
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = saksbehandlerUtenEkstraTilganger,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Ferdigstilling av oppgave under kontroll krever at utførende eier oppgaven og er beslutter`() {
+        val beslutterSomEierOppgaven = Saksbehandler("eier", setOf(), setOf(BESLUTTER))
+        val saksbehandler = Saksbehandler("saksbehandler", setOf(), setOf(SAKSBEHANDLER))
+
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomEierOppgaven)
+        shouldThrow<ManglendeTilgang> {
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = saksbehandler,
+                ),
+            )
+        }
+
+        val enAnnenBeslutter = Saksbehandler("beslutter 2", setOf(), setOf(BESLUTTER))
+        shouldThrow<ManglendeTilgang> {
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = enAnnenBeslutter,
+                ),
+            )
+        }
+
+        val saksbehandlerSomVarBeslutter = Saksbehandler("saksbehandler som var beslutter", setOf(), setOf(SAKSBEHANDLER))
+        val oppgaveUnderKontrollUtenBeslutter = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandlerSomVarBeslutter)
+        shouldThrow<ManglendeTilgang> {
+            oppgaveUnderKontrollUtenBeslutter.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = saksbehandlerSomVarBeslutter,
+                ),
+            )
+        }
+
+        shouldNotThrow<ManglendeTilgang> {
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = beslutterSomEierOppgaven,
                 ),
             )
         }
