@@ -71,7 +71,7 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
                         logger.info { "${it.size} oppgaver skal settes tilbake til KLAR_TIL_BEHANDLING: $it" }
                     }
                     .map { listOf(it) }
-            tx.settOppgaverTilKlarForBehandling(utgåtteOppgaver)
+            tx.settOppgaverKlarTilBehandlingEllerUnderBehandling(utgåtteOppgaver)
             tx.leggPåUtsattTidligereEmneknagg(utgåtteOppgaver)
         }
     }
@@ -94,15 +94,20 @@ private fun TransactionalSession.leggPåUtsattTidligereEmneknagg(utgåtteOppgave
     }
 }
 
-private fun TransactionalSession.settOppgaverTilKlarForBehandling(utgåtteOppgaver: List<List<UUID>>) {
+private fun TransactionalSession.settOppgaverKlarTilBehandlingEllerUnderBehandling(utgåtteOppgaver: List<List<UUID>>) {
     this.batchPreparedStatement(
         //language=PostgreSQL
         statement =
             """
             UPDATE oppgave_v1
-            SET    tilstand = '${Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING.name}',
+            SET    tilstand =   CASE
+                                    WHEN saksbehandler_ident IS NULL THEN
+                                        '${Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING.name}'
+                                    ELSE
+                                        '${Oppgave.Tilstand.Type.UNDER_BEHANDLING.name}'
+                                END,
                    utsatt_til = null
-            WHERE id = ?
+            WHERE  id = ?
             """.trimIndent(),
         params = utgåtteOppgaver,
     ).also {
