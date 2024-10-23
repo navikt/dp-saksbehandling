@@ -158,6 +158,7 @@ class OppgaveMediator(
         repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
             oppgave.adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
             oppgave.egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
+            oppgave.ferdigstill(godkjentBehandlingHendelse)
 
             val utsendingID =
                 utsendingMediator.opprettUtsending(
@@ -171,7 +172,6 @@ class OppgaveMediator(
                 ident = oppgave.ident,
                 saksbehandlerToken = saksbehandlerToken,
             ).onSuccess {
-                oppgave.ferdigstill(godkjentBehandlingHendelse)
                 repository.lagre(oppgave)
             }.onFailure {
                 val feil = "Feil ved godkjenning av behandling: ${it.message}"
@@ -194,13 +194,13 @@ class OppgaveMediator(
         repository.hentOppgave(godkjennBehandlingMedBrevIArena.oppgaveId).let { oppgave ->
             oppgave.adressebeskyttelseTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
             oppgave.egneAnsatteTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
+            oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
 
             behandlingKlient.godkjennBehandling(
                 behandlingId = oppgave.behandlingId,
                 ident = oppgave.ident,
                 saksbehandlerToken = saksbehandlerToken,
             ).onSuccess {
-                oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
                 repository.lagre(oppgave)
             }.onFailure {
                 val feil = "Feil ved godkjenning av behandling: ${it.message}"
