@@ -21,7 +21,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
-import no.nav.dagpenger.saksbehandling.api.tilgangskontroll.IngenTilgangTilOppgaveException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -130,20 +129,6 @@ fun Application.apiConfig() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.BadRequest, problem)
-                }
-
-                is IngenTilgangTilOppgaveException -> {
-                    val problem =
-                        HttpProblemDTO(
-                            title = "Ingen tilgang til oppgave",
-                            detail = cause.message,
-                            status = HttpStatusCode.Forbidden.value,
-                            instance = call.request.path(),
-                            type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-tilgang-til-oppgave:${cause.type}")
-                                    .toString(),
-                        )
-                    call.respond(HttpStatusCode.Forbidden, problem)
                 }
 
                 is AlleredeTildeltException -> {
