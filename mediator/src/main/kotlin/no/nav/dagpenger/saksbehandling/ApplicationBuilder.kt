@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
+import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
@@ -113,6 +114,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 oppgaveRepository,
                 utsendingMediator,
             )
+            MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
         }
 
     init {
