@@ -192,6 +192,8 @@ class OppgaveMediator(
         saksbehandlerToken: String,
     ) {
         repository.hentOppgave(godkjennBehandlingMedBrevIArena.oppgaveId).let { oppgave ->
+            oppgave.adressebeskyttelseTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
+            oppgave.egneAnsatteTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
 
             behandlingKlient.godkjennBehandling(
                 behandlingId = oppgave.behandlingId,

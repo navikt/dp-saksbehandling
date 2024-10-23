@@ -356,6 +356,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
+            requireSammeEier(oppgave, godkjennBehandlingMedBrevIArena.utførtAv)
             oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
         }
     }
