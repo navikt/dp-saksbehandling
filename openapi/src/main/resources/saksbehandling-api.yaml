@@ -224,7 +224,11 @@ paths:
             format: uuid
       responses:
         '204':
-          description: Oppgaven er tildelt saksbehandler eller beslutter
+          description: Returnerer oppdatert tilstand etter tildeling av oppgave til saksbehandler eller beslutter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OppgaveTilstand'
         '404':
           description: Oppgaven ble ikke funnet
           content:
