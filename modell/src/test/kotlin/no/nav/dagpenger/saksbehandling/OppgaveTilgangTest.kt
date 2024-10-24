@@ -23,7 +23,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -93,8 +92,8 @@ class OppgaveTilgangTest {
             )
 
         shouldThrow<ManglendeTilgang> {
-            egneAnsatteOppgave.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
+            egneAnsatteOppgave.tildel(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = egneAnsatteOppgave.oppgaveId,
                     ansvarligIdent = beslutterUtenTilgangTilEgneAnsatte.navIdent,
                     utførtAv = beslutterUtenTilgangTilEgneAnsatte,
@@ -102,8 +101,8 @@ class OppgaveTilgangTest {
             )
         }
         shouldNotThrow<ManglendeTilgang> {
-            egneAnsatteOppgave.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
+            egneAnsatteOppgave.tildel(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = egneAnsatteOppgave.oppgaveId,
                     ansvarligIdent = beslutterMedtilgangTilEgneAnsatte.navIdent,
                     utførtAv = beslutterMedtilgangTilEgneAnsatte,
@@ -133,8 +132,8 @@ class OppgaveTilgangTest {
 
         if (forventetTilgang) {
             shouldNotThrow<ManglendeTilgang> {
-                oppgave.tildelTotrinnskontroll(
-                    ToTrinnskontrollHendelse(
+                oppgave.tildel(
+                    SettOppgaveAnsvarHendelse(
                         oppgaveId = oppgave.oppgaveId,
                         ansvarligIdent = saksbehandler.navIdent,
                         utførtAv = saksbehandler,
@@ -143,8 +142,8 @@ class OppgaveTilgangTest {
             }
         } else {
             shouldThrow<ManglendeTilgang> {
-                oppgave.tildelTotrinnskontroll(
-                    ToTrinnskontrollHendelse(
+                oppgave.tildel(
+                    SettOppgaveAnsvarHendelse(
                         oppgaveId = oppgave.oppgaveId,
                         ansvarligIdent = saksbehandler.navIdent,
                         utførtAv = saksbehandler,

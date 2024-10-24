@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -127,13 +126,6 @@ class OppgaveMediator(
     fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         repository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
             oppgave.tildel(settOppgaveAnsvarHendelse)
-            repository.lagre(oppgave)
-        }
-    }
-
-    fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
-        repository.hentOppgave(toTrinnskontrollHendelse.oppgaveId).also { oppgave ->
-            oppgave.tildelTotrinnskontroll(toTrinnskontrollHendelse)
             repository.lagre(oppgave)
         }
     }

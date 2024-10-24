@@ -60,7 +60,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -111,7 +110,6 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
-                Arguments.of("/oppgave/oppgaveId/kontroller", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
@@ -504,8 +502,8 @@ class OppgaveApiTest {
         val oppgaveSomAlleredeErUnderKontroll = UUIDv7.ny()
 
         coEvery {
-            oppgaveMediatorMock.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
+            oppgaveMediatorMock.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgaveSomIkkeFinnes,
                     ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
@@ -514,8 +512,8 @@ class OppgaveApiTest {
         } throws DataNotFoundException("Oppgave ikke funnet")
 
         coEvery {
-            oppgaveMediatorMock.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
+            oppgaveMediatorMock.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgaveSomAlleredeErUnderKontroll,
                     ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
@@ -524,11 +522,11 @@ class OppgaveApiTest {
         } throws UlovligTilstandsendringException("Oppgaven er allerede under kontroll")
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/$oppgaveSomIkkeFinnes/kontroller") { autentisert() }
+            client.put("/oppgave/$oppgaveSomIkkeFinnes/tildel") { autentisert() }
                 .also { response ->
                     response.status shouldBe HttpStatusCode.NotFound
                 }
-            client.put("/oppgave/$oppgaveSomAlleredeErUnderKontroll/kontroller") { autentisert() }
+            client.put("/oppgave/$oppgaveSomAlleredeErUnderKontroll/tildel") { autentisert() }
                 .also { response ->
                     response.status shouldBe HttpStatusCode.Conflict
                 }
@@ -655,9 +653,9 @@ class OppgaveApiTest {
                         postadresse = "Adresseveien 3, 0101 ADRESSA",
                     ),
             )
-        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(beslutter.navIdent) } returns
+        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(saksbehandler.navIdent) } returns
             BehandlerDTO(
-                ident = beslutter.navIdent,
+                ident = saksbehandler.navIdent,
                 fornavn = "Saksbeandler fornavn",
                 etternavn = "Saksbehandler etternavn",
                 enhet =

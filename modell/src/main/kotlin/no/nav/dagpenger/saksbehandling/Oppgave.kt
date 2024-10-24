@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
@@ -28,7 +29,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
@@ -193,12 +193,6 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, klarTilKontrollHendelse)
     }
 
-    fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
-        egneAnsatteTilgangskontroll(toTrinnskontrollHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(toTrinnskontrollHendelse.utførtAv)
-        tilstand.tildelTotrinnskontroll(this, toTrinnskontrollHendelse)
-    }
-
     fun sendTilbakeTilUnderBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
     }
@@ -236,7 +230,7 @@ data class Oppgave private constructor(
     fun sisteBeslutter(): String? {
         return kotlin.runCatching {
             _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL }?.let {
-                (it.hendelse as ToTrinnskontrollHendelse).ansvarligIdent
+                (it.hendelse as SettOppgaveAnsvarHendelse).ansvarligIdent
             }
         }
             .onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
@@ -424,15 +418,15 @@ data class Oppgave private constructor(
     object KlarTilKontroll : Tilstand {
         override val type: Type = KLAR_TIL_KONTROLL
 
-        override fun tildelTotrinnskontroll(
+        override fun tildel(
             oppgave: Oppgave,
-            toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            require(toTrinnskontrollHendelse.utførtAv.tilganger.contains(TilgangType.BESLUTTER)) {
+            require(settOppgaveAnsvarHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter tilgang")
             }
-            oppgave.endreTilstand(UnderKontroll, toTrinnskontrollHendelse)
-            oppgave.behandlerIdent = toTrinnskontrollHendelse.ansvarligIdent
+            oppgave.endreTilstand(UnderKontroll, settOppgaveAnsvarHendelse)
+            oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
     }
 
@@ -443,12 +437,19 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
-            require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(TilgangType.BESLUTTER)) {
+            require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten  beslutter tilgang")
             }
             requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv)
 
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
+        }
+
+        override fun tildel(
+            oppgave: Oppgave,
+            settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
+        ) {
+            requireSammeEier(oppgave, settOppgaveAnsvarHendelse.utførtAv)
         }
 
         override fun sendTilbakeTilUnderBehandling(
@@ -612,16 +613,6 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type",
-            )
-        }
-
-        fun tildelTotrinnskontroll(
-            oppgave: Oppgave,
-            toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å tildele totrinnskontroll i tilstand $type",
             )
         }
 

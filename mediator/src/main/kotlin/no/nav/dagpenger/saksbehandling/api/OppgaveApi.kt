@@ -149,18 +149,6 @@ internal fun Application.oppgaveApi(
                         }
                     }
 
-                    route("kontroller") {
-                        put {
-                            val saksbehandler = applicationCallParser.sakbehandler(call)
-                            val toTrinnskontrollHendelse = call.tildelKontrollHendelse(saksbehandler)
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-                        }
-                    }
-
                     route("utsett") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)

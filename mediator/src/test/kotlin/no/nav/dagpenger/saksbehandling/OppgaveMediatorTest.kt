@@ -37,7 +37,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
@@ -136,8 +135,8 @@ class OppgaveMediatorTest {
                     behandlingKlientMock,
                     mockk(),
                 )
-            oppgaveMediator.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     ansvarligIdent = beslutter.navIdent,
                     utførtAv = beslutter,
@@ -848,8 +847,8 @@ class OppgaveMediatorTest {
             return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
         }
 
-        oppgaveMediator.tildelTotrinnskontroll(
-            ToTrinnskontrollHendelse(
+        oppgaveMediator.tildelOppgave(
+            SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 ansvarligIdent = beslutter.navIdent,
                 utførtAv = beslutter,
