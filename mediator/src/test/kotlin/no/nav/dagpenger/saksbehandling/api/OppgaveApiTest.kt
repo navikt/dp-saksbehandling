@@ -28,7 +28,6 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
@@ -65,7 +64,6 @@ import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -463,34 +461,13 @@ class OppgaveApiTest {
                     utførtAv = saksbehandler,
                 ),
             )
-        } just Runs
+        } returns Oppgave.UnderBehandling
 
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
-        }
-    }
-
-    @Test
-    @Disabled
-    fun `Beslutter skal kunne ta en oppgave som er KLAR_TIL_KONTROLL`() {
-        val oppgaveMediatorMock = mockk<OppgaveMediator>()
-        val testOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_KONTROLL)
-        val beslutter = Saksbehandler(BESLUTTER_IDENT, emptySet(), setOf(BESLUTTER))
-        coEvery {
-            oppgaveMediatorMock.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = testOppgave.oppgaveId,
-                    ansvarligIdent = beslutter.navIdent,
-                    utførtAv = beslutter,
-                ),
-            )
-        } just Runs
-
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "text/plain"
+                response.bodyAsText() shouldBe "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
             }
         }
     }

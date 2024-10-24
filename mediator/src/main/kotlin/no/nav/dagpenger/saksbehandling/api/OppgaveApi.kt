@@ -141,9 +141,14 @@ internal fun Application.oppgaveApi(
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
                             val oppgaveId = call.finnUUID("oppgaveId")
+
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
-                                call.respond(HttpStatusCode.NoContent)
+                                val oppdatertTilstand = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse).tilOppgaveTilstandDTO()
+                                call.respondText(
+                                    contentType = ContentType.Text.Plain,
+                                    status = HttpStatusCode.OK,
+                                    text = oppdatertTilstand.toString(),
+                                )
                             }
                         }
                     }

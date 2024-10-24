@@ -123,11 +123,11 @@ class OppgaveMediator(
             }
     }
 
-    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
-        repository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
+    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave.Tilstand {
+        return repository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
             oppgave.tildel(settOppgaveAnsvarHendelse)
             repository.lagre(oppgave)
-        }
+        }.tilstand()
     }
 
     fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {

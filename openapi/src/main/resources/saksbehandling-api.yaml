@@ -226,7 +226,7 @@ paths:
         '200':
           description: Returnerer oppdatert tilstand etter tildeling av oppgave til saksbehandler eller beslutter
           content:
-            application/json:
+            text/plain:
               schema:
                 $ref: '#/components/schemas/OppgaveTilstand'
         '404':
