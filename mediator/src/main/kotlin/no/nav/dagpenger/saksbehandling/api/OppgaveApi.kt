@@ -21,6 +21,7 @@ import io.ktor.util.pipeline.PipelineContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -130,33 +131,44 @@ internal fun Application.oppgaveApi(
                     get {
                         val saksbehandler = applicationCallParser.sakbehandler(call)
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
-                        val oppgaveDTO = oppgaveDTO(oppgave)
-                        call.respond(HttpStatusCode.OK, oppgaveDTO)
+                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                            val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
+                            val oppgaveDTO = oppgaveDTO(oppgave)
+                            call.respond(HttpStatusCode.OK, oppgaveDTO)
+                        }
                     }
                     route("tildel") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
-                            val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
-                            call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
+                                call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                            }
                         }
                     }
                     route("utsett") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val utsettOppgaveHendelse = call.utsettOppgaveHendelse(saksbehandler)
-                            logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
-                            oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
-                            call.respond(HttpStatusCode.NoContent)
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
+                                oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
                     route("legg-tilbake") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse(saksbehandler)
-                            oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
-                            call.respond(HttpStatusCode.NoContent)
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                oppgaveMediator.fristillOppgave(oppgaveAnsvarHendelse)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
 
@@ -164,45 +176,53 @@ internal fun Application.oppgaveApi(
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val klarTilKontrollHendelse = call.klarTilKontrollHendelse(saksbehandler)
-                            logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
-                            oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse)
-                            call.respond(HttpStatusCode.NoContent)
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
+                                oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
                     route("kontroller") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val toTrinnskontrollHendelse = call.tildelKontrollHendelse(saksbehandler)
-                            oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
-                            call.respond(HttpStatusCode.NoContent)
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
 
                     route("ferdigstill/melding-om-vedtak") {
                         put {
                             val meldingOmVedtak = call.receiveText()
-                            try {
-                                if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
-                                val oppgaveId = call.finnUUID("oppgaveId")
-                                sikkerlogger.info { "Motatt melding om vedtak for oppgave $oppgaveId: $meldingOmVedtak" }
-                                val saksbehandler = applicationCallParser.sakbehandler(call)
-                                val saksbehandlerToken = call.request.jwt()
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                try {
+                                    if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
+                                    sikkerlogger.info { "Motatt melding om vedtak for oppgave $oppgaveId: $meldingOmVedtak" }
+                                    val saksbehandler = applicationCallParser.sakbehandler(call)
+                                    val saksbehandlerToken = call.request.jwt()
 
-                                // TODO fix saksbehandler vs beslutter
-                                oppgaveMediator.ferdigstillOppgave(
-                                    GodkjentBehandlingHendelse(
-                                        meldingOmVedtak = meldingOmVedtak,
-                                        oppgaveId = oppgaveId,
-                                        utførtAv = saksbehandler,
-                                    ),
-                                    saksbehandlerToken,
-                                )
-                                call.respond(HttpStatusCode.NoContent)
-                            } catch (e: UgyldigContentType) {
-                                val feilmelding = "Feil ved mottak av melding om vedtak: ${e.message}"
-                                logger.error(e) { feilmelding }
-                                sikkerlogger.error(e) { "$feilmelding for $meldingOmVedtak" }
-                                call.respond(HttpStatusCode.UnsupportedMediaType)
+                                    // TODO fix saksbehandler vs beslutter
+                                    oppgaveMediator.ferdigstillOppgave(
+                                        GodkjentBehandlingHendelse(
+                                            meldingOmVedtak = meldingOmVedtak,
+                                            oppgaveId = oppgaveId,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                        saksbehandlerToken,
+                                    )
+                                    call.respond(HttpStatusCode.NoContent)
+                                } catch (e: UgyldigContentType) {
+                                    val feilmelding = "Feil ved mottak av melding om vedtak: ${e.message}"
+                                    logger.error(e) { feilmelding }
+                                    sikkerlogger.error(e) { "$feilmelding for $meldingOmVedtak" }
+                                    call.respond(HttpStatusCode.UnsupportedMediaType)
+                                }
                             }
                         }
                     }
@@ -210,15 +230,17 @@ internal fun Application.oppgaveApi(
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val oppgaveId = call.finnUUID("oppgaveId")
-                            val saksbehandlerToken = call.request.jwt()
-                            oppgaveMediator.ferdigstillOppgave(
-                                GodkjennBehandlingMedBrevIArena(
-                                    oppgaveId = oppgaveId,
-                                    utførtAv = saksbehandler,
-                                ),
-                                saksbehandlerToken,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                val saksbehandlerToken = call.request.jwt()
+                                oppgaveMediator.ferdigstillOppgave(
+                                    GodkjennBehandlingMedBrevIArena(
+                                        oppgaveId = oppgaveId,
+                                        utførtAv = saksbehandler,
+                                    ),
+                                    saksbehandlerToken,
+                                )
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
                 }
