@@ -143,11 +143,24 @@ internal fun Application.oppgaveApi(
                             val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
                             val oppgaveId = call.finnUUID("oppgaveId")
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                val oppgave = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
-                                call.respond(HttpStatusCode.OK, oppgaveDTO(oppgave))
+                                oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse)
+                                call.respond(HttpStatusCode.NoContent)
                             }
                         }
                     }
+
+                    route("kontroller") {
+                        put {
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val toTrinnskontrollHendelse = call.tildelKontrollHendelse(saksbehandler)
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+                        }
+                    }
+
                     route("utsett") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
@@ -180,17 +193,6 @@ internal fun Application.oppgaveApi(
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
                                 oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse)
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-                        }
-                    }
-                    route("kontroller") {
-                        put {
-                            val saksbehandler = applicationCallParser.sakbehandler(call)
-                            val toTrinnskontrollHendelse = call.tildelKontrollHendelse(saksbehandler)
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                oppgaveMediator.tildelTotrinnskontroll(toTrinnskontrollHendelse)
                                 call.respond(HttpStatusCode.NoContent)
                             }
                         }

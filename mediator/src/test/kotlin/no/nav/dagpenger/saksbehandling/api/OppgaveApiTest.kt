@@ -75,6 +75,10 @@ import java.time.LocalDateTime
 import java.util.stream.Stream
 
 class OppgaveApiTest {
+    init {
+        mockAzure()
+    }
+
     val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
     private val saksbehandler =
         Saksbehandler(
@@ -84,13 +88,13 @@ class OppgaveApiTest {
                 SAKSBEHANDLER,
             ),
         )
+
     private val beslutter =
         Saksbehandler(
             BESLUTTER_IDENT,
             setOf(Configuration.saksbehandlerADGruppe, Configuration.beslutterADGruppe),
             setOf(BESLUTTER, SAKSBEHANDLER),
         )
-    private val mockAzure = mockAzure()
     private val ugyldigToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDI" +
             "yfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
@@ -466,28 +470,7 @@ class OppgaveApiTest {
 
         withOppgaveApi(oppgaveMediatorMock, pdlMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val json = response.bodyAsText()
-                //language=JSON
-                json shouldEqualSpecifiedJsonIgnoringOrder
-                    """
-                    {
-                      "behandlingId": "${testOppgave.behandlingId}",
-                      "person": {
-                        "ident": "$TEST_IDENT",
-                        "fornavn": "PETTER",
-                        "etternavn": "SMART",
-                        "fodselsdato": "2000-01-01",
-                        "kjonn": "UKJENT",
-                        "statsborgerskap": "NOR",
-                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte},
-                        "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}"
-                      },
-                      "emneknagger": ["Søknadsbehandling"],
-                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
-                    }
-                    """.trimIndent()
+                response.status shouldBe HttpStatusCode.NoContent
             }
         }
     }
