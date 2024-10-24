@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlngHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandling
+import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandlingEllerUnderBehandling
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
@@ -122,7 +122,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     fun start() {
-        settOppgaverKlarTilBehandling()
+        settOppgaverKlarTilBehandlingEllerUnderBehandling()
         rapidsConnection.start()
     }
 

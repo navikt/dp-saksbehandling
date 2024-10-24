@@ -54,7 +54,7 @@ class OppgaveFristUtgåttJobTest {
             repo.lagre(oppgave3)
             repo.lagre(oppgave4)
 
-            settOppgaverMedUtgåttFristTilKlarTilBehandling(
+            settOppgaverMedUtgåttFristTilKlarTilBehandlingEllerUnderBehandling(
                 dataSource = ds,
                 frist = iDag,
             )

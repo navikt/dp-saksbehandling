@@ -17,7 +17,7 @@ import kotlin.concurrent.fixedRateTimer
 
 private val logger = KotlinLogging.logger {}
 
-fun settOppgaverKlarTilBehandling() {
+fun settOppgaverKlarTilBehandlingEllerUnderBehandling() {
     val date = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
 
     fixedRateTimer(
@@ -27,13 +27,13 @@ fun settOppgaverKlarTilBehandling() {
         period = 1.Dag,
         action = {
             try {
-                logger.info { "Starter settOppgaverMedUtgåttFristTilKlarTilBehandling jobb" }
-                settOppgaverMedUtgåttFristTilKlarTilBehandling(
+                logger.info { "Starter settOppgaverKlarTilBehandlingEllerUnderBehandling jobb" }
+                settOppgaverMedUtgåttFristTilKlarTilBehandlingEllerUnderBehandling(
                     PostgresDataSourceBuilder.dataSource,
                     frist = LocalDate.now(),
                 )
             } catch (e: Exception) {
-                logger.error(e) { "SettOppgaverMedUtgåttFristTilKlarTilBehandling feilet: ${e.message} " }
+                logger.error(e) { "SettOppgaverKlarTilBehandlingEllerUnderBehandling feilet: ${e.message} " }
             }
         },
     )
@@ -41,7 +41,7 @@ fun settOppgaverKlarTilBehandling() {
 
 private val Int.Dag get() = this * 1000L * 60L * 60L * 24L
 
-fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
+fun settOppgaverMedUtgåttFristTilKlarTilBehandlingEllerUnderBehandling(
     dataSource: DataSource,
     frist: LocalDate = LocalDate.now(),
 ) {
@@ -68,7 +68,7 @@ fun settOppgaverMedUtgåttFristTilKlarTilBehandling(
                     }.asList,
                 )
                     .also {
-                        logger.info { "${it.size} oppgaver skal settes tilbake til KLAR_TIL_BEHANDLING: $it" }
+                        logger.info { "${it.size} oppgaver skal settes tilbake til KLAR_TIL_BEHANDLING/UNDER_BEHANDLING: $it" }
                     }
                     .map { listOf(it) }
             tx.settOppgaverKlarTilBehandlingEllerUnderBehandling(utgåtteOppgaver)
