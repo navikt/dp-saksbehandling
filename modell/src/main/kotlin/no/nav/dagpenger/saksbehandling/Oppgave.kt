@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
@@ -532,21 +533,34 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type",
+            )
         }
 
         fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke ferdigstille oppgave i tilstand $type for ${vedtakFattetHendelse.javaClass.simpleName}")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${vedtakFattetHendelse.javaClass.simpleName}",
+            )
         }
 
         fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke ferdigstille oppgave i tilstand $type for ${godkjentBehandlingHendelse.javaClass.simpleName}")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${godkjentBehandlingHendelse.javaClass.simpleName}",
+            )
         }
 
         fun ferdigstill(
@@ -554,7 +568,10 @@ data class Oppgave private constructor(
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
             ulovligTilstandsendring(
-                "Kan ikke ferdigstille oppgave i tilstand $type for ${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
             )
         }
 
@@ -562,60 +579,89 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om fjerne oppgaveansvar i tilstand $type",
+            )
         }
 
         fun tildel(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å tildele oppgave i tilstand $type",
+            )
         }
 
         fun utsett(
             oppgave: Oppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å utsette oppgave i tilstand $type",
+            )
         }
 
         fun sendTilKontroll(
             oppgave: Oppgave,
             klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type",
+            )
         }
 
         fun tildelTotrinnskontroll(
             oppgave: Oppgave,
             toTrinnskontrollHendelse: ToTrinnskontrollHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om å tildele totrinnskontroll i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å tildele totrinnskontroll i tilstand $type",
+            )
         }
 
         fun sendTilbakeTilUnderBehandling(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type",
+            )
         }
 
         fun sendTilbakeTilKlarTilKontroll(
             oppgave: Oppgave,
             tilbakeTilKontrollHendelse: TilbakeTilKlarTilKontrollHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake til klar til kontroll i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å sende tilbake til klar til kontroll i tilstand $type",
+            )
         }
 
         fun sendTilbakeTilUnderKontroll(
             oppgave: Oppgave,
             tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
         ) {
-            ulovligTilstandsendring("Kan ikke håndtere hendelse om å sende tilbake til under kontroll i tilstand $type")
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å sende tilbake til under kontroll i tilstand $type",
+            )
         }
 
-        private fun ulovligTilstandsendring(message: String): Nothing {
-            logger.error { message }
+        private fun ulovligTilstandsendring(
+            oppgaveId: UUID,
+            message: String,
+        ): Nothing {
+            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                logger.error { message }
+            }
             throw UlovligTilstandsendringException(message)
         }
     }
