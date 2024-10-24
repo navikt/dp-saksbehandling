@@ -464,11 +464,9 @@ class OppgaveApiTest {
                     utførtAv = saksbehandler,
                 ),
             )
-        } returns testOppgave
-        val pdlMock = mockk<PDLKlient>()
-        coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
+        } just Runs
 
-        withOppgaveApi(oppgaveMediatorMock, pdlMock) {
+        withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
