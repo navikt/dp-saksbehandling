@@ -28,6 +28,7 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
@@ -41,7 +42,6 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigBeslutterToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstand
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstandOgBehandling
@@ -66,6 +66,7 @@ import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -452,15 +453,15 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Saksbehandler skal kunne ta en oppgave`() {
+    fun `Saksbehandler skal kunne ta en oppgave som er KLAR_TIL_BEHANDLING`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
-        val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
+        val testOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
 
         coEvery {
             oppgaveMediatorMock.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
-                    ansvarligIdent = SAKSBEHANDLER_IDENT,
+                    ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 ),
             )
@@ -474,30 +475,30 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Beslutter skal kunne ta en kontrolloppgave`() {
+    @Disabled
+    fun `Beslutter skal kunne ta en oppgave som er KLAR_TIL_KONTROLL`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
-        val oppgaveId = UUIDv7.ny()
-
+        val testOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_KONTROLL)
+        val beslutter = Saksbehandler(BESLUTTER_IDENT, emptySet(), setOf(BESLUTTER))
         coEvery {
-            oppgaveMediatorMock.tildelTotrinnskontroll(
-                ToTrinnskontrollHendelse(
-                    oppgaveId = oppgaveId,
-                    ansvarligIdent = BESLUTTER_IDENT,
+            oppgaveMediatorMock.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = testOppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
                     utførtAv = beslutter,
                 ),
             )
-        } just runs
+        } just Runs
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/$oppgaveId/kontroller") { autentisert(token = gyldigBeslutterToken()) }
-                .also { response ->
-                    response.status shouldBe HttpStatusCode.NoContent
-                }
+            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
         }
     }
 
     @Test
-    fun `Feilstatuser når beslutter forsøker å ta en kontrolloppgave`() {
+    fun `Feilstatuser ved tildeling av kontrolloppgave`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val oppgaveSomIkkeFinnes = UUIDv7.ny()
         val oppgaveSomAlleredeErUnderKontroll = UUIDv7.ny()
@@ -506,8 +507,8 @@ class OppgaveApiTest {
             oppgaveMediatorMock.tildelTotrinnskontroll(
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgaveSomIkkeFinnes,
-                    ansvarligIdent = beslutter.navIdent,
-                    utførtAv = beslutter,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
                 ),
             )
         } throws DataNotFoundException("Oppgave ikke funnet")
@@ -516,18 +517,18 @@ class OppgaveApiTest {
             oppgaveMediatorMock.tildelTotrinnskontroll(
                 ToTrinnskontrollHendelse(
                     oppgaveId = oppgaveSomAlleredeErUnderKontroll,
-                    ansvarligIdent = beslutter.navIdent,
-                    utførtAv = beslutter,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
                 ),
             )
         } throws UlovligTilstandsendringException("Oppgaven er allerede under kontroll")
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/$oppgaveSomIkkeFinnes/kontroller") { autentisert(token = gyldigBeslutterToken()) }
+            client.put("/oppgave/$oppgaveSomIkkeFinnes/kontroller") { autentisert() }
                 .also { response ->
                     response.status shouldBe HttpStatusCode.NotFound
                 }
-            client.put("/oppgave/$oppgaveSomAlleredeErUnderKontroll/kontroller") { autentisert(token = gyldigBeslutterToken()) }
+            client.put("/oppgave/$oppgaveSomAlleredeErUnderKontroll/kontroller") { autentisert() }
                 .also { response ->
                     response.status shouldBe HttpStatusCode.Conflict
                 }

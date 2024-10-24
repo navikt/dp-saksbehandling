@@ -131,6 +131,13 @@ class OppgaveMediator(
         }
     }
 
+    fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
+        repository.hentOppgave(toTrinnskontrollHendelse.oppgaveId).also { oppgave ->
+            oppgave.tildelTotrinnskontroll(toTrinnskontrollHendelse)
+            repository.lagre(oppgave)
+        }
+    }
+
     fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
         repository.hentOppgave(klarTilKontrollHendelse.oppgaveId).also { oppgave ->
             oppgave.sendTilKontroll(klarTilKontrollHendelse)
@@ -223,13 +230,6 @@ class OppgaveMediator(
                 true -> logger.info { "Fjernet emneknagg: ${hendelse.ikkeRelevantEmneknagg} for behandlingId: ${hendelse.behandlingId}" }
                 false -> logger.warn { "Fant ikke emneknagg: ${hendelse.ikkeRelevantEmneknagg} for behandlingId: ${hendelse.behandlingId}" }
             }
-        }
-    }
-
-    fun tildelTotrinnskontroll(toTrinnskontrollHendelse: ToTrinnskontrollHendelse) {
-        repository.hentOppgave(toTrinnskontrollHendelse.oppgaveId).also { oppgave ->
-            oppgave.tildelTotrinnskontroll(toTrinnskontrollHendelse)
-            repository.lagre(oppgave)
         }
     }
 

@@ -85,17 +85,6 @@ internal object OppgaveApiTestHelper {
             ),
         )
 
-    fun gyldigBeslutterToken(
-        adGrupper: List<String> = emptyList(),
-        navIdent: String = BESLUTTER_IDENT,
-    ): String =
-        mockAzure.lagTokenMedClaims(
-            mapOf(
-                "groups" to listOf("BeslutterADGruppe", "SaksbehandlerADGruppe") + adGrupper,
-                "NAVident" to navIdent,
-            ),
-        )
-
     fun lagTestOppgaveMedTilstandOgBehandling(
         tilstand: Oppgave.Tilstand.Type,
         tildeltBehandlerIdent: String? = null,
