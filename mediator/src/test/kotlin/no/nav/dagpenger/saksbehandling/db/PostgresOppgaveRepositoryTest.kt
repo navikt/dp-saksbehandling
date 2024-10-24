@@ -34,8 +34,8 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
@@ -563,7 +563,7 @@ class PostgresOppgaveRepositoryTest {
                     ),
                     Tilstandsendring(
                         tilstand = UNDER_KONTROLL,
-                        hendelse = ToTrinnskontrollHendelse(oppgaveId = oppgaveIdTest, beslutter.navIdent, beslutter),
+                        hendelse = SettOppgaveAnsvarHendelse(oppgaveId = oppgaveIdTest, beslutter.navIdent, beslutter),
                         tidspunkt = nå.minusDays(1).truncatedTo(ChronoUnit.SECONDS),
                     ),
                     Tilstandsendring(

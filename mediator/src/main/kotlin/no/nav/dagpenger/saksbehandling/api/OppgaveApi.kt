@@ -46,7 +46,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
@@ -294,14 +293,6 @@ private fun ApplicationCall.settOppgaveAnsvarHendelse(saksbehandler: Saksbehandl
 private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehandler): FjernOppgaveAnsvarHendelse {
     return FjernOppgaveAnsvarHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
-        utførtAv = saksbehandler,
-    )
-}
-
-private fun ApplicationCall.tildelKontrollHendelse(saksbehandler: Saksbehandler): ToTrinnskontrollHendelse {
-    return ToTrinnskontrollHendelse(
-        oppgaveId = this.finnUUID("oppgaveId"),
-        ansvarligIdent = saksbehandler.navIdent,
         utførtAv = saksbehandler,
     )
 }
