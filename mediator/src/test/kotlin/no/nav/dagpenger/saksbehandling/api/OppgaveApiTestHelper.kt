@@ -33,7 +33,6 @@ import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.ToTrinnskontrollHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -128,7 +127,7 @@ internal object OppgaveApiTestHelper {
                         Tilstandsendring(
                             tilstand = UNDER_KONTROLL,
                             hendelse =
-                                ToTrinnskontrollHendelse(
+                                SettOppgaveAnsvarHendelse(
                                     oppgaveId = oppgaveId,
                                     ansvarligIdent = BESLUTTER_IDENT,
                                     utførtAv = Saksbehandler(BESLUTTER_IDENT, emptySet()),

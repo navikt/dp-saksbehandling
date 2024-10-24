@@ -653,9 +653,9 @@ class OppgaveApiTest {
                         postadresse = "Adresseveien 3, 0101 ADRESSA",
                     ),
             )
-        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(saksbehandler.navIdent) } returns
+        coEvery { saksbehandlerOppslagMock.hentSaksbehandler(beslutter.navIdent) } returns
             BehandlerDTO(
-                ident = saksbehandler.navIdent,
+                ident = beslutter.navIdent,
                 fornavn = "Saksbeandler fornavn",
                 etternavn = "Saksbehandler etternavn",
                 enhet =
