@@ -353,9 +353,8 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Ved tildeling av neste oppgave, skal man ut fra filteret og tilganger finne eldste ledige oppgave klar til behandling/kontroll og oppdatere den`() {
+    fun `Tildeling av neste oppgave ut fra filteret og tilganger `() {
         withMigratedDb { ds ->
-
             val testSaksbehandler =
                 Saksbehandler(
                     navIdent = "saksbehandler",
