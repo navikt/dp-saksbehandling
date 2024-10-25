@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -20,7 +21,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.TilgangType
+import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
+import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -50,12 +52,12 @@ import java.time.temporal.ChronoUnit
 
 class PostgresOppgaveRepositoryTest {
     private val saksbehandler =
-        Saksbehandler("saksbehandler", setOf("SaksbehandlerADGruppe"), setOf(TilgangType.SAKSBEHANDLER))
+        Saksbehandler("saksbehandler", setOf("SaksbehandlerADGruppe"), setOf(SAKSBEHANDLER))
     private val beslutter =
         Saksbehandler(
             "beslutter",
             setOf("SaksbehandlerADGruppe", "BeslutterADGruppe"),
-            setOf(TilgangType.BESLUTTER, TilgangType.SAKSBEHANDLER),
+            setOf(BESLUTTER, SAKSBEHANDLER),
         )
     private val oppgaveIdTest = UUIDv7.ny()
 
@@ -351,13 +353,21 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Ved tildeling av neste oppgave, skal man ut fra filteret finne eldste ledige oppgave klar til behandling og oppdatere den`() {
+    fun `Ved tildeling av neste oppgave, skal man ut fra filteret og tilganger finne eldste ledige oppgave klar til behandling/kontroll og oppdatere den`() {
         withMigratedDb { ds ->
 
             val testSaksbehandler =
                 Saksbehandler(
-                    navIdent = "NAVIdent",
+                    navIdent = "saksbehandler",
                     grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER),
+                )
+
+            val testBeslutter =
+                Saksbehandler(
+                    navIdent = "beslutter",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
                 )
             val repo = PostgresOppgaveRepository(ds)
 
@@ -400,12 +410,19 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(13),
                 )
 
+            val eldsteKontrollOppgave =
+                lagOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(14),
+                )
+
             repo.lagre(yngsteLedigeOppgave)
             repo.lagre(nestEldsteLedigeOppgave)
             repo.lagre(eldsteLedigeOppgave)
             repo.lagre(endaEldreTildeltOppgave)
             repo.lagre(endaEldreFerdigOppgave)
             repo.lagre(endaEldreOpprettetOppgave)
+            repo.lagre(eldsteKontrollOppgave)
 
             val filter =
                 TildelNesteOppgaveFilter(
@@ -442,6 +459,29 @@ class PostgresOppgaveRepositoryTest {
                     filter = filter2,
                 )
             nesteOppgave2!!.oppgaveId shouldBe yngsteLedigeOppgave.oppgaveId
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = testBeslutter.navIdent,
+                        utførtAv = testBeslutter,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        harTilgangTilEgneAnsatte = true,
+                        harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                        harBeslutterRolle = true,
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe eldsteKontrollOppgave.oppgaveId
+                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.sisteBeslutter() shouldBe testBeslutter.navIdent
+                }
+            }
         }
     }
 

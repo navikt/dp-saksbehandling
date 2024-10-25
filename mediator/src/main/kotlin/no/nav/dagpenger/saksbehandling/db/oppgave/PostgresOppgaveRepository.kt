@@ -138,7 +138,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     """
                         SELECT *
                         FROM   alle_oppgaver alop
-                        ORDER BY alop.registrert_tidspunkt
+                        ORDER BY alop.opprettet
                         FETCH FIRST 1 ROWS ONLY
                     )
                     """.trimIndent()
@@ -164,8 +164,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         selectKlarTilKontrollOppgaver +
                         selectFraAlleOppgaverOgOrderBy +
                         updateStatement
-                println(statement)
-                val oppgaveId: UUID? =
+                val oppgaveIdOgTilstandType: Pair<UUID, Type>? =
                     tx.run(
                         queryOf(
                             statement = statement,
@@ -178,19 +177,20 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                                     "har_beslutter_rolle" to filter.harBeslutterRolle,
                                 ),
                         ).map { row ->
-                            row.uuidOrNull("id")
+                            val tilstandType = Type.valueOf(row.string("tilstand"))
+                            Pair(row.uuid("id"), tilstandType)
                         }.asSingle,
                     )
-                oppgaveId?.let {
+                oppgaveIdOgTilstandType?.let {
                     tx.lagre(
-                        it,
+                        it.first,
                         Tilstandsendring(
-                            tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                            tilstand = it.second,
                             hendelse = nesteOppgaveHendelse,
                         ),
                     )
                 }
-                oppgaveId
+                oppgaveIdOgTilstandType?.first
             }
         }
     }

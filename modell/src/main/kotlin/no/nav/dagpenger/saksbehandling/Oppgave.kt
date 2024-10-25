@@ -225,7 +225,7 @@ data class Oppgave private constructor(
     fun sisteBeslutter(): String? {
         return kotlin.runCatching {
             _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL }?.let {
-                (it.hendelse as SettOppgaveAnsvarHendelse).ansvarligIdent
+                (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
         }
             .onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
