@@ -263,6 +263,7 @@ class PostgresOppgaveRepositoryTest {
                 Saksbehandler(
                     navIdent = "NAVIdent2",
                     grupper = emptySet(),
+                    tilganger = emptySet(),
                 )
             val nesteOppgave =
                 repo.tildelOgHentNesteOppgave(
@@ -277,6 +278,7 @@ class PostgresOppgaveRepositoryTest {
                             emneknagg = emptySet(),
                             harTilgangTilEgneAnsatte = false,
                             harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                            harBeslutterRolle = false,
                         ),
                 )
             requireNotNull(nesteOppgave)

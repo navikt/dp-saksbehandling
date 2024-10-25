@@ -66,6 +66,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             session.transaction { tx ->
                 val emneknagger = filter.emneknagg.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
+
+                // language=SQL
                 val emneknaggClause =
                     if (filter.emneknagg.isNotEmpty()) {
                         """
@@ -79,19 +81,21 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     } else {
                         ""
                     }
-                val orderByReturningStatement =
+
+                // Oppdaterer saksbehandler_ident og tilstand avhengig av om oppgaven som hentes som neste er klar til
+                // behandling eller klar til kontroll. Pålogget saksbehandler må ha rettighet til aktuell oppgave.
+                // Det sjekkes derfor mot tilganger i utplukket.
+
+                // language=SQL
+                val withStatement =
                     """
-                    ORDER BY oppg.opprettet
-                    FETCH FIRST 1 ROWS ONLY)
-                    RETURNING *;
+                    WITH neste_oppgave AS ( WITH alle_oppgaver AS (
                     """.trimIndent()
 
-                val updateStatement =
+                // language=SQL
+                val selectKlarTilBehandlingOppgaver =
                     """
-                UPDATE oppgave_v1
-                SET    saksbehandler_ident = :saksbehandler_ident
-                     , tilstand            = 'UNDER_BEHANDLING'
-                WHERE id = (SELECT   oppg.id
+                            SELECT   oppg.*
                             FROM     oppgave_v1    oppg
                             JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
                             JOIN     person_v1     pers ON pers.id = beha.person_id
@@ -101,18 +105,77 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                             AND      oppg.opprettet <  :tom_pluss_1_dag
                             AND    ( NOT pers.skjermes_som_egne_ansatte
                                   OR :har_tilgang_til_egne_ansatte )
+                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
+                            """ + emneknaggClause
+
+                // language=SQL
+                val unionAll = """
+                            UNION ALL
+                            """
+
+                // language=SQL
+                val selectKlarTilKontrollOppgaver =
+                    """
+                            SELECT   oppg.*
+                            FROM     oppgave_v1    oppg
+                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
+                            JOIN     person_v1     pers ON pers.id = beha.person_id
+                            WHERE    :har_beslutter_rolle
+                            AND      oppg.tilstand = 'KLAR_TIL_KONTROLL'
+                            AND      oppg.saksbehandler_ident IS NULL
+                            AND      oppg.opprettet >= :fom
+                            AND      oppg.opprettet <  :tom_pluss_1_dag
+                            AND    ( NOT pers.skjermes_som_egne_ansatte
+                                  OR :har_tilgang_til_egne_ansatte )
                             AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
-                """ + emneknaggClause + orderByReturningStatement
+                """ + emneknaggClause +
+                        """
+                        )
+                        """.trimIndent()
+
+                // language=SQL
+                val selectFraAlleOppgaverOgOrderBy =
+                    """
+                        SELECT *
+                        FROM   alle_oppgaver alop
+                        ORDER BY alop.registrert_tidspunkt
+                        FETCH FIRST 1 ROWS ONLY
+                    )
+                    """.trimIndent()
+
+                // language=SQL
+                val updateStatement =
+                    """
+                UPDATE oppgave_v1 oppu
+                SET    saksbehandler_ident = :saksbehandler_ident
+                     , tilstand            = CASE oppu.tilstand
+                                                     WHEN 'KLAR_TIL_BEHANDLING' THEN 'UNDER_BEHANDLING'
+                                                     WHEN 'KLAR_TIL_KONTROLL' THEN 'UNDER_KONTROLL'
+                                                  END
+                FROM  neste_oppgave next
+                WHERE next.id = oppu.id
+                RETURNING *
+                """
+
+                val statement =
+                    withStatement +
+                        selectKlarTilBehandlingOppgaver +
+                        unionAll +
+                        selectKlarTilKontrollOppgaver +
+                        selectFraAlleOppgaverOgOrderBy +
+                        updateStatement
+                println(statement)
                 val oppgaveId: UUID? =
                     tx.run(
                         queryOf(
-                            statement = updateStatement,
+                            statement = statement,
                             paramMap =
                                 mapOf(
                                     "saksbehandler_ident" to nesteOppgaveHendelse.ansvarligIdent,
                                     "fom" to filter.periode.fom,
                                     "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
                                     "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
+                                    "har_beslutter_rolle" to filter.harBeslutterRolle,
                                 ),
                         ).map { row ->
                             row.uuidOrNull("id")

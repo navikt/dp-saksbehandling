@@ -52,28 +52,32 @@ data class TildelNesteOppgaveFilter(
     val emneknagg: Set<String>,
     val harTilgangTilEgneAnsatte: Boolean = false,
     val harTilgangTilAdressebeskyttelser: Set<AdressebeskyttelseGradering>,
+    val harBeslutterRolle: Boolean = false,
 ) {
     companion object {
-        fun fra(
-            queryString: String,
-            saksbehandlerTilgangEgneAnsatte: Boolean,
-            adresseBeskyttelseGradering: Set<AdressebeskyttelseGradering>,
-        ): TildelNesteOppgaveFilter {
-            val builder = FilterBuilder(queryString)
-
-            return TildelNesteOppgaveFilter(
-                periode = Periode.fra(queryString),
-                emneknagg = builder.emneknagg() ?: emptySet(),
-                harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
-                harTilgangTilAdressebeskyttelser = adresseBeskyttelseGradering,
-            )
-        }
+//        fun fra(
+//            queryString: String,
+//            saksbehandlerTilgangEgneAnsatte: Boolean,
+//            adresseBeskyttelseGradering: Set<AdressebeskyttelseGradering>,
+// //            harbeslutterRolle: Boolean = false,
+//        ): TildelNesteOppgaveFilter {
+//            val builder = FilterBuilder(queryString)
+//
+//            return TildelNesteOppgaveFilter(
+//                periode = Periode.fra(queryString),
+//                emneknagg = builder.emneknagg() ?: emptySet(),
+//                harTilgangTilEgneAnsatte = saksbehandlerTilgangEgneAnsatte,
+//                harTilgangTilAdressebeskyttelser = adresseBeskyttelseGradering,
+// //                harbeslutterRolle = harbeslutterRolle
+//            )
+//        }
 
         fun fra(
             queryString: String,
             saksbehandler: Saksbehandler,
         ): TildelNesteOppgaveFilter {
             val builder = FilterBuilder(queryString)
+            val harTilgangTilEgneAnsatte = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE)
             val adresseGraderingTilganger = mutableSetOf(AdressebeskyttelseGradering.UGRADERT)
             saksbehandler.tilganger.forEach { tilgang ->
                 when (tilgang) {
@@ -86,12 +90,13 @@ data class TildelNesteOppgaveFilter(
                     else -> {}
                 }
             }
-            val harTilgangTilEgneAnsatte = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE)
+            val harBeslutterRolle: Boolean = saksbehandler.tilganger.contains(TilgangType.BESLUTTER)
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknagg = builder.emneknagg() ?: emptySet(),
                 harTilgangTilEgneAnsatte = harTilgangTilEgneAnsatte,
                 harTilgangTilAdressebeskyttelser = adresseGraderingTilganger,
+                harBeslutterRolle = harBeslutterRolle,
             )
         }
     }
