@@ -23,7 +23,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -114,6 +113,18 @@ class OppgaveTilstandTest {
         }
 
         oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+        oppgave.behandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Skal gå til KlarTilKontroll fra UnderKontroll`() {
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
+
+        shouldNotThrowAny {
+            oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId, saksbehandler))
+        }
+
+        oppgave.tilstand().type shouldBe KLAR_TIL_KONTROLL
         oppgave.behandlerIdent shouldBe null
     }
 
@@ -460,23 +471,6 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandlerIdent
-    }
-
-    @Test
-    fun `Skal gå fra tilstand UNDER_KONTROLL til KLAR_TIL_KONTROLL`() {
-        val beslutter = Saksbehandler("Z080808", emptySet())
-        val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
-
-        oppgave.sendTilbakeTilKlarTilKontroll(
-            tilbakeTilKontrollHendelse =
-                TilbakeTilKlarTilKontrollHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    utførtAv = beslutter,
-                ),
-        )
-
-        oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
-        oppgave.behandlerIdent shouldBe null
     }
 
     @Test

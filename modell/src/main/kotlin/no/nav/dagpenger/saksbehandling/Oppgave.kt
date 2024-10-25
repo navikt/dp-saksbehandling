@@ -27,7 +27,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilKlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -195,10 +194,6 @@ data class Oppgave private constructor(
 
     fun sendTilbakeTilUnderBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
-    }
-
-    fun sendTilbakeTilKlarTilKontroll(tilbakeTilKontrollHendelse: TilbakeTilKlarTilKontrollHendelse) {
-        tilstand.sendTilbakeTilKlarTilKontroll(this, tilbakeTilKontrollHendelse)
     }
 
     fun sendTilbakeTilUnderKontroll(tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse) {
@@ -460,11 +455,11 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
-        override fun sendTilbakeTilKlarTilKontroll(
+        override fun fjernAnsvar(
             oppgave: Oppgave,
-            tilbakeTilKontrollHendelse: TilbakeTilKlarTilKontrollHendelse,
+            fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilKontroll, tilbakeTilKontrollHendelse)
+            oppgave.endreTilstand(KlarTilKontroll, fjernOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = null
         }
     }
@@ -623,16 +618,6 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type",
-            )
-        }
-
-        fun sendTilbakeTilKlarTilKontroll(
-            oppgave: Oppgave,
-            tilbakeTilKontrollHendelse: TilbakeTilKlarTilKontrollHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å sende tilbake til klar til kontroll i tilstand $type",
             )
         }
 

@@ -243,7 +243,7 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
   /oppgave/{oppgaveId}/legg-tilbake:
     put:
-      summary: Saksbehandler fjernes som ansvarlig for oppgaven, og oppgaven går tilbake til oppgavelisten
+      summary: Saksbehandler/beslutter fjernes som ansvarlig for oppgaven, og oppgaven går tilbake til oppgavelisten
       parameters:
         - in: path
           name: oppgaveId
@@ -253,7 +253,7 @@ paths:
             format: uuid
       responses:
         '204':
-          description: Fjernet saksbehandler som ansvarlig for oppgaven, og oppgaven gjøres klar til behandling
+          description: Fjernet saksbehandler/beslutter som ansvarlig for oppgaven, og oppgaven gjøres klar til behandling/kontroll
         '404':
           description: Oppgaven ble ikke funnet
           content:
@@ -261,7 +261,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
         '409':
-          description: Oppgaven kan ikke settes klar til behandling igjen
+          description: Oppgaven kan ikke legges tilbake i oppgavelisten igjen
           content:
             application/problem+json:
               schema:
