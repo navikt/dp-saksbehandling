@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
+import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
@@ -140,7 +141,7 @@ class PostgresOppgaveRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
 
-            val eldsteOppgaveMedSkjermingAvEgenAnsatt =
+            val eldsteOppgaveMedSkjermingSomEgneAnsatte =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
@@ -151,7 +152,7 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            repo.lagre(eldsteOppgaveMedSkjermingAvEgenAnsatt)
+            repo.lagre(eldsteOppgaveMedSkjermingSomEgneAnsatte)
 
             val eldsteOppgaveUtenSkjermingAvEgenAnsatt =
                 lagOppgave(
@@ -224,7 +225,7 @@ class PostgresOppgaveRepositoryTest {
                         ),
                 )!!
 
-            nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingAvEgenAnsatt.oppgaveId
+            nesteOppgaveMedTilgang.oppgaveId shouldBe eldsteOppgaveMedSkjermingSomEgneAnsatte.oppgaveId
             nesteOppgaveMedTilgang.behandlerIdent shouldBe saksbehandlerMedTilgangTilEgneAnsatte.navIdent
             nesteOppgaveMedTilgang.tilstand().type shouldBe UNDER_BEHANDLING
         }
@@ -353,7 +354,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Tildeling av neste oppgave ut fra filteret og tilganger `() {
+    fun `Tildeling av neste oppgave ut fra søkefilter og tilganger`() {
         withMigratedDb { ds ->
             val testSaksbehandler =
                 Saksbehandler(
@@ -361,29 +362,34 @@ class PostgresOppgaveRepositoryTest {
                     grupper = emptySet(),
                     tilganger = setOf(SAKSBEHANDLER),
                 )
-
-            val testBeslutter =
+            val vanligBeslutter =
                 Saksbehandler(
-                    navIdent = "beslutter",
+                    navIdent = "vanligBeslutter",
                     grupper = emptySet(),
                     tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
                 )
+            val beslutterMedTilgangTilEgneAnsatte =
+                Saksbehandler(
+                    navIdent = "beslutterMedTilgangTilEgneAnsatte",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER, EGNE_ANSATTE),
+                )
             val repo = PostgresOppgaveRepository(ds)
 
-            val yngsteLedigeOppgave =
+            val yngsteLedigeOppgaveOpprettetIDag =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå,
                 )
 
-            val nestEldsteLedigeOppgave =
+            val oppgaveMedEmneknagg =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     emneknagger = setOf("Testknagg"),
                 )
 
-            val eldsteLedigeOppgave =
+            val eldsteLedigeOppgaveKlarTilBehandling =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(10),
@@ -415,70 +421,108 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(14),
                 )
 
-            repo.lagre(yngsteLedigeOppgave)
-            repo.lagre(nestEldsteLedigeOppgave)
-            repo.lagre(eldsteLedigeOppgave)
+            val endaEldreKontrollOppgaveMedEgneAnsatteSkjerming =
+                lagOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(15),
+                    skjermesSomEgneAnsatte = true,
+                )
+
+            repo.lagre(yngsteLedigeOppgaveOpprettetIDag)
+            repo.lagre(oppgaveMedEmneknagg)
+            repo.lagre(eldsteLedigeOppgaveKlarTilBehandling)
             repo.lagre(endaEldreTildeltOppgave)
             repo.lagre(endaEldreFerdigOppgave)
             repo.lagre(endaEldreOpprettetOppgave)
             repo.lagre(eldsteKontrollOppgave)
+            repo.lagre(endaEldreKontrollOppgaveMedEgneAnsatteSkjerming)
 
-            val filter =
+            val emneknaggFilter =
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
                     harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
-            val nesteOppgave =
-                repo.tildelOgHentNesteOppgave(
-                    nesteOppgaveHendelse =
-                        NesteOppgaveHendelse(
-                            ansvarligIdent = testSaksbehandler.navIdent,
-                            utførtAv = testSaksbehandler,
-                        ),
-                    filter = filter,
-                )
-            nesteOppgave!!.oppgaveId shouldBe nestEldsteLedigeOppgave.oppgaveId
-            nesteOppgave.behandlerIdent shouldBe testSaksbehandler.navIdent
-            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
-
-            val filter2 =
+            val opprettetIDagFilter =
                 TildelNesteOppgaveFilter(
                     periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
                     emneknagg = emptySet(),
                     harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
                 )
-            val nesteOppgave2 =
-                repo.tildelOgHentNesteOppgave(
-                    nesteOppgaveHendelse =
-                        NesteOppgaveHendelse(
-                            ansvarligIdent = testSaksbehandler.navIdent,
-                            utførtAv = testSaksbehandler,
-                        ),
-                    filter = filter2,
-                )
-            nesteOppgave2!!.oppgaveId shouldBe yngsteLedigeOppgave.oppgaveId
 
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
                     NesteOppgaveHendelse(
-                        ansvarligIdent = testBeslutter.navIdent,
-                        utførtAv = testBeslutter,
+                        ansvarligIdent = testSaksbehandler.navIdent,
+                        utførtAv = testSaksbehandler,
+                    ),
+                filter = emneknaggFilter,
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe oppgaveMedEmneknagg.oppgaveId
+                    it.behandlerIdent shouldBe testSaksbehandler.navIdent
+                    it.tilstand().type shouldBe UNDER_BEHANDLING
+                }
+            }
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = testSaksbehandler.navIdent,
+                        utførtAv = testSaksbehandler,
+                    ),
+                filter = opprettetIDagFilter,
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe yngsteLedigeOppgaveOpprettetIDag.oppgaveId
+                }
+            }
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = vanligBeslutter.navIdent,
+                        utførtAv = vanligBeslutter,
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
                         emneknagg = emptySet(),
-                        harTilgangTilEgneAnsatte = true,
+                        harTilgangTilEgneAnsatte = beslutter.tilganger.contains(EGNE_ANSATTE),
                         harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
-                        harBeslutterRolle = true,
+                        harBeslutterRolle = beslutter.tilganger.contains(BESLUTTER),
                     ),
             ).let {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgave.oppgaveId
                     it.tilstand() shouldBe Oppgave.UnderKontroll
-                    it.sisteBeslutter() shouldBe testBeslutter.navIdent
+                    it.sisteBeslutter() shouldBe vanligBeslutter.navIdent
+                }
+            }
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = beslutterMedTilgangTilEgneAnsatte.navIdent,
+                        utførtAv = beslutterMedTilgangTilEgneAnsatte,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        harTilgangTilEgneAnsatte = beslutterMedTilgangTilEgneAnsatte.tilganger.contains(EGNE_ANSATTE),
+                        harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                        harBeslutterRolle = beslutterMedTilgangTilEgneAnsatte.tilganger.contains(BESLUTTER),
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe endaEldreKontrollOppgaveMedEgneAnsatteSkjerming.oppgaveId
+                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.sisteBeslutter() shouldBe beslutterMedTilgangTilEgneAnsatte.navIdent
                 }
             }
         }
