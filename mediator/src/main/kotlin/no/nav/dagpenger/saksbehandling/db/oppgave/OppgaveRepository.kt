@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import java.time.LocalDateTime
 import java.util.UUID
 
 interface OppgaveRepository {
@@ -51,4 +52,10 @@ interface OppgaveRepository {
     fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
 
     fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering
+
+    fun lagreNotat(
+        notatId: UUID,
+        tilstandsendringId: UUID,
+        tekst: String,
+    ): LocalDateTime
 }

@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
@@ -351,6 +352,13 @@ fun lagOppgaveDTO(
         utsattTilDato = oppgave.utsattTil(),
         saksbehandler = sisteSaksbehandlerDTO,
         beslutter = sisteBeslutterDTO,
+        notat =
+            oppgave.tilstand().notat?.let {
+                NotatDTO(
+                    tekst = it.tekst,
+                    sistEndretTidspunkt = it.sistEndretTidspunkt,
+                )
+            },
     )
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {

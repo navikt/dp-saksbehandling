@@ -33,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import org.postgresql.util.PGobject
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -409,6 +410,17 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 }.asSingle,
             )
         } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
+    }
+
+    override fun lagreNotat(
+        notatId: UUID,
+        tilstandsendringId: UUID,
+        tekst: String,
+    ): LocalDateTime {
+        TODO()
+//        return sessionOf(dataSource).use { session ->
+//            session.
+//        }
     }
 
     //language=PostgreSQL
@@ -827,6 +839,35 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
     lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
 }
 
+private fun TransactionalSession.lagreNotat(
+    notatId: UUID,
+    tilstandsendringId: UUID,
+    tekst: String,
+): LocalDateTime {
+    return run(
+        queryOf(
+            //language=PostgreSQL
+            statement =
+                """
+                INSERT INTO notat_v1
+                    (id, oppgave_tilstand_logg_id, tekst) 
+                VALUES
+                    (:notat_id, :oppgave_tilstand_logg_id, :tekst) 
+                ON CONFLICT (oppgave_tilstand_logg_id) DO UPDATE SET tekst = :tekst
+                             RETURNING endret_tidspunkt
+                """.trimIndent(),
+            paramMap =
+                mapOf(
+                    "id" to notatId,
+                    "oppgave_tilstand_logg_id" to tilstandsendringId,
+                    "tekst" to tekst,
+                ),
+        ).map { row -> row.localDateTime("endret_tidspunkt") }.asSingle,
+    ) ?: throw KanIkkeLagreNotatException(
+        "Kunne ikke lagre notat for tilstandsendringId: $tilstandsendringId",
+    )
+}
+
 private fun TransactionalSession.lagre(
     oppgaveId: UUID,
     emneknagger: Set<String>,
@@ -931,3 +972,5 @@ private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
 }
 
 class DataNotFoundException(message: String) : RuntimeException(message)
+
+class KanIkkeLagreNotatException(message: String) : RuntimeException(message)

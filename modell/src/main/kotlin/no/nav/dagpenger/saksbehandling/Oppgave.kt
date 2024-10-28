@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -192,6 +193,12 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, klarTilKontrollHendelse)
     }
 
+    fun lagreNotat(notatHendelse: NotatHendelse) {
+        egneAnsatteTilgangskontroll(notatHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(notatHendelse.utførtAv)
+        tilstand.lagreNotat(this, notatHendelse)
+    }
+
     fun sendTilbakeTilUnderBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
     }
@@ -232,7 +239,7 @@ data class Oppgave private constructor(
             .getOrThrow()
     }
 
-    object Opprettet : Tilstand {
+    object Opprettet : TilstandImpl() {
         override val type: Type = OPPRETTET
 
         override fun oppgaveKlarTilBehandling(
@@ -250,7 +257,7 @@ data class Oppgave private constructor(
         }
     }
 
-    object KlarTilBehandling : Tilstand {
+    object KlarTilBehandling : TilstandImpl() {
         override val type: Type = KLAR_TIL_BEHANDLING
 
         override fun oppgaveKlarTilBehandling(
@@ -276,7 +283,7 @@ data class Oppgave private constructor(
         }
     }
 
-    object UnderBehandling : Tilstand {
+    object UnderBehandling : TilstandImpl() {
         override val type: Type = UNDER_BEHANDLING
 
         override fun sendTilKontroll(
@@ -334,7 +341,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
         ) {
-            oppgave.endreTilstand(UnderKontroll, tilbakeTilUnderKontrollHendelse)
+            oppgave.endreTilstand(UnderKontroll(), tilbakeTilUnderKontrollHendelse)
             oppgave.behandlerIdent = tilbakeTilUnderKontrollHendelse.ansvarligIdent
         }
 
@@ -366,7 +373,7 @@ data class Oppgave private constructor(
         message: String,
     ) : RuntimeException(message)
 
-    object FerdigBehandlet : Tilstand {
+    object FerdigBehandlet : TilstandImpl() {
         override val type: Type = FERDIG_BEHANDLET
 
         override fun ferdigstill(
@@ -381,7 +388,7 @@ data class Oppgave private constructor(
         }
     }
 
-    object PaaVent : Tilstand {
+    object PaaVent : TilstandImpl() {
         override val type: Type = PAA_VENT
 
         override fun tildel(
@@ -410,7 +417,7 @@ data class Oppgave private constructor(
         }
     }
 
-    object KlarTilKontroll : Tilstand {
+    object KlarTilKontroll : TilstandImpl() {
         override val type: Type = KLAR_TIL_KONTROLL
 
         override fun tildel(
@@ -420,12 +427,12 @@ data class Oppgave private constructor(
             require(settOppgaveAnsvarHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter tilgang")
             }
-            oppgave.endreTilstand(UnderKontroll, settOppgaveAnsvarHendelse)
+            oppgave.endreTilstand(UnderKontroll(), settOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
     }
 
-    object UnderKontroll : Tilstand {
+    class UnderKontroll : TilstandImpl() {
         override val type: Type = UNDER_KONTROLL
 
         override fun ferdigstill(
@@ -462,10 +469,32 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(KlarTilKontroll, fjernOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = null
         }
+
+        override fun lagreNotat(
+            oppgave: Oppgave,
+            notatHendelse: NotatHendelse,
+        ) {
+            if (oppgave.tilstand.notat == null) {
+                oppgave.tilstand.notat =
+                    Notat(
+                        notatId = UUIDv7.ny(),
+                        tekst = notatHendelse.tekst,
+                        sistEndretTidspunkt = TODO(),
+                    )
+            } else {
+                oppgave.tilstand.notat!!.endreTekst(notatHendelse.tekst)
+            }
+        }
+    }
+
+    abstract class TilstandImpl : Tilstand {
+        override var notat: Notat? = null
     }
 
     interface Tilstand {
         val type: Type
+
+        var notat: Notat?
 
         class ManglendeTilgang(
             message: String,
@@ -488,7 +517,7 @@ data class Oppgave private constructor(
                     FERDIG_BEHANDLET -> FerdigBehandlet
                     PAA_VENT -> PaaVent
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
-                    UNDER_KONTROLL -> UnderKontroll
+                    UNDER_KONTROLL -> UnderKontroll()
                 }
 
             fun fra(type: String) =
@@ -512,9 +541,9 @@ data class Oppgave private constructor(
 
             companion object {
                 val values
-                    get() = Type.entries.toSet()
+                    get() = entries.toSet()
 
-                val søkbareTyper = Type.entries.toSet().minus(OPPRETTET)
+                val søkbareTyper = entries.toSet().minus(OPPRETTET)
                 val defaultOppgaveListTilstander =
                     setOf(
                         KLAR_TIL_BEHANDLING,
@@ -629,6 +658,13 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å sende tilbake til under kontroll i tilstand $type",
             )
+        }
+
+        fun lagreNotat(
+            oppgave: Oppgave,
+            notatHendelse: NotatHendelse,
+        ) {
+            throw RuntimeException("Notat er ikke tillatt i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(

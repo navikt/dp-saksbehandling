@@ -302,7 +302,7 @@ class OppgaveTilstandTest {
                 utførtAv = beslutter,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
         oppgave.behandlerIdent shouldBe beslutter.navIdent
     }
 
@@ -320,7 +320,7 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
         oppgave.behandlerIdent shouldBe beslutterIdent.navIdent
     }
 
@@ -335,7 +335,7 @@ class OppgaveTilstandTest {
                 utførtAv = beslutter,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
     }
 
     @Test
@@ -391,7 +391,7 @@ class OppgaveTilstandTest {
                 utførtAv = saksbehandler,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
     }
 
     @Test

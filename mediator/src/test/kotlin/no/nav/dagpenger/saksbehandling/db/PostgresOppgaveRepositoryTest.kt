@@ -562,7 +562,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveUtenSkjermingOgAdressegradering.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe vanligBeslutter.navIdent
                 }
             }
@@ -585,7 +585,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveEgneAnsatteSkjerming.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterEgneAnsatte.navIdent
                 }
             }
@@ -608,7 +608,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveFortroligAdresse.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterFortroligAdresse.navIdent
                 }
             }
@@ -631,7 +631,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresse.navIdent
                     it.opprettet shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.opprettet
                 }
@@ -655,7 +655,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseUtland.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresseUtland.navIdent
                 }
             }
@@ -684,7 +684,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligOgEgneAnsatte.navIdent
                 }
             }

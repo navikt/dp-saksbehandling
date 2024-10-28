@@ -27,7 +27,7 @@ object OppgaveTestHelper {
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
                 PAA_VENT -> Oppgave.PaaVent
                 KLAR_TIL_KONTROLL -> Oppgave.KlarTilKontroll
-                UNDER_KONTROLL -> Oppgave.UnderKontroll
+                UNDER_KONTROLL -> Oppgave.UnderKontroll()
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),

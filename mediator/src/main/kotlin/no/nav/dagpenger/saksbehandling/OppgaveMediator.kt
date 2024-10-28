@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -133,6 +134,13 @@ class OppgaveMediator(
     fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
         repository.hentOppgave(klarTilKontrollHendelse.oppgaveId).also { oppgave ->
             oppgave.sendTilKontroll(klarTilKontrollHendelse)
+            repository.lagre(oppgave)
+        }
+    }
+
+    fun lagreNotat(notatHendelse: NotatHendelse) {
+        repository.hentOppgave(notatHendelse.oppgaveId).also { oppgave ->
+            oppgave.lagreNotat(notatHendelse)
             repository.lagre(oppgave)
         }
     }
