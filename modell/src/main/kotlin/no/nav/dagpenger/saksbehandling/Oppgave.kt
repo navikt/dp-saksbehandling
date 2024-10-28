@@ -432,7 +432,7 @@ data class Oppgave private constructor(
         }
     }
 
-    class UnderKontroll(private var notat: Notat? = null) : Tilstand {
+    data class UnderKontroll(private var notat: Notat? = null) : Tilstand {
         override val type: Type = UNDER_KONTROLL
 
         override fun ferdigstill(
@@ -506,27 +506,6 @@ data class Oppgave private constructor(
         class UgyldigTilstandException(
             message: String,
         ) : RuntimeException(message)
-
-        companion object {
-            fun fra(type: Type) =
-                when (type) {
-                    OPPRETTET -> Opprettet
-                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
-                    UNDER_BEHANDLING -> UnderBehandling
-                    FERDIG_BEHANDLET -> FerdigBehandlet
-                    PAA_VENT -> PaaVent
-                    KLAR_TIL_KONTROLL -> KlarTilKontroll
-                    UNDER_KONTROLL -> UnderKontroll()
-                }
-
-            fun fra(type: String) =
-                kotlin
-                    .runCatching {
-                        fra(Type.valueOf(type))
-                    }.getOrElse { t ->
-                        throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: $type ${t.message}")
-                    }
-        }
 
         enum class Type {
             OPPRETTET,
