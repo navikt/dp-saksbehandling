@@ -300,7 +300,6 @@ class OppgaveTilstandTest {
         oppgave.behandlerIdent shouldBe null
     }
 
-
     @ParameterizedTest
     @EnumSource(Type::class)
     fun `Ulovlige bruk av sendTilKontroll`(tilstandstype: Type) {
@@ -335,7 +334,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand UNDER_BEHANDLING til UNDER_KONTROLL`() {
+    fun `Skal gå fra tilstand UNDER_BEHANDLING til UNDER_KONTROLL via AVVENTER_LÅS_AV_BEHANDLING`() {
         val beslutterIdent = Saksbehandler("Z080808", emptySet())
         val saksbehandlerIdent = Saksbehandler("Z999999", emptySet())
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
@@ -348,8 +347,13 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
         oppgave.behandlerIdent shouldBe beslutterIdent.navIdent
+
+        oppgave.klarTilNyKontroll(
+            TomHendelse,
+        )
+        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
     }
 
     @Test

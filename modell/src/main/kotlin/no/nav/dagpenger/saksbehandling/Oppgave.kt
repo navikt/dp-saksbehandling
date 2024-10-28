@@ -198,6 +198,10 @@ data class Oppgave private constructor(
         tilstand.klarTilKontroll(this, klarTilKontrollHendelse)
     }
 
+    fun klarTilNyKontroll(klarTilKontrollHendelse: TomHendelse) {
+        tilstand.klarTilNyKontroll(this, klarTilKontrollHendelse)
+    }
+
     fun sendTilbakeTilUnderBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
     }
@@ -340,7 +344,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
         ) {
-            oppgave.endreTilstand(UnderKontroll, tilbakeTilUnderKontrollHendelse)
+            oppgave.endreTilstand(AvventerLåsAvBehandling, tilbakeTilUnderKontrollHendelse)
             oppgave.behandlerIdent = tilbakeTilUnderKontrollHendelse.ansvarligIdent
         }
 
@@ -439,6 +443,14 @@ data class Oppgave private constructor(
             klarTilKontrollHendelse: TomHendelse,
         ) {
             oppgave.endreTilstand(KlarTilKontroll, klarTilKontrollHendelse)
+            oppgave.behandlerIdent = null
+        }
+
+        override fun klarTilNyKontroll(
+            oppgave: Oppgave,
+            klarTilKontrollHendelse: TomHendelse,
+        ) {
+            oppgave.endreTilstand(UnderKontroll, klarTilKontrollHendelse)
             oppgave.behandlerIdent = null
         }
     }
@@ -632,6 +644,17 @@ data class Oppgave private constructor(
         }
 
         fun klarTilKontroll(
+            oppgave: Oppgave,
+            klarTilKontrollHendelse: TomHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type",
+                // TODO: ikke helt fornøyd med å bruke samme navn klarTilKontrollHendelse på forskjellige ting og samme message men kom ikke på noe bra
+            )
+        }
+
+        fun klarTilNyKontroll(
             oppgave: Oppgave,
             klarTilKontrollHendelse: TomHendelse,
         ) {
