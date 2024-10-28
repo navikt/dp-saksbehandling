@@ -42,6 +42,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
@@ -783,6 +784,26 @@ class PostgresOppgaveRepositoryTest {
                 repo.lagre(testOppgave)
                 repo.lagre(testOppgave)
             }
+        }
+    }
+
+    @Test
+    fun `Skal kunne lagre og hente en oppgave med notat`() {
+        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        testOppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId = testOppgave.oppgaveId, beslutter.navIdent, beslutter))
+        testOppgave.lagreNotat(
+            NotatHendelse(
+                oppgaveId = testOppgave.oppgaveId,
+                tekst = "Dette er et notat",
+                utførtAv = beslutter,
+            ),
+        )
+
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testOppgave)
+            val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
+            oppgaveFraDatabase shouldBe testOppgave
         }
     }
 

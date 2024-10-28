@@ -55,6 +55,7 @@ import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
@@ -353,10 +354,10 @@ fun lagOppgaveDTO(
         saksbehandler = sisteSaksbehandlerDTO,
         beslutter = sisteBeslutterDTO,
         notat =
-            oppgave.tilstand().notat?.let {
+            oppgave.tilstand().notat()?.let {
                 NotatDTO(
-                    tekst = it.tekst,
-                    sistEndretTidspunkt = it.sistEndretTidspunkt,
+                    tekst = it.hentTekst(),
+                    sistEndretTidspunkt = it.sistEndretTidspunkt ?: LocalDateTime.now(),
                 )
             },
     )

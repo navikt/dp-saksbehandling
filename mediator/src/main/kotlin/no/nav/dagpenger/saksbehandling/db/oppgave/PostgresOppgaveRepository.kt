@@ -412,17 +412,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
     }
 
-    override fun lagreNotat(
-        notatId: UUID,
-        tilstandsendringId: UUID,
-        tekst: String,
-    ): LocalDateTime {
-        TODO()
-//        return sessionOf(dataSource).use { session ->
-//            session.
-//        }
-    }
-
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(
@@ -837,6 +826,9 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
     )
     lagre(oppgave.oppgaveId, oppgave.emneknagger)
     lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
+    oppgave.tilstand().notat()?.let {
+        lagreNotat(it.notatId, oppgave.tilstandslogg.first().id, it.hentTekst())
+    }
 }
 
 private fun TransactionalSession.lagreNotat(
@@ -858,7 +850,7 @@ private fun TransactionalSession.lagreNotat(
                 """.trimIndent(),
             paramMap =
                 mapOf(
-                    "id" to notatId,
+                    "notat_id" to notatId,
                     "oppgave_tilstand_logg_id" to tilstandsendringId,
                     "tekst" to tekst,
                 ),
