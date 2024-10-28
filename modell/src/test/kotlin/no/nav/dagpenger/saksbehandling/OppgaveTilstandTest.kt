@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -24,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
@@ -261,7 +263,7 @@ class OppgaveTilstandTest {
         oppgave.behandlerIdent shouldBe null
     }
 
-    @Test
+/*    @Test
     fun `Skal gå fra tilstand UNDER_BEHANDLING til KLAR_TIL_KONTROLL`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
 
@@ -271,11 +273,37 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
+    }*/
+
+    @Test
+    fun `Skal gå fra tilstand UNDER_BEHANDLING til AVVENTER_LÅS_AV_BEHANDLING`() {
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+
+        oppgave.sendTilKontroll(
+            KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
+        oppgave.behandlerIdent shouldBe null
     }
+
+    @Test
+    fun `Skal gå fra tilstand AVVENTER_LÅS_AV_BEHANDLING til KLAR_TIL_KONTROLL`() {
+        val oppgave = lagOppgave(AVVENTER_LÅS_AV_BEHANDLING, null)
+
+        oppgave.klarTilKontroll(
+            TomHendelse,
+            // TODO: her er det vel strengt tatt system som utfører? bruk tom hendelse?
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
+        oppgave.behandlerIdent shouldBe null
+    }
+
 
     @ParameterizedTest
     @EnumSource(Type::class)
-    fun `Ulovlige tilstandsendringer til KLAR_TIL_KONTROLL`(tilstandstype: Type) {
+    fun `Ulovlige bruk av sendTilKontroll`(tilstandstype: Type) {
         val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler)
 
         if (tilstandstype != UNDER_BEHANDLING) {
@@ -531,7 +559,9 @@ class OppgaveTilstandTest {
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         oppgave.sendTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
+        oppgave.klarTilKontroll(TomHendelse)
         val beslutter1 = Saksbehandler("beslutter 1", emptySet(), setOf(BESLUTTER))
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
@@ -548,6 +578,7 @@ class OppgaveTilstandTest {
 
         val beslutter2 = Saksbehandler("beslutter 2", emptySet(), setOf(BESLUTTER))
         oppgave.sendTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
+        oppgave.klarTilKontroll(TomHendelse)
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,

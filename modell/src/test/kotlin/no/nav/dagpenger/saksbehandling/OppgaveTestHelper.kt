@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -28,6 +29,7 @@ object OppgaveTestHelper {
                 PAA_VENT -> Oppgave.PaaVent
                 KLAR_TIL_KONTROLL -> Oppgave.KlarTilKontroll
                 UNDER_KONTROLL -> Oppgave.UnderKontroll
+                AVVENTER_LÅS_AV_BEHANDLING -> Oppgave.AvventerLåsAvBehandling
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),

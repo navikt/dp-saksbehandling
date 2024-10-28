@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -28,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
@@ -192,6 +194,10 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, klarTilKontrollHendelse)
     }
 
+    fun klarTilKontroll(klarTilKontrollHendelse: TomHendelse) {
+        tilstand.klarTilKontroll(this, klarTilKontrollHendelse)
+    }
+
     fun sendTilbakeTilUnderBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
     }
@@ -283,7 +289,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             klarTilKontrollHendelse: KlarTilKontrollHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilKontroll, klarTilKontrollHendelse)
+            oppgave.endreTilstand(AvventerLåsAvBehandling, klarTilKontrollHendelse)
             oppgave.behandlerIdent = null
         }
 
@@ -425,6 +431,18 @@ data class Oppgave private constructor(
         }
     }
 
+    object AvventerLåsAvBehandling : Tilstand {
+        override val type: Type = AVVENTER_LÅS_AV_BEHANDLING
+
+        override fun klarTilKontroll(
+            oppgave: Oppgave,
+            klarTilKontrollHendelse: TomHendelse,
+        ) {
+            oppgave.endreTilstand(KlarTilKontroll, klarTilKontrollHendelse)
+            oppgave.behandlerIdent = null
+        }
+    }
+
     object UnderKontroll : Tilstand {
         override val type: Type = UNDER_KONTROLL
 
@@ -489,6 +507,7 @@ data class Oppgave private constructor(
                     PAA_VENT -> PaaVent
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
                     UNDER_KONTROLL -> UnderKontroll
+                    AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
                 }
 
             fun fra(type: String) =
@@ -508,6 +527,7 @@ data class Oppgave private constructor(
             PAA_VENT,
             KLAR_TIL_KONTROLL,
             UNDER_KONTROLL,
+            AVVENTER_LÅS_AV_BEHANDLING,
             ;
 
             companion object {
@@ -608,6 +628,17 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type",
+            )
+        }
+
+        fun klarTilKontroll(
+            oppgave: Oppgave,
+            klarTilKontrollHendelse: TomHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type",
+                // TODO: ikke helt fornøyd med å bruke samme navn klarTilKontrollHendelse på forskjellige ting og samme message men kom ikke på noe bra
             )
         }
 
