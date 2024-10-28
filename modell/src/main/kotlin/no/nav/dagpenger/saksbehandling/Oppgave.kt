@@ -106,7 +106,7 @@ data class Oppgave private constructor(
             require(oppgave.behandlerIdent == saksbehandler.navIdent) {
                 throw Tilstand.ManglendeTilgang(
                     "Kan ikke ferdigstille oppgave i tilstand ${UnderBehandling.type} uten å eie oppgaven. " +
-                        "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
+                            "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
                 )
             }
         }
@@ -213,7 +213,7 @@ data class Oppgave private constructor(
     ) {
         logger.info {
             "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} " +
-                "basert på hendelse: ${hendelse.javaClass.simpleName} "
+                    "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
@@ -239,7 +239,7 @@ data class Oppgave private constructor(
             .getOrThrow()
     }
 
-    object Opprettet : TilstandImpl() {
+    object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 
         override fun oppgaveKlarTilBehandling(
@@ -257,7 +257,7 @@ data class Oppgave private constructor(
         }
     }
 
-    object KlarTilBehandling : TilstandImpl() {
+    object KlarTilBehandling : Tilstand {
         override val type: Type = KLAR_TIL_BEHANDLING
 
         override fun oppgaveKlarTilBehandling(
@@ -283,7 +283,7 @@ data class Oppgave private constructor(
         }
     }
 
-    object UnderBehandling : TilstandImpl() {
+    object UnderBehandling : Tilstand {
         override val type: Type = UNDER_BEHANDLING
 
         override fun sendTilKontroll(
@@ -309,7 +309,7 @@ data class Oppgave private constructor(
             if (oppgave.behandlerIdent != settOppgaveAnsvarHendelse.ansvarligIdent) {
                 sikkerlogg.warn {
                     "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${settOppgaveAnsvarHendelse.ansvarligIdent}. " +
-                        "Oppgave er allerede tildelt ${oppgave.behandlerIdent}."
+                            "Oppgave er allerede tildelt ${oppgave.behandlerIdent}."
                 }
                 throw AlleredeTildeltException(
                     "Kan ikke tildele oppgave til annen saksbehandler. Oppgaven er allerede tildelt.",
@@ -373,7 +373,7 @@ data class Oppgave private constructor(
         message: String,
     ) : RuntimeException(message)
 
-    object FerdigBehandlet : TilstandImpl() {
+    object FerdigBehandlet : Tilstand {
         override val type: Type = FERDIG_BEHANDLET
 
         override fun ferdigstill(
@@ -383,12 +383,12 @@ data class Oppgave private constructor(
             logger.warn { "Ferdigstiller allerede ferdigbehandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
             sikkerlogg.warn {
                 "Ferdigstiller allerede ferdigbehandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
-                    "med vedtakFattetHendelse: $vedtakFattetHendelse "
+                        "med vedtakFattetHendelse: $vedtakFattetHendelse "
             }
         }
     }
 
-    object PaaVent : TilstandImpl() {
+    object PaaVent : Tilstand {
         override val type: Type = PAA_VENT
 
         override fun tildel(
@@ -417,7 +417,7 @@ data class Oppgave private constructor(
         }
     }
 
-    object KlarTilKontroll : TilstandImpl() {
+    object KlarTilKontroll : Tilstand {
         override val type: Type = KLAR_TIL_KONTROLL
 
         override fun tildel(
@@ -432,7 +432,7 @@ data class Oppgave private constructor(
         }
     }
 
-    class UnderKontroll : TilstandImpl() {
+    class UnderKontroll(private var notat: Notat? = null) : Tilstand {
         override val type: Type = UNDER_KONTROLL
 
         override fun ferdigstill(
@@ -474,27 +474,26 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             notatHendelse: NotatHendelse,
         ) {
-            if (oppgave.tilstand.notat == null) {
-                oppgave.tilstand.notat =
-                    Notat(
-                        notatId = UUIDv7.ny(),
-                        tekst = notatHendelse.tekst,
-                        sistEndretTidspunkt = TODO(),
-                    )
-            } else {
-                oppgave.tilstand.notat!!.endreTekst(notatHendelse.tekst)
+            when (notat) {
+                null -> {
+                    notat =
+                        Notat(
+                            notatId = notatHendelse.oppgaveId,
+                            tekst = notatHendelse.tekst,
+                        )
+                }
+
+                else -> {
+                    notat?.endreTekst(notatHendelse.tekst)
+                }
             }
         }
-    }
 
-    abstract class TilstandImpl : Tilstand {
-        override var notat: Notat? = null
+        override fun notat(): Notat? = notat
     }
 
     interface Tilstand {
         val type: Type
-
-        var notat: Notat?
 
         class ManglendeTilgang(
             message: String,
@@ -552,6 +551,8 @@ data class Oppgave private constructor(
             }
         }
 
+        fun notat(): Notat? = null
+
         fun behov() = emptySet<String>()
 
         fun oppgaveKlarTilBehandling(
@@ -571,7 +572,7 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =
-                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${vedtakFattetHendelse.javaClass.simpleName}",
             )
         }
@@ -583,7 +584,7 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =
-                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${godkjentBehandlingHendelse.javaClass.simpleName}",
             )
         }
@@ -595,7 +596,7 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =
-                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
             )
         }
