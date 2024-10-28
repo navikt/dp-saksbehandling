@@ -65,7 +65,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         return sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val emneknagger = filter.emneknagg.joinToString { "'$it'" }
-                val tillatteGraderinger = filter.harTilgangTilAdressebeskyttelser.joinToString { "'$it'" }
+                val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
 
                 // language=SQL
                 val emneknaggClause =
@@ -109,9 +109,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                             """ + emneknaggClause
 
                 // language=SQL
-                val unionAll = """
-                            UNION ALL
-                            """
+                val unionAll = """UNION ALL"""
 
                 // language=SQL
                 val selectKlarTilKontrollOppgaver =
@@ -134,7 +132,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         """.trimIndent()
 
                 // language=SQL
-                val selectFraAlleOppgaverOgOrderBy =
+                val selectAlleAktuelleOppgaverOrderByOpprettet =
                     """
                         SELECT *
                         FROM   alle_oppgaver alop
@@ -144,7 +142,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     """.trimIndent()
 
                 // language=SQL
-                val updateStatement =
+                val updateNesteOppgave =
                     """
                 UPDATE oppgave_v1 oppu
                 SET    saksbehandler_ident = :saksbehandler_ident
@@ -162,8 +160,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         selectKlarTilBehandlingOppgaver +
                         unionAll +
                         selectKlarTilKontrollOppgaver +
-                        selectFraAlleOppgaverOgOrderBy +
-                        updateStatement
+                        selectAlleAktuelleOppgaverOrderByOpprettet +
+                        updateNesteOppgave
                 val oppgaveIdOgTilstandType: Pair<UUID, Type>? =
                     tx.run(
                         queryOf(
@@ -173,7 +171,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                                     "saksbehandler_ident" to nesteOppgaveHendelse.ansvarligIdent,
                                     "fom" to filter.periode.fom,
                                     "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
-                                    "har_tilgang_til_egne_ansatte" to filter.harTilgangTilEgneAnsatte,
+                                    "har_tilgang_til_egne_ansatte" to filter.egneAnsatteTilgang,
                                     "har_beslutter_rolle" to filter.harBeslutterRolle,
                                 ),
                         ).map { row ->

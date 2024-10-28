@@ -8,6 +8,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
@@ -23,10 +24,14 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
+import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
+import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -130,7 +135,7 @@ class PostgresOppgaveRepositoryTest {
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
                         emneknagg = emptySet(),
-                        harTilgangTilAdressebeskyttelser = setOf(FORTROLIG),
+                        adressebeskyttelseTilganger = setOf(FORTROLIG),
                     ),
             ) shouldBe null
         }
@@ -196,8 +201,8 @@ class PostgresOppgaveRepositoryTest {
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
-                            harTilgangTilEgneAnsatte = false,
-                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                            egneAnsatteTilgang = false,
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
                         ),
                 )!!
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
@@ -220,8 +225,8 @@ class PostgresOppgaveRepositoryTest {
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
-                            harTilgangTilEgneAnsatte = true,
-                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                            egneAnsatteTilgang = true,
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
                         ),
                 )!!
 
@@ -279,8 +284,8 @@ class PostgresOppgaveRepositoryTest {
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
-                            harTilgangTilEgneAnsatte = false,
-                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                            egneAnsatteTilgang = false,
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
                             harBeslutterRolle = false,
                         ),
                 )
@@ -305,8 +310,8 @@ class PostgresOppgaveRepositoryTest {
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
                             emneknagg = emptySet(),
-                            harTilgangTilEgneAnsatte = true,
-                            harTilgangTilAdressebeskyttelser = setOf(UGRADERT, FORTROLIG),
+                            egneAnsatteTilgang = true,
+                            adressebeskyttelseTilganger = setOf(UGRADERT, FORTROLIG),
                         ),
                 )!!
 
@@ -346,7 +351,7 @@ class PostgresOppgaveRepositoryTest {
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
-                    harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                    adressebeskyttelseTilganger = setOf(UGRADERT),
                 )
             val nesteOppgave = repo.tildelOgHentNesteOppgave(nesteOppgaveHendelse, filter)
             nesteOppgave!!.tilstandslogg.size shouldBe antallTilstandsendringer + 1
@@ -368,11 +373,35 @@ class PostgresOppgaveRepositoryTest {
                     grupper = emptySet(),
                     tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
                 )
-            val beslutterMedTilgangTilEgneAnsatte =
+            val beslutterEgneAnsatte =
                 Saksbehandler(
-                    navIdent = "beslutterMedTilgangTilEgneAnsatte",
+                    navIdent = "beslutterEgneAnsatte",
                     grupper = emptySet(),
                     tilganger = setOf(SAKSBEHANDLER, BESLUTTER, EGNE_ANSATTE),
+                )
+            val beslutterFortroligAdresse =
+                Saksbehandler(
+                    navIdent = "beslutterFortroligAdresse",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER, FORTROLIG_ADRESSE),
+                )
+            val beslutterStrengtFortroligAdresse =
+                Saksbehandler(
+                    navIdent = "beslutterStrengtFortroligAdresse",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER, STRENGT_FORTROLIG_ADRESSE),
+                )
+            val beslutterStrengtFortroligAdresseUtland =
+                Saksbehandler(
+                    navIdent = "beslutterStrengtFortroligAdresseUtland",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER, STRENGT_FORTROLIG_ADRESSE_UTLAND),
+                )
+            val beslutterStrengtFortroligOgEgneAnsatte =
+                Saksbehandler(
+                    navIdent = "beslutterStrengtFortroligOgEgneAnsatte",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER, STRENGT_FORTROLIG_ADRESSE, EGNE_ANSATTE),
                 )
             val repo = PostgresOppgaveRepository(ds)
 
@@ -415,17 +444,46 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(13),
                 )
 
-            val eldsteKontrollOppgave =
+            val eldsteKontrollOppgaveUtenSkjermingOgAdressegradering =
                 lagOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(14),
                 )
 
-            val endaEldreKontrollOppgaveMedEgneAnsatteSkjerming =
+            val eldsteKontrollOppgaveEgneAnsatteSkjerming =
                 lagOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(15),
                     skjermesSomEgneAnsatte = true,
+                )
+
+            val eldsteKontrollOppgaveFortroligAdresse =
+                lagOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(16),
+                    adressebeskyttelseGradering = FORTROLIG,
+                )
+
+            val eldsteKontrollOppgaveStrengtFortroligAdresse =
+                lagOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(17),
+                    adressebeskyttelseGradering = STRENGT_FORTROLIG,
+                )
+
+            val eldsteKontrollOppgaveStrengtFortroligAdresseUtland =
+                lagOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(18),
+                    adressebeskyttelseGradering = STRENGT_FORTROLIG_UTLAND,
+                )
+
+            val eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming =
+                lagOppgave(
+                    tilstand = Oppgave.KlarTilKontroll,
+                    opprettet = opprettetNå.minusDays(19),
+                    skjermesSomEgneAnsatte = true,
+                    adressebeskyttelseGradering = STRENGT_FORTROLIG,
                 )
 
             repo.lagre(yngsteLedigeOppgaveOpprettetIDag)
@@ -434,20 +492,24 @@ class PostgresOppgaveRepositoryTest {
             repo.lagre(endaEldreTildeltOppgave)
             repo.lagre(endaEldreFerdigOppgave)
             repo.lagre(endaEldreOpprettetOppgave)
-            repo.lagre(eldsteKontrollOppgave)
-            repo.lagre(endaEldreKontrollOppgaveMedEgneAnsatteSkjerming)
+            repo.lagre(eldsteKontrollOppgaveUtenSkjermingOgAdressegradering)
+            repo.lagre(eldsteKontrollOppgaveEgneAnsatteSkjerming)
+            repo.lagre(eldsteKontrollOppgaveFortroligAdresse)
+            repo.lagre(eldsteKontrollOppgaveStrengtFortroligAdresse)
+            repo.lagre(eldsteKontrollOppgaveStrengtFortroligAdresseUtland)
+            repo.lagre(eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming)
 
             val emneknaggFilter =
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
-                    harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                    adressebeskyttelseTilganger = setOf(UGRADERT),
                 )
             val opprettetIDagFilter =
                 TildelNesteOppgaveFilter(
                     periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
                     emneknagg = emptySet(),
-                    harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                    adressebeskyttelseTilganger = setOf(UGRADERT),
                 )
 
             repo.tildelOgHentNesteOppgave(
@@ -462,7 +524,7 @@ class PostgresOppgaveRepositoryTest {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe oppgaveMedEmneknagg.oppgaveId
                     it.behandlerIdent shouldBe testSaksbehandler.navIdent
-                    it.tilstand().type shouldBe UNDER_BEHANDLING
+                    it.tilstand() shouldBe UnderBehandling
                 }
             }
 
@@ -477,6 +539,8 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe yngsteLedigeOppgaveOpprettetIDag.oppgaveId
+                    it.behandlerIdent shouldBe testSaksbehandler.navIdent
+                    it.tilstand() shouldBe UnderBehandling
                 }
             }
 
@@ -490,14 +554,14 @@ class PostgresOppgaveRepositoryTest {
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
                         emneknagg = emptySet(),
-                        harTilgangTilEgneAnsatte = beslutter.tilganger.contains(EGNE_ANSATTE),
-                        harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                        egneAnsatteTilgang = beslutter.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutter.tilganger.contains(BESLUTTER),
                     ),
             ).let {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe eldsteKontrollOppgave.oppgaveId
+                    it.oppgaveId shouldBe eldsteKontrollOppgaveUtenSkjermingOgAdressegradering.oppgaveId
                     it.tilstand() shouldBe Oppgave.UnderKontroll
                     it.sisteBeslutter() shouldBe vanligBeslutter.navIdent
                 }
@@ -506,23 +570,122 @@ class PostgresOppgaveRepositoryTest {
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
                     NesteOppgaveHendelse(
-                        ansvarligIdent = beslutterMedTilgangTilEgneAnsatte.navIdent,
-                        utførtAv = beslutterMedTilgangTilEgneAnsatte,
+                        ansvarligIdent = beslutterEgneAnsatte.navIdent,
+                        utførtAv = beslutterEgneAnsatte,
                     ),
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
                         emneknagg = emptySet(),
-                        harTilgangTilEgneAnsatte = beslutterMedTilgangTilEgneAnsatte.tilganger.contains(EGNE_ANSATTE),
-                        harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
-                        harBeslutterRolle = beslutterMedTilgangTilEgneAnsatte.tilganger.contains(BESLUTTER),
+                        egneAnsatteTilgang = beslutterEgneAnsatte.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = beslutterEgneAnsatte.adressebeskyttelseTilganger(),
+                        harBeslutterRolle = beslutterEgneAnsatte.tilganger.contains(BESLUTTER),
                     ),
             ).let {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
-                    it.oppgaveId shouldBe endaEldreKontrollOppgaveMedEgneAnsatteSkjerming.oppgaveId
+                    it.oppgaveId shouldBe eldsteKontrollOppgaveEgneAnsatteSkjerming.oppgaveId
                     it.tilstand() shouldBe Oppgave.UnderKontroll
-                    it.sisteBeslutter() shouldBe beslutterMedTilgangTilEgneAnsatte.navIdent
+                    it.sisteBeslutter() shouldBe beslutterEgneAnsatte.navIdent
+                }
+            }
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = beslutterFortroligAdresse.navIdent,
+                        utførtAv = beslutterFortroligAdresse,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        egneAnsatteTilgang = beslutterFortroligAdresse.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = beslutterFortroligAdresse.adressebeskyttelseTilganger(),
+                        harBeslutterRolle = beslutterFortroligAdresse.tilganger.contains(BESLUTTER),
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe eldsteKontrollOppgaveFortroligAdresse.oppgaveId
+                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.sisteBeslutter() shouldBe beslutterFortroligAdresse.navIdent
+                }
+            }
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = beslutterStrengtFortroligAdresse.navIdent,
+                        utførtAv = beslutterStrengtFortroligAdresse,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        egneAnsatteTilgang = beslutterStrengtFortroligAdresse.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = beslutterStrengtFortroligAdresse.adressebeskyttelseTilganger(),
+                        harBeslutterRolle = beslutterStrengtFortroligAdresse.tilganger.contains(BESLUTTER),
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.oppgaveId
+                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresse.navIdent
+                    it.opprettet shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.opprettet
+                }
+            }
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = beslutterStrengtFortroligAdresseUtland.navIdent,
+                        utførtAv = beslutterStrengtFortroligAdresseUtland,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        egneAnsatteTilgang = beslutterStrengtFortroligAdresseUtland.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = beslutterStrengtFortroligAdresseUtland.adressebeskyttelseTilganger(),
+                        harBeslutterRolle = beslutterStrengtFortroligAdresseUtland.tilganger.contains(BESLUTTER),
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseUtland.oppgaveId
+                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresseUtland.navIdent
+                }
+            }
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = beslutterStrengtFortroligOgEgneAnsatte.navIdent,
+                        utførtAv = beslutterStrengtFortroligOgEgneAnsatte,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        egneAnsatteTilgang =
+                            beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
+                                EGNE_ANSATTE,
+                            ),
+                        adressebeskyttelseTilganger = beslutterStrengtFortroligOgEgneAnsatte.adressebeskyttelseTilganger(),
+                        harBeslutterRolle =
+                            beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
+                                BESLUTTER,
+                            ),
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming.oppgaveId
+                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.sisteBeslutter() shouldBe beslutterStrengtFortroligOgEgneAnsatte.navIdent
                 }
             }
         }

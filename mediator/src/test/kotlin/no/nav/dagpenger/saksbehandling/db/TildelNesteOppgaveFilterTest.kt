@@ -33,8 +33,8 @@ class TildelNesteOppgaveFilterTest {
                         tom = LocalDate.of(2023, 1, 1),
                     ),
                 emneknagg = setOf("knagg1", "knagg2"),
-                harTilgangTilEgneAnsatte = false,
-                harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                egneAnsatteTilgang = false,
+                adressebeskyttelseTilganger = setOf(UGRADERT),
             )
     }
 
@@ -56,8 +56,8 @@ class TildelNesteOppgaveFilterTest {
                         ),
                 ),
         ).let { filter ->
-            filter.harTilgangTilEgneAnsatte shouldBe true
-            filter.harTilgangTilAdressebeskyttelser shouldBe
+            filter.egneAnsatteTilgang shouldBe true
+            filter.adressebeskyttelseTilganger shouldBe
                 setOf(
                     UGRADERT,
                     FORTROLIG,
@@ -81,8 +81,8 @@ class TildelNesteOppgaveFilterTest {
             TildelNesteOppgaveFilter(
                 periode = Periode.UBEGRENSET_PERIODE,
                 emneknagg = setOf(),
-                harTilgangTilEgneAnsatte = false,
-                harTilgangTilAdressebeskyttelser = setOf(UGRADERT),
+                egneAnsatteTilgang = false,
+                adressebeskyttelseTilganger = setOf(UGRADERT),
             )
     }
 }

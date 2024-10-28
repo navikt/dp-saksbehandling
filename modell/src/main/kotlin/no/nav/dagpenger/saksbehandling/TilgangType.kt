@@ -1,5 +1,10 @@
 package no.nav.dagpenger.saksbehandling
 
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+
 enum class TilgangType {
     SAKSBEHANDLER,
     BESLUTTER,
@@ -30,4 +35,18 @@ class TilgangMapper(
             }
         }.toSet()
     }
+}
+
+fun Saksbehandler.adressebeskyttelseTilganger(): Set<AdressebeskyttelseGradering> {
+    val adressebeskyttelseGraderinger = mutableSetOf(UGRADERT)
+
+    tilganger.forEach { tilgang ->
+        when (tilgang) {
+            TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND -> adressebeskyttelseGraderinger.add(STRENGT_FORTROLIG_UTLAND)
+            TilgangType.STRENGT_FORTROLIG_ADRESSE -> adressebeskyttelseGraderinger.add(STRENGT_FORTROLIG)
+            TilgangType.FORTROLIG_ADRESSE -> adressebeskyttelseGraderinger.add(FORTROLIG)
+            else -> {}
+        }
+    }
+    return adressebeskyttelseGraderinger.toSet()
 }
