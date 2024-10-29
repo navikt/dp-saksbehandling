@@ -103,6 +103,32 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+  /oppgave/{oppgaveId}/notat:
+    put:
+      summary: Legg til et notat på en oppgave
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notat'
+      responses:
+        '204':
+          description: Notatet ble lagt til
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/klar-til-kontroll:
     put:
       summary: Saksbehandler sender oppgaven til kontroll og innstiller vedtaket
