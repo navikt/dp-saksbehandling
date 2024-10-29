@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -16,14 +17,14 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
@@ -262,26 +263,68 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand UNDER_BEHANDLING til KLAR_TIL_KONTROLL`() {
+    fun `Skal gå fra tilstand UNDER_BEHANDLING til AVVENTER_LÅS_AV_BEHANDLING`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
 
         oppgave.sendTilKontroll(
-            KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+            SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
+        oppgave.behandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Skal gå fra tilstand AVVENTER_LÅS_AV_BEHANDLING til KLAR_TIL_KONTROLL når ingen tildligere beslutter finnes`() {
+        val oppgave = lagOppgave(AVVENTER_LÅS_AV_BEHANDLING, null)
+
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.behandlingId,
+                søknadId = UUIDv7.ny(),
+                ident = testIdent,
+            ),
         )
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
     }
 
+    @Test
+    fun `Skal gå fra tilstand AVVENTER_LÅS_AV_BEHANDLING til UNDER_KONTROLL når tildligere beslutter finnes`() {
+        val beslutter = Saksbehandler("Z080808", emptySet(), setOf(BESLUTTER))
+        val oppgave = lagOppgave(AVVENTER_LÅS_AV_BEHANDLING, null)
+        oppgave.tilstandslogg.leggTil(
+            nyTilstand = UNDER_KONTROLL,
+            hendelse =
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+        )
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.behandlingId,
+                søknadId = UUIDv7.ny(),
+                ident = testIdent,
+            ),
+            // TODO: her er det vel strengt tatt system som utfører? bruk tom hendelse?
+        )
+
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
+        oppgave.behandlerIdent shouldBe beslutter.navIdent
+    }
+
     @ParameterizedTest
     @EnumSource(Type::class)
-    fun `Ulovlige tilstandsendringer til KLAR_TIL_KONTROLL`(tilstandstype: Type) {
+    fun `Ulovlige bruk av sendTilKontroll`(tilstandstype: Type) {
         val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler)
 
         if (tilstandstype != UNDER_BEHANDLING) {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.sendTilKontroll(
-                    KlarTilKontrollHendelse(
+                    SendTilKontrollHendelse(
                         oppgaveId = oppgave.oppgaveId,
                         utførtAv = Saksbehandler("ident", emptySet()),
                     ),
@@ -304,24 +347,6 @@ class OppgaveTilstandTest {
         )
         oppgave.tilstand().type shouldBe UNDER_KONTROLL
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-    }
-
-    @Test
-    fun `Skal gå fra tilstand UNDER_BEHANDLING til UNDER_KONTROLL`() {
-        val beslutterIdent = Saksbehandler("Z080808", emptySet())
-        val saksbehandlerIdent = Saksbehandler("Z999999", emptySet())
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
-
-        oppgave.sendTilbakeTilUnderKontroll(
-            TilbakeTilUnderKontrollHendelse(
-                oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = beslutterIdent.navIdent,
-                utførtAv = saksbehandlerIdent,
-            ),
-        )
-
-        oppgave.tilstand().type shouldBe UNDER_KONTROLL
-        oppgave.behandlerIdent shouldBe beslutterIdent.navIdent
     }
 
     @Test
@@ -530,9 +555,19 @@ class OppgaveTilstandTest {
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, saksbehandler2))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
-        oppgave.sendTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
+        oppgave.sendTilKontroll(SendTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
+
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.oppgaveId,
+                søknadId = UUIDv7.ny(),
+                ident = oppgave.ident,
+            ),
+        )
 
         val beslutter1 = Saksbehandler("beslutter 1", emptySet(), setOf(BESLUTTER))
+
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
@@ -547,12 +582,24 @@ class OppgaveTilstandTest {
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         val beslutter2 = Saksbehandler("beslutter 2", emptySet(), setOf(BESLUTTER))
-        oppgave.sendTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
+        oppgave.sendTilKontroll(SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.oppgaveId,
+                søknadId = UUIDv7.ny(),
+                ident = oppgave.ident,
+            ),
+        )
+        oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
+
+        oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId = oppgaveId, utførtAv = beslutter1))
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave.oppgaveId,
+                oppgaveId = oppgaveId,
                 ansvarligIdent = beslutter2.navIdent,
-                utførtAv = beslutter1,
+                utførtAv = beslutter2,
             ),
         )
         oppgave.sisteBeslutter() shouldBe beslutter2.navIdent

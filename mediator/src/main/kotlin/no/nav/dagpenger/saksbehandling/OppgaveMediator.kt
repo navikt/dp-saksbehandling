@@ -10,14 +10,15 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -131,9 +132,9 @@ class OppgaveMediator(
         }.tilstand()
     }
 
-    fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
-        repository.hentOppgave(klarTilKontrollHendelse.oppgaveId).also { oppgave ->
-            oppgave.sendTilKontroll(klarTilKontrollHendelse)
+    fun sendTilKontroll(sendTilKontrollHendelse: SendTilKontrollHendelse) {
+        repository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
+            oppgave.sendTilKontroll(sendTilKontrollHendelse)
             repository.lagre(oppgave)
         }
     }
@@ -142,6 +143,30 @@ class OppgaveMediator(
         repository.hentOppgave(notatHendelse.oppgaveId).also { oppgave ->
             oppgave.lagreNotat(notatHendelse)
             repository.lagre(oppgave)
+        }
+    }
+
+    fun settOppgaveKlarTilKontroll(behandlingLåstHendelse: BehandlingLåstHendelse) {
+        val oppgave = repository.finnOppgaveFor(behandlingLåstHendelse.behandlingId)
+        when (oppgave) {
+            null -> {
+                logger.error {
+                    "Mottatt hendelse behandling_låst for behandling med id " +
+                        "${behandlingLåstHendelse.behandlingId}." +
+                        "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
+                }
+            }
+
+            else -> {
+                oppgave.klarTilKontroll(behandlingLåstHendelse)
+                repository.lagre(oppgave)
+                withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                    logger.info {
+                        "Mottatt hendelse behandling_låst for behandling med id " +
+                            "${behandlingLåstHendelse.behandlingId}. Oppgave er klar til kontroll."
+                    }
+                }
+            }
         }
     }
 

@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -30,11 +31,12 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -99,7 +101,7 @@ class OppgaveMediatorTest {
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
 
     @Test
-    fun `Skal kunne sette oppgave til KLAR_TIL_KONTROLL`() {
+    fun `Skal kunne sette oppgave til AVVENTER_LÅS_AV_BEHANDLING`() {
         withMigratedDb { dataSource ->
             val oppgave = dataSource.lagTestoppgave(UNDER_BEHANDLING)
             val oppgaveMediator =
@@ -111,13 +113,13 @@ class OppgaveMediatorTest {
                     mockk(),
                 )
             oppgaveMediator.sendTilKontroll(
-                KlarTilKontrollHendelse(
+                SendTilKontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = saksbehandler,
                 ),
             )
             val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
+            oppgaveTilKontroll.tilstand().type shouldBe AVVENTER_LÅS_AV_BEHANDLING
             oppgaveTilKontroll.behandlerIdent shouldBe null
             oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
         }
@@ -130,10 +132,10 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(dataSource),
-                    skjermingKlientMock,
-                    pdlKlientMock,
-                    behandlingKlientMock,
-                    mockk(),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
                 )
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
@@ -837,9 +839,20 @@ class OppgaveMediatorTest {
         }
 
         oppgaveMediator.sendTilKontroll(
-            KlarTilKontrollHendelse(
+            SendTilKontrollHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 utførtAv = saksbehandler,
+            ),
+        )
+        if (tilstand == AVVENTER_LÅS_AV_BEHANDLING) {
+            return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+        }
+
+        oppgaveMediator.settOppgaveKlarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.behandling.behandlingId,
+                søknadId = UUIDv7.ny(),
+                ident = oppgave.ident,
             ),
         )
 

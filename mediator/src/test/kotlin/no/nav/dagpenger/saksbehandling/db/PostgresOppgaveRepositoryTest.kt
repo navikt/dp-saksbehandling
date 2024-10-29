@@ -39,8 +39,8 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_P
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -827,7 +827,12 @@ class PostgresOppgaveRepositoryTest {
                 mutableListOf(
                     Tilstandsendring(
                         tilstand = KLAR_TIL_KONTROLL,
-                        hendelse = KlarTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler),
+                        hendelse =
+                            BehandlingLåstHendelse(
+                                behandlingId = UUIDv7.ny(),
+                                søknadId = UUIDv7.ny(),
+                                ident = "12345612345",
+                            ),
                         tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
                     ),
                     Tilstandsendring(

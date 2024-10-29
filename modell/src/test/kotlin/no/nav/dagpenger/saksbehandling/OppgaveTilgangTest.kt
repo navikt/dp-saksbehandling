@@ -21,7 +21,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import org.junit.jupiter.api.Test
@@ -383,7 +383,7 @@ class OppgaveTilgangTest {
         if (forventetTilgang) {
             shouldNotThrow<ManglendeTilgang> {
                 oppgave.sendTilKontroll(
-                    KlarTilKontrollHendelse(
+                    SendTilKontrollHendelse(
                         oppgaveId = oppgave.oppgaveId,
                         utførtAv = saksbehandler,
                     ),
@@ -392,7 +392,7 @@ class OppgaveTilgangTest {
         } else {
             shouldThrow<ManglendeTilgang> {
                 oppgave.sendTilKontroll(
-                    KlarTilKontrollHendelse(
+                    SendTilKontrollHendelse(
                         oppgaveId = oppgave.oppgaveId,
                         utførtAv = saksbehandler,
                     ),
@@ -412,7 +412,7 @@ class OppgaveTilgangTest {
 
         shouldThrow<ManglendeTilgang> {
             egneAnsatteOppgave.sendTilKontroll(
-                KlarTilKontrollHendelse(
+                SendTilKontrollHendelse(
                     oppgaveId = egneAnsatteOppgave.oppgaveId,
                     utførtAv = saksbehandlerUtenEkstraTilganger,
                 ),
@@ -421,7 +421,7 @@ class OppgaveTilgangTest {
 
         shouldNotThrow<ManglendeTilgang> {
             egneAnsatteOppgave.sendTilKontroll(
-                KlarTilKontrollHendelse(
+                SendTilKontrollHendelse(
                     oppgaveId = egneAnsatteOppgave.oppgaveId,
                     utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
                 ),
