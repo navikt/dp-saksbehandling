@@ -57,6 +57,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -105,6 +106,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/neste", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId", HttpMethod.Get),
                 Arguments.of("/oppgave/oppgaveId/tildel", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/notat", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
@@ -302,6 +304,33 @@ class OppgaveApiTest {
                         )
                     oppgaver.size shouldBe 2
                 }
+        }
+    }
+
+    @Test
+    fun `Skal kunne lagre et notat på en oppgave`() {
+        val oppgaveId = UUIDv7.ny()
+
+        val beslutterToken =
+            gyldigSaksbehandlerToken(
+                adGrupper = listOf(Configuration.beslutterADGruppe),
+                navIdent = beslutter.navIdent,
+            )
+        val notat = "Dette er et notat"
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every {
+                    it.lagreNotat(NotatHendelse(oppgaveId, notat, beslutter))
+                } just Runs
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/$oppgaveId/notat") {
+                autentisert(token = beslutterToken)
+                setBody(notat)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
         }
     }
 
