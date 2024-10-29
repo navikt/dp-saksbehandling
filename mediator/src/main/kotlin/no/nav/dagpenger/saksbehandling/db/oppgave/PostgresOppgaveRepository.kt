@@ -660,7 +660,6 @@ private fun rehydrerTilstandsendringHendelse(
         "SendTilKontrollHendelse" -> hendelseJson.tilHendelse<SendTilKontrollHendelse>()
         "BehandlingLåstHendelse" -> hendelseJson.tilHendelse<BehandlingLåstHendelse>()
         "SøknadsbehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-        "TomHendelse" -> hendelseJson.tilHendelse<TomHendelse>()
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
         "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()

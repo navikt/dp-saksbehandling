@@ -200,8 +200,6 @@ internal fun Application.oppgaveApi(
                                     sikkerlogger.info { "Motatt melding om vedtak for oppgave $oppgaveId: $meldingOmVedtak" }
                                     val saksbehandler = applicationCallParser.sakbehandler(call)
                                     val saksbehandlerToken = call.request.jwt()
-
-                                    // TODO fix saksbehandler vs beslutter
                                     oppgaveMediator.ferdigstillOppgave(
                                         GodkjentBehandlingHendelse(
                                             meldingOmVedtak = meldingOmVedtak,

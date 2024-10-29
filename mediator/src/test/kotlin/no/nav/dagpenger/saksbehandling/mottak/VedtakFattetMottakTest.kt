@@ -49,7 +49,6 @@ internal class VedtakFattetMottakTest {
     private val testRapid = TestRapid()
     private val oppgaveMediatorMock = mockk<OppgaveMediator>(relaxed = true)
     private val utsendingMediatorMock = mockk<UtsendingMediator>()
-//    private val utsendingRepositoryMock = mockk<UtsendingRepository>(relaxed = true)
 
     init {
         VedtakFattetMottak(testRapid, oppgaveMediatorMock, utsendingMediatorMock)

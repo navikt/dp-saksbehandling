@@ -1178,7 +1178,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Sjekk om fnre eksisterer i vårt system`() {
+    fun `Sjekk om fødselsnumre eksisterer i vårt system`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val (fnr1, fnr2, fnr3) = Triple("12345678910", "10987654321", "12345678931")

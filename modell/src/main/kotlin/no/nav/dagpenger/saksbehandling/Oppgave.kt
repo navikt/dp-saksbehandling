@@ -29,7 +29,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
@@ -106,7 +105,7 @@ data class Oppgave private constructor(
         ) {
             require(oppgave.behandlerIdent == saksbehandler.navIdent) {
                 throw Tilstand.ManglendeTilgang(
-                    "Kan ikke ferdigstille oppgave i tilstand ${UnderBehandling.type} uten å eie oppgaven. " +
+                    "Kan ikke ferdigstille oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
                         "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
                 )
             }
@@ -198,10 +197,6 @@ data class Oppgave private constructor(
         tilstand.klarTilKontroll(this, behandlingLåstHendelse)
     }
 
-    fun klarTilNyKontroll(klarTilKontrollHendelse: TomHendelse) {
-        tilstand.klarTilNyKontroll(this, klarTilKontrollHendelse)
-    }
-
     fun sendTilbakeTilUnderBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
     }
@@ -230,7 +225,7 @@ data class Oppgave private constructor(
 
     fun sisteBeslutter(): String? {
         return kotlin.runCatching {
-            _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL }?.let {
+            _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL && it.hendelse is AnsvarHendelse }?.let {
                 (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
         }
@@ -634,17 +629,6 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å låse behandling i tilstand $type",
-            )
-        }
-
-        fun klarTilNyKontroll(
-            oppgave: Oppgave,
-            klarTilKontrollHendelse: TomHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type",
-                // TODO: ikke helt fornøyd med å bruke samme navn klarTilKontrollHendelse på forskjellige ting og samme message men kom ikke på noe bra
             )
         }
 

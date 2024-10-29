@@ -296,7 +296,6 @@ class OppgaveTilstandTest {
                 søknadId = UUIDv7.ny(),
                 ident = testIdent,
             ),
-            // TODO: her er det vel strengt tatt system som utfører? bruk tom hendelse?
         )
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
@@ -589,6 +588,7 @@ class OppgaveTilstandTest {
             ),
         )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
+        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
 
         oppgave.sendTilbakeTilUnderBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, beslutter1))
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
@@ -603,15 +603,18 @@ class OppgaveTilstandTest {
                 ident = oppgave.ident,
             ),
         )
+        oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
+        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+
+        oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId = oppgaveId, utførtAv = beslutter1))
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave.oppgaveId,
+                oppgaveId = oppgaveId,
                 ansvarligIdent = beslutter2.navIdent,
-                utførtAv = beslutter1,
+                utførtAv = beslutter2,
             ),
         )
-        oppgave.sisteBeslutter() shouldBe beslutter2.navIdent
-        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =
