@@ -25,8 +25,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
@@ -289,7 +287,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand AVVENTER_LÅS_AV_BEHANDLING til KLAR_TIL_KONTROLL`() {
+    fun `Skal gå fra tilstand AVVENTER_LÅS_AV_BEHANDLING til KLAR_TIL_KONTROLL når ingen tildligere beslutter finnes`() {
         val oppgave = lagOppgave(AVVENTER_LÅS_AV_BEHANDLING, null)
 
         oppgave.klarTilKontroll(
@@ -303,6 +301,32 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Skal gå fra tilstand AVVENTER_LÅS_AV_BEHANDLING til UNDER_KONTROLL når tildligere beslutter finnes`() {
+        val beslutter = Saksbehandler("Z080808", emptySet(), setOf(BESLUTTER))
+        val oppgave = lagOppgave(AVVENTER_LÅS_AV_BEHANDLING, null)
+        oppgave.tilstandslogg.leggTil(
+            nyTilstand = UNDER_KONTROLL,
+            hendelse =
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+        )
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.behandlingId,
+                søknadId = UUIDv7.ny(),
+                ident = testIdent,
+            ),
+            // TODO: her er det vel strengt tatt system som utfører? bruk tom hendelse?
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.behandlerIdent shouldBe beslutter.navIdent
     }
 
     @ParameterizedTest
@@ -336,29 +360,6 @@ class OppgaveTilstandTest {
         )
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-    }
-
-    @Test
-    fun `Skal gå fra tilstand UNDER_BEHANDLING til UNDER_KONTROLL via AVVENTER_LÅS_AV_BEHANDLING`() {
-        val beslutterIdent = Saksbehandler("Z080808", emptySet())
-        val saksbehandlerIdent = Saksbehandler("Z999999", emptySet())
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandlerIdent)
-
-        oppgave.sendTilbakeTilUnderKontroll(
-            TilbakeTilUnderKontrollHendelse(
-                oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = beslutterIdent.navIdent,
-                utførtAv = saksbehandlerIdent,
-            ),
-        )
-
-        oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
-        oppgave.behandlerIdent shouldBe beslutterIdent.navIdent
-
-        oppgave.klarTilNyKontroll(
-            TomHendelse,
-        )
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
     }
 
     @Test

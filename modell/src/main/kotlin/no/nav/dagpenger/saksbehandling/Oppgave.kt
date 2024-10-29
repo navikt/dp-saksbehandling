@@ -29,7 +29,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -207,10 +206,6 @@ data class Oppgave private constructor(
         tilstand.sendTilbakeTilUnderBehandling(this, settOppgaveAnsvarHendelse)
     }
 
-    fun sendTilbakeTilUnderKontroll(tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse) {
-        tilstand.sendTilbakeTilUnderKontroll(this, tilbakeTilUnderKontrollHendelse)
-    }
-
     private fun endreTilstand(
         nyTilstand: Tilstand,
         hendelse: Hendelse,
@@ -341,14 +336,6 @@ data class Oppgave private constructor(
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId}" }
         }
 
-        override fun sendTilbakeTilUnderKontroll(
-            oppgave: Oppgave,
-            tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
-        ) {
-            oppgave.endreTilstand(AvventerLåsAvBehandling, tilbakeTilUnderKontrollHendelse)
-            oppgave.behandlerIdent = tilbakeTilUnderKontrollHendelse.ansvarligIdent
-        }
-
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
@@ -443,14 +430,12 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             behandlingLåstHendelse: BehandlingLåstHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilKontroll, behandlingLåstHendelse)
-        }
-
-        override fun klarTilNyKontroll(
-            oppgave: Oppgave,
-            klarTilKontrollHendelse: TomHendelse,
-        ) {
-            oppgave.endreTilstand(UnderKontroll, klarTilKontrollHendelse)
+            if (oppgave.sisteBeslutter() == null) {
+                oppgave.endreTilstand(KlarTilKontroll, behandlingLåstHendelse)
+            } else {
+                oppgave.behandlerIdent = oppgave.sisteBeslutter()
+                oppgave.endreTilstand(UnderKontroll, behandlingLåstHendelse)
+            }
         }
     }
 
@@ -670,16 +655,6 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type",
-            )
-        }
-
-        fun sendTilbakeTilUnderKontroll(
-            oppgave: Oppgave,
-            tilbakeTilUnderKontrollHendelse: TilbakeTilUnderKontrollHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å sende tilbake til under kontroll i tilstand $type",
             )
         }
 
