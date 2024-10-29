@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -134,6 +135,30 @@ class OppgaveMediator(
         repository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
             oppgave.sendTilKontroll(sendTilKontrollHendelse)
             repository.lagre(oppgave)
+        }
+    }
+
+    fun settOppgaveKlarTilKontroll(behandlingLåstHendelse: BehandlingLåstHendelse) {
+        val oppgave = repository.finnOppgaveFor(behandlingLåstHendelse.behandlingId)
+        when (oppgave) {
+            null -> {
+                logger.error {
+                    "Mottatt hendelse behandling_låst for behandling med id " +
+                        "${behandlingLåstHendelse.behandlingId}." +
+                        "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
+                }
+            }
+
+            else -> {
+                oppgave.klarTilKontroll(behandlingLåstHendelse)
+                repository.lagre(oppgave)
+                withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                    logger.info {
+                        "Mottatt hendelse behandling_låst for behandling med id " +
+                            "${behandlingLåstHendelse.behandlingId}. Oppgave er klar til kontroll."
+                    }
+                }
+            }
         }
     }
 

@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -131,10 +132,10 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(dataSource),
-                    skjermingKlientMock,
-                    pdlKlientMock,
-                    behandlingKlientMock,
-                    mockk(),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
                 )
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
@@ -846,6 +847,14 @@ class OppgaveMediatorTest {
         if (tilstand == AVVENTER_LÅS_AV_BEHANDLING) {
             return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
         }
+
+        oppgaveMediator.settOppgaveKlarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.behandling.behandlingId,
+                søknadId = UUIDv7.ny(),
+                ident = oppgave.ident,
+            ),
+        )
 
         if (tilstand == KLAR_TIL_KONTROLL) {
             return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
