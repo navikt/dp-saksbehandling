@@ -4,7 +4,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
-import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
+import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -25,26 +25,26 @@ class OppgaveFristUtgåttJobTest {
 
             val oppgave1 =
                 lagOppgave(
-                    tilstand = PaaVent,
+                    tilstand = PåVent,
                     utsattTil = iDag,
                     saksbehandlerIdent = null,
                 )
             val oppgave2 =
                 lagOppgave(
-                    tilstand = PaaVent,
+                    tilstand = PåVent,
                     utsattTil = iDag,
                     saksbehandlerIdent = saksbehandlerIdent1,
                     emneknagger = setOf("Tidligere utsatt"),
                 )
             val oppgave3 =
                 lagOppgave(
-                    tilstand = PaaVent,
+                    tilstand = PåVent,
                     utsattTil = iDag,
                     saksbehandlerIdent = saksbehandlerIdent2,
                 )
             val oppgave4 =
                 lagOppgave(
-                    tilstand = PaaVent,
+                    tilstand = PåVent,
                     utsattTil = iMorgen,
                     saksbehandlerIdent = saksbehandlerIdent1,
                 )
@@ -78,7 +78,7 @@ class OppgaveFristUtgåttJobTest {
             }
 
             repo.hentOppgave(oppgave4.oppgaveId).let { oppgave ->
-                oppgave.tilstand() shouldBe PaaVent
+                oppgave.tilstand() shouldBe PåVent
                 oppgave.emneknagger shouldNotContain "Tidligere utsatt"
                 oppgave.behandlerIdent shouldBe saksbehandlerIdent1
             }

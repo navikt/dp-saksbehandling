@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -107,10 +106,11 @@ data class Oppgave private constructor(
         private fun requireSammeEier(
             oppgave: Oppgave,
             saksbehandler: Saksbehandler,
+            hendelseNavn: String,
         ) {
             require(oppgave.behandlerIdent == saksbehandler.navIdent) {
                 throw Tilstand.ManglendeTilgang(
-                    "Kan ikke ferdigstille oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
+                    "Ulovlig hendelse av typ $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
                         "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
                 )
             }
@@ -299,6 +299,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
+            requireSammeEier(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
             oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
             oppgave.behandlerIdent = null
         }
@@ -330,7 +331,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
-            oppgave.endreTilstand(PaaVent, utsettOppgaveHendelse)
+            oppgave.endreTilstand(PåVent, utsettOppgaveHendelse)
             oppgave.behandlerIdent =
                 when (utsettOppgaveHendelse.beholdOppgave) {
                     true -> utsettOppgaveHendelse.navIdent
@@ -357,7 +358,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
-            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv)
+            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv, godkjentBehandlingHendelse.javaClass.simpleName)
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
@@ -365,7 +366,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
-            requireSammeEier(oppgave, godkjennBehandlingMedBrevIArena.utførtAv)
+            requireSammeEier(oppgave, godkjennBehandlingMedBrevIArena.utførtAv, godkjennBehandlingMedBrevIArena.javaClass.simpleName)
             oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
         }
     }
@@ -381,15 +382,15 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
-            logger.warn { "Ferdigstiller allerede ferdigbehandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
-            sikkerlogg.warn {
-                "Ferdigstiller allerede ferdigbehandlet oppgave for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
-                    "med vedtakFattetHendelse: $vedtakFattetHendelse "
+            logger.info { "Oppgave er allerede ferdigstilt for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
+            sikkerlogg.info {
+                "Oppgave er allerede ferdigstilt for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
+                    "VedtakFattetHendelse: $vedtakFattetHendelse "
             }
         }
     }
 
-    object PaaVent : Tilstand {
+    object PåVent : Tilstand {
         override val type: Type = PAA_VENT
 
         override fun tildel(
@@ -426,7 +427,7 @@ data class Oppgave private constructor(
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
             require(settOppgaveAnsvarHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
-                throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter tilgang")
+                throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter-tilgang")
             }
             oppgave.endreTilstand(UnderKontroll(), settOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
@@ -469,9 +470,9 @@ data class Oppgave private constructor(
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
             require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
-                throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten  beslutter tilgang")
+                throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten beslutter-tilgang")
             }
-            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv)
+            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv, godkjentBehandlingHendelse.javaClass.simpleName)
 
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
@@ -480,13 +481,18 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            requireSammeEier(oppgave, settOppgaveAnsvarHendelse.utførtAv)
+            requireSammeEier(oppgave, settOppgaveAnsvarHendelse.utførtAv, settOppgaveAnsvarHendelse.javaClass.simpleName)
         }
 
         override fun sendTilbakeTilUnderBehandling(
             oppgave: Oppgave,
             returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         ) {
+            require(returnerTilSaksbehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
+                throw Tilstand.ManglendeTilgang("Kan ikke returnere oppgaven til saksbehandling i tilstand $type uten beslutter-tilgang")
+            }
+            requireSammeEier(oppgave, returnerTilSaksbehandlingHendelse.utførtAv, returnerTilSaksbehandlingHendelse.javaClass.simpleName)
+
             oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
             oppgave.behandlerIdent = null
         }
@@ -647,7 +653,7 @@ data class Oppgave private constructor(
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type",
+                message = "Kan ikke håndtere hendelse om å sende til kontroll i tilstand $type",
             )
         }
 
@@ -657,7 +663,7 @@ data class Oppgave private constructor(
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å låse behandling i tilstand $type",
+                message = "Kan ikke håndtere hendelse om låst behandling i tilstand $type",
             )
         }
 
@@ -667,7 +673,7 @@ data class Oppgave private constructor(
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å låse behandling i tilstand $type",
+                message = "Kan ikke håndtere hendelse om opplåst behandling i tilstand $type",
             )
         }
 
@@ -677,7 +683,7 @@ data class Oppgave private constructor(
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type",
+                message = "Kan ikke håndtere hendelse om å returnere til saksbehandling fra kontroll i tilstand $type",
             )
         }
 

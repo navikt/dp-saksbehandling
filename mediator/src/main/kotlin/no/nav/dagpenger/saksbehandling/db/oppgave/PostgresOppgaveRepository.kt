@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
-import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
+import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -968,7 +968,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
                     OPPRETTET -> Opprettet
                     KLAR_TIL_BEHANDLING -> KlarTilBehandling
                     UNDER_BEHANDLING -> UnderBehandling
-                    PAA_VENT -> PaaVent
+                    PAA_VENT -> PåVent
                     AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
                     UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id))

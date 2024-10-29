@@ -884,7 +884,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `CRUD på oppgave med PAAVENT tilstand`() {
+    fun `CRUD på oppgave i tilstand PAA_VENT`() {
         val testOppgave = lagOppgave(tilstand = UnderBehandling)
         val utsattTil = LocalDate.now().plusDays(1)
         withMigratedDb { ds ->
@@ -892,12 +892,12 @@ class PostgresOppgaveRepositoryTest {
 
             repo.lagre(
                 testOppgave.copy(
-                    tilstand = Oppgave.PaaVent,
+                    tilstand = Oppgave.PåVent,
                     utsattTil = utsattTil,
                 ),
             )
             repo.hentOppgave(testOppgave.oppgaveId).let { oppgave: Oppgave ->
-                oppgave.tilstand() shouldBe Oppgave.PaaVent
+                oppgave.tilstand() shouldBe Oppgave.PåVent
                 oppgave.utsattTil() shouldBe utsattTil
             }
         }

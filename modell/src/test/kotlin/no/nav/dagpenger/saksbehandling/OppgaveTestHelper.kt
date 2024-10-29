@@ -27,7 +27,7 @@ object OppgaveTestHelper {
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
-                PAA_VENT -> Oppgave.PaaVent
+                PAA_VENT -> Oppgave.PåVent
                 KLAR_TIL_KONTROLL -> Oppgave.KlarTilKontroll
                 UNDER_KONTROLL -> Oppgave.UnderKontroll()
                 AVVENTER_LÅS_AV_BEHANDLING -> Oppgave.AvventerLåsAvBehandling

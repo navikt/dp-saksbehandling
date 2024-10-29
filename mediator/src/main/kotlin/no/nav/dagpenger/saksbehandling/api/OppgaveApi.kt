@@ -387,7 +387,7 @@ private fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
         is Oppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
         is Oppgave.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
-        is Oppgave.PaaVent -> OppgaveTilstandDTO.PAA_VENT
+        is Oppgave.PåVent -> OppgaveTilstandDTO.PAA_VENT
         is Oppgave.KlarTilKontroll -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
         is Oppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
         else -> throw InternDataException("Ukjent tilstand: $this")

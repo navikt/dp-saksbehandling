@@ -133,9 +133,10 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra UnderKontroll til AvventerOpplåsing`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
+    fun `Skal gå fra UnderKontroll til AvventerOpplåsingAvBehandling`() {
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutter)
+
         shouldNotThrowAny {
             oppgave.sendTilbakeTilUnderBehandling(
                 ReturnerTilSaksbehandlingHendelse(
@@ -176,7 +177,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå til FERDIG_BEHANDLET fra UNDER_BEHANDLING vha GodkjentBehandlingHendelse`() {
+    fun `Skal gå til FerdigBehandlet fra UnderBehandling vha GodkjentBehandlingHendelse`() {
         val saksbehandler = Saksbehandler("sIdent", emptySet())
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
@@ -213,7 +214,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal ikke endre tilstand på en oppgave når den er ferdigbehandlet`() {
+    fun `Skal ikke endre tilstand på en oppgave når den er FerdigBehandlet`() {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
         shouldThrow<UlovligTilstandsendringException> {
@@ -236,7 +237,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal kunne utsette en opppgave og ta den tilbake til under behandling`() {
+    fun `Skal kunne utsette en opppgave og ta den tilbake UnderBehandling`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
         val utsattTil = LocalDate.now().plusDays(1)
 
@@ -250,7 +251,7 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.PaaVent
+        oppgave.tilstand() shouldBe Oppgave.PåVent
         oppgave.utsattTil() shouldBe utsattTil
         oppgave.behandlerIdent shouldBe null
 
@@ -262,7 +263,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Saksbehandler skal kunne beholde en oppgave når den settes PAA_VENT`() {
+    fun `Saksbehandler skal kunne beholde en oppgave når den settes på vent`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
         val utsattTil = LocalDate.now().plusDays(1)
 
@@ -276,13 +277,13 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.PaaVent
+        oppgave.tilstand() shouldBe Oppgave.PåVent
         oppgave.utsattTil() shouldBe utsattTil
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
     }
 
     @Test
-    fun `Fjern ansvar fra en oppgave med tilstand PAA_VENT`() {
+    fun `Fjern ansvar fra en oppgave med tilstand PåVent`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
         val utSattTil = LocalDate.now().plusDays(1)
 
