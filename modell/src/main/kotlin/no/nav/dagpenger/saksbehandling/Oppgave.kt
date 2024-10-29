@@ -478,7 +478,7 @@ data class Oppgave private constructor(
                 null -> {
                     notat =
                         Notat(
-                            notatId = notatHendelse.oppgaveId,
+                            notatId = UUIDv7.ny(),
                             tekst = notatHendelse.tekst,
                         )
                 }
