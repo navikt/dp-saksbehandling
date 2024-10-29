@@ -6,6 +6,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -18,11 +19,13 @@ import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -127,6 +130,49 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand().type shouldBe KLAR_TIL_KONTROLL
         oppgave.behandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Skal gå fra UnderKontroll til AvventerOpplåsing`() {
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
+        val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
+        shouldNotThrowAny {
+            oppgave.sendTilbakeTilUnderBehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = beslutter,
+                ),
+            )
+        }
+
+        oppgave.tilstand().type shouldBe AVVENTER_OPPLÅSING_AV_BEHANDLING
+        oppgave.behandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Skal gå fra AvventerOpplåsningAvBehandling til UnderBehandling`() {
+        val oppgave = lagOppgave(tilstandType = AVVENTER_OPPLÅSING_AV_BEHANDLING)
+        oppgave.tilstandslogg.leggTil(
+            nyTilstand = UNDER_BEHANDLING,
+            hendelse =
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+        )
+        shouldNotThrowAny {
+            oppgave.klarTilBehandling(
+                BehandlingOpplåstHendelse(
+                    behandlingId = oppgave.behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    ident = testIdent,
+                ),
+            )
+        }
+
+        oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
     }
 
     @Test
@@ -309,7 +355,6 @@ class OppgaveTilstandTest {
                 søknadId = UUIDv7.ny(),
                 ident = testIdent,
             ),
-            // TODO: her er det vel strengt tatt system som utfører? bruk tom hendelse?
         )
 
         oppgave.tilstand().type shouldBe UNDER_KONTROLL
@@ -480,25 +525,6 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand UNDER_KONTROLL til UNDER_BEHANDLING`() {
-        val beslutter = Saksbehandler("besluttterIdent", emptySet())
-        val saksbehandlerIdent = "Z080809"
-        val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
-
-        oppgave.sendTilbakeTilUnderBehandling(
-            settOppgaveAnsvarHendelse =
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandlerIdent,
-                    utførtAv = beslutter,
-                ),
-        )
-
-        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
-        oppgave.behandlerIdent shouldBe saksbehandlerIdent
-    }
-
-    @Test
     fun `Finn siste saksbehandler når oppgave er tildelt via neste-oppgave funksjon`() {
         val saksbehandler = Saksbehandler("Z080808", emptySet())
         val oppgave =
@@ -577,7 +603,14 @@ class OppgaveTilstandTest {
         )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
 
-        oppgave.sendTilbakeTilUnderBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, beslutter1))
+        oppgave.sendTilbakeTilUnderBehandling(ReturnerTilSaksbehandlingHendelse(oppgaveId, beslutter1))
+        oppgave.klarTilBehandling(
+            BehandlingOpplåstHendelse(
+                behandlingId = oppgave.oppgaveId,
+                søknadId = UUIDv7.ny(),
+                ident = oppgave.ident,
+            ),
+        )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
