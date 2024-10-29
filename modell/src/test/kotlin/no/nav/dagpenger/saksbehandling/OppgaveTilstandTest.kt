@@ -262,18 +262,6 @@ class OppgaveTilstandTest {
         oppgave.behandlerIdent shouldBe null
     }
 
-/*    @Test
-    fun `Skal gå fra tilstand UNDER_BEHANDLING til KLAR_TIL_KONTROLL`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
-
-        oppgave.sendTilKontroll(
-            KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
-        )
-
-        oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
-        oppgave.behandlerIdent shouldBe null
-    }*/
-
     @Test
     fun `Skal gå fra tilstand UNDER_BEHANDLING til AVVENTER_LÅS_AV_BEHANDLING`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
@@ -324,7 +312,7 @@ class OppgaveTilstandTest {
             // TODO: her er det vel strengt tatt system som utfører? bruk tom hendelse?
         )
 
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
         oppgave.behandlerIdent shouldBe beslutter.navIdent
     }
 
@@ -357,7 +345,7 @@ class OppgaveTilstandTest {
                 utførtAv = beslutter,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
         oppgave.behandlerIdent shouldBe beslutter.navIdent
     }
 
@@ -372,7 +360,7 @@ class OppgaveTilstandTest {
                 utførtAv = beslutter,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
     }
 
     @Test
@@ -428,7 +416,7 @@ class OppgaveTilstandTest {
                 utførtAv = saksbehandler,
             ),
         )
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
     }
 
     @Test
@@ -588,7 +576,6 @@ class OppgaveTilstandTest {
             ),
         )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
 
         oppgave.sendTilbakeTilUnderBehandling(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, beslutter1))
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
@@ -605,7 +592,7 @@ class OppgaveTilstandTest {
         )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
-        oppgave.tilstand() shouldBe Oppgave.UnderKontroll
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
 
         oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(oppgaveId = oppgaveId, utførtAv = beslutter1))
         oppgave.tildel(
@@ -615,6 +602,8 @@ class OppgaveTilstandTest {
                 utførtAv = beslutter2,
             ),
         )
+        oppgave.sisteBeslutter() shouldBe beslutter2.navIdent
+        oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         oppgave.ferdigstill(
             godkjentBehandlingHendelse =

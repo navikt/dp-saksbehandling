@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -195,6 +196,12 @@ data class Oppgave private constructor(
 
     fun klarTilKontroll(behandlingLåstHendelse: BehandlingLåstHendelse) {
         tilstand.klarTilKontroll(this, behandlingLåstHendelse)
+    }
+
+    fun lagreNotat(notatHendelse: NotatHendelse) {
+        egneAnsatteTilgangskontroll(notatHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(notatHendelse.utførtAv)
+        tilstand.lagreNotat(this, notatHendelse)
     }
 
     fun sendTilbakeTilUnderBehandling(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
@@ -413,7 +420,7 @@ data class Oppgave private constructor(
             require(settOppgaveAnsvarHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter tilgang")
             }
-            oppgave.endreTilstand(UnderKontroll, settOppgaveAnsvarHendelse)
+            oppgave.endreTilstand(UnderKontroll(), settOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
     }
@@ -429,12 +436,12 @@ data class Oppgave private constructor(
                 oppgave.endreTilstand(KlarTilKontroll, behandlingLåstHendelse)
             } else {
                 oppgave.behandlerIdent = oppgave.sisteBeslutter()
-                oppgave.endreTilstand(UnderKontroll, behandlingLåstHendelse)
+                oppgave.endreTilstand(UnderKontroll(), behandlingLåstHendelse)
             }
         }
     }
 
-    object UnderKontroll : Tilstand {
+    data class UnderKontroll(private var notat: Notat? = null) : Tilstand {
         override val type: Type = UNDER_KONTROLL
 
         override fun ferdigstill(
@@ -471,6 +478,27 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(KlarTilKontroll, fjernOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = null
         }
+
+        override fun lagreNotat(
+            oppgave: Oppgave,
+            notatHendelse: NotatHendelse,
+        ) {
+            when (notat) {
+                null -> {
+                    notat =
+                        Notat(
+                            notatId = UUIDv7.ny(),
+                            tekst = notatHendelse.tekst,
+                        )
+                }
+
+                else -> {
+                    notat?.endreTekst(notatHendelse.tekst)
+                }
+            }
+        }
+
+        override fun notat(): Notat? = notat
     }
 
     interface Tilstand {
@@ -488,28 +516,6 @@ data class Oppgave private constructor(
             message: String,
         ) : RuntimeException(message)
 
-        companion object {
-            fun fra(type: Type) =
-                when (type) {
-                    OPPRETTET -> Opprettet
-                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
-                    UNDER_BEHANDLING -> UnderBehandling
-                    FERDIG_BEHANDLET -> FerdigBehandlet
-                    PAA_VENT -> PaaVent
-                    KLAR_TIL_KONTROLL -> KlarTilKontroll
-                    UNDER_KONTROLL -> UnderKontroll
-                    AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
-                }
-
-            fun fra(type: String) =
-                kotlin
-                    .runCatching {
-                        fra(Type.valueOf(type))
-                    }.getOrElse { t ->
-                        throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: $type ${t.message}")
-                    }
-        }
-
         enum class Type {
             OPPRETTET,
             KLAR_TIL_BEHANDLING,
@@ -523,9 +529,9 @@ data class Oppgave private constructor(
 
             companion object {
                 val values
-                    get() = Type.entries.toSet()
+                    get() = entries.toSet()
 
-                val søkbareTyper = Type.entries.toSet().minus(OPPRETTET)
+                val søkbareTyper = entries.toSet().minus(OPPRETTET)
                 val defaultOppgaveListTilstander =
                     setOf(
                         KLAR_TIL_BEHANDLING,
@@ -533,6 +539,8 @@ data class Oppgave private constructor(
                     )
             }
         }
+
+        fun notat(): Notat? = null
 
         fun behov() = emptySet<String>()
 
@@ -640,6 +648,13 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å sende tilbake fra kontroll i tilstand $type",
             )
+        }
+
+        fun lagreNotat(
+            oppgave: Oppgave,
+            notatHendelse: NotatHendelse,
+        ) {
+            throw RuntimeException("Notat er ikke tillatt i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(

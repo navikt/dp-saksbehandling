@@ -7,8 +7,25 @@ import kotliquery.sessionOf
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
+import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
@@ -33,6 +50,7 @@ import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import org.postgresql.util.PGobject
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -824,6 +842,38 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
     )
     lagre(oppgave.oppgaveId, oppgave.emneknagger)
     lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
+    oppgave.tilstand().notat()?.let {
+        lagreNotat(it.notatId, oppgave.tilstandslogg.first().id, it.hentTekst())
+    }
+}
+
+private fun TransactionalSession.lagreNotat(
+    notatId: UUID,
+    tilstandsendringId: UUID,
+    tekst: String,
+): LocalDateTime {
+    return run(
+        queryOf(
+            //language=PostgreSQL
+            statement =
+                """
+                INSERT INTO notat_v1
+                    (id, oppgave_tilstand_logg_id, tekst) 
+                VALUES
+                    (:notat_id, :oppgave_tilstand_logg_id, :tekst) 
+                ON CONFLICT (oppgave_tilstand_logg_id) DO UPDATE SET tekst = :tekst
+                             RETURNING endret_tidspunkt
+                """.trimIndent(),
+            paramMap =
+                mapOf(
+                    "notat_id" to notatId,
+                    "oppgave_tilstand_logg_id" to tilstandsendringId,
+                    "tekst" to tekst,
+                ),
+        ).map { row -> row.localDateTime("endret_tidspunkt") }.asSingle,
+    ) ?: throw KanIkkeLagreNotatException(
+        "Kunne ikke lagre notat for tilstandsendringId: $tilstandsendringId",
+    )
 }
 
 private fun TransactionalSession.lagre(
@@ -906,10 +956,24 @@ private fun Row.rehydrerOppgave(): Oppgave {
             hendelse = finnHendelseForBehandling(behandlingId),
         )
 
+    val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId)
+
     val tilstand =
-        Oppgave.Tilstand.fra(
-            type = this.string("tilstand"),
-        )
+        kotlin
+            .runCatching {
+                when (Type.valueOf(value = string("tilstand"))) {
+                    OPPRETTET -> Opprettet
+                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                    UNDER_BEHANDLING -> UnderBehandling
+                    PAA_VENT -> PaaVent
+                    AVVENTER_LÅS_AV_BEHANDLING -> Oppgave.AvventerLåsAvBehandling
+                    KLAR_TIL_KONTROLL -> KlarTilKontroll
+                    UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id))
+                    FERDIG_BEHANDLET -> FerdigBehandlet
+                }
+            }.getOrElse { t ->
+                throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: ${string("tilstand")} ${t.message}")
+            }
 
     return Oppgave.rehydrer(
         oppgaveId = oppgaveId,
@@ -921,8 +985,31 @@ private fun Row.rehydrerOppgave(): Oppgave {
         tilstand = tilstand,
         behandling = behandling,
         utsattTil = this.localDateOrNull("utsatt_til"),
-        tilstandslogg = hentTilstandsloggForOppgave(oppgaveId),
+        tilstandslogg = tilstandslogg,
     )
+}
+
+private fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? {
+    return sessionOf(dataSource).use { session ->
+        session.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    SELECT id,tekst,endret_tidspunkt
+                    FROM   notat_v1
+                    WHERE  oppgave_tilstand_logg_id = :oppgaveTilstandLoggId
+                    """.trimIndent(),
+                paramMap = mapOf("oppgaveTilstandLoggId" to oppgaveTilstandLoggId),
+            ).map { row ->
+                Notat(
+                    notatId = row.uuid("id"),
+                    tekst = row.string("tekst"),
+                    sistEndretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                )
+            }.asSingle,
+        )
+    }
 }
 
 private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
@@ -930,3 +1017,5 @@ private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
 }
 
 class DataNotFoundException(message: String) : RuntimeException(message)
+
+class KanIkkeLagreNotatException(message: String) : RuntimeException(message)

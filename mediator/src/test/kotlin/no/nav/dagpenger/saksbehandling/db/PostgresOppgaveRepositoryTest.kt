@@ -39,9 +39,10 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_P
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
@@ -562,7 +563,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveUtenSkjermingOgAdressegradering.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe vanligBeslutter.navIdent
                 }
             }
@@ -585,7 +586,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveEgneAnsatteSkjerming.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterEgneAnsatte.navIdent
                 }
             }
@@ -608,7 +609,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveFortroligAdresse.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterFortroligAdresse.navIdent
                 }
             }
@@ -631,7 +632,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresse.navIdent
                     it.opprettet shouldBe eldsteKontrollOppgaveStrengtFortroligAdresse.opprettet
                 }
@@ -655,7 +656,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseUtland.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligAdresseUtland.navIdent
                 }
             }
@@ -684,7 +685,7 @@ class PostgresOppgaveRepositoryTest {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
                     it.oppgaveId shouldBe eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming.oppgaveId
-                    it.tilstand() shouldBe Oppgave.UnderKontroll
+                    it.tilstand().type shouldBe UNDER_KONTROLL
                     it.sisteBeslutter() shouldBe beslutterStrengtFortroligOgEgneAnsatte.navIdent
                 }
             }
@@ -787,6 +788,26 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne lagre og hente en oppgave med notat`() {
+        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        testOppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId = testOppgave.oppgaveId, beslutter.navIdent, beslutter))
+        testOppgave.lagreNotat(
+            NotatHendelse(
+                oppgaveId = testOppgave.oppgaveId,
+                tekst = "Dette er et notat",
+                utførtAv = beslutter,
+            ),
+        )
+
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testOppgave)
+            val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
+            oppgaveFraDatabase shouldBe testOppgave
+        }
+    }
+
+    @Test
     fun `Skal kunne lagre og hente en oppgave`() {
         val testOppgave = lagOppgave()
         withMigratedDb { ds ->
@@ -806,7 +827,12 @@ class PostgresOppgaveRepositoryTest {
                 mutableListOf(
                     Tilstandsendring(
                         tilstand = KLAR_TIL_KONTROLL,
-                        hendelse = SendTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler),
+                        hendelse =
+                            BehandlingLåstHendelse(
+                                behandlingId = UUIDv7.ny(),
+                                søknadId = UUIDv7.ny(),
+                                ident = "12345612345",
+                            ),
                         tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
                     ),
                     Tilstandsendring(
@@ -1178,7 +1204,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Sjekk om fødselsnumre eksisterer i vårt system`() {
+    fun `Sjekk om fnre eksisterer i vårt system`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val (fnr1, fnr2, fnr3) = Triple("12345678910", "10987654321", "12345678931")

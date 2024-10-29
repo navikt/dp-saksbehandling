@@ -109,7 +109,7 @@ internal object OppgaveApiTestHelper {
                     FERDIG_BEHANDLET -> FerdigBehandlet
                     PAA_VENT -> PaaVent
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
-                    UNDER_KONTROLL -> UnderKontroll
+                    UNDER_KONTROLL -> UnderKontroll()
                     AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
                 },
             behandling = behandling,

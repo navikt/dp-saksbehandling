@@ -28,7 +28,7 @@ object OppgaveTestHelper {
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
                 PAA_VENT -> Oppgave.PaaVent
                 KLAR_TIL_KONTROLL -> Oppgave.KlarTilKontroll
-                UNDER_KONTROLL -> Oppgave.UnderKontroll
+                UNDER_KONTROLL -> Oppgave.UnderKontroll()
                 AVVENTER_LÅS_AV_BEHANDLING -> Oppgave.AvventerLåsAvBehandling
             }
         return Oppgave.rehydrer(

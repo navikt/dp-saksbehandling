@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
@@ -43,6 +44,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -134,6 +136,23 @@ internal fun Application.oppgaveApi(
                             val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
                             val oppgaveDTO = oppgaveDTO(oppgave)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
+                        }
+                    }
+                    route("notat") {
+                        put {
+                            val notat = call.receiveText()
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                oppgaveMediator.lagreNotat(
+                                    NotatHendelse(
+                                        oppgaveId = oppgaveId,
+                                        tekst = notat,
+                                        utførtAv = saksbehandler,
+                                    ),
+                                )
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     }
                     route("tildel") {
@@ -349,6 +368,13 @@ fun lagOppgaveDTO(
         utsattTilDato = oppgave.utsattTil(),
         saksbehandler = sisteSaksbehandlerDTO,
         beslutter = sisteBeslutterDTO,
+        notat =
+            oppgave.tilstand().notat()?.let {
+                NotatDTO(
+                    tekst = it.hentTekst(),
+                    sistEndretTidspunkt = it.sistEndretTidspunkt!!,
+                )
+            },
     )
 
 private fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
