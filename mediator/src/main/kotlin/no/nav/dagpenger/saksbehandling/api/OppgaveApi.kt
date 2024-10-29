@@ -42,8 +42,8 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -302,8 +302,8 @@ private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehand
     )
 }
 
-private fun ApplicationCall.klarTilKontrollHendelse(saksbehandler: Saksbehandler): KlarTilKontrollHendelse {
-    return KlarTilKontrollHendelse(
+private fun ApplicationCall.klarTilKontrollHendelse(saksbehandler: Saksbehandler): SendTilKontrollHendelse {
+    return SendTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = saksbehandler,
     )

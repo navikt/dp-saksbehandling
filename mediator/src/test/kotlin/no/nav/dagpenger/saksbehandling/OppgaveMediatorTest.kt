@@ -35,7 +35,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -112,7 +112,7 @@ class OppgaveMediatorTest {
                     mockk(),
                 )
             oppgaveMediator.sendTilKontroll(
-                KlarTilKontrollHendelse(
+                SendTilKontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = saksbehandler,
                 ),
@@ -838,7 +838,7 @@ class OppgaveMediatorTest {
         }
 
         oppgaveMediator.sendTilKontroll(
-            KlarTilKontrollHendelse(
+            SendTilKontrollHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 utførtAv = saksbehandler,
             ),

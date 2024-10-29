@@ -21,12 +21,13 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -188,14 +189,14 @@ data class Oppgave private constructor(
         tilstand.utsett(this, utsettOppgaveHendelse)
     }
 
-    fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
-        egneAnsatteTilgangskontroll(klarTilKontrollHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(klarTilKontrollHendelse.utførtAv)
-        tilstand.sendTilKontroll(this, klarTilKontrollHendelse)
+    fun sendTilKontroll(sendTilKontrollHendelse: SendTilKontrollHendelse) {
+        egneAnsatteTilgangskontroll(sendTilKontrollHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(sendTilKontrollHendelse.utførtAv)
+        tilstand.sendTilKontroll(this, sendTilKontrollHendelse)
     }
 
-    fun klarTilKontroll(klarTilKontrollHendelse: TomHendelse) {
-        tilstand.klarTilKontroll(this, klarTilKontrollHendelse)
+    fun klarTilKontroll(behandlingLåstHendelse: BehandlingLåstHendelse) {
+        tilstand.klarTilKontroll(this, behandlingLåstHendelse)
     }
 
     fun klarTilNyKontroll(klarTilKontrollHendelse: TomHendelse) {
@@ -291,9 +292,9 @@ data class Oppgave private constructor(
 
         override fun sendTilKontroll(
             oppgave: Oppgave,
-            klarTilKontrollHendelse: KlarTilKontrollHendelse,
+            sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
-            oppgave.endreTilstand(AvventerLåsAvBehandling, klarTilKontrollHendelse)
+            oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
             oppgave.behandlerIdent = null
         }
 
@@ -440,10 +441,9 @@ data class Oppgave private constructor(
 
         override fun klarTilKontroll(
             oppgave: Oppgave,
-            klarTilKontrollHendelse: TomHendelse,
+            behandlingLåstHendelse: BehandlingLåstHendelse,
         ) {
-            oppgave.endreTilstand(KlarTilKontroll, klarTilKontrollHendelse)
-            oppgave.behandlerIdent = null
+            oppgave.endreTilstand(KlarTilKontroll, behandlingLåstHendelse)
         }
 
         override fun klarTilNyKontroll(
@@ -451,7 +451,6 @@ data class Oppgave private constructor(
             klarTilKontrollHendelse: TomHendelse,
         ) {
             oppgave.endreTilstand(UnderKontroll, klarTilKontrollHendelse)
-            oppgave.behandlerIdent = null
         }
     }
 
@@ -635,7 +634,7 @@ data class Oppgave private constructor(
 
         fun sendTilKontroll(
             oppgave: Oppgave,
-            klarTilKontrollHendelse: KlarTilKontrollHendelse,
+            sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
@@ -645,12 +644,11 @@ data class Oppgave private constructor(
 
         fun klarTilKontroll(
             oppgave: Oppgave,
-            klarTilKontrollHendelse: TomHendelse,
+            behandlingLåstHendelse: BehandlingLåstHendelse,
         ) {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om å gjøre klar til kontroll i tilstand $type",
-                // TODO: ikke helt fornøyd med å bruke samme navn klarTilKontrollHendelse på forskjellige ting og samme message men kom ikke på noe bra
+                message = "Kan ikke håndtere hendelse om å låse behandling i tilstand $type",
             )
         }
 

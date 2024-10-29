@@ -40,8 +40,8 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
@@ -806,7 +806,7 @@ class PostgresOppgaveRepositoryTest {
                 mutableListOf(
                     Tilstandsendring(
                         tilstand = KLAR_TIL_KONTROLL,
-                        hendelse = KlarTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler),
+                        hendelse = SendTilKontrollHendelse(oppgaveId = oppgaveIdTest, saksbehandler),
                         tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
                     ),
                     Tilstandsendring(

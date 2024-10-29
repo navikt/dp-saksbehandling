@@ -15,8 +15,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -130,9 +130,9 @@ class OppgaveMediator(
         }.tilstand()
     }
 
-    fun sendTilKontroll(klarTilKontrollHendelse: KlarTilKontrollHendelse) {
-        repository.hentOppgave(klarTilKontrollHendelse.oppgaveId).also { oppgave ->
-            oppgave.sendTilKontroll(klarTilKontrollHendelse)
+    fun sendTilKontroll(sendTilKontrollHendelse: SendTilKontrollHendelse) {
+        repository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
+            oppgave.sendTilKontroll(sendTilKontrollHendelse)
             repository.lagre(oppgave)
         }
     }

@@ -17,12 +17,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.KlarTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TilbakeTilUnderKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -280,7 +281,7 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
 
         oppgave.sendTilKontroll(
-            KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+            SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
         )
 
         oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
@@ -292,7 +293,11 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(AVVENTER_LÅS_AV_BEHANDLING, null)
 
         oppgave.klarTilKontroll(
-            TomHendelse,
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.behandlingId,
+                søknadId = UUIDv7.ny(),
+                ident = testIdent,
+            ),
             // TODO: her er det vel strengt tatt system som utfører? bruk tom hendelse?
         )
 
@@ -308,7 +313,7 @@ class OppgaveTilstandTest {
         if (tilstandstype != UNDER_BEHANDLING) {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.sendTilKontroll(
-                    KlarTilKontrollHendelse(
+                    SendTilKontrollHendelse(
                         oppgaveId = oppgave.oppgaveId,
                         utførtAv = Saksbehandler("ident", emptySet()),
                     ),
@@ -562,11 +567,19 @@ class OppgaveTilstandTest {
         oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler2.navIdent, saksbehandler2))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
-        oppgave.sendTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
+        oppgave.sendTilKontroll(SendTilKontrollHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler2))
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
-        oppgave.klarTilKontroll(TomHendelse)
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.oppgaveId,
+                søknadId = UUIDv7.ny(),
+                ident = oppgave.ident,
+            ),
+        )
+
         val beslutter1 = Saksbehandler("beslutter 1", emptySet(), setOf(BESLUTTER))
+
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
@@ -581,8 +594,14 @@ class OppgaveTilstandTest {
         oppgave.sisteSaksbehandler() shouldBe saksbehandler2.navIdent
 
         val beslutter2 = Saksbehandler("beslutter 2", emptySet(), setOf(BESLUTTER))
-        oppgave.sendTilKontroll(KlarTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
-        oppgave.klarTilKontroll(TomHendelse)
+        oppgave.sendTilKontroll(SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler2))
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.oppgaveId,
+                søknadId = UUIDv7.ny(),
+                ident = oppgave.ident,
+            ),
+        )
         oppgave.tildel(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = oppgave.oppgaveId,
