@@ -138,7 +138,7 @@ class OppgaveTilstandTest {
         val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutter)
 
         shouldNotThrowAny {
-            oppgave.sendTilbakeTilUnderBehandling(
+            oppgave.returnerTilSaksbehandling(
                 ReturnerTilSaksbehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = beslutter,
@@ -604,7 +604,7 @@ class OppgaveTilstandTest {
         )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
 
-        oppgave.sendTilbakeTilUnderBehandling(ReturnerTilSaksbehandlingHendelse(oppgaveId, beslutter1))
+        oppgave.returnerTilSaksbehandling(ReturnerTilSaksbehandlingHendelse(oppgaveId, beslutter1))
         oppgave.klarTilBehandling(
             BehandlingOpplåstHendelse(
                 behandlingId = oppgave.oppgaveId,

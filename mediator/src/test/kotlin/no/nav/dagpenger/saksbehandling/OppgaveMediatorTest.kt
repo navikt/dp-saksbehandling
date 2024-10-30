@@ -868,7 +868,7 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.sendTilbakeTilUnderBehandling(
+            oppgaveMediator.returnerTilSaksbehandling(
                 ReturnerTilSaksbehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = beslutter,
