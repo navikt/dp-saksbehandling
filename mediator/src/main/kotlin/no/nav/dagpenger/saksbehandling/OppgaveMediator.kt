@@ -4,6 +4,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBeslutterDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -74,6 +76,26 @@ class OppgaveMediator(
             logger.info {
                 "Mottatt hendelse behandling_opprettet med id ${behandling.behandlingId}. Oppgave opprettet."
             }
+        }
+    }
+
+    fun lagOppgaveHistorikk(tilstandslogg: Tilstandslogg): List<OppgaveHistorikkDTO> {
+        return tilstandslogg.filter {
+            it.tilstand != Oppgave.Tilstand.Type.UNDER_KONTROLL
+        }.map {
+            Triple(it.id, it.hendelse.utførtAv, repository.finnNotat(it.id))
+        }.filter { it.third != null }.map {
+            OppgaveHistorikkDTO(
+                type = OppgaveHistorikkDTO.Type.notat,
+                tidspunkt = it.third!!.sistEndretTidspunkt!!,
+                beslutter =
+                    OppgaveHistorikkBeslutterDTO(
+                        navn = (it.second as Saksbehandler).navIdent,
+                        rolle = OppgaveHistorikkBeslutterDTO.Rolle.beslutter,
+                    ),
+                tittel = "Notat",
+                body = it.third!!.hentTekst(),
+            )
         }
     }
 

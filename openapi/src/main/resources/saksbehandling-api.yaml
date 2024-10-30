@@ -450,7 +450,9 @@ components:
           items:
             type: string
         historikk:
-          $ref: '#/components/schemas/OppgaveHistorikk'
+          type: array
+          items:
+             $ref: '#/components/schemas/OppgaveHistorikk'
         emneknagger:
           type: array
           items:
@@ -502,34 +504,37 @@ components:
 
     OppgaveHistorikk:
       type: object
+      required:
+        - type
+        - tidspunkt
+        - tittel
+        - beslutter
       properties:
-        historikkType:
+        type:
           type: string
-        tittel:
-          type: string
-        body:
-          type: string
+          enum:
+            - notat
+            - ny-status
         tidspunkt:
           type: string
           format: date-time
-        behandler:
+        body:
+          type: string
+        tittel:
+         type: string
+        beslutter:
           type: object
+          required:
+            - rolle
+            - navn
           properties:
             navn:
               type: string
-
-          required:
-            - navn
-            - enhetNr
-            - postadresse
-      required:
-        - historikkType
-    #   type: "ny-status" | "notat" | "endre-opplysning" | "melding";
-    #  tittel: string;
-    #  body?: string;
-    #  tidspunkt: string;
-    #  behandler: IBehandler;
-
+            rolle:
+              type: string
+              enum:
+                - saksbehandler
+                - beslutter
 
     NesteOppgave:
       type: object
@@ -563,7 +568,6 @@ components:
       required:
         - tekst
         - sistEndretTidspunkt
-
     Behandler:
       type: object
       properties:

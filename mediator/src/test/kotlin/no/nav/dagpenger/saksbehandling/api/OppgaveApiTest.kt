@@ -49,6 +49,8 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBeslutterDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -414,6 +416,7 @@ class OppgaveApiTest {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.tildelOgHentNesteOppgave(any(), any()) } returns oppgave
+                every { it.lagOppgaveHistorikk(any()) } returns emptyList()
             }
         val pdlMock = mockk<PDLKlient>()
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
@@ -647,6 +650,20 @@ class OppgaveApiTest {
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
         coEvery { pdlMock.person(any()) } returns Result.success(testPerson)
         coEvery { journalpostIdClientMock.hentJournalpostId(any()) } returns Result.success("123456789")
+        val tidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
+        coEvery { oppgaveMediatorMock.lagOppgaveHistorikk(any()) } returns
+            listOf(
+                OppgaveHistorikkDTO(
+                    type = OppgaveHistorikkDTO.Type.notat,
+                    tidspunkt = tidspunkt,
+                    beslutter =
+                        OppgaveHistorikkBeslutterDTO(
+                            navn = "Ole Doffen", rolle = OppgaveHistorikkBeslutterDTO.Rolle.beslutter,
+                        ),
+                    tittel = "Notat",
+                    body = "Dette er et notat",
+                ),
+            )
         coEvery { saksbehandlerOppslagMock.hentSaksbehandler(saksbehandler.navIdent) } returns
             BehandlerDTO(
                 ident = saksbehandler.navIdent,
@@ -704,7 +721,19 @@ class OppgaveApiTest {
                       },
                       "beslutter": {
                         "ident": "${beslutter.navIdent}"
-                      }
+                      },
+                      "historikk": [
+                        {
+                          "type": "notat",
+                          "tidspunkt": "2021-01-01T12:00:00",
+                          "tittel": "Notat",
+                          "beslutter": {
+                            "navn": "Ole Doffen",
+                            "rolle": "beslutter"
+                          },
+                          "body": "Dette er et notat"
+                        }
+                      ]
                     }
                     """.trimIndent()
             }

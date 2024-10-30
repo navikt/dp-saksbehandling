@@ -33,7 +33,6 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
-import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
@@ -59,12 +58,12 @@ import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}
 
-class PostgresOppgaveRepository(private val dataSource: DataSource) :
+class PostgresOppgaveRepository(private val datasource: DataSource) :
     OppgaveRepository,
     SkjermingRepository,
     AdressebeskyttelseRepository {
     override fun lagre(person: Person) {
-        sessionOf(dataSource).use { session ->
+        sessionOf(datasource).use { session ->
             session.transaction { tx ->
                 tx.lagre(person)
             }
@@ -83,7 +82,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
     ): UUID? {
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.transaction { tx ->
                 val emneknagger = filter.emneknagg.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
@@ -215,7 +214,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun finnPerson(ident: String): Person? {
-        sessionOf(dataSource).use { session ->
+        sessionOf(datasource).use { session ->
             return session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -251,7 +250,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 logger.warn("Behandling med id $behandlingId finnes ikke, sletter ikke noe")
                 return
             }
-        sessionOf(dataSource).use { session ->
+        sessionOf(datasource).use { session ->
             session.transaction { tx ->
                 tx.slettBehandling(behandlingId)
                 tx.slettPersonUtenBehandlinger(behandling.person.ident)
@@ -260,7 +259,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun lagre(behandling: Behandling) {
-        sessionOf(dataSource).use { session ->
+        sessionOf(datasource).use { session ->
             session.transaction { tx ->
                 tx.lagre(behandling)
             }
@@ -268,7 +267,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun lagre(oppgave: Oppgave) {
-        sessionOf(dataSource).use { session ->
+        sessionOf(datasource).use { session ->
             session.transaction { tx ->
                 tx.lagre(oppgave)
             }
@@ -276,7 +275,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun finnBehandling(behandlingId: UUID): Behandling? {
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -294,7 +293,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         behandlingId = behandlingId,
                         person = finnPerson(ident)!!,
                         opprettet = row.localDateTime("opprettet"),
-                        hendelse = finnHendelseForBehandling(behandlingId),
+                        hendelse = finnHendelseForBehandling(behandlingId, datasource),
                     )
                 }.asSingle,
             )
@@ -327,7 +326,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         statement = "SELECT * FROM oppgave_v1 WHERE id = :oppgave_id",
                         paramMap = mapOf("oppgave_id" to oppgaveId),
                     ).map { row ->
-                        row.rehydrerOppgave()
+                        row.rehydrerOppgave(datasource)
                     }.asSingle,
                 )
             }
@@ -335,7 +334,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -370,7 +369,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         behandlingId: UUID,
         ikkeRelevantEmneknagg: String,
     ): Boolean {
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -393,7 +392,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? {
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -413,7 +412,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 
     override fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering {
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -431,6 +430,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             )
         } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
     }
+
+    override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, datasource)
 
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
@@ -456,7 +457,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         var oppgaver: List<Oppgave>
 
         oppgaver =
-            sessionOf(dataSource).use { session ->
+            sessionOf(datasource).use { session ->
                 val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
 
                 val saksBehandlerClause =
@@ -540,7 +541,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     )
                 session.run(
                     queryOf.map { row ->
-                        row.rehydrerOppgave()
+                        row.rehydrerOppgave(datasource)
                     }.asList,
                 )
             }
@@ -551,7 +552,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         fnr: String,
         skjermet: Boolean,
     ): Int {
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -575,7 +576,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         fnr: String,
         adresseBeskyttelseGradering: AdressebeskyttelseGradering,
     ): Int {
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -597,7 +598,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
 
     override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
         val identer = fnrs.joinToString { "'$it'" }
-        return sessionOf(dataSource).use { session ->
+        return sessionOf(datasource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -696,7 +697,10 @@ private fun Row.rehydrerHendelse(): Hendelse {
     }
 }
 
-private fun finnHendelseForBehandling(behandlingId: UUID): Hendelse {
+private fun finnHendelseForBehandling(
+    behandlingId: UUID,
+    dataSource: DataSource,
+): Hendelse {
     return sessionOf(dataSource).use { session ->
         session.run(
             queryOf(
@@ -715,7 +719,10 @@ private fun finnHendelseForBehandling(behandlingId: UUID): Hendelse {
     }
 }
 
-private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
+private fun hentEmneknaggerForOppgave(
+    oppgaveId: UUID,
+    dataSource: DataSource,
+): Set<String> {
     return sessionOf(dataSource).use { session ->
         session.run(
             queryOf(
@@ -734,7 +741,36 @@ private fun hentEmneknaggerForOppgave(oppgaveId: UUID): Set<String> {
     }.toSet()
 }
 
-private fun hentTilstandsloggForOppgave(oppgaveId: UUID): Tilstandslogg {
+private fun finnNotat(
+    oppgaveTilstandLoggId: UUID,
+    dataSource: DataSource,
+): Notat? {
+    return sessionOf(dataSource).use { session ->
+        session.run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    SELECT id,tekst,endret_tidspunkt
+                    FROM   notat_v1
+                    WHERE  oppgave_tilstand_logg_id = :oppgaveTilstandLoggId
+                    """.trimIndent(),
+                paramMap = mapOf("oppgaveTilstandLoggId" to oppgaveTilstandLoggId),
+            ).map { row ->
+                Notat(
+                    notatId = row.uuid("id"),
+                    tekst = row.string("tekst"),
+                    sistEndretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                )
+            }.asSingle,
+        )
+    }
+}
+
+private fun hentTilstandsloggForOppgave(
+    oppgaveId: UUID,
+    dataSource: DataSource,
+): Tilstandslogg {
     return sessionOf(dataSource).use { session ->
         session.run(
             queryOf(
@@ -942,7 +978,7 @@ private fun TransactionalSession.lagre(
     }
 }
 
-private fun Row.rehydrerOppgave(): Oppgave {
+private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
     val behandlingId = this.uuid("behandling_id")
     val oppgaveId = this.uuid("oppgave_id")
     val behandling =
@@ -956,10 +992,10 @@ private fun Row.rehydrerOppgave(): Oppgave {
                     adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
                 ),
             opprettet = this.localDateTime("behandling_opprettet"),
-            hendelse = finnHendelseForBehandling(behandlingId),
+            hendelse = finnHendelseForBehandling(behandlingId, dataSource),
         )
 
-    val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId)
+    val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId, dataSource)
 
     val tilstand =
         kotlin
@@ -971,7 +1007,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
                     PAA_VENT -> PåVent
                     AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
-                    UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id))
+                    UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id, dataSource))
                     AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
                     FERDIG_BEHANDLET -> FerdigBehandlet
                 }
@@ -983,35 +1019,12 @@ private fun Row.rehydrerOppgave(): Oppgave {
         oppgaveId = oppgaveId,
         behandlerIdent = this.stringOrNull("saksbehandler_ident"),
         opprettet = this.localDateTime("oppgave_opprettet"),
-        emneknagger = hentEmneknaggerForOppgave(oppgaveId),
+        emneknagger = hentEmneknaggerForOppgave(oppgaveId, dataSource),
         tilstand = tilstand,
         behandling = behandling,
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
     )
-}
-
-private fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? {
-    return sessionOf(dataSource).use { session ->
-        session.run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    SELECT id,tekst,endret_tidspunkt
-                    FROM   notat_v1
-                    WHERE  oppgave_tilstand_logg_id = :oppgaveTilstandLoggId
-                    """.trimIndent(),
-                paramMap = mapOf("oppgaveTilstandLoggId" to oppgaveTilstandLoggId),
-            ).map { row ->
-                Notat(
-                    notatId = row.uuid("id"),
-                    tekst = row.string("tekst"),
-                    sistEndretTidspunkt = row.localDateTime("endret_tidspunkt"),
-                )
-            }.asSingle,
-        )
-    }
 }
 
 private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {

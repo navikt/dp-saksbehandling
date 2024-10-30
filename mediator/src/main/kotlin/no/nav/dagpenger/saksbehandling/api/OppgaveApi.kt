@@ -34,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
@@ -80,6 +81,7 @@ internal fun Application.oppgaveApi(
                 oppgave.sisteBeslutter()?.let { beslutterIdent ->
                     async { saksbehandlerOppslag.hentSaksbehandler(beslutterIdent) }
                 }
+
             val oppgaveDTO =
                 lagOppgaveDTO(
                     oppgave = oppgave,
@@ -87,6 +89,7 @@ internal fun Application.oppgaveApi(
                     journalpostIder = journalpostIder.await(),
                     sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                     sisteBeslutterDTO = sisteBeslutterDTO?.await(),
+                    oppgaveHistorikk = oppgaveMediator.lagOppgaveHistorikk(oppgave.tilstandslogg),
                 )
             oppgaveDTO
         }
@@ -332,6 +335,7 @@ fun lagOppgaveDTO(
     journalpostIder: Set<String>,
     sisteSaksbehandlerDTO: BehandlerDTO? = null,
     sisteBeslutterDTO: BehandlerDTO? = null,
+    oppgaveHistorikk: List<OppgaveHistorikkDTO> = emptyList(),
 ): OppgaveDTO =
 
     OppgaveDTO(
@@ -367,6 +371,7 @@ fun lagOppgaveDTO(
         journalpostIder = journalpostIder.toList(),
         utsattTilDato = oppgave.utsattTil(),
         saksbehandler = sisteSaksbehandlerDTO,
+        historikk = oppgaveHistorikk,
         beslutter = sisteBeslutterDTO,
         notat =
             oppgave.tilstand().notat()?.let {
