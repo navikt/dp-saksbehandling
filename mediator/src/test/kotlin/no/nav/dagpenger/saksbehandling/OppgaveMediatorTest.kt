@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
@@ -111,7 +112,9 @@ class OppgaveMediatorTest {
                     pdlKlientMock,
                     behandlingKlientMock,
                     mockk(),
-                )
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
             oppgaveMediator.sendTilKontroll(
                 SendTilKontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -136,7 +139,9 @@ class OppgaveMediatorTest {
                     pdlKlient = pdlKlientMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
-                )
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -781,6 +786,73 @@ class OppgaveMediatorTest {
         }
     }
 
+    @Test
+    fun `Livssyklus for søknadsbehandling som krever totrinnskontroll`() {
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val behandlingId = UUIDv7.ny()
+
+            oppgaveMediator.opprettOppgaveForBehandling(
+                søknadsbehandlingOpprettetHendelse =
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
+            )
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                ),
+            )
+
+            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.sendTilKontroll(
+                sendTilKontrollHendelse =
+                    SendTilKontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+
+            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
+                //language=JSON
+                """
+                {
+                   "@event_name": "oppgave_sendt_til_kontroll",
+                   "behandlingId": "${oppgave.behandling.behandlingId}",
+                   "ident": "${oppgave.behandling.person.ident}"
+                }
+                """.trimIndent()
+        }
+    }
+
     private fun DataSource.lagTestoppgave(tilstand: Oppgave.Tilstand.Type): Oppgave {
         val oppgaveMediator =
             OppgaveMediator(
@@ -789,7 +861,9 @@ class OppgaveMediatorTest {
                 pdlKlientMock,
                 behandlingKlientMock,
                 mockk(),
-            )
+            ).also {
+                it.setRapidsConnection(testRapid)
+            }
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
 
         BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)

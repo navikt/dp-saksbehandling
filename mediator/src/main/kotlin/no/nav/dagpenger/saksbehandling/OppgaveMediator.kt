@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -37,6 +39,12 @@ class OppgaveMediator(
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
 ) {
+    private lateinit var rapidsConnection: RapidsConnection
+
+    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
+        this.rapidsConnection = rapidsConnection
+    }
+
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
             repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: lagPerson(
@@ -134,6 +142,17 @@ class OppgaveMediator(
     fun sendTilKontroll(sendTilKontrollHendelse: SendTilKontrollHendelse) {
         repository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
             oppgave.sendTilKontroll(sendTilKontrollHendelse)
+            rapidsConnection.publish(
+                key = oppgave.behandling.person.ident,
+                JsonMessage.newMessage(
+                    eventName = "oppgave_sendt_til_kontroll",
+                    map =
+                        mapOf(
+                            "behandlingId" to oppgave.behandling.behandlingId,
+                            "ident" to oppgave.behandling.person.ident,
+                        ),
+                ).toJson(),
+            )
             repository.lagre(oppgave)
         }
     }
