@@ -174,7 +174,7 @@ class OppgaveApiTest {
                     [{
                       "oppgaveId": "${oppgave1.oppgaveId}",
                       "behandlingId": "${oppgave1.behandling.behandlingId}",
-                      "personIdent": "${oppgave1.ident}",
+                      "personIdent": "${oppgave1.behandling.person.ident}",
                       "emneknagger": [
                         "Søknadsbehandling"
                       ],
@@ -188,7 +188,7 @@ class OppgaveApiTest {
                     {
                       "oppgaveId": "${oppgave2.oppgaveId}",
                       "behandlingId": "${oppgave2.behandling.behandlingId}",
-                      "personIdent": "${oppgave2.ident}",
+                      "personIdent": "${oppgave2.behandling.person.ident}",
                       "emneknagger": [
                         "Søknadsbehandling"
                       ],

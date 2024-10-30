@@ -589,7 +589,7 @@ class OppgaveTilstandTest {
             BehandlingLåstHendelse(
                 behandlingId = oppgave.oppgaveId,
                 søknadId = UUIDv7.ny(),
-                ident = oppgave.ident,
+                ident = oppgave.behandling.person.ident,
             ),
         )
 
@@ -609,7 +609,7 @@ class OppgaveTilstandTest {
             BehandlingOpplåstHendelse(
                 behandlingId = oppgave.oppgaveId,
                 søknadId = UUIDv7.ny(),
-                ident = oppgave.ident,
+                ident = oppgave.behandling.person.ident,
             ),
         )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent
@@ -621,7 +621,7 @@ class OppgaveTilstandTest {
             BehandlingLåstHendelse(
                 behandlingId = oppgave.oppgaveId,
                 søknadId = UUIDv7.ny(),
-                ident = oppgave.ident,
+                ident = oppgave.behandling.person.ident,
             ),
         )
         oppgave.sisteBeslutter() shouldBe beslutter1.navIdent

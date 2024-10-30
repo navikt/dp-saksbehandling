@@ -98,9 +98,7 @@ internal object OppgaveApiTestHelper {
         val nå = LocalDateTime.now()
         return Oppgave.rehydrer(
             oppgaveId = oppgaveId,
-            ident = TEST_IDENT,
             behandlerIdent = tildeltBehandlerIdent,
-            behandlingId = behandling.behandlingId,
             opprettet = nå,
             emneknagger = setOf("Søknadsbehandling"),
             tilstand =

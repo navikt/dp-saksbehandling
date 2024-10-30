@@ -26,7 +26,7 @@ class PostgresUtsendingRepositoryTest {
                     oppgaveId = oppgave.oppgaveId,
                     brev = brev,
                     sak = sak,
-                    ident = oppgave.ident,
+                    ident = oppgave.behandling.person.ident,
                     distribusjonId = distribusjonId,
                 )
             repository.lagre(utsending)
@@ -50,7 +50,7 @@ class PostgresUtsendingRepositoryTest {
                     oppgaveId = oppgave.oppgaveId,
                     brev = "brev",
                     sak = Sak("id", "fagsystem"),
-                    ident = oppgave.ident,
+                    ident = oppgave.behandling.person.ident,
                     distribusjonId = "distribusjonId",
                 )
             repository.lagre(utsending)

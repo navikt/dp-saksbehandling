@@ -44,7 +44,6 @@ private val logger = KotlinLogging.logger {}
 data class Oppgave private constructor(
     val oppgaveId: UUID,
     val opprettet: LocalDateTime,
-    val ident: String,
     var behandlerIdent: String? = null,
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = Opprettet,
@@ -62,7 +61,6 @@ data class Oppgave private constructor(
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
     ) : this(
         oppgaveId = oppgaveId,
-        ident = ident,
         behandlerIdent = null,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
@@ -76,9 +74,7 @@ data class Oppgave private constructor(
 
         fun rehydrer(
             oppgaveId: UUID,
-            ident: String,
             behandlerIdent: String?,
-            behandlingId: UUID,
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
             tilstand: Tilstand,
@@ -89,7 +85,6 @@ data class Oppgave private constructor(
             Oppgave(
                 oppgaveId = oppgaveId,
                 opprettet = opprettet,
-                ident = ident,
                 behandlerIdent = behandlerIdent,
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,

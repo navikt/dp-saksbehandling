@@ -35,12 +35,10 @@ object OppgaveTestHelper {
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
-            ident = "ident",
-            behandlingId = UUIDv7.ny(),
-            emneknagger = setOf(),
-            opprettet = LocalDateTime.now(),
-            tilstand = tilstand,
             behandlerIdent = behandler?.navIdent,
+            opprettet = LocalDateTime.now(),
+            emneknagger = setOf(),
+            tilstand = tilstand,
             behandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),

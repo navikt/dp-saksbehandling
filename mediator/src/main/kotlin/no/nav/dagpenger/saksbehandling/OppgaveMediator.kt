@@ -193,12 +193,12 @@ class OppgaveMediator(
                 utsendingMediator.opprettUtsending(
                     oppgave.oppgaveId,
                     godkjentBehandlingHendelse.meldingOmVedtak,
-                    oppgave.ident,
+                    oppgave.behandling.person.ident,
                 )
 
             behandlingKlient.godkjennBehandling(
                 behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.ident,
+                ident = oppgave.behandling.person.ident,
                 saksbehandlerToken = saksbehandlerToken,
             ).onSuccess {
                 repository.lagre(oppgave)
@@ -225,7 +225,7 @@ class OppgaveMediator(
 
             behandlingKlient.godkjennBehandling(
                 behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.ident,
+                ident = oppgave.behandling.person.ident,
                 saksbehandlerToken = saksbehandlerToken,
             ).onSuccess {
                 repository.lagre(oppgave)

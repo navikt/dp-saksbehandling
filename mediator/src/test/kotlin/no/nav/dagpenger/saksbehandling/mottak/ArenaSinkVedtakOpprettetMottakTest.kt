@@ -44,7 +44,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
         startUtsendingEvent["@event_name"].asText() shouldBe "start_utsending"
         startUtsendingEvent["behandlingId"].asUUID() shouldBe testOppgave.behandling.behandlingId
         startUtsendingEvent["oppgaveId"].asUUID() shouldBe testOppgave.oppgaveId
-        startUtsendingEvent["ident"].asText() shouldBe testOppgave.ident
+        startUtsendingEvent["ident"].asText() shouldBe testOppgave.behandling.person.ident
         startUtsendingEvent["sak"]["id"].asText() shouldBe sakId
         startUtsendingEvent["sak"]["kontekst"].asText() shouldBe "Arena"
     }

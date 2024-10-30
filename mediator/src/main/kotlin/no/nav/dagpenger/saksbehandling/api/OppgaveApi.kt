@@ -70,7 +70,7 @@ internal fun Application.oppgaveApi(
 ) {
     suspend fun oppgaveDTO(oppgave: Oppgave): OppgaveDTO =
         coroutineScope {
-            val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
+            val person = async { pdlKlient.person(oppgave.behandling.person.ident).getOrThrow() }
             val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
@@ -400,7 +400,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
         behandlingId = this.behandling.behandlingId,
-        personIdent = this.ident,
+        personIdent = this.behandling.person.ident,
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
         skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
