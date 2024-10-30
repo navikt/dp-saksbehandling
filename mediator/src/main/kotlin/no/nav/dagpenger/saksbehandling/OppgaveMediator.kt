@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -173,6 +174,30 @@ class OppgaveMediator(
                 ).toJson(),
             )
             repository.lagre(oppgave)
+        }
+    }
+
+    fun settOppgaveUnderBehandling(behandlingOpplåstHendelse: BehandlingOpplåstHendelse) {
+        val oppgave = repository.finnOppgaveFor(behandlingOpplåstHendelse.behandlingId)
+        when (oppgave) {
+            null -> {
+                logger.error {
+                    "Mottatt hendelse behandling_opplåst for behandling med id " +
+                        "${behandlingOpplåstHendelse.behandlingId}." +
+                        "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
+                }
+            }
+
+            else -> {
+                oppgave.klarTilBehandling(behandlingOpplåstHendelse)
+                repository.lagre(oppgave)
+                withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                    logger.info {
+                        "Mottatt hendelse behandling_opplåst for behandling med id " +
+                            "${behandlingOpplåstHendelse.behandlingId}. Oppgave er klar til ny behandling."
+                    }
+                }
+            }
         }
     }
 

@@ -166,7 +166,6 @@ class OppgaveTilstandTest {
             oppgave.klarTilBehandling(
                 BehandlingOpplåstHendelse(
                     behandlingId = oppgave.behandling.behandlingId,
-                    søknadId = UUIDv7.ny(),
                     ident = testIdent,
                 ),
             )
@@ -605,7 +604,6 @@ class OppgaveTilstandTest {
         oppgave.klarTilBehandling(
             BehandlingOpplåstHendelse(
                 behandlingId = oppgave.oppgaveId,
-                søknadId = UUIDv7.ny(),
                 ident = oppgave.behandling.person.ident,
             ),
         )
