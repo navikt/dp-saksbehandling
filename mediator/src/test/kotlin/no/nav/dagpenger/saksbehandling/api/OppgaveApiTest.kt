@@ -58,6 +58,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -110,6 +112,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
@@ -362,6 +365,49 @@ class OppgaveApiTest {
 
             verify(exactly = 1) {
                 oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse, any())
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne sende en oppgave til kontroll`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val sendTilKontrollHendelse = SendTilKontrollHendelse(oppgave.oppgaveId, saksbehandler)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.sendTilKontroll(sendTilKontrollHendelse) } just Runs
+            }
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
+                autentisert(token = saksbehandlerToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            verify(exactly = 1) {
+                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelse)
+            }
+        }
+    }
+
+    @Test
+    fun `Beslutter skal kunne sende en oppgave tilbake til saksbehandler`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_KONTROLL, BESLUTTER_IDENT)
+        val beslutterToken = gyldigSaksbehandlerToken(navIdent = BESLUTTER_IDENT, adGrupper = listOf(Configuration.beslutterADGruppe))
+        val returnerTilSaksbehandlingHendelse = ReturnerTilSaksbehandlingHendelse(oppgave.oppgaveId, beslutter)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse) } just Runs
+            }
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/returner-til-saksbehandler") {
+                autentisert(token = beslutterToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+            verify(exactly = 1) {
+                oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
             }
         }
     }
