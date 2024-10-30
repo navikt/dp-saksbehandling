@@ -37,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -846,6 +847,40 @@ class OppgaveMediatorTest {
                 """
                 {
                    "@event_name": "oppgave_sendt_til_kontroll",
+                   "behandlingId": "${oppgave.behandling.behandlingId}",
+                   "ident": "${oppgave.behandling.person.ident}"
+                }
+                """.trimIndent()
+
+            oppgaveMediator.settOppgaveKlarTilKontroll(
+                BehandlingLåstHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    ident = oppgave.behandling.person.ident,
+                ),
+            )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+
+            oppgaveMediator.sendTilbakeTilUnderBehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = beslutter,
+                ),
+            )
+
+            testRapid.inspektør.size shouldBe 2
+            testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
+                //language=JSON
+                """
+                {
+                   "@event_name": "oppgave_returnert_til_saksbehandling",
                    "behandlingId": "${oppgave.behandling.behandlingId}",
                    "ident": "${oppgave.behandling.person.ident}"
                 }

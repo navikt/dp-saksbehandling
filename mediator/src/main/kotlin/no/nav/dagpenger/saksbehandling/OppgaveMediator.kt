@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -146,6 +147,24 @@ class OppgaveMediator(
                 key = oppgave.behandling.person.ident,
                 JsonMessage.newMessage(
                     eventName = "oppgave_sendt_til_kontroll",
+                    map =
+                        mapOf(
+                            "behandlingId" to oppgave.behandling.behandlingId,
+                            "ident" to oppgave.behandling.person.ident,
+                        ),
+                ).toJson(),
+            )
+            repository.lagre(oppgave)
+        }
+    }
+
+    fun sendTilbakeTilUnderBehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
+        repository.hentOppgave(returnerTilSaksbehandlingHendelse.oppgaveId).also { oppgave ->
+            oppgave.sendTilbakeTilUnderBehandling(returnerTilSaksbehandlingHendelse)
+            rapidsConnection.publish(
+                key = oppgave.behandling.person.ident,
+                JsonMessage.newMessage(
+                    eventName = "oppgave_returnert_til_saksbehandling",
                     map =
                         mapOf(
                             "behandlingId" to oppgave.behandling.behandlingId,
