@@ -328,7 +328,6 @@ class OppgaveTilstandTest {
         oppgave.klarTilKontroll(
             BehandlingLåstHendelse(
                 behandlingId = oppgave.behandling.behandlingId,
-                søknadId = UUIDv7.ny(),
                 ident = testIdent,
             ),
         )
@@ -353,7 +352,6 @@ class OppgaveTilstandTest {
         oppgave.klarTilKontroll(
             BehandlingLåstHendelse(
                 behandlingId = oppgave.behandling.behandlingId,
-                søknadId = UUIDv7.ny(),
                 ident = testIdent,
             ),
         )
@@ -588,7 +586,6 @@ class OppgaveTilstandTest {
         oppgave.klarTilKontroll(
             BehandlingLåstHendelse(
                 behandlingId = oppgave.oppgaveId,
-                søknadId = UUIDv7.ny(),
                 ident = oppgave.behandling.person.ident,
             ),
         )
@@ -620,7 +617,6 @@ class OppgaveTilstandTest {
         oppgave.klarTilKontroll(
             BehandlingLåstHendelse(
                 behandlingId = oppgave.oppgaveId,
-                søknadId = UUIDv7.ny(),
                 ident = oppgave.behandling.person.ident,
             ),
         )

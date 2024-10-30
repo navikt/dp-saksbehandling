@@ -830,7 +830,6 @@ class PostgresOppgaveRepositoryTest {
                         hendelse =
                             BehandlingLåstHendelse(
                                 behandlingId = UUIDv7.ny(),
-                                søknadId = UUIDv7.ny(),
                                 ident = "12345612345",
                             ),
                         tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),

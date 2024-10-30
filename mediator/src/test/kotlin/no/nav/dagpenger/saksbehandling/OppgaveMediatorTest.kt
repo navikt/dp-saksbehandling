@@ -855,7 +855,6 @@ class OppgaveMediatorTest {
             oppgaveMediator.settOppgaveKlarTilKontroll(
                 BehandlingLåstHendelse(
                     behandlingId = oppgave.behandling.behandlingId,
-                    søknadId = UUIDv7.ny(),
                     ident = oppgave.behandling.person.ident,
                 ),
             )
@@ -960,7 +959,6 @@ class OppgaveMediatorTest {
         oppgaveMediator.settOppgaveKlarTilKontroll(
             BehandlingLåstHendelse(
                 behandlingId = oppgave.behandling.behandlingId,
-                søknadId = UUIDv7.ny(),
                 ident = oppgave.behandling.person.ident,
             ),
         )
