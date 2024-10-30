@@ -33,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -884,6 +885,13 @@ class OppgaveMediatorTest {
                    "ident": "${oppgave.behandling.person.ident}"
                 }
                 """.trimIndent()
+
+            oppgaveMediator.settOppgaveUnderBehandling(
+                BehandlingOpplåstHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = oppgave.behandling.person.ident,
+                ),
+            )
         }
     }
 
