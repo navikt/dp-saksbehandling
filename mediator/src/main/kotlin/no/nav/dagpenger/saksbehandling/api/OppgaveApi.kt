@@ -336,7 +336,7 @@ fun lagOppgaveDTO(
 
     OppgaveDTO(
         oppgaveId = oppgave.oppgaveId,
-        behandlingId = oppgave.behandlingId,
+        behandlingId = oppgave.behandling.behandlingId,
         person =
             PersonDTO(
                 ident = person.ident,
@@ -399,7 +399,7 @@ class InternDataException(message: String) : RuntimeException(message)
 internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
-        behandlingId = this.behandlingId,
+        behandlingId = this.behandling.behandlingId,
         personIdent = this.ident,
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),

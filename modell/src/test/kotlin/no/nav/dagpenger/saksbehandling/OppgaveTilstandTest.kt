@@ -84,7 +84,7 @@ class OppgaveTilstandTest {
             val oppgave = lagOppgave(tilstand)
             oppgave.ferdigstill(
                 VedtakFattetHendelse(
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     søknadId = UUIDv7.ny(),
                     ident = testIdent,
                     sak = sak,
@@ -98,7 +98,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandlingId,
+                        behandlingId = oppgave.behandling.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         sak = sak,
@@ -165,7 +165,7 @@ class OppgaveTilstandTest {
         shouldNotThrowAny {
             oppgave.klarTilBehandling(
                 BehandlingOpplåstHendelse(
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     søknadId = UUIDv7.ny(),
                     ident = testIdent,
                 ),
@@ -327,7 +327,7 @@ class OppgaveTilstandTest {
 
         oppgave.klarTilKontroll(
             BehandlingLåstHendelse(
-                behandlingId = oppgave.behandlingId,
+                behandlingId = oppgave.behandling.behandlingId,
                 søknadId = UUIDv7.ny(),
                 ident = testIdent,
             ),
@@ -352,7 +352,7 @@ class OppgaveTilstandTest {
         )
         oppgave.klarTilKontroll(
             BehandlingLåstHendelse(
-                behandlingId = oppgave.behandlingId,
+                behandlingId = oppgave.behandling.behandlingId,
                 søknadId = UUIDv7.ny(),
                 ident = testIdent,
             ),

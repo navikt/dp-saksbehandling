@@ -835,7 +835,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
             paramMap =
                 mapOf(
                     "id" to oppgave.oppgaveId,
-                    "behandling_id" to oppgave.behandlingId,
+                    "behandling_id" to oppgave.behandling.behandlingId,
                     "tilstand" to oppgave.tilstand().type.name,
                     "opprettet" to oppgave.opprettet,
                     "saksbehandler_ident" to oppgave.behandlerIdent,

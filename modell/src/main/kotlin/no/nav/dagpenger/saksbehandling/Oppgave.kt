@@ -44,10 +44,8 @@ private val logger = KotlinLogging.logger {}
 data class Oppgave private constructor(
     val oppgaveId: UUID,
     val opprettet: LocalDateTime,
-    // TODO: Bedre navn a'la borgerIdent?
     val ident: String,
     var behandlerIdent: String? = null,
-    val behandlingId: UUID,
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = Opprettet,
     val behandling: Behandling,
@@ -57,7 +55,6 @@ data class Oppgave private constructor(
     constructor(
         oppgaveId: UUID,
         ident: String,
-        behandlingId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
         tilstand: Tilstand = Opprettet,
@@ -69,7 +66,6 @@ data class Oppgave private constructor(
         behandlerIdent = null,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
-        behandlingId = behandlingId,
         tilstand = tilstand,
         behandling = behandling,
         _tilstandslogg = tilstandslogg,
@@ -95,7 +91,6 @@ data class Oppgave private constructor(
                 opprettet = opprettet,
                 ident = ident,
                 behandlerIdent = behandlerIdent,
-                behandlingId = behandlingId,
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,
                 behandling = behandling,

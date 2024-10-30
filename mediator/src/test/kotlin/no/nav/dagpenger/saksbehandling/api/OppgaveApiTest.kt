@@ -173,7 +173,7 @@ class OppgaveApiTest {
                     """
                     [{
                       "oppgaveId": "${oppgave1.oppgaveId}",
-                      "behandlingId": "${oppgave1.behandlingId}",
+                      "behandlingId": "${oppgave1.behandling.behandlingId}",
                       "personIdent": "${oppgave1.ident}",
                       "emneknagger": [
                         "Søknadsbehandling"
@@ -187,7 +187,7 @@ class OppgaveApiTest {
                     },
                     {
                       "oppgaveId": "${oppgave2.oppgaveId}",
-                      "behandlingId": "${oppgave2.behandlingId}",
+                      "behandlingId": "${oppgave2.behandling.behandlingId}",
                       "personIdent": "${oppgave2.ident}",
                       "emneknagger": [
                         "Søknadsbehandling"
@@ -436,7 +436,7 @@ class OppgaveApiTest {
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
                     {
-                      "behandlingId": "${oppgave.behandlingId}",
+                      "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "$TEST_IDENT",
                         "fornavn": "PETTER",
@@ -686,7 +686,7 @@ class OppgaveApiTest {
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
                     {
-                      "behandlingId": "${testOppgave.behandlingId}",
+                      "behandlingId": "${testOppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "${testOppgave.behandling.person.ident}",
                         "fornavn": "PETTER",
