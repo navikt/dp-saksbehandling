@@ -192,7 +192,7 @@ class OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = UUIDv7.ny(),
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     emneknagger = testEmneknagger1,
                 ),
             )
@@ -201,7 +201,7 @@ class OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = UUIDv7.ny(),
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     emneknagger = testEmneknagger2,
                 ),
             )
@@ -233,7 +233,7 @@ class OppgaveMediatorTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = UUIDv7.ny(),
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     emneknagger = testEmneknagger,
                 ),
             )
@@ -243,7 +243,7 @@ class OppgaveMediatorTest {
             oppgaveMediator.fjernEmneknagg(
                 IkkeRelevantAvklaringHendelse(
                     ident = testIdent,
-                    behandlingId = oppgave.behandlingId,
+                    behandlingId = oppgave.behandling.behandlingId,
                     ikkeRelevantEmneknagg = "a",
                 ),
             )
@@ -301,7 +301,7 @@ class OppgaveMediatorTest {
 
             oppgaverKlarTilBehandling.size shouldBe 1
             val oppgave = oppgaverKlarTilBehandling.single()
-            oppgave.behandlingId shouldBe behandlingId
+            oppgave.behandling.behandlingId shouldBe behandlingId
             oppgave.emneknagger shouldContainAll emneknagger
 
             oppgaveMediator.tildelOppgave(
@@ -386,7 +386,7 @@ class OppgaveMediatorTest {
 
             oppgaverKlarTilBehandling.size shouldBe 1
             val oppgave = oppgaverKlarTilBehandling.single()
-            oppgave.behandlingId shouldBe behandlingId
+            oppgave.behandling.behandlingId shouldBe behandlingId
             oppgave.emneknagger shouldContainAll emneknagger
 
             oppgaveMediator.tildelOppgave(
@@ -421,7 +421,7 @@ class OppgaveMediatorTest {
             val utsending = utsendingMediator.hent(ferdigbehandletOppgave.oppgaveId)
             utsending.brev() shouldBe meldingOmVedtak
             utsending.oppgaveId shouldBe ferdigbehandletOppgave.oppgaveId
-            utsending.ident shouldBe ferdigbehandletOppgave.ident
+            utsending.ident shouldBe ferdigbehandletOppgave.behandling.person.ident
         }
     }
 
@@ -482,7 +482,7 @@ class OppgaveMediatorTest {
 
             oppgaverKlarTilBehandling.size shouldBe 1
             val oppgave = oppgaverKlarTilBehandling.single()
-            oppgave.behandlingId shouldBe behandlingId
+            oppgave.behandling.behandlingId shouldBe behandlingId
             oppgave.emneknagger shouldContainAll emneknagger
 
             oppgaveMediator.tildelOppgave(
@@ -706,7 +706,7 @@ class OppgaveMediatorTest {
             )
             val oppgaver = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
             oppgaver.size shouldBe 1
-            oppgaver.single().behandlingId shouldBe behandlingId
+            oppgaver.single().behandling.behandlingId shouldBe behandlingId
 
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
@@ -852,7 +852,7 @@ class OppgaveMediatorTest {
             BehandlingLåstHendelse(
                 behandlingId = oppgave.behandling.behandlingId,
                 søknadId = UUIDv7.ny(),
-                ident = oppgave.ident,
+                ident = oppgave.behandling.person.ident,
             ),
         )
 

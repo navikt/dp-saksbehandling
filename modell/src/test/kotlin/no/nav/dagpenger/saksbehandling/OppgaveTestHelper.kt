@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -26,19 +27,18 @@ object OppgaveTestHelper {
                 KLAR_TIL_BEHANDLING -> Oppgave.KlarTilBehandling
                 FERDIG_BEHANDLET -> Oppgave.FerdigBehandlet
                 UNDER_BEHANDLING -> Oppgave.UnderBehandling
-                PAA_VENT -> Oppgave.PaaVent
+                PAA_VENT -> Oppgave.PåVent
                 KLAR_TIL_KONTROLL -> Oppgave.KlarTilKontroll
                 UNDER_KONTROLL -> Oppgave.UnderKontroll()
                 AVVENTER_LÅS_AV_BEHANDLING -> Oppgave.AvventerLåsAvBehandling
+                AVVENTER_OPPLÅSING_AV_BEHANDLING -> Oppgave.AvventerOpplåsingAvBehandling
             }
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
-            ident = "ident",
-            behandlingId = UUIDv7.ny(),
-            emneknagger = setOf(),
-            opprettet = LocalDateTime.now(),
-            tilstand = tilstand,
             behandlerIdent = behandler?.navIdent,
+            opprettet = LocalDateTime.now(),
+            emneknagger = setOf(),
+            tilstand = tilstand,
             behandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),

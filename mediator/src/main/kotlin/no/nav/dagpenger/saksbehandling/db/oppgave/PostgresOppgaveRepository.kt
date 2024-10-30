@@ -9,13 +9,16 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
-import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
+import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -832,7 +835,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
             paramMap =
                 mapOf(
                     "id" to oppgave.oppgaveId,
-                    "behandling_id" to oppgave.behandlingId,
+                    "behandling_id" to oppgave.behandling.behandlingId,
                     "tilstand" to oppgave.tilstand().type.name,
                     "opprettet" to oppgave.opprettet,
                     "saksbehandler_ident" to oppgave.behandlerIdent,
@@ -965,10 +968,11 @@ private fun Row.rehydrerOppgave(): Oppgave {
                     OPPRETTET -> Opprettet
                     KLAR_TIL_BEHANDLING -> KlarTilBehandling
                     UNDER_BEHANDLING -> UnderBehandling
-                    PAA_VENT -> PaaVent
-                    AVVENTER_LÅS_AV_BEHANDLING -> Oppgave.AvventerLåsAvBehandling
+                    PAA_VENT -> PåVent
+                    AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
                     UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id))
+                    AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
                     FERDIG_BEHANDLET -> FerdigBehandlet
                 }
             }.getOrElse { t ->
@@ -977,9 +981,7 @@ private fun Row.rehydrerOppgave(): Oppgave {
 
     return Oppgave.rehydrer(
         oppgaveId = oppgaveId,
-        ident = this.string("person_ident"),
         behandlerIdent = this.stringOrNull("saksbehandler_ident"),
-        behandlingId = behandlingId,
         opprettet = this.localDateTime("oppgave_opprettet"),
         emneknagger = hentEmneknaggerForOppgave(oppgaveId),
         tilstand = tilstand,

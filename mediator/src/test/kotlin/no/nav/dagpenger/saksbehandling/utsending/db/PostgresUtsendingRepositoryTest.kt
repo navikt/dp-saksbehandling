@@ -26,7 +26,7 @@ class PostgresUtsendingRepositoryTest {
                     oppgaveId = oppgave.oppgaveId,
                     brev = brev,
                     sak = sak,
-                    ident = oppgave.ident,
+                    ident = oppgave.behandling.person.ident,
                     distribusjonId = distribusjonId,
                 )
             repository.lagre(utsending)
@@ -50,13 +50,13 @@ class PostgresUtsendingRepositoryTest {
                     oppgaveId = oppgave.oppgaveId,
                     brev = "brev",
                     sak = Sak("id", "fagsystem"),
-                    ident = oppgave.ident,
+                    ident = oppgave.behandling.person.ident,
                     distribusjonId = "distribusjonId",
                 )
             repository.lagre(utsending)
 
             repository.utsendingFinnesForOppgave(oppgave.oppgaveId) shouldBe true
-            repository.utsendingFinnesForBehandling(oppgave.behandlingId) shouldBe true
+            repository.utsendingFinnesForBehandling(oppgave.behandling.behandlingId) shouldBe true
 
             repository.utsendingFinnesForOppgave(UUIDv7.ny()) shouldBe false
             repository.utsendingFinnesForBehandling(UUIDv7.ny()) shouldBe false

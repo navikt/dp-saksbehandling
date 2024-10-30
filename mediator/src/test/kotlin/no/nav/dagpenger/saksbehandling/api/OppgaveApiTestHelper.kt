@@ -12,12 +12,14 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
-import no.nav.dagpenger.saksbehandling.Oppgave.PaaVent
+import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -96,9 +98,7 @@ internal object OppgaveApiTestHelper {
         val nå = LocalDateTime.now()
         return Oppgave.rehydrer(
             oppgaveId = oppgaveId,
-            ident = TEST_IDENT,
             behandlerIdent = tildeltBehandlerIdent,
-            behandlingId = behandling.behandlingId,
             opprettet = nå,
             emneknagger = setOf("Søknadsbehandling"),
             tilstand =
@@ -107,10 +107,11 @@ internal object OppgaveApiTestHelper {
                     KLAR_TIL_BEHANDLING -> KlarTilBehandling
                     UNDER_BEHANDLING -> UnderBehandling
                     FERDIG_BEHANDLET -> FerdigBehandlet
-                    PAA_VENT -> PaaVent
+                    PAA_VENT -> PåVent
                     KLAR_TIL_KONTROLL -> KlarTilKontroll
                     UNDER_KONTROLL -> UnderKontroll()
                     AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
+                    AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
                 },
             behandling = behandling,
             utsattTil = utsattTil,

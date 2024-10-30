@@ -30,7 +30,6 @@ internal class VedtakFattetMottakTest {
         Oppgave(
             oppgaveId = UUIDv7.ny(),
             ident = testIdent,
-            behandlingId = behandlingId,
             opprettet = opprettet,
             behandling =
                 Behandling(
@@ -57,7 +56,7 @@ internal class VedtakFattetMottakTest {
     @Test
     fun `Skal behandle vedtak fattet hendelse når utsending ikke finnes`() {
         every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
-        every { utsendingMediatorMock.utsendingFinnesForBehandling(behandlingId = oppgave.behandlingId) } returns false
+        every { utsendingMediatorMock.utsendingFinnesForBehandling(behandlingId = oppgave.behandling.behandlingId) } returns false
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
@@ -88,7 +87,7 @@ internal class VedtakFattetMottakTest {
     @Test
     fun `Skal behandle vedtak fattet hendelse når utsending finnes`() {
         every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
-        every { utsendingMediatorMock.utsendingFinnesForBehandling(behandlingId = oppgave.behandlingId) } returns true
+        every { utsendingMediatorMock.utsendingFinnesForBehandling(behandlingId = oppgave.behandling.behandlingId) } returns true
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,

@@ -70,7 +70,7 @@ internal fun Application.oppgaveApi(
 ) {
     suspend fun oppgaveDTO(oppgave: Oppgave): OppgaveDTO =
         coroutineScope {
-            val person = async { pdlKlient.person(oppgave.ident).getOrThrow() }
+            val person = async { pdlKlient.person(oppgave.behandling.person.ident).getOrThrow() }
             val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
@@ -336,7 +336,7 @@ fun lagOppgaveDTO(
 
     OppgaveDTO(
         oppgaveId = oppgave.oppgaveId,
-        behandlingId = oppgave.behandlingId,
+        behandlingId = oppgave.behandling.behandlingId,
         person =
             PersonDTO(
                 ident = person.ident,
@@ -387,7 +387,7 @@ private fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.KlarTilBehandling -> OppgaveTilstandDTO.KLAR_TIL_BEHANDLING
         is Oppgave.UnderBehandling -> OppgaveTilstandDTO.UNDER_BEHANDLING
         is Oppgave.FerdigBehandlet -> OppgaveTilstandDTO.FERDIG_BEHANDLET
-        is Oppgave.PaaVent -> OppgaveTilstandDTO.PAA_VENT
+        is Oppgave.PåVent -> OppgaveTilstandDTO.PAA_VENT
         is Oppgave.KlarTilKontroll -> OppgaveTilstandDTO.KLAR_TIL_KONTROLL
         is Oppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
         else -> throw InternDataException("Ukjent tilstand: $this")
@@ -399,8 +399,8 @@ class InternDataException(message: String) : RuntimeException(message)
 internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
-        behandlingId = this.behandlingId,
-        personIdent = this.ident,
+        behandlingId = this.behandling.behandlingId,
+        personIdent = this.behandling.person.ident,
         tidspunktOpprettet = this.opprettet,
         emneknagger = this.emneknagger.toList(),
         skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,

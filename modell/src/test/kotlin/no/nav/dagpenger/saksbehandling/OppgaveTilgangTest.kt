@@ -379,6 +379,7 @@ class OppgaveTilgangTest {
                 adressebeskyttelseGradering = adressebeskyttelseGradering,
             )
         val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        oppgave.behandlerIdent = saksbehandler.navIdent
 
         if (forventetTilgang) {
             shouldNotThrow<ManglendeTilgang> {
@@ -403,29 +404,34 @@ class OppgaveTilgangTest {
 
     @Test
     fun `Egne ansatte tilganger ved sending av oppgave til kontroll`() {
-        val egneAnsatteOppgave =
+        shouldThrow<ManglendeTilgang> {
             lagOppgave(
-                UNDER_BEHANDLING,
+                tilstandType = UNDER_BEHANDLING,
                 behandler = saksbehandlerUtenEkstraTilganger,
                 skjermesSomEgneAnsatte = true,
-            )
-
-        shouldThrow<ManglendeTilgang> {
-            egneAnsatteOppgave.sendTilKontroll(
-                SendTilKontrollHendelse(
-                    oppgaveId = egneAnsatteOppgave.oppgaveId,
-                    utførtAv = saksbehandlerUtenEkstraTilganger,
-                ),
-            )
+            ).let {
+                it.sendTilKontroll(
+                    SendTilKontrollHendelse(
+                        oppgaveId = it.oppgaveId,
+                        utførtAv = saksbehandlerUtenEkstraTilganger,
+                    ),
+                )
+            }
         }
 
         shouldNotThrow<ManglendeTilgang> {
-            egneAnsatteOppgave.sendTilKontroll(
-                SendTilKontrollHendelse(
-                    oppgaveId = egneAnsatteOppgave.oppgaveId,
-                    utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
-                ),
-            )
+            lagOppgave(
+                tilstandType = UNDER_BEHANDLING,
+                behandler = saksbehandlerMedTilgangTilEgneAnsatte,
+                skjermesSomEgneAnsatte = true,
+            ).let {
+                it.sendTilKontroll(
+                    SendTilKontrollHendelse(
+                        oppgaveId = it.oppgaveId,
+                        utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                    ),
+                )
+            }
         }
     }
 

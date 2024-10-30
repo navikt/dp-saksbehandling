@@ -65,7 +65,6 @@ class OppgaveMediator(
                 emneknagger = setOf("Søknadsbehandling"),
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                 ident = person.ident,
-                behandlingId = behandling.behandlingId,
                 behandling = behandling,
             )
 
@@ -194,12 +193,12 @@ class OppgaveMediator(
                 utsendingMediator.opprettUtsending(
                     oppgave.oppgaveId,
                     godkjentBehandlingHendelse.meldingOmVedtak,
-                    oppgave.ident,
+                    oppgave.behandling.person.ident,
                 )
 
             behandlingKlient.godkjennBehandling(
-                behandlingId = oppgave.behandlingId,
-                ident = oppgave.ident,
+                behandlingId = oppgave.behandling.behandlingId,
+                ident = oppgave.behandling.person.ident,
                 saksbehandlerToken = saksbehandlerToken,
             ).onSuccess {
                 repository.lagre(oppgave)
@@ -225,8 +224,8 @@ class OppgaveMediator(
             oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
 
             behandlingKlient.godkjennBehandling(
-                behandlingId = oppgave.behandlingId,
-                ident = oppgave.ident,
+                behandlingId = oppgave.behandling.behandlingId,
+                ident = oppgave.behandling.person.ident,
                 saksbehandlerToken = saksbehandlerToken,
             ).onSuccess {
                 repository.lagre(oppgave)

@@ -698,10 +698,10 @@ class PostgresOppgaveRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
-            repo.slettBehandling(testOppgave.behandlingId)
+            repo.slettBehandling(testOppgave.behandling.behandlingId)
 
             assertThrows<DataNotFoundException> {
-                repo.hentBehandling(testOppgave.behandlingId)
+                repo.hentBehandling(testOppgave.behandling.behandlingId)
             }
 
             assertThrows<DataNotFoundException> {
@@ -884,7 +884,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `CRUD på oppgave med PAAVENT tilstand`() {
+    fun `CRUD på oppgave i tilstand PAA_VENT`() {
         val testOppgave = lagOppgave(tilstand = UnderBehandling)
         val utsattTil = LocalDate.now().plusDays(1)
         withMigratedDb { ds ->
@@ -892,12 +892,12 @@ class PostgresOppgaveRepositoryTest {
 
             repo.lagre(
                 testOppgave.copy(
-                    tilstand = Oppgave.PaaVent,
+                    tilstand = Oppgave.PåVent,
                     utsattTil = utsattTil,
                 ),
             )
             repo.hentOppgave(testOppgave.oppgaveId).let { oppgave: Oppgave ->
-                oppgave.tilstand() shouldBe Oppgave.PaaVent
+                oppgave.tilstand() shouldBe Oppgave.PåVent
                 oppgave.utsattTil() shouldBe utsattTil
             }
         }
@@ -1184,7 +1184,7 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             val oppgave = lagOppgave()
             repo.lagre(oppgave)
-            repo.hentOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+            repo.hentOppgaveFor(oppgave.behandling.behandlingId) shouldBe oppgave
 
             assertThrows<DataNotFoundException> {
                 repo.hentOppgaveFor(behandlingId = UUIDv7.ny())
@@ -1198,7 +1198,7 @@ class PostgresOppgaveRepositoryTest {
             val repo = PostgresOppgaveRepository(ds)
             val oppgave = lagOppgave()
             repo.lagre(oppgave)
-            repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave
+            repo.finnOppgaveFor(oppgave.behandling.behandlingId) shouldBe oppgave
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }

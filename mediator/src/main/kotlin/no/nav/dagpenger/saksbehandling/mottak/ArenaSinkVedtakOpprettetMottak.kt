@@ -81,9 +81,9 @@ class ArenaSinkVedtakOpprettetMottak(
     ) = JsonMessage.newMessage(
         mapOf(
             "@event_name" to "start_utsending",
-            "behandlingId" to oppgave.behandlingId,
+            "behandlingId" to oppgave.behandling.behandlingId,
             "oppgaveId" to oppgave.oppgaveId,
-            "ident" to oppgave.ident,
+            "ident" to oppgave.behandling.person.ident,
             "sak" to
                 mapOf(
                     "id" to sakId,
