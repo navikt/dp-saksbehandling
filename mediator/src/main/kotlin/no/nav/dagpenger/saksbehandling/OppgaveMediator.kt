@@ -180,9 +180,9 @@ class OppgaveMediator(
         }
     }
 
-    fun sendTilbakeTilUnderBehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
+    fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
         repository.hentOppgave(returnerTilSaksbehandlingHendelse.oppgaveId).also { oppgave ->
-            oppgave.sendTilbakeTilUnderBehandling(returnerTilSaksbehandlingHendelse)
+            oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
             rapidsConnection.publish(
                 key = oppgave.behandling.person.ident,
                 JsonMessage.newMessage(

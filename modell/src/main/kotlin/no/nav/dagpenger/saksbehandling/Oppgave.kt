@@ -202,8 +202,8 @@ data class Oppgave private constructor(
         tilstand.lagreNotat(this, notatHendelse)
     }
 
-    fun sendTilbakeTilUnderBehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
-        tilstand.sendTilbakeTilUnderBehandling(this, returnerTilSaksbehandlingHendelse)
+    fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
+        tilstand.returnerTilSaksbehandling(this, returnerTilSaksbehandlingHendelse)
     }
 
     private fun endreTilstand(
@@ -474,7 +474,7 @@ data class Oppgave private constructor(
             requireSammeEier(oppgave, settOppgaveAnsvarHendelse.utførtAv, settOppgaveAnsvarHendelse.javaClass.simpleName)
         }
 
-        override fun sendTilbakeTilUnderBehandling(
+        override fun returnerTilSaksbehandling(
             oppgave: Oppgave,
             returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         ) {
@@ -667,7 +667,7 @@ data class Oppgave private constructor(
             )
         }
 
-        fun sendTilbakeTilUnderBehandling(
+        fun returnerTilSaksbehandling(
             oppgave: Oppgave,
             returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         ) {
