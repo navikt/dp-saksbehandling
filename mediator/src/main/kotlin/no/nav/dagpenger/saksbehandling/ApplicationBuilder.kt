@@ -7,6 +7,7 @@ import io.ktor.server.engine.ApplicationEngine
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
+import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.behandling.BehandlngHttpKlient
@@ -75,16 +76,22 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
 
+    private val oppgaveDTOMapper =
+        OppgaveDTOMapper(
+            pdlKlient = pdlKlient,
+            journalpostIdClient = journalpostIdClient,
+            saksbehandlerOppslag = SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider),
+            repository = oppgaveRepository,
+        )
+
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(configuration) { applicationEngine: ApplicationEngine, _: KafkaRapid ->
             with(applicationEngine.application) {
                 this.apiConfig()
                 this.oppgaveApi(
-                    oppgaveMediator,
-                    pdlKlient,
-                    journalpostIdClient,
-                    SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider),
-                    applicationCallParser,
+                    oppgaveMediator = oppgaveMediator,
+                    ooppgaveDTOMapper = oppgaveDTOMapper,
+                    applicationCallParser = applicationCallParser,
                 )
                 this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
                 this.install(KafkaStreamsPlugin) {
