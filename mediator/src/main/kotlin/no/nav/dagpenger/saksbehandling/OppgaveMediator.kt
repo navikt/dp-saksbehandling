@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
@@ -20,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -39,6 +42,12 @@ class OppgaveMediator(
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
 ) {
+    private lateinit var rapidsConnection: RapidsConnection
+
+    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
+        this.rapidsConnection = rapidsConnection
+    }
+
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
             repository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: lagPerson(
@@ -156,6 +165,35 @@ class OppgaveMediator(
     fun sendTilKontroll(sendTilKontrollHendelse: SendTilKontrollHendelse) {
         repository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
             oppgave.sendTilKontroll(sendTilKontrollHendelse)
+            rapidsConnection.publish(
+                key = oppgave.behandling.person.ident,
+                JsonMessage.newMessage(
+                    eventName = "oppgave_sendt_til_kontroll",
+                    map =
+                        mapOf(
+                            "behandlingId" to oppgave.behandling.behandlingId,
+                            "ident" to oppgave.behandling.person.ident,
+                        ),
+                ).toJson(),
+            )
+            repository.lagre(oppgave)
+        }
+    }
+
+    fun sendTilbakeTilUnderBehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
+        repository.hentOppgave(returnerTilSaksbehandlingHendelse.oppgaveId).also { oppgave ->
+            oppgave.sendTilbakeTilUnderBehandling(returnerTilSaksbehandlingHendelse)
+            rapidsConnection.publish(
+                key = oppgave.behandling.person.ident,
+                JsonMessage.newMessage(
+                    eventName = "oppgave_returnert_til_saksbehandling",
+                    map =
+                        mapOf(
+                            "behandlingId" to oppgave.behandling.behandlingId,
+                            "ident" to oppgave.behandling.person.ident,
+                        ),
+                ).toJson(),
+            )
             repository.lagre(oppgave)
         }
     }
