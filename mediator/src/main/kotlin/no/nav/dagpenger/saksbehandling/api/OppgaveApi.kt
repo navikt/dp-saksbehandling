@@ -111,12 +111,17 @@ internal fun Application.oppgaveApi(
                                             utførtAv = saksbehandler,
                                         ),
                                     )
+                                val notatDTO = NotatDTO(
+                                    tekst = lagretNotat.hentTekst(),
+                                    sistEndretTidspunkt = lagretNotat.sistEndretTidspunkt,
+                                ).also {
+                                    logger.info { "Lagret $notat for oppgave $oppgaveId" }
+                                }
+
+
                                 call.respond(
                                     HttpStatusCode.NoContent,
-                                    NotatDTO(
-                                        tekst = lagretNotat.hentTekst(),
-                                        sistEndretTidspunkt = lagretNotat.sistEndretTidspunkt,
-                                    ),
+                                    notatDTO,
                                 )
                             }
                         }
