@@ -46,7 +46,7 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal fun Application.oppgaveApi(
     oppgaveMediator: OppgaveMediator,
-    ooppgaveDTOMapper: OppgaveDTOMapper,
+    oppgaveDTOMapper: OppgaveDTOMapper,
     applicationCallParser: ApplicationCallParser,
 ) {
     routing {
@@ -82,7 +82,7 @@ internal fun Application.oppgaveApi(
                             )
                         when (oppgave) {
                             null -> call.respond(HttpStatusCode.NotFound)
-                            else -> call.respond(HttpStatusCode.OK, ooppgaveDTOMapper.lagOppgaveDTO(oppgave))
+                            else -> call.respond(HttpStatusCode.OK, oppgaveDTOMapper.lagOppgaveDTO(oppgave))
                         }
                     }
                 }
@@ -93,7 +93,7 @@ internal fun Application.oppgaveApi(
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
-                            val oppgaveDTO = ooppgaveDTOMapper.lagOppgaveDTO(oppgave)
+                            val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }
                     }
@@ -111,13 +111,13 @@ internal fun Application.oppgaveApi(
                                             utførtAv = saksbehandler,
                                         ),
                                     )
-                                val notatDTO = NotatDTO(
-                                    tekst = lagretNotat.hentTekst(),
-                                    sistEndretTidspunkt = lagretNotat.sistEndretTidspunkt,
-                                ).also {
-                                    logger.info { "Lagret $notat for oppgave $oppgaveId" }
-                                }
-
+                                val notatDTO =
+                                    NotatDTO(
+                                        tekst = lagretNotat.hentTekst(),
+                                        sistEndretTidspunkt = lagretNotat.sistEndretTidspunkt,
+                                    ).also {
+                                        logger.info { "Lagret $notat for oppgave $oppgaveId" }
+                                    }
 
                                 call.respond(
                                     HttpStatusCode.OK,

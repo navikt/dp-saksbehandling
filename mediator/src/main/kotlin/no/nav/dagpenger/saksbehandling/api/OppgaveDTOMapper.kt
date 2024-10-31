@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBeslutterDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
@@ -55,19 +55,19 @@ internal class OppgaveDTOMapper(
         }
     }
 
-    private fun lagOppgaveHistorikk(tilstandslogg: Tilstandslogg): List<OppgaveHistorikkDTO> {
+    internal fun lagOppgaveHistorikk(tilstandslogg: Tilstandslogg): List<OppgaveHistorikkDTO> {
         return tilstandslogg.filter {
-            it.tilstand != Oppgave.Tilstand.Type.UNDER_KONTROLL
+            it.tilstand === Oppgave.Tilstand.Type.UNDER_KONTROLL
         }.map {
             Triple(it.id, it.hendelse.utførtAv, repository.finnNotat(it.id))
         }.filter { it.third != null }.map {
             OppgaveHistorikkDTO(
                 type = OppgaveHistorikkDTO.Type.notat,
                 tidspunkt = it.third!!.sistEndretTidspunkt,
-                beslutter =
-                    OppgaveHistorikkBeslutterDTO(
+                behandler =
+                    OppgaveHistorikkBehandlerDTO(
                         navn = (it.second as Saksbehandler).navIdent,
-                        rolle = OppgaveHistorikkBeslutterDTO.Rolle.beslutter,
+                        rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
                     ),
                 tittel = "Notat",
                 body = it.third!!.hentTekst(),

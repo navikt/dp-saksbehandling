@@ -53,7 +53,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBeslutterDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
@@ -759,9 +759,9 @@ class OppgaveApiTest {
                                 OppgaveHistorikkDTO(
                                     type = OppgaveHistorikkDTO.Type.notat,
                                     tidspunkt = tidspunkt,
-                                    beslutter =
-                                        OppgaveHistorikkBeslutterDTO(
-                                            navn = "Ole Doffen", rolle = OppgaveHistorikkBeslutterDTO.Rolle.beslutter,
+                                    behandler =
+                                        OppgaveHistorikkBehandlerDTO(
+                                            navn = "Ole Doffen", rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
                                         ),
                                     tittel = "Notat",
                                     body = "Dette er et notat",
@@ -807,7 +807,7 @@ class OppgaveApiTest {
                           "type": "notat",
                           "tidspunkt": "2021-01-01T12:00:00",
                           "tittel": "Notat",
-                          "beslutter": {
+                          "behandler": {
                             "navn": "Ole Doffen",
                             "rolle": "beslutter"
                           },

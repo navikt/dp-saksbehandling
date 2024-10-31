@@ -556,7 +556,7 @@ components:
           type: string
         tittel:
          type: string
-        beslutter:
+        behandler:
           type: object
           required:
             - rolle
