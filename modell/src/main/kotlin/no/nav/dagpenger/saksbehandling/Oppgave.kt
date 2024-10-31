@@ -517,7 +517,7 @@ data class Oppgave private constructor(
         override fun notat(): Notat? = notat
     }
 
-    interface Tilstand {
+    sealed interface Tilstand {
         val type: Type
 
         class ManglendeTilgang(
