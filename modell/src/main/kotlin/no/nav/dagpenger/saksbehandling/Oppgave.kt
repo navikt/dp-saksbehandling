@@ -290,8 +290,17 @@ data class Oppgave private constructor(
             sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
             requireSammeEier(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
-            oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
-            oppgave.behandlerIdent = null
+            // TODO: kommenter inn dette etter testign
+            // oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
+            // oppgave.behandlerIdent = null
+
+            if (oppgave.sisteBeslutter() == null) {
+                oppgave.behandlerIdent = null
+                oppgave.endreTilstand(KlarTilKontroll, sendTilKontrollHendelse)
+            } else {
+                oppgave.behandlerIdent = oppgave.sisteBeslutter()
+                oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
+            }
         }
 
         override fun fjernAnsvar(
@@ -482,9 +491,11 @@ data class Oppgave private constructor(
                 throw Tilstand.ManglendeTilgang("Kan ikke returnere oppgaven til saksbehandling i tilstand $type uten beslutter-tilgang")
             }
             requireSammeEier(oppgave, returnerTilSaksbehandlingHendelse.utførtAv, returnerTilSaksbehandlingHendelse.javaClass.simpleName)
-
-            oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
-            oppgave.behandlerIdent = null
+// TOdo: kommenter inn dette etter testing
+            // oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
+            // oppgave.behandlerIdent = null
+            oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
+            oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
         }
 
         override fun fjernAnsvar(
