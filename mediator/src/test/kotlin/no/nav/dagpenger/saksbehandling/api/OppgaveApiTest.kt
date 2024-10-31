@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import com.fasterxml.jackson.core.type.TypeReference
+import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -25,6 +26,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -326,11 +328,12 @@ class OppgaveApiTest {
                 navIdent = beslutter.navIdent,
             )
         val notat = "Dette er et notat"
+        val sisteEndretTidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every {
                     it.lagreNotat(NotatHendelse(oppgaveId, notat, beslutter))
-                } just Runs
+                } returns Notat(UUIDv7.ny(), notat, sisteEndretTidspunkt)
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -339,6 +342,13 @@ class OppgaveApiTest {
                 setBody(notat)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    """
+                    {
+                       "tekst" : "Dette er et notat",
+                       "sistEndretTidspunkt" : "2021-01-01T12:00:00"
+                    }
+                    """.trimIndent()
             }
         }
     }
@@ -398,7 +408,8 @@ class OppgaveApiTest {
     @Test
     fun `Beslutter skal kunne sende en oppgave tilbake til saksbehandler`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_KONTROLL, BESLUTTER_IDENT)
-        val beslutterToken = gyldigSaksbehandlerToken(navIdent = BESLUTTER_IDENT, adGrupper = listOf(Configuration.beslutterADGruppe))
+        val beslutterToken =
+            gyldigSaksbehandlerToken(navIdent = BESLUTTER_IDENT, adGrupper = listOf(Configuration.beslutterADGruppe))
         val returnerTilSaksbehandlingHendelse = ReturnerTilSaksbehandlingHendelse(oppgave.oppgaveId, beslutter)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {

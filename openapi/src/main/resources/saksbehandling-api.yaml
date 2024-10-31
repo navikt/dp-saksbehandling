@@ -122,6 +122,10 @@ paths:
       responses:
         '204':
           description: Notatet ble lagt til
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notat'
         '404':
           description: Oppgaven ble ikke funnet
           content:
