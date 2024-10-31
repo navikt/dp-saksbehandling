@@ -509,6 +509,8 @@ components:
         - UNDER_KONTROLL
         - FERDIG_BEHANDLET
         - PAA_VENT
+        - AVVENTER_LÅS_AV_BEHANDLING
+        - AVVENTER_OPPLÅSING_AV_BEHANDLING
 
     AdressebeskyttelseGradering:
       type: string
