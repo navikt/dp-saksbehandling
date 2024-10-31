@@ -4,6 +4,8 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -45,13 +47,38 @@ class OppgaveTilstandTest {
     fun `Skal på nytt kunne tildele en tildelt oppgave til samme saksbehandler`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
 
-        shouldNotThrow<Oppgave.AlleredeTildeltException> {
+        shouldNotThrow<AlleredeTildeltException> {
             oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, saksbehandler.navIdent, saksbehandler))
         }
         val enAnnenSaksbehandler = Saksbehandler("enAnnenSaksbehandler", emptySet())
-        shouldThrow<Oppgave.AlleredeTildeltException> {
+        shouldThrow<AlleredeTildeltException> {
             oppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId, enAnnenSaksbehandler.navIdent, enAnnenSaksbehandler))
         }
+    }
+
+    @Test
+    fun `Skal på nytt kunne tildele en oppgave UnderKontroll til samme beslutter`() {
+        val beslutter = Saksbehandler("beslutter", emptySet(), setOf(BESLUTTER))
+        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, beslutter)
+        shouldNotThrow<AlleredeTildeltException> {
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+        }
+        shouldNotThrow<ManglendeTilgang> {
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+        }
+        oppgave.tilstand().type shouldBe UNDER_KONTROLL
     }
 
     @Test
@@ -63,7 +90,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal kunne sette oppgave klar til behandling i tilstand opprettet`() {
+    fun `Skal sette oppgave klar til behandling i tilstand opprettet når regelmotor kommer med vedtaksforslag`() {
         val oppgave = lagOppgave(OPPRETTET)
         oppgave.oppgaveKlarTilBehandling(
             ForslagTilVedtakHendelse(
@@ -78,7 +105,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave fra alle lovlige tilstander`() {
+    fun `Skal ferdigstille en oppgave fra alle lovlige tilstander`() {
         val lovligeTilstander = setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET)
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
@@ -109,7 +136,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå til KlarTilBehandling fra UnderBehandling`() {
+    fun `Skal gå fra UnderBehandling til KlarTilBehandling når oppgaveansvar fjernes`() {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
@@ -121,7 +148,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå til KlarTilKontroll fra UnderKontroll`() {
+    fun `Skal gå fra UnderKontroll til KlarTilKontroll når oppgaveansvar fjernes`() {
         val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
 
         shouldNotThrowAny {
@@ -133,7 +160,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra UnderKontroll til AvventerOpplåsingAvBehandling`() {
+    fun `Skal gå fra UnderKontroll til AvventerOpplåsingAvBehandling når beslutter returnerer oppgaven`() {
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
         val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutter)
 
@@ -151,7 +178,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra AvventerOpplåsningAvBehandling til UnderBehandling`() {
+    fun `Skal gå fra AvventerOpplåsningAvBehandling til UnderBehandling når regelmotor har låst opp behandlingen`() {
         val oppgave = lagOppgave(tilstandType = AVVENTER_OPPLÅSING_AV_BEHANDLING)
         oppgave.tilstandslogg.leggTil(
             nyTilstand = UNDER_BEHANDLING,
@@ -176,7 +203,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå til FerdigBehandlet fra UnderBehandling vha GodkjentBehandlingHendelse`() {
+    fun `Skal gå fra UnderBehandling til FerdigBehandlet når saksbehandler godkjenner en behandling`() {
         val saksbehandler = Saksbehandler("sIdent", emptySet())
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
@@ -236,7 +263,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal kunne utsette en opppgave og ta den tilbake UnderBehandling`() {
+    fun `Skal kunne utsette en opppgave uten å beholde den og deretter ta den tilbake UnderBehandling`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
         val utsattTil = LocalDate.now().plusDays(1)
 
@@ -282,15 +309,15 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Fjern ansvar fra en oppgave med tilstand PåVent`() {
+    fun `Fjerning av ansvar fra en utsatt oppgave skal også fjerne datoen det er utsatt til`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
-        val utSattTil = LocalDate.now().plusDays(1)
+        val utsattTil = LocalDate.now().plusDays(1)
 
         oppgave.utsett(
             UtsettOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
                 navIdent = saksbehandler.navIdent,
-                utsattTil = utSattTil,
+                utsattTil = utsattTil,
                 beholdOppgave = false,
                 utførtAv = saksbehandler,
             ),
@@ -309,7 +336,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand UNDER_BEHANDLING til AVVENTER_LÅS_AV_BEHANDLING`() {
+    fun `Skal gå fra UnderBehandling til AvventerLåsAvBehandling når oppgave sendes til kontroll`() {
         val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
 
         oppgave.sendTilKontroll(
@@ -321,7 +348,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand AVVENTER_LÅS_AV_BEHANDLING til KLAR_TIL_KONTROLL når ingen tildligere beslutter finnes`() {
+    fun `Skal gå fra AvventerLåsAvBehandling til KlarTilKontroll når lås mottas og ingen beslutter finnes`() {
         val oppgave = lagOppgave(AVVENTER_LÅS_AV_BEHANDLING, null)
 
         oppgave.klarTilKontroll(
@@ -336,7 +363,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand AVVENTER_LÅS_AV_BEHANDLING til UNDER_KONTROLL når tildligere beslutter finnes`() {
+    fun `Skal gå fra AvventerLåsAvBehandling til UnderKontroll når lås mottas og beslutter finnes`() {
         val beslutter = Saksbehandler("Z080808", emptySet(), setOf(BESLUTTER))
         val oppgave = lagOppgave(AVVENTER_LÅS_AV_BEHANDLING, null)
         oppgave.tilstandslogg.leggTil(
@@ -377,7 +404,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra tilstand KLAR_TIL_KONTROLL til UNDER_KONTROLL`() {
+    fun `Skal gå fra KlarTilKontroll til UnderKontroll når beslutter tildeles en oppgave`() {
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
         val oppgave = lagOppgave(KLAR_TIL_KONTROLL, null)
 
@@ -393,21 +420,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Oppgave er KLAR_TIL_KONTROLL, og skal gå til UNDER_KONTROLL`() {
-        val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
-        val oppgave = lagOppgave(tilstandType = KLAR_TIL_KONTROLL, null)
-        oppgave.tildel(
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = beslutter.navIdent,
-                utførtAv = beslutter,
-            ),
-        )
-        oppgave.tilstand().type shouldBe UNDER_KONTROLL
-    }
-
-    @Test
-    fun `Oppgave er KLAR_TIL_BEHANDLING, og skal gå til UNDER_BEHANDLING`() {
+    fun `Skal gå fra KlarTilBehandling til UnderBehandling når saksbehandler tildeles en oppgave`() {
         val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf())
         val oppgave = lagOppgave(tilstandType = KLAR_TIL_BEHANDLING, null)
         oppgave.tildel(
@@ -418,10 +431,11 @@ class OppgaveTilstandTest {
             ),
         )
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
     }
 
     @Test
-    fun `Oppgave er PAA_VENT, og skal gå til UNDER_BEHANDLING`() {
+    fun `Skal gå fra PaaVent til UnderBehandling når saksbehandler tildeles en oppgave`() {
         val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf())
         val oppgave = lagOppgave(tilstandType = PAA_VENT, saksbehandler)
         oppgave.tildel(
@@ -432,34 +446,6 @@ class OppgaveTilstandTest {
             ),
         )
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
-    }
-
-    @Test
-    fun `Oppgave er UNDER_BEHANDLING, og skal gå til UNDER_BEHANDLING`() {
-        val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf())
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, saksbehandler)
-        oppgave.tildel(
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = saksbehandler.navIdent,
-                utførtAv = saksbehandler,
-            ),
-        )
-        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
-    }
-
-    @Test
-    fun `Oppgave er UNDER_KONTROLL, og skal gå til UNDER_KONTROLL hvis du eier oppgaven og er beslutter`() {
-        val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf(BESLUTTER))
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, saksbehandler)
-        oppgave.tildel(
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = oppgave.oppgaveId,
-                ansvarligIdent = saksbehandler.navIdent,
-                utførtAv = saksbehandler,
-            ),
-        )
-        oppgave.tilstand().type shouldBe UNDER_KONTROLL
     }
 
     @Test
@@ -490,7 +476,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille med brev i ny løsning fra UNDER_KONTROLL`() {
+    fun `Skal ferdigstille med brev i ny løsning fra UnderKontroll`() {
         val beslutter = Saksbehandler("Z080808", emptySet(), setOf(BESLUTTER))
         val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
         oppgave.ferdigstill(
@@ -507,7 +493,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal ikke kunne ferdigstille med brev i Arena fra UNDER_KONTROLL`() {
+    fun `Skal ikke kunne ferdigstille med brev i Arena fra UnderKontroll`() {
         val beslutter = Saksbehandler("Z080808", emptySet())
         val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
 
