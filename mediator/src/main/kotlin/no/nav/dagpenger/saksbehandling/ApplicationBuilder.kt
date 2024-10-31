@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
+import no.nav.dagpenger.saksbehandling.saksbehandler.CachedSaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
@@ -84,7 +85,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     oppgaveMediator,
                     pdlKlient,
                     journalpostIdClient,
-                    SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider),
+                    CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider)),
                     applicationCallParser,
                 )
                 this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))

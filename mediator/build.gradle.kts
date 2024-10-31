@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.logging.jvm)
     implementation("de.slub-dresden:urnlib:2.0.1")
+    implementation("dev.hsbrysk:caffeine-coroutines:1.2.0")
 
     api("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
