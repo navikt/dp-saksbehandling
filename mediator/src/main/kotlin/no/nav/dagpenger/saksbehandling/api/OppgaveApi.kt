@@ -415,7 +415,6 @@ private fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
         is Oppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
         is Oppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
-        else -> throw InternDataException("Ukjent tilstand: $this")
     }
 }
 
