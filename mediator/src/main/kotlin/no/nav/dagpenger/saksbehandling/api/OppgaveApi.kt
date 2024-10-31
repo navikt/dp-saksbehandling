@@ -120,7 +120,7 @@ internal fun Application.oppgaveApi(
 
 
                                 call.respond(
-                                    HttpStatusCode.NoContent,
+                                    HttpStatusCode.OK,
                                     notatDTO,
                                 )
                             }

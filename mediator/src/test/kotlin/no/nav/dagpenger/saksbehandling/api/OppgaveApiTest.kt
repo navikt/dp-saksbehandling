@@ -341,7 +341,8 @@ class OppgaveApiTest {
                 autentisert(token = beslutterToken)
                 setBody(notat)
             }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
                 response.bodyAsText() shouldEqualSpecifiedJson
                     """
                     {
