@@ -201,10 +201,12 @@ class OppgaveMediator(
         }
     }
 
-    fun lagreNotat(notatHendelse: NotatHendelse) {
-        repository.hentOppgave(notatHendelse.oppgaveId).also { oppgave ->
+    fun lagreNotat(notatHendelse: NotatHendelse): Notat {
+        return repository.hentOppgave(notatHendelse.oppgaveId).let { oppgave ->
             oppgave.lagreNotat(notatHendelse)
             repository.lagre(oppgave)
+
+            repository.finnNotat(oppgave.tilstandslogg.first().id) ?: throw RuntimeException("Notat ble ikke lagret")
         }
     }
 

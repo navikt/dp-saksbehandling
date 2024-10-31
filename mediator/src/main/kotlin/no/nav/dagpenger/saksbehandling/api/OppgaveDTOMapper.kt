@@ -63,7 +63,7 @@ internal class OppgaveDTOMapper(
         }.filter { it.third != null }.map {
             OppgaveHistorikkDTO(
                 type = OppgaveHistorikkDTO.Type.notat,
-                tidspunkt = it.third!!.sistEndretTidspunkt!!,
+                tidspunkt = it.third!!.sistEndretTidspunkt,
                 beslutter =
                     OppgaveHistorikkBeslutterDTO(
                         navn = (it.second as Saksbehandler).navIdent,
@@ -137,7 +137,7 @@ internal class OppgaveDTOMapper(
                 oppgave.tilstand().notat()?.let {
                     NotatDTO(
                         tekst = it.hentTekst(),
-                        sistEndretTidspunkt = it.sistEndretTidspunkt!!,
+                        sistEndretTidspunkt = it.sistEndretTidspunkt,
                     )
                 },
         )

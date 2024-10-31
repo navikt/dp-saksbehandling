@@ -23,6 +23,7 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -102,14 +103,21 @@ internal fun Application.oppgaveApi(
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                oppgaveMediator.lagreNotat(
-                                    NotatHendelse(
-                                        oppgaveId = oppgaveId,
-                                        tekst = notat,
-                                        utførtAv = saksbehandler,
+                                val lagretNotat =
+                                    oppgaveMediator.lagreNotat(
+                                        NotatHendelse(
+                                            oppgaveId = oppgaveId,
+                                            tekst = notat,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                    )
+                                call.respond(
+                                    HttpStatusCode.NoContent,
+                                    NotatDTO(
+                                        tekst = lagretNotat.hentTekst(),
+                                        sistEndretTidspunkt = lagretNotat.sistEndretTidspunkt,
                                     ),
                                 )
-                                call.respond(HttpStatusCode.NoContent)
                             }
                         }
                     }
