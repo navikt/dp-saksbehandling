@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -166,6 +167,21 @@ internal fun Application.oppgaveApi(
                         }
                     }
 
+                    route("returner-til-saksbehandler") {
+                        put {
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val returnerTilSaksbehandlingHendelse = call.returnerTilSaksbehandlingHendelse(saksbehandler)
+
+                            val oppgaveId = call.finnUUID("oppgaveId")
+
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                logger.info("Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse")
+                                oppgaveMediator.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
+                        }
+                    }
+
                     route("ferdigstill/melding-om-vedtak") {
                         put {
                             val meldingOmVedtak = call.receiveText()
@@ -264,6 +280,13 @@ private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehand
 
 private fun ApplicationCall.klarTilKontrollHendelse(saksbehandler: Saksbehandler): SendTilKontrollHendelse {
     return SendTilKontrollHendelse(
+        oppgaveId = this.finnUUID("oppgaveId"),
+        utførtAv = saksbehandler,
+    )
+}
+
+private fun ApplicationCall.returnerTilSaksbehandlingHendelse(saksbehandler: Saksbehandler): ReturnerTilSaksbehandlingHendelse {
+    return ReturnerTilSaksbehandlingHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = saksbehandler,
     )

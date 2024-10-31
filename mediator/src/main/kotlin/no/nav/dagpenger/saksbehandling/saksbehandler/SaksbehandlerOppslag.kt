@@ -3,6 +3,9 @@ package no.nav.dagpenger.saksbehandling.saksbehandler
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.github.benmanes.caffeine.cache.Caffeine
+import dev.hsbrysk.caffeine.CoroutineCache
+import dev.hsbrysk.caffeine.buildCoroutine
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
@@ -12,6 +15,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.serialization.jackson.jackson
+import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.core.metrics.Histogram
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.Dispatchers
@@ -21,11 +25,49 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
+import java.util.concurrent.TimeUnit
 
 private val logger = KotlinLogging.logger { }
 
 internal interface SaksbehandlerOppslag {
     suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO
+}
+
+internal class CachedSaksbehandlerOppslag(
+    private val saksbehandlerOppslag: SaksbehandlerOppslag,
+    registry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
+) : SaksbehandlerOppslag {
+    private val cache: CoroutineCache<String, BehandlerDTO> =
+        Caffeine.newBuilder()
+            .maximumSize(500)
+            .expireAfterWrite(1, TimeUnit.DAYS)
+            .buildCoroutine()
+
+    private val counter = registry.lagCounter()
+
+    override suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO {
+        var treff = true
+        return cache.get(navIdent) {
+            treff = false
+            saksbehandlerOppslag.hentSaksbehandler(navIdent)
+        }.also {
+            when (treff) {
+                true -> counter.hit()
+                false -> counter.miss()
+            }
+        } ?: throw RuntimeException("Kunne ikke hente saksbehandler")
+    }
+
+    private fun Counter.hit() = this.labelValues("hit").inc()
+
+    private fun Counter.miss() = this.labelValues("miss").inc()
+
+    private fun PrometheusRegistry.lagCounter(): Counter =
+        Counter.builder()
+            .name("dp_saksbehandling_saksbehandler_oppslag_cache")
+            .labelNames("treff")
+            .help("Cache treff på saksbehandler oppslag")
+            .register(this)
 }
 
 internal class SaksbehandlerOppslagImpl(

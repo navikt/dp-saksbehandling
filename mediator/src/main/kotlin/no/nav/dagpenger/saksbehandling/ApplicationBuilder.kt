@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
+import no.nav.dagpenger.saksbehandling.saksbehandler.CachedSaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
@@ -75,13 +76,12 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
-
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
-            pdlKlient = pdlKlient,
-            journalpostIdClient = journalpostIdClient,
-            saksbehandlerOppslag = SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider),
-            repository = oppgaveRepository,
+            pdlKlient,
+            journalpostIdClient,
+            CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider)),
+            oppgaveRepository,
         )
 
     private val rapidsConnection: RapidsConnection =
@@ -89,9 +89,9 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             with(applicationEngine.application) {
                 this.apiConfig()
                 this.oppgaveApi(
-                    oppgaveMediator = oppgaveMediator,
-                    ooppgaveDTOMapper = oppgaveDTOMapper,
-                    applicationCallParser = applicationCallParser,
+                    oppgaveMediator,
+                    oppgaveDTOMapper,
+                    applicationCallParser,
                 )
                 this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
                 this.install(KafkaStreamsPlugin) {
