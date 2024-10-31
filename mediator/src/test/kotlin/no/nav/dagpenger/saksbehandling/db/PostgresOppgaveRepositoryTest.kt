@@ -808,6 +808,37 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne finne et notat`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            val oppgave =
+                lagOppgave(tilstand = Oppgave.KlarTilKontroll).also { oppgave: Oppgave ->
+                    oppgave.tildel(
+                        SettOppgaveAnsvarHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            beslutter.navIdent,
+                            beslutter,
+                        ),
+                    )
+                    oppgave.lagreNotat(
+                        NotatHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            tekst = "Dette er et notat",
+                            utførtAv = beslutter,
+                        ),
+                    )
+                    repo.lagre(oppgave)
+                }
+
+            repo.finnNotat(oppgave.tilstandslogg.first().id)?.hentTekst().let {
+                it shouldBe "Dette er et notat"
+            }
+
+            repo.finnNotat(UUIDv7.ny()) shouldBe null
+        }
+    }
+
+    @Test
     fun `Skal kunne lagre og hente en oppgave`() {
         val testOppgave = lagOppgave()
         withMigratedDb { ds ->
@@ -836,7 +867,12 @@ class PostgresOppgaveRepositoryTest {
                     ),
                     Tilstandsendring(
                         tilstand = UNDER_KONTROLL,
-                        hendelse = SettOppgaveAnsvarHendelse(oppgaveId = oppgaveIdTest, beslutter.navIdent, beslutter),
+                        hendelse =
+                            SettOppgaveAnsvarHendelse(
+                                oppgaveId = oppgaveIdTest,
+                                beslutter.navIdent,
+                                beslutter,
+                            ),
                         tidspunkt = nå.minusDays(1).truncatedTo(ChronoUnit.SECONDS),
                     ),
                     Tilstandsendring(

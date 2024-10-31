@@ -36,6 +36,7 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -53,9 +54,7 @@ internal object OppgaveApiTestHelper {
 
     fun withOppgaveApi(
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
-        pdlKlient: PDLKlient = mockk(relaxed = true),
-        journalpostIdClient: JournalpostIdClient = mockk(relaxed = true),
-        saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
+        oppgaveDTOMapper: OppgaveDTOMapper = mockk<OppgaveDTOMapper>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -63,9 +62,33 @@ internal object OppgaveApiTestHelper {
                 apiConfig()
                 oppgaveApi(
                     oppgaveMediator,
-                    pdlKlient,
-                    journalpostIdClient,
-                    saksbehandlerOppslag,
+                    oppgaveDTOMapper,
+                    applicationCallParser,
+                )
+            }
+            test()
+        }
+    }
+
+    fun withOppgaveApi(
+        oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
+        pdlKlient: PDLKlient = mockk(relaxed = true),
+        journalpostIdClient: JournalpostIdClient = mockk(relaxed = true),
+        saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
+        oppgaveRepository: OppgaveRepository = mockk<OppgaveRepository>(relaxed = true),
+        test: suspend ApplicationTestBuilder.() -> Unit,
+    ) {
+        testApplication {
+            application {
+                apiConfig()
+                oppgaveApi(
+                    oppgaveMediator,
+                    OppgaveDTOMapper(
+                        pdlKlient,
+                        journalpostIdClient,
+                        saksbehandlerOppslag,
+                        oppgaveRepository,
+                    ),
                     applicationCallParser,
                 )
             }

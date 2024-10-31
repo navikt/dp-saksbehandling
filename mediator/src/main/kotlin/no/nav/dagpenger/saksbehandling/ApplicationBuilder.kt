@@ -7,6 +7,7 @@ import io.ktor.server.engine.ApplicationEngine
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
+import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.behandling.BehandlngHttpKlient
@@ -19,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingLåstMottak
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpplåstMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
@@ -76,6 +76,13 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
+    private val oppgaveDTOMapper =
+        OppgaveDTOMapper(
+            pdlKlient,
+            journalpostIdClient,
+            CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider)),
+            oppgaveRepository,
+        )
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(configuration) { applicationEngine: ApplicationEngine, _: KafkaRapid ->
@@ -83,9 +90,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 this.apiConfig()
                 this.oppgaveApi(
                     oppgaveMediator,
-                    pdlKlient,
-                    journalpostIdClient,
-                    CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider)),
+                    oppgaveDTOMapper,
                     applicationCallParser,
                 )
                 this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
@@ -120,7 +125,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
             BehandlingLåstMottak(rapidsConnection, oppgaveMediator)
-            BehandlingOpplåstMottak(rapidsConnection, oppgaveMediator)
         }
 
     init {

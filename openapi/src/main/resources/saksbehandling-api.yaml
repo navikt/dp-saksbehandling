@@ -477,6 +477,10 @@ components:
           type: array
           items:
             type: string
+        historikk:
+          type: array
+          items:
+             $ref: '#/components/schemas/OppgaveHistorikk'
         emneknagger:
           type: array
           items:
@@ -528,6 +532,40 @@ components:
       required:
         - ident
 
+    OppgaveHistorikk:
+      type: object
+      required:
+        - type
+        - tidspunkt
+        - tittel
+        - beslutter
+      properties:
+        type:
+          type: string
+          enum:
+            - notat
+            - ny-status
+        tidspunkt:
+          type: string
+          format: date-time
+        body:
+          type: string
+        tittel:
+         type: string
+        beslutter:
+          type: object
+          required:
+            - rolle
+            - navn
+          properties:
+            navn:
+              type: string
+            rolle:
+              type: string
+              enum:
+                - saksbehandler
+                - beslutter
+
     NesteOppgave:
       type: object
       properties:
@@ -560,7 +598,6 @@ components:
       required:
         - tekst
         - sistEndretTidspunkt
-
     Behandler:
       type: object
       properties:
