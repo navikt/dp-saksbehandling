@@ -22,8 +22,8 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -103,7 +103,7 @@ internal fun Application.oppgaveApi(
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                val lagretNotat =
+                                val sistEndretTidspunkt =
                                     oppgaveMediator.lagreNotat(
                                         NotatHendelse(
                                             oppgaveId = oppgaveId,
@@ -111,17 +111,9 @@ internal fun Application.oppgaveApi(
                                             utførtAv = saksbehandler,
                                         ),
                                     )
-                                val notatDTO =
-                                    NotatDTO(
-                                        tekst = lagretNotat.hentTekst(),
-                                        sistEndretTidspunkt = lagretNotat.sistEndretTidspunkt,
-                                    ).also {
-                                        logger.info { "Lagret $notat for oppgave $oppgaveId" }
-                                    }
-
                                 call.respond(
                                     HttpStatusCode.OK,
-                                    notatDTO,
+                                    LagreNotatResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
                                 )
                             }
                         }
@@ -133,7 +125,8 @@ internal fun Application.oppgaveApi(
                             val oppgaveId = call.finnUUID("oppgaveId")
 
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                val oppdatertTilstand = oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse).tilOppgaveTilstandDTO()
+                                val oppdatertTilstand =
+                                    oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse).tilOppgaveTilstandDTO()
                                 call.respondText(
                                     contentType = ContentType.Text.Plain,
                                     status = HttpStatusCode.OK,
@@ -183,7 +176,8 @@ internal fun Application.oppgaveApi(
                     route("returner-til-saksbehandler") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
-                            val returnerTilSaksbehandlingHendelse = call.returnerTilSaksbehandlingHendelse(saksbehandler)
+                            val returnerTilSaksbehandlingHendelse =
+                                call.returnerTilSaksbehandlingHendelse(saksbehandler)
 
                             val oppgaveId = call.finnUUID("oppgaveId")
 

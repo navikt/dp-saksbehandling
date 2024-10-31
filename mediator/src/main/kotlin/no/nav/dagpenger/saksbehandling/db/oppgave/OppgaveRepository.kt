@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import java.time.LocalDateTime
 import java.util.UUID
 
 interface OppgaveRepository {
@@ -54,4 +55,6 @@ interface OppgaveRepository {
     fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering
 
     fun finnNotat(oppgaveTilstandLoggId: UUID): Notat?
+
+    fun lagreNotatFor(oppgave: Oppgave): LocalDateTime
 }

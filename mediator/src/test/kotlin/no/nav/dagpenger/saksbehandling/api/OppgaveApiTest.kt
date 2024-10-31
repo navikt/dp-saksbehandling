@@ -26,7 +26,6 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -333,7 +332,7 @@ class OppgaveApiTest {
             mockk<OppgaveMediator>().also {
                 every {
                     it.lagreNotat(NotatHendelse(oppgaveId, notat, beslutter))
-                } returns Notat(UUIDv7.ny(), notat, sisteEndretTidspunkt)
+                } returns sisteEndretTidspunkt
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -346,7 +345,6 @@ class OppgaveApiTest {
                 response.bodyAsText() shouldEqualSpecifiedJson
                     """
                     {
-                       "tekst" : "Dette er et notat",
                        "sistEndretTidspunkt" : "2021-01-01T12:00:00"
                     }
                     """.trimIndent()

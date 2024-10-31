@@ -125,7 +125,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Notat'
+                $ref: '#/components/schemas/LagreNotatResponse'
         '404':
           description: Oppgaven ble ikke funnet
           content:
@@ -590,6 +590,15 @@ components:
         - utsettTilDato
         - beholdOppgave
 
+    LagreNotatResponse:
+      type: object
+      properties:
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+          description: Tidspunkt notat sist ble endret
+      required:
+        - sistEndretTidspunkt
     Notat:
       type: object
       properties:

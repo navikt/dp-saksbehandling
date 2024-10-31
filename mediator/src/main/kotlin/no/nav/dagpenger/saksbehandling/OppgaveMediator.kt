@@ -30,6 +30,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -201,12 +202,10 @@ class OppgaveMediator(
         }
     }
 
-    fun lagreNotat(notatHendelse: NotatHendelse): Notat {
+    fun lagreNotat(notatHendelse: NotatHendelse): LocalDateTime {
         return repository.hentOppgave(notatHendelse.oppgaveId).let { oppgave ->
             oppgave.lagreNotat(notatHendelse)
-            repository.lagre(oppgave)
-
-            repository.finnNotat(oppgave.tilstandslogg.first().id) ?: throw RuntimeException("Notat ble ikke lagret")
+            repository.lagreNotatFor(oppgave)
         }
     }
 

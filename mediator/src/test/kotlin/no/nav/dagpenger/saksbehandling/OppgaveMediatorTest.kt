@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -159,6 +160,39 @@ class OppgaveMediatorTest {
             oppgaveUnderKontroll.behandlerIdent shouldBe beslutter.navIdent
             oppgaveUnderKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
             oppgaveUnderKontroll.sisteBeslutter() shouldBe beslutter.navIdent
+        }
+    }
+
+    @Test
+    @Disabled
+    fun `Skal kunne lagre et notat på en oppgave`() {
+        withMigratedDb { dataSource ->
+            val oppgave = dataSource.lagTestoppgave(UNDER_KONTROLL)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(dataSource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
+                )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat() shouldBe null
+
+            val endretTidsPunkt1 =
+                oppgaveMediator.lagreNotat(
+                    notatHendelse =
+                        NotatHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            tekst = "Dette er et notat",
+                            utførtAv = testInspektør,
+                        ),
+                )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat().let {
+                require(it != null) { "Notatet er null" }
+                it.hentTekst() shouldBe "Dette er et notat"
+            }
         }
     }
 
@@ -987,6 +1021,10 @@ class OppgaveMediatorTest {
                 utførtAv = beslutter,
             ),
         )
+
+        if (tilstand == UNDER_KONTROLL) {
+            return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+        }
 
         return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
     }

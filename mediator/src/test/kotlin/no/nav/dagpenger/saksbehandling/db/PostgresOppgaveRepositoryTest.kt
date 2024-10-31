@@ -808,6 +808,37 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne lagre notatet til en oppgave`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            lagOppgave(tilstand = Oppgave.KlarTilKontroll).also { oppgave: Oppgave ->
+                repo.lagre(oppgave)
+                oppgave.tildel(
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        beslutter.navIdent,
+                        beslutter,
+                    ),
+                )
+                repo.lagre(oppgave)
+                repo.hentOppgave(oppgave.oppgaveId).tilstand().notat() shouldBe null
+
+                oppgave.lagreNotat(
+                    NotatHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        tekst = "Dette er et notat",
+                        utførtAv = beslutter,
+                    ),
+                )
+                repo.lagreNotatFor(oppgave)
+                repo.finnNotat(oppgave.tilstandslogg.first().id)?.hentTekst().let {
+                    it shouldBe "Dette er et notat"
+                }
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne finne et notat`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)

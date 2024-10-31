@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import kotliquery.Row
+import kotliquery.Session
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -434,6 +435,21 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, datasource)
+
+    override fun lagreNotatFor(oppgave: Oppgave): LocalDateTime {
+        return when (val notat = oppgave.tilstand().notat()) {
+            null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
+            else -> {
+                sessionOf(datasource).use { session ->
+                    session.lagreNotat(
+                        notatId = notat.notatId,
+                        tilstandsendringId = oppgave.tilstandslogg.first().id,
+                        tekst = notat.hentTekst(),
+                    )
+                }
+            }
+        }
+    }
 
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
@@ -890,7 +906,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
     }
 }
 
-private fun TransactionalSession.lagreNotat(
+private fun Session.lagreNotat(
     notatId: UUID,
     tilstandsendringId: UUID,
     tekst: String,
