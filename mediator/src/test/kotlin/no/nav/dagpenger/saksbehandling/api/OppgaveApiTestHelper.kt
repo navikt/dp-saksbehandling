@@ -87,7 +87,7 @@ internal object OppgaveApiTestHelper {
                         pdlKlient,
                         journalpostIdClient,
                         saksbehandlerOppslag,
-                        OppgaveHistorikkDTOMapper(oppgaveRepository),
+                        OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                     ),
                     applicationCallParser,
                 )

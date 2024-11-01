@@ -77,12 +77,14 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
+    private val saksbehandlerOppslag =
+        CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider))
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
             pdlKlient,
             journalpostIdClient,
-            CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider)),
-            OppgaveHistorikkDTOMapper(oppgaveRepository),
+            saksbehandlerOppslag,
+            OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
         )
 
     private val rapidsConnection: RapidsConnection =

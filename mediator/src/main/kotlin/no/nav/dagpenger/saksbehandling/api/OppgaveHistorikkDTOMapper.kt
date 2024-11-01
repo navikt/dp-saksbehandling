@@ -6,11 +6,13 @@ import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
-class OppgaveHistorikkDTOMapper(
+internal class OppgaveHistorikkDTOMapper(
     private val repository: OppgaveRepository,
+    private val saksbehandlerOppslag: SaksbehandlerOppslag,
 ) {
-    internal fun lagOppgaveHistorikk(tilstandslogg: Tilstandslogg): List<OppgaveHistorikkDTO> {
+    suspend fun lagOppgaveHistorikk(tilstandslogg: Tilstandslogg): List<OppgaveHistorikkDTO> {
         return tilstandslogg.filter {
             it.tilstand === Oppgave.Tilstand.Type.UNDER_KONTROLL
         }.map {
@@ -21,12 +23,18 @@ class OppgaveHistorikkDTOMapper(
                 tidspunkt = it.third!!.sistEndretTidspunkt,
                 behandler =
                     OppgaveHistorikkBehandlerDTO(
-                        navn = (it.second as Saksbehandler).navIdent,
+                        navn = hentNavn((it.second as Saksbehandler).navIdent),
                         rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
                     ),
                 tittel = "Notat",
                 body = it.third!!.hentTekst(),
             )
+        }
+    }
+
+    private suspend fun hentNavn(ident: String): String {
+        return saksbehandlerOppslag.hentSaksbehandler(ident).let {
+            "${it.fornavn} ${it.etternavn}"
         }
     }
 }
