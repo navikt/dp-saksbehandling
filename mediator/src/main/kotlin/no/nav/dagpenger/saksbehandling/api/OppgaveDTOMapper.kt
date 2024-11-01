@@ -6,19 +6,15 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -29,7 +25,7 @@ internal class OppgaveDTOMapper(
     private val pdlKlient: PDLKlient,
     private val journalpostIdClient: JournalpostIdClient,
     private val saksbehandlerOppslag: SaksbehandlerOppslag,
-    private val repository: OppgaveRepository,
+    private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
     suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
         return coroutineScope {
@@ -50,27 +46,7 @@ internal class OppgaveDTOMapper(
                 journalpostIder = journalpostIder.await(),
                 sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                 sisteBeslutterDTO = sisteBeslutterDTO?.await(),
-                oppgaveHistorikk = lagOppgaveHistorikk(oppgave.tilstandslogg),
-            )
-        }
-    }
-
-    internal fun lagOppgaveHistorikk(tilstandslogg: Tilstandslogg): List<OppgaveHistorikkDTO> {
-        return tilstandslogg.filter {
-            it.tilstand === Oppgave.Tilstand.Type.UNDER_KONTROLL
-        }.map {
-            Triple(it.id, it.hendelse.utførtAv, repository.finnNotat(it.id))
-        }.filter { it.third != null }.map {
-            OppgaveHistorikkDTO(
-                type = OppgaveHistorikkDTO.Type.notat,
-                tidspunkt = it.third!!.sistEndretTidspunkt,
-                behandler =
-                    OppgaveHistorikkBehandlerDTO(
-                        navn = (it.second as Saksbehandler).navIdent,
-                        rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
-                    ),
-                tittel = "Notat",
-                body = it.third!!.hentTekst(),
+                oppgaveHistorikk = oppgaveHistorikkDTOMapper.lagOppgaveHistorikk(oppgave.tilstandslogg),
             )
         }
     }

@@ -1,25 +1,18 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualJson
-import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
-import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
-import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -40,12 +33,12 @@ class OppgaveDTOMapperTest {
 
     @Test
     fun `Skal mappe og berike oppgaveDTO`() {
-        val oppgaveOpprettet = LocalDateTime.of(2024, 11, 1, 9, 50)
+        val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
                 OppgaveApiTestHelper.lagTestOppgaveMedTilstand(
                     tilstand = Oppgave.Tilstand.Type.UNDER_KONTROLL,
-                    oprettet = oppgaveOpprettet,
+                    oprettet = etTidspunkt,
                 )
             OppgaveDTOMapper(
                 pdlKlient = pdlKlient,
@@ -77,13 +70,21 @@ class OppgaveDTOMapperTest {
                                     ),
                             )
                     },
-                repository =
-                    mockk<OppgaveRepository>().also {
-                        every { it.finnNotat(any()) } returns
-                            Notat(
-                                notatId = UUIDv7.ny(),
-                                tekst = "Dette er et notat",
-                                sistEndretTidspunkt = LocalDateTime.of(2021, 1, 1, 1, 1),
+                oppgaveHistorikkDTOMapper =
+                    mockk<OppgaveHistorikkDTOMapper>().also {
+                        coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
+                            listOf(
+                                OppgaveHistorikkDTO(
+                                    type = OppgaveHistorikkDTO.Type.notat,
+                                    tidspunkt = etTidspunkt,
+                                    tittel = "Notat",
+                                    body = "Dette er et notat",
+                                    behandler =
+                                        OppgaveHistorikkBehandlerDTO(
+                                            navn = "BeslutterNavn",
+                                            rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
+                                        ),
+                                ),
                             )
                     },
             ).let { mapper ->
@@ -137,11 +138,11 @@ class OppgaveDTOMapperTest {
                       "historikk": [
                         {
                           "type": "notat",
-                          "tidspunkt": "2021-01-01T01:01:00",
+                          "tidspunkt": "2024-11-01T09:50:00",
                           "tittel": "Notat",
                           "body": "Dette er et notat",
                           "behandler": {
-                            "navn": "BeslutterIdent",
+                            "navn": "BeslutterNavn",
                             "rolle": "beslutter"
                           }
                         }
@@ -149,47 +150,6 @@ class OppgaveDTOMapperTest {
                     }
                     """.trimIndent()
             }
-        }
-    }
-
-    @Test
-    fun `lage historikk`() {
-        OppgaveDTOMapper(
-            pdlKlient = mockk(relaxed = true),
-            journalpostIdClient = mockk(relaxed = true),
-            saksbehandlerOppslag = mockk(relaxed = true),
-            repository =
-                mockk<OppgaveRepository>(relaxed = true).also {
-                    every { it.finnNotat(any()) } returns
-                        Notat(
-                            notatId = UUIDv7.ny(),
-                            tekst = "Dette er et notat",
-                            sistEndretTidspunkt = LocalDateTime.now(),
-                        )
-                },
-        ).let { mapper ->
-
-            val histtorikkk =
-                mapper.lagOppgaveHistorikk(
-                    tilstandslogg =
-                        Tilstandslogg().also {
-                            it.leggTil(
-                                Oppgave.Tilstand.Type.UNDER_KONTROLL,
-                                SettOppgaveAnsvarHendelse(
-                                    oppgaveId = oppgaveId,
-                                    ansvarligIdent = "ansvarligIdent",
-                                    utførtAv =
-                                        Saksbehandler(
-                                            navIdent = "utførtAv",
-                                            grupper = emptySet(),
-                                            tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
-                                        ),
-                                ),
-                            )
-                        },
-                )
-
-            histtorikkk.size shouldBe 1
         }
     }
 }

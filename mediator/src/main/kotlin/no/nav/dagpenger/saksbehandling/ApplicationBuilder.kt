@@ -8,6 +8,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
+import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.api.oppgaveApi
 import no.nav.dagpenger.saksbehandling.behandling.BehandlngHttpKlient
@@ -81,7 +82,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             pdlKlient,
             journalpostIdClient,
             CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider)),
-            oppgaveRepository,
+            OppgaveHistorikkDTOMapper(oppgaveRepository),
         )
 
     private val rapidsConnection: RapidsConnection =
