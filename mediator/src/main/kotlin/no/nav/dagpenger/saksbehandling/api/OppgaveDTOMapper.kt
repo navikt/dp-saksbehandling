@@ -40,13 +40,17 @@ internal class OppgaveDTOMapper(
                     async { saksbehandlerOppslag.hentSaksbehandler(beslutterIdent) }
                 }
 
+            val oppgaveHistorikk =
+                async {
+                    oppgaveHistorikkDTOMapper.lagOppgaveHistorikk(oppgave.tilstandslogg)
+                }
             lagOppgaveDTO(
                 oppgave = oppgave,
                 person = person.await(),
                 journalpostIder = journalpostIder.await(),
                 sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                 sisteBeslutterDTO = sisteBeslutterDTO?.await(),
-                oppgaveHistorikk = oppgaveHistorikkDTOMapper.lagOppgaveHistorikk(oppgave.tilstandslogg),
+                oppgaveHistorikk = oppgaveHistorikk.await(),
             )
         }
     }
