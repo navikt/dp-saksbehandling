@@ -116,13 +116,13 @@ internal object OppgaveApiTestHelper {
         tildeltBehandlerIdent: String? = null,
         behandling: Behandling,
         utsattTil: LocalDate? = null,
+        opprettet: LocalDateTime = LocalDateTime.now(),
     ): Oppgave {
         val oppgaveId = UUIDv7.ny()
-        val nå = LocalDateTime.now()
         return Oppgave.rehydrer(
             oppgaveId = oppgaveId,
             behandlerIdent = tildeltBehandlerIdent,
-            opprettet = nå,
+            opprettet = opprettet,
             emneknagger = setOf("Søknadsbehandling"),
             tilstand =
                 when (tilstand) {
@@ -149,7 +149,7 @@ internal object OppgaveApiTestHelper {
                                     ansvarligIdent = SAKSBEHANDLER_IDENT,
                                     utførtAv = Saksbehandler(SAKSBEHANDLER_IDENT, emptySet()),
                                 ),
-                            tidspunkt = nå.minusDays(2),
+                            tidspunkt = opprettet.minusDays(2),
                         ),
                         Tilstandsendring(
                             tilstand = UNDER_KONTROLL,
@@ -159,7 +159,7 @@ internal object OppgaveApiTestHelper {
                                     ansvarligIdent = BESLUTTER_IDENT,
                                     utførtAv = Saksbehandler(BESLUTTER_IDENT, emptySet()),
                                 ),
-                            tidspunkt = nå.minusDays(1),
+                            tidspunkt = opprettet.minusDays(1),
                         ),
                     ),
                 ),
@@ -171,6 +171,7 @@ internal object OppgaveApiTestHelper {
         saksbehandlerIdent: String? = null,
         skjermesSomEgneAnsatte: Boolean = false,
         utsattTil: LocalDate? = null,
+        oprettet: LocalDateTime = LocalDateTime.now(),
     ): Oppgave {
         val behandling =
             Behandling(
@@ -184,7 +185,7 @@ internal object OppgaveApiTestHelper {
                     ),
                 opprettet = LocalDateTime.now(),
             )
-        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil)
+        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil, oprettet)
     }
 
     val testPerson =
