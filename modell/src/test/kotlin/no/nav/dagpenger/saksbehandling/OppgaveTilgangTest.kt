@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -528,6 +529,126 @@ class OppgaveTilgangTest {
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = "<HTML>en melding</HTML>",
                     utførtAv = beslutterSomEierOppgaven,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Oppgave klar til kontroll kan ikke tildeles samme behandler som saksbehandlet, selv om hen er beslutter`() {
+        val beslutterSomSaksbehandlet =
+            Saksbehandler("beslutterSomSaksbehandlet", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave = lagOppgave(tilstandType = KLAR_TIL_KONTROLL)
+        oppgave.tilstandslogg.leggTil(
+            UNDER_BEHANDLING,
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
+                utførtAv = beslutterSomSaksbehandlet,
+            ),
+        )
+
+        shouldThrow<ManglendeTilgang> {
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = beslutterSomSaksbehandlet,
+                    ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
+                ),
+            )
+        }
+
+        val enAnnenBeslutter = Saksbehandler("enAnnenBeslutter", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        shouldNotThrow<ManglendeTilgang> {
+            oppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = enAnnenBeslutter,
+                    ansvarligIdent = enAnnenBeslutter.navIdent,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Oppgave under kontroll kan ikke ferdigstilles av samme behandler som saksbehandlet, selv om hen er beslutter`() {
+        val beslutterSomSaksbehandlet = Saksbehandler("eier", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
+        oppgave1.tilstandslogg.leggTil(
+            UNDER_BEHANDLING,
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave1.oppgaveId,
+                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
+                utførtAv = beslutterSomSaksbehandlet,
+            ),
+        )
+        shouldThrow<ManglendeTilgang> {
+            oppgave1.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave1.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = beslutterSomSaksbehandlet,
+                ),
+            )
+        }
+
+        val enAnnenBeslutter = Saksbehandler("enAnnenBeslutter", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
+        oppgave2.tilstandslogg.leggTil(
+            UNDER_BEHANDLING,
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave2.oppgaveId,
+                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
+                utførtAv = beslutterSomSaksbehandlet,
+            ),
+        )
+        shouldNotThrow<ManglendeTilgang> {
+            oppgave2.ferdigstill(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave2.oppgaveId,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
+                    utførtAv = enAnnenBeslutter,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Oppgave under kontroll kan ikke retureres til saksbehandling av samme behandler som saksbehandlet`() {
+        val beslutterSomSaksbehandlet = Saksbehandler("eier", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave1 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutterSomSaksbehandlet)
+        oppgave1.tilstandslogg.leggTil(
+            UNDER_BEHANDLING,
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave1.oppgaveId,
+                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
+                utførtAv = beslutterSomSaksbehandlet,
+            ),
+        )
+        shouldThrow<ManglendeTilgang> {
+            oppgave1.returnerTilSaksbehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave1.oppgaveId,
+                    utførtAv = beslutterSomSaksbehandlet,
+                ),
+            )
+        }
+
+        val enAnnenBeslutter = Saksbehandler("beslutter 2", setOf(), setOf(SAKSBEHANDLER, BESLUTTER))
+        val oppgave2 = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = enAnnenBeslutter)
+        oppgave2.tilstandslogg.leggTil(
+            UNDER_BEHANDLING,
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave2.oppgaveId,
+                ansvarligIdent = beslutterSomSaksbehandlet.navIdent,
+                utførtAv = beslutterSomSaksbehandlet,
+            ),
+        )
+        shouldNotThrow<ManglendeTilgang> {
+            oppgave2.returnerTilSaksbehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave2.oppgaveId,
+                    utførtAv = enAnnenBeslutter,
                 ),
             )
         }

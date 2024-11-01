@@ -100,8 +100,22 @@ data class Oppgave private constructor(
         ) {
             require(oppgave.behandlerIdent == saksbehandler.navIdent) {
                 throw Tilstand.ManglendeTilgang(
-                    "Ulovlig hendelse av typ $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
+                    "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
                         "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
+                )
+            }
+        }
+
+        private fun requireBeslutterUlikSaksbehandler(
+            oppgave: Oppgave,
+            beslutter: Saksbehandler,
+            hendelseNavn: String,
+        ) {
+            require(oppgave.sisteSaksbehandler() != beslutter.navIdent) {
+                throw Tilstand.ManglendeTilgang(
+                    "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type}. " +
+                        "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
+                        "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
                 )
             }
         }
@@ -428,6 +442,12 @@ data class Oppgave private constructor(
             require(settOppgaveAnsvarHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter-tilgang")
             }
+            requireBeslutterUlikSaksbehandler(
+                oppgave = oppgave,
+                beslutter = settOppgaveAnsvarHendelse.utførtAv,
+                hendelseNavn = settOppgaveAnsvarHendelse.javaClass.simpleName,
+            )
+
             oppgave.endreTilstand(UnderKontroll(), settOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
@@ -471,7 +491,16 @@ data class Oppgave private constructor(
             require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten beslutter-tilgang")
             }
-            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv, godkjentBehandlingHendelse.javaClass.simpleName)
+            requireSammeEier(
+                oppgave = oppgave,
+                saksbehandler = godkjentBehandlingHendelse.utførtAv,
+                hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
+            )
+            requireBeslutterUlikSaksbehandler(
+                oppgave = oppgave,
+                beslutter = godkjentBehandlingHendelse.utførtAv,
+                hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
+            )
 
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
@@ -480,7 +509,16 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            requireSammeEier(oppgave, settOppgaveAnsvarHendelse.utførtAv, settOppgaveAnsvarHendelse.javaClass.simpleName)
+            requireSammeEier(
+                oppgave = oppgave,
+                saksbehandler = settOppgaveAnsvarHendelse.utførtAv,
+                hendelseNavn = settOppgaveAnsvarHendelse.javaClass.simpleName,
+            )
+            requireBeslutterUlikSaksbehandler(
+                oppgave = oppgave,
+                beslutter = settOppgaveAnsvarHendelse.utførtAv,
+                hendelseNavn = settOppgaveAnsvarHendelse.javaClass.simpleName,
+            )
         }
 
         override fun returnerTilSaksbehandling(
@@ -490,8 +528,18 @@ data class Oppgave private constructor(
             require(returnerTilSaksbehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke returnere oppgaven til saksbehandling i tilstand $type uten beslutter-tilgang")
             }
-            requireSammeEier(oppgave, returnerTilSaksbehandlingHendelse.utførtAv, returnerTilSaksbehandlingHendelse.javaClass.simpleName)
-// TOdo: kommenter inn dette etter testing
+            requireSammeEier(
+                oppgave = oppgave,
+                saksbehandler = returnerTilSaksbehandlingHendelse.utførtAv,
+                hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
+            )
+            requireBeslutterUlikSaksbehandler(
+                oppgave = oppgave,
+                beslutter = returnerTilSaksbehandlingHendelse.utførtAv,
+                hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
+            )
+
+// TODO: kommenter inn dette etter testing
             // oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
             // oppgave.behandlerIdent = null
             oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
