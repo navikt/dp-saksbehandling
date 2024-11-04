@@ -141,7 +141,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                             FROM     oppgave_v1    oppg
                             JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
                             JOIN     person_v1     pers ON pers.id = beha.person_id
-                            LEFT JOIN oppgave_tilstand_logg_v1 logg ON logg.id = 
+                            JOIN oppgave_tilstand_logg_v1 logg ON logg.id = 
                                 ( SELECT logg2.id
                                   FROM   oppgave_tilstand_logg_v1 logg2
                                   WHERE  logg2.oppgave_id = oppg.id
@@ -151,6 +151,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                                     WHERE  logg3.oppgave_id = oppg.id
                                     AND    logg3.tilstand = 'UNDER_BEHANDLING'
                                   )
+                                  AND    logg2.tilstand = 'UNDER_BEHANDLING'
                                   )
                             WHERE    :har_beslutter_rolle
                             AND      oppg.tilstand = 'KLAR_TIL_KONTROLL'
@@ -159,7 +160,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                             AND      oppg.opprettet <  :tom_pluss_1_dag
                             AND    ( NOT pers.skjermes_som_egne_ansatte
                                   OR :har_tilgang_til_egne_ansatte )
-                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
+                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) AND (hendelse->'utførtAv'->>'navIdent')::text != :navIdent
                 """ + emneknaggClause +
                         """
                         )
