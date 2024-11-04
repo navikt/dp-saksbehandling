@@ -375,7 +375,7 @@ class PostgresOppgaveRepositoryTest {
                     tilganger = setOf(SAKSBEHANDLER),
                 )
 
-            val tilstandsloggUnderBehandling =
+            fun tilstandsloggUnderBehandling() =
                 Tilstandslogg(
                     tilstandsendringer =
                         mutableListOf(
@@ -465,7 +465,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(12),
                     saksbehandlerIdent = testSaksbehandler.navIdent,
-                    tilstandslogg = tilstandsloggUnderBehandling,
+                    tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val endaEldreOpprettetOppgave =
@@ -478,7 +478,7 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(14),
-                    tilstandslogg = tilstandsloggUnderBehandling,
+                    tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveEgneAnsatteSkjerming =
@@ -486,7 +486,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(15),
                     skjermesSomEgneAnsatte = true,
-                    tilstandslogg = tilstandsloggUnderBehandling,
+                    tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveFortroligAdresse =
@@ -494,7 +494,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(16),
                     adressebeskyttelseGradering = FORTROLIG,
-                    tilstandslogg = tilstandsloggUnderBehandling,
+                    tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresse =
@@ -502,7 +502,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(17),
                     adressebeskyttelseGradering = STRENGT_FORTROLIG,
-                    tilstandslogg = tilstandsloggUnderBehandling,
+                    tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseUtland =
@@ -510,7 +510,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(18),
                     adressebeskyttelseGradering = STRENGT_FORTROLIG_UTLAND,
-                    tilstandslogg = tilstandsloggUnderBehandling,
+                    tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming =
@@ -519,7 +519,7 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(19),
                     skjermesSomEgneAnsatte = true,
                     adressebeskyttelseGradering = STRENGT_FORTROLIG,
-                    tilstandslogg = tilstandsloggUnderBehandling,
+                    tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             repo.lagre(yngsteLedigeOppgaveOpprettetIDag)
