@@ -43,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
@@ -362,6 +363,111 @@ class PostgresOppgaveRepositoryTest {
                 )
             val nesteOppgave = repo.tildelOgHentNesteOppgave(nesteOppgaveHendelse, filter)
             nesteOppgave!!.tilstandslogg.size shouldBe antallTilstandsendringer + 1
+        }
+    }
+
+    @Test
+    fun `Skal ikke få tildelt kontrolloppgave som man selv har saksbehandlet`() {
+        withMigratedDb { ds ->
+            val saksbehandlerUtført =
+                Saksbehandler(
+                    navIdent = "saksbehandlerUtført",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
+                )
+
+            val annenBeslutter =
+                Saksbehandler(
+                    navIdent = "annenBeslutter",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
+                )
+            val oppgaveId = UUIDv7.ny()
+
+            fun tilstandsloggUnderBehandling() =
+                Tilstandslogg(
+                    tilstandsendringer =
+                        mutableListOf(
+                            Tilstandsendring(
+                                tilstand = UNDER_BEHANDLING,
+                                hendelse =
+                                    NesteOppgaveHendelse(
+                                        ansvarligIdent = annenBeslutter.navIdent,
+                                        utførtAv = annenBeslutter,
+                                    ),
+                                tidspunkt = LocalDateTime.now().minusDays(2),
+                            ),
+                            Tilstandsendring(
+                                tilstand = UNDER_BEHANDLING,
+                                hendelse =
+                                    NesteOppgaveHendelse(
+                                        ansvarligIdent = saksbehandlerUtført.navIdent,
+                                        utførtAv = saksbehandlerUtført,
+                                    ),
+                                tidspunkt = LocalDateTime.now().minusDays(1),
+                            ),
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_KONTROLL,
+                                hendelse =
+                                    SendTilKontrollHendelse(
+                                        oppgaveId = oppgaveId,
+                                        utførtAv = saksbehandlerUtført,
+                                    ),
+                                tidspunkt = LocalDateTime.now(),
+                            ),
+                        ),
+                )
+
+            val oppgave =
+                lagOppgave(
+                    oppgaveId = oppgaveId,
+                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstandslogg = tilstandsloggUnderBehandling(),
+                )
+
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(oppgave)
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = saksbehandlerUtført.navIdent,
+                        utførtAv = saksbehandlerUtført,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        egneAnsatteTilgang = saksbehandlerUtført.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = saksbehandlerUtført.adressebeskyttelseTilganger(),
+                        harBeslutterRolle = saksbehandlerUtført.tilganger.contains(BESLUTTER),
+                        navIdent = saksbehandlerUtført.navIdent,
+                    ),
+            ) shouldBe null
+
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = annenBeslutter.navIdent,
+                        utførtAv = annenBeslutter,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        egneAnsatteTilgang = annenBeslutter.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = annenBeslutter.adressebeskyttelseTilganger(),
+                        harBeslutterRolle = annenBeslutter.tilganger.contains(BESLUTTER),
+                        navIdent = annenBeslutter.navIdent,
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe oppgave.oppgaveId
+                    it.behandlerIdent shouldBe annenBeslutter.navIdent
+                    it.tilstand() shouldBe Oppgave.UnderKontroll()
+                }
+            }
         }
     }
 
