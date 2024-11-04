@@ -208,6 +208,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                                     "tom_pluss_1_dag" to filter.periode.tom.plusDays(1),
                                     "har_tilgang_til_egne_ansatte" to filter.egneAnsatteTilgang,
                                     "har_beslutter_rolle" to filter.harBeslutterRolle,
+                                    "navIdent" to filter.navIdent,
                                 ),
                         ).map { row ->
                             val tilstandType = Type.valueOf(row.string("tilstand"))
