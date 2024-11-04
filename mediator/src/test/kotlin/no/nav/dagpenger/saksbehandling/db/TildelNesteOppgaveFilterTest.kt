@@ -17,14 +17,15 @@ class TildelNesteOppgaveFilterTest {
 
     @Test
     fun `Skal kunne initialisere et søkefilter fra en url streng`() {
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "saksbehandler",
+                grupper = setOf(),
+                tilganger = setOf(TilgangType.SAKSBEHANDLER),
+            )
         TildelNesteOppgaveFilter.fra(
-            queryString,
-            saksbehandler =
-                Saksbehandler(
-                    navIdent = "saksbehandler",
-                    grupper = setOf(),
-                    tilganger = setOf(TilgangType.SAKSBEHANDLER),
-                ),
+            queryString = queryString,
+            saksbehandler = saksbehandler,
         ) shouldBe
             TildelNesteOppgaveFilter(
                 periode =
@@ -35,6 +36,7 @@ class TildelNesteOppgaveFilterTest {
                 emneknagg = setOf("knagg1", "knagg2"),
                 egneAnsatteTilgang = false,
                 adressebeskyttelseTilganger = setOf(UGRADERT),
+                navIdent = saksbehandler.navIdent,
             )
     }
 
@@ -69,20 +71,22 @@ class TildelNesteOppgaveFilterTest {
 
     @Test
     fun `Skal håndtere tom streng`() {
+        val saksbehandler =
+            Saksbehandler(
+                navIdent = "saksbehandler",
+                grupper = setOf(),
+                tilganger = setOf(TilgangType.SAKSBEHANDLER),
+            )
         TildelNesteOppgaveFilter.fra(
             queryString = "",
-            saksbehandler =
-                Saksbehandler(
-                    navIdent = "saksbehandler",
-                    grupper = setOf(),
-                    tilganger = setOf(TilgangType.SAKSBEHANDLER),
-                ),
+            saksbehandler = saksbehandler,
         ) shouldBe
             TildelNesteOppgaveFilter(
                 periode = Periode.UBEGRENSET_PERIODE,
                 emneknagg = setOf(),
                 egneAnsatteTilgang = false,
                 adressebeskyttelseTilganger = setOf(UGRADERT),
+                navIdent = saksbehandler.navIdent,
             )
     }
 }

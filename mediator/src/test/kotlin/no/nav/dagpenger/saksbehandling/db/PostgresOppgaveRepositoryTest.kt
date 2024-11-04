@@ -137,6 +137,7 @@ class PostgresOppgaveRepositoryTest {
                         periode = UBEGRENSET_PERIODE,
                         emneknagg = emptySet(),
                         adressebeskyttelseTilganger = setOf(FORTROLIG),
+                        navIdent = saksbehandler.navIdent,
                     ),
             ) shouldBe null
         }
@@ -204,6 +205,7 @@ class PostgresOppgaveRepositoryTest {
                             emneknagg = emptySet(),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = saksbehandlerUtenTilgangTilEgneAnsatte.navIdent,
                         ),
                 )!!
             nesteOppgave.oppgaveId shouldBe eldsteOppgaveUtenSkjermingAvEgenAnsatt.oppgaveId
@@ -228,6 +230,7 @@ class PostgresOppgaveRepositoryTest {
                             emneknagg = emptySet(),
                             egneAnsatteTilgang = true,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
                         ),
                 )!!
 
@@ -288,6 +291,7 @@ class PostgresOppgaveRepositoryTest {
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             harBeslutterRolle = false,
+                            navIdent = saksbehandlernUtenTilgangTilAdressebeskyttede.navIdent,
                         ),
                 )
             requireNotNull(nesteOppgave)
@@ -313,6 +317,7 @@ class PostgresOppgaveRepositoryTest {
                             emneknagg = emptySet(),
                             egneAnsatteTilgang = true,
                             adressebeskyttelseTilganger = setOf(UGRADERT, FORTROLIG),
+                            navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
                         ),
                 )!!
 
@@ -353,6 +358,7 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
+                    navIdent = saksbehandler.navIdent,
                 )
             val nesteOppgave = repo.tildelOgHentNesteOppgave(nesteOppgaveHendelse, filter)
             nesteOppgave!!.tilstandslogg.size shouldBe antallTilstandsendringer + 1
@@ -362,6 +368,28 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Tildeling av neste oppgave ut fra søkefilter og tilganger`() {
         withMigratedDb { ds ->
+            val saksbehandlerUtført =
+                Saksbehandler(
+                    navIdent = "saksbehandlerUtført",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER),
+                )
+
+            val tilstandsloggUnderBehandling =
+                Tilstandslogg(
+                    tilstandsendringer =
+                        mutableListOf(
+                            Tilstandsendring(
+                                tilstand = UNDER_BEHANDLING,
+                                hendelse =
+                                    NesteOppgaveHendelse(
+                                        ansvarligIdent = saksbehandlerUtført.navIdent,
+                                        utførtAv = saksbehandlerUtført,
+                                    ),
+                            ),
+                        ),
+                )
+
             val testSaksbehandler =
                 Saksbehandler(
                     navIdent = "saksbehandler",
@@ -437,6 +465,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(12),
                     saksbehandlerIdent = testSaksbehandler.navIdent,
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val endaEldreOpprettetOppgave =
@@ -449,6 +478,7 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(14),
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val eldsteKontrollOppgaveEgneAnsatteSkjerming =
@@ -456,6 +486,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(15),
                     skjermesSomEgneAnsatte = true,
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val eldsteKontrollOppgaveFortroligAdresse =
@@ -463,6 +494,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(16),
                     adressebeskyttelseGradering = FORTROLIG,
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresse =
@@ -470,6 +502,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(17),
                     adressebeskyttelseGradering = STRENGT_FORTROLIG,
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseUtland =
@@ -477,6 +510,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(18),
                     adressebeskyttelseGradering = STRENGT_FORTROLIG_UTLAND,
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming =
@@ -485,6 +519,7 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(19),
                     skjermesSomEgneAnsatte = true,
                     adressebeskyttelseGradering = STRENGT_FORTROLIG,
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             repo.lagre(yngsteLedigeOppgaveOpprettetIDag)
@@ -500,17 +535,19 @@ class PostgresOppgaveRepositoryTest {
             repo.lagre(eldsteKontrollOppgaveStrengtFortroligAdresseUtland)
             repo.lagre(eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming)
 
-            val emneknaggFilter =
+            val emneknaggFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
                     emneknagg = setOf("Testknagg"),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
+                    navIdent = testSaksbehandler.navIdent,
                 )
-            val opprettetIDagFilter =
+            val opprettetIDagFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
                     periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
                     emneknagg = emptySet(),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
+                    navIdent = testSaksbehandler.navIdent,
                 )
 
             repo.tildelOgHentNesteOppgave(
@@ -519,7 +556,7 @@ class PostgresOppgaveRepositoryTest {
                         ansvarligIdent = testSaksbehandler.navIdent,
                         utførtAv = testSaksbehandler,
                     ),
-                filter = emneknaggFilter,
+                filter = emneknaggFilterForTestSaksbehandler,
             ).let {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
@@ -535,7 +572,7 @@ class PostgresOppgaveRepositoryTest {
                         ansvarligIdent = testSaksbehandler.navIdent,
                         utførtAv = testSaksbehandler,
                     ),
-                filter = opprettetIDagFilter,
+                filter = opprettetIDagFilterForTestSaksbehandler,
             ).let {
                 assertSoftly {
                     require(it != null) { "Skal finne en oppgave" }
@@ -558,6 +595,7 @@ class PostgresOppgaveRepositoryTest {
                         egneAnsatteTilgang = beslutter.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutter.tilganger.contains(BESLUTTER),
+                        navIdent = vanligBeslutter.navIdent,
                     ),
             ).let {
                 assertSoftly {
@@ -581,6 +619,7 @@ class PostgresOppgaveRepositoryTest {
                         egneAnsatteTilgang = beslutterEgneAnsatte.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterEgneAnsatte.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutterEgneAnsatte.tilganger.contains(BESLUTTER),
+                        navIdent = beslutterEgneAnsatte.navIdent,
                     ),
             ).let {
                 assertSoftly {
@@ -604,6 +643,7 @@ class PostgresOppgaveRepositoryTest {
                         egneAnsatteTilgang = beslutterFortroligAdresse.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterFortroligAdresse.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutterFortroligAdresse.tilganger.contains(BESLUTTER),
+                        navIdent = beslutterFortroligAdresse.navIdent,
                     ),
             ).let {
                 assertSoftly {
@@ -627,6 +667,7 @@ class PostgresOppgaveRepositoryTest {
                         egneAnsatteTilgang = beslutterStrengtFortroligAdresse.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterStrengtFortroligAdresse.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutterStrengtFortroligAdresse.tilganger.contains(BESLUTTER),
+                        navIdent = beslutterStrengtFortroligAdresse.navIdent,
                     ),
             ).let {
                 assertSoftly {
@@ -651,6 +692,7 @@ class PostgresOppgaveRepositoryTest {
                         egneAnsatteTilgang = beslutterStrengtFortroligAdresseUtland.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterStrengtFortroligAdresseUtland.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutterStrengtFortroligAdresseUtland.tilganger.contains(BESLUTTER),
+                        navIdent = beslutterStrengtFortroligAdresseUtland.navIdent,
                     ),
             ).let {
                 assertSoftly {
@@ -680,6 +722,7 @@ class PostgresOppgaveRepositoryTest {
                             beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
                                 BESLUTTER,
                             ),
+                        navIdent = beslutterStrengtFortroligOgEgneAnsatte.navIdent,
                     ),
             ).let {
                 assertSoftly {

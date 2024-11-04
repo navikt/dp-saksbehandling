@@ -141,6 +141,17 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                             FROM     oppgave_v1    oppg
                             JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
                             JOIN     person_v1     pers ON pers.id = beha.person_id
+                            LEFT JOIN oppgave_tilstand_logg_v1 logg ON logg.id = 
+                                ( SELECT logg2.id
+                                  FROM   oppgave_tilstand_logg_v1 logg2
+                                  WHERE  logg2.oppgave_id = oppg.id
+                                  AND    logg2.tidspunkt = (
+                                    SELECT MAX(logg3.tidspunkt)
+                                    FROM   oppgave_tilstand_logg_v1 logg3
+                                    WHERE  logg3.oppgave_id = oppg.id
+                                    AND    logg3.tilstand = 'UNDER_BEHANDLING'
+                                  )
+                                  )
                             WHERE    :har_beslutter_rolle
                             AND      oppg.tilstand = 'KLAR_TIL_KONTROLL'
                             AND      oppg.saksbehandler_ident IS NULL

@@ -54,6 +54,7 @@ data class TildelNesteOppgaveFilter(
     val egneAnsatteTilgang: Boolean = false,
     val adressebeskyttelseTilganger: Set<AdressebeskyttelseGradering>,
     val harBeslutterRolle: Boolean = false,
+    val navIdent: String,
 ) {
     companion object {
         fun fra(
@@ -70,6 +71,7 @@ data class TildelNesteOppgaveFilter(
                 egneAnsatteTilgang = egneAnsatteTilgang,
                 adressebeskyttelseTilganger = adressebeskyttelseTilganger,
                 harBeslutterRolle = harBeslutterRolle,
+                navIdent = saksbehandler.navIdent,
             )
         }
     }
