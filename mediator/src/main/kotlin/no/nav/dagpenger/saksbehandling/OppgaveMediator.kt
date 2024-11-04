@@ -75,7 +75,6 @@ class OppgaveMediator(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = setOf("Søknadsbehandling"),
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                ident = person.ident,
                 behandling = behandling,
             )
 

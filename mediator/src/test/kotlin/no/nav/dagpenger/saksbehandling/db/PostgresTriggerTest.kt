@@ -29,8 +29,7 @@ class PostgresTriggerTest {
         val testBehandling = Behandling(behandlingId = UUIDv7.ny(), testPerson, opprettet = opprettet)
         val testOppgave =
             Oppgave(
-                UUIDv7.ny(),
-                ident = testPerson.ident,
+                oppgaveId = UUIDv7.ny(),
                 emneknagger = setOf("Hugga", "Bugga"),
                 opprettet = opprettet,
                 tilstand = Oppgave.KlarTilBehandling,

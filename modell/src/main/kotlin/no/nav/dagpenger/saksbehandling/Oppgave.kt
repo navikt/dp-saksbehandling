@@ -53,7 +53,6 @@ data class Oppgave private constructor(
 ) {
     constructor(
         oppgaveId: UUID,
-        ident: String,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
         tilstand: Tilstand = Opprettet,

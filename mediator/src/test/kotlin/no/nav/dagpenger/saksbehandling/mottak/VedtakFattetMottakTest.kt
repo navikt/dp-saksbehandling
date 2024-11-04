@@ -29,7 +29,6 @@ internal class VedtakFattetMottakTest {
     private val oppgave =
         Oppgave(
             oppgaveId = UUIDv7.ny(),
-            ident = testIdent,
             opprettet = opprettet,
             behandling =
                 Behandling(
