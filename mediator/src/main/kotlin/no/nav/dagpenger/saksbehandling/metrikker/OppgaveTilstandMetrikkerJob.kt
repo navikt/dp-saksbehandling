@@ -16,7 +16,7 @@ private val logger = KotlinLogging.logger {}
 
 private val oppgaveTilstandGauge: Gauge =
     Gauge.builder()
-        .name("dp_saksbehandling_oppgave_tilstand_counter")
+        .name("dp_saksbehandling_oppgave_tilstand_gauge")
         .help("Antall oppgaver i hver tilstand")
         .labelNames("tilstand")
         .register(PrometheusRegistry.defaultRegistry)
@@ -27,7 +27,7 @@ fun startOppgaveTilstandMetrikkJob() {
     val nå = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
 
     fixedRateTimer(
-        name = "oppgave-tilstand-updater",
+        name = "OppgaveTilstandMetrikkJob",
         daemon = true,
         startAt = nå,
         period = 1.Minutt,
