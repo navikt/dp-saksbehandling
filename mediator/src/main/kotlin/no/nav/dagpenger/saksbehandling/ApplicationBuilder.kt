@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandlingEllerUnderBehandling
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
+import no.nav.dagpenger.saksbehandling.metrikker.startOppgaveTilstandMetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -136,6 +137,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
 
     fun start() {
         settOppgaverKlarTilBehandlingEllerUnderBehandling()
+        startOppgaveTilstandMetrikkJob()
         rapidsConnection.start()
     }
 
