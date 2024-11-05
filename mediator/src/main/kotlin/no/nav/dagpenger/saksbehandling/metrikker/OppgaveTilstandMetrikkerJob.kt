@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling.metrikker
 
-import io.prometheus.metrics.core.metrics.Counter
+import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -13,8 +13,9 @@ import javax.sql.DataSource
 import kotlin.concurrent.fixedRateTimer
 
 private val logger = KotlinLogging.logger {}
-private val oppgaveTilstandCounter: Counter =
-    Counter.builder()
+
+private val oppgaveTilstandGauge: Gauge =
+    Gauge.builder()
         .name("dp_saksbehandling_oppgave_tilstand_counter")
         .help("Antall oppgaver i hver tilstand")
         .labelNames("tilstand")
@@ -42,9 +43,9 @@ fun startOppgaveTilstandMetrikkJob() {
 
 private fun oppdaterOppgaveTilstandMetrikker(dataSource: DataSource) {
     val oppgaveTilstandDistribusjon = hentOppgaveTilstandDistribusjon(dataSource)
-    oppgaveTilstandCounter.clear()
+
     oppgaveTilstandDistribusjon.forEach { distribusjon ->
-        oppgaveTilstandCounter.labelValues(distribusjon.oppgaveTilstand).inc(distribusjon.antall.toDouble())
+        oppgaveTilstandGauge.labelValues(distribusjon.oppgaveTilstand).set(distribusjon.antall.toDouble())
     }
 }
 
