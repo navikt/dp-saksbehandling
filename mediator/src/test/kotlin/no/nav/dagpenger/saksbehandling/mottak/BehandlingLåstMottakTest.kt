@@ -28,25 +28,25 @@ class BehandlingLåstMottakTest {
     val behandlingLåstHendelse =
         """
         {
-          "@event_name": "behandling_låst",
-          "ident": "09830698334",
-          "behandlingId": "018ec271-6a29-7fcc-95df-37d48118072f",
-          "gjelderDato": "2024-04-09",
-          "fagsakId": "0",
-          "søknadId": "a830499b-5bcd-4401-9db4-8e54549e9e0f",
-          "søknad_uuid": "a830499b-5bcd-4401-9db4-8e54549e9e0f",
-          "@id": "7333f08e-dfeb-438e-aba3-9cd6387fca73",
-          "@opprettet": "2024-04-10T10:00:21.081950694",
-          "system_read_count": 0,
-          "system_participating_services": [
-            {
-              "id": "7333f08e-dfeb-438e-aba3-9cd6387fca73",
-              "time": "2024-04-10T10:00:21.081950694",
-              "service": "dp-behandling",
-              "instance": "dp-behandling-86599cc6d5-lp5kh",
-              "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-behandling:2024.04.10-07.51-74cf1b5"
-            }
-          ]
+          "@event_name" : "behandling_endret_tilstand",
+          "ident" : "12345612345",
+          "behandlingId" : "0192f670-d6d4-7709-927d-d40f25010a5b",
+          "forrigeTilstand" : "ForslagTilVedtak",
+          "gjeldendeTilstand" : "Låst",
+          "forventetFerdig" : "+999999999-12-31T23:59:59.999999999",
+          "tidBrukt" : "PT0.145965S",
+          "@id" : "95318c13-94c3-4d78-b0c0-46421a265552",
+          "@opprettet" : "2024-11-04T10:10:44.837634",
+          "system_read_count" : 0,
+          "system_participating_services" : [ {
+            "id" : "95318c13-94c3-4d78-b0c0-46421a265552",
+            "time" : "2024-11-04T10:10:44.837634"
+          } ],
+          "@forårsaket_av" : {
+            "id" : "9f1276b3-0ff9-4c4f-9e68-b6d9c644863f",
+            "opprettet" : "2024-11-04T10:10:44.80971",
+            "event_name" : "oppgave_sendt_til_kontroll"
+          }
         }
         """.trimIndent()
 }

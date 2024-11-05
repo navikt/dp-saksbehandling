@@ -303,17 +303,9 @@ data class Oppgave private constructor(
             sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
             requireSammeEier(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
-            // TODO: kommenter inn dette etter testign
-            // oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
-            // oppgave.behandlerIdent = null
 
-            if (oppgave.sisteBeslutter() == null) {
-                oppgave.behandlerIdent = null
-                oppgave.endreTilstand(KlarTilKontroll, sendTilKontrollHendelse)
-            } else {
-                oppgave.behandlerIdent = oppgave.sisteBeslutter()
-                oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
-            }
+            oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
+            oppgave.behandlerIdent = null
         }
 
         override fun fjernAnsvar(
@@ -370,7 +362,11 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
-            requireSammeEier(oppgave, godkjentBehandlingHendelse.utførtAv, godkjentBehandlingHendelse.javaClass.simpleName)
+            requireSammeEier(
+                oppgave,
+                godkjentBehandlingHendelse.utførtAv,
+                godkjentBehandlingHendelse.javaClass.simpleName,
+            )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
         }
 
@@ -378,7 +374,11 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
-            requireSammeEier(oppgave, godkjennBehandlingMedBrevIArena.utførtAv, godkjennBehandlingMedBrevIArena.javaClass.simpleName)
+            requireSammeEier(
+                oppgave,
+                godkjennBehandlingMedBrevIArena.utførtAv,
+                godkjennBehandlingMedBrevIArena.javaClass.simpleName,
+            )
             oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
         }
     }
@@ -538,11 +538,8 @@ data class Oppgave private constructor(
                 hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
             )
 
-// TODO: kommenter inn dette etter testing
-            // oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
-            // oppgave.behandlerIdent = null
-            oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
-            oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
+            oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
+            oppgave.behandlerIdent = null
         }
 
         override fun fjernAnsvar(

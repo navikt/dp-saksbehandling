@@ -16,7 +16,9 @@ internal class BehandlingLåstMottak(
     companion object {
         private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "behandling_låst") }
+            validate { it.demandValue("@event_name", "behandling_endret_tilstand") }
+            validate { it.demandValue("forrigeTilstand", "ForslagTilVedtak") }
+            validate { it.demandValue("gjeldendeTilstand", "Låst") }
             validate { it.requireKey("ident", "behandlingId") }
         }
     }
@@ -32,7 +34,7 @@ internal class BehandlingLåstMottak(
         val ident = packet["ident"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
         withLoggingContext("behandlingId" to "$behandlingId") {
-            logger.info { "Mottok behandling_låst hendelse for behandlingId $behandlingId." }
+            logger.info { "Mottok behandling_endret_tilstand hendelse med ny tilstand 'Låst' for behandlingId $behandlingId." }
             oppgaveMediator.settOppgaveKlarTilKontroll(
                 BehandlingLåstHendelse(
                     behandlingId = behandlingId,

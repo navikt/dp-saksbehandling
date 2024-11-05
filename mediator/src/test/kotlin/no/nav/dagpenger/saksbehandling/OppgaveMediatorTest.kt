@@ -52,7 +52,6 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
@@ -106,7 +105,6 @@ class OppgaveMediatorTest {
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
 
     @Test
-    @Disabled
     fun `Skal kunne sette oppgave til AVVENTER_LÅS_AV_BEHANDLING`() {
         withMigratedDb { dataSource ->
             val oppgave = dataSource.lagTestoppgave(UNDER_BEHANDLING)
@@ -134,7 +132,6 @@ class OppgaveMediatorTest {
     }
 
     @Test
-    @Disabled
     fun `Skal kunne ta en oppgave under kontroll`() {
         withMigratedDb { dataSource ->
             val oppgave = dataSource.lagTestoppgave(KLAR_TIL_KONTROLL)
@@ -164,7 +161,6 @@ class OppgaveMediatorTest {
     }
 
     @Test
-    @Disabled
     fun `Skal kunne lagre et notat på en oppgave`() {
         withMigratedDb { dataSource ->
             val oppgave = dataSource.lagTestoppgave(UNDER_KONTROLL)
@@ -300,7 +296,6 @@ class OppgaveMediatorTest {
     }
 
     @Test
-    @Disabled
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
@@ -827,7 +822,6 @@ class OppgaveMediatorTest {
     }
 
     @Test
-    @Disabled
     fun `Livssyklus for søknadsbehandling som krever totrinnskontroll`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
