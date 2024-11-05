@@ -276,7 +276,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ) {
-            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId}" }
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
         }
 
         override fun tildel(
@@ -348,7 +348,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ) {
-            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId}" }
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
         }
 
         override fun ferdigstill(
@@ -478,6 +478,13 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
             oppgave.endreTilstand(UnderBehandling, behandlingOpplåstHendelse)
         }
+
+        override fun oppgaveKlarTilBehandling(
+            oppgave: Oppgave,
+            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+        ) {
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
+        }
     }
 
     data class UnderKontroll(private var notat: Notat? = null) : Tilstand {
@@ -525,7 +532,10 @@ data class Oppgave private constructor(
             returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         ) {
             require(returnerTilSaksbehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
-                throw Tilstand.ManglendeTilgang("Kan ikke returnere oppgaven til saksbehandling i tilstand $type uten beslutter-tilgang")
+                throw Tilstand.ManglendeTilgang(
+                    "Kan ikke returnere oppgaven til saksbehandling i tilstand $type " +
+                        "uten beslutter-tilgang",
+                )
             }
             requireSammeEier(
                 oppgave = oppgave,

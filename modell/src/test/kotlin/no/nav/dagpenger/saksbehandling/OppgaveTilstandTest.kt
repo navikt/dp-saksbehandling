@@ -105,6 +105,36 @@ class OppgaveTilstandTest {
     }
 
     @Test
+    fun `Skal ikke endre tilstand dersom forslag til vedtak mottas i tilstand AvventerOpplåsingAvBehandling`() {
+        val oppgave =
+            lagOppgave(
+                tilstandType = AVVENTER_OPPLÅSING_AV_BEHANDLING,
+                tilstandslogg =
+                    Tilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = UNDER_BEHANDLING,
+                            hendelse =
+                                NesteOppgaveHendelse(
+                                    ansvarligIdent = saksbehandler.navIdent,
+                                    utførtAv = saksbehandler,
+                                ),
+                        )
+                    },
+            )
+
+        oppgave.oppgaveKlarTilBehandling(
+            ForslagTilVedtakHendelse(
+                ident = oppgave.behandling.person.ident,
+                søknadId = UUIDv7.ny(),
+                behandlingId = oppgave.behandling.behandlingId,
+                utførtAv = Applikasjon("dp-behandling"),
+            ),
+        )
+
+        oppgave.tilstand().type shouldBe AVVENTER_OPPLÅSING_AV_BEHANDLING
+    }
+
+    @Test
     fun `Skal ferdigstille en oppgave fra alle lovlige tilstander`() {
         val lovligeTilstander = setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET)
         lovligeTilstander.forEach { tilstand ->
