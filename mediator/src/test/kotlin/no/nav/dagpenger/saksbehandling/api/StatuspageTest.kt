@@ -10,6 +10,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
@@ -132,6 +133,35 @@ class StatuspageTest {
                       "title": "Ugyldig verdi",
                       "detail": "$message",
                       "status": 400,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Error håndtering av ManglendeTilgang`() {
+        testApplication {
+            val message = "Mangler tilgang"
+            val path = "/ManglendeTilgang"
+            application {
+                apiConfig()
+                routing {
+                    get(path) { throw ManglendeTilgang(message) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.Forbidden
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:manglende-tilgang",
+                      "title": "Mangler tilgang",
+                      "detail": "$message",
+                      "status": 403,
                       "instance": "$path"
                     }
                     """.trimIndent()

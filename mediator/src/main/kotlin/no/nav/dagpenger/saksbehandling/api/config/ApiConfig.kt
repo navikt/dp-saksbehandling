@@ -17,6 +17,7 @@ import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
@@ -157,6 +158,20 @@ fun Application.apiConfig() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.InternalServerError, problem)
+                }
+
+                is ManglendeTilgang -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Mangler tilgang",
+                            detail = cause.message,
+                            status = HttpStatusCode.Forbidden.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:manglende-tilgang")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.Forbidden, problem)
                 }
 
                 else -> {
