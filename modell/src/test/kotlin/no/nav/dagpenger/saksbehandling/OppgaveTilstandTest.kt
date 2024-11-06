@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -191,7 +192,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.tilstand().type shouldBe Type.BEHANDLES_I_ARENA
+        oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
     }
 
     @Test
