@@ -179,7 +179,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra under behandling til behandles i arena når oppgaven avbrytes`() {
+    fun `Skal gå fra opprettet til behandles i arena når oppgaven avbrytes`() {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
