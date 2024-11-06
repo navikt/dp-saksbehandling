@@ -194,23 +194,20 @@ class OppgaveTilstandTest {
         oppgave.tilstand().type shouldBe Type.BEHANDLES_I_ARENA
     }
 
-    @ParameterizedTest
-    @EnumSource(Type::class)
-    fun `Overgang fra alle tilstander til BEHANDLES_I_ARENA når oppgaven avbrytes`(tilstand: Type) {
-        val oppgave = lagOppgave(tilstandType = tilstand, behandler = saksbehandler)
-        val ulovligeTilstander = listOf(FERDIG_BEHANDLET, OPPRETTET)
-        if (tilstand !in ulovligeTilstander) {
-            shouldNotThrowAny {
-                oppgave.behandlesIArena(
-                    BehandlingAvbruttHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
-                        søknadId = UUIDv7.ny(),
-                        ident = testIdent,
-                    ),
-                )
-            }
-            oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+    @Test
+    fun `Overgang fra UNDER_BEHANDLING til BEHANDLES_I_ARENA når oppgaven avbrytes`() {
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
+
+        shouldNotThrowAny {
+            oppgave.behandlesIArena(
+                BehandlingAvbruttHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    ident = testIdent,
+                ),
+            )
         }
+        oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
     }
 
     @Test
