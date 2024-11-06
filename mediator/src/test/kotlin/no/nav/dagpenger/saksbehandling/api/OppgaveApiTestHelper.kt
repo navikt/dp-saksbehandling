@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.BehandlesIArena
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
@@ -20,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -135,6 +137,7 @@ internal object OppgaveApiTestHelper {
                     UNDER_KONTROLL -> UnderKontroll()
                     AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
                     AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
+                    BEHANDLES_I_ARENA -> BehandlesIArena
                 },
             behandling = behandling,
             utsattTil = utsattTil,

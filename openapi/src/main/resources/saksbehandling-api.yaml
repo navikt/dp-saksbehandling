@@ -519,6 +519,7 @@ components:
         - PAA_VENT
         - AVVENTER_LÅS_AV_BEHANDLING
         - AVVENTER_OPPLÅSING_AV_BEHANDLING
+        - BEHANDLES_I_ARENA
 
     AdressebeskyttelseGradering:
       type: string

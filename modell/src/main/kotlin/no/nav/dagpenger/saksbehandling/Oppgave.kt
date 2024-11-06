@@ -6,9 +6,11 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -22,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -209,6 +212,10 @@ data class Oppgave private constructor(
         tilstand.klarTilBehandling(this, behandlingOpplåstHendelse)
     }
 
+    fun behandlesIArena(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
+        tilstand.behandlesIArena(this, behandlingAvbruttHendelse)
+    }
+
     fun lagreNotat(notatHendelse: NotatHendelse) {
         egneAnsatteTilgangskontroll(notatHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(notatHendelse.utførtAv)
@@ -316,6 +323,13 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = null
         }
 
+        override fun behandlesIArena(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+        }
+
         override fun tildel(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
@@ -400,6 +414,10 @@ data class Oppgave private constructor(
                     "VedtakFattetHendelse: $vedtakFattetHendelse "
             }
         }
+    }
+
+    object BehandlesIArena : Tilstand {
+        override val type: Type = BEHANDLES_I_ARENA
     }
 
     object PåVent : Tilstand {
@@ -608,6 +626,7 @@ data class Oppgave private constructor(
             UNDER_KONTROLL,
             AVVENTER_LÅS_AV_BEHANDLING,
             AVVENTER_OPPLÅSING_AV_BEHANDLING,
+            BEHANDLES_I_ARENA,
             ;
 
             companion object {
@@ -730,6 +749,16 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om opplåst behandling i tilstand $type",
+            )
+        }
+
+        fun behandlesIArena(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om behandling avbrutt i tilstand $type",
             )
         }
 

@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -175,6 +176,22 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
         oppgave.behandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Skal gå fra under behandling til behandles i arena når oppgaven avbrytes`() {
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
+
+        shouldNotThrowAny {
+            oppgave.behandlesIArena(
+                BehandlingAvbruttHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    ident = testIdent,
+                ),
+            )
+        }
+        oppgave.tilstand().type shouldBe Type.BEHANDLES_I_ARENA
     }
 
     @Test

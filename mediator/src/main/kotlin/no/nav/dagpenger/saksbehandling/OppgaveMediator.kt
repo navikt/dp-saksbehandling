@@ -300,8 +300,11 @@ class OppgaveMediator(
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
-        repository.slettBehandling(hendelse.behandlingId)
-        logger.info { "Mottatt behandling avbrutt hendelse for behandling med id ${hendelse.behandlingId}. Behandling slettet." }
+        repository.finnOppgaveFor(hendelse.behandlingId)?.let { oppgave ->
+            oppgave.behandlesIArena(hendelse)
+            repository.lagre(oppgave)
+        }
+        logger.info { "Mottatt behandling avbrutt hendelse for behandling med id ${hendelse.behandlingId}. Behandles i arena." }
     }
 
     fun utsettOppgave(utsettOppgaveHendelse: UtsettOppgaveHendelse) {

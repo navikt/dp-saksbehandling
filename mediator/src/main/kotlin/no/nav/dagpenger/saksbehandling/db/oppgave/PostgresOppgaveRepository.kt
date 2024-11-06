@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.BehandlesIArena
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
@@ -20,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -1043,6 +1045,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
                     UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id, dataSource))
                     AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
                     FERDIG_BEHANDLET -> FerdigBehandlet
+                    BEHANDLES_I_ARENA -> BehandlesIArena
                 }
             }.getOrElse { t ->
                 throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: ${string("tilstand")} ${t.message}")

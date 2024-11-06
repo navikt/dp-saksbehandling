@@ -12,6 +12,7 @@ import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -28,7 +29,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTL
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -53,7 +53,6 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -744,9 +743,15 @@ class OppgaveMediatorTest {
                     behandlingId = behandlingId,
                 ),
             )
-            val oppgaver = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
-            oppgaver.size shouldBe 1
-            oppgaver.single().behandling.behandlingId shouldBe behandlingId
+
+            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
 
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
@@ -756,9 +761,8 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            assertThrows<DataNotFoundException> {
-                oppgaveMediator.hentOppgave(oppgaver.single().oppgaveId, testInspektør)
-            }
+            val avbruttOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            avbruttOppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
         }
     }
 
