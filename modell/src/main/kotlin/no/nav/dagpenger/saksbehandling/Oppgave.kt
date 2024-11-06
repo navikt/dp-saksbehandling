@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -273,13 +272,6 @@ data class Oppgave private constructor(
             vedtakFattetHendelse: VedtakFattetHendelse,
         ) {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
-        }
-
-        override fun behandlesIArena(
-            oppgave: Oppgave,
-            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
-        ) {
-            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
         }
     }
 

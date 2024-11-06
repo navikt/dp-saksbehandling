@@ -179,24 +179,8 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra UnderBehandling til BehandlesIArena når behandlingen avbrytes`() {
+    fun `Skal gå fra UnderBehandling til BehandlesIArena når oppgaven avbrytes`() {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
-
-        shouldNotThrowAny {
-            oppgave.behandlesIArena(
-                BehandlingAvbruttHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    søknadId = UUIDv7.ny(),
-                    ident = testIdent,
-                ),
-            )
-        }
-        oppgave.tilstand().type shouldBe Type.BEHANDLES_I_ARENA
-    }
-
-    @Test
-    fun `Skal gå fra Opprettet til BehandlesIArena når behandlingen avbrytes`() {
-        val oppgave = lagOppgave(tilstandType = OPPRETTET)
 
         shouldNotThrowAny {
             oppgave.behandlesIArena(

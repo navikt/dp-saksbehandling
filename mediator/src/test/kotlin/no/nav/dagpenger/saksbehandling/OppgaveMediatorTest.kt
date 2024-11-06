@@ -767,6 +767,44 @@ class OppgaveMediatorTest {
     }
 
     @Test
+    fun `Livssyklus for søknadsbehandling som blir opprettet og så avbrutt`() {
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
+                )
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val behandlingId = UUIDv7.ny()
+
+            oppgaveMediator.opprettOppgaveForBehandling(
+                søknadsbehandlingOpprettetHendelse =
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
+            )
+            oppgaveMediator.avbrytOppgave(
+                BehandlingAvbruttHendelse(
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                    ident = testIdent,
+                ),
+            )
+
+            oppgaveMediator.hentOppgaveIdFor(behandlingId) shouldBe null
+        }
+    }
+
+    @Test
     fun `Livssyklus for søknadsbehandling som blir satt på vent`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
