@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -62,6 +63,20 @@ fun lagBehandling(
         hendelse = hendelse,
     )
 }
+
+fun lagUtsending(
+    tilstand: Utsending.Tilstand,
+    oppgaveId: UUID,
+) = Utsending(
+    tilstand = tilstand,
+    ident = lagTilfeldigIdent(),
+    oppgaveId = oppgaveId,
+    brev = "brev",
+    pdfUrn = null,
+    journalpostId = "journalpostId",
+    distribusjonId = "distribusjonId",
+    sak = null,
+)
 
 private fun lagTilfeldigIdent() =
     (1..11)

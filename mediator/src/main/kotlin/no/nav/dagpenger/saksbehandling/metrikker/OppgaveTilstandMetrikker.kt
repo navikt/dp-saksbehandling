@@ -5,12 +5,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
-import java.time.Instant
-import java.time.ZoneId
-import java.util.Date
 import javax.sql.DataSource
-import kotlin.concurrent.fixedRateTimer
 
 private val logger = KotlinLogging.logger {}
 
@@ -21,31 +16,15 @@ private val oppgaveTilstandGauge: Gauge =
         .labelNames("tilstand")
         .register(PrometheusRegistry.defaultRegistry)
 
-private val Int.Minutt get() = this * 1000L * 60L
+fun oppdaterOppgaveTilstandMetrikker(dataSource: DataSource) {
+    try {
+        val oppgaveTilstandDistribusjon = hentOppgaveTilstandDistribusjon(dataSource)
 
-fun startOppgaveTilstandMetrikkJob() {
-    val nå = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
-
-    fixedRateTimer(
-        name = "OppgaveTilstandMetrikkJob",
-        daemon = true,
-        startAt = nå,
-        period = 1.Minutt,
-        action = {
-            try {
-                oppdaterOppgaveTilstandMetrikker(dataSource)
-            } catch (e: Exception) {
-                logger.error(e) { "Oppdatering av oppgave tilstand metrikker feilet: ${e.message}" }
-            }
-        },
-    )
-}
-
-private fun oppdaterOppgaveTilstandMetrikker(dataSource: DataSource) {
-    val oppgaveTilstandDistribusjon = hentOppgaveTilstandDistribusjon(dataSource)
-
-    oppgaveTilstandDistribusjon.forEach { distribusjon ->
-        oppgaveTilstandGauge.labelValues(distribusjon.oppgaveTilstand).set(distribusjon.antall.toDouble())
+        oppgaveTilstandDistribusjon.forEach { distribusjon ->
+            oppgaveTilstandGauge.labelValues(distribusjon.oppgaveTilstand).set(distribusjon.antall.toDouble())
+        }
+    } catch (e: Exception) {
+        logger.error(e) { "Henting av oppgavetilstand distribusjon feilet: ${e.message}" }
     }
 }
 
@@ -56,7 +35,7 @@ fun hentOppgaveTilstandDistribusjon(dataSource: DataSource): List<OppgaveTilstan
     val query =
         """
         SELECT tilstand, COUNT(*) as antall
-        FROM public.oppgave_v1
+        FROM oppgave_v1
         GROUP BY tilstand;
         """.trimIndent()
 
