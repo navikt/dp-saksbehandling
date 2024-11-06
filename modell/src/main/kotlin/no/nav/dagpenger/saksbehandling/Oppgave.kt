@@ -274,6 +274,13 @@ data class Oppgave private constructor(
         ) {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
         }
+
+        override fun behandlesIArena(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+        }
     }
 
     object KlarTilBehandling : Tilstand {

@@ -195,6 +195,22 @@ class OppgaveTilstandTest {
     }
 
     @Test
+    fun `Skal gå fra under behandlings til behandles i arena når oppgaven avbrytes`() {
+        val oppgave = lagOppgave(tilstandType = OPPRETTET, behandler = saksbehandler)
+
+        shouldNotThrowAny {
+            oppgave.behandlesIArena(
+                BehandlingAvbruttHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    ident = testIdent,
+                ),
+            )
+        }
+        oppgave.tilstand().type shouldBe Type.BEHANDLES_I_ARENA
+    }
+
+    @Test
     fun `Skal gå fra UnderKontroll til KlarTilKontroll når oppgaveansvar fjernes`() {
         val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
 
