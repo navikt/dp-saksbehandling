@@ -1,12 +1,15 @@
 package no.nav.dagpenger.saksbehandling.behandling
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.accept
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.prometheus.metrics.model.registry.PrometheusRegistry
@@ -23,6 +26,11 @@ interface BehandlingKlient {
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit>
+
+    suspend fun kreverTotrinnskontroll(
+        behandlingId: UUID,
+        saksbehandlerToken: String,
+    ): Result<Boolean>
 }
 
 internal class BehandlngHttpKlient(
@@ -57,7 +65,25 @@ internal class BehandlngHttpKlient(
                     setBody(Request(ident))
                 }
             }.let {}
-        }.onFailure { logger.error(it) { "Kall til dp-behandling feilet ${it.message}" } }
+        }.onFailure { logger.error(it) { "Kall til dp-behandling feilet ved godkjenning ${it.message}" } }
+    }
+
+    override suspend fun kreverTotrinnskontroll(
+        behandlingId: UUID,
+        saksbehandlerToken: String,
+    ): Result<Boolean> {
+        return kotlin.runCatching {
+            runBlocking {
+                httpClient.get(urlString = "$dpBehandlingApiUrl/$behandlingId") {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    accept(ContentType.Application.Json)
+                }
+            }.let { response ->
+                val objectMapper = ObjectMapper()
+                objectMapper.readTree(response.bodyAsText())["kreverTotrinnskontroll"].asBoolean()
+            }
+        }.onFailure { logger.error(it) { "Kall til dp-behandling feilet ved henting av kreverTotrinnskontroll ${it.message}" } }
     }
 }
 
