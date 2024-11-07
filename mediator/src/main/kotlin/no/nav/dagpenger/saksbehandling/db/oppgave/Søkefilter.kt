@@ -79,12 +79,12 @@ data class TildelNesteOppgaveFilter(
 
 data class Søkefilter(
     val periode: Periode,
-    val tilstand: Set<Oppgave.Tilstand.Type>,
+    val tilstander: Set<Oppgave.Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
-    val emneknagg: Set<String> = emptySet(),
+    val emneknagger: Set<String> = emptySet(),
 ) {
     companion object {
         fun fra(
@@ -93,19 +93,19 @@ data class Søkefilter(
         ): Søkefilter {
             val builder = FilterBuilder(queryParameters)
 
-            val tilstand = builder.tilstand() ?: defaultOppgaveListTilstander
-            val mine = builder.mineOppgaver() ?: false
-            val emneknagg = builder.emneknagg() ?: emptySet()
+            val tilstander = builder.tilstand() ?: defaultOppgaveListTilstander
+            val mineOppgaver = builder.mineOppgaver() ?: false
+            val emneknagger = builder.emneknagg() ?: emptySet()
 
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
-                tilstand = tilstand,
+                tilstander = tilstander,
                 saksbehandlerIdent =
                     when {
-                        mine -> saksbehandlerIdent
+                        mineOppgaver -> saksbehandlerIdent
                         else -> null
                     },
-                emneknagg = emneknagg,
+                emneknagger = emneknagger,
             )
         }
     }

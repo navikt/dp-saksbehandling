@@ -1199,33 +1199,33 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
-                    emneknagg = emptySet(),
+                    emneknagger = emptySet(),
                 ),
             ) shouldBe listOf(oppgave1, oppgave2, oppgave3)
 
             repo.søk(
                 Søkefilter(
-                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
-                    emneknagg = setOf("hubba"),
+                    emneknagger = setOf("hubba"),
                 ),
             ) shouldBe listOf(oppgave1, oppgave2)
 
             repo.søk(
                 Søkefilter(
-                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
-                    emneknagg = setOf("bubba"),
+                    emneknagger = setOf("bubba"),
                 ),
             ) shouldBe listOf(oppgave1)
 
             repo.søk(
                 Søkefilter(
-                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
-                    emneknagg = setOf("bubba", "hubba"),
+                    emneknagger = setOf("bubba", "hubba"),
                 ),
             ) shouldBe listOf(oppgave1, oppgave2)
         }
@@ -1251,7 +1251,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler1,
                 ),
@@ -1259,7 +1259,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
                 ),
@@ -1267,7 +1267,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = null,
                 ),
@@ -1293,14 +1293,14 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = setOf(UNDER_BEHANDLING),
+                    tilstander = setOf(UNDER_BEHANDLING),
                     periode = UBEGRENSET_PERIODE,
                 ),
             ).single() shouldBe oppgaveUnderBehandlingEnUkeGammel
 
             repo.søk(
                 Søkefilter(
-                    tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                    tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                     periode = UBEGRENSET_PERIODE,
                 ),
             ).size shouldBe 3
@@ -1308,7 +1308,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
-                    tilstand = Oppgave.Tilstand.Type.søkbareTyper,
+                    tilstander = Oppgave.Tilstand.Type.søkbareTyper,
                     saksbehandlerIdent = null,
                     personIdent = null,
                     oppgaveId = null,
@@ -1325,7 +1325,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = setOf(KLAR_TIL_BEHANDLING),
+                    tilstander = setOf(KLAR_TIL_BEHANDLING),
                     periode =
                         Periode(
                             fom = enUkeSiden.plusDays(1).toLocalDate(),
@@ -1336,7 +1336,7 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = setOf(UNDER_BEHANDLING),
+                    tilstander = setOf(UNDER_BEHANDLING),
                     periode =
                         Periode(
                             fom = enUkeSiden.minusDays(1).toLocalDate(),
@@ -1347,7 +1347,18 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstand = setOf(KLAR_TIL_BEHANDLING),
+                    tilstander = setOf(KLAR_TIL_BEHANDLING),
+                    periode =
+                        Periode(
+                            fom = opprettetNå.toLocalDate(),
+                            tom = opprettetNå.toLocalDate(),
+                        ),
+                ),
+            ).size shouldBe 1
+
+            repo.søk(
+                Søkefilter(
+                    tilstander = emptySet(),
                     periode =
                         Periode(
                             fom = opprettetNå.toLocalDate(),
@@ -1383,7 +1394,7 @@ class PostgresOppgaveRepositoryTest {
             val oppgaver =
                 repo.søk(
                     Søkefilter(
-                        tilstand = setOf(KLAR_TIL_BEHANDLING),
+                        tilstander = setOf(KLAR_TIL_BEHANDLING),
                         periode = Periode(fom = iGår, tom = iGår),
                     ),
                 )
