@@ -12,7 +12,7 @@ private val logger = KotlinLogging.logger {}
 private val oppgaveTilstandSiste24TimerGauge: Gauge =
     Gauge.builder()
         .name("dp_saksbehandling_oppgave_tilstand_siste_24_t_gauge")
-        .help("Antall oppgaver i hver tilstand")
+        .help("Antall oppgaver i hver tilstand siste 24t")
         .labelNames("tilstand")
         .register(PrometheusRegistry.defaultRegistry)
 
@@ -24,7 +24,7 @@ fun oppdaterOppgaveTilstandSiste24TimerMetrikker(dataSource: DataSource) {
             oppgaveTilstandSiste24TimerGauge.labelValues(distribusjon.oppgaveTilstand).set(distribusjon.antall.toDouble())
         }
     } catch (e: Exception) {
-        logger.error(e) { "Henting av oppgavetilstand distribusjon feilet: ${e.message}" }
+        logger.error(e) { "Henting av oppgavetilstand distribusjon for siste 24t feilet: ${e.message}" }
     }
 }
 
