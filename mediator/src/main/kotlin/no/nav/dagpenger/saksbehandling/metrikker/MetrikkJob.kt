@@ -19,6 +19,7 @@ fun startMetrikkJob() {
         action = {
             oppdaterOppgaveTilstandMetrikker(dataSource)
             oppdaterUtsendingTilstandMetrikker(dataSource)
+            oppdaterOppgaveTilstandSiste24TimerMetrikker(dataSource)
         },
     )
 }
