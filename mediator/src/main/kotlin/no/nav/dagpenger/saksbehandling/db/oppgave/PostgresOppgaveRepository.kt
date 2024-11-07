@@ -62,6 +62,7 @@ import java.util.UUID
 import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 class PostgresOppgaveRepository(private val datasource: DataSource) :
     OppgaveRepository,
@@ -557,6 +558,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         )
                         .toString()
 
+                sikkerlogger.info { "Søker etter oppgaver med følgende SQL: $sql" }
                 val queryOf =
                     queryOf(
                         statement = sql,
