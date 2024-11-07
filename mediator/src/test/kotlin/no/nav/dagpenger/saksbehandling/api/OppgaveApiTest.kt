@@ -163,7 +163,7 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            tilstander = Oppgave.Tilstand.Type.defaultOppgaveListTilstander,
+                            tilstand = Oppgave.Tilstand.Type.defaultOppgaveListTilstander,
                             saksbehandlerIdent = null,
                             personIdent = null,
                             oppgaveId = null,
@@ -220,7 +220,7 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                            tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                         ),
                     )
                 } returns
@@ -253,8 +253,8 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            tilstander = setOf(KLAR_TIL_BEHANDLING),
-                            emneknagger = setOf("SØKNADSBEHANDLING", "KLAGE"),
+                            tilstand = setOf(KLAR_TIL_BEHANDLING),
+                            emneknagg = setOf("SØKNADSBEHANDLING", "KLAGE"),
                         ),
                     )
                 } returns
@@ -291,7 +291,7 @@ class OppgaveApiTest {
                                     fom = LocalDate.parse("2021-01-01"),
                                     tom = LocalDate.parse("2023-01-01"),
                                 ),
-                            tilstander = setOf(UNDER_BEHANDLING),
+                            tilstand = setOf(UNDER_BEHANDLING),
                             saksbehandlerIdent = SAKSBEHANDLER_IDENT,
                         ),
                     )

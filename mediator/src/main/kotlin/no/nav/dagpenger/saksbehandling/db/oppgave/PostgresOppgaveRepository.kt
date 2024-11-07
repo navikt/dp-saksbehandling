@@ -327,7 +327,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
         søk(
             Søkefilter(
-                tilstander = setOf(tilstand),
+                tilstand = setOf(tilstand),
                 periode = UBEGRENSET_PERIODE,
                 saksbehandlerIdent = null,
             ),
@@ -379,7 +379,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             søkeFilter =
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
-                    tilstander = Type.values,
+                    tilstand = Type.values,
                     behandlingId = behandlingId,
                 ),
         ).singleOrNull()
@@ -472,7 +472,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstander = Type.values,
+                tilstand = Type.values,
                 oppgaveId = oppgaveId,
             ),
         ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
@@ -481,7 +481,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstander = Type.søkbareTyper,
+                tilstand = Type.søkbareTyper,
                 saksbehandlerIdent = null,
                 personIdent = ident,
             ),
@@ -492,13 +492,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
 
         oppgaver =
             sessionOf(datasource).use { session ->
-                val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
-                val tilstandClause =
-                    if (søkeFilter.tilstander.isEmpty()) {
-                        ""
-                    } else {
-                        " AND     oppg.tilstand IN ($tilstander) "
-                    }
+                val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
 
                 val saksBehandlerClause =
                     søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" }
@@ -511,9 +505,9 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 val behandlingIdClause =
                     søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
 
-                val emneknagger = søkeFilter.emneknagger.joinToString { "'$it'" }
+                val emneknagger = søkeFilter.emneknagg.joinToString { "'$it'" }
                 val emneknaggClause =
-                    if (søkeFilter.emneknagger.isNotEmpty()) {
+                    if (søkeFilter.emneknagg.isNotEmpty()) {
                         """
                         AND EXISTS(
                             SELECT 1
@@ -526,35 +520,36 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         ""
                     }
 
-                // TODO: sjekk på tilstand OPPRETTET bør erstattes med noe logikk for ikke-søkbare-tilstander
-
                 // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
                 //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
                 //language=PostgreSQL
                 val sql =
                     StringBuilder(
                         """
-                        SELECT  pers.id AS person_id, 
-                                pers.ident AS person_ident,
-                                pers.skjermes_som_egne_ansatte,
-                                pers.adressebeskyttelse_gradering,
-                                oppg.id AS oppgave_id, 
-                                oppg.tilstand, 
-                                oppg.opprettet AS oppgave_opprettet, 
-                                oppg.behandling_id, 
-                                oppg.saksbehandler_ident,
-                                oppg.utsatt_til,
-                                beha.opprettet AS behandling_opprettet
-                        FROM    oppgave_v1    oppg
-                        JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                        JOIN    person_v1     pers ON pers.id = beha.person_id
-                        WHERE   oppg.tilstand != 'OPPRETTET'
-                        AND     oppg.opprettet >= :fom
-                        AND     oppg.opprettet <  :tom_pluss_1_dag
-                        """.trimIndent(),
+                ${
+                            """
+                            SELECT  pers.id AS person_id, 
+                                    pers.ident AS person_ident,
+                                    pers.skjermes_som_egne_ansatte,
+                                    pers.adressebeskyttelse_gradering,
+                                    oppg.id AS oppgave_id, 
+                                    oppg.tilstand, 
+                                    oppg.opprettet AS oppgave_opprettet, 
+                                    oppg.behandling_id, 
+                                    oppg.saksbehandler_ident,
+                                    oppg.utsatt_til,
+                                    beha.opprettet AS behandling_opprettet
+                            FROM    oppgave_v1    oppg
+                            JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                            JOIN    person_v1     pers ON pers.id = beha.person_id
+                            """.trimIndent()
+                        }
+                WHERE  oppg.tilstand IN ($tilstander)
+                AND    oppg.opprettet >= :fom
+                AND    oppg.opprettet <  :tom_pluss_1_dag
+            """,
                     )
                         .append(
-                            tilstandClause,
                             saksBehandlerClause,
                             personIdentClause,
                             oppgaveIdClause,
