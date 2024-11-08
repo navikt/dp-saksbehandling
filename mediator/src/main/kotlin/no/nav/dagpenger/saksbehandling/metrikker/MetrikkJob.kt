@@ -23,6 +23,7 @@ fun startMetrikkJob() {
             oppdaterOppgaveTilstandMetrikker(dataSource)
             oppdaterUtsendingTilstandMetrikker(dataSource)
             oppdaterOppgaveTilstandSiste24TimerMetrikker(dataSource)
+            oppdaterSaksbehandlingstidMetrikker(dataSource)
         },
     )
 }
