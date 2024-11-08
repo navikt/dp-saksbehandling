@@ -62,6 +62,7 @@ import java.util.UUID
 import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 class PostgresOppgaveRepository(private val datasource: DataSource) :
     OppgaveRepository,
@@ -326,7 +327,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
         søk(
             Søkefilter(
-                tilstand = setOf(tilstand),
+                tilstander = setOf(tilstand),
                 periode = UBEGRENSET_PERIODE,
                 saksbehandlerIdent = null,
             ),
@@ -378,7 +379,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             søkeFilter =
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
-                    tilstand = Type.values,
+                    tilstander = Type.values,
                     behandlingId = behandlingId,
                 ),
         ).singleOrNull()
@@ -471,7 +472,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstand = Type.values,
+                tilstander = Type.values,
                 oppgaveId = oppgaveId,
             ),
         ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
@@ -480,7 +481,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstand = Type.søkbareTyper,
+                tilstander = Type.søkbareTyper,
                 saksbehandlerIdent = null,
                 personIdent = ident,
             ),
@@ -491,11 +492,16 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
 
         oppgaver =
             sessionOf(datasource).use { session ->
-                val tilstander = søkeFilter.tilstand.joinToString { "'$it'" }
+                val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
+                val tilstandClause =
+                    if (søkeFilter.tilstander.isEmpty()) {
+                        " AND oppg.tilstand != 'OPPRETTET' "
+                    } else {
+                        " AND oppg.tilstand IN ($tilstander) "
+                    }
 
-                val saksBehandlerClause =
-                    søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" }
-                        ?: ""
+                val saksbehandlerClause =
+                    søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
 
                 val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
 
@@ -504,20 +510,22 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 val behandlingIdClause =
                     søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
 
-                val emneknagger = søkeFilter.emneknagg.joinToString { "'$it'" }
+                val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
                 val emneknaggClause =
-                    if (søkeFilter.emneknagg.isNotEmpty()) {
+                    if (søkeFilter.emneknagger.isNotEmpty()) {
                         """
                         AND EXISTS(
                             SELECT 1
                             FROM   emneknagg_v1 emne
                             WHERE  emne.oppgave_id = oppg.id
-                            AND    emne.emneknagg IN ($emneknagger)
+                            AND    emne.emneknagg IN ($emneknaggerAsText)
                         )
                         """.trimIndent()
                     } else {
                         ""
                     }
+
+                // TODO: sjekk på tilstand OPPRETTET bør erstattes med noe logikk for ikke-søkbare-tilstander
 
                 // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
                 //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
@@ -525,31 +533,27 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 val sql =
                     StringBuilder(
                         """
-                ${
-                            """
-                            SELECT  pers.id AS person_id, 
-                                    pers.ident AS person_ident,
-                                    pers.skjermes_som_egne_ansatte,
-                                    pers.adressebeskyttelse_gradering,
-                                    oppg.id AS oppgave_id, 
-                                    oppg.tilstand, 
-                                    oppg.opprettet AS oppgave_opprettet, 
-                                    oppg.behandling_id, 
-                                    oppg.saksbehandler_ident,
-                                    oppg.utsatt_til,
-                                    beha.opprettet AS behandling_opprettet
-                            FROM    oppgave_v1    oppg
-                            JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                            JOIN    person_v1     pers ON pers.id = beha.person_id
-                            """.trimIndent()
-                        }
-                WHERE  oppg.tilstand IN ($tilstander)
-                AND    oppg.opprettet >= :fom
-                AND    oppg.opprettet <  :tom_pluss_1_dag
-            """,
+                        SELECT  pers.id AS person_id, 
+                                pers.ident AS person_ident,
+                                pers.skjermes_som_egne_ansatte,
+                                pers.adressebeskyttelse_gradering,
+                                oppg.id AS oppgave_id, 
+                                oppg.tilstand, 
+                                oppg.opprettet AS oppgave_opprettet, 
+                                oppg.behandling_id, 
+                                oppg.saksbehandler_ident,
+                                oppg.utsatt_til,
+                                beha.opprettet AS behandling_opprettet
+                        FROM    oppgave_v1    oppg
+                        JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                        JOIN    person_v1     pers ON pers.id = beha.person_id
+                        WHERE   oppg.opprettet >= :fom
+                        AND     oppg.opprettet <  :tom_pluss_1_dag
+                        """.trimIndent(),
                     )
                         .append(
-                            saksBehandlerClause,
+                            tilstandClause,
+                            saksbehandlerClause,
                             personIdentClause,
                             oppgaveIdClause,
                             behandlingIdClause,
@@ -557,6 +561,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         )
                         .toString()
 
+                sikkerlogger.info { "Søker etter oppgaver med følgende SQL: $sql" }
                 val queryOf =
                     queryOf(
                         statement = sql,
@@ -569,7 +574,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                                 "person_ident" to søkeFilter.personIdent,
                                 "oppgave_id" to søkeFilter.oppgaveId,
                                 "behandling_id" to søkeFilter.behandlingId,
-                                "emneknagger" to emneknagger,
+                                "emneknagger" to emneknaggerAsText,
                             ),
                     )
                 session.run(

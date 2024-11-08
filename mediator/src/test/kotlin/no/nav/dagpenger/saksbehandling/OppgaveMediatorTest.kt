@@ -974,10 +974,10 @@ class OppgaveMediatorTest {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = PostgresOppgaveRepository(this),
-                skjermingKlientMock,
-                pdlKlientMock,
-                behandlingKlientMock,
-                mockk(),
+                skjermingKlient = skjermingKlientMock,
+                pdlKlient = pdlKlientMock,
+                behandlingKlient = behandlingKlientMock,
+                utsendingMediator = mockk(),
             ).also {
                 it.setRapidsConnection(testRapid)
             }

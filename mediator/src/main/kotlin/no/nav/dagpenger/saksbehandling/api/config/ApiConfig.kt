@@ -15,6 +15,8 @@ import io.ktor.server.request.document
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
+import io.prometheus.metrics.core.metrics.Counter
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
@@ -30,6 +32,12 @@ import java.time.format.DateTimeParseException
 
 private val sikkerLogger = KotlinLogging.logger("tjenestekall")
 private val logger = KotlinLogging.logger {}
+private val apiFeilCounter: Counter =
+    Counter.builder()
+        .name("dp_saksbehandling_oppgave_api_feil")
+        .help("Antall feil kastet i oppgave APIet")
+        .labelNames("feiltype")
+        .register(PrometheusRegistry.defaultRegistry)
 
 fun Application.apiConfig() {
     install(CallLogging) {
@@ -63,6 +71,7 @@ fun Application.apiConfig() {
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+            apiFeilCounter.labelValues(cause.javaClass.simpleName).inc()
             when (cause) {
                 is DataNotFoundException -> {
                     val problem =

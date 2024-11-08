@@ -28,7 +28,7 @@ class SøkefilterTest {
                             fom = LocalDate.of(2021, 1, 1),
                             tom = LocalDate.of(2023, 1, 1),
                         ),
-                    tilstand = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                    tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                     saksbehandlerIdent = "testIdent",
                 )
         }
@@ -39,7 +39,7 @@ class SøkefilterTest {
         Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                tilstand = Oppgave.Tilstand.Type.defaultOppgaveListTilstander,
+                tilstander = Oppgave.Tilstand.Type.defaultOppgaveListTilstander,
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,
