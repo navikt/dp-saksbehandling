@@ -495,14 +495,13 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
                 val tilstandClause =
                     if (søkeFilter.tilstander.isEmpty()) {
-                        ""
+                        " AND oppg.tilstand != 'OPPRETTET' "
                     } else {
-                        " AND     oppg.tilstand IN ($tilstander) "
+                        " AND oppg.tilstand IN ($tilstander) "
                     }
 
-                val saksBehandlerClause =
-                    søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" }
-                        ?: ""
+                val saksbehandlerClause =
+                    søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
 
                 val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
 
@@ -511,7 +510,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 val behandlingIdClause =
                     søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
 
-                val emneknagger = søkeFilter.emneknagger.joinToString { "'$it'" }
+                val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
                 val emneknaggClause =
                     if (søkeFilter.emneknagger.isNotEmpty()) {
                         """
@@ -519,7 +518,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                             SELECT 1
                             FROM   emneknagg_v1 emne
                             WHERE  emne.oppgave_id = oppg.id
-                            AND    emne.emneknagg IN ($emneknagger)
+                            AND    emne.emneknagg IN ($emneknaggerAsText)
                         )
                         """.trimIndent()
                     } else {
@@ -548,14 +547,13 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         FROM    oppgave_v1    oppg
                         JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                         JOIN    person_v1     pers ON pers.id = beha.person_id
-                        WHERE   oppg.tilstand != 'OPPRETTET'
-                        AND     oppg.opprettet >= :fom
+                        WHERE   oppg.opprettet >= :fom
                         AND     oppg.opprettet <  :tom_pluss_1_dag
                         """.trimIndent(),
                     )
                         .append(
                             tilstandClause,
-                            saksBehandlerClause,
+                            saksbehandlerClause,
                             personIdentClause,
                             oppgaveIdClause,
                             behandlingIdClause,
@@ -576,7 +574,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                                 "person_ident" to søkeFilter.personIdent,
                                 "oppgave_id" to søkeFilter.oppgaveId,
                                 "behandling_id" to søkeFilter.behandlingId,
-                                "emneknagger" to emneknagger,
+                                "emneknagger" to emneknaggerAsText,
                             ),
                     )
                 session.run(
