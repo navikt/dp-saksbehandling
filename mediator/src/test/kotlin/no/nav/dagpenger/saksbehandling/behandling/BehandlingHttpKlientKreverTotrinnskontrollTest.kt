@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class BehandlingHttpKlientKreverTotrinnskontrollTest {
-
     val saksbehandlerToken = "token"
     val behandlingId = UUID.fromString("019145eb-6fbb-769f-b1b1-d2450b383a98")
     val dpBehandlingApiUrl = "https://dp-behandling.intern.dev.nav.no/behandling"

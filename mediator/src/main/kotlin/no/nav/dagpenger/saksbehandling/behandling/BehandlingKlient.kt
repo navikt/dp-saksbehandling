@@ -79,23 +79,7 @@ internal class BehandlngHttpKlient(
             }.body<BehandlingEkstern>().let { behandlingEkstern ->
                 behandlingEkstern.kreverTotrinnskontroll
             }
-        }
-            .onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
-    }
-
-    suspend fun kreverTotrinnskontroll2(
-        behandlingId: UUID,
-        saksbehandlerToken: String,
-    ): Result<Boolean> {
-        return kotlin.runCatching {
-            httpClient.get(urlString = "$dpBehandlingApiUrl/$behandlingId") {
-                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
-                accept(ContentType.Application.Json)
-            }.body<BehandlingEkstern>().let { behandlingEkstern ->
-                behandlingEkstern.kreverTotrinnskontroll
-            }
-        }
-            .onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
+        }.onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
     }
 }
 
