@@ -725,7 +725,11 @@ private fun rehydrerTilstandsendringHendelse(
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
         "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
-        else -> throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
+        else -> {
+            logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
+            sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
+            throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
+        }
     }
 }
 
@@ -733,7 +737,11 @@ private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
         "TomHendelse" -> return TomHendelse
         "SøknadsbehandlingOpprettetHendelse" -> SøknadsbehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
-        else -> throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
+        else -> {
+            logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
+            sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
+            throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
+        }
     }
 }
 
