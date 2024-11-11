@@ -5,7 +5,7 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.behandling.BehandlngHttpKlient.Companion.lagBehandlingHttpKlient
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient.Companion.lagBehandlingHttpKlient
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -25,7 +25,7 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
                 respond(responseJson, headers = headersOf("Content-Type", "application/json"))
             }
         val klient =
-            BehandlngHttpKlient(
+            BehandlingHttpKlient(
                 dpBehandlingApiUrl = dpBehandlingApiUrl,
                 tokenProvider = { "tulleToken" },
                 httpClient =
@@ -58,7 +58,7 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
                 respond(responseJson, headers = headersOf("Content-Type", "application/json"))
             }
         val klient =
-            BehandlngHttpKlient(
+            BehandlingHttpKlient(
                 dpBehandlingApiUrl = dpBehandlingApiUrl,
                 tokenProvider = { "tulleToken" },
                 httpClient =

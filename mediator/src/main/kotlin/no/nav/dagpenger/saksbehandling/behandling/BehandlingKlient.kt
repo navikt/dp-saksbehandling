@@ -32,7 +32,7 @@ interface BehandlingKlient {
     ): Result<Boolean>
 }
 
-internal class BehandlngHttpKlient(
+internal class BehandlingHttpKlient(
     private val dpBehandlingApiUrl: String,
     private val tokenProvider: (String) -> String,
     private val httpClient: HttpClient = lagBehandlingHttpKlient(),

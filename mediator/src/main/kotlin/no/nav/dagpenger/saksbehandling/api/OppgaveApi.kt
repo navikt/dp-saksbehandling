@@ -159,14 +159,16 @@ internal fun Application.oppgaveApi(
                             }
                         }
                     }
-
                     route("send-til-kontroll") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
+
+                            val saksbehandlerToken = call.request.jwt()
                             val klarTilKontrollHendelse = call.klarTilKontrollHendelse(saksbehandler)
                             val oppgaveId = call.finnUUID("oppgaveId")
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
+                                // Send token inn i mediatoren
                                 oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse)
                                 call.respond(HttpStatusCode.NoContent)
                             }

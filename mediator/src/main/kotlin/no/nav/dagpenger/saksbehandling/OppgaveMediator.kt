@@ -143,6 +143,14 @@ class OppgaveMediator(
 
     fun sendTilKontroll(sendTilKontrollHendelse: SendTilKontrollHendelse) {
         repository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
+
+            /*runBlocking {
+                Test, ofc :D
+                behandlingKlient.kreverTotrinnskontroll(oppgave.behandling.behandlingId) husk token
+                Custom exception?
+                StatusPages, hvilken HTTP kode skal den returnere?
+            }*/
+
             oppgave.sendTilKontroll(sendTilKontrollHendelse)
             rapidsConnection.publish(
                 key = oppgave.behandling.person.ident,

@@ -10,11 +10,11 @@ import io.ktor.http.HttpStatusCode
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.behandling.BehandlngHttpKlient.Companion.lagBehandlingHttpKlient
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient.Companion.lagBehandlingHttpKlient
 import java.util.UUID
 import kotlin.test.Test
 
-class BehandlngHttpKlientTest {
+class BehandlingHttpKlientTest {
     val saksbehandlerToken = "token"
     private val tokenProvider = { _: String -> saksbehandlerToken }
     private val ident = "testIdent"
@@ -23,7 +23,7 @@ class BehandlngHttpKlientTest {
     private var requestData: HttpRequestData? = null
 
     private val behandlingKlient =
-        BehandlngHttpKlient(
+        BehandlingHttpKlient(
             dpBehandlingApiUrl = "http://localhost",
             tokenProvider = tokenProvider,
             httpClient =
