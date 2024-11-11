@@ -17,7 +17,7 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
     @Test
     fun `Test av request og parsing av response av behandling som krever totrinnskontroll`() {
         val resourseRetriever = object {}.javaClass
-        val responseJson = resourseRetriever.getResource("/behandlingKreverIkkeTotrinnskontroll.json").readText()
+        val responseJson = resourseRetriever.getResource("/behandlingKreverIkkeTotrinnskontroll.json")!!.readText()
         val mockEngine =
             MockEngine { request ->
                 request.headers["Authorization"] shouldBe "Bearer tulleToken"
@@ -50,7 +50,7 @@ class BehandlingHttpKlientKreverTotrinnskontrollTest {
         val saksbehandlerToken = "token"
         val behandlingId = UUID.fromString("019145eb-6fbb-769f-b1b1-d2450b383a98")
         val dpBehandlingApiUrl = "https://dp-behandling.intern.dev.nav.no/behandling"
-        val responseJson = resourseRetriever.getResource("/behandlingKreverIkkeTotrinnskontroll.json").readText()
+        val responseJson = resourseRetriever.getResource("/behandlingKreverIkkeTotrinnskontroll.json")!!.readText()
         val mockEngine =
             MockEngine { request ->
                 request.headers["Authorization"] shouldBe "Bearer tulleToken"

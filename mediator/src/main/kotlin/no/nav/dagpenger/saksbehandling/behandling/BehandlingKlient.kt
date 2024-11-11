@@ -76,8 +76,8 @@ internal class BehandlngHttpKlient(
             httpClient.get(urlString = "$dpBehandlingApiUrl/$behandlingId") {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                 accept(ContentType.Application.Json)
-            }.body<BehandlingEkstern>().let { behandlingEkstern ->
-                behandlingEkstern.kreverTotrinnskontroll
+            }.body<BehandlingDTO>().let { behandlingDTO ->
+                behandlingDTO.kreverTotrinnskontroll
             }
         }.onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
     }
@@ -87,7 +87,7 @@ class GodkjennBehandlingFeiletException(message: String) : RuntimeException(mess
 
 private data class Request(val ident: String)
 
-private data class BehandlingEkstern(
+private data class BehandlingDTO(
     val behandlingId: String,
     val kreverTotrinnskontroll: Boolean,
 )
