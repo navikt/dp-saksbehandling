@@ -479,15 +479,20 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
 
     override fun finnOppgaverFor(ident: String): List<Oppgave> =
         søk(
-            Søkefilter(
-                periode = UBEGRENSET_PERIODE,
-                tilstander = Type.søkbareTyper,
-                saksbehandlerIdent = null,
-                personIdent = ident,
-            ),
+            søkeFilter =
+                Søkefilter(
+                    periode = UBEGRENSET_PERIODE,
+                    tilstander = Type.søkbareTyper,
+                    saksbehandlerIdent = null,
+                    personIdent = ident,
+                ),
+            orderByOpprettet = true,
         )
 
-    override fun søk(søkeFilter: Søkefilter): List<Oppgave> {
+    override fun søk(
+        søkeFilter: Søkefilter,
+        orderByOpprettet: Boolean,
+    ): List<Oppgave> {
         var oppgaver: List<Oppgave>
 
         oppgaver =
@@ -521,6 +526,12 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                             AND    emne.emneknagg IN ($emneknaggerAsText)
                         )
                         """.trimIndent()
+                    } else {
+                        ""
+                    }
+                val orderByOpprettetClause =
+                    if (orderByOpprettet) {
+                        """ ORDER BY oppg.opprettet """
                     } else {
                         ""
                     }
@@ -558,6 +569,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                             oppgaveIdClause,
                             behandlingIdClause,
                             emneknaggClause,
+                            orderByOpprettetClause,
                         )
                         .toString()
 

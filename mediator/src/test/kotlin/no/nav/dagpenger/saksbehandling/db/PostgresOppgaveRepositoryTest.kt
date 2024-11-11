@@ -1141,7 +1141,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne hente alle oppgaver for en gitt person`() {
+    fun `Skal kunne hente alle oppgaver for en gitt person, sortert på opprettet`() {
         val ola =
             Person(
                 ident = "12345678910",
@@ -1155,8 +1155,8 @@ class PostgresOppgaveRepositoryTest {
                 adressebeskyttelseGradering = UGRADERT,
             )
 
-        val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling)
-        val oppgave2TilOla = lagOppgave(person = ola, tilstand = FerdigBehandlet)
+        val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling, opprettet = opprettetNå)
+        val oppgave2TilOla = lagOppgave(person = ola, tilstand = FerdigBehandlet, opprettet = opprettetNå.minusDays(1))
         val oppgave1TilKari = lagOppgave(person = kari, tilstand = FerdigBehandlet)
 
         withMigratedDb { ds ->
@@ -1165,7 +1165,7 @@ class PostgresOppgaveRepositoryTest {
             repo.lagre(oppgave2TilOla)
             repo.lagre(oppgave1TilKari)
 
-            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave1TilOla, oppgave2TilOla)
+            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave2TilOla, oppgave1TilOla)
             repo.finnOppgaverFor(kari.ident) shouldBe listOf(oppgave1TilKari)
         }
     }
@@ -1430,7 +1430,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Sjekk om fnre eksisterer i vårt system`() {
+    fun `Sjekk om fødselsnumre eksisterer i vårt system`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val (fnr1, fnr2, fnr3) = Triple("12345678910", "10987654321", "12345678931")

@@ -30,7 +30,10 @@ interface OppgaveRepository {
 
     fun finnOppgaverFor(ident: String): List<Oppgave>
 
-    fun søk(søkeFilter: Søkefilter): List<Oppgave>
+    fun søk(
+        søkeFilter: Søkefilter,
+        orderByOpprettet: Boolean = false,
+    ): List<Oppgave>
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
 
