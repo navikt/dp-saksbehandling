@@ -168,8 +168,7 @@ internal fun Application.oppgaveApi(
                             val oppgaveId = call.finnUUID("oppgaveId")
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
-                                // Send token inn i mediatoren
-                                oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse)
+                                oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse, saksbehandlerToken)
                                 call.respond(HttpStatusCode.NoContent)
                             }
                         }

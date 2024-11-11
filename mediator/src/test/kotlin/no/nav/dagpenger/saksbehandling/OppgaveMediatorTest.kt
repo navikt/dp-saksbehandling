@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -93,9 +94,22 @@ class OppgaveMediatorTest {
                     ),
                 )
         }
+
+    val behandlingIDKreverIkkeTotrinnskontroll = UUIDv7.ny()
+
     private val behandlingKlientMock =
         mockk<BehandlingKlient>().also {
             every { it.godkjennBehandling(any(), any(), any()) } returns Result.success(Unit)
+            coEvery { it.kreverTotrinnskontroll(behandlingIDKreverIkkeTotrinnskontroll, any()) } returns
+                Result.success(
+                    false,
+                )
+            coEvery {
+                it.kreverTotrinnskontroll(
+                    not(behandlingIDKreverIkkeTotrinnskontroll),
+                    any(),
+                )
+            } returns Result.success(true)
         }
     private val skjermingKlientMock =
         mockk<SkjermingKlient>(relaxed = true).also {
@@ -122,6 +136,7 @@ class OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = saksbehandler,
                 ),
+                saksbehandlerToken = "testToken",
             )
             val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             oppgaveTilKontroll.tilstand().type shouldBe AVVENTER_LÅS_AV_BEHANDLING
@@ -864,6 +879,65 @@ class OppgaveMediatorTest {
     }
 
     @Test
+    fun `Kast feil når send til kontroll kalles uten at det kreves totrinnskontroll`() {
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val behandlingId = behandlingIDKreverIkkeTotrinnskontroll
+
+            oppgaveMediator.opprettOppgaveForBehandling(
+                søknadsbehandlingOpprettetHendelse =
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
+            )
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                ),
+            )
+
+            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            shouldThrow<BehandlingKreverIkkeTotrinnskontrollException> {
+                oppgaveMediator.sendTilKontroll(
+                    sendTilKontrollHendelse =
+                        SendTilKontrollHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "testtoken",
+                )
+            }
+        }
+    }
+
+    @Test
     fun `Livssyklus for søknadsbehandling som krever totrinnskontroll`() {
         withMigratedDb { datasource ->
             val oppgaveMediator =
@@ -915,6 +989,7 @@ class OppgaveMediatorTest {
                         oppgaveId = oppgave.oppgaveId,
                         utførtAv = saksbehandler,
                     ),
+                saksbehandlerToken = "testtoken",
             )
 
             testRapid.inspektør.size shouldBe 1
@@ -1034,6 +1109,7 @@ class OppgaveMediatorTest {
                 oppgaveId = oppgave.oppgaveId,
                 utførtAv = saksbehandler,
             ),
+            saksbehandlerToken = "testtoken",
         )
         if (tilstand == AVVENTER_LÅS_AV_BEHANDLING) {
             return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)

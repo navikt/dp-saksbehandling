@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -141,29 +142,42 @@ class OppgaveMediator(
         }.tilstand()
     }
 
-    fun sendTilKontroll(sendTilKontrollHendelse: SendTilKontrollHendelse) {
+    fun sendTilKontroll(
+        sendTilKontrollHendelse: SendTilKontrollHendelse,
+        saksbehandlerToken: String,
+    ) {
         repository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
 
-            /*runBlocking {
-                Test, ofc :D
-                behandlingKlient.kreverTotrinnskontroll(oppgave.behandling.behandlingId) husk token
-                Custom exception?
-                StatusPages, hvilken HTTP kode skal den returnere?
-            }*/
+            runBlocking {
+                behandlingKlient.kreverTotrinnskontroll(
+                    oppgave.behandling.behandlingId,
+                    saksbehandlerToken = saksbehandlerToken,
+                ).onSuccess { result ->
+                    when (result) {
+                        true -> {
+                            oppgave.sendTilKontroll(sendTilKontrollHendelse)
+                            rapidsConnection.publish(
+                                key = oppgave.behandling.person.ident,
+                                JsonMessage.newMessage(
+                                    eventName = "oppgave_sendt_til_kontroll",
+                                    map =
+                                        mapOf(
+                                            "behandlingId" to oppgave.behandling.behandlingId,
+                                            "ident" to oppgave.behandling.person.ident,
+                                        ),
+                                ).toJson(),
+                            )
+                            repository.lagre(oppgave)
+                        }
 
-            oppgave.sendTilKontroll(sendTilKontrollHendelse)
-            rapidsConnection.publish(
-                key = oppgave.behandling.person.ident,
-                JsonMessage.newMessage(
-                    eventName = "oppgave_sendt_til_kontroll",
-                    map =
-                        mapOf(
-                            "behandlingId" to oppgave.behandling.behandlingId,
-                            "ident" to oppgave.behandling.person.ident,
-                        ),
-                ).toJson(),
-            )
-            repository.lagre(oppgave)
+                        false -> {
+                            throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
+                        }
+                    }
+                }.onFailure {
+                    logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
+                }
+            }
         }
     }
 

@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -181,6 +182,20 @@ fun Application.apiConfig() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Forbidden, problem)
+                }
+
+                is BehandlingKreverIkkeTotrinnskontrollException -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Behandling krever ikke totrinnskontroll",
+                            detail = cause.message,
+                            status = HttpStatusCode.Conflict.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:behandling-krever-ikke-totrinnskontroll")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.Conflict, problem)
                 }
 
                 else -> {

@@ -57,6 +57,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -389,7 +390,7 @@ class OppgaveApiTest {
         val sendTilKontrollHendelse = SendTilKontrollHendelse(oppgave.oppgaveId, saksbehandler)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.sendTilKontroll(sendTilKontrollHendelse) } just Runs
+                every { it.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
@@ -399,7 +400,34 @@ class OppgaveApiTest {
             }
 
             verify(exactly = 1) {
-                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelse)
+                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
+            }
+        }
+    }
+
+    @Test
+    fun `Skal feile på send til kontroll hvis oppgaven ikke trenger totrinns`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val sendTilKontrollHendelse = SendTilKontrollHendelse(oppgave.oppgaveId, saksbehandler)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every {
+                    it.sendTilKontroll(
+                        sendTilKontrollHendelse,
+                        saksbehandlerToken,
+                    )
+                } throws BehandlingKreverIkkeTotrinnskontrollException("Testmelding")
+            }
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/send-til-kontroll") {
+                autentisert(token = saksbehandlerToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.Conflict
+            }
+
+            verify(exactly = 1) {
+                oppgaveMediatorMock.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
             }
         }
     }
