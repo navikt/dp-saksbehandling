@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class OppgaveTilstandTest {
     private val oppgaveId = UUIDv7.ny()
@@ -196,22 +198,6 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Overgang fra UNDER_BEHANDLING til BEHANDLES_I_ARENA når oppgaven avbrytes`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
-
-        shouldNotThrowAny {
-            oppgave.behandlesIArena(
-                BehandlingAvbruttHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    søknadId = UUIDv7.ny(),
-                    ident = testIdent,
-                ),
-            )
-        }
-        oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
-    }
-
-    @Test
     fun `Skal gå fra UnderKontroll til KlarTilKontroll når oppgaveansvar fjernes`() {
         val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = saksbehandler)
 
@@ -225,8 +211,28 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal gå fra UnderKontroll til AvventerOpplåsingAvBehandling når beslutter returnerer oppgaven`() {
+        val saksbehandler = Saksbehandler("saksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
-        val oppgave = lagOppgave(tilstandType = UNDER_KONTROLL, behandler = beslutter)
+        val oppgave =
+            lagOppgave(
+                tilstandType = UNDER_KONTROLL,
+                behandler = beslutter,
+                tilstandslogg =
+                    Tilstandslogg(
+                        tilstandsendringer =
+                            mutableListOf(
+                                Tilstandsendring(
+                                    tilstand = UNDER_BEHANDLING,
+                                    hendelse =
+                                        NesteOppgaveHendelse(
+                                            ansvarligIdent = saksbehandler.navIdent,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                    tidspunkt = LocalDateTime.now().minusDays(1),
+                                ),
+                            ),
+                    ),
+            )
 
         shouldNotThrowAny {
             oppgave.returnerTilSaksbehandling(
@@ -239,6 +245,7 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand().type shouldBe AVVENTER_OPPLÅSING_AV_BEHANDLING
         oppgave.behandlerIdent shouldBe null
+        oppgave.emneknagger.shouldContain("Retur fra kontroll")
     }
 
     @Test
@@ -409,6 +416,19 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
         oppgave.behandlerIdent shouldBe null
+    }
+
+    @Test
+    fun `Skal gå fra UnderBehandling til AvventerLåsAvBehandling og sette emneknagg når oppgave sendes til kontroll på nytt`() {
+        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+
+        oppgave.sendTilKontroll(
+            SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
+        oppgave.behandlerIdent shouldBe null
+        oppgave.emneknagger shouldContain "Til ny kontroll"
     }
 
     @Test

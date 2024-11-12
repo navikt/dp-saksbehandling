@@ -154,7 +154,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
         '409':
-          description: Oppgaven er allerede sendt til kontroll
+          description: Oppgaven er allerede sendt til kontroll eller den krever ikke kontroll.
           content:
             application/problem+json:
               schema:

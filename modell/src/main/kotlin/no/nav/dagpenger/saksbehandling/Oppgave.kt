@@ -225,6 +225,13 @@ data class Oppgave private constructor(
         tilstand.returnerTilSaksbehandling(this, returnerTilSaksbehandlingHendelse)
     }
 
+    fun harVærtITilstand(tilstandType: Type): Boolean {
+        this.tilstandslogg.find { it.tilstand == tilstandType }?.let {
+            return true
+        }
+        return false
+    }
+
     private fun endreTilstand(
         nyTilstand: Tilstand,
         hendelse: Hendelse,
@@ -312,6 +319,10 @@ data class Oppgave private constructor(
 
             oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
             oppgave.behandlerIdent = null
+            if (oppgave.harVærtITilstand(AVVENTER_LÅS_AV_BEHANDLING)) {
+                oppgave._emneknagger.add("Til ny kontroll")
+                oppgave._emneknagger.remove("Retur fra kontroll")
+            }
         }
 
         override fun fjernAnsvar(
@@ -567,6 +578,8 @@ data class Oppgave private constructor(
 
             oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
             oppgave.behandlerIdent = null
+            oppgave._emneknagger.add("Retur fra kontroll")
+            oppgave._emneknagger.remove("Til ny kontroll")
         }
 
         override fun fjernAnsvar(
