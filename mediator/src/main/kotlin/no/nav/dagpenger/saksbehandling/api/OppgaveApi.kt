@@ -164,11 +164,11 @@ internal fun Application.oppgaveApi(
                             val saksbehandler = applicationCallParser.sakbehandler(call)
 
                             val saksbehandlerToken = call.request.jwt()
-                            val klarTilKontrollHendelse = call.klarTilKontrollHendelse(saksbehandler)
+                            val sendTilKontrollHendelse = call.sendTilKontrollHendelse(saksbehandler)
                             val oppgaveId = call.finnUUID("oppgaveId")
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                logger.info("Sender oppgave til kontroll: $klarTilKontrollHendelse")
-                                oppgaveMediator.sendTilKontroll(klarTilKontrollHendelse, saksbehandlerToken)
+                                logger.info("Sender oppgave til kontroll: $sendTilKontrollHendelse")
+                                oppgaveMediator.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
                                 call.respond(HttpStatusCode.NoContent)
                             }
                         }
@@ -286,7 +286,7 @@ private fun ApplicationCall.fjernOppgaveAnsvarHendelse(saksbehandler: Saksbehand
     )
 }
 
-private fun ApplicationCall.klarTilKontrollHendelse(saksbehandler: Saksbehandler): SendTilKontrollHendelse {
+private fun ApplicationCall.sendTilKontrollHendelse(saksbehandler: Saksbehandler): SendTilKontrollHendelse {
     return SendTilKontrollHendelse(
         oppgaveId = this.finnUUID("oppgaveId"),
         utførtAv = saksbehandler,
