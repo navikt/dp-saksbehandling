@@ -428,7 +428,7 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldContain "Til ny kontroll"
+        oppgave.emneknagger shouldContain "Tidligere kontrollert"
     }
 
     @Test

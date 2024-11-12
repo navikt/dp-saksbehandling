@@ -320,7 +320,7 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
             oppgave.behandlerIdent = null
             if (oppgave.harVærtITilstand(AVVENTER_LÅS_AV_BEHANDLING)) {
-                oppgave._emneknagger.add("Til ny kontroll")
+                oppgave._emneknagger.add("Tidligere kontrollert")
                 oppgave._emneknagger.remove("Retur fra kontroll")
             }
         }
@@ -579,7 +579,7 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
             oppgave.behandlerIdent = null
             oppgave._emneknagger.add("Retur fra kontroll")
-            oppgave._emneknagger.remove("Til ny kontroll")
+            oppgave._emneknagger.remove("Tidligere kontrollert")
         }
 
         override fun fjernAnsvar(
