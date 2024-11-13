@@ -140,7 +140,7 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal ferdigstille en oppgave fra alle lovlige tilstander`() {
-        val lovligeTilstander = setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET)
+        val lovligeTilstander = setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
             oppgave.ferdigstill(
@@ -151,7 +151,12 @@ class OppgaveTilstandTest {
                     sak = sak,
                 ),
             )
-            oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+
+            if (tilstand == UNDER_KONTROLL) {
+                oppgave.tilstand().type shouldBe UNDER_KONTROLL
+            } else {
+                oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            }
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->

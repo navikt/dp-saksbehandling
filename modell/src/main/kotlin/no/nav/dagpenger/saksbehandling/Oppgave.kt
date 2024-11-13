@@ -520,6 +520,16 @@ data class Oppgave private constructor(
 
         override fun ferdigstill(
             oppgave: Oppgave,
+            vedtakFattetHendelse: VedtakFattetHendelse,
+        ) {
+            logger.warn { "Mottok vedtak fattet i tilstand: $type for behandlingId: ${vedtakFattetHendelse.behandlingId}." }
+            sikkerlogg.warn {
+                "Mottok vedtak fattet i tilstand: $type. VedtakFattetHendelse: $vedtakFattetHendelse "
+            }
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ) {
             require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
