@@ -319,7 +319,7 @@ data class Oppgave private constructor(
 
             oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
             oppgave.behandlerIdent = null
-            if (oppgave.harVærtITilstand(AVVENTER_LÅS_AV_BEHANDLING)) {
+            if (oppgave.harVærtITilstand(UNDER_KONTROLL)) {
                 oppgave._emneknagger.add("Tidligere kontrollert")
                 oppgave._emneknagger.remove("Retur fra kontroll")
             }

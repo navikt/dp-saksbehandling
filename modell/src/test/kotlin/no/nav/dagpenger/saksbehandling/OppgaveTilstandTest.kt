@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
@@ -424,8 +425,74 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra UnderBehandling til AvventerLåsAvBehandling og sette emneknagg når oppgave sendes til kontroll på nytt`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, saksbehandler)
+    fun `Skal sette og fjerne aktuell emneknagger når oppgave returneres fra kontroll og sendes til kontroll på nytt`() {
+        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING)
+
+        oppgave.tildel(
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                ansvarligIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
+            ),
+        )
+
+        oppgave.sendTilKontroll(
+            SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
+        oppgave.behandlerIdent shouldBe null
+        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
+        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.behandling.behandlingId,
+                ident = oppgave.behandling.person.ident,
+            ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
+        oppgave.behandlerIdent shouldBe null
+        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
+        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+
+        val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
+        oppgave.tildel(
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                ansvarligIdent = beslutter.navIdent,
+                utførtAv = beslutter,
+            ),
+        )
+        oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
+        oppgave.behandlerIdent shouldBe beslutter.navIdent
+        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
+        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+
+        oppgave.returnerTilSaksbehandling(
+            ReturnerTilSaksbehandlingHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                utførtAv = beslutter,
+            ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.AvventerOpplåsingAvBehandling
+        oppgave.behandlerIdent shouldBe null
+        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
+        oppgave.emneknagger shouldContain "Retur fra kontroll"
+
+        oppgave.klarTilBehandling(
+            BehandlingOpplåstHendelse(
+                behandlingId = oppgave.behandling.behandlingId,
+                ident = oppgave.behandling.person.ident,
+            ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+        oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
+        oppgave.emneknagger shouldContain "Retur fra kontroll"
 
         oppgave.sendTilKontroll(
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
@@ -434,6 +501,19 @@ class OppgaveTilstandTest {
         oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
         oppgave.behandlerIdent shouldBe null
         oppgave.emneknagger shouldContain "Tidligere kontrollert"
+        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+
+        oppgave.klarTilKontroll(
+            BehandlingLåstHendelse(
+                behandlingId = oppgave.behandling.behandlingId,
+                ident = oppgave.behandling.person.ident,
+            ),
+        )
+
+        oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
+        oppgave.behandlerIdent shouldBe beslutter.navIdent
+        oppgave.emneknagger shouldContain "Tidligere kontrollert"
+        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
     }
 
     @Test
