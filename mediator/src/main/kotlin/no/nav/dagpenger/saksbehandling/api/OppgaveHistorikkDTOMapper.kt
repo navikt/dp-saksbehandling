@@ -17,7 +17,7 @@ internal class OppgaveHistorikkDTOMapper(
             it.tilstand === Oppgave.Tilstand.Type.UNDER_KONTROLL
         }.map {
             Triple(it.id, it.hendelse.utførtAv, repository.finnNotat(it.id))
-        }.filter { it.third != null }.map {
+        }.filter { it.third != null  && it.second is Saksbehandler}.map {
             OppgaveHistorikkDTO(
                 type = OppgaveHistorikkDTO.Type.notat,
                 tidspunkt = it.third!!.sistEndretTidspunkt,
