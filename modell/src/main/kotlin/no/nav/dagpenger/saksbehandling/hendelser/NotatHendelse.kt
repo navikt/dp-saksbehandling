@@ -7,4 +7,8 @@ data class NotatHendelse(
     val oppgaveId: UUID,
     val tekst: String,
     override val utførtAv: Saksbehandler,
-) : Hendelse(utførtAv)
+) : Hendelse(utførtAv) {
+    init {
+        require(tekst.isNotBlank()) { "Notat kan ikke være tomt" }
+    }
+}
