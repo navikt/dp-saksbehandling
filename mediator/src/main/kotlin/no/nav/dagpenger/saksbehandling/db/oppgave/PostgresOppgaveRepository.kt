@@ -939,6 +939,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
                 ),
         ).asUpdate,
     )
+    logger.info { "Lagrer oppgave med id ${oppgave.oppgaveId} i tilstand: ${oppgave.tilstand().type}" }
     lagre(oppgave.oppgaveId, oppgave.emneknagger)
     lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
     oppgave.tilstand().notat()?.let {
