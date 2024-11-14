@@ -95,21 +95,6 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal sette oppgave klar til behandling i tilstand opprettet når regelmotor kommer med vedtaksforslag`() {
-        val oppgave = lagOppgave(OPPRETTET)
-        oppgave.oppgaveKlarTilBehandling(
-            ForslagTilVedtakHendelse(
-                ident = testIdent,
-                søknadId = UUIDv7.ny(),
-                behandlingId = UUIDv7.ny(),
-                utførtAv = Applikasjon("dp-behandling"),
-            ),
-        )
-
-        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
-    }
-
-    @Test
     fun `Skal kun endre tilstand dersom forslag til vedtak mottas i tilstand Opprettet`() {
         val hendelse =
             ForslagTilVedtakHendelse(
@@ -124,7 +109,15 @@ class OppgaveTilstandTest {
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
         }
 
-        setOf(AVVENTER_OPPLÅSING_AV_BEHANDLING, KLAR_TIL_BEHANDLING, UNDER_BEHANDLING).forEach { tilstand ->
+        setOf(KLAR_TIL_BEHANDLING, PAA_VENT).forEach { tilstand ->
+            lagOppgave(tilstandType = tilstand).let { oppgave ->
+                val tilstandFørHendelse = oppgave.tilstand().type
+                oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe true
+                oppgave.tilstand().type shouldBe tilstandFørHendelse
+            }
+        }
+
+        setOf(AVVENTER_OPPLÅSING_AV_BEHANDLING, UNDER_BEHANDLING).forEach { tilstand ->
             lagOppgave(tilstandType = tilstand).let { oppgave ->
                 oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe false
                 oppgave.tilstand().type shouldBe tilstand
@@ -298,7 +291,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TILBEHANDLING`() {
+    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
         val oppgave = lagOppgave(KLAR_TIL_BEHANDLING)
         val emneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
@@ -317,7 +310,26 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal ikke endre tilstand på en oppgave når den er FerdigBehandlet`() {
+    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand PAA_VENT`() {
+        val oppgave = lagOppgave(PAA_VENT)
+        val emneknagger = setOf("knagg1", "knagg2")
+        shouldNotThrow<Exception> {
+            oppgave.oppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = oppgave.behandling.behandlingId,
+                    utførtAv = Applikasjon("dp-behandling"),
+                    emneknagger = emneknagger,
+                ),
+            )
+        }
+        oppgave.emneknagger shouldBe emneknagger
+        oppgave.tilstand() shouldBe Oppgave.PåVent
+    }
+
+    @Test
+    fun `Skal ikke endre tilstand på en oppgave hvis nytt forslag til vedtak mottas i tilstand FerdigBehandlet`() {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
         shouldThrow<UlovligTilstandsendringException> {

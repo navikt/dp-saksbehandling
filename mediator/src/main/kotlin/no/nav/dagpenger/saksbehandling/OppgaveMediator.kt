@@ -129,8 +129,8 @@ class OppgaveMediator(
                             false -> {
                                 logger.info {
                                     "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                                            "${forslagTilVedtakHendelse.behandlingId}. Oppgavens tilstand er uendret" +
-                                            " ${oppgave.tilstand().type}"
+                                        "${forslagTilVedtakHendelse.behandlingId}. Oppgavens tilstand er uendret" +
+                                        " ${oppgave.tilstand().type}"
                                 }
                             }
                         }

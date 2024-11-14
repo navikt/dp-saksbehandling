@@ -291,8 +291,8 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Boolean {
-            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
-            return false
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand $type" }
+            return true
         }
 
         override fun tildel(
@@ -456,6 +456,14 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(KlarTilBehandling, fjernOppgaveAnsvarHendelse)
             oppgave.behandlerIdent = null
             oppgave.utsattTil = null
+        }
+
+        override fun oppgaveKlarTilBehandling(
+            oppgave: Oppgave,
+            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+        ): Boolean {
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
+            return true
         }
 
         override fun ferdigstill(
