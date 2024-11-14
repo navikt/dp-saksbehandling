@@ -3,7 +3,8 @@ package no.nav.dagpenger.saksbehandling
 import com.github.navikt.tbd_libs.rapids_and_rivers.KafkaRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.ktor.server.application.install
-import io.ktor.server.engine.ApplicationEngine
+import io.ktor.server.cio.CIOApplicationEngine
+import io.ktor.server.engine.EmbeddedServer
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
@@ -90,7 +91,9 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
 
     private val rapidsConnection: RapidsConnection =
-        RapidApplication.create(configuration) { applicationEngine: ApplicationEngine, _: KafkaRapid ->
+        RapidApplication.create(
+            configuration,
+        ) { applicationEngine: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
             with(applicationEngine.application) {
                 this.apiConfig()
                 this.oppgaveApi(

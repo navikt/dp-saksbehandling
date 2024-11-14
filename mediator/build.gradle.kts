@@ -16,6 +16,8 @@ repositories {
 
 dependencies {
     val ktorVersion = libs.versions.ktor.get()
+    val dpBibliotekerVersion = "2024.10.31-15.02.1d4f08a38d24"
+
     implementation(project(":modell"))
     implementation(project(":openapi"))
     implementation(project(":streams-consumer"))
@@ -28,9 +30,9 @@ dependencies {
     implementation("io.ktor:ktor-server-html-builder:$ktorVersion")
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
     implementation(libs.bundles.postgres)
-    implementation(libs.dp.biblioteker.oauth2.klient)
-    implementation(libs.dp.biblioteker.pdl.klient)
-    implementation(libs.dp.biblioteker.ktor.klient.metrics)
+    implementation("no.nav.dagpenger:oauth2-klient:$dpBibliotekerVersion")
+    implementation("no.nav.dagpenger:pdl-klient:$dpBibliotekerVersion")
+    implementation("no.nav.dagpenger:ktor-client-metrics:$dpBibliotekerVersion")
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.logging.jvm)

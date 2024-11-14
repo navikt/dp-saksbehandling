@@ -1,18 +1,10 @@
 package no.nav.dagpenger.saksbehandling.api.config
 
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.JacksonConverter
-import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
-import io.ktor.server.plugins.callloging.CallLogging
-import io.ktor.server.plugins.callloging.processingTimeMillis
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.document
-import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
 import io.prometheus.metrics.core.metrics.Counter
@@ -27,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import java.net.URI
 import java.time.format.DateTimeParseException
 
@@ -41,30 +32,30 @@ private val apiFeilCounter: Counter =
         .register(PrometheusRegistry.defaultRegistry)
 
 fun Application.apiConfig() {
-    install(CallLogging) {
-        disableDefaultColors()
-        filter { call ->
-            !setOf(
-                "isalive",
-                "isready",
-                "metrics",
-            ).contains(call.request.document())
-        }
-        format { call ->
-            val status = call.response.status()?.value ?: "Unhandled"
-            val method = call.request.httpMethod.value
-            val path = call.request.path()
-            val duration = call.processingTimeMillis()
-            val queryParams = call.request.queryParameters.entries()
-            "$status $method $path $queryParams $duration ms"
-        }
-    }
+//    install(CallLogging) {
+//        disableDefaultColors()
+//        filter { call ->
+//            !setOf(
+//                "isalive",
+//                "isready",
+//                "metrics",
+//            ).contains(call.request.document())
+//        }
+//        format { call ->
+//            val status = call.response.status()?.value ?: "Unhandled"
+//            val method = call.request.httpMethod.value
+//            val path = call.request.path()
+//            val duration = call.processingTimeMillis()
+//            val queryParams = call.request.queryParameters.entries()
+//            "$status $method $path $queryParams $duration ms"
+//        }
+//    }
 
-    install(ContentNegotiation) {
-        jackson {
-            register(ContentType.Application.Json, JacksonConverter(objectMapper))
-        }
-    }
+//    install(ContentNegotiation) {
+//        jackson {
+//            register(ContentType.Application.Json, JacksonConverter(objectMapper))
+//        }
+//    }
 
     install(Authentication) {
         jwt("azureAd")

@@ -4,7 +4,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.contentType
@@ -12,12 +11,12 @@ import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.util.pipeline.PipelineContext
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -257,7 +256,7 @@ internal fun Application.oppgaveApi(
 
 class UgyldigContentType(message: String) : RuntimeException(message)
 
-private val PipelineContext<Unit, ApplicationCall>.htmlContentType: Boolean
+private val RoutingContext.htmlContentType: Boolean
     get() = call.request.contentType().match(ContentType.Text.Html)
 
 private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbehandler): UtsettOppgaveHendelse {

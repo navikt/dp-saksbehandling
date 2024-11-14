@@ -33,8 +33,8 @@ val KafkaStreamsPlugin =
         stopped = { _ ->
             kafkaStreams.close()
             log.info { "Kafka Streams stoppet" }
-            application.environment.monitor.unsubscribe(ApplicationStarted, started)
-            application.environment.monitor.unsubscribe(ApplicationStopped, stopped)
+            application.monitor.unsubscribe(ApplicationStarted, started)
+            application.monitor.unsubscribe(ApplicationStopped, stopped)
         }
 
         on(MonitoringEvent(ApplicationStarted), started)
