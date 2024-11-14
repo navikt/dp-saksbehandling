@@ -110,33 +110,26 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal ikke endre tilstand dersom forslag til vedtak mottas i tilstand AvventerOpplåsingAvBehandling`() {
-        val oppgave =
-            lagOppgave(
-                tilstandType = AVVENTER_OPPLÅSING_AV_BEHANDLING,
-                tilstandslogg =
-                    Tilstandslogg().also {
-                        it.leggTil(
-                            nyTilstand = UNDER_BEHANDLING,
-                            hendelse =
-                                NesteOppgaveHendelse(
-                                    ansvarligIdent = saksbehandler.navIdent,
-                                    utførtAv = saksbehandler,
-                                ),
-                        )
-                    },
+    fun `Skal kun endre tilstand dersom forslag til vedtak mottas i tilstand Opprettet`() {
+        val hendelse =
+            ForslagTilVedtakHendelse(
+                ident = testIdent,
+                søknadId = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+                utførtAv = Applikasjon("dp-behandling"),
             )
 
-        oppgave.oppgaveKlarTilBehandling(
-            ForslagTilVedtakHendelse(
-                ident = oppgave.behandling.person.ident,
-                søknadId = UUIDv7.ny(),
-                behandlingId = oppgave.behandling.behandlingId,
-                utførtAv = Applikasjon("dp-behandling"),
-            ),
-        )
+        lagOppgave(tilstandType = OPPRETTET).let { oppgave ->
+            oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe true
+            oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+        }
 
-        oppgave.tilstand().type shouldBe AVVENTER_OPPLÅSING_AV_BEHANDLING
+        setOf(AVVENTER_OPPLÅSING_AV_BEHANDLING, KLAR_TIL_BEHANDLING, UNDER_BEHANDLING).forEach { tilstand ->
+            lagOppgave(tilstandType = tilstand).let { oppgave ->
+                oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe false
+                oppgave.tilstand().type shouldBe tilstand
+            }
+        }
     }
 
     @Test

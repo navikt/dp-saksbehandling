@@ -114,13 +114,26 @@ class OppgaveMediator(
             }
 
             else -> {
-                oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse)
-                repository.lagre(oppgave)
                 withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
-                    logger.info {
-                        "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                            "${forslagTilVedtakHendelse.behandlingId}. Oppgave er klar til behandling. " +
-                            "Emneknagger: ${oppgave.emneknagger.joinToString()}"
+                    oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let {
+                        when (it) {
+                            true -> {
+                                repository.lagre(oppgave)
+                                logger.info {
+                                    "Mottatt hendelse forslag_til_vedtak for behandling med id " +
+                                        "${forslagTilVedtakHendelse.behandlingId}. Oppgavens tilstand er" +
+                                        " ${oppgave.tilstand().type}"
+                                }
+                            }
+
+                            false -> {
+                                logger.info {
+                                    "Mottatt hendelse forslag_til_vedtak for behandling med id " +
+                                            "${forslagTilVedtakHendelse.behandlingId}. Oppgavens tilstand er uendret" +
+                                            " ${oppgave.tilstand().type}"
+                                }
+                            }
+                        }
                     }
                 }
             }
