@@ -141,22 +141,29 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal ferdigstille en oppgave fra alle lovlige tilstander`() {
-        val lovligeTilstander = setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
+        val lovligeTilstander =
+            setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
-            oppgave.ferdigstill(
-                VedtakFattetHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    søknadId = UUIDv7.ny(),
-                    ident = testIdent,
-                    sak = sak,
-                ),
-            )
+            val resultat =
+                oppgave.ferdigstill(
+                    VedtakFattetHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                        sak = sak,
+                    ),
+                )
 
             if (tilstand == UNDER_KONTROLL) {
                 oppgave.tilstand().type shouldBe UNDER_KONTROLL
             } else {
                 oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            }
+
+            when (tilstand) {
+                in setOf(UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe false
+                else -> resultat shouldBe true
             }
         }
 

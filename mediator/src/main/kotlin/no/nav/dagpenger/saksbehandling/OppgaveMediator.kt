@@ -256,12 +256,16 @@ class OppgaveMediator(
 
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
         return repository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
-            oppgave.ferdigstill(vedtakFattetHendelse)
-            repository.lagre(oppgave)
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
                     "Mottatt hendelse vedtak_fattet for behandling med id ${vedtakFattetHendelse.behandlingId}. " +
                         "Oppgave ferdigstilt."
+                }
+                oppgave.ferdigstill(vedtakFattetHendelse).let {
+                    when (it) {
+                        true -> repository.lagre(oppgave)
+                        false -> logger.warn { "Oppgave med id ${oppgave.oppgaveId} er allerede ferdigstilt" }
+                    }
                 }
             }
         }
