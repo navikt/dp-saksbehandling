@@ -616,6 +616,22 @@ class OppgaveTilstandTest {
     }
 
     @Test
+    fun `Skal gå fra KlarTilBehandling til BehandlesIArena når oppgaven avbrytes`() {
+        val oppgave = lagOppgave(tilstandType = KLAR_TIL_BEHANDLING, behandler = saksbehandler)
+
+        shouldNotThrowAny {
+            oppgave.behandlesIArena(
+                BehandlingAvbruttHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    ident = testIdent,
+                ),
+            )
+        }
+        oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+    }
+
+    @Test
     fun `Skal gå fra PaaVent til UnderBehandling når saksbehandler tildeles en oppgave`() {
         val saksbehandler = Saksbehandler("saksbehandler", emptySet(), setOf())
         val oppgave = lagOppgave(tilstandType = PAA_VENT, saksbehandler)
