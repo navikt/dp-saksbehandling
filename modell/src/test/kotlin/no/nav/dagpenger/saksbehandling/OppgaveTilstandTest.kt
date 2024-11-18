@@ -169,6 +169,39 @@ class OppgaveTilstandTest {
     }
 
     @Test
+    fun `Skal kunne avbryte en oppgave fra alle lovlige tilstander`() {
+        val lovligeTilstander =
+            setOf(PAA_VENT, UNDER_BEHANDLING, KLAR_TIL_BEHANDLING)
+
+        lovligeTilstander.forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand, behandler = null)
+            shouldNotThrowAny {
+                oppgave.behandlesIArena(
+                    BehandlingAvbruttHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                    ),
+                )
+            }
+            oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+        }
+
+        (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand)
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.behandlesIArena(
+                    BehandlingAvbruttHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
     fun `Skal gå fra UnderBehandling til KlarTilBehandling når oppgaveansvar fjernes`() {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
