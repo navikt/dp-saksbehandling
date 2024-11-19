@@ -186,9 +186,7 @@ class OppgaveApiTest {
                       "oppgaveId": "${oppgave1.oppgaveId}",
                       "behandlingId": "${oppgave1.behandling.behandlingId}",
                       "personIdent": "${oppgave1.behandling.person.ident}",
-                      "emneknagger": [
-                        "Søknadsbehandling"
-                      ],
+                      "emneknagger": [],
                       "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
                       "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
@@ -200,9 +198,7 @@ class OppgaveApiTest {
                       "oppgaveId": "${oppgave2.oppgaveId}",
                       "behandlingId": "${oppgave2.behandling.behandlingId}",
                       "personIdent": "${oppgave2.behandling.person.ident}",
-                      "emneknagger": [
-                        "Søknadsbehandling"
-                      ],
+                      "emneknagger": [],
                       "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
                       "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                       "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
@@ -255,7 +251,7 @@ class OppgaveApiTest {
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
                             tilstander = setOf(KLAR_TIL_BEHANDLING),
-                            emneknagger = setOf("SØKNADSBEHANDLING", "KLAGE"),
+                            emneknagger = setOf("TULLBALL", "KLAGE"),
                         ),
                     )
                 } returns
@@ -266,7 +262,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.get("/oppgave?tilstand=${KLAR_TIL_BEHANDLING}&emneknagg=SØKNADSBEHANDLING&emneknagg=KLAGE") { autentisert() }
+            client.get("/oppgave?tilstand=${KLAR_TIL_BEHANDLING}&emneknagg=TULLBALL&emneknagg=KLAGE") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
@@ -532,7 +528,7 @@ class OppgaveApiTest {
                         "statsborgerskap": "NOR",
                         "skjermesSomEgneAnsatte": ${oppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
-                      "emneknagger": ["Søknadsbehandling"],
+                      "emneknagger": [],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
                     }
                     """.trimIndent()
@@ -819,7 +815,7 @@ class OppgaveApiTest {
                         "statsborgerskap": "NOR",
                         "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
-                      "emneknagger": ["Søknadsbehandling"],
+                      "emneknagger": [],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
                       "journalpostIder": ["123456789"],
                       "saksbehandler": {

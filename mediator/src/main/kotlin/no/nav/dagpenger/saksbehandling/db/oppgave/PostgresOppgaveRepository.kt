@@ -979,6 +979,18 @@ private fun TransactionalSession.lagre(
     oppgaveId: UUID,
     emneknagger: Set<String>,
 ) {
+    run(
+        queryOf(
+            //language=PostgreSQL
+            statement =
+                """
+                DELETE
+                FROM  emneknagg_v1
+                WHERE oppgave_id = :oppgave_id
+                """.trimIndent(),
+            paramMap = mapOf("oppgave_id" to oppgaveId),
+        ).asUpdate,
+    )
     emneknagger.forEach { emneknagg ->
         run(
             queryOf(

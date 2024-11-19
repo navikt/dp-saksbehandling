@@ -125,7 +125,7 @@ internal object OppgaveApiTestHelper {
             oppgaveId = oppgaveId,
             behandlerIdent = tildeltBehandlerIdent,
             opprettet = opprettet,
-            emneknagger = setOf("Søknadsbehandling"),
+            emneknagger = emptySet(),
             tilstand =
                 when (tilstand) {
                     OPPRETTET -> Opprettet

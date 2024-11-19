@@ -17,12 +17,10 @@ internal class ForslagTilVedtakMottak(
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
         private val logger = KotlinLogging.logger {}
 
-        const val AVKLARINGER = "avklaringer"
-
         val rapidFilter: River.() -> Unit = {
             validate { it.demandValue("@event_name", "forslag_til_vedtak") }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
-            validate { it.interestedIn(AVKLARINGER) }
+            validate { it.interestedIn("utfall", "harAvklart") }
         }
     }
 
@@ -36,11 +34,11 @@ internal class ForslagTilVedtakMottak(
     ) {
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
-        val ident = packet["ident"].asText()
-        val emneknagger = packet.emneknagger()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_vedtak hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+            val ident = packet["ident"].asText()
+            val emneknagger = packet.emneknagger()
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
