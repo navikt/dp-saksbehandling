@@ -19,7 +19,7 @@ internal class AvklaringIkkeRelevantMottak(
         private val logger = KotlinLogging.logger {}
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "avklaring_lukket") }
+            precondition { it.requireValue("@event_name", "avklaring_lukket") }
             validate { it.requireKey("ident", "kode", "behandlingId") }
             validate { it.interestedIn("avklaringId") }
         }

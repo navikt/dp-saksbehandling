@@ -32,10 +32,12 @@ class UtsendingBehovLøsningMottak(
                 DistribueringBehov.BEHOV_NAVN,
             ).toList()
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "behov") }
+            precondition {
+                it.requireValue("@event_name", "behov")
+                it.forbid("@final")
+            }
             validate { it.requireKey("@løsning") }
             validate { it.requireKey("oppgaveId") }
-            validate { it.rejectKey("@final") }
             validate { it.interestedIn("journalpostId") }
             validate { it.interestedIn("urn") }
             validate {

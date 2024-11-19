@@ -16,10 +16,12 @@ internal class MeldingOmVedtakProdusentBehovløser(
 ) : PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "behov") }
-            validate { it.demandAll("@behov", listOf("MeldingOmVedtakProdusent")) }
+            precondition {
+                it.requireValue("@event_name", "behov")
+                it.requireAll("@behov", listOf("MeldingOmVedtakProdusent"))
+                it.forbid("@løsning")
+            }
             validate { it.requireKey("ident", "behandlingId") }
-            validate { it.rejectKey("@løsning") }
         }
     }
 
@@ -34,7 +36,6 @@ internal class MeldingOmVedtakProdusentBehovløser(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asText().let { UUID.fromString(it) }
-        val ident = packet["ident"].asText()
 
         utsendingMediator.utsendingFinnesForBehandling(behandlingId).let {
             when (it) {

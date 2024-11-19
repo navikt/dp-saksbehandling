@@ -25,7 +25,8 @@ internal class BehandlingOpprettetMottak(
     companion object {
         private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "behandling_opprettet") }
+
+            precondition { it.requireValue("@event_name", "behandling_opprettet") }
             validate { it.requireKey("ident", "søknadId", "behandlingId", "@opprettet") }
         }
     }

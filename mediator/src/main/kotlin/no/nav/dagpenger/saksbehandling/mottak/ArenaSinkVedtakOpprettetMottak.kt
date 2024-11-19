@@ -24,7 +24,9 @@ class ArenaSinkVedtakOpprettetMottak(
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "arenasink_vedtak_opprettet") }
+            precondition {
+                it.requireValue("@event_name", "arenasink_vedtak_opprettet")
+            }
             validate {
                 it.requireKey(
                     "søknadId",

@@ -23,9 +23,11 @@ internal class VedtakFattetMottak(
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "vedtak_fattet") }
+            precondition {
+                it.requireValue("@event_name", "vedtak_fattet")
+                it.forbid("meldingOmVedtakProdusent")
+            }
             validate { it.requireKey("ident", "søknadId", "behandlingId", "fagsakId") }
-            validate { it.rejectKey("meldingOmVedtakProdusent") }
         }
     }
 
