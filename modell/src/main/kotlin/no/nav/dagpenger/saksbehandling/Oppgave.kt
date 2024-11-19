@@ -159,13 +159,13 @@ data class Oppgave private constructor(
 
     fun utsattTil() = this.utsattTil
 
-    fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+    fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Boolean {
         this._emneknagger += forslagTilVedtakHendelse.emneknagger
-        tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
+        return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
-    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse) {
-        tilstand.ferdigstill(this, vedtakFattetHendelse)
+    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Boolean {
+        return tilstand.ferdigstill(this, vedtakFattetHendelse)
     }
 
     fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
@@ -270,15 +270,17 @@ data class Oppgave private constructor(
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ) {
+        ): Boolean {
             oppgave.endreTilstand(KlarTilBehandling, forslagTilVedtakHendelse)
+            return true
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
+        ): Boolean {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+            return true
         }
     }
 
@@ -288,8 +290,9 @@ data class Oppgave private constructor(
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ) {
-            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
+        ): Boolean {
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand $type" }
+            return true
         }
 
         override fun tildel(
@@ -303,8 +306,16 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
+        ): Boolean {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+            return true
+        }
+
+        override fun behandlesIArena(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
         }
     }
 
@@ -371,15 +382,17 @@ data class Oppgave private constructor(
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ) {
+        ): Boolean {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
+            return false
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
+        ): Boolean {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+            return true
         }
 
         override fun ferdigstill(
@@ -417,12 +430,13 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
+        ): Boolean {
             logger.info { "Oppgave er allerede ferdigstilt for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
             sikkerlogg.info {
                 "Oppgave er allerede ferdigstilt for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
                     "VedtakFattetHendelse: $vedtakFattetHendelse "
             }
+            return false
         }
     }
 
@@ -451,11 +465,27 @@ data class Oppgave private constructor(
             oppgave.utsattTil = null
         }
 
+        override fun oppgaveKlarTilBehandling(
+            oppgave: Oppgave,
+            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+        ): Boolean {
+            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
+            return true
+        }
+
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
+        ): Boolean {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+            return true
+        }
+
+        override fun behandlesIArena(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
         }
     }
 
@@ -510,8 +540,9 @@ data class Oppgave private constructor(
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ) {
+        ): Boolean {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
+            return false
         }
     }
 
@@ -521,11 +552,12 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
+        ): Boolean {
             logger.warn { "Mottok vedtak fattet i tilstand: $type for behandlingId: ${vedtakFattetHendelse.behandlingId}." }
             sikkerlogg.warn {
                 "Mottok vedtak fattet i tilstand: $type. VedtakFattetHendelse: $vedtakFattetHendelse "
             }
+            return false
         }
 
         override fun ferdigstill(
@@ -671,7 +703,7 @@ data class Oppgave private constructor(
         fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ) {
+        ): Boolean {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type",
@@ -681,7 +713,7 @@ data class Oppgave private constructor(
         fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ) {
+        ): Boolean {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =

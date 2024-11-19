@@ -95,68 +95,61 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal sette oppgave klar til behandling i tilstand opprettet når regelmotor kommer med vedtaksforslag`() {
-        val oppgave = lagOppgave(OPPRETTET)
-        oppgave.oppgaveKlarTilBehandling(
+    fun `Skal kun endre tilstand dersom forslag til vedtak mottas i tilstand Opprettet`() {
+        val hendelse =
             ForslagTilVedtakHendelse(
                 ident = testIdent,
                 søknadId = UUIDv7.ny(),
                 behandlingId = UUIDv7.ny(),
                 utførtAv = Applikasjon("dp-behandling"),
-            ),
-        )
-
-        oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
-    }
-
-    @Test
-    fun `Skal ikke endre tilstand dersom forslag til vedtak mottas i tilstand AvventerOpplåsingAvBehandling`() {
-        val oppgave =
-            lagOppgave(
-                tilstandType = AVVENTER_OPPLÅSING_AV_BEHANDLING,
-                tilstandslogg =
-                    Tilstandslogg().also {
-                        it.leggTil(
-                            nyTilstand = UNDER_BEHANDLING,
-                            hendelse =
-                                NesteOppgaveHendelse(
-                                    ansvarligIdent = saksbehandler.navIdent,
-                                    utførtAv = saksbehandler,
-                                ),
-                        )
-                    },
             )
 
-        oppgave.oppgaveKlarTilBehandling(
-            ForslagTilVedtakHendelse(
-                ident = oppgave.behandling.person.ident,
-                søknadId = UUIDv7.ny(),
-                behandlingId = oppgave.behandling.behandlingId,
-                utførtAv = Applikasjon("dp-behandling"),
-            ),
-        )
+        lagOppgave(tilstandType = OPPRETTET).let { oppgave ->
+            oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe true
+            oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+        }
 
-        oppgave.tilstand().type shouldBe AVVENTER_OPPLÅSING_AV_BEHANDLING
+        setOf(KLAR_TIL_BEHANDLING, PAA_VENT).forEach { tilstand ->
+            lagOppgave(tilstandType = tilstand).let { oppgave ->
+                val tilstandFørHendelse = oppgave.tilstand().type
+                oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe true
+                oppgave.tilstand().type shouldBe tilstandFørHendelse
+            }
+        }
+
+        setOf(AVVENTER_OPPLÅSING_AV_BEHANDLING, UNDER_BEHANDLING).forEach { tilstand ->
+            lagOppgave(tilstandType = tilstand).let { oppgave ->
+                oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe false
+                oppgave.tilstand().type shouldBe tilstand
+            }
+        }
     }
 
     @Test
     fun `Skal ferdigstille en oppgave fra alle lovlige tilstander`() {
-        val lovligeTilstander = setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
+        val lovligeTilstander =
+            setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
-            oppgave.ferdigstill(
-                VedtakFattetHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    søknadId = UUIDv7.ny(),
-                    ident = testIdent,
-                    sak = sak,
-                ),
-            )
+            val resultat =
+                oppgave.ferdigstill(
+                    VedtakFattetHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                        sak = sak,
+                    ),
+                )
 
             if (tilstand == UNDER_KONTROLL) {
                 oppgave.tilstand().type shouldBe UNDER_KONTROLL
             } else {
                 oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            }
+
+            when (tilstand) {
+                in setOf(UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe false
+                else -> resultat shouldBe true
             }
         }
 
@@ -169,6 +162,39 @@ class OppgaveTilstandTest {
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         sak = sak,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne avbryte en oppgave fra alle lovlige tilstander`() {
+        val lovligeTilstander =
+            setOf(PAA_VENT, UNDER_BEHANDLING, KLAR_TIL_BEHANDLING)
+
+        lovligeTilstander.forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand, behandler = null)
+            shouldNotThrowAny {
+                oppgave.behandlesIArena(
+                    BehandlingAvbruttHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                    ),
+                )
+            }
+            oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+        }
+
+        (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand)
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.behandlesIArena(
+                    BehandlingAvbruttHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
                     ),
                 )
             }
@@ -298,7 +324,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TILBEHANDLING`() {
+    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
         val oppgave = lagOppgave(KLAR_TIL_BEHANDLING)
         val emneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
@@ -317,7 +343,26 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal ikke endre tilstand på en oppgave når den er FerdigBehandlet`() {
+    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand PAA_VENT`() {
+        val oppgave = lagOppgave(PAA_VENT)
+        val emneknagger = setOf("knagg1", "knagg2")
+        shouldNotThrow<Exception> {
+            oppgave.oppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = oppgave.behandling.behandlingId,
+                    utførtAv = Applikasjon("dp-behandling"),
+                    emneknagger = emneknagger,
+                ),
+            )
+        }
+        oppgave.emneknagger shouldBe emneknagger
+        oppgave.tilstand() shouldBe Oppgave.PåVent
+    }
+
+    @Test
+    fun `Skal ikke endre tilstand på en oppgave hvis nytt forslag til vedtak mottas i tilstand FerdigBehandlet`() {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
         shouldThrow<UlovligTilstandsendringException> {
@@ -601,6 +646,22 @@ class OppgaveTilstandTest {
         )
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+    }
+
+    @Test
+    fun `Skal gå fra KlarTilBehandling til BehandlesIArena når oppgaven avbrytes`() {
+        val oppgave = lagOppgave(tilstandType = KLAR_TIL_BEHANDLING, behandler = saksbehandler)
+
+        shouldNotThrowAny {
+            oppgave.behandlesIArena(
+                BehandlingAvbruttHendelse(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    søknadId = UUIDv7.ny(),
+                    ident = testIdent,
+                ),
+            )
+        }
+        oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
     }
 
     @Test
