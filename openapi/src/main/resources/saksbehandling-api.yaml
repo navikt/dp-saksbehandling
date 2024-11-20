@@ -549,7 +549,7 @@ components:
           type: string
           enum:
             - notat
-            - ny-status
+            - statusendring
         tidspunkt:
           type: string
           format: date-time
@@ -560,7 +560,6 @@ components:
         behandler:
           type: object
           required:
-            - rolle
             - navn
           properties:
             navn:
@@ -570,6 +569,7 @@ components:
               enum:
                 - saksbehandler
                 - beslutter
+                - system
 
     NesteOppgave:
       type: object
