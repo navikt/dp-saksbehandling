@@ -160,7 +160,8 @@ data class Oppgave private constructor(
     fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Boolean {
-        this._emneknagger += forslagTilVedtakHendelse.emneknagger
+        this._emneknagger.clear()
+        this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
         return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
@@ -384,6 +385,7 @@ data class Oppgave private constructor(
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Boolean {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
+//            TODO( skal denne returnere true for å lagre endringer? )
             return false
         }
 
