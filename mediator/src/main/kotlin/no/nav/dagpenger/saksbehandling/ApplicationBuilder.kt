@@ -6,13 +6,11 @@ import io.ktor.server.application.install
 import io.ktor.server.cio.CIOApplicationEngine
 import io.ktor.server.engine.EmbeddedServer
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
-import no.nav.dagpenger.saksbehandling.api.config.statusPages
-import no.nav.dagpenger.saksbehandling.api.oppgaveApi
+import no.nav.dagpenger.saksbehandling.api.allApis
+import no.nav.dagpenger.saksbehandling.api.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
@@ -36,7 +34,6 @@ import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.statistikkApi
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
@@ -98,13 +95,12 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             objectMapper = objectMapper,
             builder = {
                 withKtorModule {
-                    this.apiConfig()
-                    this.oppgaveApi(
+                    allApis(
                         oppgaveMediator,
                         oppgaveDTOMapper,
-                        applicationCallParser,
+                        PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource),
                     )
-                    this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
+                    withStatusPagesConfig { statusPages() }
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =
                             kafkaStreams(Configuration.kafkaStreamProperties) {
@@ -117,7 +113,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                                     adressebeskyttelseConsumer::oppdaterAdressebeskyttelseStatus,
                                 )
                             }
-                        withStatusPagesConfig { statusPages() }
                     }
                 }
             },

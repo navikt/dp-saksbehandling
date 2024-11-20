@@ -14,7 +14,6 @@ import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
@@ -42,8 +41,6 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
-import no.nav.dagpenger.saksbehandling.api.config.statusPages
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
@@ -68,19 +65,18 @@ internal object OppgaveApiTestHelper {
     ) {
         testApplication {
             application {
-                standardApiModule()
-                apiConfig()
-                oppgaveApi(
+                allApis(
                     oppgaveMediator,
                     oppgaveDTOMapper,
-                    applicationCallParser,
+                    mockk(relaxed = true),
                 )
+                statusPages()
             }
             test()
         }
     }
 
-    fun Application.standardApiModule() {
+    fun Application.statusPages() {
         standardApiModule(
             meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
             objectMapper = objectMapper,
@@ -101,9 +97,7 @@ internal object OppgaveApiTestHelper {
     ) {
         testApplication {
             application {
-                standardApiModule()
-                apiConfig()
-                oppgaveApi(
+                allApis(
                     oppgaveMediator,
                     OppgaveDTOMapper(
                         pdlKlient,
@@ -111,8 +105,9 @@ internal object OppgaveApiTestHelper {
                         saksbehandlerOppslag,
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                     ),
-                    applicationCallParser,
+                    mockk(relaxed = true),
                 )
+                statusPages()
             }
             test()
         }

@@ -1,9 +1,6 @@
-package no.nav.dagpenger.saksbehandling.api.config
+package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.auth.Authentication
 import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
@@ -14,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
-import no.nav.dagpenger.saksbehandling.api.config.auth.jwt
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
@@ -175,11 +171,5 @@ fun StatusPagesConfig.statusPages() {
                 call.respond(HttpStatusCode.InternalServerError, problem)
             }
         }
-    }
-}
-
-fun Application.apiConfig() {
-    install(Authentication) {
-        jwt("azureAd")
     }
 }

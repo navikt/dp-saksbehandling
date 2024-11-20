@@ -7,7 +7,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.api.allApis
 import no.nav.dagpenger.saksbehandling.api.mockAzure
 import org.junit.jupiter.api.Test
 
@@ -22,8 +22,7 @@ class StatistikkApiTest {
             }
         testApplication {
             application {
-                apiConfig()
-                statistikkApi(mockStatistikkTjeneste)
+                allApis(mockk(), mockk(), mockStatistikkTjeneste)
             }
 
             client.get("public/statistikk").let { httpResponse ->
