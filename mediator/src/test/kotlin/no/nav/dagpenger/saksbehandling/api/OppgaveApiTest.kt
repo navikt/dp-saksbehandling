@@ -59,7 +59,6 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -71,9 +70,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
-import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -88,7 +85,7 @@ class OppgaveApiTest {
         mockAzure()
     }
 
-    val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
+    private val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
     private val saksbehandler =
         Saksbehandler(
             SAKSBEHANDLER_IDENT,
@@ -701,11 +698,6 @@ class OppgaveApiTest {
     @Test
     fun `Hent oppgave med tilhørende personinfo og journalpostIder `() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
-        val pdlMock = mockk<PDLKlient>()
-        val journalpostIdClientMock = mockk<JournalpostIdClient>()
-        val saksbehandlerOppslagMock = mockk<SaksbehandlerOppslag>()
-        val oppgaveRepository = mockk<OppgaveRepository>()
-
         val testOppgave =
             lagTestOppgaveMedTilstandOgBehandling(
                 tilstand = UNDER_KONTROLL,

@@ -34,18 +34,16 @@ class UtsendingBehovLøsningMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "behov")
+                it.requireAllOrAny(
+                    key = "@behov",
+                    values = behovListe,
+                )
                 it.forbid("@final")
             }
             validate { it.requireKey("@løsning") }
             validate { it.requireKey("oppgaveId") }
             validate { it.interestedIn("journalpostId") }
             validate { it.interestedIn("urn") }
-            validate {
-                it.requireAllOrAny(
-                    key = "@behov",
-                    values = behovListe,
-                )
-            }
         }
     }
 
