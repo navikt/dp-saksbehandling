@@ -50,4 +50,26 @@ internal class ForslagTilVedtakMottak(
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
     }
+
+    private fun JsonMessage.emneknagger(): Set<String> {
+        return try {
+            when (this["utfall"].asBoolean()) {
+                true -> setOf("Innvilgelse")
+                false -> {
+                    if (this["harAvklart"].asText() == "Krav til minsteinntekt") {
+                        return setOf("Avslag minsteinntekt")
+                    } else {
+                        logger.warn {
+                            "Klarte ikke sette emneknagg for Innvilgelse eller Avslag minsteinntekt. " +
+                                "Element harAvklart har verdi: ${this["harAvklart"].asText()}."
+                        }
+                        return setOf("Avslag")
+                    }
+                }
+            }
+        } catch (e: NullPointerException) {
+            logger.warn { "Fant ikke utfall eller harAvklart. Lager ingen emneknagger." }
+            return emptySet()
+        }
+    }
 }
