@@ -19,14 +19,12 @@ internal class ForslagTilVedtakMottak(
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
         private val logger = KotlinLogging.logger {}
 
-        const val AVKLARINGER = "avklaringer"
-
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "forslag_til_vedtak")
             }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
-            validate { it.interestedIn(AVKLARINGER) }
+            validate { it.interestedIn("utfall", "harAvklart") }
         }
     }
 
@@ -42,11 +40,11 @@ internal class ForslagTilVedtakMottak(
     ) {
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
-        val ident = packet["ident"].asText()
-        val emneknagger = packet.emneknagger()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_vedtak hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+            val ident = packet["ident"].asText()
+            val emneknagger = packet.emneknagger()
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
@@ -56,6 +54,28 @@ internal class ForslagTilVedtakMottak(
                 )
             sikkerlogg.info { "Mottok forslag_til_vedtak hendelse: $forslagTilVedtakHendelse" }
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    private fun JsonMessage.emneknagger(): Set<String> {
+        return try {
+            when (this["utfall"].asBoolean()) {
+                true -> setOf("Innvilgelse")
+                false -> {
+                    if (this["harAvklart"].asText() == "Krav til minsteinntekt") {
+                        return setOf("Avslag minsteinntekt")
+                    } else {
+                        logger.warn {
+                            "Klarte ikke sette emneknagg for Innvilgelse eller Avslag minsteinntekt. " +
+                                "Element harAvklart har verdi: ${this["harAvklart"].asText()}."
+                        }
+                        return setOf("Avslag")
+                    }
+                }
+            }
+        } catch (e: NullPointerException) {
+            logger.warn { "Fant ikke utfall eller harAvklart. Lager ingen emneknagger." }
+            return emptySet()
         }
     }
 }

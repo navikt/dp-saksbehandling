@@ -20,8 +20,8 @@ class ForslagTilVedtakMottakTest {
     }
 
     @Test
-    fun `Skal kunne motta forslag_til_vedtak hendelse`() {
-        testRapid.sendTestMessage(forslagTilVedtakJson)
+    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag minsteinntekt`() {
+        testRapid.sendTestMessage(forslagTilVedtakAvslagMinsteinntektJson)
 
         verify(exactly = 1) {
             val forslagTilVedtakHendelse =
@@ -29,44 +29,109 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf("EØSArbeid", "HarRapportertInntektNesteMåned", "SykepengerSiste36Måneder"),
+                    emneknagger = setOf("Avslag minsteinntekt"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag som ikke er minsteinntekt`() {
+        testRapid.sendTestMessage(forslagTilVedtakAvslagAlderJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = setOf("Avslag"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilgelse`() {
+        testRapid.sendTestMessage(forslagTilVedtakInnvilgelseJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = setOf("Innvilgelse"),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
     }
 
     //language=json
-    private val forslagTilVedtakJson =
+    private val forslagTilVedtakAvslagMinsteinntektJson =
         """
-          {
+        {
             "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
             "utfall": false,
-            "harAvklart": "Krav på dagpenger",
-            "avklaringer": [
-              {
-                "type": "EØSArbeid",
-                "utfall": "Manuell",
-                "begrunnelse": "Personen har oppgitt arbeid fra EØS"
-              },
-              {
-                "type": "HarRapportertInntektNesteMåned",
-                "utfall": "Manuell",
-                "begrunnelse": "Personen har inntekter som tilhører neste inntektsperiode"
-              },
-              {
-                "type": "SykepengerSiste36Måneder",
-                "utfall": "Manuell",
-                "begrunnelse": "Personen har sykepenger som kan være svangerskapsrelaterte"
-              }
+            "harAvklart": "Krav til minsteinntekt",
+            "avklaringer": [{
+                    "type": "InntektNesteKalendermåned",
+                    "utfall": "Manuell",
+                    "begrunnelse": "Personen har inntekter som tilhører neste inntektsperiode"
+                }, {
+                    "type": "SvangerskapsrelaterteSykepenger",
+                    "utfall": "Manuell",
+                    "begrunnelse": "Personen har sykepenger som kan være svangerskapsrelaterte"
+                }
             ],
             "ident": "$ident",
             "behandlingId": "$behandlingId",
-            "gjelderDato": "2024-05-10",
+            "gjelderDato": "2024-11-19",
             "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId",
-            "opprettet": "2024-05-10T10:18:51.251369",
-            "@id": "3b0fab42-74af-423c-a04f-a0b7562d2d7b",
-            "@opprettet": "2024-05-10T10:18:51.29592"
+            "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakInnvilgelseJson =
+        """
+        {
+            "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
+            "utfall": true,
+            "harAvklart": "Krav på dagpenger",
+            "avklaringer": [{
+                    "type": "SvangerskapsrelaterteSykepenger",
+                    "utfall": "Manuell",
+                    "begrunnelse": "Personen har sykepenger som kan være svangerskapsrelaterte"
+                }, {
+                    "type": "Totrinnskontroll",
+                    "utfall": "Manuell",
+                    "begrunnelse": "Totrinnskontroll"
+                }
+            ],
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
+            "gjelderDato": "2024-11-19",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakAvslagAlderJson =
+        """
+        {
+            "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
+            "utfall": false,
+            "harAvklart": "Krav til alder",
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
+            "gjelderDato": "2024-11-19",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId"
         }
         """.trimIndent()
 }

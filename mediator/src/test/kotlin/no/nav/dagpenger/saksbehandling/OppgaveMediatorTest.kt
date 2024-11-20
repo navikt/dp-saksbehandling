@@ -189,15 +189,14 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat() shouldBe null
 
-            val endretTidsPunkt1 =
-                oppgaveMediator.lagreNotat(
-                    notatHendelse =
-                        NotatHendelse(
-                            oppgaveId = oppgave.oppgaveId,
-                            tekst = "Dette er et notat",
-                            utførtAv = testInspektør,
-                        ),
-                )
+            oppgaveMediator.lagreNotat(
+                notatHendelse =
+                    NotatHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        tekst = "Dette er et notat",
+                        utførtAv = testInspektør,
+                    ),
+            )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat().let {
                 require(it != null) { "Notatet er null" }
@@ -226,7 +225,7 @@ class OppgaveMediatorTest {
     }
 
     @Test
-    fun `Skal kunne motta flere forslag til vedtak hendelser og oppdatere emneknaggene`() {
+    fun `Skal kunne motta flere forslag til vedtak hendelser og oppdatere emneknaggene med de siste mottatte`() {
         withMigratedDb { datasource ->
             val testEmneknagger1 = setOf("a", "b", "c")
             val testEmneknagger2 = setOf("x", "y")
@@ -262,7 +261,7 @@ class OppgaveMediatorTest {
 
             val oppdatertOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
 
-            oppdatertOppgave.emneknagger shouldContainAll testEmneknagger1 + testEmneknagger2
+            oppdatertOppgave.emneknagger shouldBe testEmneknagger2
             oppdatertOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
         }
     }
