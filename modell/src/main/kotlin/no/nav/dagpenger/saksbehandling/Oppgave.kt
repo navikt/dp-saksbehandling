@@ -385,8 +385,7 @@ data class Oppgave private constructor(
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
         ): Boolean {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
-//            TODO( skal denne returnere true for å lagre endringer? )
-            return false
+            return true
         }
 
         override fun ferdigstill(
