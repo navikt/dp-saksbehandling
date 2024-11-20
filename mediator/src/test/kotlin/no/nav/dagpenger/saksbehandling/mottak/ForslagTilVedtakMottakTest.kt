@@ -67,6 +67,22 @@ class ForslagTilVedtakMottakTest {
         }
     }
 
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse uten utfall`() {
+        testRapid.sendTestMessage(forslagTilVedtakUtfallNullJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = emptySet(),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
     //language=json
     private val forslagTilVedtakAvslagMinsteinntektJson =
         """
@@ -127,6 +143,22 @@ class ForslagTilVedtakMottakTest {
             "prøvingsdato": "2024-12-01",
             "utfall": false,
             "harAvklart": "Krav til alder",
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
+            "gjelderDato": "2024-11-19",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakUtfallNullJson =
+        """
+        {
+            "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
+            "utfall": null,
+            "harAvklart": "Mikke mus",
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",

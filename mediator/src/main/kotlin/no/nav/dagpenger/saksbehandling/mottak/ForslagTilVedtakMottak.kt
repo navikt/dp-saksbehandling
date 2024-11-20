@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -58,24 +59,27 @@ internal class ForslagTilVedtakMottak(
     }
 
     private fun JsonMessage.emneknagger(): Set<String> {
-        return try {
-            when (this["utfall"].asBoolean()) {
-                true -> setOf("Innvilgelse")
-                false -> {
-                    if (this["harAvklart"].asText() == "Krav til minsteinntekt") {
-                        return setOf("Avslag minsteinntekt")
-                    } else {
-                        logger.warn {
-                            "Klarte ikke sette emneknagg for Innvilgelse eller Avslag minsteinntekt. " +
-                                "Element harAvklart har verdi: ${this["harAvklart"].asText()}."
-                        }
-                        return setOf("Avslag")
+        if (this["utfall"].isMissingOrNull()) {
+            logger.warn { "Fant ikke utfall. Lager ingen emneknagger." }
+            return emptySet()
+        }
+        when (this["utfall"].asBoolean()) {
+            true -> return setOf("Innvilgelse")
+            false -> {
+                if (this["harAvklart"].isMissingOrNull()) {
+                    logger.warn { "Fant ikke harAvklart men utfallet er avslag, lager emneknagg Avslag." }
+                    return setOf("Avslag")
+                }
+                if (this["harAvklart"].asText() == "Krav til minsteinntekt") {
+                    return setOf("Avslag minsteinntekt")
+                } else {
+                    logger.warn {
+                        "Klarte ikke sette emneknagg for ukjent verdi i harAvklart når uftallet er avslag. " +
+                            "Element harAvklart har verdi: ${this["harAvklart"].asText()}."
                     }
+                    return setOf("Avslag")
                 }
             }
-        } catch (e: NullPointerException) {
-            logger.warn { "Fant ikke utfall eller harAvklart. Lager ingen emneknagger." }
-            return emptySet()
         }
     }
 }
