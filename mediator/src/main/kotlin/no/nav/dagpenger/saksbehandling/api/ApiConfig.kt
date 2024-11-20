@@ -7,7 +7,7 @@ import no.nav.dagpenger.saksbehandling.api.auth.authConfig
 import no.nav.dagpenger.saksbehandling.statistikk.StatistikkTjeneste
 import no.nav.dagpenger.saksbehandling.statistikk.statistikkApi
 
-internal fun Application.allApis(
+internal fun Application.installerApis(
     oppgaveMediator: OppgaveMediator,
     oppgaveDTOMapper: OppgaveDTOMapper,
     statistikkTjeneste: StatistikkTjeneste,

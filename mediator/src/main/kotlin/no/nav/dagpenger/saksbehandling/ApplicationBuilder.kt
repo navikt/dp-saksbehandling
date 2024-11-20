@@ -9,7 +9,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
-import no.nav.dagpenger.saksbehandling.api.allApis
+import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
@@ -95,7 +95,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             objectMapper = objectMapper,
             builder = {
                 withKtorModule {
-                    allApis(
+                    installerApis(
                         oppgaveMediator,
                         oppgaveDTOMapper,
                         PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource),

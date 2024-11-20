@@ -65,7 +65,7 @@ internal object OppgaveApiTestHelper {
     ) {
         testApplication {
             application {
-                allApis(
+                installerApis(
                     oppgaveMediator,
                     oppgaveDTOMapper,
                     mockk(relaxed = true),
@@ -97,7 +97,7 @@ internal object OppgaveApiTestHelper {
     ) {
         testApplication {
             application {
-                allApis(
+                installerApis(
                     oppgaveMediator,
                     OppgaveDTOMapper(
                         pdlKlient,
