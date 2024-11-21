@@ -461,6 +461,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         notatId = notat.notatId,
                         tilstandsendringId = oppgave.tilstandslogg.first().id,
                         tekst = notat.hentTekst(),
+                        skrevetAv = notat.skrevetAv,
                     )
                 }
             }
@@ -811,7 +812,7 @@ private fun finnNotat(
                 //language=PostgreSQL
                 statement =
                     """
-                    SELECT id,tekst,endret_tidspunkt
+                    SELECT id,tekst,endret_tidspunkt, skrevet_av
                     FROM   notat_v1
                     WHERE  oppgave_tilstand_logg_id = :oppgaveTilstandLoggId
                     """.trimIndent(),
@@ -821,6 +822,7 @@ private fun finnNotat(
                     notatId = row.uuid("id"),
                     tekst = row.string("tekst"),
                     sistEndretTidspunkt = row.localDateTime("endret_tidspunkt"),
+                    skrevetAv = row.string("skrevet_av"),
                 )
             }.asSingle,
         )
@@ -942,7 +944,12 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
     lagre(oppgave.oppgaveId, oppgave.emneknagger)
     lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
     oppgave.tilstand().notat()?.let {
-        lagreNotat(it.notatId, oppgave.tilstandslogg.first().id, it.hentTekst())
+        lagreNotat(
+            notatId = it.notatId,
+            tilstandsendringId = oppgave.tilstandslogg.first().id,
+            tekst = it.hentTekst(),
+            skrevetAv = it.skrevetAv,
+        )
     }
 }
 
@@ -950,6 +957,7 @@ private fun Session.lagreNotat(
     notatId: UUID,
     tilstandsendringId: UUID,
     tekst: String,
+    skrevetAv: String?,
 ): LocalDateTime {
     return run(
         queryOf(
@@ -957,17 +965,18 @@ private fun Session.lagreNotat(
             statement =
                 """
                 INSERT INTO notat_v1
-                    (id, oppgave_tilstand_logg_id, tekst) 
+                    (id, oppgave_tilstand_logg_id, tekst, skrevet_av) 
                 VALUES
-                    (:notat_id, :oppgave_tilstand_logg_id, :tekst) 
+                    (:notat_id, :oppgave_tilstand_logg_id, :tekst, :skrevet_av) 
                 ON CONFLICT (oppgave_tilstand_logg_id) DO UPDATE SET tekst = :tekst
-                             RETURNING endret_tidspunkt
+                RETURNING endret_tidspunkt
                 """.trimIndent(),
             paramMap =
                 mapOf(
                     "notat_id" to notatId,
                     "oppgave_tilstand_logg_id" to tilstandsendringId,
                     "tekst" to tekst,
+                    "skrevet_av" to skrevetAv,
                 ),
         ).map { row -> row.localDateTime("endret_tidspunkt") }.asSingle,
     ) ?: throw KanIkkeLagreNotatException(

@@ -30,6 +30,12 @@ class OppgaveHistorikkDTOMapperTest {
     @Test
     fun `lage historikk for notat`(): Unit =
         runBlocking {
+            val beslutter =
+                Saksbehandler(
+                    navIdent = "beslutterIdent",
+                    grupper = emptySet(),
+                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
+                )
             val oppgaveId = UUIDv7.ny()
             val sistEndretTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
             OppgaveHistorikkDTOMapper(
@@ -40,13 +46,14 @@ class OppgaveHistorikkDTOMapperTest {
                                 notatId = UUIDv7.ny(),
                                 tekst = "Dette er et notat",
                                 sistEndretTidspunkt = sistEndretTidspunkt,
+                                skrevetAv = beslutter.navIdent,
                             )
                     },
                 saksbehandlerOppslag =
                     mockk<SaksbehandlerOppslag>().also {
-                        coEvery { it.hentSaksbehandler("saksbehandlerIdent") } returns
+                        coEvery { it.hentSaksbehandler(beslutter.navIdent) } returns
                             BehandlerDTO(
-                                ident = "saksbehandlerIdent",
+                                ident = beslutter.navIdent,
                                 fornavn = "fornavn",
                                 etternavn = "etternavn",
                                 enhet = null,
@@ -63,19 +70,17 @@ class OppgaveHistorikkDTOMapperTest {
                                     hendelse =
                                         SettOppgaveAnsvarHendelse(
                                             oppgaveId = oppgaveId,
-                                            ansvarligIdent = "ansvarligIdent",
-                                            utførtAv =
-                                                Saksbehandler(
-                                                    navIdent = "saksbehandlerIdent",
-                                                    grupper = emptySet(),
-                                                    tilganger = setOf(SAKSBEHANDLER, BESLUTTER),
-                                                ),
+                                            ansvarligIdent = beslutter.navIdent,
+                                            utførtAv = beslutter,
                                         ),
                                 )
                             },
                     )
 
                 historikk.size shouldBe 2
+                historikk.first().tittel shouldBe "Notat"
+                historikk.last().tittel shouldBe "Ny status: Under kontroll"
+
                 objectMapper.writeValueAsString(historikk) shouldEqualSpecifiedJsonIgnoringOrder """
                 [
                     {
@@ -170,6 +175,7 @@ class OppgaveHistorikkDTOMapperTest {
                                 notatId = UUIDv7.ny(),
                                 tekst = "Dette er et notat",
                                 sistEndretTidspunkt = sistEndretTidspunkt,
+                                skrevetAv = beslutter.navIdent,
                             )
                     },
                 saksbehandlerOppslag =
@@ -196,6 +202,7 @@ class OppgaveHistorikkDTOMapperTest {
                     )
 
                 historikk.size shouldBe 6
+                historikk.first().tittel shouldBe "Notat"
                 objectMapper.writeValueAsString(historikk) shouldEqualSpecifiedJsonIgnoringOrder """
                 [
                     {

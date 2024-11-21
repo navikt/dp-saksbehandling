@@ -27,14 +27,6 @@ internal class OppgaveHistorikkDTOMapper(
     suspend fun lagOppgaveHistorikk(tilstandslogg: Tilstandslogg): List<OppgaveHistorikkDTO> {
         val historikk = mutableListOf<OppgaveHistorikkDTO>()
         tilstandslogg.forEach { tilstandsendring ->
-            historikk.add(
-                OppgaveHistorikkDTO(
-                    type = OppgaveHistorikkDTO.Type.statusendring,
-                    tidspunkt = tilstandsendring.tidspunkt,
-                    tittel = tilstandsendringTittel(tilstandsendring),
-                    behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
-                ),
-            )
 
             if (tilstandsendring.tilstand == UNDER_KONTROLL) {
                 repository.finnNotat(tilstandsendring.id)?.let { notat ->
@@ -49,6 +41,15 @@ internal class OppgaveHistorikkDTOMapper(
                     )
                 }
             }
+
+            historikk.add(
+                OppgaveHistorikkDTO(
+                    type = OppgaveHistorikkDTO.Type.statusendring,
+                    tidspunkt = tilstandsendring.tidspunkt,
+                    tittel = tilstandsendringTittel(tilstandsendring),
+                    behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
+                ),
+            )
         }
         return historikk
     }
