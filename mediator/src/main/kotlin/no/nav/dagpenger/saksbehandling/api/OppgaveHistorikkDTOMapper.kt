@@ -31,11 +31,11 @@ internal class OppgaveHistorikkDTOMapper(
                 OppgaveHistorikkDTO(
                     type = OppgaveHistorikkDTO.Type.statusendring,
                     tidspunkt = tilstandsendring.tidspunkt,
+                    tittel = tilstandsendringTittel(tilstandsendring),
                     behandler =
                         OppgaveHistorikkBehandlerDTO(
                             navn = hentNavn(tilstandsendring.hendelse.utførtAv),
                         ),
-                    tittel = tilstandsendringTittel(tilstandsendring),
                 ),
             )
 
@@ -45,11 +45,11 @@ internal class OppgaveHistorikkDTOMapper(
                         OppgaveHistorikkDTO(
                             type = OppgaveHistorikkDTO.Type.notat,
                             tidspunkt = notat.sistEndretTidspunkt,
+                            tittel = "Notat",
                             behandler =
                                 OppgaveHistorikkBehandlerDTO(
                                     navn = hentNavn(tilstandsendring.hendelse.utførtAv),
                                 ),
-                            tittel = "Notat",
                             body = notat.hentTekst(),
                         ),
                     )

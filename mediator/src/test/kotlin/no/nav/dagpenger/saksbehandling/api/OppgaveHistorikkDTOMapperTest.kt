@@ -89,10 +89,10 @@ class OppgaveHistorikkDTOMapperTest {
                         "type": "notat",
                         "tidspunkt": "2024-11-01T09:50:00",
                         "tittel": "Notat",
-                        "body": "Dette er et notat",
                         "behandler": {
                             "navn": "fornavn etternavn"
-                        }
+                        },
+                        "body": "Dette er et notat"
                     }
                 ]
             """

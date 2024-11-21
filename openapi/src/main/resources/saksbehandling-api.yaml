@@ -539,11 +539,6 @@ components:
 
     OppgaveHistorikk:
       type: object
-      required:
-        - type
-        - tidspunkt
-        - tittel
-        - beslutter
       properties:
         type:
           type: string
@@ -553,14 +548,10 @@ components:
         tidspunkt:
           type: string
           format: date-time
-        body:
-          type: string
         tittel:
          type: string
         behandler:
           type: object
-          required:
-            - navn
           properties:
             navn:
               type: string
@@ -570,6 +561,15 @@ components:
                 - saksbehandler
                 - beslutter
                 - system
+          required:
+            - navn
+        body:
+          type: string
+      required:
+        - type
+        - tidspunkt
+        - tittel
+        - behandler
 
     NesteOppgave:
       type: object
