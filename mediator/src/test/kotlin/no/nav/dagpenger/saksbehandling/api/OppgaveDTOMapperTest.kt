@@ -13,7 +13,6 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
-import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -26,9 +25,9 @@ class OppgaveDTOMapperTest {
         mockk<PDLKlient>().also {
             coEvery { it.person(TEST_IDENT) } returns Result.success(OppgaveApiTestHelper.testPerson)
         }
-    private val journalpostIdClient =
-        mockk<JournalpostIdClient>().also {
-            coEvery { it.hentJournalpostId(any()) } returns Result.success("journalpostId")
+    private val relevanteJournalpostIdOppslag =
+        mockk<RelevanteJournalpostIdOppslag>().also {
+            coEvery { it.hentJournalpostIder(any()) } returns setOf("søknadJournalpostId", "vedtakJournalpostId")
         }
 
     @Test
@@ -42,7 +41,7 @@ class OppgaveDTOMapperTest {
                 )
             OppgaveDTOMapper(
                 pdlKlient = pdlKlient,
-                journalpostIdClient = journalpostIdClient,
+                relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
                 saksbehandlerOppslag =
                     mockk<SaksbehandlerOppslag>().also {
                         coEvery { it.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
@@ -132,7 +131,10 @@ class OppgaveDTOMapperTest {
                           "postadresse": "bePostadresse"
                         }
                       },
-                      "journalpostIder": [],
+                      "journalpostIder": [
+                        "søknadJournalpostId",
+                        "vedtakJournalpostId"
+                      ],
                       "historikk": [
                         {
                           "type": "notat",

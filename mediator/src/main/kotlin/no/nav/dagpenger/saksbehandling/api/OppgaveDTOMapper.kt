@@ -23,14 +23,14 @@ import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
 internal class OppgaveDTOMapper(
     private val pdlKlient: PDLKlient,
-    private val journalpostIdClient: JournalpostIdClient,
+    private val relevanteJournalpostIdOppslag: RelevanteJournalpostIdOppslag,
     private val saksbehandlerOppslag: SaksbehandlerOppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
     suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
         return coroutineScope {
             val person = async { pdlKlient.person(oppgave.behandling.person.ident).getOrThrow() }
-            val journalpostIder = async { journalpostIdClient.hentJournalPostIder(oppgave.behandling) }
+            val journalpostIder = async { relevanteJournalpostIdOppslag.hentJournalpostIder(oppgave) }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
                     async { saksbehandlerOppslag.hentSaksbehandler(saksbehandlerIdent) }
