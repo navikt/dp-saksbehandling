@@ -210,7 +210,9 @@ class OppgaveMediatorTest {
         withMigratedDb { datasource ->
             val repo = PostgresOppgaveRepository(datasource)
             val oppgaveMediator =
-                OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock, behandlingKlientMock, mockk())
+                OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock, behandlingKlientMock, mockk()).also {
+                    it.setRapidsConnection(testRapid)
+                }
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =

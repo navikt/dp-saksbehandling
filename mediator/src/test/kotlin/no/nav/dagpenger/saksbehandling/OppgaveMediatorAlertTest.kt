@@ -52,16 +52,16 @@ class OppgaveMediatorAlertTest {
 
             oppgaveMediator.settOppgaveKlarTilKontroll(
                 BehandlingLåstHendelse(
-                    behandlingId = behandlingIdk
-                            ident = "12345678910",
-                )
+                    behandlingId = behandlingId,
+                    ident = "12345678910",
+                ),
             )
-
-
+            rapid.inspektør.size shouldBe 3
+            rapid.inspektør.message(1).forventetAlert(behandlingId) shouldBe true
         }
     }
 
-    private fun JsonNode.forventetAlert(behandlingId: UUID): Boolean{
+    private fun JsonNode.forventetAlert(behandlingId: UUID): Boolean {
         this["@event_name"].asText() shouldBe "saksbehandling_alert"
         this["alertType"].asText() shouldBe "OPPGAVE_IKKE_FUNNET"
         this["feilMelding"].asText() shouldBe "Oppgave ikke funnet"
