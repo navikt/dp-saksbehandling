@@ -35,6 +35,7 @@ internal class OppgaveHistorikkDTOMapper(
                     behandler =
                         OppgaveHistorikkBehandlerDTO(
                             navn = hentNavn(tilstandsendring.hendelse.utførtAv),
+                            rolle = hentRolle(tilstandsendring.hendelse.utførtAv),
                         ),
                 ),
             )
@@ -85,6 +86,13 @@ internal class OppgaveHistorikkDTOMapper(
         return when (utførtAv) {
             is Saksbehandler -> hentNavn(utførtAv.navIdent)
             is Applikasjon -> utførtAv.navn
+        }
+    }
+
+    private fun hentRolle(utførtAv: Behandler): OppgaveHistorikkBehandlerDTO.Rolle {
+        return when (utførtAv) {
+            is Applikasjon -> OppgaveHistorikkBehandlerDTO.Rolle.system
+            is Saksbehandler -> OppgaveHistorikkBehandlerDTO.Rolle.saksbehandler
         }
     }
 }
