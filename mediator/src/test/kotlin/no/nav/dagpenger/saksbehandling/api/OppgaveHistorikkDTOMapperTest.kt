@@ -79,13 +79,13 @@ class OppgaveHistorikkDTOMapperTest {
 
                 historikk.size shouldBe 2
                 historikk.first().tittel shouldBe "Notat"
-                historikk.last().tittel shouldBe "Ny status: Under kontroll"
+                historikk.last().tittel shouldBe "Under kontroll"
 
                 objectMapper.writeValueAsString(historikk) shouldEqualSpecifiedJsonIgnoringOrder """
                 [
                     {
                         "type": "statusendring",
-                        "tittel": "Ny status: Under kontroll",
+                        "tittel": "Under kontroll",
                         "behandler": {
                             "navn": "fornavn etternavn"
                         }
@@ -207,7 +207,7 @@ class OppgaveHistorikkDTOMapperTest {
                 [
                     {
                         "type": "statusendring",
-                        "tittel": "Ny status: Under kontroll",
+                        "tittel": "Under kontroll",
                         "behandler": {
                             "navn": "beslutterFornavn beslutterEtternavn"
                         }
@@ -223,28 +223,28 @@ class OppgaveHistorikkDTOMapperTest {
                     },
                     {
                         "type": "statusendring",
-                        "tittel": "Ny status: Klar til kontroll",
+                        "tittel": "Klar til kontroll",
                         "behandler": {
                             "navn": "dp-behandling"
                         }
                     },
                     {
                         "type": "statusendring",
-                        "tittel": "Ny status: Sendt til kontroll",
+                        "tittel": "Sendt til kontroll",
                         "behandler": {
                             "navn": "saksbehandlerFornavn saksbehandlerEtternavn"
                         }
                     },
                     {
                         "type": "statusendring",
-                        "tittel": "Ny status: Under behandling",
+                        "tittel": "Under behandling",
                         "behandler": {
                             "navn": "saksbehandlerFornavn saksbehandlerEtternavn"
                         }
                     },
                     {
                         "type": "statusendring",
-                        "tittel": "Ny status: Klar til behandling",
+                        "tittel": "Klar til behandling",
                         "behandler": {
                             "navn": "dp-behandling"
                         }

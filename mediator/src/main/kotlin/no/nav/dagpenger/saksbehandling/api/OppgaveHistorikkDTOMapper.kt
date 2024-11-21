@@ -55,19 +55,18 @@ internal class OppgaveHistorikkDTOMapper(
     }
 
     private fun tilstandsendringTittel(tilstandsendring: Tilstandsendring): String {
-        return "Ny status: " +
-            when (tilstandsendring.tilstand) {
-                OPPRETTET -> "Opprettet"
-                KLAR_TIL_BEHANDLING -> "Klar til behandling"
-                UNDER_BEHANDLING -> "Under behandling"
-                FERDIG_BEHANDLET -> "Ferdig behandlet"
-                PAA_VENT -> "På vent"
-                KLAR_TIL_KONTROLL -> "Klar til kontroll"
-                UNDER_KONTROLL -> "Under kontroll"
-                AVVENTER_LÅS_AV_BEHANDLING -> "Sendt til kontroll"
-                AVVENTER_OPPLÅSING_AV_BEHANDLING -> "Returnert til saksbehandling"
-                BEHANDLES_I_ARENA -> "Behandles i Arena"
-            }
+        return when (tilstandsendring.tilstand) {
+            OPPRETTET -> "Opprettet"
+            KLAR_TIL_BEHANDLING -> "Klar til behandling"
+            UNDER_BEHANDLING -> "Under behandling"
+            FERDIG_BEHANDLET -> "Ferdig behandlet"
+            PAA_VENT -> "På vent"
+            KLAR_TIL_KONTROLL -> "Klar til kontroll"
+            UNDER_KONTROLL -> "Under kontroll"
+            AVVENTER_LÅS_AV_BEHANDLING -> "Sendt til kontroll"
+            AVVENTER_OPPLÅSING_AV_BEHANDLING -> "Returnert til saksbehandling"
+            BEHANDLES_I_ARENA -> "Behandles i Arena"
+        }
     }
 
     private suspend fun hentOppgavehistorikkBehandler(behandler: Behandler): OppgaveHistorikkBehandlerDTO {
