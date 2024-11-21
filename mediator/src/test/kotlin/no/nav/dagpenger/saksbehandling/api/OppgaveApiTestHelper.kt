@@ -1,15 +1,19 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import com.github.navikt.tbd_libs.naisful.NaisEndpoints
+import com.github.navikt.tbd_libs.naisful.standardApiModule
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
+import io.ktor.server.application.Application
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
@@ -37,13 +41,13 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
+import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -61,15 +65,26 @@ internal object OppgaveApiTestHelper {
     ) {
         testApplication {
             application {
-                apiConfig()
-                oppgaveApi(
+                installerApis(
                     oppgaveMediator,
                     oppgaveDTOMapper,
-                    applicationCallParser,
+                    mockk(relaxed = true),
                 )
+                statusPages()
             }
             test()
         }
+    }
+
+    fun Application.statusPages() {
+        standardApiModule(
+            meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
+            objectMapper = objectMapper,
+            callLogger = environment.log,
+            naisEndpoints = NaisEndpoints.Default,
+            callIdHeaderName = "callId",
+            statusPagesConfig = { statusPages() },
+        )
     }
 
     fun withOppgaveApi(
@@ -82,8 +97,7 @@ internal object OppgaveApiTestHelper {
     ) {
         testApplication {
             application {
-                apiConfig()
-                oppgaveApi(
+                installerApis(
                     oppgaveMediator,
                     OppgaveDTOMapper(
                         pdlKlient,
@@ -91,8 +105,9 @@ internal object OppgaveApiTestHelper {
                         saksbehandlerOppslag,
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                     ),
-                    applicationCallParser,
+                    mockk(relaxed = true),
                 )
+                statusPages()
             }
             test()
         }

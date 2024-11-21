@@ -3,7 +3,9 @@ package no.nav.dagpenger.saksbehandling.mottak
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -16,7 +18,7 @@ internal class BehandlingAvbruttMottak(
     companion object {
         private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "behandling_avbrutt") }
+            precondition { it.requireValue("@event_name", "behandling_avbrutt") }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
         }
     }
@@ -28,6 +30,8 @@ internal class BehandlingAvbruttMottak(
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
     ) {
         val ident = packet["ident"].asText()
         val søknadId = packet["søknadId"].asUUID()

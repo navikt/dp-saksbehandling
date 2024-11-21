@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling.api.config.auth
+package no.nav.dagpenger.saksbehandling.api.auth
 
 import com.auth0.jwk.JwkProviderBuilder
 import io.ktor.server.auth.jwt.JWTAuthenticationProvider

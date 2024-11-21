@@ -4,7 +4,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -19,7 +21,9 @@ internal class ForslagTilVedtakMottak(
         private val logger = KotlinLogging.logger {}
 
         val rapidFilter: River.() -> Unit = {
-            validate { it.demandValue("@event_name", "forslag_til_vedtak") }
+            precondition {
+                it.requireValue("@event_name", "forslag_til_vedtak")
+            }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
             validate { it.interestedIn("utfall", "harAvklart") }
         }
@@ -32,6 +36,8 @@ internal class ForslagTilVedtakMottak(
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
     ) {
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()

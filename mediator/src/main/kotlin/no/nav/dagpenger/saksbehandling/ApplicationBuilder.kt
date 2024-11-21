@@ -3,14 +3,14 @@ package no.nav.dagpenger.saksbehandling
 import com.github.navikt.tbd_libs.rapids_and_rivers.KafkaRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.ktor.server.application.install
-import io.ktor.server.engine.ApplicationEngine
+import io.ktor.server.cio.CIOApplicationEngine
+import io.ktor.server.engine.EmbeddedServer
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
-import no.nav.dagpenger.saksbehandling.api.oppgaveApi
+import no.nav.dagpenger.saksbehandling.api.installerApis
+import no.nav.dagpenger.saksbehandling.api.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
@@ -30,10 +30,10 @@ import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.CachedSaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
+import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
-import no.nav.dagpenger.saksbehandling.statistikk.statistikkApi
 import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
@@ -90,29 +90,33 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
 
     private val rapidsConnection: RapidsConnection =
-        RapidApplication.create(configuration) { applicationEngine: ApplicationEngine, _: KafkaRapid ->
-            with(applicationEngine.application) {
-                this.apiConfig()
-                this.oppgaveApi(
-                    oppgaveMediator,
-                    oppgaveDTOMapper,
-                    applicationCallParser,
-                )
-                this.statistikkApi(PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource))
-                this.install(KafkaStreamsPlugin) {
-                    kafkaStreams =
-                        kafkaStreams(Configuration.kafkaStreamProperties) {
-                            skjermetPersonStatus(
-                                Configuration.skjermingPersonStatusTopic,
-                                skjermingConsumer::oppdaterSkjermetStatus,
-                            )
-                            adressebeskyttetStream(
-                                Configuration.leesahTopic,
-                                adressebeskyttelseConsumer::oppdaterAdressebeskyttelseStatus,
-                            )
-                        }
+        RapidApplication.create(
+            env = configuration,
+            objectMapper = objectMapper,
+            builder = {
+                withKtorModule {
+                    installerApis(
+                        oppgaveMediator,
+                        oppgaveDTOMapper,
+                        PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource),
+                    )
+                    withStatusPagesConfig { statusPages() }
+                    this.install(KafkaStreamsPlugin) {
+                        kafkaStreams =
+                            kafkaStreams(Configuration.kafkaStreamProperties) {
+                                skjermetPersonStatus(
+                                    Configuration.skjermingPersonStatusTopic,
+                                    skjermingConsumer::oppdaterSkjermetStatus,
+                                )
+                                adressebeskyttetStream(
+                                    Configuration.leesahTopic,
+                                    adressebeskyttelseConsumer::oppdaterAdressebeskyttelseStatus,
+                                )
+                            }
+                    }
                 }
-            }
+            },
+        ) { _: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
         }.also { rapidsConnection ->
             utsendingMediator.setRapidsConnection(rapidsConnection)
             oppgaveMediator.setRapidsConnection(rapidsConnection)

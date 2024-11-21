@@ -1,5 +1,8 @@
-package no.nav.dagpenger.saksbehandling.api.config.auth
+package no.nav.dagpenger.saksbehandling.api.auth
 
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.JWTPrincipal
@@ -8,6 +11,12 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration
 
 private val logger = KotlinLogging.logger {}
+
+fun Application.authConfig() {
+    install(Authentication) {
+        jwt("azureAd")
+    }
+}
 
 fun AuthenticationConfig.jwt(name: String) {
     jwt(name) {

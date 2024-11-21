@@ -12,7 +12,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
-import no.nav.dagpenger.saksbehandling.api.config.apiConfig
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import org.junit.jupiter.api.Test
@@ -30,7 +30,7 @@ class StatuspageTest {
             val message = "Fant ikke oppgave med id"
             val path = "/v1/oppgave/id/DataNotFoundException"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) { throw DataNotFoundException(message) }
                 }
@@ -59,7 +59,7 @@ class StatuspageTest {
             val message = "Kunne ikke rehydrere med ugyldig tilstand"
             val path = "/UkjentTilstandException"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) { throw Tilstand.UgyldigTilstandException(message) }
                 }
@@ -88,7 +88,7 @@ class StatuspageTest {
             val message = "Kan ikke håndtere hendelsen i denne tilstanden"
             val path = "/UlovligTilstandsendringException"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) { throw UlovligTilstandsendringException(message) }
                 }
@@ -117,7 +117,7 @@ class StatuspageTest {
             val message = "Kunne ikke finne oppgaveId i path"
             val path = "/IllegalArgumentException"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) { throw IllegalArgumentException(message) }
                 }
@@ -146,7 +146,7 @@ class StatuspageTest {
             val message = "Mangler tilgang"
             val path = "/ManglendeTilgang"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) { throw ManglendeTilgang(message) }
                 }
@@ -175,7 +175,7 @@ class StatuspageTest {
             val message = "Feil ved parsing av dato/tid"
             val path = "/DateTimeParseException"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) {
                         throw DateTimeParseException(message, "syttende mai 2024 klokka 19:43", 1)
@@ -206,7 +206,7 @@ class StatuspageTest {
             val message = "Uhåndtert feil i koden"
             val path = "/Exception"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) {
                         throw RuntimeException(message)
@@ -237,7 +237,7 @@ class StatuspageTest {
             val message = "Oppgaven eies av noen andre"
             val path = "/AlleredeTildeltException"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) { throw Oppgave.AlleredeTildeltException(message) }
                 }
@@ -266,7 +266,7 @@ class StatuspageTest {
             val message = "Kall mot dp-behandling feilet"
             val path = "/GodkjennBehandlingFeiletException"
             application {
-                apiConfig()
+                statusPages()
                 routing {
                     get(path) { throw GodkjennBehandlingFeiletException(message) }
                 }
