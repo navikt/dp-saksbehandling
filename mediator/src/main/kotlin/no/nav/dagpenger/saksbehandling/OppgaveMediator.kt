@@ -6,6 +6,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
+import no.nav.dagpenger.saksbehandling.OppgaveAlertManager.OppgaveAlertType.OPPGAVE_IKKE_FUNNET
+import no.nav.dagpenger.saksbehandling.OppgaveAlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
@@ -106,11 +108,12 @@ class OppgaveMediator(
         val oppgave = repository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
         when (oppgave) {
             null -> {
-                logger.warn {
+                val feilmelding =
                     "Mottatt hendelse forslag_til_vedtak for behandling med id " +
                         "${forslagTilVedtakHendelse.behandlingId}." +
                         "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
-                }
+                logger.error { feilmelding }
+                sendAlertTilRapid(OPPGAVE_IKKE_FUNNET, feilmelding)
             }
 
             else -> {
@@ -216,11 +219,12 @@ class OppgaveMediator(
         val oppgave = repository.finnOppgaveFor(behandlingOpplåstHendelse.behandlingId)
         when (oppgave) {
             null -> {
-                logger.error {
+                val feilMelding =
                     "Mottatt hendelse behandling_opplåst for behandling med id " +
                         "${behandlingOpplåstHendelse.behandlingId}." +
                         "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
-                }
+                logger.error { feilMelding }
+                sendAlertTilRapid(OPPGAVE_IKKE_FUNNET, feilMelding)
             }
 
             else -> {
@@ -247,11 +251,12 @@ class OppgaveMediator(
         val oppgave = repository.finnOppgaveFor(behandlingLåstHendelse.behandlingId)
         when (oppgave) {
             null -> {
-                logger.error {
+                val feilMelding =
                     "Mottatt hendelse behandling_låst for behandling med id " +
                         "${behandlingLåstHendelse.behandlingId}." +
                         "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
-                }
+                logger.error { feilMelding }
+                sendAlertTilRapid(OPPGAVE_IKKE_FUNNET, feilMelding)
             }
 
             else -> {
@@ -404,4 +409,9 @@ class OppgaveMediator(
             )
         return repository.tildelOgHentNesteOppgave(nesteOppgaveHendelse, tildelNesteOppgaveFilter)
     }
+
+    private fun sendAlertTilRapid(
+        feilType: OppgaveAlertManager.AlertType,
+        utvidetFeilmelding: String,
+    ) = rapidsConnection.sendAlertTilRapid(feilType, utvidetFeilmelding)
 }
