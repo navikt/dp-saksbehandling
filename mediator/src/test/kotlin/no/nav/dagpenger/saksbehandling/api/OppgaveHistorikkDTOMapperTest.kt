@@ -82,7 +82,7 @@ class OppgaveHistorikkDTOMapperTest {
                         "type": "statusendring",
                         "tittel": "Ny status: Under kontroll",
                         "behandler": {
-                            "navn": "fornavn etternavn"
+                            "navn": "etternavn, fornavn"
                         }
                     },
                     {
@@ -90,7 +90,7 @@ class OppgaveHistorikkDTOMapperTest {
                         "tidspunkt": "2024-11-01T09:50:00",
                         "tittel": "Notat",
                         "behandler": {
-                            "navn": "fornavn etternavn"
+                            "navn": "etternavn, fornavn"
                         },
                         "body": "Dette er et notat"
                     }
@@ -202,7 +202,7 @@ class OppgaveHistorikkDTOMapperTest {
                         "type": "statusendring",
                         "tittel": "Ny status: Under kontroll",
                         "behandler": {
-                            "navn": "beslutterFornavn beslutterEtternavn"
+                            "navn": "beslutterEtternavn, beslutterFornavn"
                         }
                     },
                     {
@@ -211,7 +211,7 @@ class OppgaveHistorikkDTOMapperTest {
                         "tittel": "Notat",
                         "body": "Dette er et notat",
                         "behandler": {
-                            "navn": "beslutterFornavn beslutterEtternavn"
+                            "navn": "beslutterEtternavn, beslutterFornavn"
                         }
                     },
                     {
@@ -225,14 +225,14 @@ class OppgaveHistorikkDTOMapperTest {
                         "type": "statusendring",
                         "tittel": "Ny status: Sendt til kontroll",
                         "behandler": {
-                            "navn": "saksbehandlerFornavn saksbehandlerEtternavn"
+                            "navn": "saksbehandlerEtternavn, saksbehandlerFornavn"
                         }
                     },
                     {
                         "type": "statusendring",
                         "tittel": "Ny status: Under behandling",
                         "behandler": {
-                            "navn": "saksbehandlerFornavn saksbehandlerEtternavn"
+                            "navn": "saksbehandlerEtternavn, saksbehandlerFornavn"
                         }
                     },
                     {
