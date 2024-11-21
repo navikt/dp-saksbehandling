@@ -1,0 +1,2 @@
+ALTER TABLE notat_v1
+    ALTER COLUMN skrevet_av SET NOT NULL;

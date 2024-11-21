@@ -939,7 +939,13 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente en oppgave med notat`() {
         val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        testOppgave.tildel(SettOppgaveAnsvarHendelse(oppgaveId = testOppgave.oppgaveId, beslutter.navIdent, beslutter))
+        testOppgave.tildel(
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = testOppgave.oppgaveId,
+                ansvarligIdent = beslutter.navIdent,
+                utførtAv = beslutter,
+            ),
+        )
         testOppgave.lagreNotat(
             NotatHendelse(
                 oppgaveId = testOppgave.oppgaveId,

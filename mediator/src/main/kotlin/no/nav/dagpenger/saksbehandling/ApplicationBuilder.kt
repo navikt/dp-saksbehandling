@@ -9,6 +9,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
+import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
@@ -84,7 +85,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
             pdlKlient,
-            journalpostIdClient,
+            RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
             saksbehandlerOppslag,
             OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
         )

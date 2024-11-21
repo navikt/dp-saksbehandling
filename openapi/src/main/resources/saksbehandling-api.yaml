@@ -539,29 +539,19 @@ components:
 
     OppgaveHistorikk:
       type: object
-      required:
-        - type
-        - tidspunkt
-        - tittel
-        - beslutter
       properties:
         type:
           type: string
           enum:
             - notat
-            - ny-status
+            - statusendring
         tidspunkt:
           type: string
           format: date-time
-        body:
-          type: string
         tittel:
          type: string
         behandler:
           type: object
-          required:
-            - rolle
-            - navn
           properties:
             navn:
               type: string
@@ -570,6 +560,16 @@ components:
               enum:
                 - saksbehandler
                 - beslutter
+                - system
+          required:
+            - navn
+        body:
+          type: string
+      required:
+        - type
+        - tidspunkt
+        - tittel
+        - behandler
 
     NesteOppgave:
       type: object

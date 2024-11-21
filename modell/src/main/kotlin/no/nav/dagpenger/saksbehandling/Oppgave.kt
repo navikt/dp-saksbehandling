@@ -644,6 +644,7 @@ data class Oppgave private constructor(
                             notatId = UUIDv7.ny(),
                             tekst = notatHendelse.tekst,
                             sistEndretTidspunkt = LocalDateTime.now(),
+                            skrevetAv = notatHendelse.utførtAv.navIdent,
                         )
                 }
 

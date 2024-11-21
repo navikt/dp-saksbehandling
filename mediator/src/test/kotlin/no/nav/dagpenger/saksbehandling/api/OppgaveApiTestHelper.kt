@@ -43,7 +43,6 @@ import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -90,7 +89,7 @@ internal object OppgaveApiTestHelper {
     fun withOppgaveApi(
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         pdlKlient: PDLKlient = mockk(relaxed = true),
-        journalpostIdClient: JournalpostIdClient = mockk(relaxed = true),
+        relevanteJournalpostIdOppslag: RelevanteJournalpostIdOppslag = mockk(relaxed = true),
         saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
         oppgaveRepository: OppgaveRepository = mockk<OppgaveRepository>(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
@@ -101,7 +100,7 @@ internal object OppgaveApiTestHelper {
                     oppgaveMediator,
                     OppgaveDTOMapper(
                         pdlKlient,
-                        journalpostIdClient,
+                        relevanteJournalpostIdOppslag,
                         saksbehandlerOppslag,
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                     ),
