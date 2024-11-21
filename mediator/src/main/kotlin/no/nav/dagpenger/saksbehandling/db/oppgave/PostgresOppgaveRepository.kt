@@ -957,7 +957,7 @@ private fun Session.lagreNotat(
     notatId: UUID,
     tilstandsendringId: UUID,
     tekst: String,
-    skrevetAv: String?,
+    skrevetAv: String,
 ): LocalDateTime {
     return run(
         queryOf(
