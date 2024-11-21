@@ -4,7 +4,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
@@ -15,8 +14,6 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
-import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -52,20 +49,6 @@ internal class OppgaveDTOMapper(
                 sisteBeslutterDTO = sisteBeslutterDTO?.await(),
                 oppgaveHistorikk = oppgaveHistorikk.await(),
             )
-        }
-    }
-
-    private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandling): Set<String> {
-        return when (val hendelse = behandling.hendelse) {
-            is SøknadsbehandlingOpprettetHendelse -> {
-                this.hentJournalpostId(hendelse.søknadId).map {
-                    setOf(it)
-                }.getOrElse {
-                    emptySet()
-                }
-            }
-
-            else -> emptySet()
         }
     }
 
