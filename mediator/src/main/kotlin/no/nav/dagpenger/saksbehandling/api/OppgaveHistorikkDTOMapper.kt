@@ -32,11 +32,7 @@ internal class OppgaveHistorikkDTOMapper(
                     type = OppgaveHistorikkDTO.Type.statusendring,
                     tidspunkt = tilstandsendring.tidspunkt,
                     tittel = tilstandsendringTittel(tilstandsendring),
-                    behandler =
-                        OppgaveHistorikkBehandlerDTO(
-                            navn = hentNavn(tilstandsendring.hendelse.utførtAv),
-                            rolle = hentRolle(tilstandsendring.hendelse.utførtAv),
-                        ),
+                    behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
                 ),
             )
 
@@ -47,10 +43,7 @@ internal class OppgaveHistorikkDTOMapper(
                             type = OppgaveHistorikkDTO.Type.notat,
                             tidspunkt = notat.sistEndretTidspunkt,
                             tittel = "Notat",
-                            behandler =
-                                OppgaveHistorikkBehandlerDTO(
-                                    navn = hentNavn(tilstandsendring.hendelse.utførtAv),
-                                ),
+                            behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
                             body = notat.hentTekst(),
                         ),
                     )
@@ -76,23 +69,25 @@ internal class OppgaveHistorikkDTOMapper(
             }
     }
 
+    private suspend fun hentOppgavehistorikkBehandler(behandler: Behandler): OppgaveHistorikkBehandlerDTO {
+        return when (behandler) {
+            is Saksbehandler ->
+                OppgaveHistorikkBehandlerDTO(
+                    navn = hentNavn(behandler.navIdent),
+                    rolle = OppgaveHistorikkBehandlerDTO.Rolle.saksbehandler,
+                )
+
+            is Applikasjon ->
+                OppgaveHistorikkBehandlerDTO(
+                    navn = behandler.navn,
+                    rolle = OppgaveHistorikkBehandlerDTO.Rolle.system,
+                )
+        }
+    }
+
     private suspend fun hentNavn(ident: String): String {
         return saksbehandlerOppslag.hentSaksbehandler(ident).let {
             "${it.fornavn} ${it.etternavn}"
-        }
-    }
-
-    private suspend fun hentNavn(utførtAv: Behandler): String {
-        return when (utførtAv) {
-            is Saksbehandler -> hentNavn(utførtAv.navIdent)
-            is Applikasjon -> utførtAv.navn
-        }
-    }
-
-    private fun hentRolle(utførtAv: Behandler): OppgaveHistorikkBehandlerDTO.Rolle {
-        return when (utførtAv) {
-            is Applikasjon -> OppgaveHistorikkBehandlerDTO.Rolle.system
-            is Saksbehandler -> OppgaveHistorikkBehandlerDTO.Rolle.saksbehandler
         }
     }
 }
