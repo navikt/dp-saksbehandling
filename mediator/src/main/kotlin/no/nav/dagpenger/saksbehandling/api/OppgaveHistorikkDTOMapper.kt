@@ -77,7 +77,7 @@ internal class OppgaveHistorikkDTOMapper(
 
     private suspend fun hentNavn(ident: String): String {
         return saksbehandlerOppslag.hentSaksbehandler(ident).let {
-            "${it.etternavn}, ${it.fornavn}"
+            "${it.fornavn} ${it.etternavn}"
         }
     }
 
