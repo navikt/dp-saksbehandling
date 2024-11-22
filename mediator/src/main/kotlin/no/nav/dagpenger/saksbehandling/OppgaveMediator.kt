@@ -83,9 +83,12 @@ class OppgaveMediator(
 
         repository.lagre(oppgave)
 
-        withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+        withLoggingContext(
+            "oppgaveId" to oppgave.oppgaveId.toString(),
+            "behandlingId" to oppgave.behandling.behandlingId.toString(),
+        ) {
             logger.info {
-                "Mottatt hendelse behandling_opprettet med id ${behandling.behandlingId}. Oppgave opprettet."
+                "Mottatt og behandlet hendelse behandling_opprettet. Oppgave opprettet."
             }
         }
     }
@@ -117,22 +120,27 @@ class OppgaveMediator(
             }
 
             else -> {
-                withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                withLoggingContext(
+                    "oppgaveId" to oppgave.oppgaveId.toString(),
+                    "behandlingId" to forslagTilVedtakHendelse.behandlingId.toString(),
+                ) {
+                    logger.info {
+                        "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er" +
+                            " ${oppgave.tilstand().type} når hendelsen mottas."
+                    }
                     oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let {
                         when (it) {
                             true -> {
                                 repository.lagre(oppgave)
                                 logger.info {
-                                    "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                                        "${forslagTilVedtakHendelse.behandlingId}. Oppgavens tilstand er" +
-                                        " ${oppgave.tilstand().type}"
+                                    "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
+                                        " ${oppgave.tilstand().type} etter behandling."
                                 }
                             }
 
                             false -> {
                                 logger.info {
-                                    "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                                        "${forslagTilVedtakHendelse.behandlingId}. Oppgavens tilstand er uendret" +
+                                    "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
                                         " ${oppgave.tilstand().type}"
                                 }
                             }
@@ -163,35 +171,46 @@ class OppgaveMediator(
         saksbehandlerToken: String,
     ) {
         repository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt SendTilKontrollHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                runBlocking {
+                    behandlingKlient.kreverTotrinnskontroll(
+                        oppgave.behandling.behandlingId,
+                        saksbehandlerToken = saksbehandlerToken,
+                    ).onSuccess { result ->
+                        when (result) {
+                            true -> {
+                                oppgave.sendTilKontroll(sendTilKontrollHendelse)
+                                rapidsConnection.publish(
+                                    key = oppgave.behandling.person.ident,
+                                    JsonMessage.newMessage(
+                                        eventName = "oppgave_sendt_til_kontroll",
+                                        map =
+                                            mapOf(
+                                                "behandlingId" to oppgave.behandling.behandlingId,
+                                                "ident" to oppgave.behandling.person.ident,
+                                            ),
+                                    ).toJson(),
+                                )
+                                repository.lagre(oppgave)
+                                logger.info {
+                                    "Behandlet SendTilKontrollHendelse og publisert oppgave_sendt_til_kontroll " +
+                                        "event. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                                }
+                            }
 
-            runBlocking {
-                behandlingKlient.kreverTotrinnskontroll(
-                    oppgave.behandling.behandlingId,
-                    saksbehandlerToken = saksbehandlerToken,
-                ).onSuccess { result ->
-                    when (result) {
-                        true -> {
-                            oppgave.sendTilKontroll(sendTilKontrollHendelse)
-                            rapidsConnection.publish(
-                                key = oppgave.behandling.person.ident,
-                                JsonMessage.newMessage(
-                                    eventName = "oppgave_sendt_til_kontroll",
-                                    map =
-                                        mapOf(
-                                            "behandlingId" to oppgave.behandling.behandlingId,
-                                            "ident" to oppgave.behandling.person.ident,
-                                        ),
-                                ).toJson(),
-                            )
-                            repository.lagre(oppgave)
+                            false -> {
+                                throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
+                            }
                         }
-
-                        false -> {
-                            throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
-                        }
+                    }.onFailure {
+                        logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
                     }
-                }.onFailure {
-                    logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
                 }
             }
         }
@@ -199,19 +218,31 @@ class OppgaveMediator(
 
     fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
         repository.hentOppgave(returnerTilSaksbehandlingHendelse.oppgaveId).also { oppgave ->
-            oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
-            rapidsConnection.publish(
-                key = oppgave.behandling.person.ident,
-                JsonMessage.newMessage(
-                    eventName = "oppgave_returnert_til_saksbehandling",
-                    map =
-                        mapOf(
-                            "behandlingId" to oppgave.behandling.behandlingId,
-                            "ident" to oppgave.behandling.person.ident,
-                        ),
-                ).toJson(),
-            )
-            repository.lagre(oppgave)
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
+                rapidsConnection.publish(
+                    key = oppgave.behandling.person.ident,
+                    JsonMessage.newMessage(
+                        eventName = "oppgave_returnert_til_saksbehandling",
+                        map =
+                            mapOf(
+                                "behandlingId" to oppgave.behandling.behandlingId,
+                                "ident" to oppgave.behandling.person.ident,
+                            ),
+                    ).toJson(),
+                )
+                repository.lagre(oppgave)
+                logger.info {
+                    "Behandlet ReturnerTilSaksbehandlingHendelse og publisert oppgave_returnert_til_saksbehandling " +
+                        "event. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                }
+            }
         }
     }
 
@@ -228,12 +259,17 @@ class OppgaveMediator(
             }
 
             else -> {
-                oppgave.klarTilBehandling(behandlingOpplåstHendelse)
-                repository.lagre(oppgave)
-                withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                withLoggingContext(
+                    "oppgaveId" to oppgave.oppgaveId.toString(),
+                    "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                ) {
                     logger.info {
-                        "Mottatt hendelse behandling_opplåst for behandling med id " +
-                            "${behandlingOpplåstHendelse.behandlingId}. Oppgave er klar til ny behandling."
+                        "Mottatt BehandlingOpplåstHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                    }
+                    oppgave.klarTilBehandling(behandlingOpplåstHendelse)
+                    repository.lagre(oppgave)
+                    logger.info {
+                        "Behandlet BehandlingOpplåstHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                     }
                 }
             }
@@ -260,12 +296,17 @@ class OppgaveMediator(
             }
 
             else -> {
-                oppgave.klarTilKontroll(behandlingLåstHendelse)
-                repository.lagre(oppgave)
-                withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+                withLoggingContext(
+                    "oppgaveId" to oppgave.oppgaveId.toString(),
+                    "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                ) {
                     logger.info {
-                        "Mottatt hendelse behandling_låst for behandling med id " +
-                            "${behandlingLåstHendelse.behandlingId}. Oppgave er klar til kontroll."
+                        "Mottatt BehandlingLåstHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                    }
+                    oppgave.klarTilKontroll(behandlingLåstHendelse)
+                    repository.lagre(oppgave)
+                    logger.info {
+                        "Behandlet BehandlingLåstHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                     }
                 }
             }
@@ -274,16 +315,22 @@ class OppgaveMediator(
 
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
         return repository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
-            withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
                 logger.info {
-                    "Mottatt hendelse vedtak_fattet for behandling med id ${vedtakFattetHendelse.behandlingId}. " +
-                        "Oppgave ferdigstilles."
+                    "Mottatt hendelse vedtak_fattet for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(vedtakFattetHendelse).let {
                     when (it) {
                         true -> repository.lagre(oppgave)
                         false -> {}
                     }
+                }
+
+                logger.info {
+                    "Behandlet hendelse vedtak_fattet. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }
@@ -294,31 +341,42 @@ class OppgaveMediator(
         saksbehandlerToken: String,
     ) {
         repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
-            oppgave.ferdigstill(godkjentBehandlingHendelse)
-
-            val utsendingID =
-                utsendingMediator.opprettUtsending(
-                    oppgave.oppgaveId,
-                    godkjentBehandlingHendelse.meldingOmVedtak,
-                    oppgave.behandling.person.ident,
-                )
-
-            behandlingKlient.godkjennBehandling(
-                behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.behandling.person.ident,
-                saksbehandlerToken = saksbehandlerToken,
-            ).onSuccess {
-                repository.lagre(oppgave)
-            }.onFailure {
-                val feil = "Feil ved godkjenning av behandling: ${it.message}"
-                logger.error { feil }
-                utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
-                    when (rowsDeleted) {
-                        1 -> logger.info { "Slettet utsending med id $utsendingID" }
-                        else -> logger.error { "Fant ikke utsending med id $utsendingID" }
-                    }
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt GodkjentBehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
-                throw GodkjennBehandlingFeiletException(feil)
+                oppgave.ferdigstill(godkjentBehandlingHendelse)
+
+                val utsendingID =
+                    utsendingMediator.opprettUtsending(
+                        oppgave.oppgaveId,
+                        godkjentBehandlingHendelse.meldingOmVedtak,
+                        oppgave.behandling.person.ident,
+                    )
+
+                behandlingKlient.godkjennBehandling(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = oppgave.behandling.person.ident,
+                    saksbehandlerToken = saksbehandlerToken,
+                ).onSuccess {
+                    repository.lagre(oppgave)
+                    logger.info {
+                        "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    }
+                }.onFailure {
+                    val feil = "Feil ved godkjenning av behandling: ${it.message}"
+                    logger.error { feil }
+                    utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
+                        when (rowsDeleted) {
+                            1 -> logger.info { "Slettet utsending med id $utsendingID" }
+                            else -> logger.error { "Fant ikke utsending med id $utsendingID" }
+                        }
+                    }
+                    throw GodkjennBehandlingFeiletException(feil)
+                }
             }
         }
     }
@@ -344,14 +402,24 @@ class OppgaveMediator(
     }
 
     fun avbrytOppgave(hendelse: BehandlingAvbruttHendelse) {
-        logger.info { "Mottatt behandling avbrutt hendelse for behandling med id ${hendelse.behandlingId}." }
         repository.finnOppgaveFor(hendelse.behandlingId)?.let { oppgave ->
-            if (oppgave.tilstand() == Oppgave.Opprettet) {
-                repository.slettBehandling(hendelse.behandlingId)
-            } else {
-                logger.info { "Behandling med id ${hendelse.behandlingId} behandles i Arena" }
-                oppgave.behandlesIArena(hendelse)
-                repository.lagre(oppgave)
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                if (oppgave.tilstand() == Oppgave.Opprettet) {
+                    repository.slettBehandling(hendelse.behandlingId)
+                } else {
+                    logger.info { "Behandling med id ${hendelse.behandlingId} behandles i Arena" }
+                    oppgave.behandlesIArena(hendelse)
+                    repository.lagre(oppgave)
+                    logger.info {
+                        "Behandlet BehandlingAvbruttHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    }
+                }
             }
         }
     }
