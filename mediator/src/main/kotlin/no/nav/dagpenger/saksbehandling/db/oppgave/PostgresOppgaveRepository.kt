@@ -507,14 +507,14 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     }
 
                 val saksbehandlerClause =
-                    søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident" } ?: ""
+                    søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident " } ?: ""
 
-                val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident" } ?: ""
+                val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident " } ?: ""
 
-                val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id" } ?: ""
+                val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id " } ?: ""
 
                 val behandlingIdClause =
-                    søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id" } ?: ""
+                    søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id " } ?: ""
 
                 val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
                 val emneknaggClause =

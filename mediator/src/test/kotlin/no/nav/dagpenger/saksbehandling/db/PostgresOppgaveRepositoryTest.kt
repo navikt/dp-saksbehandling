@@ -1245,10 +1245,10 @@ class PostgresOppgaveRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1)
-            val oppgave2 = lagOppgave(UnderBehandling, saksbehandlerIdent = saksbehandler2)
-            val oppgave3 = lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2)
-            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null)
+            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf("Innvilgelse"))
+            val oppgave2 = lagOppgave(UnderBehandling, saksbehandlerIdent = saksbehandler2, emneknagger = setOf("Avslag minsteinntekt"))
+            val oppgave3 = lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf("Innvilgelse"))
+            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf("Innvilgelse"))
 
             repo.lagre(oppgave1)
             repo.lagre(oppgave2)
@@ -1278,6 +1278,15 @@ class PostgresOppgaveRepositoryTest {
                     saksbehandlerIdent = null,
                 ),
             ).size shouldBe 4
+
+            repo.søk(
+                Søkefilter(
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = UBEGRENSET_PERIODE,
+                    saksbehandlerIdent = saksbehandler2,
+                    emneknagger = setOf("Innvilgelse"),
+                ),
+            ).size shouldBe 1
         }
     }
 

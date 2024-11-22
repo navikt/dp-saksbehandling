@@ -277,12 +277,12 @@ class OppgaveMediator(
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
                     "Mottatt hendelse vedtak_fattet for behandling med id ${vedtakFattetHendelse.behandlingId}. " +
-                        "Oppgave ferdigstilt."
+                        "Oppgave ferdigstilles."
                 }
                 oppgave.ferdigstill(vedtakFattetHendelse).let {
                     when (it) {
                         true -> repository.lagre(oppgave)
-                        false -> logger.warn { "Oppgave med id ${oppgave.oppgaveId} er allerede ferdigstilt" }
+                        false -> {}
                     }
                 }
             }
