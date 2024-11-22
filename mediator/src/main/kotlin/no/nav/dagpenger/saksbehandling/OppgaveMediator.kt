@@ -82,6 +82,10 @@ class OppgaveMediator(
             )
 
         repository.lagre(oppgave)
+        sendAlertTilRapid(
+            OppgaveAlertManager.OppgaveAlertType.OPPGAVE_IKKE_FUNNET,
+            "Mottatt hendelse behandling_opprettet med id ${behandling.behandlingId}. Oppgave opprettet.",
+        )
 
         withLoggingContext(
             "oppgaveId" to oppgave.oppgaveId.toString(),
