@@ -20,6 +20,8 @@ class SøkefilterTest {
             this["fom"] = "2021-01-01"
             this["tom"] = "2023-01-01"
             this["mineOppgaver"] = "true"
+            this["antallOppgaver"] = "10"
+            this["side"] = "1"
         }.let {
             Søkefilter.fra(it, "testIdent") shouldBe
                 Søkefilter(
@@ -30,12 +32,14 @@ class SøkefilterTest {
                         ),
                     tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                     saksbehandlerIdent = "testIdent",
+                    antallOppgaver = 10,
+                    side = 1,
                 )
         }
     }
 
     @Test
-    fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom eller tom`() {
+    fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom eller tom antallOppgaver og side`() {
         Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
@@ -44,6 +48,8 @@ class SøkefilterTest {
                 personIdent = null,
                 oppgaveId = null,
                 behandlingId = null,
+                antallOppgaver = 50,
+                side = 0,
             )
     }
 
