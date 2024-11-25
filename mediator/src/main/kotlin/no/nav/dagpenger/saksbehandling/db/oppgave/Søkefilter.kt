@@ -31,6 +31,10 @@ class FilterBuilder {
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
 
+    fun antallOppgaver(): Int = stringValues["antallOppgaver"]?.toInt() ?: 50
+
+    fun side(): Int = stringValues["side"]?.toInt() ?: 0
+
     fun tilstand(): Set<Oppgave.Tilstand.Type>? {
         return stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
     }
@@ -85,6 +89,8 @@ data class Søkefilter(
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
     val emneknagger: Set<String> = emptySet(),
+    val antallOppgaver: Int = 50,
+    val side: Int = 0,
 ) {
     companion object {
         fun fra(
@@ -96,6 +102,8 @@ data class Søkefilter(
             val tilstander = builder.tilstand() ?: defaultOppgaveListTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
             val emneknagger = builder.emneknagg() ?: emptySet()
+            val antallOppgaver = builder.antallOppgaver()
+            val side = builder.side()
 
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
@@ -106,6 +114,8 @@ data class Søkefilter(
                         else -> null
                     },
                 emneknagger = emneknagger,
+                antallOppgaver = antallOppgaver,
+                side = side,
             )
         }
     }
