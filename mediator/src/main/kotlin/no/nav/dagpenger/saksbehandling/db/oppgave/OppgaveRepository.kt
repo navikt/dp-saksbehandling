@@ -33,7 +33,7 @@ interface OppgaveRepository {
     fun søk(
         søkeFilter: Søkefilter,
         orderByOpprettet: Boolean = false,
-    ): List<Oppgave>
+    ): PostgresOppgaveRepository.OppgaveSøkResultat
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
 

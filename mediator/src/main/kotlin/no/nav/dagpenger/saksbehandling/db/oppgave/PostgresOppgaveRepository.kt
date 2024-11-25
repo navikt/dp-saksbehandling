@@ -331,7 +331,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 periode = UBEGRENSET_PERIODE,
                 saksbehandlerIdent = null,
             ),
-        )
+        ).oppgaver
 
     private fun hentOppgave(
         transactionalSession: TransactionalSession,
@@ -382,7 +382,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     tilstander = Type.values,
                     behandlingId = behandlingId,
                 ),
-        ).singleOrNull()
+        ).oppgaver.singleOrNull()
 
     override fun fjerneEmneknagg(
         behandlingId: UUID,
@@ -476,7 +476,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 tilstander = Type.values,
                 oppgaveId = oppgaveId,
             ),
-        ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+        ).oppgaver.singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
     override fun finnOppgaverFor(ident: String): List<Oppgave> =
         søk(
@@ -488,15 +488,18 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     personIdent = ident,
                 ),
             orderByOpprettet = true,
-        )
+        ).oppgaver
+
+    data class OppgaveSøkResultat(
+        val oppgaver: List<Oppgave>,
+        val totaltAntallOppgaver: Int,
+    )
 
     override fun søk(
         søkeFilter: Søkefilter,
         orderByOpprettet: Boolean,
-    ): List<Oppgave> {
-        var oppgaver: List<Oppgave>
-
-        oppgaver =
+    ): OppgaveSøkResultat {
+        val oppgaver =
             sessionOf(datasource).use { session ->
                 val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
                 val tilstandClause =
@@ -575,15 +578,31 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                             oppgaveIdClause,
                             behandlingIdClause,
                             emneknaggClause,
-                            orderByOpprettetClause,
-                            limitAndOffsetClause,
                         )
                         .toString()
 
-                sikkerlogger.info { "Søker etter oppgaver med følgende SQL: $sql" }
+                //language=PostgreSQL
+                val hubba =
+                    """
+                    WITH filtered_oppgaver AS(
+                     $sql
+                    ),
+                    total_count AS (
+                     SELECT COUNT(*) as total_count FROM filtered_oppgaver
+                    )
+                    SELECT
+                      f.*, t.total_count
+                    FROM
+                      filtered_oppgaver f,
+                      total_count t
+                    $orderByOpprettetClause
+                    $limitAndOffsetClause    
+                    """.trimIndent()
+
+                sikkerlogger.info { "Søker etter oppgaver med følgende SQL: $hubba" }
                 val queryOf =
                     queryOf(
-                        statement = sql,
+                        statement = hubba,
                         paramMap =
                             mapOf(
                                 "tilstander" to tilstander,
@@ -598,11 +617,11 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     )
                 session.run(
                     queryOf.map { row ->
-                        row.rehydrerOppgave(datasource)
+                        Pair(row.rehydrerOppgave(datasource), row.int("total_count"))
                     }.asList,
                 )
             }
-        return oppgaver
+        return OppgaveSøkResultat(oppgaver.map { it.first }, oppgaver.firstOrNull()?.second ?: 0)
     }
 
     override fun oppdaterSkjermingStatus(

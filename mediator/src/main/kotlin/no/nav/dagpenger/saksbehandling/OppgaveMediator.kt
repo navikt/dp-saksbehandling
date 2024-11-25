@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -463,7 +464,7 @@ class OppgaveMediator(
 
     fun finnOppgaverFor(ident: String): List<Oppgave> = repository.finnOppgaverFor(ident)
 
-    fun søk(søkefilter: Søkefilter): List<Oppgave> = repository.søk(søkefilter)
+    fun søk(søkefilter: Søkefilter): OppgaveSøkResultat = repository.søk(søkefilter)
 
     fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
