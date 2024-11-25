@@ -63,4 +63,14 @@ class SøkefilterTest {
             Periode(fom = LocalDate.MIN, tom = LocalDate.MIN)
         }
     }
+
+    @Test
+    fun `Ugyldige verdier for paginering skal kaste feil`() {
+        shouldThrow<IllegalArgumentException> {
+            Søkefilter.Paginering(10, -1)
+        }
+        shouldThrow<IllegalArgumentException> {
+            Søkefilter.Paginering(0, 2)
+        }
+    }
 }

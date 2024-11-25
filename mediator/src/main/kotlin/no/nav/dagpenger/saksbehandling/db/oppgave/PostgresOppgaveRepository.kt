@@ -537,6 +537,11 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         ""
                     }
 
+                val limitAndOffsetClause =
+                    søkeFilter.paginering?.let {
+                        """ LIMIT ${it.antallOppgaver} OFFSET ${it.side * it.antallOppgaver} """
+                    } ?: ""
+
                 // TODO: sjekk på tilstand OPPRETTET bør erstattes med noe logikk for ikke-søkbare-tilstander
 
                 // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
@@ -571,6 +576,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                             behandlingIdClause,
                             emneknaggClause,
                             orderByOpprettetClause,
+                            limitAndOffsetClause,
                         )
                         .toString()
 
