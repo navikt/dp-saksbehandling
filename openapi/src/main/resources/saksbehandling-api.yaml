@@ -53,13 +53,11 @@ paths:
           required: false
           schema:
             type: integer
-            default: 50
         - in: query
           name: side
           required: false
           schema:
             type: integer
-            default: 0
 
 
       responses:

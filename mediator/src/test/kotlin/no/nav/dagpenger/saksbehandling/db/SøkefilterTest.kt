@@ -32,14 +32,13 @@ class SøkefilterTest {
                         ),
                     tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                     saksbehandlerIdent = "testIdent",
-                    antallOppgaver = 10,
-                    side = 1,
+                    paginering = Søkefilter.Paginering(10, 1),
                 )
         }
     }
 
     @Test
-    fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom eller tom antallOppgaver og side`() {
+    fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom eller tom`() {
         Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
@@ -48,8 +47,7 @@ class SøkefilterTest {
                 personIdent = null,
                 oppgaveId = null,
                 behandlingId = null,
-                antallOppgaver = 50,
-                side = 0,
+                paginering = null,
             )
     }
 

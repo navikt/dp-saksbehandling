@@ -31,6 +31,16 @@ class FilterBuilder {
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
 
+    fun paginering(): Søkefilter.Paginering? {
+        val antallOppgaver = stringValues["antallOppgaver"]?.toInt()
+        val side = stringValues["side"]?.toInt()
+        return if (antallOppgaver != null && side != null) {
+            Søkefilter.Paginering(antallOppgaver, side)
+        } else {
+            null
+        }
+    }
+
     fun antallOppgaver(): Int = stringValues["antallOppgaver"]?.toInt() ?: 50
 
     fun side(): Int = stringValues["side"]?.toInt() ?: 0
@@ -89,9 +99,13 @@ data class Søkefilter(
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
     val emneknagger: Set<String> = emptySet(),
-    val antallOppgaver: Int = 50,
-    val side: Int = 0,
+    val paginering: Paginering? = null,
 ) {
+    data class Paginering(
+        val antallOppgaver: Int,
+        val side: Int,
+    )
+
     companion object {
         fun fra(
             queryParameters: Parameters,
@@ -102,8 +116,7 @@ data class Søkefilter(
             val tilstander = builder.tilstand() ?: defaultOppgaveListTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
             val emneknagger = builder.emneknagg() ?: emptySet()
-            val antallOppgaver = builder.antallOppgaver()
-            val side = builder.side()
+            val paginering = builder.paginering()
 
             return Søkefilter(
                 periode = Periode.fra(queryParameters),
@@ -114,8 +127,7 @@ data class Søkefilter(
                         else -> null
                     },
                 emneknagger = emneknagger,
-                antallOppgaver = antallOppgaver,
-                side = side,
+                paginering = paginering,
             )
         }
     }
