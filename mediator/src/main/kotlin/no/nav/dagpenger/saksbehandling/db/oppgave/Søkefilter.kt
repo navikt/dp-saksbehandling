@@ -104,7 +104,12 @@ data class Søkefilter(
     data class Paginering(
         val antallOppgaver: Int,
         val side: Int,
-    )
+    ) {
+        init {
+            require(antallOppgaver > 0) { "antallOppgaver må være større enn 0" }
+            require(side >= 0) { "side må være større eller lik 0" }
+        }
+    }
 
     companion object {
         fun fra(

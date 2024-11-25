@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
+import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Paginering
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -1287,6 +1288,76 @@ class PostgresOppgaveRepositoryTest {
                     emneknagger = setOf("Innvilgelse"),
                 ),
             ).size shouldBe 1
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente paginerte oppgaver`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            val oppgave1 = lagOppgave()
+            val oppgave2 = lagOppgave()
+            val oppgave3 = lagOppgave()
+            val oppgave4 = lagOppgave()
+
+            repo.lagre(oppgave1)
+            repo.lagre(oppgave2)
+            repo.lagre(oppgave3)
+            repo.lagre(oppgave4)
+
+            repo.søk(
+                Søkefilter(
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = UBEGRENSET_PERIODE,
+                    paginering = null,
+                ),
+            ).size shouldBe 4
+
+            repo.søk(
+                Søkefilter(
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = UBEGRENSET_PERIODE,
+                    paginering = Paginering(2, 0),
+                ),
+            ).let {
+                it.size shouldBe 2
+                it[0] shouldBe oppgave1
+                it[1] shouldBe oppgave2
+            }
+            repo.søk(
+                Søkefilter(
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = UBEGRENSET_PERIODE,
+                    paginering = Paginering(2, 1),
+                ),
+            ).let {
+                it.size shouldBe 2
+                it[0] shouldBe oppgave3
+                it[1] shouldBe oppgave4
+            }
+
+            repo.søk(
+                Søkefilter(
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = UBEGRENSET_PERIODE,
+                    paginering = Paginering(10, 0),
+                ),
+            ).let {
+                it.size shouldBe 4
+                it[0] shouldBe oppgave1
+                it[1] shouldBe oppgave2
+                it[2] shouldBe oppgave3
+                it[3] shouldBe oppgave4
+            }
+            repo.søk(
+                Søkefilter(
+                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    periode = UBEGRENSET_PERIODE,
+                    paginering = Paginering(10, 1),
+                ),
+            ).let {
+                it.size shouldBe 0
+            }
         }
     }
 
