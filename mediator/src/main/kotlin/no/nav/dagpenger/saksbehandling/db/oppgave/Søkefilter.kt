@@ -41,10 +41,6 @@ class FilterBuilder {
         }
     }
 
-    fun antallOppgaver(): Int = stringValues["antallOppgaver"]?.toInt() ?: 50
-
-    fun side(): Int = stringValues["side"]?.toInt() ?: 0
-
     fun tilstand(): Set<Oppgave.Tilstand.Type>? {
         return stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
     }
