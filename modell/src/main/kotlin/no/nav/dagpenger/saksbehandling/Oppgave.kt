@@ -73,6 +73,10 @@ data class Oppgave private constructor(
     companion object {
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
+        internal const val RETUR_FRA_KONTROLL = "Retur fra kontroll"
+        internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
+        internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
+
         fun rehydrer(
             oppgaveId: UUID,
             behandlerIdent: String?,
@@ -160,8 +164,10 @@ data class Oppgave private constructor(
     fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Boolean {
+        val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger }.toSet()
         this._emneknagger.clear()
         this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
+        this._emneknagger.addAll(beholdEmneknagger)
         return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
@@ -332,8 +338,8 @@ data class Oppgave private constructor(
             oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
             oppgave.behandlerIdent = null
             if (oppgave.harVærtITilstand(UNDER_KONTROLL)) {
-                oppgave._emneknagger.add("Tidligere kontrollert")
-                oppgave._emneknagger.remove("Retur fra kontroll")
+                oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT)
+                oppgave._emneknagger.remove(RETUR_FRA_KONTROLL)
             }
         }
 
@@ -621,8 +627,8 @@ data class Oppgave private constructor(
 
             oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
             oppgave.behandlerIdent = null
-            oppgave._emneknagger.add("Retur fra kontroll")
-            oppgave._emneknagger.remove("Tidligere kontrollert")
+            oppgave._emneknagger.add(RETUR_FRA_KONTROLL)
+            oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT)
         }
 
         override fun fjernAnsvar(

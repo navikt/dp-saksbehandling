@@ -21,6 +21,7 @@ object OppgaveTestHelper {
         skjermesSomEgneAnsatte: Boolean = false,
         adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
+        emneknagger: Set<String> = emptySet(),
     ): Oppgave {
         val tilstand =
             when (tilstandType) {
@@ -39,7 +40,7 @@ object OppgaveTestHelper {
             oppgaveId = UUIDv7.ny(),
             behandlerIdent = behandler?.navIdent,
             opprettet = LocalDateTime.now(),
-            emneknagger = setOf(),
+            emneknagger = emneknagger,
             tilstand = tilstand,
             behandling =
                 Behandling(

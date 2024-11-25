@@ -277,7 +277,7 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand().type shouldBe AVVENTER_OPPLÅSING_AV_BEHANDLING
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger.shouldContain("Retur fra kontroll")
+        oppgave.emneknagger.shouldContain(Oppgave.RETUR_FRA_KONTROLL)
     }
 
     @Test
@@ -324,9 +324,9 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
-        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING)
-        val emneknagger = setOf("knagg1", "knagg2")
+    fun `Skal endre emneknagger som ikke er kontrollemneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
+        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING, emneknagger = setOf("skalSlettes") + Oppgave.kontrollEmneknagger)
+        val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
@@ -334,18 +334,18 @@ class OppgaveTilstandTest {
                     søknadId = UUIDv7.ny(),
                     behandlingId = oppgave.behandling.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
-                    emneknagger = emneknagger,
+                    emneknagger = nyeEmneknagger,
                 ),
             )
         }
-        oppgave.emneknagger shouldBe emneknagger
+        oppgave.emneknagger shouldBe nyeEmneknagger + Oppgave.kontrollEmneknagger
         oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
     }
 
     @Test
-    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand PAA_VENT`() {
-        val oppgave = lagOppgave(PAA_VENT)
-        val emneknagger = setOf("knagg1", "knagg2")
+    fun `Skal endre emneknagger som ikke er kontrollemneknagger hvis nytt forslag til vedtak mottas i tilstand PAA_VENT`() {
+        val oppgave = lagOppgave(PAA_VENT, emneknagger = setOf("skalSlettes") + Oppgave.kontrollEmneknagger)
+        val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
@@ -353,16 +353,35 @@ class OppgaveTilstandTest {
                     søknadId = UUIDv7.ny(),
                     behandlingId = oppgave.behandling.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
-                    emneknagger = emneknagger,
+                    emneknagger = nyeEmneknagger,
                 ),
             )
         }
-        oppgave.emneknagger shouldBe emneknagger
+        oppgave.emneknagger shouldBe nyeEmneknagger + Oppgave.kontrollEmneknagger
         oppgave.tilstand() shouldBe Oppgave.PåVent
     }
 
     @Test
-    fun `Skal ikke endre tilstand på en oppgave hvis nytt forslag til vedtak mottas i tilstand FerdigBehandlet`() {
+    fun `Skal endre emneknagger som ikke er kontrollemneknagger hvis nytt forslag til vedtak mottas i tilstand UNDER_BEHANDLING`() {
+        val oppgave = lagOppgave(UNDER_BEHANDLING, emneknagger = setOf("skalSlettes") + Oppgave.kontrollEmneknagger)
+        val nyeEmneknagger = setOf("knagg1", "knagg2")
+        shouldNotThrow<Exception> {
+            oppgave.oppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = oppgave.behandling.behandlingId,
+                    utførtAv = Applikasjon("dp-behandling"),
+                    emneknagger = nyeEmneknagger,
+                ),
+            )
+        }
+        oppgave.emneknagger shouldBe nyeEmneknagger + Oppgave.kontrollEmneknagger
+        oppgave.tilstand() shouldBe Oppgave.UnderBehandling
+    }
+
+    @Test
+    fun `Ikke tillatt med forslag til vedtak, tildel eller fjern ansvar i tilstand FerdigBehandlet`() {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
         shouldThrow<UlovligTilstandsendringException> {
@@ -487,8 +506,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
-        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldNotContain Oppgave.RETUR_FRA_KONTROLL
 
         oppgave.klarTilKontroll(
             BehandlingLåstHendelse(
@@ -499,8 +518,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
-        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldNotContain Oppgave.RETUR_FRA_KONTROLL
 
         val beslutter = Saksbehandler("beslutterIdent", emptySet(), setOf(BESLUTTER))
         oppgave.tildel(
@@ -512,8 +531,8 @@ class OppgaveTilstandTest {
         )
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
-        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldNotContain Oppgave.RETUR_FRA_KONTROLL
 
         oppgave.returnerTilSaksbehandling(
             ReturnerTilSaksbehandlingHendelse(
@@ -524,8 +543,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.AvventerOpplåsingAvBehandling
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
-        oppgave.emneknagger shouldContain "Retur fra kontroll"
+        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldContain Oppgave.RETUR_FRA_KONTROLL
 
         oppgave.klarTilBehandling(
             BehandlingOpplåstHendelse(
@@ -536,8 +555,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
-        oppgave.emneknagger shouldNotContain "Tidligere kontrollert"
-        oppgave.emneknagger shouldContain "Retur fra kontroll"
+        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldContain Oppgave.RETUR_FRA_KONTROLL
 
         oppgave.sendTilKontroll(
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
@@ -545,8 +564,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
         oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldContain "Tidligere kontrollert"
-        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+        oppgave.emneknagger shouldContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldNotContain Oppgave.RETUR_FRA_KONTROLL
 
         oppgave.klarTilKontroll(
             BehandlingLåstHendelse(
@@ -557,8 +576,8 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-        oppgave.emneknagger shouldContain "Tidligere kontrollert"
-        oppgave.emneknagger shouldNotContain "Retur fra kontroll"
+        oppgave.emneknagger shouldContain Oppgave.TIDLIGERE_KONTROLLERT
+        oppgave.emneknagger shouldNotContain Oppgave.RETUR_FRA_KONTROLL
     }
 
     @Test
