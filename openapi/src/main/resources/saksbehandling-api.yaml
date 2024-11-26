@@ -59,16 +59,14 @@ paths:
           schema:
             type: integer
 
-
       responses:
         '200':
           description: Vellykket respons med en liste over oppgaver
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OppgaveOversikt'
+                $ref: '#/components/schemas/OppgaveOversiktResultat'
+
   /oppgave/neste:
     put:
       summary: Hent neste oppgave og tildel denne til saksbehandler
@@ -427,7 +425,15 @@ components:
         - skjermesSomEgneAnsatte
         - adressebeskyttelseGradering
 
-
+    OppgaveOversiktResultat:
+      type: object
+      properties:
+        oppgaver:
+          type: array
+          items:
+            $ref: '#/components/schemas/OppgaveOversikt'
+        totaltAntallTreff:
+          type: integer
 
     OppgaveOversikt:
       type: object
