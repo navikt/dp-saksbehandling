@@ -244,6 +244,7 @@ data class Utsending(
             AvventerJournalføring,
             AvventerDistribuering,
             Distribuert,
+            Avbrutt
         }
 
         class UlovligUtsendingTilstandsendring(message: String) : RuntimeException(message)

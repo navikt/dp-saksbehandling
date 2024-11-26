@@ -1,16 +1,19 @@
 package no.nav.dagpenger.saksbehandling.utsending.db
 
+import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -91,6 +94,42 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
+    override fun hentVentendeUtsendinger(): List<Pair<Utsending, LocalDateTime>> {
+        return sessionOf(ds).use{session ->
+            session.run(
+                queryOf(
+                    statement = """
+                        SELECT *
+                        FROM utsending_v1
+                        WHERE tilstand != :distribuert 
+                        AND tilstand != :avbrutt
+                        AND endretTidspunkt < now() - interval '24 hour'
+                    """.trimIndent(),
+                    paramMap = mapOf(
+                        "distribuert" to Distribuert.name,
+                        "avbrutt" to Avbrutt.name
+                    )
+                ).map { row ->
+                    Pair(
+                        Utsending.rehydrer(
+                            id = row.uuid("id"),
+                            oppgaveId = row.uuid("oppgave_id"),
+                            ident = hentIdentForOppgaveId(row.uuid("oppgave_id")),
+                            tilstand = Tilstand.Type.valueOf(row.string("tilstand")),
+                            brev = row.string("brev"),
+                            pdfUrn = row.stringOrNull("pdf_urn"),
+                            journalpostId = row.stringOrNull("journalpost_id"),
+                            distribusjonId = row.stringOrNull("distribusjon_id"),
+                            sak = row.stringOrNull("sak_id")?.let { Sak(row.string("sak_id"), row.string("kontekst")) }
+                        ),
+                        row.localDateTime("endret_tidspunkt")
+                    )
+                }.asList
+
+            )
+        }
+    }
+
     override fun utsendingFinnesForOppgave(oppgaveId: UUID): Boolean {
         return sessionOf(ds).use { session ->
             session.run(
@@ -159,6 +198,19 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                 }.asSingle,
             )
         }
+    }
+    private fun Row.rehydrerUtsending(): Utsending {
+        return Utsending.rehydrer(
+            id = uuid("id"),
+            oppgaveId = uuid("oppgave_id"),
+            ident = string("ident"),
+            tilstand = tilstand,
+            brev = string("brev"),
+            pdfUrn = stringOrNull("pdf_urn"),
+            journalpostId = stringOrNull("journalpost_id"),
+            distribusjonId = stringOrNull("distribusjon_id"),
+            sak = stringOrNull("sak_id")?.let { Sak(string("sak_id"), string("kontekst")) }
+        )
     }
 
     private fun hentIdentForOppgaveId(oppgaveId: UUID): String {

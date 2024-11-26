@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.utsending.db
 
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
+import java.time.LocalDateTime
 import java.util.UUID
 
 interface UtsendingRepository {
@@ -15,6 +16,7 @@ interface UtsendingRepository {
     fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean
 
     fun slettUtsending(utsendingID: UUID): Int
+    fun hentVentendeUtsendinger(): List<Pair<Utsending, LocalDateTime>>
 }
 
 class UtsendingIkkeFunnet(message: String) : RuntimeException(message)
