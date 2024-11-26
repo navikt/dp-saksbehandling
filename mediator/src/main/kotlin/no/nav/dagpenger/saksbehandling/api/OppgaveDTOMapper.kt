@@ -129,13 +129,13 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         utsattTilDato = this.utsattTil(),
     )
 
-internal fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
+internal fun List<Oppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 }
 
 internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktResultatDTO(): OppgaveOversiktResultatDTO {
     return OppgaveOversiktResultatDTO(
-        oppgaver = this.oppgaver.tilOppgaverOversiktDTO(),
+        oppgaver = this.oppgaver.tilOppgaveOversiktDTOListe(),
         totaltAntallTreff = this.totaltAntallOppgaver,
     )
 }

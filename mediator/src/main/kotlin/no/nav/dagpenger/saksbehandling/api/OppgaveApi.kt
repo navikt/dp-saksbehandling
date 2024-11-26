@@ -55,7 +55,8 @@ internal fun Application.oppgaveApi(
             route("person/oppgaver") {
                 post {
                     val oppgaver =
-                        oppgaveMediator.finnOppgaverFor(call.receive<PersonIdentDTO>().ident).tilOppgaverOversiktDTO()
+                        oppgaveMediator.finnOppgaverFor(call.receive<PersonIdentDTO>().ident)
+                            .tilOppgaveOversiktDTOListe()
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
             }
@@ -64,7 +65,7 @@ internal fun Application.oppgaveApi(
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
 
                     val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktResultatDTO()
-                    call.respond(status = HttpStatusCode.OK, message = oppgaver)
+                    call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
                 route("neste") {
                     put {
@@ -93,6 +94,10 @@ internal fun Application.oppgaveApi(
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
                             val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
+                            logger.debug {
+                                "Oppgave med tilstand ${oppgave.tilstand().type} " +
+                                    "har journalpostIder: ${oppgaveDTO.journalpostIder}"
+                            }
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }
                     }
