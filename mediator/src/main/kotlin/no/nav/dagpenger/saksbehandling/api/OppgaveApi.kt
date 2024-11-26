@@ -63,8 +63,8 @@ internal fun Application.oppgaveApi(
                 get {
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
 
-                    val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktDTO()
-                    call.respond(status = HttpStatusCode.OK, oppgaver)
+                    val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktResultatDTO()
+                    call.respond(status = HttpStatusCode.OK, message = oppgaver)
                 }
                 route("neste") {
                     put {

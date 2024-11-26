@@ -55,6 +55,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -180,28 +181,32 @@ class OppgaveApiTest {
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
-                    [{
-                      "oppgaveId": "${oppgave1.oppgaveId}",
-                      "behandlingId": "${oppgave1.behandling.behandlingId}",
-                      "personIdent": "${oppgave1.behandling.person.ident}",
-                      "emneknagger": [],
-                      "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
-                      "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                      "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
-                      "saksbehandlerIdent": "${oppgave1.behandlerIdent}",
-                      "behandlerIdent": "${oppgave1.behandlerIdent}",
-                      "utsattTilDato": "${oppgave1.utsattTil()}"
-                    },
                     {
-                      "oppgaveId": "${oppgave2.oppgaveId}",
-                      "behandlingId": "${oppgave2.behandling.behandlingId}",
-                      "personIdent": "${oppgave2.behandling.person.ident}",
-                      "emneknagger": [],
-                      "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
-                      "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                      "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
+                      "oppgaver": [
+                        {
+                          "oppgaveId": "${oppgave1.oppgaveId}",
+                          "behandlingId": "${oppgave1.behandling.behandlingId}",
+                          "personIdent": "${oppgave1.behandling.person.ident}",
+                          "emneknagger": [],
+                          "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
+                          "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
+                          "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
+                          "saksbehandlerIdent": "${oppgave1.behandlerIdent}",
+                          "behandlerIdent": "${oppgave1.behandlerIdent}",
+                          "utsattTilDato": "${oppgave1.utsattTil()}"
+                        },
+                        {
+                          "oppgaveId": "${oppgave2.oppgaveId}",
+                          "behandlingId": "${oppgave2.behandling.behandlingId}",
+                          "personIdent": "${oppgave2.behandling.person.ident}",
+                          "emneknagger": [],
+                          "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
+                          "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
+                          "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}"
+                        }
+                      ],
+                      "totaltAntallTreff" : 2
                     }
-                    ]
                     """.trimIndent()
             }
         }
@@ -235,12 +240,13 @@ class OppgaveApiTest {
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
-                    val oppgaver =
+                    val oppgaveOversiktResultatDTO =
                         objectMapper.readValue(
                             response.bodyAsText(),
-                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                            object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaver.size shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallTreff shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
                 }
         }
     }
@@ -273,12 +279,13 @@ class OppgaveApiTest {
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
-                    val oppgaver =
+                    val oppgaveOversiktResultatDTO =
                         objectMapper.readValue(
                             response.bodyAsText(),
-                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                            object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaver.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallTreff shouldBe 2
                 }
         }
     }
@@ -314,12 +321,13 @@ class OppgaveApiTest {
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
-                    val oppgaver =
+                    val oppgaveOversiktResultatDTO =
                         objectMapper.readValue(
                             response.bodyAsText(),
-                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                            object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaver.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallTreff shouldBe 2
                 }
         }
     }
