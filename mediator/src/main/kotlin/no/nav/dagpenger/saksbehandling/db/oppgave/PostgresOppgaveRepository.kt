@@ -549,11 +549,11 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
 
                 // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
                 //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
+
                 //language=PostgreSQL
-                val sql =
-                    StringBuilder(
-                        """
-                        SELECT  pers.id AS person_id, 
+                val oppgaveSelect =
+                    """
+                    SELECT  pers.id AS person_id, 
                                 pers.ident AS person_ident,
                                 pers.skjermes_som_egne_ansatte,
                                 pers.adressebeskyttelse_gradering,
@@ -564,6 +564,15 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                                 oppg.saksbehandler_ident,
                                 oppg.utsatt_til,
                                 beha.opprettet AS behandling_opprettet
+                    """.trimIndent()
+
+                val antallSelect =
+                    """
+                    SELECT COUNT(*) as total_count
+                    """.trimIndent()
+                val fromJoinAndWhereClause =
+                    StringBuilder(
+                        """
                         FROM    oppgave_v1    oppg
                         JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
                         JOIN    person_v1     pers ON pers.id = beha.person_id
@@ -582,46 +591,49 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         .toString()
 
                 //language=PostgreSQL
-                val hubba =
+                val oppgaverQuery =
                     """
-                    WITH filtered_oppgaver AS(
-                     $sql
-                    ),
-                    total_count AS (
-                     SELECT COUNT(*) as total_count FROM filtered_oppgaver
-                    )
-                    SELECT
-                      f.*, t.total_count
-                    FROM
-                      filtered_oppgaver f,
-                      total_count t
+                    $oppgaveSelect
+                    $fromJoinAndWhereClause
                     $orderByOpprettetClause
-                    $limitAndOffsetClause    
+                    $limitAndOffsetClause   
                     """.trimIndent()
 
-                sikkerlogger.info { "Søker etter oppgaver med følgende SQL: $hubba" }
-                val queryOf =
-                    queryOf(
-                        statement = hubba,
-                        paramMap =
-                            mapOf(
-                                "tilstander" to tilstander,
-                                "fom" to søkeFilter.periode.fom,
-                                "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
-                                "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                                "person_ident" to søkeFilter.personIdent,
-                                "oppgave_id" to søkeFilter.oppgaveId,
-                                "behandling_id" to søkeFilter.behandlingId,
-                                "emneknagger" to emneknaggerAsText,
-                            ),
+                val antallOppgaverQuery =
+                    """
+                    $antallSelect
+                    $fromJoinAndWhereClause
+                    """.trimIndent()
+
+                val paramap =
+                    mapOf(
+                        "tilstander" to tilstander,
+                        "fom" to søkeFilter.periode.fom,
+                        "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
+                        "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                        "person_ident" to søkeFilter.personIdent,
+                        "oppgave_id" to søkeFilter.oppgaveId,
+                        "behandling_id" to søkeFilter.behandlingId,
+                        "emneknagger" to emneknaggerAsText,
                     )
-                session.run(
-                    queryOf.map { row ->
-                        Pair(row.rehydrerOppgave(datasource), row.int("total_count"))
-                    }.asList,
-                )
+                sikkerlogger.info { "Søker etter antall oppgaver med følgende SQL: $antallOppgaverQuery" }
+                val antallOppgaver: Int =
+                    session.run(
+                        queryOf(
+                            statement = antallOppgaverQuery,
+                            paramMap = paramap,
+                        ).map { row -> row.int("total_count") }.asSingle,
+                    ) ?: throw DataNotFoundException("Query for å telle antall oppgaver feilet")
+
+                val oppgaver =
+                    session.run(
+                        queryOf(statement = oppgaverQuery, paramMap = paramap).map { row ->
+                            row.rehydrerOppgave(datasource)
+                        }.asList,
+                    )
+
+                return OppgaveSøkResultat(oppgaver, totaltAntallOppgaver = antallOppgaver)
             }
-        return OppgaveSøkResultat(oppgaver.map { it.first }, oppgaver.firstOrNull()?.second ?: 0)
     }
 
     override fun oppdaterSkjermingStatus(
