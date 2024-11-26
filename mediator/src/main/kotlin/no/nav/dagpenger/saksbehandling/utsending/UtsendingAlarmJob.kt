@@ -7,8 +7,6 @@ import no.nav.dagpenger.saksbehandling.OppgaveAlertManager
 import no.nav.dagpenger.saksbehandling.OppgaveAlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
-import java.time.LocalDateTime
-import java.util.UUID
 import javax.sql.DataSource
 
 internal class UtsendingAlarmJob(
@@ -17,13 +15,6 @@ internal class UtsendingAlarmJob(
 ) {
     fun sjekkVentendeTilstander() {
         utsendingAlarmRepository.hentVentendeUtsendinger(24)
-            .map { ventendeUtsending ->
-                OppgaveAlertManager.UtsendingIkkeFullført(
-                    utsendingId = ventendeUtsending.id,
-                    tilstand = ventendeUtsending.tilstand,
-                    sistEndret = ventendeUtsending.sistEndret,
-                )
-            }
             .forEach {
                 rapidsConnection.sendAlertTilRapid(
                     it,
@@ -33,14 +24,8 @@ internal class UtsendingAlarmJob(
     }
 }
 
-data class VentendeUtsending(
-    val id: UUID,
-    val tilstand: String,
-    val sistEndret: LocalDateTime,
-)
-
 internal class UtsendingAlarmRepository(private val ds: DataSource) {
-    fun hentVentendeUtsendinger(intervallAntallTimer: Int): List<VentendeUtsending> {
+    fun hentVentendeUtsendinger(intervallAntallTimer: Int): List<OppgaveAlertManager.UtsendingIkkeFullført> {
         return sessionOf(ds).use { session ->
             session.run(
                 queryOf(
@@ -59,8 +44,8 @@ internal class UtsendingAlarmRepository(private val ds: DataSource) {
                             "avbrutt" to Avbrutt.name,
                         ),
                 ).map { row ->
-                    VentendeUtsending(
-                        id = row.uuid("id"),
+                    OppgaveAlertManager.UtsendingIkkeFullført(
+                        utsendingId = row.uuid("id"),
                         tilstand = row.string("tilstand"),
                         sistEndret = row.localDateTime("endret_tidspunkt"),
                     )
