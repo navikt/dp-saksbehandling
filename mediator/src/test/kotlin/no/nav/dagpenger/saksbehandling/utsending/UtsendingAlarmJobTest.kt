@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.OppgaveAlertManager
+import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -25,12 +25,12 @@ class UtsendingAlarmJobTest {
                 mockk<UtsendingAlarmRepository>().also {
                     every { it.hentVentendeUtsendinger(any()) } returns
                         listOf(
-                            OppgaveAlertManager.UtsendingIkkeFullført(
+                            AlertManager.UtsendingIkkeFullført(
                                 utsendingId = utsendingId1,
                                 tilstand = "AvventerArkiverbarVersjonAvBrev",
                                 sistEndret = igår,
                             ),
-                            OppgaveAlertManager.UtsendingIkkeFullført(
+                            AlertManager.UtsendingIkkeFullført(
                                 utsendingId = utsendingId2,
                                 tilstand = "AvventerDistribuering",
                                 sistEndret = idag,

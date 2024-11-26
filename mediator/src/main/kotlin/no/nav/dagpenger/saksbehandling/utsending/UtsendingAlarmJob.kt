@@ -3,8 +3,8 @@ package no.nav.dagpenger.saksbehandling.utsending
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.OppgaveAlertManager
-import no.nav.dagpenger.saksbehandling.OppgaveAlertManager.sendAlertTilRapid
+import no.nav.dagpenger.saksbehandling.AlertManager
+import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import javax.sql.DataSource
@@ -25,7 +25,7 @@ internal class UtsendingAlarmJob(
 }
 
 internal class UtsendingAlarmRepository(private val ds: DataSource) {
-    fun hentVentendeUtsendinger(intervallAntallTimer: Int): List<OppgaveAlertManager.UtsendingIkkeFullført> {
+    fun hentVentendeUtsendinger(intervallAntallTimer: Int): List<AlertManager.UtsendingIkkeFullført> {
         return sessionOf(ds).use { session ->
             session.run(
                 queryOf(
@@ -44,7 +44,7 @@ internal class UtsendingAlarmRepository(private val ds: DataSource) {
                             "avbrutt" to Avbrutt.name,
                         ),
                 ).map { row ->
-                    OppgaveAlertManager.UtsendingIkkeFullført(
+                    AlertManager.UtsendingIkkeFullført(
                         utsendingId = row.uuid("id"),
                         tilstand = row.string("tilstand"),
                         sistEndret = row.localDateTime("endret_tidspunkt"),

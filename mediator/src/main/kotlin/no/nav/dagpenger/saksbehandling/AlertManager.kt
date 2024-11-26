@@ -5,7 +5,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import java.time.LocalDateTime
 import java.util.UUID
 
-object OppgaveAlertManager {
+object AlertManager {
     sealed interface AlertType {
         val feilMelding: String
         val type: String
