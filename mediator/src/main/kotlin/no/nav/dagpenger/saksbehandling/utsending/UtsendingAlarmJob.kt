@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import no.nav.dagpenger.saksbehandling.OppgaveAlertManager
+import no.nav.dagpenger.saksbehandling.OppgaveAlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 
 class UtsendingAlarmJob(
@@ -8,22 +10,20 @@ class UtsendingAlarmJob(
     private val utsendingRepository: UtsendingRepository,
 ) {
     fun sjekkVentendeTilstander() {
-        utsendingRepository.hentVentendeUtsendinger().forEach {
-            if (it.venterPåUtsending()) {
-                rapidsConnection.publish(
-                    UtsendingAlarm(
-                        aktørId = it.aktørId,
-                        journalpostId = it.journalpostId,
-                        oppgaveId = it.oppgaveId,
-                        opprettet = it.opprettet,
-                        tilstand = it.tilstand,
-                    ),
+        utsendingRepository.hentVentendeUtsendinger()
+            .map {
+                val utsending = it.first
+                OppgaveAlertManager.UtsendingIkkeFullført(
+                    utsendingId = utsending.id,
+                    tilstand = utsending.tilstand(),
+                    sistEndret = it.second,
                 )
             }
-        }
+            .forEach {
+                rapidsConnection.sendAlertTilRapid(
+                    it,
+                    it.feilMelding,
+                )
+            }
     }
-
-
-
-
 }

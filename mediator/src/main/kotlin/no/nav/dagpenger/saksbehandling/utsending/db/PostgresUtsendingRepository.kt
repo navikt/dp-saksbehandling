@@ -95,37 +95,38 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
     }
 
     override fun hentVentendeUtsendinger(): List<Pair<Utsending, LocalDateTime>> {
-        return sessionOf(ds).use{session ->
+        return sessionOf(ds).use { session ->
             session.run(
                 queryOf(
-                    statement = """
+                    statement =
+                        """
                         SELECT *
                         FROM utsending_v1
                         WHERE tilstand != :distribuert 
                         AND tilstand != :avbrutt
                         AND endretTidspunkt < now() - interval '24 hour'
-                    """.trimIndent(),
-                    paramMap = mapOf(
-                        "distribuert" to Distribuert.name,
-                        "avbrutt" to Avbrutt.name
-                    )
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "distribuert" to Distribuert.name,
+                            "avbrutt" to Avbrutt.name,
+                        ),
                 ).map { row ->
                     Pair(
                         Utsending.rehydrer(
                             id = row.uuid("id"),
                             oppgaveId = row.uuid("oppgave_id"),
                             ident = hentIdentForOppgaveId(row.uuid("oppgave_id")),
-                            tilstand = Tilstand.Type.valueOf(row.string("tilstand")),
+                            tilstand = row.rehydrerUtsendingTilstand("tilstand"),
                             brev = row.string("brev"),
                             pdfUrn = row.stringOrNull("pdf_urn"),
                             journalpostId = row.stringOrNull("journalpost_id"),
                             distribusjonId = row.stringOrNull("distribusjon_id"),
-                            sak = row.stringOrNull("sak_id")?.let { Sak(row.string("sak_id"), row.string("kontekst")) }
+                            sak = row.stringOrNull("sak_id")?.let { Sak(row.string("sak_id"), row.string("kontekst")) },
                         ),
-                        row.localDateTime("endret_tidspunkt")
+                        row.localDateTime("endret_tidspunkt"),
                     )
-                }.asList
-
+                }.asList,
             )
         }
     }
@@ -173,14 +174,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
-                    val tilstand =
-                        when (Tilstand.Type.valueOf(row.string("tilstand"))) {
-                            VenterPåVedtak -> Utsending.VenterPåVedtak
-                            AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev
-                            AvventerJournalføring -> Utsending.AvventerJournalføring
-                            AvventerDistribuering -> Utsending.AvventerDistribuering
-                            Distribuert -> Utsending.Distribuert
-                        }
+                    val tilstand = row.rehydrerUtsendingTilstand("tilstand")
                     val sak: Sak? =
                         row.stringOrNull("sak_id")?.let { Sak(row.string("sak_id"), row.string("kontekst")) }
 
@@ -199,17 +193,29 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
             )
         }
     }
+
+    private fun Row.rehydrerUtsendingTilstand(kolonneNavn: String): Utsending.Tilstand {
+        return when (Tilstand.Type.valueOf(this.string(kolonneNavn))) {
+            VenterPåVedtak -> Utsending.VenterPåVedtak
+            AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev
+            AvventerJournalføring -> Utsending.AvventerJournalføring
+            AvventerDistribuering -> Utsending.AvventerDistribuering
+            Distribuert -> Utsending.Distribuert
+            Avbrutt -> Utsending.Avbrutt
+        }
+    }
+
     private fun Row.rehydrerUtsending(): Utsending {
         return Utsending.rehydrer(
             id = uuid("id"),
             oppgaveId = uuid("oppgave_id"),
             ident = string("ident"),
-            tilstand = tilstand,
+            tilstand = this.rehydrerUtsendingTilstand("tilstand"),
             brev = string("brev"),
             pdfUrn = stringOrNull("pdf_urn"),
             journalpostId = stringOrNull("journalpost_id"),
             distribusjonId = stringOrNull("distribusjon_id"),
-            sak = stringOrNull("sak_id")?.let { Sak(string("sak_id"), string("kontekst")) }
+            sak = stringOrNull("sak_id")?.let { Sak(string("sak_id"), string("kontekst")) },
         )
     }
 

@@ -16,6 +16,7 @@ interface UtsendingRepository {
     fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean
 
     fun slettUtsending(utsendingID: UUID): Int
+
     fun hentVentendeUtsendinger(): List<Pair<Utsending, LocalDateTime>>
 }
 
