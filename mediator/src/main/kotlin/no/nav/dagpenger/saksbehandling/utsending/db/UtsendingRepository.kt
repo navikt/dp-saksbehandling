@@ -17,7 +17,7 @@ interface UtsendingRepository {
 
     fun slettUtsending(utsendingID: UUID): Int
 
-    fun hentVentendeUtsendinger(): List<Pair<Utsending, LocalDateTime>>
+    fun hentVentendeUtsendinger(intervallAntallTimer: Int = 24): List<Pair<Utsending, LocalDateTime>>
 }
 
 class UtsendingIkkeFunnet(message: String) : RuntimeException(message)

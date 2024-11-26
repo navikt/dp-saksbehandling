@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -78,7 +79,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
-    override fun slettUtsending(utsendingID: UUID): Int {
+    override fun slettUtsending(utsendingId: UUID): Int {
         return sessionOf(ds).use { session ->
             session.run(
                 queryOf(
@@ -88,28 +89,32 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         DELETE FROM utsending_v1
                         WHERE id = :id
                         """.trimIndent(),
-                    paramMap = mapOf("id" to utsendingID),
+                    paramMap = mapOf("id" to utsendingId),
                 ).asUpdate,
             )
         }
     }
 
-    override fun hentVentendeUtsendinger(): List<Pair<Utsending, LocalDateTime>> {
+    override fun hentVentendeUtsendinger(intervallAntallTimer: Int): List<Pair<Utsending, LocalDateTime>> {
         return sessionOf(ds).use { session ->
+            val nåString = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS).toString().replace('T', ' ')
             session.run(
                 queryOf(
+                    //language=PostgreSQL
                     statement =
                         """
-                        SELECT *
-                        FROM utsending_v1
-                        WHERE tilstand != :distribuert 
-                        AND tilstand != :avbrutt
-                        AND endretTidspunkt < now() - interval '24 hour'
+                        SELECT  *
+                        FROM    utsending_v1
+                        WHERE   tilstand != :distribuert 
+                        AND     tilstand != :avbrutt
+                        AND     endret_tidspunkt < TO_TIMESTAMP(:naa_string,'YYYY-MM-DD HH24:MI:SS:MS') - (:intervall_antall_timer || ' HOUR')::INTERVAL
                         """.trimIndent(),
                     paramMap =
                         mapOf(
                             "distribuert" to Distribuert.name,
                             "avbrutt" to Avbrutt.name,
+                            "naa_string" to nåString,
+                            "intervall_antall_timer" to intervallAntallTimer,
                         ),
                 ).map { row ->
                     Pair(
@@ -203,20 +208,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
             Distribuert -> Utsending.Distribuert
             Avbrutt -> Utsending.Avbrutt
         }
-    }
-
-    private fun Row.rehydrerUtsending(): Utsending {
-        return Utsending.rehydrer(
-            id = uuid("id"),
-            oppgaveId = uuid("oppgave_id"),
-            ident = string("ident"),
-            tilstand = this.rehydrerUtsendingTilstand("tilstand"),
-            brev = string("brev"),
-            pdfUrn = stringOrNull("pdf_urn"),
-            journalpostId = stringOrNull("journalpost_id"),
-            distribusjonId = stringOrNull("distribusjon_id"),
-            sak = stringOrNull("sak_id")?.let { Sak(string("sak_id"), string("kontekst")) },
-        )
     }
 
     private fun hentIdentForOppgaveId(oppgaveId: UUID): String {
