@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
-import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -14,12 +13,12 @@ object OppgaveAlertManager {
 
     data class UtsendingIkkeFullført(
         val utsendingId: UUID,
-        val tilstand: Utsending.Tilstand,
+        val tilstand: String,
         val sistEndret: LocalDateTime,
     ) : AlertType {
         override val feilMelding =
             "Utsending ikke fullført for $utsendingId. " +
-                "Den har vært i tilstand ${tilstand.type.name} siden $sistEndret"
+                "Den har vært i tilstand $tilstand siden $sistEndret"
         override val type: String = "UTSENDING_IKKE_FULLFØRT"
     }
 

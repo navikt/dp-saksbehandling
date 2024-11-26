@@ -13,8 +13,6 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
-import java.time.LocalDateTime
-import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -91,47 +89,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         """.trimIndent(),
                     paramMap = mapOf("id" to utsendingId),
                 ).asUpdate,
-            )
-        }
-    }
-
-    override fun hentVentendeUtsendinger(intervallAntallTimer: Int): List<Pair<Utsending, LocalDateTime>> {
-        return sessionOf(ds).use { session ->
-            val nåString = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS).toString().replace('T', ' ')
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT  *
-                        FROM    utsending_v1
-                        WHERE   tilstand != :distribuert 
-                        AND     tilstand != :avbrutt
-                        AND     endret_tidspunkt < TO_TIMESTAMP(:naa_string,'YYYY-MM-DD HH24:MI:SS:MS') - (:intervall_antall_timer || ' HOUR')::INTERVAL
-                        """.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "distribuert" to Distribuert.name,
-                            "avbrutt" to Avbrutt.name,
-                            "naa_string" to nåString,
-                            "intervall_antall_timer" to intervallAntallTimer,
-                        ),
-                ).map { row ->
-                    Pair(
-                        Utsending.rehydrer(
-                            id = row.uuid("id"),
-                            oppgaveId = row.uuid("oppgave_id"),
-                            ident = hentIdentForOppgaveId(row.uuid("oppgave_id")),
-                            tilstand = row.rehydrerUtsendingTilstand("tilstand"),
-                            brev = row.string("brev"),
-                            pdfUrn = row.stringOrNull("pdf_urn"),
-                            journalpostId = row.stringOrNull("journalpost_id"),
-                            distribusjonId = row.stringOrNull("distribusjon_id"),
-                            sak = row.stringOrNull("sak_id")?.let { Sak(row.string("sak_id"), row.string("kontekst")) },
-                        ),
-                        row.localDateTime("endret_tidspunkt"),
-                    )
-                }.asList,
             )
         }
     }

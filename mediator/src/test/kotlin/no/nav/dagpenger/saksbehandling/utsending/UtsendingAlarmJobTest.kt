@@ -5,11 +5,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 class UtsendingAlarmJobTest {
     private val testRapid = TestRapid()
@@ -22,12 +20,20 @@ class UtsendingAlarmJobTest {
         val utsendingId2 = UUIDv7.ny()
         UtsendingAlarmJob(
             rapidsConnection = testRapid,
-            utsendingRepository =
-                mockk<UtsendingRepository>().also {
-                    every { it.hentVentendeUtsendinger() } returns
+            utsendingAlarmRepository =
+                mockk<UtsendingAlarmRepository>().also {
+                    every { it.hentVentendeUtsendinger(any()) } returns
                         listOf(
-                            Pair(lagUtsending(utsendingId1, Utsending.AvventerArkiverbarVersjonAvBrev), igår),
-                            Pair(lagUtsending(utsendingId2, Utsending.AvventerDistribuering), idag),
+                            VentendeUtsending(
+                                id = utsendingId1,
+                                tilstand = "AvventerArkiverbarVersjonAvBrev",
+                                sistEndret = igår,
+                            ),
+                            VentendeUtsending(
+                                id = utsendingId2,
+                                tilstand = "AvventerDistribuering",
+                                sistEndret = idag,
+                            ),
                         )
                 },
         ).sjekkVentendeTilstander()
@@ -46,22 +52,5 @@ class UtsendingAlarmJobTest {
             jsonNode["feilMelding"].asText() shouldBe "Utsending ikke fullført for $utsendingId2. Den har vært " +
                 "i tilstand AvventerDistribuering siden $idag"
         }
-    }
-
-    private fun lagUtsending(
-        id: UUID,
-        tilstand: Utsending.Tilstand,
-    ): Utsending {
-        return Utsending.rehydrer(
-            id = id,
-            oppgaveId = UUIDv7.ny(),
-            ident = "testIdent",
-            tilstand = tilstand,
-            brev = "html",
-            pdfUrn = null,
-            journalpostId = null,
-            distribusjonId = null,
-            sak = null,
-        )
     }
 }
