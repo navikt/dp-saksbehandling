@@ -127,7 +127,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         utsattTilDato = this.utsattTil(),
     )
 
-internal fun List<Oppgave>.tilOppgaverOversiktDTO(): List<OppgaveOversiktDTO> {
+internal fun List<Oppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
 }
 

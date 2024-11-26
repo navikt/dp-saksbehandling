@@ -55,7 +55,7 @@ internal fun Application.oppgaveApi(
             route("person/oppgaver") {
                 post {
                     val oppgaver =
-                        oppgaveMediator.finnOppgaverFor(call.receive<PersonIdentDTO>().ident).tilOppgaverOversiktDTO()
+                        oppgaveMediator.finnOppgaverFor(call.receive<PersonIdentDTO>().ident).tilOppgaveOversiktDTOListe()
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
             }
@@ -63,7 +63,7 @@ internal fun Application.oppgaveApi(
                 get {
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
 
-                    val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktDTO()
+                    val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaveOversiktDTOListe()
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
                 route("neste") {
