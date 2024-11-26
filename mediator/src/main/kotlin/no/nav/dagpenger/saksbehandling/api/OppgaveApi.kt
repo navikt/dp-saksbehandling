@@ -94,7 +94,7 @@ internal fun Application.oppgaveApi(
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
                             val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
-                            logger.debug {
+                            logger.info {
                                 "Oppgave med tilstand ${oppgave.tilstand().type} " +
                                     "har journalpostIder: ${oppgaveDTO.journalpostIder}"
                             }
