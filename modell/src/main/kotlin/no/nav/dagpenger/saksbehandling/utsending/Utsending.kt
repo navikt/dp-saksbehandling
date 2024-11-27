@@ -201,6 +201,10 @@ data class Utsending(
         }
     }
 
+    object Avbrutt : Tilstand {
+        override val type = Tilstand.Type.Avbrutt
+    }
+
     object Distribuert : Tilstand {
         override val type = Tilstand.Type.Distribuert
     }
@@ -244,6 +248,7 @@ data class Utsending(
             AvventerJournalføring,
             AvventerDistribuering,
             Distribuert,
+            Avbrutt,
         }
 
         class UlovligUtsendingTilstandsendring(message: String) : RuntimeException(message)
