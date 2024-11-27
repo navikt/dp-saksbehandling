@@ -136,7 +136,7 @@ internal fun List<Oppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO
 internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktResultatDTO(): OppgaveOversiktResultatDTO {
     return OppgaveOversiktResultatDTO(
         oppgaver = this.oppgaver.tilOppgaveOversiktDTOListe(),
-        totaltAntallTreff = this.totaltAntallOppgaver,
+        totaltAntallOppgaver = this.totaltAntallOppgaver,
     )
 }
 

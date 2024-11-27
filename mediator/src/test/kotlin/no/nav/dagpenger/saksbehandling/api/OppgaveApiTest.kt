@@ -205,7 +205,7 @@ class OppgaveApiTest {
                           "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}"
                         }
                       ],
-                      "totaltAntallTreff" : 2
+                      "totaltAntallOppgaver" : 2
                     }
                     """.trimIndent()
             }
@@ -245,7 +245,7 @@ class OppgaveApiTest {
                             response.bodyAsText(),
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaveOversiktResultatDTO.totaltAntallTreff shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                     oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
                 }
         }
@@ -285,7 +285,7 @@ class OppgaveApiTest {
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
                     oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
-                    oppgaveOversiktResultatDTO.totaltAntallTreff shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }
     }
@@ -327,7 +327,7 @@ class OppgaveApiTest {
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
                     oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
-                    oppgaveOversiktResultatDTO.totaltAntallTreff shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }
     }
