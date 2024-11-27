@@ -34,10 +34,10 @@ class UtsendingAlarmRepositoryTest {
             ventendeUtsendinger.size shouldBe 4
             ventendeUtsendinger.map { it.tilstand } shouldBe
                 listOf(
-                    VenterPåVedtak,
-                    AvventerArkiverbarVersjonAvBrev,
-                    AvventerJournalføring,
-                    AvventerDistribuering,
+                    VenterPåVedtak.name,
+                    AvventerArkiverbarVersjonAvBrev.name,
+                    AvventerJournalføring.name,
+                    AvventerDistribuering.name,
                 )
         }
     }
