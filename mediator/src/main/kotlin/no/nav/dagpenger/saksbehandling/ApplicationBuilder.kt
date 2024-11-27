@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.api.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
-import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
+import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandlingEllerUnderBehandling
@@ -39,15 +39,18 @@ import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
 import no.nav.helse.rapids_rivers.RapidApplication
+import java.util.Timer
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
-    private val oppgaveRepository = PostgresOppgaveRepository(PostgresDataSourceBuilder.dataSource)
-    private val utsendingRepository = PostgresUtsendingRepository(PostgresDataSourceBuilder.dataSource)
+    private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
+    private val utsendingRepository = PostgresUtsendingRepository(dataSource)
     private val skjermingKlient =
         SkjermingHttpKlient(
             skjermingApiUrl = Configuration.skjermingApiUrl,
@@ -89,6 +92,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             saksbehandlerOppslag,
             OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
         )
+    private val utsendingAlarmJob: Timer
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(
@@ -99,7 +103,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     installerApis(
                         oppgaveMediator,
                         oppgaveDTOMapper,
-                        PostgresStatistikkTjeneste(PostgresDataSourceBuilder.dataSource),
+                        PostgresStatistikkTjeneste(dataSource),
                     )
                     withStatusPagesConfig { statusPages() }
                     this.install(KafkaStreamsPlugin) {
@@ -136,6 +140,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
             BehandlingLåstMottak(rapidsConnection, oppgaveMediator)
             BehandlingOpplåstMottak(rapidsConnection, oppgaveMediator)
+            utsendingAlarmJob = UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob()
         }
 
     init {
@@ -154,6 +159,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     override fun onShutdown(rapidsConnection: RapidsConnection) {
+        utsendingAlarmJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 

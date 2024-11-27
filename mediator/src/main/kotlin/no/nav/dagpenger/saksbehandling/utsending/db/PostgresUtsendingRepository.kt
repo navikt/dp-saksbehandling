@@ -1,11 +1,13 @@
 package no.nav.dagpenger.saksbehandling.utsending.db
 
+import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
@@ -75,7 +77,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
-    override fun slettUtsending(utsendingID: UUID): Int {
+    override fun slettUtsending(utsendingId: UUID): Int {
         return sessionOf(ds).use { session ->
             session.run(
                 queryOf(
@@ -85,7 +87,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         DELETE FROM utsending_v1
                         WHERE id = :id
                         """.trimIndent(),
-                    paramMap = mapOf("id" to utsendingID),
+                    paramMap = mapOf("id" to utsendingId),
                 ).asUpdate,
             )
         }
@@ -134,14 +136,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
-                    val tilstand =
-                        when (Tilstand.Type.valueOf(row.string("tilstand"))) {
-                            VenterPåVedtak -> Utsending.VenterPåVedtak
-                            AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev
-                            AvventerJournalføring -> Utsending.AvventerJournalføring
-                            AvventerDistribuering -> Utsending.AvventerDistribuering
-                            Distribuert -> Utsending.Distribuert
-                        }
+                    val tilstand = row.rehydrerUtsendingTilstand("tilstand")
                     val sak: Sak? =
                         row.stringOrNull("sak_id")?.let { Sak(row.string("sak_id"), row.string("kontekst")) }
 
@@ -158,6 +153,17 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                     )
                 }.asSingle,
             )
+        }
+    }
+
+    private fun Row.rehydrerUtsendingTilstand(kolonneNavn: String): Utsending.Tilstand {
+        return when (Tilstand.Type.valueOf(this.string(kolonneNavn))) {
+            VenterPåVedtak -> Utsending.VenterPåVedtak
+            AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev
+            AvventerJournalføring -> Utsending.AvventerJournalføring
+            AvventerDistribuering -> Utsending.AvventerDistribuering
+            Distribuert -> Utsending.Distribuert
+            Avbrutt -> Utsending.Avbrutt
         }
     }
 

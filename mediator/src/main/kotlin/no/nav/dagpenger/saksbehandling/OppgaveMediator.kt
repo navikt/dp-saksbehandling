@@ -6,8 +6,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.OppgaveAlertManager.OppgaveAlertType.OPPGAVE_IKKE_FUNNET
-import no.nav.dagpenger.saksbehandling.OppgaveAlertManager.sendAlertTilRapid
+import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.OPPGAVE_IKKE_FUNNET
+import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
@@ -479,7 +479,7 @@ class OppgaveMediator(
     }
 
     private fun sendAlertTilRapid(
-        feilType: OppgaveAlertManager.AlertType,
+        feilType: AlertManager.AlertType,
         utvidetFeilmelding: String,
     ) = rapidsConnection.sendAlertTilRapid(feilType, utvidetFeilmelding)
 }
