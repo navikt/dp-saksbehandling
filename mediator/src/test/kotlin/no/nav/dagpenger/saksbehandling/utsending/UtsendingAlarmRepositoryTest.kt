@@ -32,6 +32,13 @@ class UtsendingAlarmRepositoryTest {
 
             val ventendeUtsendinger = repository.hentVentendeUtsendinger(intervallAntallTimer = 23)
             ventendeUtsendinger.size shouldBe 4
+            ventendeUtsendinger.map { it.tilstand } shouldBe
+                listOf(
+                    VenterPåVedtak,
+                    AvventerArkiverbarVersjonAvBrev,
+                    AvventerJournalføring,
+                    AvventerDistribuering,
+                )
         }
     }
 
