@@ -42,7 +42,7 @@ class SøkefilterTest {
         Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                tilstander = Oppgave.Tilstand.Type.defaultOppgaveListTilstander,
+                tilstander = Oppgave.Tilstand.Type.søkbareTyper,
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,

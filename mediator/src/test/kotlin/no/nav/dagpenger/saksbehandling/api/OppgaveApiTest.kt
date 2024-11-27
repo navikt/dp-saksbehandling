@@ -163,7 +163,7 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            tilstander = Oppgave.Tilstand.Type.defaultOppgaveListTilstander,
+                            tilstander = Oppgave.Tilstand.Type.søkbareTyper,
                             saksbehandlerIdent = null,
                             personIdent = null,
                             oppgaveId = null,

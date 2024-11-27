@@ -5,7 +5,7 @@ import io.ktor.util.StringValues
 import io.ktor.util.StringValuesBuilderImpl
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.defaultOppgaveListTilstander
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTyper
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
@@ -114,7 +114,7 @@ data class Søkefilter(
         ): Søkefilter {
             val builder = FilterBuilder(queryParameters)
 
-            val tilstander = builder.tilstand() ?: defaultOppgaveListTilstander
+            val tilstander = builder.tilstand() ?: søkbareTyper
             val mineOppgaver = builder.mineOppgaver() ?: false
             val emneknagger = builder.emneknagg() ?: emptySet()
             val paginering = builder.paginering()
