@@ -32,7 +32,7 @@ class SøkefilterTest {
                         ),
                     tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                     saksbehandlerIdent = "testIdent",
-                    paginering = Søkefilter.Paginering(10, 1),
+                    paginering = Søkefilter.Paginering(10, 0),
                 )
         }
     }
