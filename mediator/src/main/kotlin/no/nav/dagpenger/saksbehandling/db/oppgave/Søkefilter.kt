@@ -33,7 +33,7 @@ class FilterBuilder {
 
     fun paginering(): Søkefilter.Paginering? {
         val antallOppgaver = stringValues["antallOppgaver"]?.toInt()
-        val side = stringValues["side"]?.toInt()
+        val side = stringValues["side"]?.toInt()?.minus(1)
         return if (antallOppgaver != null && side != null) {
             Søkefilter.Paginering(antallOppgaver, side)
         } else {

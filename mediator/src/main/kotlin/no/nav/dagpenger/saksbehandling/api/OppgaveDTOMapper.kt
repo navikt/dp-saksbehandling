@@ -12,8 +12,10 @@ import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -129,6 +131,13 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
 
 internal fun List<Oppgave>.tilOppgaveOversiktDTOListe(): List<OppgaveOversiktDTO> {
     return this.map { oppgave -> oppgave.tilOppgaveOversiktDTO() }
+}
+
+internal fun PostgresOppgaveRepository.OppgaveSøkResultat.tilOppgaverOversiktResultatDTO(): OppgaveOversiktResultatDTO {
+    return OppgaveOversiktResultatDTO(
+        oppgaver = this.oppgaver.tilOppgaveOversiktDTOListe(),
+        totaltAntallOppgaver = this.totaltAntallOppgaver,
+    )
 }
 
 internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {

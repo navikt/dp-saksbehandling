@@ -331,7 +331,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 periode = UBEGRENSET_PERIODE,
                 saksbehandlerIdent = null,
             ),
-        )
+        ).oppgaver
 
     private fun hentOppgave(
         transactionalSession: TransactionalSession,
@@ -382,7 +382,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     tilstander = Type.values,
                     behandlingId = behandlingId,
                 ),
-        ).singleOrNull()
+        ).oppgaver.singleOrNull()
 
     override fun fjerneEmneknagg(
         behandlingId: UUID,
@@ -476,7 +476,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 tilstander = Type.values,
                 oppgaveId = oppgaveId,
             ),
-        ).singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
+        ).oppgaver.singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
 
     override fun finnOppgaverFor(ident: String): List<Oppgave> =
         søk(
@@ -488,121 +488,150 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     personIdent = ident,
                 ),
             orderByOpprettet = true,
-        )
+        ).oppgaver
+
+    data class OppgaveSøkResultat(
+        val oppgaver: List<Oppgave>,
+        val totaltAntallOppgaver: Int,
+    )
 
     override fun søk(
         søkeFilter: Søkefilter,
         orderByOpprettet: Boolean,
-    ): List<Oppgave> {
-        var oppgaver: List<Oppgave>
+    ): OppgaveSøkResultat {
+        return sessionOf(datasource).use { session ->
+            val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
+            val tilstandClause =
+                if (søkeFilter.tilstander.isEmpty()) {
+                    " AND oppg.tilstand != 'OPPRETTET' "
+                } else {
+                    " AND oppg.tilstand IN ($tilstander) "
+                }
 
-        oppgaver =
-            sessionOf(datasource).use { session ->
-                val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
-                val tilstandClause =
-                    if (søkeFilter.tilstander.isEmpty()) {
-                        " AND oppg.tilstand != 'OPPRETTET' "
-                    } else {
-                        " AND oppg.tilstand IN ($tilstander) "
-                    }
+            val saksbehandlerClause =
+                søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident " } ?: ""
 
-                val saksbehandlerClause =
-                    søkeFilter.saksbehandlerIdent?.let { "AND oppg.saksbehandler_ident = :saksbehandler_ident " } ?: ""
+            val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident " } ?: ""
 
-                val personIdentClause = søkeFilter.personIdent?.let { "AND pers.ident = :person_ident " } ?: ""
+            val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id " } ?: ""
 
-                val oppgaveIdClause = søkeFilter.oppgaveId?.let { "AND oppg.id = :oppgave_id " } ?: ""
+            val behandlingIdClause =
+                søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id " } ?: ""
 
-                val behandlingIdClause =
-                    søkeFilter.behandlingId?.let { "AND oppg.behandling_id = :behandling_id " } ?: ""
-
-                val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
-                val emneknaggClause =
-                    if (søkeFilter.emneknagger.isNotEmpty()) {
-                        """
-                        AND EXISTS(
-                            SELECT 1
-                            FROM   emneknagg_v1 emne
-                            WHERE  emne.oppgave_id = oppg.id
-                            AND    emne.emneknagg IN ($emneknaggerAsText)
-                        )
-                        """.trimIndent()
-                    } else {
-                        ""
-                    }
-                val orderByOpprettetClause =
-                    if (orderByOpprettet) {
-                        """ ORDER BY oppg.opprettet """
-                    } else {
-                        ""
-                    }
-
-                val limitAndOffsetClause =
-                    søkeFilter.paginering?.let {
-                        """ LIMIT ${it.antallOppgaver} OFFSET ${it.side * it.antallOppgaver} """
-                    } ?: ""
-
-                // TODO: sjekk på tilstand OPPRETTET bør erstattes med noe logikk for ikke-søkbare-tilstander
-
-                // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
-                //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
-                //language=PostgreSQL
-                val sql =
-                    StringBuilder(
-                        """
-                        SELECT  pers.id AS person_id, 
-                                pers.ident AS person_ident,
-                                pers.skjermes_som_egne_ansatte,
-                                pers.adressebeskyttelse_gradering,
-                                oppg.id AS oppgave_id, 
-                                oppg.tilstand, 
-                                oppg.opprettet AS oppgave_opprettet, 
-                                oppg.behandling_id, 
-                                oppg.saksbehandler_ident,
-                                oppg.utsatt_til,
-                                beha.opprettet AS behandling_opprettet
-                        FROM    oppgave_v1    oppg
-                        JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                        JOIN    person_v1     pers ON pers.id = beha.person_id
-                        WHERE   oppg.opprettet >= :fom
-                        AND     oppg.opprettet <  :tom_pluss_1_dag
-                        """.trimIndent(),
+            val emneknaggerAsText: String = søkeFilter.emneknagger.joinToString { "'$it'" }
+            val emneknaggClause =
+                if (søkeFilter.emneknagger.isNotEmpty()) {
+                    """
+                    AND EXISTS(
+                        SELECT 1
+                        FROM   emneknagg_v1 emne
+                        WHERE  emne.oppgave_id = oppg.id
+                        AND    emne.emneknagg IN ($emneknaggerAsText)
                     )
-                        .append(
-                            tilstandClause,
-                            saksbehandlerClause,
-                            personIdentClause,
-                            oppgaveIdClause,
-                            behandlingIdClause,
-                            emneknaggClause,
-                            orderByOpprettetClause,
-                            limitAndOffsetClause,
-                        )
-                        .toString()
+                    """.trimIndent()
+                } else {
+                    ""
+                }
+            val orderByOpprettetClause =
+                if (orderByOpprettet) {
+                    """ ORDER BY oppg.opprettet """
+                } else {
+                    ""
+                }
 
-                sikkerlogger.info { "Søker etter oppgaver med følgende SQL: $sql" }
-                val queryOf =
-                    queryOf(
-                        statement = sql,
-                        paramMap =
-                            mapOf(
-                                "tilstander" to tilstander,
-                                "fom" to søkeFilter.periode.fom,
-                                "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
-                                "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
-                                "person_ident" to søkeFilter.personIdent,
-                                "oppgave_id" to søkeFilter.oppgaveId,
-                                "behandling_id" to søkeFilter.behandlingId,
-                                "emneknagger" to emneknaggerAsText,
-                            ),
+            val limitAndOffsetClause =
+                søkeFilter.paginering?.let {
+                    """ LIMIT ${it.antallOppgaver} OFFSET ${it.side * it.antallOppgaver} """
+                } ?: ""
+
+            // TODO: sjekk på tilstand OPPRETTET bør erstattes med noe logikk for ikke-søkbare-tilstander
+
+            // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
+            //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
+
+            //language=PostgreSQL
+            val oppgaveSelect =
+                """
+                SELECT  pers.id AS person_id, 
+                            pers.ident AS person_ident,
+                            pers.skjermes_som_egne_ansatte,
+                            pers.adressebeskyttelse_gradering,
+                            oppg.id AS oppgave_id, 
+                            oppg.tilstand, 
+                            oppg.opprettet AS oppgave_opprettet, 
+                            oppg.behandling_id, 
+                            oppg.saksbehandler_ident,
+                            oppg.utsatt_til,
+                            beha.opprettet AS behandling_opprettet
+                """.trimIndent()
+
+            val antallSelect =
+                """
+                SELECT COUNT(*) as total_count
+                """.trimIndent()
+            val fromJoinAndWhereClause =
+                StringBuilder(
+                    """
+                    FROM    oppgave_v1    oppg
+                    JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN    person_v1     pers ON pers.id = beha.person_id
+                    WHERE   oppg.opprettet >= :fom
+                    AND     oppg.opprettet <  :tom_pluss_1_dag
+                    """.trimIndent(),
+                )
+                    .append(
+                        tilstandClause,
+                        saksbehandlerClause,
+                        personIdentClause,
+                        oppgaveIdClause,
+                        behandlingIdClause,
+                        emneknaggClause,
                     )
+                    .toString()
+
+            //language=PostgreSQL
+            val oppgaverQuery =
+                """
+                $oppgaveSelect
+                $fromJoinAndWhereClause
+                $orderByOpprettetClause
+                $limitAndOffsetClause   
+                """.trimIndent()
+
+            val antallOppgaverQuery =
+                """
+                $antallSelect
+                $fromJoinAndWhereClause
+                """.trimIndent()
+
+            val paramap =
+                mapOf(
+                    "tilstander" to tilstander,
+                    "fom" to søkeFilter.periode.fom,
+                    "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
+                    "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
+                    "person_ident" to søkeFilter.personIdent,
+                    "oppgave_id" to søkeFilter.oppgaveId,
+                    "behandling_id" to søkeFilter.behandlingId,
+                    "emneknagger" to emneknaggerAsText,
+                )
+            sikkerlogger.info { "Søker etter antall oppgaver med følgende SQL: $antallOppgaverQuery" }
+            val antallOppgaver: Int =
                 session.run(
-                    queryOf.map { row ->
+                    queryOf(
+                        statement = antallOppgaverQuery,
+                        paramMap = paramap,
+                    ).map { row -> row.int("total_count") }.asSingle,
+                ) ?: throw DataNotFoundException("Query for å telle antall oppgaver feilet")
+
+            val oppgaver =
+                session.run(
+                    queryOf(statement = oppgaverQuery, paramMap = paramap).map { row ->
                         row.rehydrerOppgave(datasource)
                     }.asList,
                 )
-            }
-        return oppgaver
+            OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
+        }
     }
 
     override fun oppdaterSkjermingStatus(

@@ -1210,7 +1210,7 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     emneknagger = emptySet(),
                 ),
-            ) shouldBe listOf(oppgave1, oppgave2, oppgave3)
+            ).oppgaver shouldBe listOf(oppgave1, oppgave2, oppgave3)
 
             repo.søk(
                 Søkefilter(
@@ -1218,7 +1218,7 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     emneknagger = setOf("hubba"),
                 ),
-            ) shouldBe listOf(oppgave1, oppgave2)
+            ).oppgaver shouldBe listOf(oppgave1, oppgave2)
 
             repo.søk(
                 Søkefilter(
@@ -1226,7 +1226,7 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     emneknagger = setOf("bubba"),
                 ),
-            ) shouldBe listOf(oppgave1)
+            ).oppgaver shouldBe listOf(oppgave1)
 
             repo.søk(
                 Søkefilter(
@@ -1234,7 +1234,7 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     emneknagger = setOf("bubba", "hubba"),
                 ),
-            ) shouldBe listOf(oppgave1, oppgave2)
+            ).oppgaver shouldBe listOf(oppgave1, oppgave2)
         }
     }
 
@@ -1262,7 +1262,7 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler1,
                 ),
-            ).size shouldBe 1
+            ).oppgaver.size shouldBe 1
 
             repo.søk(
                 Søkefilter(
@@ -1270,7 +1270,7 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
                 ),
-            ).size shouldBe 2
+            ).oppgaver.size shouldBe 2
 
             repo.søk(
                 Søkefilter(
@@ -1278,7 +1278,7 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = null,
                 ),
-            ).size shouldBe 4
+            ).oppgaver.size shouldBe 4
 
             repo.søk(
                 Søkefilter(
@@ -1287,7 +1287,7 @@ class PostgresOppgaveRepositoryTest {
                     saksbehandlerIdent = saksbehandler2,
                     emneknagger = setOf("Innvilgelse"),
                 ),
-            ).size shouldBe 1
+            ).oppgaver.size shouldBe 1
         }
     }
 
@@ -1311,7 +1311,10 @@ class PostgresOppgaveRepositoryTest {
                     periode = UBEGRENSET_PERIODE,
                     paginering = null,
                 ),
-            ).size shouldBe 4
+            ).let {
+                it.oppgaver.size shouldBe 4
+                it.totaltAntallOppgaver shouldBe 4
+            }
 
             repo.søk(
                 Søkefilter(
@@ -1320,10 +1323,12 @@ class PostgresOppgaveRepositoryTest {
                     paginering = Paginering(2, 0),
                 ),
             ).let {
-                it.size shouldBe 2
-                it[0] shouldBe oppgave1
-                it[1] shouldBe oppgave2
+                it.oppgaver.size shouldBe 2
+                it.oppgaver[0] shouldBe oppgave1
+                it.oppgaver[1] shouldBe oppgave2
+                it.totaltAntallOppgaver shouldBe 4
             }
+
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
@@ -1331,9 +1336,10 @@ class PostgresOppgaveRepositoryTest {
                     paginering = Paginering(2, 1),
                 ),
             ).let {
-                it.size shouldBe 2
-                it[0] shouldBe oppgave3
-                it[1] shouldBe oppgave4
+                it.oppgaver.size shouldBe 2
+                it.oppgaver[0] shouldBe oppgave3
+                it.oppgaver[1] shouldBe oppgave4
+                it.totaltAntallOppgaver shouldBe 4
             }
 
             repo.søk(
@@ -1343,11 +1349,12 @@ class PostgresOppgaveRepositoryTest {
                     paginering = Paginering(10, 0),
                 ),
             ).let {
-                it.size shouldBe 4
-                it[0] shouldBe oppgave1
-                it[1] shouldBe oppgave2
-                it[2] shouldBe oppgave3
-                it[3] shouldBe oppgave4
+                it.oppgaver.size shouldBe 4
+                it.oppgaver[0] shouldBe oppgave1
+                it.oppgaver[1] shouldBe oppgave2
+                it.oppgaver[2] shouldBe oppgave3
+                it.oppgaver[3] shouldBe oppgave4
+                it.totaltAntallOppgaver shouldBe 4
             }
             repo.søk(
                 Søkefilter(
@@ -1356,7 +1363,8 @@ class PostgresOppgaveRepositoryTest {
                     paginering = Paginering(10, 1),
                 ),
             ).let {
-                it.size shouldBe 0
+                it.oppgaver.size shouldBe 0
+                it.totaltAntallOppgaver shouldBe 4
             }
         }
     }
@@ -1382,14 +1390,14 @@ class PostgresOppgaveRepositoryTest {
                     tilstander = setOf(UNDER_BEHANDLING),
                     periode = UBEGRENSET_PERIODE,
                 ),
-            ).single() shouldBe oppgaveUnderBehandlingEnUkeGammel
+            ).oppgaver.single() shouldBe oppgaveUnderBehandlingEnUkeGammel
 
             repo.søk(
                 Søkefilter(
                     tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
                     periode = UBEGRENSET_PERIODE,
                 ),
-            ).size shouldBe 3
+            ).oppgaver.size shouldBe 3
 
             repo.søk(
                 Søkefilter(
@@ -1401,8 +1409,8 @@ class PostgresOppgaveRepositoryTest {
                     behandlingId = null,
                 ),
             ).let {
-                it.size shouldBe 3
-                it.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
+                it.oppgaver.size shouldBe 3
+                it.oppgaver.map { oppgave -> oppgave.tilstand().type }.toSet() shouldBe
                     setOf(
                         UNDER_BEHANDLING,
                         KLAR_TIL_BEHANDLING,
@@ -1418,7 +1426,7 @@ class PostgresOppgaveRepositoryTest {
                             tom = enUkeSiden.plusDays(2).toLocalDate(),
                         ),
                 ),
-            ).size shouldBe 0
+            ).oppgaver.size shouldBe 0
 
             repo.søk(
                 Søkefilter(
@@ -1429,7 +1437,7 @@ class PostgresOppgaveRepositoryTest {
                             tom = enUkeSiden.plusDays(2).toLocalDate(),
                         ),
                 ),
-            ).size shouldBe 1
+            ).oppgaver.size shouldBe 1
 
             repo.søk(
                 Søkefilter(
@@ -1440,7 +1448,7 @@ class PostgresOppgaveRepositoryTest {
                             tom = opprettetNå.toLocalDate(),
                         ),
                 ),
-            ).size shouldBe 1
+            ).oppgaver.size shouldBe 1
 
             repo.søk(
                 Søkefilter(
@@ -1451,7 +1459,7 @@ class PostgresOppgaveRepositoryTest {
                             tom = opprettetNå.toLocalDate(),
                         ),
                 ),
-            ).size shouldBe 1
+            ).oppgaver.size shouldBe 1
         }
     }
 
@@ -1484,9 +1492,9 @@ class PostgresOppgaveRepositoryTest {
                         periode = Periode(fom = iGår, tom = iGår),
                     ),
                 )
-            oppgaver.size shouldBe 2
-            oppgaver.contains(oppgaveOpprettetTidligIGår)
-            oppgaver.contains(oppgaveOpprettetSeintIGår)
+            oppgaver.oppgaver.size shouldBe 2
+            oppgaver.oppgaver.contains(oppgaveOpprettetTidligIGår)
+            oppgaver.oppgaver.contains(oppgaveOpprettetSeintIGår)
         }
     }
 

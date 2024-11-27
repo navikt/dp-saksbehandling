@@ -55,11 +55,13 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
+import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -168,7 +170,7 @@ class OppgaveApiTest {
                             behandlingId = null,
                         ),
                     )
-                } returns listOf(oppgave1, oppgave2)
+                } returns PostgresOppgaveRepository.OppgaveSøkResultat(listOf(oppgave1, oppgave2), 2)
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -179,28 +181,32 @@ class OppgaveApiTest {
                 //language=JSON
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
-                    [{
-                      "oppgaveId": "${oppgave1.oppgaveId}",
-                      "behandlingId": "${oppgave1.behandling.behandlingId}",
-                      "personIdent": "${oppgave1.behandling.person.ident}",
-                      "emneknagger": [],
-                      "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
-                      "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                      "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" ,
-                      "saksbehandlerIdent": "${oppgave1.behandlerIdent}",
-                      "behandlerIdent": "${oppgave1.behandlerIdent}",
-                      "utsattTilDato": "${oppgave1.utsattTil()}"
-                    },
                     {
-                      "oppgaveId": "${oppgave2.oppgaveId}",
-                      "behandlingId": "${oppgave2.behandling.behandlingId}",
-                      "personIdent": "${oppgave2.behandling.person.ident}",
-                      "emneknagger": [],
-                      "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
-                      "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
-                      "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}" 
+                      "oppgaver": [
+                        {
+                          "oppgaveId": "${oppgave1.oppgaveId}",
+                          "behandlingId": "${oppgave1.behandling.behandlingId}",
+                          "personIdent": "${oppgave1.behandling.person.ident}",
+                          "emneknagger": [],
+                          "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
+                          "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
+                          "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
+                          "saksbehandlerIdent": "${oppgave1.behandlerIdent}",
+                          "behandlerIdent": "${oppgave1.behandlerIdent}",
+                          "utsattTilDato": "${oppgave1.utsattTil()}"
+                        },
+                        {
+                          "oppgaveId": "${oppgave2.oppgaveId}",
+                          "behandlingId": "${oppgave2.behandling.behandlingId}",
+                          "personIdent": "${oppgave2.behandling.person.ident}",
+                          "emneknagger": [],
+                          "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
+                          "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
+                          "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}"
+                        }
+                      ],
+                      "totaltAntallOppgaver" : 2
                     }
-                    ]
                     """.trimIndent()
             }
         }
@@ -210,6 +216,14 @@ class OppgaveApiTest {
     fun `Hent alle oppgaver med tilstander basert på query parameter`() {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
+                val oppgaveSøkResultat =
+                    listOf(
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                    ).let {
+                        PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
+                    }
+
                 every {
                     it.søk(
                         Søkefilter(
@@ -218,10 +232,7 @@ class OppgaveApiTest {
                         ),
                     )
                 } returns
-                    listOf(
-                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                    )
+                    oppgaveSøkResultat
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -229,18 +240,27 @@ class OppgaveApiTest {
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
-                    val oppgaver =
+                    val oppgaveOversiktResultatDTO =
                         objectMapper.readValue(
                             response.bodyAsText(),
-                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                            object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaver.size shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
                 }
         }
     }
 
     @Test
     fun `Hent alle oppgaver basert på emneknagg`() {
+        val søkResultat =
+            listOf(
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+                lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
+            ).let {
+                PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
+            }
+
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every {
@@ -251,11 +271,7 @@ class OppgaveApiTest {
                             emneknagger = setOf("TULLBALL", "KLAGE"),
                         ),
                     )
-                } returns
-                    listOf(
-                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                        lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING),
-                    )
+                } returns søkResultat
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -263,18 +279,27 @@ class OppgaveApiTest {
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
-                    val oppgaver =
+                    val oppgaveOversiktResultatDTO =
                         objectMapper.readValue(
                             response.bodyAsText(),
-                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                            object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaver.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }
     }
 
     @Test
     fun `Hent alle oppgaver fom, tom, mine  og tilstand`() {
+        val søkResultat =
+            listOf(
+                lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
+                lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
+            ).let {
+                PostgresOppgaveRepository.OppgaveSøkResultat(it, it.size)
+            }
+
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every {
@@ -289,24 +314,20 @@ class OppgaveApiTest {
                             saksbehandlerIdent = SAKSBEHANDLER_IDENT,
                         ),
                     )
-                } returns
-                    listOf(
-                        lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
-                        lagTestOppgaveMedTilstand(UNDER_BEHANDLING),
-                    )
+                } returns søkResultat
             }
-
         withOppgaveApi(oppgaveMediatorMock) {
             client.get("/oppgave?tilstand=$UNDER_BEHANDLING&fom=2021-01-01&tom=2023-01-01&mineOppgaver=true") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
-                    val oppgaver =
+                    val oppgaveOversiktResultatDTO =
                         objectMapper.readValue(
                             response.bodyAsText(),
-                            object : TypeReference<List<OppgaveOversiktDTO>>() {},
+                            object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
-                    oppgaver.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
                 }
         }
     }
