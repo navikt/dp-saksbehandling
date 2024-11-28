@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.db
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -1173,11 +1172,8 @@ class PostgresOppgaveRepositoryTest {
             repo.lagre(oppgave2TilOla)
             repo.lagre(oppgave1TilKari)
 
-            // TODO: Midlertidlig fjernet på grunn av filtrering av ferdige oppgaver
-            // repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave2TilOla, oppgave1TilOla)
-            // repo.finnOppgaverFor(kari.ident) shouldBe listOf(oppgave1TilKari)
-            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave1TilOla)
-            repo.finnOppgaverFor(kari.ident).shouldBeEmpty()
+            repo.finnOppgaverFor(ola.ident) shouldBe listOf(oppgave2TilOla, oppgave1TilOla)
+            repo.finnOppgaverFor(kari.ident) shouldBe listOf(oppgave1TilKari)
         }
     }
 
