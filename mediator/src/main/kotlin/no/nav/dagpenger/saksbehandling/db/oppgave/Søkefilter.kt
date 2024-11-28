@@ -135,13 +135,13 @@ data class Søkefilter(
             )
         }
 
-        private val defaultSøkbareTyper =
+        internal val defaultSøkbareTyper =
             Oppgave.Tilstand.Type.values.minus(
                 setOf(
                     OPPRETTET,
                     AVVENTER_LÅS_AV_BEHANDLING,
                     AVVENTER_OPPLÅSING_AV_BEHANDLING,
-                    FERDIG_BEHANDLET
+                    FERDIG_BEHANDLET,
                 ),
             )
     }
