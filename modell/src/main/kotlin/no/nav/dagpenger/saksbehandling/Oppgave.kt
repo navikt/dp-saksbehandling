@@ -106,7 +106,7 @@ data class Oppgave private constructor(
             require(oppgave.behandlerIdent == saksbehandler.navIdent) {
                 throw Tilstand.ManglendeTilgang(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
-                        "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
+                            "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
                 )
             }
         }
@@ -119,8 +119,8 @@ data class Oppgave private constructor(
             require(oppgave.sisteSaksbehandler() != beslutter.navIdent) {
                 throw Tilstand.ManglendeTilgang(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type}. " +
-                        "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
-                        "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
+                            "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
+                            "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
                 )
             }
         }
@@ -245,7 +245,7 @@ data class Oppgave private constructor(
     ) {
         logger.info {
             "Endrer tilstand fra ${this.tilstand.type} til ${nyTilstand.type} for oppgaveId: ${this.oppgaveId} " +
-                "basert på hendelse: ${hendelse.javaClass.simpleName} "
+                    "basert på hendelse: ${hendelse.javaClass.simpleName} "
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
@@ -365,7 +365,7 @@ data class Oppgave private constructor(
             if (oppgave.behandlerIdent != settOppgaveAnsvarHendelse.ansvarligIdent) {
                 sikkerlogg.warn {
                     "Kan ikke tildele oppgave med id ${oppgave.oppgaveId} til ${settOppgaveAnsvarHendelse.ansvarligIdent}. " +
-                        "Oppgave er allerede tildelt ${oppgave.behandlerIdent}."
+                            "Oppgave er allerede tildelt ${oppgave.behandlerIdent}."
                 }
                 throw AlleredeTildeltException(
                     "Kan ikke tildele oppgave til annen saksbehandler. Oppgaven er allerede tildelt.",
@@ -441,7 +441,7 @@ data class Oppgave private constructor(
             logger.info { "Oppgave er allerede ferdigstilt for behandlingId: ${vedtakFattetHendelse.behandlingId}" }
             sikkerlogg.info {
                 "Oppgave er allerede ferdigstilt for behandlingId: ${vedtakFattetHendelse.behandlingId}. " +
-                    "VedtakFattetHendelse: $vedtakFattetHendelse "
+                        "VedtakFattetHendelse: $vedtakFattetHendelse "
             }
             return false
         }
@@ -611,7 +611,7 @@ data class Oppgave private constructor(
             require(returnerTilSaksbehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang(
                     "Kan ikke returnere oppgaven til saksbehandling i tilstand $type " +
-                        "uten beslutter-tilgang",
+                            "uten beslutter-tilgang",
                 )
             }
             requireSammeEier(
@@ -698,7 +698,7 @@ data class Oppgave private constructor(
                 val søkbareTyper =
                     entries.toSet().minus(
                         OPPRETTET,
-                    ).minus(AVVENTER_LÅS_AV_BEHANDLING).minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
+                    ).minus(AVVENTER_LÅS_AV_BEHANDLING).minus(AVVENTER_OPPLÅSING_AV_BEHANDLING).minus(FERDIG_BEHANDLET)
             }
         }
 
@@ -724,7 +724,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${vedtakFattetHendelse.javaClass.simpleName}",
+                            "${vedtakFattetHendelse.javaClass.simpleName}",
             )
         }
 
@@ -736,7 +736,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${godkjentBehandlingHendelse.javaClass.simpleName}",
+                            "${godkjentBehandlingHendelse.javaClass.simpleName}",
             )
         }
 
@@ -748,7 +748,7 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
+                            "${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
             )
         }
 
