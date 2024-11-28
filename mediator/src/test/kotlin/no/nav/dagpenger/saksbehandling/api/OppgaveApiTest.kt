@@ -63,6 +63,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
+import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Companion.defaultSøkbareTyper
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -163,7 +164,7 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            tilstander = Oppgave.Tilstand.Type.søkbareTyper,
+                            tilstander = defaultSøkbareTyper,
                             saksbehandlerIdent = null,
                             personIdent = null,
                             oppgaveId = null,
