@@ -695,10 +695,11 @@ data class Oppgave private constructor(
                 val values
                     get() = entries.toSet()
 
-                val søkbareTyper =
-                    entries.toSet().minus(
-                        OPPRETTET,
-                    ).minus(AVVENTER_LÅS_AV_BEHANDLING).minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
+                val søkbareTilstander =
+                    entries.toSet()
+                        .minus(OPPRETTET)
+                        .minus(AVVENTER_LÅS_AV_BEHANDLING)
+                        .minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
             }
         }
 

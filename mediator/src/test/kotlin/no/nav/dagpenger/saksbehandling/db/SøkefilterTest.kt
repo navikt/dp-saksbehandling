@@ -4,7 +4,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAnyUnit
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Parameters
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTyper
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -42,7 +42,7 @@ class SøkefilterTest {
         Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                tilstander = søkbareTyper,
+                tilstander = søkbareTilstander,
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,

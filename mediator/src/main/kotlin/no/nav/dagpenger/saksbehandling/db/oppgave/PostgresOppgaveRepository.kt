@@ -483,7 +483,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             søkeFilter =
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
-                    tilstander = Type.søkbareTyper,
+                    tilstander = Type.søkbareTilstander,
                     saksbehandlerIdent = null,
                     personIdent = ident,
                 ),

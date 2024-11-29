@@ -1402,7 +1402,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
-                    tilstander = Oppgave.Tilstand.Type.søkbareTyper,
+                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
                     saksbehandlerIdent = null,
                     personIdent = null,
                     oppgaveId = null,

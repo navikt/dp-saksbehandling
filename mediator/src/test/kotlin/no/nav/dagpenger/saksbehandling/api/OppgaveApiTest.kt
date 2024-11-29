@@ -27,7 +27,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTyper
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -164,7 +164,7 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            tilstander = søkbareTyper,
+                            tilstander = søkbareTilstander,
                             saksbehandlerIdent = null,
                             personIdent = null,
                             oppgaveId = null,
