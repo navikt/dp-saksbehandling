@@ -32,9 +32,16 @@ class FilterBuilder {
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
 
     fun paginering(): Søkefilter.Paginering {
-        val antallOppgaver = stringValues["antallOppgaver"]?.toInt() ?: 20
-        val side = stringValues["side"]?.toInt()?.minus(1) ?: 0
-        return Søkefilter.Paginering(antallOppgaver, side)
+        val antallOppgaver = stringValues["antallOppgaver"]
+        val side = stringValues["side"]?.toInt()?.minus(1)
+        return if (antallOppgaver == null || side == null) {
+            Søkefilter.Paginering.DEFAULT
+        } else {
+            Søkefilter.Paginering(
+                antallOppgaver.toInt(),
+                side,
+            )
+        }
     }
 
     fun tilstand(): Set<Oppgave.Tilstand.Type>? {
@@ -91,7 +98,7 @@ data class Søkefilter(
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
     val emneknagger: Set<String> = emptySet(),
-    val paginering: Paginering? = null,
+    val paginering: Paginering? = Paginering.DEFAULT,
 ) {
     data class Paginering(
         val antallOppgaver: Int,
@@ -100,6 +107,10 @@ data class Søkefilter(
         init {
             require(antallOppgaver > 0) { "antallOppgaver må være større enn 0" }
             require(side >= 0) { "side må være større eller lik 0" }
+        }
+
+        companion object {
+            val DEFAULT = Paginering(20, 0)
         }
     }
 
