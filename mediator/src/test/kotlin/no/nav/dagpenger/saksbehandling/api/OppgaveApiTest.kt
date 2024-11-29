@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTyper
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -63,7 +64,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
-import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Companion.defaultSøkbareTyper
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -164,7 +164,7 @@ class OppgaveApiTest {
                     it.søk(
                         Søkefilter(
                             periode = Periode.UBEGRENSET_PERIODE,
-                            tilstander = defaultSøkbareTyper,
+                            tilstander = søkbareTyper,
                             saksbehandlerIdent = null,
                             personIdent = null,
                             oppgaveId = null,
