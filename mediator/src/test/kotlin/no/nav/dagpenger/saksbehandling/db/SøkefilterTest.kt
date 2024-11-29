@@ -38,7 +38,7 @@ class SøkefilterTest {
     }
 
     @Test
-    fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom eller tom`() {
+    fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom, tom eller paginering`() {
         Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
@@ -47,7 +47,7 @@ class SøkefilterTest {
                 personIdent = null,
                 oppgaveId = null,
                 behandlingId = null,
-                paginering = null,
+                paginering = Søkefilter.Paginering(20, 0),
             )
     }
 

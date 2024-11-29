@@ -31,14 +31,10 @@ class FilterBuilder {
 
     fun mineOppgaver(): Boolean? = stringValues["mineOppgaver"]?.toBoolean()
 
-    fun paginering(): Søkefilter.Paginering? {
-        val antallOppgaver = stringValues["antallOppgaver"]?.toInt()
-        val side = stringValues["side"]?.toInt()?.minus(1)
-        return if (antallOppgaver != null && side != null) {
-            Søkefilter.Paginering(antallOppgaver, side)
-        } else {
-            null
-        }
+    fun paginering(): Søkefilter.Paginering {
+        val antallOppgaver = stringValues["antallOppgaver"]?.toInt() ?: 20
+        val side = stringValues["side"]?.toInt()?.minus(1) ?: 0
+        return Søkefilter.Paginering(antallOppgaver, side)
     }
 
     fun tilstand(): Set<Oppgave.Tilstand.Type>? {
