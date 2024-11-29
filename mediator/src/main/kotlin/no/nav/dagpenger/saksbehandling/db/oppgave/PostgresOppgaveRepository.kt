@@ -616,6 +616,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     "emneknagger" to emneknaggerAsText,
                 )
             sikkerlogger.info { "Søker etter antall oppgaver med følgende SQL: $antallOppgaverQuery" }
+            sikkerlogger.info { "Henter oppgaver med følgende SQL: $oppgaverQuery" }
             val antallOppgaver: Int =
                 session.run(
                     queryOf(
