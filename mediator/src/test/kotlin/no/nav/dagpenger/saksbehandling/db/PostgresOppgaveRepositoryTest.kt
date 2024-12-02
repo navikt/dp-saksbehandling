@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -1295,19 +1296,19 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne hente paginerte oppgaver`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave1 = lagOppgave()
-            val oppgave2 = lagOppgave()
-            val oppgave3 = lagOppgave()
-            val oppgave4 = lagOppgave()
+            val nyesteOppgave = lagOppgave(opprettet = opprettetNå)
+            val nestNyesteOppgave = lagOppgave(opprettet = opprettetNå.minusDays(1))
+            val nestEldsteOppgave = lagOppgave(opprettet = opprettetNå.minusDays(3))
+            val eldsteOppgave = lagOppgave(opprettet = opprettetNå.minusDays(7))
 
-            repo.lagre(oppgave1)
-            repo.lagre(oppgave2)
-            repo.lagre(oppgave3)
-            repo.lagre(oppgave4)
+            repo.lagre(nestEldsteOppgave)
+            repo.lagre(nyesteOppgave)
+            repo.lagre(nestNyesteOppgave)
+            repo.lagre(eldsteOppgave)
 
             repo.søk(
                 Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = søkbareTilstander,
                     periode = UBEGRENSET_PERIODE,
                     paginering = null,
                 ),
@@ -1318,14 +1319,14 @@ class PostgresOppgaveRepositoryTest {
 
             repo.søk(
                 Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = søkbareTilstander,
                     periode = UBEGRENSET_PERIODE,
                     paginering = Paginering(2, 0),
                 ),
             ).let {
                 it.oppgaver.size shouldBe 2
-                it.oppgaver[0] shouldBe oppgave1
-                it.oppgaver[1] shouldBe oppgave2
+                it.oppgaver[0] shouldBe eldsteOppgave
+                it.oppgaver[1] shouldBe nestEldsteOppgave
                 it.totaltAntallOppgaver shouldBe 4
             }
 
@@ -1337,28 +1338,28 @@ class PostgresOppgaveRepositoryTest {
                 ),
             ).let {
                 it.oppgaver.size shouldBe 2
-                it.oppgaver[0] shouldBe oppgave3
-                it.oppgaver[1] shouldBe oppgave4
+                it.oppgaver[0] shouldBe nestNyesteOppgave
+                it.oppgaver[1] shouldBe nyesteOppgave
                 it.totaltAntallOppgaver shouldBe 4
             }
 
             repo.søk(
                 Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = søkbareTilstander,
                     periode = UBEGRENSET_PERIODE,
                     paginering = Paginering(10, 0),
                 ),
             ).let {
                 it.oppgaver.size shouldBe 4
-                it.oppgaver[0] shouldBe oppgave1
-                it.oppgaver[1] shouldBe oppgave2
-                it.oppgaver[2] shouldBe oppgave3
-                it.oppgaver[3] shouldBe oppgave4
+                it.oppgaver[0] shouldBe eldsteOppgave
+                it.oppgaver[1] shouldBe nestEldsteOppgave
+                it.oppgaver[2] shouldBe nestNyesteOppgave
+                it.oppgaver[3] shouldBe nyesteOppgave
                 it.totaltAntallOppgaver shouldBe 4
             }
             repo.søk(
                 Søkefilter(
-                    tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                    tilstander = søkbareTilstander,
                     periode = UBEGRENSET_PERIODE,
                     paginering = Paginering(10, 1),
                 ),
@@ -1402,7 +1403,7 @@ class PostgresOppgaveRepositoryTest {
             repo.søk(
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
-                    tilstander = Oppgave.Tilstand.Type.søkbareTilstander,
+                    tilstander = søkbareTilstander,
                     saksbehandlerIdent = null,
                     personIdent = null,
                     oppgaveId = null,
