@@ -30,10 +30,7 @@ interface OppgaveRepository {
 
     fun finnOppgaverFor(ident: String): List<Oppgave>
 
-    fun søk(
-        søkeFilter: Søkefilter,
-        orderByOpprettet: Boolean = false,
-    ): PostgresOppgaveRepository.OppgaveSøkResultat
+    fun søk(søkeFilter: Søkefilter): PostgresOppgaveRepository.OppgaveSøkResultat
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave>
 

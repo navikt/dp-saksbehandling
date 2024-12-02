@@ -326,11 +326,12 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
 
     override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
         søk(
-            Søkefilter(
-                tilstander = setOf(tilstand),
-                periode = UBEGRENSET_PERIODE,
-                saksbehandlerIdent = null,
-            ),
+            søkeFilter =
+                Søkefilter(
+                    tilstander = setOf(tilstand),
+                    periode = UBEGRENSET_PERIODE,
+                    saksbehandlerIdent = null,
+                ),
         ).oppgaver
 
     private fun hentOppgave(
@@ -487,7 +488,6 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     saksbehandlerIdent = null,
                     personIdent = ident,
                 ),
-            orderByOpprettet = true,
         ).oppgaver
 
     data class OppgaveSøkResultat(
@@ -495,10 +495,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         val totaltAntallOppgaver: Int,
     )
 
-    override fun søk(
-        søkeFilter: Søkefilter,
-        orderByOpprettet: Boolean,
-    ): OppgaveSøkResultat {
+    override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat {
         return sessionOf(datasource).use { session ->
             val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
             val tilstandClause =
@@ -532,12 +529,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 } else {
                     ""
                 }
-            val orderByOpprettetClause =
-                if (orderByOpprettet) {
-                    """ ORDER BY oppg.opprettet """
-                } else {
-                    ""
-                }
+            val orderByOpprettetClause = """ ORDER BY oppg.opprettet """
 
             val limitAndOffsetClause =
                 søkeFilter.paginering?.let {
