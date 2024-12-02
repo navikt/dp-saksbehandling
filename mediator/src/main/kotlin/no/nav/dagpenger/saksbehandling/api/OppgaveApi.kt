@@ -71,6 +71,10 @@ internal fun Application.oppgaveApi(
                     put {
                         val dto = call.receive<NesteOppgaveDTO>()
                         val saksbehandler = applicationCallParser.sakbehandler(call = call)
+                        sikkerlogger.info {
+                            "Henter neste oppgave for saksbehandler ${saksbehandler.navIdent} med " +
+                                "queryparams: ${dto.queryParams}"
+                        }
                         val oppgave =
                             oppgaveMediator.tildelOgHentNesteOppgave(
                                 nesteOppgaveHendelse =
