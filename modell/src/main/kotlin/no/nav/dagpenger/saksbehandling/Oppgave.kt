@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling.BESLUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -173,10 +174,10 @@ data class Oppgave private constructor(
         return tilstand.ferdigstill(this, vedtakFattetHendelse)
     }
 
-    fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
+    fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse): FerdigstillBehandling {
         adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
-        tilstand.ferdigstill(this, godkjentBehandlingHendelse)
+        return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
     fun ferdigstill(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
@@ -391,13 +392,14 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ) {
+        ): FerdigstillBehandling {
             requireSammeEier(
                 oppgave,
                 godkjentBehandlingHendelse.utførtAv,
                 godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
+            return FerdigstillBehandling.GODKJENN
         }
 
         override fun ferdigstill(
@@ -528,7 +530,7 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ) {
+        ): FerdigstillBehandling {
             require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten beslutter-tilgang")
             }
@@ -544,6 +546,7 @@ data class Oppgave private constructor(
             )
 
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
+            return BESLUTT
         }
 
         override fun tildel(
@@ -620,6 +623,11 @@ data class Oppgave private constructor(
         override fun notat(): Notat? = notat
     }
 
+    enum class FerdigstillBehandling {
+        BESLUTT,
+        GODKJENN,
+    }
+
     sealed interface Tilstand {
         val type: Type
 
@@ -689,7 +697,7 @@ data class Oppgave private constructor(
         fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ) {
+        ): FerdigstillBehandling {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =

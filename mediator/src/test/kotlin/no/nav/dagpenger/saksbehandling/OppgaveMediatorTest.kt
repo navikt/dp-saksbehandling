@@ -107,6 +107,7 @@ class OppgaveMediatorTest {
                 )
             } returns Result.success(true)
             every { it.sendTilbake(any(), any(), any()) } returns Result.success(Unit)
+            every { it.beslutt(any(), any(), any()) } returns Result.success(Unit)
         }
     private val skjermingKlientMock =
         mockk<SkjermingKlient>(relaxed = true).also {
@@ -938,6 +939,19 @@ class OppgaveMediatorTest {
     @Test
     fun `Livssyklus for søknadsbehandling som krever totrinnskontroll`() {
         // todo sjekke kall mot dp-beahandling
+
+        val søknadId = UUIDv7.ny()
+        val behandlingId = UUIDv7.ny()
+        val behandlingKlientMock =
+            mockk<BehandlingKlient>().also {
+                coEvery {
+                    it.kreverTotrinnskontroll(behandlingId, any())
+                } returns Result.success(true)
+                every { it.godkjenn(behandlingId = behandlingId, any(), any()) } returns Result.success(Unit)
+                every { it.beslutt(behandlingId = behandlingId, any(), any()) } returns Result.success(Unit)
+                every { it.sendTilbake(behandlingId = behandlingId, any(), any()) } returns Result.success(Unit)
+            }
+
         withMigratedDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
@@ -945,15 +959,12 @@ class OppgaveMediatorTest {
                     skjermingKlient = skjermingKlientMock,
                     pdlKlient = pdlKlientMock,
                     behandlingKlient = behandlingKlientMock,
-                    utsendingMediator = mockk(),
+                    utsendingMediator = mockk(relaxed = true),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
-            val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
@@ -1005,6 +1016,24 @@ class OppgaveMediatorTest {
                     utførtAv = beslutter,
                 ),
                 beslutterToken = "testtoken",
+            )
+
+            oppgaveMediator.sendTilKontroll(
+                sendTilKontrollHendelse =
+                    SendTilKontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "testtoken",
+            )
+
+            oppgaveMediator.ferdigstillOppgave(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "test",
+                    utførtAv = beslutter,
+                ),
+                "testtoken",
             )
         }
     }

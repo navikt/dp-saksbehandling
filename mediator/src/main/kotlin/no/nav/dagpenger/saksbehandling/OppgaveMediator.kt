@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.OPPGAVE_IKK
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
+import no.nav.dagpenger.saksbehandling.behandling.BesluttBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.behandling.SendTilbakeBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -184,9 +185,20 @@ class OppgaveMediator(
                         when (result) {
                             true -> {
                                 oppgave.sendTilKontroll(sendTilKontrollHendelse)
-                                repository.lagre(oppgave)
-                                logger.info {
-                                    "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                                behandlingKlient.godkjenn(
+                                    behandlingId = oppgave.behandling.behandlingId,
+                                    ident = oppgave.behandling.person.ident,
+                                    saksbehandlerToken = saksbehandlerToken,
+                                ).onSuccess {
+                                    repository.lagre(oppgave)
+                                    logger.info {
+                                        "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                                    }
+                                }.onFailure {
+                                    val feil =
+                                        "Feil ved godkjenning av behandling: ${it.message}"
+                                    logger.error { feil }
+                                    throw GodkjennBehandlingFeiletException(feil)
                                 }
                             }
 
@@ -278,7 +290,7 @@ class OppgaveMediator(
                 logger.info {
                     "Mottatt GodkjentBehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
-                oppgave.ferdigstill(godkjentBehandlingHendelse)
+                val ferdigstillBehandling = oppgave.ferdigstill(godkjentBehandlingHendelse)
 
                 val utsendingID =
                     utsendingMediator.opprettUtsending(
@@ -287,25 +299,52 @@ class OppgaveMediator(
                         oppgave.behandling.person.ident,
                     )
 
-                behandlingKlient.godkjenn(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    ident = oppgave.behandling.person.ident,
-                    saksbehandlerToken = saksbehandlerToken,
-                ).onSuccess {
-                    repository.lagre(oppgave)
-                    logger.info {
-                        "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                    }
-                }.onFailure {
-                    val feil = "Feil ved godkjenning av behandling: ${it.message}"
-                    logger.error { feil }
-                    utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
-                        when (rowsDeleted) {
-                            1 -> logger.info { "Slettet utsending med id $utsendingID" }
-                            else -> logger.error { "Fant ikke utsending med id $utsendingID" }
+                when (ferdigstillBehandling) {
+                    Oppgave.FerdigstillBehandling.GODKJENN -> {
+                        behandlingKlient.godkjenn(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            ident = oppgave.behandling.person.ident,
+                            saksbehandlerToken = saksbehandlerToken,
+                        ).onSuccess {
+                            repository.lagre(oppgave)
+                            logger.info {
+                                "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                            }
+                        }.onFailure {
+                            val feil = "Feil ved godkjenning av behandling: ${it.message}"
+                            logger.error { feil }
+                            utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
+                                when (rowsDeleted) {
+                                    1 -> logger.info { "Slettet utsending med id $utsendingID" }
+                                    else -> logger.error { "Fant ikke utsending med id $utsendingID" }
+                                }
+                            }
+                            throw GodkjennBehandlingFeiletException(feil)
                         }
                     }
-                    throw GodkjennBehandlingFeiletException(feil)
+
+                    Oppgave.FerdigstillBehandling.BESLUTT -> {
+                        behandlingKlient.beslutt(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            ident = oppgave.behandling.person.ident,
+                            saksbehandlerToken = saksbehandlerToken,
+                        ).onSuccess {
+                            repository.lagre(oppgave)
+                            logger.info {
+                                "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                            }
+                        }.onFailure {
+                            val feil = "Feil ved beslutting av behandling: ${it.message}"
+                            logger.error { feil }
+                            utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
+                                when (rowsDeleted) {
+                                    1 -> logger.info { "Slettet utsending med id $utsendingID" }
+                                    else -> logger.error { "Fant ikke utsending med id $utsendingID" }
+                                }
+                            }
+                            throw BesluttBehandlingFeiletException(feil)
+                        }
+                    }
                 }
             }
         }

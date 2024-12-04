@@ -128,6 +128,8 @@ class SendTilbakeBehandlingFeiletException(message: String) : RuntimeException(m
 
 class BehandlingKreverIkkeTotrinnskontrollException(message: String) : RuntimeException(message)
 
+class BesluttBehandlingFeiletException(message: String) : RuntimeException(message)
+
 private data class Request(val ident: String)
 
 private data class BehandlingDTO(
