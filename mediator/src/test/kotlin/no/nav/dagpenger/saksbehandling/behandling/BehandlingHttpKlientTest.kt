@@ -11,7 +11,6 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient.Companion.lagBehandlingHttpKlient
-import java.util.UUID
 import kotlin.test.Test
 
 class BehandlingHttpKlientTest {
@@ -19,6 +18,7 @@ class BehandlingHttpKlientTest {
     private val tokenProvider = { _: String -> saksbehandlerToken }
     private val ident = "testIdent"
     private val behandlingId = UUIDv7.ny()
+    private val ukjentId = UUIDv7.ny()
 
     private var requestData: HttpRequestData? = null
 
@@ -32,7 +32,7 @@ class BehandlingHttpKlientTest {
                         MockEngine { request: HttpRequestData ->
                             requestData = request
                             when (request.url.encodedPath) {
-                                "/$behandlingId/godkjenn" ->
+                                in setOf("/$behandlingId/godkjenn", "/$behandlingId/beslutt", "/$behandlingId/send-tilbake") ->
                                     respond(
                                         content = "OK",
                                         status = HttpStatusCode.OK,
@@ -50,9 +50,21 @@ class BehandlingHttpKlientTest {
         )
 
     @Test
-    fun `godkjennBehandling should return success`(): Unit =
+    fun `kall mot dp-behandling happy path `(): Unit =
         runBlocking {
             behandlingKlient.godkjennBehandling(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
+            }
+
+            behandlingKlient.beslutt(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
+            }
+
+            behandlingKlient.sendTilbake(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
             requireNotNull(requestData).let {
                 it.body.contentType.toString() shouldBe "application/json"
                 it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
@@ -62,6 +74,8 @@ class BehandlingHttpKlientTest {
     @Test
     fun `godkjennBehandling error test`(): Unit =
         runBlocking {
-            behandlingKlient.godkjennBehandling(UUID.randomUUID(), ident, saksbehandlerToken).isFailure shouldBe true
+            behandlingKlient.godkjennBehandling(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
+            behandlingKlient.beslutt(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
+            behandlingKlient.sendTilbake(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
         }
 }

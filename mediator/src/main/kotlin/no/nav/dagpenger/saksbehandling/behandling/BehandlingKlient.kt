@@ -30,6 +30,18 @@ interface BehandlingKlient {
         behandlingId: UUID,
         saksbehandlerToken: String,
     ): Result<Boolean>
+
+    fun sendTilbake(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String,
+    ): Result<Unit>
+
+    fun beslutt(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String,
+    ): Result<Unit>
 }
 
 internal class BehandlingHttpKlient(
@@ -56,16 +68,23 @@ internal class BehandlingHttpKlient(
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit> {
-        return kotlin.runCatching {
-            runBlocking {
-                httpClient.post(urlString = "$dpBehandlingApiUrl/$behandlingId/godkjenn") {
-                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json)
-                    accept(ContentType.Application.Json)
-                    setBody(Request(ident))
-                }
-            }.let {}
-        }.onFailure { logger.error(it) { "Kall til dp-behandling feilet ved godkjenning ${it.message}" } }
+        return kallBehandling("godkjenn", behandlingId, saksbehandlerToken, ident)
+    }
+
+    override fun sendTilbake(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String,
+    ): Result<Unit> {
+        return kallBehandling("send-tilbake", behandlingId, saksbehandlerToken, ident)
+    }
+
+    override fun beslutt(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String,
+    ): Result<Unit> {
+        return kallBehandling("beslutt", behandlingId, saksbehandlerToken, ident)
     }
 
     override suspend fun kreverTotrinnskontroll(
@@ -79,7 +98,27 @@ internal class BehandlingHttpKlient(
             }.body<BehandlingDTO>().let { behandlingDTO ->
                 behandlingDTO.kreverTotrinnskontroll
             }
-        }.onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
+        }
+            .onFailure { logger.error(it) { "Kall til dp-behandling for å hente kreverTotrinnskontroll feilet ${it.message}" } }
+    }
+
+    private fun kallBehandling(
+        endepunkt: String,
+        behandlingId: UUID,
+        saksbehandlerToken: String,
+        ident: String,
+    ): Result<Unit> {
+        val urlString = "$dpBehandlingApiUrl/$behandlingId/$endepunkt"
+        return kotlin.runCatching {
+            runBlocking {
+                httpClient.post(urlString = urlString) {
+                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
+                    accept(ContentType.Application.Json)
+                    setBody(Request(ident))
+                }
+            }.let { }
+        }.onFailure { logger.error(it) { "Kall til dp-behandling feilet ved kall mot $urlString ${it.message}" } }
     }
 }
 
