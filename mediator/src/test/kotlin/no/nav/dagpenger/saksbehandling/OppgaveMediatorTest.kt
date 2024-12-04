@@ -29,7 +29,6 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnsko
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -112,6 +111,11 @@ class OppgaveMediatorTest {
     private val skjermingKlientMock =
         mockk<SkjermingKlient>(relaxed = true).also {
             coEvery { it.erSkjermetPerson(any()) } returns Result.success(false)
+        }
+
+    private val utsendingMediatorMock =
+        mockk<UtsendingMediator>(relaxed = true).also {
+            coEvery { it.opprettUtsending(any(), any(), any()) } returns UUIDv7.ny()
         }
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
 
@@ -314,15 +318,13 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlientMock,
-                    pdlKlientMock,
-                    behandlingKlientMock,
-                    mockk(),
+                    skjermingKlient = skjermingKlientMock,
+                    pdlKlient = pdlKlientMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = utsendingMediatorMock,
                 )
-            val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-            VedtakFattetMottak(testRapid, oppgaveMediator, utsendingMediator)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
@@ -369,13 +371,14 @@ class OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
-            testRapid.sendTestMessage(
-                vedtakFattetHendelse(
-                    ident = testIdent,
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    sakId = sak.id.toInt(),
-                ),
+            oppgaveMediator.ferdigstillOppgave(
+                godkjentBehandlingHendelse =
+                    GodkjentBehandlingHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        meldingOmVedtak = "<html>brev</html>",
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "token",
             )
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)

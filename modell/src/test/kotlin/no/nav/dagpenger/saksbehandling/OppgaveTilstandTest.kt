@@ -133,12 +133,14 @@ class OppgaveTilstandTest {
 
             if (tilstand == UNDER_KONTROLL) {
                 oppgave.tilstand().type shouldBe UNDER_KONTROLL
+            } else if (tilstand == UNDER_BEHANDLING) {
+                oppgave.tilstand().type shouldBe UNDER_BEHANDLING
             } else {
                 oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
             }
 
             when (tilstand) {
-                in setOf(UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe false
+                in setOf(UNDER_BEHANDLING, UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe false
                 else -> resultat shouldBe true
             }
         }
