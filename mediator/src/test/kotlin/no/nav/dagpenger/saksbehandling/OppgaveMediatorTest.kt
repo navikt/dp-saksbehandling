@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
@@ -940,6 +939,7 @@ class OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for søknadsbehandling som krever totrinnskontroll`() {
+        // todo sjekke kall mot dp-beahandling
         withMigratedDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
@@ -993,17 +993,6 @@ class OppgaveMediatorTest {
                 saksbehandlerToken = "testtoken",
             )
 
-            testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
-                //language=JSON
-                """
-                {
-                   "@event_name": "oppgave_sendt_til_kontroll",
-                   "behandlingId": "${oppgave.behandling.behandlingId}",
-                   "ident": "${oppgave.behandling.person.ident}"
-                }
-                """.trimIndent()
-
             oppgaveMediator.settOppgaveKlarTilKontroll(
                 BehandlingLåstHendelse(
                     behandlingId = oppgave.behandling.behandlingId,
@@ -1025,17 +1014,6 @@ class OppgaveMediatorTest {
                     utførtAv = beslutter,
                 ),
             )
-
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
-                //language=JSON
-                """
-                {
-                   "@event_name": "oppgave_returnert_til_saksbehandling",
-                   "behandlingId": "${oppgave.behandling.behandlingId}",
-                   "ident": "${oppgave.behandling.person.ident}"
-                }
-                """.trimIndent()
 
             oppgaveMediator.settOppgaveUnderBehandling(
                 BehandlingOpplåstHendelse(

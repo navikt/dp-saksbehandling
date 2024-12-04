@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
@@ -186,17 +185,6 @@ class OppgaveMediator(
                         when (result) {
                             true -> {
                                 oppgave.sendTilKontroll(sendTilKontrollHendelse)
-                                rapidsConnection.publish(
-                                    key = oppgave.behandling.person.ident,
-                                    JsonMessage.newMessage(
-                                        eventName = "oppgave_sendt_til_kontroll",
-                                        map =
-                                            mapOf(
-                                                "behandlingId" to oppgave.behandling.behandlingId,
-                                                "ident" to oppgave.behandling.person.ident,
-                                            ),
-                                    ).toJson(),
-                                )
                                 repository.lagre(oppgave)
                                 logger.info {
                                     "Behandlet SendTilKontrollHendelse og publisert oppgave_sendt_til_kontroll " +
@@ -226,17 +214,6 @@ class OppgaveMediator(
                     "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
-                rapidsConnection.publish(
-                    key = oppgave.behandling.person.ident,
-                    JsonMessage.newMessage(
-                        eventName = "oppgave_returnert_til_saksbehandling",
-                        map =
-                            mapOf(
-                                "behandlingId" to oppgave.behandling.behandlingId,
-                                "ident" to oppgave.behandling.person.ident,
-                            ),
-                    ).toJson(),
-                )
                 repository.lagre(oppgave)
                 logger.info {
                     "Behandlet ReturnerTilSaksbehandlingHendelse og publisert oppgave_returnert_til_saksbehandling " +
