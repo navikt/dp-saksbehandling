@@ -335,11 +335,13 @@ data class Oppgave private constructor(
         ) {
             requireSammeEier(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
 
-            oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
-            oppgave.behandlerIdent = null
-            if (oppgave.harVærtITilstand(UNDER_KONTROLL)) {
+            if (oppgave.sisteBeslutter() == null) {
+                oppgave.endreTilstand(KlarTilKontroll, sendTilKontrollHendelse)
+            } else {
+                oppgave.behandlerIdent = oppgave.sisteBeslutter()
                 oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT)
                 oppgave._emneknagger.remove(RETUR_FRA_KONTROLL)
+                oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
             }
         }
 

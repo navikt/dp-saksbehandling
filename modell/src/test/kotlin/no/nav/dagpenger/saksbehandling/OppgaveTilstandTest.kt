@@ -504,18 +504,6 @@ class OppgaveTilstandTest {
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
-        oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldNotContain Oppgave.RETUR_FRA_KONTROLL
-
-        oppgave.klarTilKontroll(
-            BehandlingLåstHendelse(
-                behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.behandling.person.ident,
-            ),
-        )
-
         oppgave.tilstand() shouldBe Oppgave.KlarTilKontroll
         oppgave.behandlerIdent shouldBe null
         oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
@@ -541,18 +529,6 @@ class OppgaveTilstandTest {
             ),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.AvventerOpplåsingAvBehandling
-        oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldContain Oppgave.RETUR_FRA_KONTROLL
-
-        oppgave.klarTilBehandling(
-            BehandlingOpplåstHendelse(
-                behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.behandling.person.ident,
-            ),
-        )
-
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
         oppgave.behandlerIdent shouldBe saksbehandler.navIdent
         oppgave.emneknagger shouldNotContain Oppgave.TIDLIGERE_KONTROLLERT
@@ -562,17 +538,6 @@ class OppgaveTilstandTest {
             SendTilKontrollHendelse(oppgaveId = oppgave.oppgaveId, utførtAv = saksbehandler),
         )
 
-        oppgave.tilstand() shouldBe Oppgave.AvventerLåsAvBehandling
-        oppgave.behandlerIdent shouldBe null
-        oppgave.emneknagger shouldContain Oppgave.TIDLIGERE_KONTROLLERT
-        oppgave.emneknagger shouldNotContain Oppgave.RETUR_FRA_KONTROLL
-
-        oppgave.klarTilKontroll(
-            BehandlingLåstHendelse(
-                behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.behandling.person.ident,
-            ),
-        )
 
         oppgave.tilstand() shouldBe Oppgave.UnderKontroll()
         oppgave.behandlerIdent shouldBe beslutter.navIdent
