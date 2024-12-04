@@ -41,7 +41,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Paginering
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -1040,16 +1039,15 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente tilstandslogg for en spesifikk oppgave`() {
         val nå = LocalDateTime.now()
-
         val tilstandslogg =
             Tilstandslogg(
                 mutableListOf(
                     Tilstandsendring(
                         tilstand = KLAR_TIL_KONTROLL,
                         hendelse =
-                            BehandlingLåstHendelse(
-                                behandlingId = UUIDv7.ny(),
-                                ident = "12345612345",
+                            SendTilKontrollHendelse(
+                                oppgaveId = oppgaveIdTest,
+                                utførtAv = saksbehandler,
                             ),
                         tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
                     ),

@@ -22,8 +22,6 @@ import no.nav.dagpenger.saksbehandling.metrikker.startMetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingLåstMottak
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpplåstMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
@@ -138,8 +136,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 utsendingMediator,
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
-            BehandlingLåstMottak(rapidsConnection, oppgaveMediator)
-            BehandlingOpplåstMottak(rapidsConnection, oppgaveMediator)
             utsendingAlarmJob = UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob()
         }
 

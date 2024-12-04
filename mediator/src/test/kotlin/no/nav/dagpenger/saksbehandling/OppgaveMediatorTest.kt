@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
@@ -11,7 +10,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -33,8 +31,6 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -110,6 +106,8 @@ class OppgaveMediatorTest {
                     any(),
                 )
             } returns Result.success(true)
+            every { it.sendTilbake(any(), any(), any()) } returns Result.success(Unit)
+            every { it.beslutt(any(), any(), any()) } returns Result.success(Unit)
         }
     private val skjermingKlientMock =
         mockk<SkjermingKlient>(relaxed = true).also {
@@ -118,7 +116,7 @@ class OppgaveMediatorTest {
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
 
     @Test
-    fun `Skal kunne sette oppgave til AVVENTER_LÅS_AV_BEHANDLING`() {
+    fun `Skal kunne sette oppgave til kontroll`() {
         withMigratedDb { dataSource ->
             val oppgave = dataSource.lagTestoppgave(UNDER_BEHANDLING)
             val oppgaveMediator =
@@ -139,7 +137,7 @@ class OppgaveMediatorTest {
                 saksbehandlerToken = "testToken",
             )
             val oppgaveTilKontroll = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            oppgaveTilKontroll.tilstand().type shouldBe AVVENTER_LÅS_AV_BEHANDLING
+            oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgaveTilKontroll.behandlerIdent shouldBe null
             oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
         }
@@ -940,6 +938,20 @@ class OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for søknadsbehandling som krever totrinnskontroll`() {
+        // todo sjekke kall mot dp-beahandling
+
+        val søknadId = UUIDv7.ny()
+        val behandlingId = UUIDv7.ny()
+        val behandlingKlientMock =
+            mockk<BehandlingKlient>().also {
+                coEvery {
+                    it.kreverTotrinnskontroll(behandlingId, any())
+                } returns Result.success(true)
+                every { it.godkjenn(behandlingId = behandlingId, any(), any()) } returns Result.success(Unit)
+                every { it.beslutt(behandlingId = behandlingId, any(), any()) } returns Result.success(Unit)
+                every { it.sendTilbake(behandlingId = behandlingId, any(), any()) } returns Result.success(Unit)
+            }
+
         withMigratedDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
@@ -947,15 +959,12 @@ class OppgaveMediatorTest {
                     skjermingKlient = skjermingKlientMock,
                     pdlKlient = pdlKlientMock,
                     behandlingKlient = behandlingKlientMock,
-                    utsendingMediator = mockk(),
+                    utsendingMediator = mockk(relaxed = true),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
 
             BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
-            val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
@@ -993,24 +1002,6 @@ class OppgaveMediatorTest {
                 saksbehandlerToken = "testtoken",
             )
 
-            testRapid.inspektør.size shouldBe 1
-            testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJson
-                //language=JSON
-                """
-                {
-                   "@event_name": "oppgave_sendt_til_kontroll",
-                   "behandlingId": "${oppgave.behandling.behandlingId}",
-                   "ident": "${oppgave.behandling.person.ident}"
-                }
-                """.trimIndent()
-
-            oppgaveMediator.settOppgaveKlarTilKontroll(
-                BehandlingLåstHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    ident = oppgave.behandling.person.ident,
-                ),
-            )
-
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -1024,24 +1015,25 @@ class OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = beslutter,
                 ),
+                beslutterToken = "testtoken",
             )
 
-            testRapid.inspektør.size shouldBe 2
-            testRapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
-                //language=JSON
-                """
-                {
-                   "@event_name": "oppgave_returnert_til_saksbehandling",
-                   "behandlingId": "${oppgave.behandling.behandlingId}",
-                   "ident": "${oppgave.behandling.person.ident}"
-                }
-                """.trimIndent()
+            oppgaveMediator.sendTilKontroll(
+                sendTilKontrollHendelse =
+                    SendTilKontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "testtoken",
+            )
 
-            oppgaveMediator.settOppgaveUnderBehandling(
-                BehandlingOpplåstHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    ident = oppgave.behandling.person.ident,
+            oppgaveMediator.ferdigstillOppgave(
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = "test",
+                    utførtAv = beslutter,
                 ),
+                "testtoken",
             )
         }
     }
@@ -1111,16 +1103,6 @@ class OppgaveMediatorTest {
                 utførtAv = saksbehandler,
             ),
             saksbehandlerToken = "testtoken",
-        )
-        if (tilstand == AVVENTER_LÅS_AV_BEHANDLING) {
-            return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-        }
-
-        oppgaveMediator.settOppgaveKlarTilKontroll(
-            BehandlingLåstHendelse(
-                behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.behandling.person.ident,
-            ),
         )
 
         if (tilstand == KLAR_TIL_KONTROLL) {

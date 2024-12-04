@@ -124,7 +124,11 @@ internal class BehandlingHttpKlient(
 
 class GodkjennBehandlingFeiletException(message: String) : RuntimeException(message)
 
+class SendTilbakeBehandlingFeiletException(message: String) : RuntimeException(message)
+
 class BehandlingKreverIkkeTotrinnskontrollException(message: String) : RuntimeException(message)
+
+class BesluttBehandlingFeiletException(message: String) : RuntimeException(message)
 
 private data class Request(val ident: String)
 

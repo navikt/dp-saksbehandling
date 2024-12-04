@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling.BESLUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -24,8 +25,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -175,10 +174,10 @@ data class Oppgave private constructor(
         return tilstand.ferdigstill(this, vedtakFattetHendelse)
     }
 
-    fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
+    fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse): FerdigstillBehandling {
         adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
-        tilstand.ferdigstill(this, godkjentBehandlingHendelse)
+        return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
     fun ferdigstill(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
@@ -210,14 +209,6 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, sendTilKontrollHendelse)
     }
 
-    fun klarTilKontroll(behandlingLåstHendelse: BehandlingLåstHendelse) {
-        tilstand.klarTilKontroll(this, behandlingLåstHendelse)
-    }
-
-    fun klarTilBehandling(behandlingOpplåstHendelse: BehandlingOpplåstHendelse) {
-        tilstand.klarTilBehandling(this, behandlingOpplåstHendelse)
-    }
-
     fun behandlesIArena(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
         tilstand.behandlesIArena(this, behandlingAvbruttHendelse)
     }
@@ -230,13 +221,6 @@ data class Oppgave private constructor(
 
     fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
         tilstand.returnerTilSaksbehandling(this, returnerTilSaksbehandlingHendelse)
-    }
-
-    fun harVærtITilstand(tilstandType: Type): Boolean {
-        this.tilstandslogg.find { it.tilstand == tilstandType }?.let {
-            return true
-        }
-        return false
     }
 
     private fun endreTilstand(
@@ -335,9 +319,12 @@ data class Oppgave private constructor(
         ) {
             requireSammeEier(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
 
-            oppgave.endreTilstand(AvventerLåsAvBehandling, sendTilKontrollHendelse)
-            oppgave.behandlerIdent = null
-            if (oppgave.harVærtITilstand(UNDER_KONTROLL)) {
+            if (oppgave.sisteBeslutter() == null) {
+                oppgave.behandlerIdent = null
+                oppgave.endreTilstand(KlarTilKontroll, sendTilKontrollHendelse)
+            } else {
+                oppgave.behandlerIdent = oppgave.sisteBeslutter()
+                oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
                 oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT)
                 oppgave._emneknagger.remove(RETUR_FRA_KONTROLL)
             }
@@ -405,13 +392,14 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ) {
+        ): FerdigstillBehandling {
             requireSammeEier(
                 oppgave,
                 godkjentBehandlingHendelse.utførtAv,
                 godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
+            return FerdigstillBehandling.GODKJENN
         }
 
         override fun ferdigstill(
@@ -519,38 +507,10 @@ data class Oppgave private constructor(
 
     object AvventerLåsAvBehandling : Tilstand {
         override val type: Type = AVVENTER_LÅS_AV_BEHANDLING
-
-        override fun klarTilKontroll(
-            oppgave: Oppgave,
-            behandlingLåstHendelse: BehandlingLåstHendelse,
-        ) {
-            if (oppgave.sisteBeslutter() == null) {
-                oppgave.endreTilstand(KlarTilKontroll, behandlingLåstHendelse)
-            } else {
-                oppgave.behandlerIdent = oppgave.sisteBeslutter()
-                oppgave.endreTilstand(UnderKontroll(), behandlingLåstHendelse)
-            }
-        }
     }
 
     object AvventerOpplåsingAvBehandling : Tilstand {
         override val type: Type = AVVENTER_OPPLÅSING_AV_BEHANDLING
-
-        override fun klarTilBehandling(
-            oppgave: Oppgave,
-            behandlingOpplåstHendelse: BehandlingOpplåstHendelse,
-        ) {
-            oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
-            oppgave.endreTilstand(UnderBehandling, behandlingOpplåstHendelse)
-        }
-
-        override fun oppgaveKlarTilBehandling(
-            oppgave: Oppgave,
-            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ): Boolean {
-            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
-            return false
-        }
     }
 
     data class UnderKontroll(private var notat: Notat? = null) : Tilstand {
@@ -570,7 +530,7 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ) {
+        ): FerdigstillBehandling {
             require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten beslutter-tilgang")
             }
@@ -586,6 +546,7 @@ data class Oppgave private constructor(
             )
 
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
+            return BESLUTT
         }
 
         override fun tildel(
@@ -610,8 +571,7 @@ data class Oppgave private constructor(
         ) {
             require(returnerTilSaksbehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang(
-                    "Kan ikke returnere oppgaven til saksbehandling i tilstand $type " +
-                        "uten beslutter-tilgang",
+                    "Kan ikke returnere oppgaven til saksbehandling i tilstand $type uten beslutter-tilgang",
                 )
             }
             requireSammeEier(
@@ -625,8 +585,8 @@ data class Oppgave private constructor(
                 hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
             )
 
-            oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
-            oppgave.behandlerIdent = null
+            oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
+            oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
             oppgave._emneknagger.add(RETUR_FRA_KONTROLL)
             oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT)
         }
@@ -661,6 +621,11 @@ data class Oppgave private constructor(
         }
 
         override fun notat(): Notat? = notat
+    }
+
+    enum class FerdigstillBehandling {
+        BESLUTT,
+        GODKJENN,
     }
 
     sealed interface Tilstand {
@@ -732,7 +697,7 @@ data class Oppgave private constructor(
         fun ferdigstill(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        ) {
+        ): FerdigstillBehandling {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =
@@ -790,26 +755,6 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å sende til kontroll i tilstand $type",
-            )
-        }
-
-        fun klarTilKontroll(
-            oppgave: Oppgave,
-            behandlingLåstHendelse: BehandlingLåstHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om låst behandling i tilstand $type",
-            )
-        }
-
-        fun klarTilBehandling(
-            oppgave: Oppgave,
-            behandlingOpplåstHendelse: BehandlingOpplåstHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om opplåst behandling i tilstand $type",
             )
         }
 
