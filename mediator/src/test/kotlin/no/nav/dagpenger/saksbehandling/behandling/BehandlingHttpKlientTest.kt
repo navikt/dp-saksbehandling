@@ -52,7 +52,7 @@ class BehandlingHttpKlientTest {
     @Test
     fun `kall mot dp-behandling happy path `(): Unit =
         runBlocking {
-            behandlingKlient.godkjennBehandling(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
+            behandlingKlient.godkjenn(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
             requireNotNull(requestData).let {
                 it.body.contentType.toString() shouldBe "application/json"
                 it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
@@ -74,7 +74,7 @@ class BehandlingHttpKlientTest {
     @Test
     fun `godkjennBehandling error test`(): Unit =
         runBlocking {
-            behandlingKlient.godkjennBehandling(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
+            behandlingKlient.godkjenn(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.beslutt(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.sendTilbake(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
         }

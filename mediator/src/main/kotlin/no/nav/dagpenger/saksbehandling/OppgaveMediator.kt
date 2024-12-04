@@ -357,7 +357,7 @@ class OppgaveMediator(
                         oppgave.behandling.person.ident,
                     )
 
-                behandlingKlient.godkjennBehandling(
+                behandlingKlient.godkjenn(
                     behandlingId = oppgave.behandling.behandlingId,
                     ident = oppgave.behandling.person.ident,
                     saksbehandlerToken = saksbehandlerToken,
@@ -388,7 +388,7 @@ class OppgaveMediator(
         repository.hentOppgave(godkjennBehandlingMedBrevIArena.oppgaveId).let { oppgave ->
             oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
 
-            behandlingKlient.godkjennBehandling(
+            behandlingKlient.godkjenn(
                 behandlingId = oppgave.behandling.behandlingId,
                 ident = oppgave.behandling.person.ident,
                 saksbehandlerToken = saksbehandlerToken,

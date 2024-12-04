@@ -99,7 +99,7 @@ class OppgaveMediatorTest {
 
     private val behandlingKlientMock =
         mockk<BehandlingKlient>().also {
-            every { it.godkjennBehandling(any(), any(), any()) } returns Result.success(Unit)
+            every { it.godkjenn(any(), any(), any()) } returns Result.success(Unit)
             coEvery { it.kreverTotrinnskontroll(behandlingIDKreverIkkeTotrinnskontroll, any()) } returns
                 Result.success(
                     false,
@@ -392,7 +392,7 @@ class OppgaveMediatorTest {
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
-                    it.godkjennBehandling(
+                    it.godkjenn(
                         behandlingId = behandlingId,
                         ident = testIdent,
                         saksbehandlerToken = saksbehandlerToken,
@@ -467,7 +467,7 @@ class OppgaveMediatorTest {
             )
 
             verify(exactly = 1) {
-                behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
+                behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
             }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
@@ -487,7 +487,7 @@ class OppgaveMediatorTest {
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
-                    it.godkjennBehandling(
+                    it.godkjenn(
                         behandlingId = behandlingId,
                         ident = testIdent,
                         saksbehandlerToken = saksbehandlerToken,
@@ -566,7 +566,7 @@ class OppgaveMediatorTest {
             }
 
             verify(exactly = 1) {
-                behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
+                behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
             }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
@@ -583,7 +583,7 @@ class OppgaveMediatorTest {
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
-                    it.godkjennBehandling(
+                    it.godkjenn(
                         behandlingId = behandlingId,
                         ident = testIdent,
                         saksbehandlerToken = saksbehandlerToken,
@@ -640,7 +640,7 @@ class OppgaveMediatorTest {
             )
 
             verify(exactly = 1) {
-                behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
+                behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
             }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
@@ -657,7 +657,7 @@ class OppgaveMediatorTest {
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
-                    it.godkjennBehandling(
+                    it.godkjenn(
                         behandlingId = behandlingId,
                         ident = testIdent,
                         saksbehandlerToken = saksbehandlerToken,
@@ -716,7 +716,7 @@ class OppgaveMediatorTest {
             }
 
             verify(exactly = 1) {
-                behandlingClientMock.godkjennBehandling(behandlingId, testIdent, saksbehandlerToken)
+                behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
             }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)

@@ -20,7 +20,7 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 interface BehandlingKlient {
-    fun godkjennBehandling(
+    fun godkjenn(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
@@ -63,7 +63,7 @@ internal class BehandlingHttpKlient(
         }
     }
 
-    override fun godkjennBehandling(
+    override fun godkjenn(
         behandlingId: UUID,
         ident: String,
         saksbehandlerToken: String,
