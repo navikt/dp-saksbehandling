@@ -15,8 +15,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.Oppg
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -187,11 +185,9 @@ class OppgaveMediator(
                                 oppgave.sendTilKontroll(sendTilKontrollHendelse)
                                 repository.lagre(oppgave)
                                 logger.info {
-                                    "Behandlet SendTilKontrollHendelse og publisert oppgave_sendt_til_kontroll " +
-                                        "event. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                                    "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                                 }
                             }
-
                             false -> {
                                 throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
                             }
@@ -216,38 +212,7 @@ class OppgaveMediator(
                 oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
                 repository.lagre(oppgave)
                 logger.info {
-                    "Behandlet ReturnerTilSaksbehandlingHendelse og publisert oppgave_returnert_til_saksbehandling " +
-                        "event. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                }
-            }
-        }
-    }
-
-    fun settOppgaveUnderBehandling(behandlingOpplåstHendelse: BehandlingOpplåstHendelse) {
-        val oppgave = repository.finnOppgaveFor(behandlingOpplåstHendelse.behandlingId)
-        when (oppgave) {
-            null -> {
-                val feilMelding =
-                    "Mottatt hendelse behandling_opplåst for behandling med id " +
-                        "${behandlingOpplåstHendelse.behandlingId}." +
-                        "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
-                logger.error { feilMelding }
-                sendAlertTilRapid(OPPGAVE_IKKE_FUNNET, feilMelding)
-            }
-
-            else -> {
-                withLoggingContext(
-                    "oppgaveId" to oppgave.oppgaveId.toString(),
-                    "behandlingId" to oppgave.behandling.behandlingId.toString(),
-                ) {
-                    logger.info {
-                        "Mottatt BehandlingOpplåstHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                    }
-                    oppgave.klarTilBehandling(behandlingOpplåstHendelse)
-                    repository.lagre(oppgave)
-                    logger.info {
-                        "Behandlet BehandlingOpplåstHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                    }
+                    "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }
@@ -257,36 +222,6 @@ class OppgaveMediator(
         return repository.hentOppgave(notatHendelse.oppgaveId).let { oppgave ->
             oppgave.lagreNotat(notatHendelse)
             repository.lagreNotatFor(oppgave)
-        }
-    }
-
-    fun settOppgaveKlarTilKontroll(behandlingLåstHendelse: BehandlingLåstHendelse) {
-        val oppgave = repository.finnOppgaveFor(behandlingLåstHendelse.behandlingId)
-        when (oppgave) {
-            null -> {
-                val feilMelding =
-                    "Mottatt hendelse behandling_låst for behandling med id " +
-                        "${behandlingLåstHendelse.behandlingId}." +
-                        "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
-                logger.error { feilMelding }
-                sendAlertTilRapid(OPPGAVE_IKKE_FUNNET, feilMelding)
-            }
-
-            else -> {
-                withLoggingContext(
-                    "oppgaveId" to oppgave.oppgaveId.toString(),
-                    "behandlingId" to oppgave.behandling.behandlingId.toString(),
-                ) {
-                    logger.info {
-                        "Mottatt BehandlingLåstHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                    }
-                    oppgave.klarTilKontroll(behandlingLåstHendelse)
-                    repository.lagre(oppgave)
-                    logger.info {
-                        "Behandlet BehandlingLåstHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                    }
-                }
-            }
         }
     }
 

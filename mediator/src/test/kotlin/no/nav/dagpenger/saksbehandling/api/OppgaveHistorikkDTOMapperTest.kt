@@ -16,7 +16,6 @@ import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -151,13 +150,6 @@ class OppgaveHistorikkDTOMapperTest {
                     ),
             )
 
-            oppgave.klarTilKontroll(
-                BehandlingLåstHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
-                    ident = saksbehandler.navIdent,
-                ),
-            )
-
             oppgave.tildel(
                 settOppgaveAnsvarHendelse =
                     SettOppgaveAnsvarHendelse(
@@ -201,7 +193,7 @@ class OppgaveHistorikkDTOMapperTest {
                         tilstandslogg = oppgave.tilstandslogg,
                     )
 
-                historikk.size shouldBe 6
+                historikk.size shouldBe 5
                 historikk.first().tittel shouldBe "Notat"
                 objectMapper.writeValueAsString(historikk) shouldEqualSpecifiedJsonIgnoringOrder """
                 [
@@ -224,13 +216,6 @@ class OppgaveHistorikkDTOMapperTest {
                     {
                         "type": "statusendring",
                         "tittel": "Klar til kontroll",
-                        "behandler": {
-                            "navn": "dp-behandling"
-                        }
-                    },
-                    {
-                        "type": "statusendring",
-                        "tittel": "Sendt til kontroll",
                         "behandler": {
                             "navn": "saksbehandlerFornavn saksbehandlerEtternavn"
                         }

@@ -24,8 +24,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -210,14 +208,6 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, sendTilKontrollHendelse)
     }
 
-    fun klarTilKontroll(behandlingLåstHendelse: BehandlingLåstHendelse) {
-        tilstand.klarTilKontroll(this, behandlingLåstHendelse)
-    }
-
-    fun klarTilBehandling(behandlingOpplåstHendelse: BehandlingOpplåstHendelse) {
-        tilstand.klarTilBehandling(this, behandlingOpplåstHendelse)
-    }
-
     fun behandlesIArena(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
         tilstand.behandlesIArena(this, behandlingAvbruttHendelse)
     }
@@ -230,13 +220,6 @@ data class Oppgave private constructor(
 
     fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
         tilstand.returnerTilSaksbehandling(this, returnerTilSaksbehandlingHendelse)
-    }
-
-    fun harVærtITilstand(tilstandType: Type): Boolean {
-        this.tilstandslogg.find { it.tilstand == tilstandType }?.let {
-            return true
-        }
-        return false
     }
 
     private fun endreTilstand(
@@ -336,12 +319,13 @@ data class Oppgave private constructor(
             requireSammeEier(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
 
             if (oppgave.sisteBeslutter() == null) {
+                oppgave.behandlerIdent = null
                 oppgave.endreTilstand(KlarTilKontroll, sendTilKontrollHendelse)
             } else {
                 oppgave.behandlerIdent = oppgave.sisteBeslutter()
+                oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
                 oppgave._emneknagger.add(TIDLIGERE_KONTROLLERT)
                 oppgave._emneknagger.remove(RETUR_FRA_KONTROLL)
-                oppgave.endreTilstand(UnderKontroll(), sendTilKontrollHendelse)
             }
         }
 
@@ -521,38 +505,10 @@ data class Oppgave private constructor(
 
     object AvventerLåsAvBehandling : Tilstand {
         override val type: Type = AVVENTER_LÅS_AV_BEHANDLING
-
-        override fun klarTilKontroll(
-            oppgave: Oppgave,
-            behandlingLåstHendelse: BehandlingLåstHendelse,
-        ) {
-            if (oppgave.sisteBeslutter() == null) {
-                oppgave.endreTilstand(KlarTilKontroll, behandlingLåstHendelse)
-            } else {
-                oppgave.behandlerIdent = oppgave.sisteBeslutter()
-                oppgave.endreTilstand(UnderKontroll(), behandlingLåstHendelse)
-            }
-        }
     }
 
     object AvventerOpplåsingAvBehandling : Tilstand {
         override val type: Type = AVVENTER_OPPLÅSING_AV_BEHANDLING
-
-        override fun klarTilBehandling(
-            oppgave: Oppgave,
-            behandlingOpplåstHendelse: BehandlingOpplåstHendelse,
-        ) {
-            oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
-            oppgave.endreTilstand(UnderBehandling, behandlingOpplåstHendelse)
-        }
-
-        override fun oppgaveKlarTilBehandling(
-            oppgave: Oppgave,
-            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ): Boolean {
-            logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
-            return false
-        }
     }
 
     data class UnderKontroll(private var notat: Notat? = null) : Tilstand {
@@ -612,8 +568,7 @@ data class Oppgave private constructor(
         ) {
             require(returnerTilSaksbehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
                 throw Tilstand.ManglendeTilgang(
-                    "Kan ikke returnere oppgaven til saksbehandling i tilstand $type " +
-                        "uten beslutter-tilgang",
+                    "Kan ikke returnere oppgaven til saksbehandling i tilstand $type uten beslutter-tilgang",
                 )
             }
             requireSammeEier(
@@ -627,8 +582,8 @@ data class Oppgave private constructor(
                 hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
             )
 
-            oppgave.endreTilstand(AvventerOpplåsingAvBehandling, returnerTilSaksbehandlingHendelse)
-            oppgave.behandlerIdent = null
+            oppgave.endreTilstand(UnderBehandling, returnerTilSaksbehandlingHendelse)
+            oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
             oppgave._emneknagger.add(RETUR_FRA_KONTROLL)
             oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT)
         }
@@ -792,26 +747,6 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å sende til kontroll i tilstand $type",
-            )
-        }
-
-        fun klarTilKontroll(
-            oppgave: Oppgave,
-            behandlingLåstHendelse: BehandlingLåstHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om låst behandling i tilstand $type",
-            )
-        }
-
-        fun klarTilBehandling(
-            oppgave: Oppgave,
-            behandlingOpplåstHendelse: BehandlingOpplåstHendelse,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message = "Kan ikke håndtere hendelse om opplåst behandling i tilstand $type",
             )
         }
 
