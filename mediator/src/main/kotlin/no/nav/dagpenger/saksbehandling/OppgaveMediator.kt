@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
+import no.nav.dagpenger.saksbehandling.behandling.SendTilbakeBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -188,6 +189,7 @@ class OppgaveMediator(
                                     "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                                 }
                             }
+
                             false -> {
                                 throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
                             }
@@ -200,7 +202,10 @@ class OppgaveMediator(
         }
     }
 
-    fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
+    fun returnerTilSaksbehandling(
+        returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
+        beslutterToken: String,
+    ) {
         repository.hentOppgave(returnerTilSaksbehandlingHendelse.oppgaveId).also { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
@@ -210,7 +215,20 @@ class OppgaveMediator(
                     "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
-                repository.lagre(oppgave)
+                behandlingKlient.sendTilbake(
+                    behandlingId = oppgave.behandling.behandlingId,
+                    ident = oppgave.behandling.person.ident,
+                    saksbehandlerToken = beslutterToken,
+                ).onSuccess {
+                    repository.lagre(oppgave)
+                    logger.info { "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling" }
+                }.onFailure {
+                    val feil =
+                        "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
+                            "tilbake til saksbehandling: ${it.message}"
+                    logger.error { feil }
+                    throw SendTilbakeBehandlingFeiletException(feil)
+                }
                 logger.info {
                     "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }

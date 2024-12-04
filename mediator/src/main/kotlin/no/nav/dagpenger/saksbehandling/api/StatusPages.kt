@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
+import no.nav.dagpenger.saksbehandling.behandling.SendTilbakeBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import java.net.URI
 import java.time.format.DateTimeParseException
@@ -122,6 +123,20 @@ fun StatusPagesConfig.statusPages() {
                         instance = call.request.path(),
                         type =
                             URI.create("dagpenger.nav.no/saksbehandling:problem:godkjenning-av-behandling-feilet")
+                                .toString(),
+                    )
+                call.respond(HttpStatusCode.InternalServerError, problem)
+            }
+
+            is SendTilbakeBehandlingFeiletException -> {
+                val problem =
+                    HttpProblemDTO(
+                        title = "Send tilbake behandling feilet",
+                        detail = cause.message,
+                        status = HttpStatusCode.InternalServerError.value,
+                        instance = call.request.path(),
+                        type =
+                            URI.create("dagpenger.nav.no/saksbehandling:problem:send-tilbake-behandling-feilet")
                                 .toString(),
                     )
                 call.respond(HttpStatusCode.InternalServerError, problem)

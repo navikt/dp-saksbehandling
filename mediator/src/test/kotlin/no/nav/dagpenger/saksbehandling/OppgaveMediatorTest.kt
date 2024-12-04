@@ -106,6 +106,7 @@ class OppgaveMediatorTest {
                     any(),
                 )
             } returns Result.success(true)
+            every { it.sendTilbake(any(), any(), any()) } returns Result.success(Unit)
         }
     private val skjermingKlientMock =
         mockk<SkjermingKlient>(relaxed = true).also {
@@ -1003,6 +1004,7 @@ class OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = beslutter,
                 ),
+                beslutterToken = "testtoken",
             )
         }
     }

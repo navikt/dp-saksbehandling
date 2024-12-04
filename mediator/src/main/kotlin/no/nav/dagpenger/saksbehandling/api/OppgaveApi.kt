@@ -185,6 +185,7 @@ internal fun Application.oppgaveApi(
                     route("returner-til-saksbehandler") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val saksbehandlerToken = call.request.jwt()
                             val returnerTilSaksbehandlingHendelse =
                                 call.returnerTilSaksbehandlingHendelse(saksbehandler)
 
@@ -192,7 +193,7 @@ internal fun Application.oppgaveApi(
 
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 logger.info("Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse")
-                                oppgaveMediator.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
+                                oppgaveMediator.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, saksbehandlerToken)
                                 call.respond(HttpStatusCode.NoContent)
                             }
                         }

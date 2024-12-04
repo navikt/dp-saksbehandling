@@ -455,7 +455,7 @@ class OppgaveApiTest {
         val returnerTilSaksbehandlingHendelse = ReturnerTilSaksbehandlingHendelse(oppgave.oppgaveId, beslutter)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse) } just Runs
+                every { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, any()) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${oppgave.oppgaveId}/returner-til-saksbehandler") {
@@ -464,7 +464,7 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.NoContent
             }
             verify(exactly = 1) {
-                oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
+                oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, beslutterToken)
             }
         }
     }
