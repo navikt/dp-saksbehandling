@@ -1052,10 +1052,9 @@ class OppgaveMediatorTest {
             ).also {
                 it.setRapidsConnection(testRapid)
             }
-        val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
 
         BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-        VedtakFattetMottak(testRapid, oppgaveMediator, utsendingMediator)
+        VedtakFattetMottak(testRapid, oppgaveMediator)
 
         val søknadId = UUIDv7.ny()
         val behandlingId = UUIDv7.ny()
