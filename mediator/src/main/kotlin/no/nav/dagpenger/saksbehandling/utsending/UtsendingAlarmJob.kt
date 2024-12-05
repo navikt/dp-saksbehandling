@@ -44,7 +44,7 @@ internal class UtsendingAlarmJob(
     }
 
     fun sjekkVentendeTilstander() {
-        utsendingAlarmRepository.hentVentendeUtsendinger(24).also {
+        utsendingAlarmRepository.hentVentendeUtsendinger(4).also {
             logger.info { "Fant ${it.size} ventende utsendinger: $it" }
         }.forEach {
             rapidsConnection.sendAlertTilRapid(
