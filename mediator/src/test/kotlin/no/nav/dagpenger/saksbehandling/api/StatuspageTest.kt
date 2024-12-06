@@ -10,7 +10,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeBeslutterTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
@@ -148,7 +148,7 @@ class StatuspageTest {
             application {
                 statusPages()
                 routing {
-                    get(path) { throw ManglendeTilgang(message) }
+                    get(path) { throw ManglendeBeslutterTilgang(message) }
                 }
             }
 
@@ -159,7 +159,7 @@ class StatuspageTest {
                     """
                     {
                       "type": "dagpenger.nav.no/saksbehandling:problem:manglende-tilgang",
-                      "title": "Mangler tilgang",
+                      "title": "ManglendeBeslutterTilgang",
                       "detail": "$message",
                       "status": 403,
                       "instance": "$path"

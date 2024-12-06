@@ -97,13 +97,13 @@ data class Oppgave private constructor(
                 _tilstandslogg = tilstandslogg,
             )
 
-        private fun requireSammeEier(
+        private fun requireEierskapTilOppgave(
             oppgave: Oppgave,
             saksbehandler: Saksbehandler,
             hendelseNavn: String,
         ) {
             require(oppgave.behandlerIdent == saksbehandler.navIdent) {
-                throw Tilstand.ManglendeTilgang(
+                throw Tilstand.SaksbehandlerEierIkkeOppgaven(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
                         "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
                 )
@@ -116,7 +116,7 @@ data class Oppgave private constructor(
             hendelseNavn: String,
         ) {
             require(saksbehandler.tilganger.contains(BESLUTTER)) {
-                throw Tilstand.ManglendeTilgang("Kan ikke behandle $hendelseNavn i tilstand $tilstandType uten beslutter-tilgang")
+                throw Tilstand.ManglendeBeslutterTilgang("Kan ikke behandle $hendelseNavn i tilstand $tilstandType uten beslutter-tilgang")
             }
         }
 
@@ -126,7 +126,7 @@ data class Oppgave private constructor(
             hendelseNavn: String,
         ) {
             require(oppgave.sisteSaksbehandler() != beslutter.navIdent) {
-                throw Tilstand.ManglendeTilgang(
+                throw Tilstand.KanIkkeBeslutteEgenSaksbehandling(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type}. " +
                         "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
                         "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
@@ -150,7 +150,7 @@ data class Oppgave private constructor(
                 true
             },
         ) {
-            throw Tilstand.ManglendeTilgang("Saksbehandler har ikke tilgang til egne ansatte")
+            throw Tilstand.IkkeTilgangTilEgneAnsatte("Saksbehandler har ikke tilgang til egne ansatte")
         }
     }
 
@@ -164,7 +164,7 @@ data class Oppgave private constructor(
                 UGRADERT -> true
             },
         ) {
-            throw Tilstand.ManglendeTilgang(
+            throw Tilstand.ManglendeTilgangTilAdressebeskyttelse(
                 "Saksbehandler mangler tilgang til adressebeskyttede personer. Adressebeskyttelse: $adressebeskyttelseGradering",
             )
         }
@@ -327,7 +327,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
-            requireSammeEier(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
+            requireEierskapTilOppgave(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
 
             if (oppgave.sisteBeslutter() == null) {
                 oppgave.behandlerIdent = null
@@ -403,10 +403,10 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ): FerdigstillBehandling {
-            requireSammeEier(
-                oppgave,
-                godkjentBehandlingHendelse.utførtAv,
-                godkjentBehandlingHendelse.javaClass.simpleName,
+            requireEierskapTilOppgave(
+                oppgave = oppgave,
+                saksbehandler = godkjentBehandlingHendelse.utførtAv,
+                hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
             return FerdigstillBehandling.GODKJENN
@@ -416,7 +416,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
         ) {
-            requireSammeEier(
+            requireEierskapTilOppgave(
                 oppgave,
                 godkjennBehandlingMedBrevIArena.utførtAv,
                 godkjennBehandlingMedBrevIArena.javaClass.simpleName,
@@ -541,7 +541,7 @@ data class Oppgave private constructor(
                 tilstandType = type,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
-            requireSammeEier(
+            requireEierskapTilOppgave(
                 oppgave = oppgave,
                 saksbehandler = godkjentBehandlingHendelse.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
@@ -560,7 +560,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            requireSammeEier(
+            requireEierskapTilOppgave(
                 oppgave = oppgave,
                 saksbehandler = settOppgaveAnsvarHendelse.utførtAv,
                 hendelseNavn = settOppgaveAnsvarHendelse.javaClass.simpleName,
@@ -581,7 +581,7 @@ data class Oppgave private constructor(
                 tilstandType = type,
                 hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
             )
-            requireSammeEier(
+            requireEierskapTilOppgave(
                 oppgave = oppgave,
                 saksbehandler = returnerTilSaksbehandlingHendelse.utførtAv,
                 hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
@@ -637,18 +637,6 @@ data class Oppgave private constructor(
 
     sealed interface Tilstand {
         val type: Type
-
-        class ManglendeTilgang(
-            message: String,
-        ) : RuntimeException(message)
-
-        class UlovligTilstandsendringException(
-            message: String,
-        ) : RuntimeException(message)
-
-        class UgyldigTilstandException(
-            message: String,
-        ) : RuntimeException(message)
 
         enum class Type {
             OPPRETTET,
@@ -801,5 +789,37 @@ data class Oppgave private constructor(
             }
             throw UlovligTilstandsendringException(message)
         }
+
+        open class ManglendeTilgang(
+            message: String,
+        ) : RuntimeException(message)
+
+        class SaksbehandlerEierIkkeOppgaven(
+            message: String,
+        ) : ManglendeTilgang(message)
+
+        class ManglendeBeslutterTilgang(
+            message: String,
+        ) : ManglendeTilgang(message)
+
+        class KanIkkeBeslutteEgenSaksbehandling(
+            message: String,
+        ) : ManglendeTilgang(message)
+
+        class IkkeTilgangTilEgneAnsatte(
+            message: String,
+        ) : ManglendeTilgang(message)
+
+        class ManglendeTilgangTilAdressebeskyttelse(
+            message: String,
+        ) : ManglendeTilgang(message)
+
+        class UlovligTilstandsendringException(
+            message: String,
+        ) : RuntimeException(message)
+
+        class UgyldigTilstandException(
+            message: String,
+        ) : RuntimeException(message)
     }
 }

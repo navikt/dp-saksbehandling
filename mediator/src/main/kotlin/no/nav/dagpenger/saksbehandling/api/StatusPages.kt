@@ -145,7 +145,7 @@ fun StatusPagesConfig.statusPages() {
             is ManglendeTilgang -> {
                 val problem =
                     HttpProblemDTO(
-                        title = "Mangler tilgang",
+                        title = cause.javaClass.simpleName,
                         detail = cause.message,
                         status = HttpStatusCode.Forbidden.value,
                         instance = call.request.path(),
