@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeBeslutterTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.statusPages
-import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
@@ -261,27 +261,27 @@ class StatuspageTest {
     }
 
     @Test
-    fun `Error håndtering av GodkjennBehandlingFeiletException`() {
+    fun `Error håndtering av BehandlingException`() {
         testApplication {
             val message = "Kall mot dp-behandling feilet"
-            val path = "/GodkjennBehandlingFeiletException"
+            val path = "/BehandlingException"
             application {
                 statusPages()
                 routing {
-                    get(path) { throw GodkjennBehandlingFeiletException(message) }
+                    get(path) { throw BehandlingException("403", 403) }
                 }
             }
 
             client.get(path).let { response ->
-                response.status shouldBe HttpStatusCode.InternalServerError
+                response.status.value shouldBe 403
                 response.bodyAsText() shouldEqualSpecifiedJson
                     //language=JSON
                     """
                     {
-                      "type": "dagpenger.nav.no/saksbehandling:problem:godkjenning-av-behandling-feilet",
-                      "title": "Godkjenning av behandling feilet",
-                      "detail": "$message",
-                      "status": 500,
+                      "type": "dagpenger.nav.no/saksbehandling:problem:behandling-feil",
+                      "title": "Feil ved kall mot dp-behandling",
+                      "detail": "403",
+                      "status": 403,
                       "instance": "$path"
                     }
                     """.trimIndent()

@@ -9,9 +9,6 @@ import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.OPPGAVE_IKK
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
-import no.nav.dagpenger.saksbehandling.behandling.BesluttBehandlingFeiletException
-import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
-import no.nav.dagpenger.saksbehandling.behandling.SendTilbakeBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -186,7 +183,7 @@ class OppgaveMediator(
                                     val feil =
                                         "Feil ved godkjenning av behandling: ${it.message}"
                                     logger.error { feil }
-                                    throw GodkjennBehandlingFeiletException(feil)
+                                    throw it
                                 }
                             }
 
@@ -227,7 +224,7 @@ class OppgaveMediator(
                         "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
                             "tilbake til saksbehandling: ${it.message}"
                     logger.error { feil }
-                    throw SendTilbakeBehandlingFeiletException(feil)
+                    throw it
                 }
                 logger.info {
                     "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
@@ -304,7 +301,7 @@ class OppgaveMediator(
                                     else -> logger.error { "Fant ikke utsending med id $utsendingID" }
                                 }
                             }
-                            throw GodkjennBehandlingFeiletException(feil)
+                            throw it
                         }
                     }
 
@@ -327,7 +324,7 @@ class OppgaveMediator(
                                     else -> logger.error { "Fant ikke utsending med id $utsendingID" }
                                 }
                             }
-                            throw BesluttBehandlingFeiletException(feil)
+                            throw it
                         }
                     }
                 }
@@ -350,7 +347,8 @@ class OppgaveMediator(
                 repository.lagre(oppgave)
             }.onFailure {
                 val feil = "Feil ved godkjenning av behandling: ${it.message}"
-                throw GodkjennBehandlingFeiletException(feil)
+                logger.error { feil }
+                throw it
             }
         }
     }

@@ -14,8 +14,9 @@ fun createHttpClient(
     prometheusRegistry: PrometheusRegistry = PrometheusRegistry.defaultRegistry,
     metricsBaseName: String,
     engine: HttpClientEngine,
+    expectSuccess: Boolean = true,
 ) = HttpClient(engine) {
-    expectSuccess = true
+    this.expectSuccess = expectSuccess
     install(PrometheusMetricsPlugin) {
         this.baseName = metricsBaseName
         this.registry = prometheusRegistry

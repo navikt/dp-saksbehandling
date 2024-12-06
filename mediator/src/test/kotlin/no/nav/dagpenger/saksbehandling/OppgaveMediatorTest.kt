@@ -24,9 +24,9 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
-import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
@@ -493,7 +493,7 @@ class OppgaveMediatorTest {
                         ident = testIdent,
                         saksbehandlerToken = saksbehandlerToken,
                     )
-                } returns Result.failure(RuntimeException("Feil ved godkjenning av behandling"))
+                } returns Result.failure(BehandlingException("Feil ved godkjenning av behandling", 403))
             }
 
         withMigratedDb { datasource ->
@@ -555,7 +555,7 @@ class OppgaveMediatorTest {
 
             val meldingOmVedtak = "<H1>Hei</H1><p>Her er et brev</p>"
 
-            shouldThrow<GodkjennBehandlingFeiletException> {
+            shouldThrow<BehandlingException> {
                 oppgaveMediator.ferdigstillOppgave(
                     GodkjentBehandlingHendelse(
                         oppgaveId = oppgave.oppgaveId,
@@ -663,7 +663,7 @@ class OppgaveMediatorTest {
                         ident = testIdent,
                         saksbehandlerToken = saksbehandlerToken,
                     )
-                } returns Result.failure(RuntimeException("Feil ved godkjenning av behandling"))
+                } returns Result.failure(BehandlingException("Feil ved godkjenning av behandling", 403))
             }
         withMigratedDb { datasource ->
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
@@ -706,7 +706,7 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            shouldThrow<GodkjennBehandlingFeiletException> {
+            shouldThrow<BehandlingException> {
                 oppgaveMediator.ferdigstillOppgave(
                     GodkjennBehandlingMedBrevIArena(
                         oppgaveId = oppgave.oppgaveId,
