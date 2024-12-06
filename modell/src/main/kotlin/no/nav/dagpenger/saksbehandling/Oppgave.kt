@@ -110,6 +110,16 @@ data class Oppgave private constructor(
             }
         }
 
+        private fun requireBeslutterTilgang(
+            saksbehandler: Saksbehandler,
+            tilstandType: Type,
+            hendelseNavn: String,
+        ) {
+            require(saksbehandler.tilganger.contains(BESLUTTER)) {
+                throw Tilstand.ManglendeTilgang("Kan ikke behandle $hendelseNavn i tilstand $tilstandType uten beslutter-tilgang")
+            }
+        }
+
         private fun requireBeslutterUlikSaksbehandler(
             oppgave: Oppgave,
             beslutter: Saksbehandler,
@@ -487,9 +497,11 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse,
         ) {
-            require(settOppgaveAnsvarHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
-                throw Tilstand.ManglendeTilgang("Kan ikke ta oppgave til totrinnskontroll i tilstand $type uten beslutter-tilgang")
-            }
+            requireBeslutterTilgang(
+                saksbehandler = settOppgaveAnsvarHendelse.utførtAv,
+                tilstandType = type,
+                hendelseNavn = settOppgaveAnsvarHendelse.javaClass.simpleName,
+            )
             requireBeslutterUlikSaksbehandler(
                 oppgave = oppgave,
                 beslutter = settOppgaveAnsvarHendelse.utførtAv,
@@ -524,9 +536,11 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         ): FerdigstillBehandling {
-            require(godkjentBehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
-                throw Tilstand.ManglendeTilgang("Kan ikke ferdigstille oppgave i tilstand $type uten beslutter-tilgang")
-            }
+            requireBeslutterTilgang(
+                saksbehandler = godkjentBehandlingHendelse.utførtAv,
+                tilstandType = type,
+                hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
+            )
             requireSammeEier(
                 oppgave = oppgave,
                 saksbehandler = godkjentBehandlingHendelse.utførtAv,
@@ -562,11 +576,11 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
         ) {
-            require(returnerTilSaksbehandlingHendelse.utførtAv.tilganger.contains(BESLUTTER)) {
-                throw Tilstand.ManglendeTilgang(
-                    "Kan ikke returnere oppgaven til saksbehandling i tilstand $type uten beslutter-tilgang",
-                )
-            }
+            requireBeslutterTilgang(
+                saksbehandler = returnerTilSaksbehandlingHendelse.utførtAv,
+                tilstandType = type,
+                hendelseNavn = returnerTilSaksbehandlingHendelse.javaClass.simpleName,
+            )
             requireSammeEier(
                 oppgave = oppgave,
                 saksbehandler = returnerTilSaksbehandlingHendelse.utførtAv,
