@@ -125,7 +125,9 @@ fun StatusPagesConfig.statusPages() {
                             URI.create("dagpenger.nav.no/saksbehandling:problem:behandling-feil")
                                 .toString(),
                     )
+                logger.error { "Behandling feilet: ${behandlingException.text} med kode ${behandlingException.status}" }
                 call.respond(HttpStatusCode.fromValue(behandlingException.status), problem)
+
             }
 
             is ManglendeTilgang -> {
