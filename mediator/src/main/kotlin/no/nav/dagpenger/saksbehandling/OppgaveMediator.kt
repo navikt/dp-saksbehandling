@@ -58,10 +58,7 @@ class OppgaveMediator(
             )
 
         if (repository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) {
-            logger.warn {
-                "Mottatt hendelse behandling_opprettet, men behandling med id " +
-                    "${søknadsbehandlingOpprettetHendelse.behandlingId} finnes allerede."
-            }
+            logger.warn { "Mottatt hendelse behandling_opprettet, men behandling finnes allerede." }
             return
         }
 
@@ -82,14 +79,6 @@ class OppgaveMediator(
             )
 
         repository.lagre(oppgave)
-        withLoggingContext(
-            "oppgaveId" to oppgave.oppgaveId.toString(),
-            "behandlingId" to oppgave.behandling.behandlingId.toString(),
-        ) {
-            logger.info {
-                "Mottatt og behandlet hendelse behandling_opprettet. Oppgave opprettet."
-            }
-        }
     }
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
@@ -121,7 +110,6 @@ class OppgaveMediator(
             else -> {
                 withLoggingContext(
                     "oppgaveId" to oppgave.oppgaveId.toString(),
-                    "behandlingId" to forslagTilVedtakHendelse.behandlingId.toString(),
                 ) {
                     logger.info {
                         "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er" +
@@ -257,10 +245,7 @@ class OppgaveMediator(
 
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
         return repository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
-            withLoggingContext(
-                "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
-            ) {
+            withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
                     "Mottatt hendelse vedtak_fattet for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
@@ -374,20 +359,15 @@ class OppgaveMediator(
         repository.finnOppgaveFor(hendelse.behandlingId)?.let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
             ) {
-                logger.info {
-                    "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                }
+                logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
                 if (oppgave.tilstand() == Oppgave.Opprettet) {
                     repository.slettBehandling(hendelse.behandlingId)
                 } else {
-                    logger.info { "Behandling med id ${hendelse.behandlingId} behandles i Arena" }
+                    logger.info { "Oppgaven behandles i Arena" }
                     oppgave.behandlesIArena(hendelse)
                     repository.lagre(oppgave)
-                    logger.info {
-                        "Behandlet BehandlingAvbruttHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                    }
+                    logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
                 }
             }
         }
@@ -403,8 +383,8 @@ class OppgaveMediator(
     fun fjernEmneknagg(hendelse: IkkeRelevantAvklaringHendelse) {
         repository.fjerneEmneknagg(hendelse.behandlingId, hendelse.ikkeRelevantEmneknagg).let {
             when (it) {
-                true -> logger.info { "Fjernet emneknagg: ${hendelse.ikkeRelevantEmneknagg} for behandlingId: ${hendelse.behandlingId}" }
-                false -> logger.warn { "Fant ikke emneknagg: ${hendelse.ikkeRelevantEmneknagg} for behandlingId: ${hendelse.behandlingId}" }
+                true -> logger.info { "Fjernet emneknagg: ${hendelse.ikkeRelevantEmneknagg}" }
+                false -> logger.warn { "Fant ikke emneknagg: ${hendelse.ikkeRelevantEmneknagg}" }
             }
         }
     }

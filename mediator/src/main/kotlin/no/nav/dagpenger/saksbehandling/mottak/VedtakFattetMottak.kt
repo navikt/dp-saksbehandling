@@ -44,9 +44,7 @@ internal class VedtakFattetMottak(
         val sak = packet.sak()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            logger.info {
-                "Mottok vedtak_fattet hendelse for søknadId $søknadId og behandlingId $behandlingId. "
-            }
+            logger.info { "Mottok vedtak_fattet hendelse" }
             oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,

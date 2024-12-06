@@ -37,7 +37,7 @@ internal class BehandlingAvbruttMottak(
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            logger.info { "Mottok behandling_avbrutt hendelse for behandlingId $behandlingId og søknadId $søknadId" }
+            logger.info { "Mottok behandling_avbrutt hendelse" }
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,

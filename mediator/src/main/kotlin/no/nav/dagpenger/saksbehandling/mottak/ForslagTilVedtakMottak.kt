@@ -43,7 +43,7 @@ internal class ForslagTilVedtakMottak(
         val behandlingId = packet["behandlingId"].asUUID()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            logger.info { "Mottok forslag_til_vedtak hendelse for søknadId $søknadId og behandlingId $behandlingId" }
+            logger.info { "Mottok forslag_til_vedtak hendelse" }
             val ident = packet["ident"].asText()
             val emneknagger = packet.emneknagger()
             val forslagTilVedtakHendelse =

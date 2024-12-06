@@ -44,7 +44,7 @@ internal class AvklaringIkkeRelevantMottak(
             "behandlingId" to "$behandlingId",
             "avklaringId" to avklaringId,
         ) {
-            logger.info { "Mottok avklaring_lukket hendelse for behandlingId=$behandlingId og avklaringId=$avklaringId" }
+            logger.info { "Mottok avklaring_lukket hendelse" }
             val hendelse =
                 IkkeRelevantAvklaringHendelse(
                     ident = ident,
