@@ -64,7 +64,9 @@ internal fun Application.oppgaveApi(
             route("oppgave") {
                 get {
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
-
+                    sikkerlogger.info {
+                        "Henter alle oppgaver med følgende queryparams: ${call.request.queryParameters}"
+                    }
                     val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktResultatDTO()
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
