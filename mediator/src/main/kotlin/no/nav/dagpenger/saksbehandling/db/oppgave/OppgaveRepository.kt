@@ -57,4 +57,6 @@ interface OppgaveRepository {
     fun finnNotat(oppgaveTilstandLoggId: UUID): Notat?
 
     fun lagreNotatFor(oppgave: Oppgave): LocalDateTime
+
+    fun slettNotatFor(oppgave: Oppgave)
 }

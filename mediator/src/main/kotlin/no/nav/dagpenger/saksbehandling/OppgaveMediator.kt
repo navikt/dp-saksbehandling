@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -238,6 +239,14 @@ class OppgaveMediator(
             oppgave.lagreNotat(notatHendelse)
             repository.lagreNotatFor(oppgave)
         }
+    }
+
+    fun slettNotat(tomtNotatHendelse: TomtNotatHendelse): LocalDateTime {
+        repository.hentOppgave(tomtNotatHendelse.oppgaveId).let { oppgave ->
+            oppgave.slettNotat(tomtNotatHendelse)
+            repository.slettNotatFor(oppgave)
+        }
+        return LocalDateTime.now()
     }
 
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {

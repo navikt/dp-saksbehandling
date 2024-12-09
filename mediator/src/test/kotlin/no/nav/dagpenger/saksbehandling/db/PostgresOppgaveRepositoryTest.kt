@@ -1037,6 +1037,36 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne slette et notat for en oppgave`() {
+        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        testOppgave.tildel(
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = testOppgave.oppgaveId,
+                ansvarligIdent = beslutter.navIdent,
+                utførtAv = beslutter,
+            ),
+        )
+        testOppgave.lagreNotat(
+            NotatHendelse(
+                oppgaveId = testOppgave.oppgaveId,
+                tekst = "Dette er et notat",
+                utførtAv = beslutter,
+            ),
+        )
+
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testOppgave)
+            val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
+            oppgaveFraDatabase shouldBe testOppgave
+            oppgaveFraDatabase.tilstand().notat()!!.hentTekst() shouldBe "Dette er et notat"
+            repo.slettNotatFor(oppgaveFraDatabase)
+            repo.hentOppgave(testOppgave.oppgaveId).tilstand().notat() shouldBe null
+            repo.slettNotatFor(oppgaveFraDatabase)
+        }
+    }
+
+    @Test
     fun `Skal kunne lagre og hente tilstandslogg for en spesifikk oppgave`() {
         val nå = LocalDateTime.now()
         val tilstandslogg =

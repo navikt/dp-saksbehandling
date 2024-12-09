@@ -2,9 +2,12 @@ package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import org.junit.jupiter.api.Test
 
 class OppgaveNotatTest {
@@ -38,5 +41,16 @@ class OppgaveNotatTest {
             ),
         )
         oppgave.tilstand().notat()!!.hentTekst() shouldBe "Hei På"
+    }
+
+    @Test
+    fun `Skal slette notat når oppgave er UNDER_KONTROLL`() {
+        val saksbehandler = Saksbehandler("saksbehandlerIdent", emptySet(), setOf(SAKSBEHANDLER))
+        val oppgave = lagOppgave(UNDER_KONTROLL, null)
+        oppgave.lagreNotat(NotatHendelse(oppgaveId, "Hei", saksbehandler))
+        oppgave.tilstand().notat()!!.hentTekst() shouldBe "Hei"
+
+        oppgave.slettNotat(TomtNotatHendelse(oppgaveId, saksbehandler))
+        oppgave.tilstand().notat() shouldBe null
     }
 }

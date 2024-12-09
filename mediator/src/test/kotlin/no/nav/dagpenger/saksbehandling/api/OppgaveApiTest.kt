@@ -72,6 +72,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -366,6 +367,43 @@ class OppgaveApiTest {
                     """.trimIndent()
             }
         }
+    }
+
+    @Test
+    fun `Skal kunne slette et notat på en oppgave`() {
+        val oppgaveId = UUIDv7.ny()
+
+        val beslutterToken =
+            gyldigSaksbehandlerToken(
+                adGrupper = listOf(Configuration.beslutterADGruppe),
+                navIdent = beslutter.navIdent,
+            )
+        val tomtNotat = ""
+        val sisteEndretTidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
+        val tomtNotatHendelse = TomtNotatHendelse(oppgaveId, beslutter)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every {
+                    it.slettNotat(tomtNotatHendelse)
+                } returns sisteEndretTidspunkt
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/$oppgaveId/notat") {
+                autentisert(token = beslutterToken)
+                setBody(tomtNotat)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    """
+                    {
+                       "sistEndretTidspunkt" : "2021-01-01T12:00:00"
+                    }
+                    """.trimIndent()
+            }
+        }
+        verify(exactly = 1) { oppgaveMediatorMock.slettNotat(tomtNotatHendelse) }
     }
 
     @Test

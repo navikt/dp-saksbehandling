@@ -470,6 +470,20 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         }
     }
 
+    override fun slettNotatFor(oppgave: Oppgave) {
+        val tilstandsloggId = oppgave.tilstandslogg.first().id
+
+        sessionOf(datasource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = "DELETE FROM notat_v1 WHERE oppgave_tilstand_logg_id = :oppgave_tilstand_logg_id",
+                    paramMap = mapOf("oppgave_tilstand_logg_id" to tilstandsloggId),
+                ).asUpdate,
+            )
+        }
+    }
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(

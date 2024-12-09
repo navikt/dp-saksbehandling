@@ -39,6 +39,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
@@ -177,7 +178,7 @@ class OppgaveMediatorTest {
     }
 
     @Test
-    fun `Skal kunne lagre et notat på en oppgave`() {
+    fun `Skal kunne lagre og slette et notat på en oppgave`() {
         withMigratedDb { dataSource ->
             val oppgave = dataSource.lagTestoppgave(UNDER_KONTROLL)
             val oppgaveMediator =
@@ -204,6 +205,15 @@ class OppgaveMediatorTest {
                 require(it != null) { "Notatet er null" }
                 it.hentTekst() shouldBe "Dette er et notat"
             }
+
+            oppgaveMediator.slettNotat(
+                tomtNotatHendelse =
+                    TomtNotatHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = testInspektør,
+                    ),
+            )
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat() shouldBe null
         }
     }
 

@@ -34,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
@@ -227,6 +228,12 @@ data class Oppgave private constructor(
         egneAnsatteTilgangskontroll(notatHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(notatHendelse.utførtAv)
         tilstand.lagreNotat(this, notatHendelse)
+    }
+
+    fun slettNotat(tomtNotatHendelse: TomtNotatHendelse) {
+        egneAnsatteTilgangskontroll(tomtNotatHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(tomtNotatHendelse.utførtAv)
+        tilstand.slettNotat(this, tomtNotatHendelse)
     }
 
     fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
@@ -627,6 +634,13 @@ data class Oppgave private constructor(
             }
         }
 
+        override fun slettNotat(
+            oppgave: Oppgave,
+            tomtNotatHendelse: TomtNotatHendelse,
+        ) {
+            notat = null
+        }
+
         override fun notat(): Notat? = notat
     }
 
@@ -778,6 +792,13 @@ data class Oppgave private constructor(
             notatHendelse: NotatHendelse,
         ) {
             throw RuntimeException("Notat er ikke tillatt i tilstand $type")
+        }
+
+        fun slettNotat(
+            oppgave: Oppgave,
+            tomtNotatHendelse: TomtNotatHendelse,
+        ) {
+            throw RuntimeException("Kan ikke slette notat i tilstand $type")
         }
 
         private fun ulovligTilstandsendring(
