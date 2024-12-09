@@ -118,7 +118,9 @@ internal class BehandlingHttpKlient(
                 accept(ContentType.Application.Json)
                 setBody(Request(ident))
             }.let {
-                when (it.status.value) {
+                val statuskode = it.status.value
+                logger.info { "Kall til dp-behandling for $endepunkt returnerte status $statuskode" }
+                when (statuskode) {
                     in 200..299 -> Result.success(Unit)
                     else -> Result.failure(BehandlingException(it.bodyAsText(), it.status.value))
                 }
