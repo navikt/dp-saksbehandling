@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db.oppgave
 import io.ktor.http.Parameters
 import io.ktor.util.StringValues
 import io.ktor.util.StringValuesBuilderImpl
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
@@ -11,6 +12,8 @@ import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import java.time.LocalDate
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 class FilterBuilder {
     private val stringValues: StringValues
@@ -78,9 +81,11 @@ data class TildelNesteOppgaveFilter(
             val egneAnsatteTilgang = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE)
             val adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger()
             val harBeslutterRolle: Boolean = saksbehandler.tilganger.contains(TilgangType.BESLUTTER)
+            val emneknagger = builder.emneknagg() ?: emptySet()
+            logger.info { "emneknagger: $emneknagger" }
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
-                emneknagg = builder.emneknagg() ?: emptySet(),
+                emneknagg = emneknagger,
                 egneAnsatteTilgang = egneAnsatteTilgang,
                 adressebeskyttelseTilganger = adressebeskyttelseTilganger,
                 harBeslutterRolle = harBeslutterRolle,
