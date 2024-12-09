@@ -164,36 +164,33 @@ class OppgaveMediator(
                     "Mottatt SendTilKontrollHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 runBlocking {
-                    behandlingKlient.kreverTotrinnskontroll(
-                        oppgave.behandling.behandlingId,
-                        saksbehandlerToken = saksbehandlerToken,
-                    ).onSuccess { result ->
-                        when (result) {
-                            true -> {
-                                oppgave.sendTilKontroll(sendTilKontrollHendelse)
-                                behandlingKlient.godkjenn(
-                                    behandlingId = oppgave.behandling.behandlingId,
-                                    ident = oppgave.behandling.person.ident,
-                                    saksbehandlerToken = saksbehandlerToken,
-                                ).onSuccess {
-                                    repository.lagre(oppgave)
-                                    logger.info {
-                                        "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                                    }
-                                }.onFailure {
-                                    val feil =
-                                        "Feil ved godkjenning av behandling: ${it.message}"
-                                    logger.error { feil }
-                                    throw it
-                                }
-                            }
+                    val kreverToTrinnsKontroll =
+                        behandlingKlient.kreverTotrinnskontroll(
+                            oppgave.behandling.behandlingId,
+                            saksbehandlerToken = saksbehandlerToken,
+                        ).onFailure {
+                            logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
+                        }.getOrThrow()
 
-                            false -> {
-                                throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
-                            }
+                    when (kreverToTrinnsKontroll) {
+                        true -> {
+                            oppgave.sendTilKontroll(sendTilKontrollHendelse)
+                            behandlingKlient.godkjenn(
+                                behandlingId = oppgave.behandling.behandlingId,
+                                ident = oppgave.behandling.person.ident,
+                                saksbehandlerToken = saksbehandlerToken,
+                            ).onSuccess {
+                                repository.lagre(oppgave)
+                                logger.info {
+                                    "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                                }
+                            }.onFailure {
+                                logger.error { "Feil ved godkjenning av behandling: ${it.message}" }
+                            }.getOrThrow()
                         }
-                    }.onFailure {
-                        logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
+                        false -> {
+                            throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
+                        }
                     }
                 }
             }

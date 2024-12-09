@@ -129,7 +129,9 @@ internal class BehandlingHttpKlient(
     }
 }
 
-class BehandlingException(val text: String?, val status: Int) : RuntimeException()
+data class BehandlingException(val text: String?, val status: Int) : RuntimeException(
+    "Feil ved kall mot dp-behandling: $text, status: $status",
+)
 
 class BehandlingKreverIkkeTotrinnskontrollException(message: String) : RuntimeException(message)
 
