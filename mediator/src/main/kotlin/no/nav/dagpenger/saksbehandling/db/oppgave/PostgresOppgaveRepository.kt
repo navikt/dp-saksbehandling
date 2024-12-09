@@ -192,7 +192,6 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 WHERE next.id = oppu.id
                 RETURNING *
                 """
-
                 val statement =
                     withStatement +
                         selectKlarTilBehandlingOppgaver +
@@ -200,6 +199,8 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         selectKlarTilKontrollOppgaver +
                         selectAlleAktuelleOppgaverOrderByOpprettet +
                         updateNesteOppgave
+
+                sikkerlogger.info { "Henter oppgaver med følgende SQL i tildelNesteOppgave: $statement" }
                 val oppgaveIdOgTilstandType: Pair<UUID, Type>? =
                     tx.run(
                         queryOf(
