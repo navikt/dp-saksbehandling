@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
 import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
-import no.nav.dagpenger.saksbehandling.api.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
@@ -29,7 +28,6 @@ import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.CachedSaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
-import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
@@ -95,7 +93,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(
             env = configuration,
-            objectMapper = objectMapper,
             builder = {
                 withKtorModule {
                     installerApis(
@@ -103,7 +100,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         oppgaveDTOMapper,
                         PostgresStatistikkTjeneste(dataSource),
                     )
-                    withStatusPagesConfig { statusPages() }
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =
                             kafkaStreams(Configuration.kafkaStreamProperties) {
