@@ -898,7 +898,16 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     skjermingKlient = skjermingKlientMock,
                     pdlKlient = pdlKlientMock,
-                    behandlingKlient = behandlingKlientMock,
+                    behandlingKlient =
+                        behandlingKlientMock.also {
+                            coEvery {
+                                it.godkjenn(
+                                    any(),
+                                    any(),
+                                    any(),
+                                )
+                            } throws BehandlingException("Behandling krever ikke totrinnskontroll", 403)
+                        },
                     utsendingMediator = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)

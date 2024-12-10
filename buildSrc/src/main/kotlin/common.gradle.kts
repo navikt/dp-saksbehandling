@@ -9,7 +9,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven("https://www.jitpack.io")
 }
 
 dependencies {
