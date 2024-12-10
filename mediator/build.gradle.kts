@@ -23,8 +23,7 @@ dependencies {
     implementation(project(":streams-consumer"))
 
     implementation(libs.kotlin.logging)
-//    implementation(libs.rapids.and.rivers)
-    implementation("com.github.navikt:rapids-and-rivers:2024120608421733470968.fc0a3d5e3685")
+    implementation(libs.rapids.and.rivers)
     implementation("io.prometheus:prometheus-metrics-core:1.3.4")
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
