@@ -5,6 +5,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Companion.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder
 import java.time.Instant
@@ -85,7 +86,7 @@ private fun TransactionalSession.leggPåUtsattTidligereEmneknagg(utgåtteOppgave
             INSERT INTO emneknagg_v1
                 (oppgave_id, emneknagg) 
             VALUES
-                (:oppgave_id, 'Tidligere utsatt')
+                (:oppgave_id, '${TIDLIGERE_UTSATT}')
             ON CONFLICT ON CONSTRAINT emneknagg_oppgave_unique DO NOTHING
             """.trimIndent(),
         params = utgåtteOppgaver,

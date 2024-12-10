@@ -75,7 +75,9 @@ data class Oppgave private constructor(
 
         internal const val RETUR_FRA_KONTROLL = "Retur fra kontroll"
         internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
+        const val TIDLIGERE_UTSATT = "Tidligere utsatt"
         internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
+        internal val påVentEmneknagger: Set<String> = setOf(TIDLIGERE_UTSATT)
 
         fun rehydrer(
             oppgaveId: UUID,
@@ -174,7 +176,7 @@ data class Oppgave private constructor(
     fun utsattTil() = this.utsattTil
 
     fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Boolean {
-        val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger }.toSet()
+        val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet()
         this._emneknagger.clear()
         this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
         this._emneknagger.addAll(beholdEmneknagger)

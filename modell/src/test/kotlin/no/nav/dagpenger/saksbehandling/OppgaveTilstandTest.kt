@@ -8,6 +8,8 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.RETUR_FRA_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
+import no.nav.dagpenger.saksbehandling.Oppgave.Companion.påVentEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
@@ -291,8 +293,8 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal endre emneknagger som ikke er kontrollemneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
-        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING, emneknagger = setOf("skalSlettes") + Oppgave.kontrollEmneknagger)
+    fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
+        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING, emneknagger = setOf("skalSlettes") + kontrollEmneknagger + påVentEmneknagger)
         val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
             oppgave.oppgaveKlarTilBehandling(
@@ -305,13 +307,13 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.emneknagger shouldBe nyeEmneknagger + Oppgave.kontrollEmneknagger
+        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger + påVentEmneknagger
         oppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
     }
 
     @Test
     fun `Skal endre emneknagger som ikke er kontrollemneknagger hvis nytt forslag til vedtak mottas i tilstand PAA_VENT`() {
-        val oppgave = lagOppgave(PAA_VENT, emneknagger = setOf("skalSlettes") + Oppgave.kontrollEmneknagger)
+        val oppgave = lagOppgave(PAA_VENT, emneknagger = setOf("skalSlettes") + kontrollEmneknagger)
         val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
             oppgave.oppgaveKlarTilBehandling(
@@ -324,13 +326,13 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.emneknagger shouldBe nyeEmneknagger + Oppgave.kontrollEmneknagger
+        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger
         oppgave.tilstand() shouldBe Oppgave.PåVent
     }
 
     @Test
     fun `Skal endre emneknagger som ikke er kontrollemneknagger hvis nytt forslag til vedtak mottas i tilstand UNDER_BEHANDLING`() {
-        val oppgave = lagOppgave(UNDER_BEHANDLING, emneknagger = setOf("skalSlettes") + Oppgave.kontrollEmneknagger)
+        val oppgave = lagOppgave(UNDER_BEHANDLING, emneknagger = setOf("skalSlettes") + kontrollEmneknagger)
         val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
             oppgave.oppgaveKlarTilBehandling(
@@ -343,7 +345,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.emneknagger shouldBe nyeEmneknagger + Oppgave.kontrollEmneknagger
+        oppgave.emneknagger shouldBe nyeEmneknagger + kontrollEmneknagger
         oppgave.tilstand() shouldBe Oppgave.UnderBehandling
     }
 
