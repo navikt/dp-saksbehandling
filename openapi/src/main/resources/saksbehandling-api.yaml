@@ -143,6 +143,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+    delete:
+      summary: Slett notat på en oppgave
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notatet slettet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LagreNotatResponse'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/send-til-kontroll:
     put:
       summary: Saksbehandler sender oppgaven til kontroll og innstiller vedtaket

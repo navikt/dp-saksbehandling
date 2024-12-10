@@ -7,7 +7,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import org.junit.jupiter.api.Test
 
 class OppgaveNotatTest {
@@ -50,7 +50,7 @@ class OppgaveNotatTest {
         oppgave.lagreNotat(NotatHendelse(oppgaveId, "Hei", saksbehandler))
         oppgave.tilstand().notat()!!.hentTekst() shouldBe "Hei"
 
-        oppgave.slettNotat(TomtNotatHendelse(oppgaveId, saksbehandler))
+        oppgave.slettNotat(SlettNotatHendelse(oppgaveId, saksbehandler))
         oppgave.tilstand().notat() shouldBe null
     }
 }

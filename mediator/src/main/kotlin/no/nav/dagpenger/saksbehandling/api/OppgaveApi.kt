@@ -12,6 +12,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.RoutingContext
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -34,6 +35,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
@@ -138,6 +140,25 @@ internal fun Application.oppgaveApi(
                                 )
                             }
                         }
+                        delete {
+                            val oppgaveId = call.finnUUID("oppgaveId")
+                            val saksbehandler = applicationCallParser.sakbehandler(call)
+
+                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                                val sistEndretTidspunkt =
+                                    oppgaveMediator.slettNotat(
+                                        SlettNotatHendelse(
+                                            oppgaveId = oppgaveId,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                    )
+
+                                call.respond(
+                                    status = HttpStatusCode.OK,
+                                    message = LagreNotatResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
+                                )
+                            }
+                        }
                     }
                     route("tildel") {
                         put {
@@ -206,7 +227,10 @@ internal fun Application.oppgaveApi(
 
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 logger.info("Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse")
-                                oppgaveMediator.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, saksbehandlerToken)
+                                oppgaveMediator.returnerTilSaksbehandling(
+                                    returnerTilSaksbehandlingHendelse,
+                                    saksbehandlerToken,
+                                )
                                 call.respond(HttpStatusCode.NoContent)
                             }
                         }

@@ -34,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -234,6 +235,12 @@ data class Oppgave private constructor(
         egneAnsatteTilgangskontroll(tomtNotatHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(tomtNotatHendelse.utførtAv)
         tilstand.slettNotat(this, tomtNotatHendelse)
+    }
+
+    fun slettNotat(slettNotatHendelse: SlettNotatHendelse) {
+        egneAnsatteTilgangskontroll(slettNotatHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(slettNotatHendelse.utførtAv)
+        tilstand.slettNotat(this, slettNotatHendelse)
     }
 
     fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
@@ -636,6 +643,13 @@ data class Oppgave private constructor(
 
         override fun slettNotat(
             oppgave: Oppgave,
+            slettNotatHendelse: SlettNotatHendelse,
+        ) {
+            notat = null
+        }
+
+        override fun slettNotat(
+            oppgave: Oppgave,
             tomtNotatHendelse: TomtNotatHendelse,
         ) {
             notat = null
@@ -797,6 +811,13 @@ data class Oppgave private constructor(
         fun slettNotat(
             oppgave: Oppgave,
             tomtNotatHendelse: TomtNotatHendelse,
+        ) {
+            throw RuntimeException("Kan ikke slette notat i tilstand $type")
+        }
+
+        fun slettNotat(
+            oppgave: Oppgave,
+            slettNotatHendelse: SlettNotatHendelse,
         ) {
             throw RuntimeException("Kan ikke slette notat i tilstand $type")
         }

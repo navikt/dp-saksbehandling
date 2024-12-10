@@ -5,6 +5,7 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -71,6 +72,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -371,6 +373,40 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kunne slette et notat på en oppgave`() {
+        val oppgaveId = UUIDv7.ny()
+        val beslutterToken =
+            gyldigSaksbehandlerToken(
+                adGrupper = listOf(Configuration.beslutterADGruppe),
+                navIdent = beslutter.navIdent,
+            )
+        val sisteEndretTidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
+        val slettNotatHendelse = SlettNotatHendelse(oppgaveId, beslutter)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every {
+                    it.slettNotat(slettNotatHendelse)
+                } returns sisteEndretTidspunkt
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.delete("/oppgave/$oppgaveId/notat") {
+                autentisert(token = beslutterToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    """
+                    {
+                       "sistEndretTidspunkt" : "2021-01-01T12:00:00"
+                    }
+                    """.trimIndent()
+            }
+        }
+        verify(exactly = 1) { oppgaveMediatorMock.slettNotat(slettNotatHendelse) }
+    }
+
+    @Test
+    fun `OLD - Skal kunne slette et notat på en oppgave`() {
         val oppgaveId = UUIDv7.ny()
 
         val beslutterToken =
