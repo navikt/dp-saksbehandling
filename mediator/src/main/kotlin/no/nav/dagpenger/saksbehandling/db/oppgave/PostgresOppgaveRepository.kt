@@ -200,9 +200,8 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         selectAlleAktuelleOppgaverOrderByOpprettet +
                         updateNesteOppgave
 
-                sikkerlogger.info { "Henter oppgaver med følgende SQL i tildelNesteOppgave: $statement" }
-                println("***STATEMENT: $statement")
-                println("***FILTER: $filter")
+                sikkerlogger.info { "Henter oppgaver med SQL i tildelNesteOppgave: $statement - Filter = $filter" }
+
                 val oppgaveIdOgTilstandType: Pair<UUID, Type>? =
                     tx.run(
                         queryOf(
@@ -215,7 +214,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                                     "har_tilgang_til_egne_ansatte" to filter.egneAnsatteTilgang,
                                     "har_beslutter_rolle" to filter.harBeslutterRolle,
                                     "navIdent" to filter.navIdent,
-                                ).also { println("***PARAMS: $it") },
+                                ),
                         ).map { row ->
                             val tilstandType = Type.valueOf(row.string("tilstand"))
                             Pair(row.uuid("id"), tilstandType)
