@@ -689,6 +689,31 @@ class PostgresOppgaveRepositoryTest {
                 }
             }
 
+            // Skal ikke hente beslutter-oppgaver
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = testSaksbehandler.navIdent,
+                        utførtAv = testSaksbehandler,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        egneAnsatteTilgang = testSaksbehandler.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = testSaksbehandler.adressebeskyttelseTilganger(),
+                        harBeslutterRolle = testSaksbehandler.tilganger.contains(BESLUTTER),
+                        navIdent = testSaksbehandler.navIdent,
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe eldsteLedigeOppgaveKlarTilBehandling.oppgaveId
+                    it.behandlerIdent shouldBe testSaksbehandler.navIdent
+                    it.tilstand() shouldBe UnderBehandling
+                }
+            }
+
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
                     NesteOppgaveHendelse(
@@ -702,7 +727,7 @@ class PostgresOppgaveRepositoryTest {
                         egneAnsatteTilgang = beslutter.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutter.tilganger.contains(BESLUTTER),
-                        navIdent = vanligBeslutter.navIdent,
+                        navIdent = beslutter.navIdent,
                     ),
             ).let {
                 assertSoftly {
@@ -1276,8 +1301,14 @@ class PostgresOppgaveRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf("Innvilgelse"))
-            val oppgave2 = lagOppgave(UnderBehandling, saksbehandlerIdent = saksbehandler2, emneknagger = setOf("Avslag minsteinntekt"))
-            val oppgave3 = lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf("Innvilgelse"))
+            val oppgave2 =
+                lagOppgave(
+                    UnderBehandling,
+                    saksbehandlerIdent = saksbehandler2,
+                    emneknagger = setOf("Avslag minsteinntekt"),
+                )
+            val oppgave3 =
+                lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf("Innvilgelse"))
             val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf("Innvilgelse"))
 
             repo.lagre(oppgave1)
