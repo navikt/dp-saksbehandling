@@ -35,7 +35,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
@@ -231,12 +230,6 @@ data class Oppgave private constructor(
         tilstand.lagreNotat(this, notatHendelse)
     }
 
-    fun slettNotat(tomtNotatHendelse: TomtNotatHendelse) {
-        egneAnsatteTilgangskontroll(tomtNotatHendelse.utførtAv)
-        adressebeskyttelseTilgangskontroll(tomtNotatHendelse.utførtAv)
-        tilstand.slettNotat(this, tomtNotatHendelse)
-    }
-
     fun slettNotat(slettNotatHendelse: SlettNotatHendelse) {
         egneAnsatteTilgangskontroll(slettNotatHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(slettNotatHendelse.utførtAv)
@@ -341,7 +334,11 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             sendTilKontrollHendelse: SendTilKontrollHendelse,
         ) {
-            requireEierskapTilOppgave(oppgave, sendTilKontrollHendelse.utførtAv, sendTilKontrollHendelse.javaClass.simpleName)
+            requireEierskapTilOppgave(
+                oppgave,
+                sendTilKontrollHendelse.utførtAv,
+                sendTilKontrollHendelse.javaClass.simpleName,
+            )
 
             if (oppgave.sisteBeslutter() == null) {
                 oppgave.behandlerIdent = null
@@ -648,13 +645,6 @@ data class Oppgave private constructor(
             notat = null
         }
 
-        override fun slettNotat(
-            oppgave: Oppgave,
-            tomtNotatHendelse: TomtNotatHendelse,
-        ) {
-            notat = null
-        }
-
         override fun notat(): Notat? = notat
     }
 
@@ -806,13 +796,6 @@ data class Oppgave private constructor(
             notatHendelse: NotatHendelse,
         ) {
             throw RuntimeException("Notat er ikke tillatt i tilstand $type")
-        }
-
-        fun slettNotat(
-            oppgave: Oppgave,
-            tomtNotatHendelse: TomtNotatHendelse,
-        ) {
-            throw RuntimeException("Kan ikke slette notat i tilstand $type")
         }
 
         fun slettNotat(

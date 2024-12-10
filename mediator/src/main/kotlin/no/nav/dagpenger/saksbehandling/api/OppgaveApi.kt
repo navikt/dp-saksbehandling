@@ -36,7 +36,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomtNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.jwt.jwt
@@ -119,24 +118,16 @@ internal fun Application.oppgaveApi(
 
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 val sistEndretTidspunkt =
-                                    when (notat.isBlank()) {
-                                        true ->
-                                            oppgaveMediator.slettNotat(
-                                                TomtNotatHendelse(oppgaveId = oppgaveId, utførtAv = saksbehandler),
-                                            )
-
-                                        false ->
-                                            oppgaveMediator.lagreNotat(
-                                                NotatHendelse(
-                                                    oppgaveId = oppgaveId,
-                                                    tekst = notat,
-                                                    utførtAv = saksbehandler,
-                                                ),
-                                            )
-                                    }
+                                    oppgaveMediator.lagreNotat(
+                                        NotatHendelse(
+                                            oppgaveId = oppgaveId,
+                                            tekst = notat,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                    )
                                 call.respond(
-                                    HttpStatusCode.OK,
-                                    LagreNotatResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
+                                    status = HttpStatusCode.OK,
+                                    message = LagreNotatResponseDTO(sistEndretTidspunkt = sistEndretTidspunkt),
                                 )
                             }
                         }
