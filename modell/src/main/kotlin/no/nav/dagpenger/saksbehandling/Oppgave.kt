@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -239,6 +240,10 @@ data class Oppgave private constructor(
 
     fun returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse) {
         tilstand.returnerTilSaksbehandling(this, returnerTilSaksbehandlingHendelse)
+    }
+
+    fun oppgaverPåVentMedUtgåttFrist(hendelse: PåVentFristUtgåttHendelse) {
+        tilstand.oppgavePåVentMedUtgåttFrist(this, hendelse)
     }
 
     private fun endreTilstand(
@@ -499,6 +504,20 @@ data class Oppgave private constructor(
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
             oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+        }
+
+        override fun oppgavePåVentMedUtgåttFrist(
+            oppgave: Oppgave,
+            hendelse: PåVentFristUtgåttHendelse,
+        ) {
+            val nyTilstand =
+                if (oppgave.behandlerIdent == null) {
+                    KlarTilBehandling
+                } else {
+                    UnderBehandling
+                }
+            oppgave.endreTilstand(nyTilstand, hendelse)
+            oppgave._emneknagger.add("Tidligere utsatt")
         }
     }
 
@@ -809,6 +828,16 @@ data class Oppgave private constructor(
             slettNotatHendelse: SlettNotatHendelse,
         ) {
             throw RuntimeException("Kan ikke slette notat i tilstand $type")
+        }
+
+        fun oppgavePåVentMedUtgåttFrist(
+            oppgave: Oppgave,
+            hendelse: PåVentFristUtgåttHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message = "Kan ikke håndtere hendelse om å sette utgått frist for oppgave på vent i tilstand $type",
+            )
         }
 
         private fun ulovligTilstandsendring(

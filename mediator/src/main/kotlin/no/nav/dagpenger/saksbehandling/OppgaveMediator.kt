@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -31,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -390,6 +392,17 @@ class OppgaveMediator(
                 true -> logger.info { "Fjernet emneknagg: ${hendelse.ikkeRelevantEmneknagg}" }
                 false -> logger.warn { "Fant ikke emneknagg: ${hendelse.ikkeRelevantEmneknagg}" }
             }
+        }
+    }
+
+    fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> {
+        return repository.finnOppgaverPåVentMedUtgåttFrist(frist)
+    }
+
+    fun håndterPåVentFristUtgått(påVentFristUtgåttHendelse: PåVentFristUtgåttHendelse) {
+        repository.hentOppgave(påVentFristUtgåttHendelse.oppgaveId).let { oppgave ->
+            oppgave.oppgaverPåVentMedUtgåttFrist(påVentFristUtgåttHendelse)
+            repository.lagre(oppgave)
         }
     }
 
