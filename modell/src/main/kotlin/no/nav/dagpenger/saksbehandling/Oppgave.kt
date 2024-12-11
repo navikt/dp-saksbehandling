@@ -517,6 +517,7 @@ data class Oppgave private constructor(
                     UnderBehandling
                 }
             oppgave.endreTilstand(nyTilstand, hendelse)
+            oppgave.utsattTil = null
             oppgave._emneknagger.add("Tidligere utsatt")
         }
     }

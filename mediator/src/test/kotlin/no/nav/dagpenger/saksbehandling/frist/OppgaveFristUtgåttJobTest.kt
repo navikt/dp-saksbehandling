@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.frist
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
@@ -73,6 +74,7 @@ class OppgaveFristUtgåttJobTest {
                 oppgave.emneknagger shouldContain "Tidligere utsatt"
                 oppgave.behandlerIdent shouldBe null
                 oppgave.tilstandslogg.first().tilstand shouldBe KLAR_TIL_BEHANDLING
+                oppgave.utsattTil() shouldBe null
             }
 
             repo.hentOppgave(oppgave2.oppgaveId).let { oppgave ->
@@ -80,6 +82,7 @@ class OppgaveFristUtgåttJobTest {
                 oppgave.emneknagger shouldContain "Tidligere utsatt"
                 oppgave.behandlerIdent shouldBe saksbehandlerIdent1
                 oppgave.tilstandslogg.first().tilstand shouldBe UNDER_BEHANDLING
+                oppgave.utsattTil() shouldBe null
             }
 
             repo.hentOppgave(oppgave3.oppgaveId).let { oppgave ->
@@ -87,12 +90,14 @@ class OppgaveFristUtgåttJobTest {
                 oppgave.emneknagger shouldContain "Tidligere utsatt"
                 oppgave.behandlerIdent shouldBe saksbehandlerIdent2
                 oppgave.tilstandslogg.first().tilstand shouldBe UNDER_BEHANDLING
+                oppgave.utsattTil() shouldBe null
             }
 
             repo.hentOppgave(oppgave4.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe PåVent
                 oppgave.emneknagger shouldNotContain "Tidligere utsatt"
                 oppgave.behandlerIdent shouldBe saksbehandlerIdent1
+                oppgave.utsattTil() shouldNotBe null
             }
         }
 }
