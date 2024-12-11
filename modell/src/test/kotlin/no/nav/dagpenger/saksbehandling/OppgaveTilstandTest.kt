@@ -104,14 +104,14 @@ class OppgaveTilstandTest {
             )
 
         lagOppgave(tilstandType = OPPRETTET).let { oppgave ->
-            oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe true
+            oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe Oppgave.Handling.LAGRE_OPPGAVE
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
         }
 
         setOf(KLAR_TIL_BEHANDLING, PAA_VENT, UNDER_BEHANDLING).forEach { tilstand ->
             lagOppgave(tilstandType = tilstand).let { oppgave ->
                 val tilstandFørHendelse = oppgave.tilstand().type
-                oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe true
+                oppgave.oppgaveKlarTilBehandling(hendelse) shouldBe Oppgave.Handling.LAGRE_OPPGAVE
                 oppgave.tilstand().type shouldBe tilstandFørHendelse
             }
         }
@@ -142,8 +142,8 @@ class OppgaveTilstandTest {
             }
 
             when (tilstand) {
-                in setOf(UNDER_BEHANDLING, UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe false
-                else -> resultat shouldBe true
+                in setOf(UNDER_BEHANDLING, UNDER_KONTROLL, FERDIG_BEHANDLET) -> resultat shouldBe Oppgave.Handling.INGEN
+                else -> resultat shouldBe Oppgave.Handling.LAGRE_OPPGAVE
             }
         }
 

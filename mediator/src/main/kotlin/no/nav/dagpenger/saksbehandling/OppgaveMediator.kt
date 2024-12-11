@@ -113,9 +113,9 @@ class OppgaveMediator(
                         "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er" +
                             " ${oppgave.tilstand().type} når hendelsen mottas."
                     }
-                    oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let {
-                        when (it) {
-                            true -> {
+                    oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let { handling ->
+                        when (handling) {
+                            Oppgave.Handling.LAGRE_OPPGAVE -> {
                                 repository.lagre(oppgave)
                                 logger.info {
                                     "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
@@ -123,7 +123,7 @@ class OppgaveMediator(
                                 }
                             }
 
-                            false -> {
+                            Oppgave.Handling.INGEN -> {
                                 logger.info {
                                     "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
                                         " ${oppgave.tilstand().type}"
@@ -252,10 +252,10 @@ class OppgaveMediator(
                 logger.info {
                     "Mottatt hendelse vedtak_fattet for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
-                oppgave.ferdigstill(vedtakFattetHendelse).let {
-                    when (it) {
-                        true -> repository.lagre(oppgave)
-                        false -> {}
+                oppgave.ferdigstill(vedtakFattetHendelse).let { handling ->
+                    when (handling) {
+                        Oppgave.Handling.LAGRE_OPPGAVE -> repository.lagre(oppgave)
+                        Oppgave.Handling.INGEN -> {}
                     }
                 }
 

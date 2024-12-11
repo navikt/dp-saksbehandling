@@ -175,7 +175,7 @@ data class Oppgave private constructor(
 
     fun utsattTil() = this.utsattTil
 
-    fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Boolean {
+    fun oppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Handling {
         val beholdEmneknagger = this._emneknagger.filter { it in kontrollEmneknagger + påVentEmneknagger }.toSet()
         this._emneknagger.clear()
         this._emneknagger.addAll(forslagTilVedtakHendelse.emneknagger)
@@ -183,7 +183,7 @@ data class Oppgave private constructor(
         return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
-    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Boolean {
+    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling {
         return tilstand.ferdigstill(this, vedtakFattetHendelse)
     }
 
@@ -206,7 +206,6 @@ data class Oppgave private constructor(
     fun tildel(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse) {
         egneAnsatteTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(settOppgaveAnsvarHendelse.utførtAv)
-
         tilstand.tildel(this, settOppgaveAnsvarHendelse)
     }
 
@@ -280,17 +279,17 @@ data class Oppgave private constructor(
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ): Boolean {
+        ): Handling {
             oppgave.endreTilstand(KlarTilBehandling, forslagTilVedtakHendelse)
-            return true
+            return Handling.LAGRE_OPPGAVE
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ): Boolean {
+        ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
-            return true
+            return Handling.LAGRE_OPPGAVE
         }
     }
 
@@ -300,9 +299,9 @@ data class Oppgave private constructor(
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ): Boolean {
+        ): Handling {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand $type" }
-            return true
+            return Handling.LAGRE_OPPGAVE
         }
 
         override fun tildel(
@@ -316,9 +315,9 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ): Boolean {
+        ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
-            return true
+            return Handling.LAGRE_OPPGAVE
         }
 
         override fun behandlesIArena(
@@ -399,17 +398,17 @@ data class Oppgave private constructor(
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ): Boolean {
+        ): Handling {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
-            return true
+            return Handling.LAGRE_OPPGAVE
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ): Boolean {
+        ): Handling {
             logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
-            return false
+            return Handling.INGEN
         }
 
         override fun ferdigstill(
@@ -448,9 +447,9 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ): Boolean {
+        ): Handling {
             logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
-            return false
+            return Handling.INGEN
         }
     }
 
@@ -482,17 +481,17 @@ data class Oppgave private constructor(
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ): Boolean {
+        ): Handling {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
-            return true
+            return Handling.LAGRE_OPPGAVE
         }
 
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ): Boolean {
+        ): Handling {
             oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
-            return true
+            return Handling.LAGRE_OPPGAVE
         }
 
         override fun behandlesIArena(
@@ -540,9 +539,9 @@ data class Oppgave private constructor(
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ): Boolean {
+        ): Handling {
             logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
-            return false
+            return Handling.INGEN
         }
 
         override fun ferdigstill(
@@ -655,6 +654,11 @@ data class Oppgave private constructor(
         GODKJENN,
     }
 
+    enum class Handling {
+        LAGRE_OPPGAVE,
+        INGEN,
+    }
+
     sealed interface Tilstand {
         val type: Type
 
@@ -690,7 +694,7 @@ data class Oppgave private constructor(
         fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
-        ): Boolean {
+        ): Handling {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type",
@@ -700,7 +704,7 @@ data class Oppgave private constructor(
         fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
-        ): Boolean {
+        ): Handling {
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message =
