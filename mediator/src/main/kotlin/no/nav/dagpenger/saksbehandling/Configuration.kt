@@ -63,7 +63,7 @@ object Configuration {
     val skjermingTokenProvider = { clientCredentialsTokenProvider(skjermingApiScope) }
 
     private val clientCredentialsTokenProvider = { scope: String ->
-        azureAdClient.clientCredentials(scope).accessToken
+        azureAdClient.clientCredentials(scope).access_token
             ?: throw RuntimeException("Failed to get access token")
     }
 
@@ -103,7 +103,7 @@ object Configuration {
     val dpBehandlingOboExchanger: (String) -> String by lazy {
         val scope = properties[Key("DP_BEHANDLING_API_SCOPE", stringType)]
         { token: String ->
-            val accessToken = azureAdClient.onBehalfOf(token, scope).accessToken
+            val accessToken = azureAdClient.onBehalfOf(token, scope).access_token
             requireNotNull(accessToken) { "Failed to get access token" }
             accessToken
         }
