@@ -21,13 +21,13 @@ fun oppgaverSomIkkeLengerSkalVærePåVentJob(oppgaveMediator: OppgaveMediator) {
         period = 1.Dag,
         action = {
             try {
-                logger.info { "Starter settOppgaverKlarTilBehandlingEllerUnderBehandling jobb" }
+                logger.info { "Starter jobb håndterOppgaverSomIkkeLengerSkalVærePåVent" }
                 håndterOppgaverSomIkkeLengerSkalVærePåVent(
                     mediator = oppgaveMediator,
                     frist = LocalDate.now(),
                 )
             } catch (e: Exception) {
-                logger.error(e) { "SettOppgaverKlarTilBehandlingEllerUnderBehandling feilet: ${e.message} " }
+                logger.error(e) { "Feil ved jobb håndterOppgaverSomIkkeLengerSkalVærePåVent: ${e.message} " }
             }
         },
     )
