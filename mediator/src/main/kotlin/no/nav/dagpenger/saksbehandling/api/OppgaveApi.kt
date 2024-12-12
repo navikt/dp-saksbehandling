@@ -52,7 +52,6 @@ internal fun Application.oppgaveApi(
 ) {
     routing {
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
-
         authenticate("azureAd") {
             route("person/oppgaver") {
                 post {
@@ -66,7 +65,7 @@ internal fun Application.oppgaveApi(
                 get {
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
                     sikkerlogger.info {
-                        "Henter alle oppgaver med følgende queryparams: ${call.request.queryParameters}"
+                        "Henter alle oppgaver med følgende søkefilter: $søkefilter"
                     }
                     val oppgaver = oppgaveMediator.søk(søkefilter).tilOppgaverOversiktResultatDTO()
                     call.respond(status = HttpStatusCode.OK, oppgaver)
@@ -102,20 +101,14 @@ internal fun Application.oppgaveApi(
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
                             val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
-                            logger.info {
-                                "Oppgave med tilstand ${oppgave.tilstand().type} " +
-                                    "har journalpostIder: ${oppgaveDTO.journalpostIder}"
-                            }
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }
                     }
                     route("notat") {
                         put {
                             val notat = call.receiveText()
-
                             val oppgaveId = call.finnUUID("oppgaveId")
                             val saksbehandler = applicationCallParser.sakbehandler(call)
-
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 val sistEndretTidspunkt =
                                     oppgaveMediator.lagreNotat(
@@ -156,7 +149,6 @@ internal fun Application.oppgaveApi(
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
                             val oppgaveId = call.finnUUID("oppgaveId")
-
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 val oppdatertTilstand =
                                     oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse).tilOppgaveTilstandDTO()
@@ -168,7 +160,6 @@ internal fun Application.oppgaveApi(
                             }
                         }
                     }
-
                     route("utsett") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
@@ -195,7 +186,6 @@ internal fun Application.oppgaveApi(
                     route("send-til-kontroll") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
-
                             val saksbehandlerToken = call.request.jwt()
                             val sendTilKontrollHendelse = call.sendTilKontrollHendelse(saksbehandler)
                             val oppgaveId = call.finnUUID("oppgaveId")
@@ -206,16 +196,13 @@ internal fun Application.oppgaveApi(
                             }
                         }
                     }
-
                     route("returner-til-saksbehandler") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             val saksbehandlerToken = call.request.jwt()
                             val returnerTilSaksbehandlingHendelse =
                                 call.returnerTilSaksbehandlingHendelse(saksbehandler)
-
                             val oppgaveId = call.finnUUID("oppgaveId")
-
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 logger.info("Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse")
                                 oppgaveMediator.returnerTilSaksbehandling(
