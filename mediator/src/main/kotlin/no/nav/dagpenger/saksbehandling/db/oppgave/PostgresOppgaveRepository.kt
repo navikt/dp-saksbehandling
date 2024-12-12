@@ -123,18 +123,18 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 // language=SQL
                 val selectKlarTilBehandlingOppgaver =
                     """
-                            SELECT   oppg.*
-                            FROM     oppgave_v1    oppg
-                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
-                            JOIN     person_v1     pers ON pers.id = beha.person_id
-                            WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
-                            AND      oppg.saksbehandler_ident IS NULL
-                            AND      oppg.opprettet >= :fom
-                            AND      oppg.opprettet <  :tom_pluss_1_dag
-                            AND    ( NOT pers.skjermes_som_egne_ansatte
-                                  OR :har_tilgang_til_egne_ansatte )
-                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
-                            """ + emneknaggClause
+                    SELECT   oppg.*
+                    FROM     oppgave_v1    oppg
+                    JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN     person_v1     pers ON pers.id = beha.person_id
+                    WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
+                    AND      oppg.saksbehandler_ident IS NULL
+                    AND      oppg.opprettet >= :fom
+                    AND      oppg.opprettet <  :tom_pluss_1_dag
+                    AND    ( NOT pers.skjermes_som_egne_ansatte
+                          OR :har_tilgang_til_egne_ansatte )
+                    AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
+                    """ + emneknaggClause
 
                 // language=SQL
                 val unionAll = """UNION ALL"""
@@ -142,30 +142,33 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 // language=SQL
                 val selectKlarTilKontrollOppgaver =
                     """
-                            SELECT  oppg.*
-                            FROM    oppgave_v1    oppg
-                            JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                            JOIN    person_v1     pers ON pers.id = beha.person_id
-                            JOIN    oppgave_tilstand_logg_v1 logg ON logg.id = 
-                                ( SELECT logg2.id
-                                  FROM   oppgave_tilstand_logg_v1 logg2
-                                  WHERE  logg2.oppgave_id = oppg.id
-                                  AND    logg2.tidspunkt = 
-                                    (   SELECT MAX(logg3.tidspunkt)
-                                        FROM   oppgave_tilstand_logg_v1 logg3
-                                        WHERE  logg3.oppgave_id = oppg.id
-                                        AND    logg3.tilstand = 'UNDER_BEHANDLING'
-                                    )
-                                )
-                            WHERE   :har_beslutter_rolle
-                            AND     oppg.tilstand = 'KLAR_TIL_KONTROLL'
-                            AND     oppg.saksbehandler_ident IS NULL
-                            AND     oppg.opprettet >= :fom
-                            AND     oppg.opprettet <  :tom_pluss_1_dag
-                            AND   ( NOT pers.skjermes_som_egne_ansatte
-                                 OR :har_tilgang_til_egne_ansatte )
-                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
-                            AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
+                    SELECT  oppg.*
+                    FROM    oppgave_v1    oppg
+                    JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN    person_v1     pers ON pers.id = beha.person_id
+                    JOIN    oppgave_tilstand_logg_v1 logg ON logg.id = 
+                        (   SELECT logg2.id
+                            FROM   oppgave_tilstand_logg_v1 logg2
+                            WHERE  logg2.oppgave_id = oppg.id
+                            AND    logg2.tilstand = 'UNDER_BEHANDLING'
+                            AND    logg2.hendelse_type IN ('NesteOppgaveHendelse','SettOppgaveAnsvarHendelse')
+                            AND    logg2.tidspunkt = 
+                            (   SELECT MAX(logg3.tidspunkt)
+                                FROM   oppgave_tilstand_logg_v1 logg3
+                                WHERE  logg3.oppgave_id = oppg.id
+                                AND    logg3.tilstand = 'UNDER_BEHANDLING'
+                                AND    logg3.hendelse_type IN ('NesteOppgaveHendelse','SettOppgaveAnsvarHendelse')
+                            )
+                        )
+                    WHERE   :har_beslutter_rolle
+                    AND     oppg.tilstand = 'KLAR_TIL_KONTROLL'
+                    AND     oppg.saksbehandler_ident IS NULL
+                    AND     oppg.opprettet >= :fom
+                    AND     oppg.opprettet <  :tom_pluss_1_dag
+                    AND   ( NOT pers.skjermes_som_egne_ansatte
+                         OR :har_tilgang_til_egne_ansatte )
+                    AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
+                    AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
                 """ + emneknaggClause +
                         """
                         )

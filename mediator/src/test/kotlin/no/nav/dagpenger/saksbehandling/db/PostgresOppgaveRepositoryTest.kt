@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -18,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
@@ -44,9 +46,11 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
@@ -385,7 +389,7 @@ class PostgresOppgaveRepositoryTest {
                 )
             val oppgaveId = UUIDv7.ny()
 
-            fun tilstandsloggUnderBehandling() =
+            val tilstandsloggUnderBehandling =
                 Tilstandslogg(
                     tilstandsendringer =
                         mutableListOf(
@@ -396,7 +400,7 @@ class PostgresOppgaveRepositoryTest {
                                         ansvarligIdent = annenBeslutter.navIdent,
                                         utførtAv = annenBeslutter,
                                     ),
-                                tidspunkt = LocalDateTime.now().minusDays(2),
+                                tidspunkt = LocalDateTime.now().minusDays(3),
                             ),
                             Tilstandsendring(
                                 tilstand = UNDER_BEHANDLING,
@@ -405,7 +409,28 @@ class PostgresOppgaveRepositoryTest {
                                         ansvarligIdent = saksbehandlerUtført.navIdent,
                                         utførtAv = saksbehandlerUtført,
                                     ),
+                                tidspunkt = LocalDateTime.now().minusDays(2),
+                            ),
+                            Tilstandsendring(
+                                tilstand = PAA_VENT,
+                                hendelse =
+                                    UtsettOppgaveHendelse(
+                                        oppgaveId = oppgaveId,
+                                        navIdent = saksbehandlerUtført.navIdent,
+                                        utsattTil = LocalDate.now(),
+                                        beholdOppgave = true,
+                                        utførtAv = saksbehandlerUtført,
+                                    ),
                                 tidspunkt = LocalDateTime.now().minusDays(1),
+                            ),
+                            Tilstandsendring(
+                                tilstand = UNDER_BEHANDLING,
+                                hendelse =
+                                    PåVentFristUtgåttHendelse(
+                                        oppgaveId = oppgaveId,
+                                        utførtAv = Applikasjon("dp-saksbehandling"),
+                                    ),
+                                tidspunkt = LocalDateTime.now().minusHours(1),
                             ),
                             Tilstandsendring(
                                 tilstand = KLAR_TIL_KONTROLL,
@@ -423,7 +448,7 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     oppgaveId = oppgaveId,
                     tilstand = Oppgave.KlarTilKontroll,
-                    tilstandslogg = tilstandsloggUnderBehandling(),
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val repo = PostgresOppgaveRepository(ds)
