@@ -460,6 +460,13 @@ data class Oppgave private constructor(
 
     object BehandlesIArena : Tilstand {
         override val type: Type = BEHANDLES_I_ARENA
+
+        override fun behandlesIArena(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            logger.info { "Behandling er avbrutt. Skal behandles i Arena. Siden vi er i tilstand $type så gjør vi ingenting." }
+        }
     }
 
     object PåVent : Tilstand {
