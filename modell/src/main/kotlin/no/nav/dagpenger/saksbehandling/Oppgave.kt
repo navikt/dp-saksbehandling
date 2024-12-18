@@ -289,6 +289,13 @@ data class Oppgave private constructor(
             return Handling.LAGRE_OPPGAVE
         }
 
+        override fun behandlesIArena(
+            oppgave: Oppgave,
+            behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
+        ) {
+            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+        }
+
         override fun ferdigstill(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,

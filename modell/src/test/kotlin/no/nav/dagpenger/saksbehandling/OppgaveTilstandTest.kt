@@ -165,7 +165,7 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal kunne avbryte en oppgave fra alle lovlige tilstander`() {
         val lovligeTilstander =
-            setOf(PAA_VENT, UNDER_BEHANDLING, KLAR_TIL_BEHANDLING, BEHANDLES_I_ARENA)
+            setOf(OPPRETTET, PAA_VENT, UNDER_BEHANDLING, KLAR_TIL_BEHANDLING, BEHANDLES_I_ARENA)
 
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand, behandler = null)
