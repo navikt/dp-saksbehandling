@@ -11,7 +11,6 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.utsending.IngenBehov.navn
 
 internal class ForslagTilVedtakMottak(
     rapidsConnection: RapidsConnection,
