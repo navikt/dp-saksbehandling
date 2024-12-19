@@ -71,12 +71,13 @@ internal class ForslagTilVedtakMottak(
 
     private val JsonMessage.vilkårEmneknagg
         get() =
-            if (this["vilkår"].map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Krav til minsteinntekt" && status == "IkkeOppfylt" }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til minsteinntekt eller verneplikt" && status == "IkkeOppfylt" }
             ) {
                 setOf("Avslag minsteinntekt")
             } else {
-                emptySet()
+                setOf("Avslag")
             }
 
     private val JsonMessage.harAvklartEmneknagg
@@ -95,7 +96,7 @@ internal class ForslagTilVedtakMottak(
             }
 
     private fun JsonMessage.emneknagger(): Set<String> {
-        when (this["utfall"].asBoolean()) {
+        when (this.utfall.asBoolean()) {
             true -> return setOf("Innvilgelse")
             false -> {
                 if (this.vilkårEmneknagg.isNotEmpty()) {

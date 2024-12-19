@@ -1,7 +1,9 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -23,16 +25,14 @@ class ForslagTilVedtakMottakTest {
     fun `Skal kunne motta forslag_til_vedtak hendelse med avslag minsteinntekt`() {
         testRapid.sendTestMessage(forslagTilVedtakAvslagMinsteinntektJson)
 
+        val hendelse = slot<ForslagTilVedtakHendelse>()
         verify(exactly = 1) {
-            val forslagTilVedtakHendelse =
-                ForslagTilVedtakHendelse(
-                    ident = ident,
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    emneknagger = setOf("Avslag minsteinntekt"),
-                )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.settOppgaveKlarTilBehandling(capture(hendelse))
         }
+        hendelse.captured.ident shouldBe ident
+        hendelse.captured.søknadId shouldBe søknadId
+        hendelse.captured.behandlingId shouldBe behandlingId
+        hendelse.captured.emneknagger shouldBe setOf("Avslag minsteinntekt")
     }
 
     @Test
@@ -89,7 +89,7 @@ class ForslagTilVedtakMottakTest {
               "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
               "hjemmel": "folketrygdloven § 4-4"
             }
-          ]
+          ],
           "ident": "$ident",
           "behandlingId": "$behandlingId",
           "gjelderDato": "2024-11-19",
