@@ -67,45 +67,34 @@ class ForslagTilVedtakMottakTest {
         }
     }
 
-    @Test
-    fun `Skal kunne motta forslag_til_vedtak hendelse uten utfall`() {
-        testRapid.sendTestMessage(forslagTilVedtakUtfallNullJson)
-
-        verify(exactly = 1) {
-            val forslagTilVedtakHendelse =
-                ForslagTilVedtakHendelse(
-                    ident = ident,
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    emneknagger = emptySet(),
-                )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
-        }
-    }
-
     //language=json
     private val forslagTilVedtakAvslagMinsteinntektJson =
         """
         {
-            "@event_name": "forslag_til_vedtak",
-            "prøvingsdato": "2024-12-01",
-            "utfall": false,
-            "harAvklart": "Krav til minsteinntekt",
-            "avklaringer": [{
-                    "type": "InntektNesteKalendermåned",
-                    "utfall": "Manuell",
-                    "begrunnelse": "Personen har inntekter som tilhører neste inntektsperiode"
-                }, {
-                    "type": "SvangerskapsrelaterteSykepenger",
-                    "utfall": "Manuell",
-                    "begrunnelse": "Personen har sykepenger som kan være svangerskapsrelaterte"
-                }
-            ],
-            "ident": "$ident",
-            "behandlingId": "$behandlingId",
-            "gjelderDato": "2024-11-19",
-            "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId"
+          "@event_name": "forslag_til_vedtak",
+          "prøvingsdato": "2024-12-01",
+          "fastsatt": {
+            "utfall": false
+          },
+          "vilkår": [
+            {
+              "navn": "Oppfyller kravet til alder",
+              "status": "Oppfylt",
+              "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+              "hjemmel": "folketrygdloven § 4-23"
+            },
+            {
+              "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
+              "hjemmel": "folketrygdloven § 4-4"
+            }
+          ]
+          "ident": "$ident",
+          "behandlingId": "$behandlingId",
+          "gjelderDato": "2024-11-19",
+          "søknadId": "$søknadId",
+          "søknad_uuid": "$søknadId"
         }
         """.trimIndent()
 

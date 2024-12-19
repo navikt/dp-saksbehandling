@@ -11,6 +11,7 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.utsending.IngenBehov.navn
 
 internal class ForslagTilVedtakMottak(
     rapidsConnection: RapidsConnection,
@@ -26,6 +27,7 @@ internal class ForslagTilVedtakMottak(
             }
             validate { it.requireKey("ident", "søknadId", "behandlingId") }
             validate { it.interestedIn("utfall", "harAvklart") }
+            validate { it.interestedIn("fastsatt", "vilkår") }
         }
     }
 
@@ -58,27 +60,48 @@ internal class ForslagTilVedtakMottak(
         }
     }
 
+    private val JsonMessage.forslagUtfall get() = this["utfall"]
+    private val JsonMessage.fastsattUtfall get() = this["fastsatt"].get("utfall")
+    private val JsonMessage.utfall
+        get() =
+            when (this.forslagUtfall.isMissingOrNull()) {
+                true -> this.fastsattUtfall
+                false -> this.forslagUtfall
+            }
+
+    private val JsonMessage.vilkårEmneknagg
+        get() =
+            if (this["vilkår"].map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Krav til minsteinntekt" && status == "IkkeOppfylt" }
+            ) {
+                setOf("Avslag minsteinntekt")
+            } else {
+                emptySet()
+            }
+
+    private val JsonMessage.harAvklartEmneknagg
+        get() =
+            if (this["harAvklart"].isMissingOrNull()) {
+                logger.warn { "Fant ikke harAvklart men utfallet er avslag, lager emneknagg Avslag." }
+                setOf("Avslag")
+            } else if (this["harAvklart"].asText() == "Krav til minsteinntekt") {
+                setOf("Avslag minsteinntekt")
+            } else {
+                logger.warn {
+                    "Klarte ikke sette emneknagg for ukjent verdi i harAvklart når uftallet er avslag. " +
+                        "Element harAvklart har verdi: ${this["harAvklart"].asText()}."
+                }
+                setOf("Avslag")
+            }
+
     private fun JsonMessage.emneknagger(): Set<String> {
-        if (this["utfall"].isMissingOrNull()) {
-            logger.warn { "Fant ikke utfall. Lager ingen emneknagger." }
-            return emptySet()
-        }
         when (this["utfall"].asBoolean()) {
             true -> return setOf("Innvilgelse")
             false -> {
-                if (this["harAvklart"].isMissingOrNull()) {
-                    logger.warn { "Fant ikke harAvklart men utfallet er avslag, lager emneknagg Avslag." }
-                    return setOf("Avslag")
+                if (this.vilkårEmneknagg.isNotEmpty()) {
+                    return this.vilkårEmneknagg
                 }
-                if (this["harAvklart"].asText() == "Krav til minsteinntekt") {
-                    return setOf("Avslag minsteinntekt")
-                } else {
-                    logger.warn {
-                        "Klarte ikke sette emneknagg for ukjent verdi i harAvklart når uftallet er avslag. " +
-                            "Element harAvklart har verdi: ${this["harAvklart"].asText()}."
-                    }
-                    return setOf("Avslag")
-                }
+                return this.harAvklartEmneknagg
             }
         }
     }
