@@ -54,6 +54,11 @@ internal class ForslagTilVedtakMottak(
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 )
+
+            packet["vilkår"].elements().forEach { vilkårNode ->
+                sikkerlogg.info { "Forslag til vedtak - vilkår: [${vilkårNode["navn"].asText()}] - [${vilkårNode["status"].asText()}]" }
+            }
+
             sikkerlogg.info { "Mottok forslag_til_vedtak hendelse: $forslagTilVedtakHendelse" }
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -93,7 +98,7 @@ internal class ForslagTilVedtakMottak(
                     setOf("Avslag minsteinntekt")
                 } else {
                     logger.warn {
-                        "Klarte ikke sette emneknagg for ukjent verdi i harAvklart når uftallet er avslag. " +
+                        "Klarte ikke sette emneknagg for ukjent verdi i harAvklart når utfallet er avslag." +
                             "Element harAvklart har verdi: ${this["harAvklart"].asText()}."
                     }
                     setOf("Avslag")
