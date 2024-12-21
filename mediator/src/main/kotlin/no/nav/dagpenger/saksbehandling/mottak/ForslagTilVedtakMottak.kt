@@ -75,36 +75,13 @@ internal class ForslagTilVedtakMottak(
 
     private val JsonMessage.vilkårEmneknagg
         get() =
-            if (this["harAvklart"].isMissingOrNull()) {
-                if (this["vilkår"]
-                        .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                        .any { (navn, status) -> navn == "Oppfyller kravet til minsteinntekt eller verneplikt" && status == "IkkeOppfylt" }
-                ) {
-                    setOf("Avslag minsteinntekt")
-                } else {
-                    setOf("Avslag")
-                }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Krav til minsteinntekt" && status == "IkkeOppfylt" }
+            ) {
+                setOf("Avslag minsteinntekt")
             } else {
-                emptySet()
-            }
-
-    private val JsonMessage.harAvklartEmneknagg
-        get() =
-            if (this["vilkår"].isMissingOrNull()) {
-                if (this["harAvklart"].isMissingOrNull()) {
-                    logger.warn { "Fant ikke harAvklart men utfallet er avslag, lager emneknagg Avslag." }
-                    setOf("Avslag")
-                } else if (this["harAvklart"].asText() == "Krav til minsteinntekt") {
-                    setOf("Avslag minsteinntekt")
-                } else {
-                    logger.warn {
-                        "Klarte ikke sette emneknagg for ukjent verdi i harAvklart når utfallet er avslag." +
-                            "Element harAvklart har verdi: ${this["harAvklart"].asText()}."
-                    }
-                    setOf("Avslag")
-                }
-            } else {
-                emptySet()
+                setOf("Avslag")
             }
 
     private fun JsonMessage.emneknagger(): Set<String> {
@@ -114,7 +91,7 @@ internal class ForslagTilVedtakMottak(
                 if (this.vilkårEmneknagg.isNotEmpty()) {
                     return this.vilkårEmneknagg
                 }
-                return this.harAvklartEmneknagg
+                return emptySet()
             }
         }
     }
