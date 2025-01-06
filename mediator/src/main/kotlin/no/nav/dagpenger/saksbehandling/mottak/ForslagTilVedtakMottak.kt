@@ -77,7 +77,7 @@ internal class ForslagTilVedtakMottak(
         get() =
             if (this["vilkår"]
                     .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Krav til minsteinntekt" && status == "IkkeOppfylt" }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til minsteinntekt eller verneplikt" && status == "IkkeOppfylt" }
             ) {
                 setOf("Avslag minsteinntekt")
             } else {
