@@ -47,6 +47,7 @@ internal class ForslagTilVedtakMottak(
             logger.info { "Mottok forslag_til_vedtak hendelse" }
             val ident = packet["ident"].asText()
             val emneknagger = packet.emneknagger()
+            println("KAKTUS: " + emneknagger)
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
@@ -73,26 +74,115 @@ internal class ForslagTilVedtakMottak(
                 false -> this.forslagUtfall
             }
 
-    private val JsonMessage.vilkårEmneknagg
-        get() =
+    private val JsonMessage.vilkårEmneknagger: Set<String>
+        get() {
+            val mutableEmneknagger = mutableSetOf<String>()
             if (this["vilkår"]
                     .map { Pair(it["navn"].asText(), it["status"].asText()) }
                     .any { (navn, status) -> navn == "Oppfyller kravet til minsteinntekt eller verneplikt" && status == "IkkeOppfylt" }
             ) {
-                setOf("Avslag minsteinntekt")
-            } else {
-                setOf("Avslag")
+                mutableEmneknagger.add("Avslag minsteinntekt")
             }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Krav til tap av arbeidsinntekt" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag arbeidsinntekt")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Tap av arbeidstid er minst terskel" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag arbeidstid")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til alder" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag alder")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Mottar ikke andre fulle ytelser" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag andre ytelser")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til medlemskap" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag folketrygdmedlemskap")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Er medlemmet ikke påvirket av streik eller lock-out?" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag streik/lock-out")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til opphold i Norge" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag opphold utland")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til heltid- og deltidsarbeid" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag heltid/deltid")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til mobilitet" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag mobilitet")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til å ta ethvert arbeid" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag ethvert arbeid")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller kravet til å være arbeidsfør" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag arbeidsførhet")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Krav til arbeidssøker" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag reell arbeidssøker")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Registrert som arbeidssøker på søknadstidspunktet" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag ikke registrert")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Oppfyller krav til ikke utestengt" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag utestengt")
+            }
+            if (this["vilkår"]
+                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
+                    .any { (navn, status) -> navn == "Krav til utdanning eller opplæring" && status == "IkkeOppfylt" }
+            ) {
+                mutableEmneknagger.add("Avslag utdanning")
+            }
+            if (mutableEmneknagger.isEmpty()) {
+                mutableEmneknagger.add("Avslag")
+            }
+            return mutableEmneknagger.toSet()
+        }
 
     private fun JsonMessage.emneknagger(): Set<String> {
         when (this.utfall.asBoolean()) {
             true -> return setOf("Innvilgelse")
-            false -> {
-                if (this.vilkårEmneknagg.isNotEmpty()) {
-                    return this.vilkårEmneknagg
-                }
-                return emptySet()
-            }
+            false -> return this.vilkårEmneknagger
         }
     }
 }
