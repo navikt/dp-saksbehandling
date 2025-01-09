@@ -10,3 +10,7 @@ sealed class AnsvarHendelse(utførtAv: Behandler, open val ansvarligIdent: Strin
 data object TomHendelse : Hendelse(Applikasjon("dp-saksbehandling")) {
     fun tilJson(): String = "{}"
 }
+
+data class SkriptHendelse(
+    override val utførtAv: Applikasjon,
+) : Hendelse(utførtAv)
