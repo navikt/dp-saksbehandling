@@ -179,9 +179,49 @@ internal class ForslagTilVedtakMottak(
             return mutableEmneknagger.toSet()
         }
 
+    private val JsonMessage.rettighetEmneknagg: Set<String>
+        get() {
+            val mutableEmneknagger = mutableSetOf<String>()
+            if (this["fastsatt"]["kvoter"]
+                    .map { Pair(it["navn"].asText(), it["verdi"].asInt()) }
+                    .any { (navn, antallUker) -> navn == "Verneplikt" && antallUker > 0 }
+            ) {
+                mutableEmneknagger.add("Innvilgelse verneplikt")
+            }
+            if (this["opplysning"]
+                    .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
+                    .any { (navn, harRettighet) -> navn == "Har rett til ordinære dagpenger" && harRettighet }
+            ) {
+                mutableEmneknagger.add("Innvilgelse ordinær")
+            }
+            if (this["opplysning"]
+                    .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
+                    .any { (navn, harRettighet) -> navn == "Har rett til dagpenger under permittering" && harRettighet }
+            ) {
+                mutableEmneknagger.add("Innvilgelse permittering")
+            }
+            if (this["opplysning"]
+                    .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
+                    .any { (navn, harRettighet) -> navn == "Har rett til dagpenger under permittering i fiskeforedlingsindustri" && harRettighet }
+            ) {
+                mutableEmneknagger.add("Innvilgelse permittering fisk")
+            }
+            if (this["opplysning"]
+                    .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
+                    .any { (navn, harRettighet) -> navn == "Har rett til dagpenger etter konkurs" && harRettighet }
+            ) {
+                mutableEmneknagger.add("Innvilgelse etter konkurs")
+            }
+
+            if (mutableEmneknagger.isEmpty()) {
+                mutableEmneknagger.add("Innvilgelse")
+            }
+            return mutableEmneknagger.toSet()
+        }
+
     private fun JsonMessage.emneknagger(): Set<String> {
         when (this.utfall.asBoolean()) {
-            true -> return setOf("Innvilgelse")
+            true -> return this.rettighetEmneknagg
             false -> return this.vilkårEmneknagger
         }
     }
