@@ -36,7 +36,7 @@ class ForslagTilVedtakMottakTest {
     }
 
     @Test
-    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag som ikke er minsteinntekt`() {
+    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag pga alder`() {
         testRapid.sendTestMessage(forslagTilVedtakAvslagAlderJson)
 
         verify(exactly = 1) {
@@ -45,7 +45,29 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf("Avslag"),
+                    emneknagger = setOf("Avslag alder"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med flere avslagsgrunner`() {
+        testRapid.sendTestMessage(forslagTilVedtakFlereAvslagsgrunnerJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger =
+                        setOf(
+                            "Avslag minsteinntekt", "Avslag arbeidsinntekt", "Avslag arbeidstid", "Avslag alder",
+                            "Avslag andre ytelser", "Avslag medlemskap", "Avslag streik", "Avslag opphold utland",
+//                            "Avslag deltidssøker", "Avslag mobilitet", "Avslag ethvert arbeid", "Avslag arbeidsførhet",
+                            "Avslag reell arbeidssøker", "Avslag ikke registrert", "Avslag utestengt", "Avslag utdanning",
+                        ),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -157,6 +179,131 @@ class ForslagTilVedtakMottakTest {
             "gjelderDato": "2024-11-19",
             "søknadId": "$søknadId",
             "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakFlereAvslagsgrunnerJson =
+        """
+        {
+          "@event_name": "forslag_til_vedtak",
+          "behandlingId": "$behandlingId",
+          "fagsakId": "123",
+          "søknadId": "$søknadId",
+          "ident": "$ident",
+          "vedtakstidspunkt": "2025-01-08T13:28:28.164624",
+          "virkningsdato": "2021-05-06",
+          "behandletAv": [],
+          "vilkår": [
+            {
+              "navn": "Oppfyller kravet til alder",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:25.847435",
+              "hjemmel": "folketrygdloven § 4-23"
+            },
+            {
+              "navn": "Registrert som arbeidssøker på søknadstidspunktet",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:25.976851",
+              "hjemmel": "folketrygdloven § 4-8"
+            },
+            {
+              "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.284199",
+              "hjemmel": "folketrygdloven § 4-4"
+            },
+            {
+              "navn": "Mottar ikke andre fulle ytelser",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.285808",
+              "hjemmel": "folketrygdloven § 4-24"
+            },
+            {
+              "navn": "Oppfyller kravet til medlemskap",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.291214",
+              "hjemmel": "folketrygdloven § 4-2"
+            },
+            {
+              "navn": "Oppfyller kravet til opphold i Norge",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.29125",
+              "hjemmel": "folketrygdloven § 4-5"
+            },
+            {
+              "navn": "Er medlemmet ikke påvirket av streik eller lock-out?",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.291276",
+              "hjemmel": "folketrygdloven § 4-22"
+            },
+            {
+              "navn": "Oppfyller krav til ikke utestengt",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.2923",
+              "hjemmel": "folketrygdloven § 4-28"
+            },
+            {
+              "navn": "Krav til tap av arbeidsinntekt",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.297548",
+              "hjemmel": "folketrygdloven § 4-3"
+            },
+            {
+              "navn": "Tap av arbeidstid er minst terskel",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.319579",
+              "hjemmel": "folketrygdloven § 4-3"
+            },
+            {
+              "navn": "Oppfyller kravet til heltid- og deltidsarbeid",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.484995",
+              "hjemmel": "folketrygdloven § 4-5"
+            },
+            {
+              "navn": "Oppfyller kravet til mobilitet",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.485021",
+              "hjemmel": "folketrygdloven § 4-5"
+            },
+            {
+              "navn": "Oppfyller kravet til å være arbeidsfør",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.485033",
+              "hjemmel": "folketrygdloven § 4-5"
+            },
+            {
+              "navn": "Oppfyller kravet til å ta ethvert arbeid",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.485043",
+              "hjemmel": "folketrygdloven § 4-5"
+            },
+            {
+              "navn": "Krav til arbeidssøker",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.487577",
+              "hjemmel": "folketrygdloven § 4-5"
+            },
+            {
+              "navn": "Krav til utdanning eller opplæring",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2025-01-08T13:28:26.624419",
+              "hjemmel": "folketrygdloven § 4-6"
+            }
+          ],
+          "fastsatt": {
+            "utfall": false
+          },
+          "@id": "ac96f190-9b18-4823-9f7d-5f7f68568e38",
+          "@opprettet": "2025-01-08T13:28:28.243249",
+          "system_read_count": 0,
+          "system_participating_services": [
+            {
+              "id": "ac96f190-9b18-4823-9f7d-5f7f68568e38",
+              "time": "2025-01-08T13:28:28.243249"
+            }
+          ]
         }
         """.trimIndent()
 }
