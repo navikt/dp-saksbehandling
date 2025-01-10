@@ -74,8 +74,88 @@ class ForslagTilVedtakMottakTest {
     }
 
     @Test
-    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilgelse`() {
-        testRapid.sendTestMessage(forslagTilVedtakInnvilgelseJson)
+    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilgelse av dagpenger etter verneplikt`() {
+        testRapid.sendTestMessage(forslagTilVedtakInnvilgelseVernepliktJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = setOf("Innvilgelse verneplikt"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilgelse av ordinære dagpenger`() {
+        testRapid.sendTestMessage(forslagTilVedtakInnvilgelseOrdinærJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = setOf("Innvilgelse ordinær"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilgelse av dagpenger under permittering`() {
+        testRapid.sendTestMessage(forslagTilVedtakInnvilgelsePermitteringJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = setOf("Innvilgelse permittering"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilgelse av dagpenger under permittering fra fiskeindustri`() {
+        testRapid.sendTestMessage(forslagTilVedtakInnvilgelsePermitteringFiskJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = setOf("Innvilgelse permittering fisk"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilgelse av dagpenger etter konkurs`() {
+        testRapid.sendTestMessage(forslagTilVedtakInnvilgelseEtterKonkursJson)
+
+        verify(exactly = 1) {
+            val forslagTilVedtakHendelse =
+                ForslagTilVedtakHendelse(
+                    ident = ident,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = setOf("Innvilgelse etter konkurs"),
+                )
+            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilget ukjent rettighet - regelmotor har laget noe vi ikke kjenner`() {
+        testRapid.sendTestMessage(forslagTilVedtakInnvilgelseUkjentTypeJson)
 
         verify(exactly = 1) {
             val forslagTilVedtakHendelse =
@@ -121,14 +201,11 @@ class ForslagTilVedtakMottakTest {
         """.trimIndent()
 
     //language=json
-    private val forslagTilVedtakInnvilgelseJson =
+    private val forslagTilVedtakInnvilgelseVernepliktJson =
         """
         {
             "@event_name": "forslag_til_vedtak",
             "prøvingsdato": "2024-12-01",
-            "fastsatt": {
-              "utfall": true
-            },
             "vilkår": [
                 {
                   "navn": "Oppfyller kravet til alder",
@@ -141,6 +218,422 @@ class ForslagTilVedtakMottakTest {
                   "status": "Oppfylt",
                   "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
                   "hjemmel": "folketrygdloven § 4-4"
+                }
+            ],
+            "fastsatt": {
+                "utfall": true,
+                "grunnlag": {
+                    "grunnlag": 372084,
+                    "begrunnelse": null
+                },
+                "fastsattVanligArbeidstid": {
+                    "vanligArbeidstidPerUke": 37.5,
+                    "nyArbeidstidPerUke": 0.0,
+                    "begrunnelse": null
+                },
+                "sats": {
+                    "dagsatsMedBarnetillegg": 893,
+                    "dagsats": 893,
+                    "begrunnelse": null,
+                    "barn": [
+                    ]
+                },
+                "kvoter": [ {
+                        "navn": "Verneplikt",
+                        "type": "uker",
+                        "verdi": 26
+                    }, {
+                        "navn": "Egenandel",
+                        "type": "beløp",
+                        "verdi": 2679
+                    }
+                ]
+            },
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
+            "gjelderDato": "2024-11-19",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakInnvilgelseOrdinærJson =
+        """
+        {
+            "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
+            "vilkår": [
+                {
+                  "navn": "Oppfyller kravet til alder",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+                  "hjemmel": "folketrygdloven § 4-23"
+                },
+                {
+                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
+                  "hjemmel": "folketrygdloven § 4-4"
+                }
+            ],
+            "fastsatt": {
+                "utfall": true,
+                "grunnlag": {
+                    "grunnlag": 500000,
+                    "begrunnelse": null
+                },
+                "fastsattVanligArbeidstid": {
+                    "vanligArbeidstidPerUke": 37.5,
+                    "nyArbeidstidPerUke": 0.0,
+                    "begrunnelse": null
+                },
+                "sats": {
+                    "dagsatsMedBarnetillegg": 1200,
+                    "dagsats": 1200,
+                    "begrunnelse": null,
+                    "barn": [
+                    ]
+                },
+                "kvoter": [ {
+                        "navn": "Dagpengeperiode",
+                        "type": "uker",
+                        "verdi": 104
+                    }, {
+                        "navn": "Egenandel",
+                        "type": "beløp",
+                        "verdi": 3600
+                    }
+                ]
+            },
+            "opplysninger": [
+                {
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "true"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                }
+            ],
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
+            "gjelderDato": "2024-11-19",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakInnvilgelsePermitteringJson =
+        """
+        {
+            "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
+            "vilkår": [
+                {
+                  "navn": "Oppfyller kravet til alder",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+                  "hjemmel": "folketrygdloven § 4-23"
+                },
+                {
+                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
+                  "hjemmel": "folketrygdloven § 4-4"
+                }
+            ],
+            "fastsatt": {
+                "utfall": true,
+                "grunnlag": {
+                    "grunnlag": 500000,
+                    "begrunnelse": null
+                },
+                "fastsattVanligArbeidstid": {
+                    "vanligArbeidstidPerUke": 37.5,
+                    "nyArbeidstidPerUke": 0.0,
+                    "begrunnelse": null
+                },
+                "sats": {
+                    "dagsatsMedBarnetillegg": 1200,
+                    "dagsats": 1200,
+                    "begrunnelse": null,
+                    "barn": [
+                    ]
+                },
+                "kvoter": [ {
+                        "navn": "Dagpengeperiode",
+                        "type": "uker",
+                        "verdi": 104
+                    }, {
+                        "navn": "Permittering",
+                        "type": "uker",
+                        "verdi": 26
+                    },{
+                        "navn": "Egenandel",
+                        "type": "beløp",
+                        "verdi": 3600
+                    }
+                ]
+            },
+            "opplysninger": [
+                {
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "true"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                }
+            ],
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
+            "gjelderDato": "2024-11-19",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakInnvilgelsePermitteringFiskJson =
+        """
+        {
+            "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
+            "vilkår": [
+                {
+                  "navn": "Oppfyller kravet til alder",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+                  "hjemmel": "folketrygdloven § 4-23"
+                },
+                {
+                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
+                  "hjemmel": "folketrygdloven § 4-4"
+                }
+            ],
+            "fastsatt": {
+                "utfall": true,
+                "grunnlag": {
+                    "grunnlag": 500000,
+                    "begrunnelse": null
+                },
+                "fastsattVanligArbeidstid": {
+                    "vanligArbeidstidPerUke": 37.5,
+                    "nyArbeidstidPerUke": 0.0,
+                    "begrunnelse": null
+                },
+                "sats": {
+                    "dagsatsMedBarnetillegg": 1200,
+                    "dagsats": 1200,
+                    "begrunnelse": null,
+                    "barn": [
+                    ]
+                },
+                "kvoter": [ {
+                        "navn": "Dagpengeperiode",
+                        "type": "uker",
+                        "verdi": 104
+                    }, {
+                        "navn": "Fiskepermittering",
+                        "type": "uker",
+                        "verdi": 26
+                    },{
+                        "navn": "Egenandel",
+                        "type": "beløp",
+                        "verdi": 3600
+                    }
+                ]
+            },
+            "opplysninger": [
+                {
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "true"
+                },
+                {
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                }
+            ],
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
+            "gjelderDato": "2024-11-19",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakInnvilgelseEtterKonkursJson =
+        """
+        {
+            "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
+            "vilkår": [
+                {
+                  "navn": "Oppfyller kravet til alder",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+                  "hjemmel": "folketrygdloven § 4-23"
+                },
+                {
+                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
+                  "hjemmel": "folketrygdloven § 4-4"
+                }
+            ],
+            "fastsatt": {
+                "utfall": true,
+                "grunnlag": {
+                    "grunnlag": 500000,
+                    "begrunnelse": null
+                },
+                "fastsattVanligArbeidstid": {
+                    "vanligArbeidstidPerUke": 37.5,
+                    "nyArbeidstidPerUke": 0.0,
+                    "begrunnelse": null
+                },
+                "sats": {
+                    "dagsatsMedBarnetillegg": 1200,
+                    "dagsats": 1200,
+                    "begrunnelse": null,
+                    "barn": [
+                    ]
+                },
+                "kvoter": [ {
+                        "navn": "Dagpengeperiode",
+                        "type": "uker",
+                        "verdi": 104
+                    }, {
+                        "navn": "Lønnsgarantiperiode",
+                        "type": "uker",
+                        "verdi": 26
+                    },{
+                        "navn": "Egenandel",
+                        "type": "beløp",
+                        "verdi": 3600
+                    }
+                ]
+            },
+            "opplysninger": [
+                {
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "true"
+                }
+            ],
+            "ident": "$ident",
+            "behandlingId": "$behandlingId",
+            "gjelderDato": "2024-11-19",
+            "søknadId": "$søknadId",
+            "søknad_uuid": "$søknadId"
+        }
+        """.trimIndent()
+
+    //language=json
+    private val forslagTilVedtakInnvilgelseUkjentTypeJson =
+        """
+        {
+            "@event_name": "forslag_til_vedtak",
+            "prøvingsdato": "2024-12-01",
+            "vilkår": [
+                {
+                  "navn": "Oppfyller kravet til alder",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+                  "hjemmel": "folketrygdloven § 4-23"
+                },
+                {
+                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "status": "Oppfylt",
+                  "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
+                  "hjemmel": "folketrygdloven § 4-4"
+                }
+            ],
+            "fastsatt": {
+                "utfall": true,
+                "grunnlag": {
+                    "grunnlag": 500000,
+                    "begrunnelse": null
+                },
+                "fastsattVanligArbeidstid": {
+                    "vanligArbeidstidPerUke": 37.5,
+                    "nyArbeidstidPerUke": 0.0,
+                    "begrunnelse": null
+                },
+                "sats": {
+                    "dagsatsMedBarnetillegg": 1200,
+                    "dagsats": 1200,
+                    "begrunnelse": null,
+                    "barn": [
+                    ]
+                },
+                "kvoter": [ {
+                        "navn": "Dagpengeperiode",
+                        "type": "uker",
+                        "verdi": 104
+                    }, {
+                        "navn": "Egenandel",
+                        "type": "beløp",
+                        "verdi": 3600
+                    }
+                ]
+            },
+            "opplysninger": [
+                {
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
                 }
             ],
             "ident": "$ident",
