@@ -45,10 +45,8 @@ internal class ForslagTilVedtakMottak(
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_vedtak hendelse" }
-            sikkerlogg.info { "Mottok forslag_til_vedtak hendelse ${packet.toJson()}" }
             val ident = packet["ident"].asText()
             val emneknagger = packet.emneknagger()
-            println("KAKTUS: " + emneknagger)
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
