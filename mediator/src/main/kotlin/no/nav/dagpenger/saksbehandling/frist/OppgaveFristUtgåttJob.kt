@@ -29,8 +29,6 @@ fun oppgaverSomIkkeLengerSkalVærePåVentJob(oppgaveMediator: OppgaveMediator) {
             } catch (e: Exception) {
                 logger.error(e) { "Feil ved jobb håndterOppgaverSomIkkeLengerSkalVærePåVent: ${e.message} " }
             }
-
-
         },
     )
 }
