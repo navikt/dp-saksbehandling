@@ -124,30 +124,6 @@ internal class ForslagTilVedtakMottak(
             ) {
                 mutableEmneknagger.add("Avslag opphold utland")
             }
-//            if (this["vilkår"]
-//                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-//                    .any { (navn, status) -> navn == "Oppfyller kravet til heltid- og deltidsarbeid" && status == "IkkeOppfylt" }
-//            ) {
-//                mutableEmneknagger.add("Avslag deltidssøker")
-//            }
-//            if (this["vilkår"]
-//                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-//                    .any { (navn, status) -> navn == "Oppfyller kravet til mobilitet" && status == "IkkeOppfylt" }
-//            ) {
-//                mutableEmneknagger.add("Avslag mobilitet")
-//            }
-//            if (this["vilkår"]
-//                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-//                    .any { (navn, status) -> navn == "Oppfyller kravet til å ta ethvert arbeid" && status == "IkkeOppfylt" }
-//            ) {
-//                mutableEmneknagger.add("Avslag ethvert arbeid")
-//            }
-//            if (this["vilkår"]
-//                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-//                    .any { (navn, status) -> navn == "Oppfyller kravet til å være arbeidsfør" && status == "IkkeOppfylt" }
-//            ) {
-//                mutableEmneknagger.add("Avslag arbeidsførhet")
-//            }
             if (this["vilkår"]
                     .map { Pair(it["navn"].asText(), it["status"].asText()) }
                     .any { (navn, status) -> navn == "Krav til arbeidssøker" && status == "IkkeOppfylt" }
