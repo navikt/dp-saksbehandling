@@ -20,7 +20,7 @@ data class ArkiverbartBrevBehov(
     private val sak: Sak,
 ) : Behov() {
     companion object {
-        const val BEHOV_NAVN = "PdfBehov"
+        const val BEHOV_NAVN = "SaksbehandlingPdfBehov"
     }
 
     override val navn: String = BEHOV_NAVN
