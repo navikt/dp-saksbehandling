@@ -43,7 +43,11 @@ internal class ForslagTilVedtakMottak(
     ) {
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
-        if (behandlingId == UUID.fromString("019457a2-6801-7b82-aed0-e2178eba8d1e")) {
+        if (behandlingId in listOf(
+                UUID.fromString("019457a2-6801-7b82-aed0-e2178eba8d1e"),
+                UUID.fromString("0194ac82-9650-759f-9e51-e7456db91b94"),
+            )
+        ) {
             logger.warn { "Skpping behandling $behandlingId" }
             return
         }
