@@ -11,6 +11,7 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import java.util.UUID
 
 internal class ForslagTilVedtakMottak(
     rapidsConnection: RapidsConnection,
@@ -42,6 +43,10 @@ internal class ForslagTilVedtakMottak(
     ) {
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
+        if (behandlingId == UUID.fromString("019457a2-6801-7b82-aed0-e2178eba8d1e")) {
+            logger.warn { "Skpping behandling $behandlingId" }
+            return
+        }
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_vedtak hendelse" }
@@ -178,8 +183,7 @@ internal class ForslagTilVedtakMottak(
                 }
                 if (this["opplysninger"]
                         .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
-                        .any {
-                                (navn, harRettighet) ->
+                        .any { (navn, harRettighet) ->
                             navn == "Har rett til dagpenger under permittering i fiskeforedlingsindustri" && harRettighet
                         }
                 ) {
