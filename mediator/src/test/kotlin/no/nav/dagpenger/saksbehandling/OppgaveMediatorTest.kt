@@ -139,6 +139,7 @@ class OppgaveMediatorTest {
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = utsendingMediatorMock,
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -166,6 +167,7 @@ class OppgaveMediatorTest {
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -194,6 +196,7 @@ class OppgaveMediatorTest {
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
                 )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat() shouldBe null
@@ -233,6 +236,7 @@ class OppgaveMediatorTest {
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
                     oppslag = oppslagMock,
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -262,6 +266,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
 
@@ -302,6 +307,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediatorMock,
                 )
 
@@ -339,6 +345,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediatorMock,
                 )
 
@@ -425,6 +432,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
 
@@ -520,6 +528,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
 
@@ -614,6 +623,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
 
@@ -687,6 +697,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
 
@@ -747,6 +758,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
 
@@ -804,6 +816,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
 
@@ -841,6 +854,7 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
 
@@ -909,6 +923,7 @@ class OppgaveMediatorTest {
                             } throws BehandlingException("Behandling krever ikke totrinnskontroll", 403)
                         },
                     utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -981,6 +996,7 @@ class OppgaveMediatorTest {
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(relaxed = true),
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -1066,6 +1082,7 @@ class OppgaveMediatorTest {
                 behandlingKlient = behandlingKlientMock,
                 oppslag = oppslagMock,
                 utsendingMediator = mockk(),
+                meldingOmVedtakKlient = mockk(),
             ).also {
                 it.setRapidsConnection(testRapid)
             }

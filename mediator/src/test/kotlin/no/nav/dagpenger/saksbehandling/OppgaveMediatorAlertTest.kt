@@ -25,6 +25,7 @@ class OppgaveMediatorAlertTest {
             oppslag = mockk(),
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
+            meldingOmVedtakKlient = mockk(),
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
 
             oppgaveMediator.settOppgaveKlarTilBehandling(

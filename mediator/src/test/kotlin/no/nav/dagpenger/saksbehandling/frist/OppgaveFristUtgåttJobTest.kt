@@ -27,6 +27,7 @@ class OppgaveFristUtgåttJobTest {
                     oppslag = mockk(),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
                 )
             val saksbehandlerIdent1 = "ident 1"
             val saksbehandlerIdent2 = "ident 2"

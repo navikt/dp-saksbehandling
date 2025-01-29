@@ -1,7 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
@@ -31,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -42,6 +45,7 @@ class OppgaveMediator(
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
     private val oppslag: Oppslag,
+    private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
 
@@ -188,6 +192,7 @@ class OppgaveMediator(
                                 logger.error { "Feil ved godkjenning av behandling: ${it.message}" }
                             }.getOrThrow()
                         }
+
                         false -> {
                             throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
                         }
@@ -262,6 +267,50 @@ class OppgaveMediator(
                 logger.info {
                     "Behandlet hendelse vedtak_fattet. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
+            }
+        }
+    }
+
+    suspend fun ferdigstillOppgave2(
+        oppgaveId: UUID,
+        saksBehandler: Saksbehandler,
+        saksbehandlerToken: String,
+    ) {
+        repository.hentOppgave(oppgaveId).let { oppgave ->
+            coroutineScope {
+                val person = async(Dispatchers.IO) { oppslag.hentPerson(oppgave.behandling.person.ident) }
+                val saksbehandler =
+                    async(Dispatchers.IO) {
+                        oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
+                            oppslag.hentBehandler(saksbehandlerIdent)
+                        } ?: throw RuntimeException("Fant ikke saksbehandler for oppgave ${oppgave.oppgaveId}")
+                    }
+                val beslutter =
+                    async(Dispatchers.IO) {
+                        oppgave.sisteBeslutter()?.let { beslutterIdent ->
+                            oppslag.hentBehandler(beslutterIdent)
+                        }
+                    }
+                val html =
+                    meldingOmVedtakKlient.hentMeldingOmVedtak(
+                        person = person.await(),
+                        saksbehandler = saksbehandler.await(),
+                        beslutter = beslutter.await(),
+                        behandlingId = oppgave.behandling.behandlingId,
+                        saksbehandlerToken,
+                    ).onSuccess { html ->
+                        ferdigstillOppgave(
+                            godkjentBehandlingHendelse =
+                                GodkjentBehandlingHendelse(
+                                    oppgaveId = oppgaveId,
+                                    meldingOmVedtak = html,
+                                    utførtAv = saksBehandler,
+                                ),
+                            saksbehandlerToken = saksbehandlerToken,
+                        )
+                    }.onFailure {
+                        logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: ${oppgave.behandling.behandlingId}" }
+                    }
             }
         }
     }

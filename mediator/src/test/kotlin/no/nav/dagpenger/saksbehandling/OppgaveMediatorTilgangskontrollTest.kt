@@ -69,6 +69,7 @@ class OppgaveMediatorTilgangskontrollTest {
                 oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
+                meldingOmVedtakKlient = mockk(),
             )
 
         if (forventetTilgang) {
@@ -89,6 +90,7 @@ class OppgaveMediatorTilgangskontrollTest {
                 oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
+                meldingOmVedtakKlient = mockk(),
             )
 
         shouldNotThrow<ManglendeTilgang> {
