@@ -81,9 +81,7 @@ internal object OppgaveApiTestHelper {
                 installerApis(
                     oppgaveMediator,
                     OppgaveDTOMapper(
-                        pdlKlient,
-                        relevanteJournalpostIdOppslag,
-                        saksbehandlerOppslag,
+                        Oppslag(pdlKlient, relevanteJournalpostIdOppslag, saksbehandlerOppslag),
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                     ),
                     mockk(relaxed = true),

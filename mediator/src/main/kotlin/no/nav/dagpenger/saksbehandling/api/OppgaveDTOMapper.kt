@@ -16,27 +16,23 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
-import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
 internal class OppgaveDTOMapper(
-    private val pdlKlient: PDLKlient,
-    private val relevanteJournalpostIdOppslag: RelevanteJournalpostIdOppslag,
-    private val saksbehandlerOppslag: SaksbehandlerOppslag,
+    private val oppslag: Oppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
     suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
         return coroutineScope {
-            val person = async { pdlKlient.person(oppgave.behandling.person.ident).getOrThrow() }
-            val journalpostIder = async { relevanteJournalpostIdOppslag.hentJournalpostIder(oppgave) }
+            val person = async { oppslag.hentPerson(oppgave.behandling.person.ident) }
+            val journalpostIder = async { oppslag.hentJournalpostIder(oppgave) }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
-                    async { saksbehandlerOppslag.hentSaksbehandler(saksbehandlerIdent) }
+                    async { oppslag.hentBehandler(saksbehandlerIdent) }
                 }
             val sisteBeslutterDTO =
                 oppgave.sisteBeslutter()?.let { beslutterIdent ->
-                    async { saksbehandlerOppslag.hentSaksbehandler(beslutterIdent) }
+                    async { oppslag.hentBehandler(beslutterIdent) }
                 }
 
             val oppgaveHistorikk =

@@ -9,6 +9,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
+import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
@@ -81,12 +82,16 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
     private val saksbehandlerOppslag =
         CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider))
+    private val oppslag: Oppslag =
+        Oppslag(
+            pdlKlient = pdlKlient,
+            relevanteJournalpostIdOppslag = RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
+            saksbehandlerOppslag = saksbehandlerOppslag,
+        )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
-            pdlKlient,
-            RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
-            saksbehandlerOppslag,
-            OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+            oppslag = oppslag,
+            oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
         )
     private val utsendingAlarmJob: Timer
 
