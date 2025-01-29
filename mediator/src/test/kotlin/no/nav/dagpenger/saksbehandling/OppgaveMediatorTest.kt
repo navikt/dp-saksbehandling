@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
@@ -25,6 +26,8 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -47,9 +50,11 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -59,6 +64,19 @@ class OppgaveMediatorTest {
     private val testIdent = "12345612345"
     private val saksbehandler = Saksbehandler("saksbehandlerIdent", setOf())
     private val beslutter = Saksbehandler("beslutterIdent", setOf(), setOf(BESLUTTER))
+    private val behandlerDTO =
+        BehandlerDTO(
+            ident = "saksbehandlerIdent",
+            fornavn = "Saks",
+            etternavn = "Behandler",
+            enhet =
+                BehandlerEnhetDTO(
+                    navn = "Enhet",
+                    enhetNr = "1234",
+                    postadresse = "Postadresse",
+                ),
+        )
+
     private val testInspektør =
         Saksbehandler(
             "beslutterIdent",
@@ -119,11 +137,16 @@ class OppgaveMediatorTest {
             coEvery { it.opprettUtsending(any(), any(), any()) } returns UUIDv7.ny()
         }
 
+    private val saksbehandlerOppslagMock =
+        mockk<SaksbehandlerOppslag>().also {
+            coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns behandlerDTO
+        }
+
     private val oppslagMock =
         Oppslag(
             pdlKlient = pdlKlientMock,
             relevanteJournalpostIdOppslag = mockk(),
-            saksbehandlerOppslag = mockk(),
+            saksbehandlerOppslag = saksbehandlerOppslagMock,
             skjermingKlient = skjermingKlientMock,
         )
 
@@ -339,13 +362,26 @@ class OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
+        val meldingOmVedtakKlientMock =
+            mockk<MeldingOmVedtakKlient>().also {
+                coEvery {
+                    it.hentMeldingOmVedtak(
+                        person = any(),
+                        saksbehandler = any(),
+                        beslutter = any(),
+                        behandlingId = any(),
+                        saksbehandlerToken = any(),
+                    )
+                } returns Result.success("<html>brev</html>")
+            }
+
         withMigratedDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
-                    meldingOmVedtakKlient = mockk(),
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     utsendingMediator = utsendingMediatorMock,
                 )
 
@@ -396,15 +432,13 @@ class OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
-            oppgaveMediator.ferdigstillOppgave(
-                godkjentBehandlingHendelse =
-                    GodkjentBehandlingHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        meldingOmVedtak = "<html>brev</html>",
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = "token",
-            )
+            runBlocking {
+                oppgaveMediator.ferdigstillOppgave2(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksBehandler = saksbehandler,
+                    saksbehandlerToken = "token",
+                )
+            }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
