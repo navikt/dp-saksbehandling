@@ -7,6 +7,7 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.OPPGAVE_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
+import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -29,8 +30,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
-import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,10 +39,9 @@ private val logger = KotlinLogging.logger {}
 
 class OppgaveMediator(
     private val repository: OppgaveRepository,
-    private val skjermingKlient: SkjermingKlient,
-    private val pdlKlient: PDLKlient,
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
+    private val oppslag: Oppslag,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
 
@@ -410,12 +408,12 @@ class OppgaveMediator(
         return runBlocking {
             val skjermesSomEgneAnsatte =
                 async {
-                    skjermingKlient.erSkjermetPerson(ident).getOrThrow()
+                    oppslag.erSkjermetPerson(ident)
                 }
 
             val adresseBeskyttelseGradering =
                 async {
-                    pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
+                    oppslag.erAdressebeskyttetPerson(ident)
                 }
 
             Person(

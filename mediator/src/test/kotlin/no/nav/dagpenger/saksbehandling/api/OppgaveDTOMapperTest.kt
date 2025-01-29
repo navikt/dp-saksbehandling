@@ -70,6 +70,7 @@ class OppgaveDTOMapperTest {
                                         ),
                                 )
                         },
+                        skjermingKlient = mockk(),
                     ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {

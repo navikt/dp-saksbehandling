@@ -24,8 +24,7 @@ class OppgaveFristUtgåttJobTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(ds),
-                    skjermingKlient = mockk(),
-                    pdlKlient = mockk(),
+                    oppslag = mockk(),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                 )

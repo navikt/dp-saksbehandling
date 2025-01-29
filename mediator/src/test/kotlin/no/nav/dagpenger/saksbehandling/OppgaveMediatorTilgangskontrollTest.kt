@@ -66,8 +66,7 @@ class OppgaveMediatorTilgangskontrollTest {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = oppgaveRepositoryMock,
-                skjermingKlient = mockk(),
-                pdlKlient = mockk(),
+                oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
             )
@@ -87,8 +86,7 @@ class OppgaveMediatorTilgangskontrollTest {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = oppgaveRepositoryMock,
-                skjermingKlient = mockk(),
-                pdlKlient = mockk(),
+                oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
             )

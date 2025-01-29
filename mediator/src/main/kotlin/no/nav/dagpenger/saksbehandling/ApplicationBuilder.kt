@@ -70,14 +70,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.dpBehandlingOboExchanger,
         )
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
-    private val oppgaveMediator =
-        OppgaveMediator(
-            repository = oppgaveRepository,
-            skjermingKlient = skjermingKlient,
-            pdlKlient = pdlKlient,
-            behandlingKlient = behandlingKlient,
-            utsendingMediator = utsendingMediator,
-        )
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
     private val saksbehandlerOppslag =
@@ -87,6 +79,14 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             pdlKlient = pdlKlient,
             relevanteJournalpostIdOppslag = RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
             saksbehandlerOppslag = saksbehandlerOppslag,
+            skjermingKlient = skjermingKlient,
+        )
+    private val oppgaveMediator =
+        OppgaveMediator(
+            repository = oppgaveRepository,
+            oppslag = oppslag,
+            behandlingKlient = behandlingKlient,
+            utsendingMediator = utsendingMediator,
         )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(

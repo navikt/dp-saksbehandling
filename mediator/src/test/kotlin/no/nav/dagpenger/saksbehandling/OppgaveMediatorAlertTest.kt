@@ -22,8 +22,7 @@ class OppgaveMediatorAlertTest {
                 mockk<OppgaveRepository>().also {
                     every { it.finnOppgaveFor(any()) } returns null
                 },
-            skjermingKlient = mockk(),
-            pdlKlient = mockk(),
+            oppslag = mockk(),
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
