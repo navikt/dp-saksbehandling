@@ -44,17 +44,18 @@ class MeldingOmVedtakKlient(
         saksbehandler: BehandlerDTO,
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
-        saksbehandlerToken: String
+        saksbehandlerToken: String,
     ): Result<String> {
-        val meldingOmVedtakDataDTO = MeldingOmVedtakDataDTO(
-            fornavn = person.fornavn,
-            etternavn = person.etternavn,
-            fodselsnummer = person.ident,
-            saksbehandler = saksbehandler,
-            beslutter = beslutter
-        )
+        val meldingOmVedtakDataDTO =
+            MeldingOmVedtakDataDTO(
+                fornavn = person.fornavn,
+                etternavn = person.etternavn,
+                fodselsnummer = person.ident,
+                saksbehandler = saksbehandler,
+                beslutter = beslutter,
+            )
         return kotlin.runCatching {
-            httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/{$behandlingId}/vedtaksmelding") {
+            httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
                 header("Authorization", "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
@@ -71,6 +72,5 @@ private data class MeldingOmVedtakDataDTO(
     val fodselsnummer: String,
     val saksbehandler: BehandlerDTO,
     val mellomnavn: String? = null,
-    val beslutter: BehandlerDTO? = null
-
+    val beslutter: BehandlerDTO? = null,
 )
