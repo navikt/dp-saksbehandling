@@ -165,7 +165,15 @@ class OppgaveTilstandTest {
     @Test
     fun `Skal kunne avbryte en oppgave fra alle lovlige tilstander`() {
         val lovligeTilstander =
-            setOf(OPPRETTET, PAA_VENT, KLAR_TIL_BEHANDLING, UNDER_BEHANDLING, KLAR_TIL_KONTROLL, UNDER_KONTROLL, BEHANDLES_I_ARENA)
+            setOf(
+                OPPRETTET,
+                PAA_VENT,
+                KLAR_TIL_BEHANDLING,
+                UNDER_BEHANDLING,
+                KLAR_TIL_KONTROLL,
+                UNDER_KONTROLL,
+                BEHANDLES_I_ARENA,
+            )
 
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand, behandler = null)
@@ -186,6 +194,58 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.behandlesIArena(
                     BehandlingAvbruttHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag til vedtak fra alle lovlige tilstander`() {
+        val lovligeTilstander =
+            setOf(
+                FERDIG_BEHANDLET,
+                KLAR_TIL_BEHANDLING,
+                OPPRETTET,
+                PAA_VENT,
+                UNDER_BEHANDLING,
+                UNDER_KONTROLL,
+            )
+
+        lovligeTilstander.forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand, behandler = null)
+            shouldNotThrowAny {
+                oppgave.oppgaveKlarTilBehandling(
+                    ForslagTilVedtakHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                    ),
+                )
+            }
+
+            when (tilstand) {
+                FERDIG_BEHANDLET -> FERDIG_BEHANDLET
+                KLAR_TIL_BEHANDLING -> KLAR_TIL_BEHANDLING
+                KLAR_TIL_KONTROLL -> KLAR_TIL_KONTROLL
+                OPPRETTET -> KLAR_TIL_BEHANDLING
+                PAA_VENT -> PAA_VENT
+                UNDER_BEHANDLING -> UNDER_BEHANDLING
+                UNDER_KONTROLL -> UNDER_KONTROLL
+                else -> throw IllegalStateException("Ukjent tilstand")
+            }.let { forventetTilstand ->
+                oppgave.tilstand().type shouldBe forventetTilstand
+            }
+        }
+
+        (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand)
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.oppgaveKlarTilBehandling(
+                    ForslagTilVedtakHendelse(
                         behandlingId = oppgave.behandling.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
@@ -294,7 +354,11 @@ class OppgaveTilstandTest {
 
     @Test
     fun `Skal endre emneknagger hvis nytt forslag til vedtak mottas i tilstand KLAR_TIL_BEHANDLING`() {
-        val oppgave = lagOppgave(KLAR_TIL_BEHANDLING, emneknagger = setOf("skalSlettes") + kontrollEmneknagger + påVentEmneknagger)
+        val oppgave =
+            lagOppgave(
+                KLAR_TIL_BEHANDLING,
+                emneknagger = setOf("skalSlettes") + kontrollEmneknagger + påVentEmneknagger,
+            )
         val nyeEmneknagger = setOf("knagg1", "knagg2")
         shouldNotThrow<Exception> {
             oppgave.oppgaveKlarTilBehandling(
@@ -350,19 +414,9 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Ikke tillatt med forslag til vedtak, tildel eller fjern ansvar i tilstand FerdigBehandlet`() {
+    fun `Ikke tillatt med tildel eller fjern ansvar i tilstand FerdigBehandlet`() {
         val oppgave = lagOppgave(FERDIG_BEHANDLET)
 
-        shouldThrow<UlovligTilstandsendringException> {
-            oppgave.oppgaveKlarTilBehandling(
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    søknadId = UUIDv7.ny(),
-                    behandlingId = UUIDv7.ny(),
-                    utførtAv = Applikasjon("dp-behandling"),
-                ),
-            )
-        }
         shouldThrow<UlovligTilstandsendringException> {
             oppgave.fjernAnsvar(FjernOppgaveAnsvarHendelse(UUIDv7.ny(), saksbehandler))
         }

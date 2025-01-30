@@ -460,7 +460,15 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
-            logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
+            logger.warn { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
+            return Handling.INGEN
+        }
+
+        override fun oppgaveKlarTilBehandling(
+            oppgave: Oppgave,
+            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+        ): Handling {
+            logger.warn { "Mottok forslagTilVedtakHendelse i tilstand $type. Ignorerer meldingen." }
             return Handling.INGEN
         }
     }
@@ -607,6 +615,14 @@ data class Oppgave private constructor(
 
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
             return BESLUTT
+        }
+
+        override fun oppgaveKlarTilBehandling(
+            oppgave: Oppgave,
+            forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
+        ): Handling {
+            logger.warn { "Mottok forslagTilVedtakHendelse i tilstand $type. Ignorerer meldingen." }
+            return Handling.INGEN
         }
 
         override fun tildel(

@@ -116,4 +116,14 @@ object Configuration {
     val kafkaStreamProperties by lazy {
         KafkaConfiguration.kafkaStreamsConfiguration(consumerId = kafkaStreamsConsumerId)
     }
+
+    val dpMeldingOmVedtakBaseUrl = "http://dp-melding-om-vedtak"
+    val dpMeldingOmVedtakOboExchanger: (String) -> String by lazy {
+        val scope = properties[Key("DP_MELDING_OM_VEDTAK_API_SCOPE", stringType)]
+        { token: String ->
+            val accessToken = azureAdClient.onBehalfOf(token, scope).access_token
+            requireNotNull(accessToken) { "Failed to get access token" }
+            accessToken
+        }
+    }
 }

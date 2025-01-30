@@ -11,7 +11,7 @@ import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-internal class RelevanteJournalpostIdOppslag(
+class RelevanteJournalpostIdOppslag(
     private val journalpostIdClient: JournalpostIdClient,
     private val utsendingRepository: UtsendingRepository,
 ) {

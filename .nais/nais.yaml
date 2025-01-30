@@ -59,6 +59,8 @@ spec:
       value: {{ journalpostid.scope }}
     - name: DP_BEHANDLING_API_SCOPE
       value: {{ dp-behandling.scope }}
+    - name: DP_MELDING_OM_VEDTAK_API_SCOPE
+      value: {{ dp-melding-om-vedtak.scope }}
 
   azure:
     application:
@@ -88,6 +90,8 @@ spec:
         - application: dp-oppslag-journalpost-id
           namespace: teamdagpenger
         - application: dp-behandling
+          namespace: teamdagpenger
+        - application: dp-melding-om-vedtak
           namespace: teamdagpenger
         - application: norg2
           namespace: org

@@ -435,6 +435,28 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Skal kunne ferdigstille en oppgave med melding om vedtak v2`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                coEvery { it.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak-v2") {
+                autentisert(token = saksbehandlerToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            coVerify(exactly = 1) {
+                oppgaveMediatorMock.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken)
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne sende en oppgave til kontroll`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
@@ -833,7 +855,8 @@ class OppgaveApiTest {
                                     tidspunkt = tidspunkt,
                                     behandler =
                                         OppgaveHistorikkBehandlerDTO(
-                                            navn = "Ole Doffen", rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
+                                            navn = "Ole Doffen",
+                                            rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
                                         ),
                                     tittel = "Notat",
                                     body = "Dette er et notat",

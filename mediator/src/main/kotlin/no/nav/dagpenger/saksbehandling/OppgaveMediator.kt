@@ -1,12 +1,15 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.OPPGAVE_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
+import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -29,9 +32,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
-import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -40,10 +42,10 @@ private val logger = KotlinLogging.logger {}
 
 class OppgaveMediator(
     private val repository: OppgaveRepository,
-    private val skjermingKlient: SkjermingKlient,
-    private val pdlKlient: PDLKlient,
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
+    private val oppslag: Oppslag,
+    private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
 
@@ -190,6 +192,7 @@ class OppgaveMediator(
                                 logger.error { "Feil ved godkjenning av behandling: ${it.message}" }
                             }.getOrThrow()
                         }
+
                         false -> {
                             throw BehandlingKreverIkkeTotrinnskontrollException("Behandling krever ikke totrinnskontroll")
                         }
@@ -268,11 +271,56 @@ class OppgaveMediator(
         }
     }
 
+    suspend fun ferdigstillOppgave2(
+        oppgaveId: UUID,
+        saksBehandler: Saksbehandler,
+        saksbehandlerToken: String,
+    ) {
+        repository.hentOppgave(oppgaveId).let { oppgave ->
+            coroutineScope {
+                val person = async(Dispatchers.IO) { oppslag.hentPerson(oppgave.behandling.person.ident) }
+                val saksbehandler =
+                    async(Dispatchers.IO) {
+                        oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
+                            oppslag.hentBehandler(saksbehandlerIdent)
+                        } ?: throw RuntimeException("Fant ikke saksbehandler for oppgave ${oppgave.oppgaveId}")
+                    }
+                val beslutter =
+                    async(Dispatchers.IO) {
+                        oppgave.sisteBeslutter()?.let { beslutterIdent ->
+                            oppslag.hentBehandler(beslutterIdent)
+                        }
+                    }
+
+                meldingOmVedtakKlient.hentMeldingOmVedtak(
+                    person = person.await(),
+                    saksbehandler = saksbehandler.await(),
+                    beslutter = beslutter.await(),
+                    behandlingId = oppgave.behandling.behandlingId,
+                    saksbehandlerToken,
+                ).onSuccess { html ->
+                    ferdigstillOppgave(
+                        godkjentBehandlingHendelse =
+                            GodkjentBehandlingHendelse(
+                                oppgaveId = oppgaveId,
+                                meldingOmVedtak = html,
+                                utførtAv = saksBehandler,
+                            ),
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                }.onFailure {
+                    logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: ${oppgave.behandling.behandlingId}" }
+                }
+            }
+        }
+    }
+
     fun ferdigstillOppgave(
         godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         saksbehandlerToken: String,
+        oppgaveTilFerdigstilling: Oppgave? = null,
     ) {
-        repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
+        oppgaveTilFerdigstilling ?: repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
@@ -410,12 +458,12 @@ class OppgaveMediator(
         return runBlocking {
             val skjermesSomEgneAnsatte =
                 async {
-                    skjermingKlient.erSkjermetPerson(ident).getOrThrow()
+                    oppslag.erSkjermetPerson(ident)
                 }
 
             val adresseBeskyttelseGradering =
                 async {
-                    pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
+                    oppslag.erAdressebeskyttetPerson(ident)
                 }
 
             Person(

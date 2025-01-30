@@ -9,6 +9,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
+import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
@@ -41,6 +42,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.helse.rapids_rivers.RapidApplication
 import java.util.Timer
 
@@ -69,24 +71,33 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.dpBehandlingOboExchanger,
         )
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
-    private val oppgaveMediator =
-        OppgaveMediator(
-            repository = oppgaveRepository,
-            skjermingKlient = skjermingKlient,
-            pdlKlient = pdlKlient,
-            behandlingKlient = behandlingKlient,
-            utsendingMediator = utsendingMediator,
-        )
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
     private val saksbehandlerOppslag =
         CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider))
+    private val oppslag: Oppslag =
+        Oppslag(
+            pdlKlient = pdlKlient,
+            relevanteJournalpostIdOppslag = RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
+            saksbehandlerOppslag = saksbehandlerOppslag,
+            skjermingKlient = skjermingKlient,
+        )
+    private val oppgaveMediator =
+        OppgaveMediator(
+            repository = oppgaveRepository,
+            oppslag = oppslag,
+            behandlingKlient = behandlingKlient,
+            utsendingMediator = utsendingMediator,
+            meldingOmVedtakKlient =
+                MeldingOmVedtakKlient(
+                    dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
+                    tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
+                ),
+        )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
-            pdlKlient,
-            RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
-            saksbehandlerOppslag,
-            OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+            oppslag = oppslag,
+            oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
         )
     private val utsendingAlarmJob: Timer
 

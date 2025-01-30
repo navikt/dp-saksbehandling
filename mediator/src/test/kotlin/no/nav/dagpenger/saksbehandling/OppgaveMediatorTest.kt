@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
@@ -24,6 +25,9 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -46,9 +50,11 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -58,6 +64,19 @@ class OppgaveMediatorTest {
     private val testIdent = "12345612345"
     private val saksbehandler = Saksbehandler("saksbehandlerIdent", setOf())
     private val beslutter = Saksbehandler("beslutterIdent", setOf(), setOf(BESLUTTER))
+    private val behandlerDTO =
+        BehandlerDTO(
+            ident = "saksbehandlerIdent",
+            fornavn = "Saks",
+            etternavn = "Behandler",
+            enhet =
+                BehandlerEnhetDTO(
+                    navn = "Enhet",
+                    enhetNr = "1234",
+                    postadresse = "Postadresse",
+                ),
+        )
+
     private val testInspektør =
         Saksbehandler(
             "beslutterIdent",
@@ -71,7 +90,6 @@ class OppgaveMediatorTest {
                 STRENGT_FORTROLIG_ADRESSE_UTLAND,
             ),
         )
-    private val sak = Sak("12342", "Arena")
     private val testRapid = TestRapid()
     private val pdlKlientMock =
         mockk<PDLKlient>(relaxed = true).also {
@@ -118,6 +136,20 @@ class OppgaveMediatorTest {
         mockk<UtsendingMediator>(relaxed = true).also {
             coEvery { it.opprettUtsending(any(), any(), any()) } returns UUIDv7.ny()
         }
+
+    private val saksbehandlerOppslagMock =
+        mockk<SaksbehandlerOppslag>().also {
+            coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns behandlerDTO
+        }
+
+    private val oppslagMock =
+        Oppslag(
+            pdlKlient = pdlKlientMock,
+            relevanteJournalpostIdOppslag = mockk(),
+            saksbehandlerOppslag = saksbehandlerOppslagMock,
+            skjermingKlient = skjermingKlientMock,
+        )
+
     private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
 
     @Test
@@ -127,10 +159,10 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(dataSource),
-                    skjermingKlientMock,
-                    pdlKlientMock,
-                    behandlingKlientMock,
-                    mockk(),
+                    oppslag = oppslagMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = utsendingMediatorMock,
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -155,10 +187,10 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(dataSource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -184,10 +216,10 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(dataSource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
                 )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat() shouldBe null
@@ -222,7 +254,13 @@ class OppgaveMediatorTest {
         withMigratedDb { datasource ->
             val repo = PostgresOppgaveRepository(datasource)
             val oppgaveMediator =
-                OppgaveMediator(repo, skjermingKlientMock, pdlKlientMock, behandlingKlientMock, mockk()).also {
+                OppgaveMediator(
+                    repository = repo,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = mockk(),
+                ).also {
                     it.setRapidsConnection(testRapid)
                 }
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
@@ -249,9 +287,9 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
 
@@ -290,10 +328,10 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlientMock,
-                    pdlKlientMock,
-                    behandlingKlientMock,
-                    mockk(),
+                    oppslag = oppslagMock,
+                    behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
+                    utsendingMediator = utsendingMediatorMock,
                 )
 
             oppgaveMediator.settOppgaveKlarTilBehandling(
@@ -324,13 +362,26 @@ class OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
+        val meldingOmVedtakKlientMock =
+            mockk<MeldingOmVedtakKlient>().also {
+                coEvery {
+                    it.hentMeldingOmVedtak(
+                        person = any(),
+                        saksbehandler = any(),
+                        beslutter = any(),
+                        behandlingId = any(),
+                        saksbehandlerToken = any(),
+                    )
+                } returns Result.success("<html>brev</html>")
+            }
+
         withMigratedDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     utsendingMediator = utsendingMediatorMock,
                 )
 
@@ -381,15 +432,13 @@ class OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
-            oppgaveMediator.ferdigstillOppgave(
-                godkjentBehandlingHendelse =
-                    GodkjentBehandlingHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        meldingOmVedtak = "<html>brev</html>",
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = "token",
-            )
+            runBlocking {
+                oppgaveMediator.ferdigstillOppgave2(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksBehandler = saksbehandler,
+                    saksbehandlerToken = "token",
+                )
+            }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
@@ -415,9 +464,9 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
 
@@ -511,9 +560,9 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
 
@@ -606,9 +655,9 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
 
@@ -680,9 +729,9 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
 
@@ -741,9 +790,9 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
 
@@ -799,9 +848,9 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
 
@@ -837,9 +886,9 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
 
@@ -896,8 +945,7 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient =
                         behandlingKlientMock.also {
                             coEvery {
@@ -909,6 +957,7 @@ class OppgaveMediatorTest {
                             } throws BehandlingException("Behandling krever ikke totrinnskontroll", 403)
                         },
                     utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -978,10 +1027,10 @@ class OppgaveMediatorTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     repository = PostgresOppgaveRepository(datasource),
-                    skjermingKlient = skjermingKlientMock,
-                    pdlKlient = pdlKlientMock,
+                    oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(relaxed = true),
+                    meldingOmVedtakKlient = mockk(),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -1064,10 +1113,10 @@ class OppgaveMediatorTest {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = PostgresOppgaveRepository(this),
-                skjermingKlient = skjermingKlientMock,
-                pdlKlient = pdlKlientMock,
                 behandlingKlient = behandlingKlientMock,
+                oppslag = oppslagMock,
                 utsendingMediator = mockk(),
+                meldingOmVedtakKlient = mockk(),
             ).also {
                 it.setRapidsConnection(testRapid)
             }

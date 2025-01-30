@@ -65,7 +65,6 @@ class ForslagTilVedtakMottakTest {
                         setOf(
                             "Avslag minsteinntekt", "Avslag arbeidsinntekt", "Avslag arbeidstid", "Avslag alder",
                             "Avslag andre ytelser", "Avslag medlemskap", "Avslag streik", "Avslag opphold utland",
-//                            "Avslag deltidssøker", "Avslag mobilitet", "Avslag ethvert arbeid", "Avslag arbeidsførhet",
                             "Avslag reell arbeidssøker", "Avslag ikke registrert", "Avslag utestengt", "Avslag utdanning",
                         ),
                 )

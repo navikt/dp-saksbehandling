@@ -66,10 +66,10 @@ class OppgaveMediatorTilgangskontrollTest {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = oppgaveRepositoryMock,
-                skjermingKlient = mockk(),
-                pdlKlient = mockk(),
+                oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
+                meldingOmVedtakKlient = mockk(),
             )
 
         if (forventetTilgang) {
@@ -87,10 +87,10 @@ class OppgaveMediatorTilgangskontrollTest {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = oppgaveRepositoryMock,
-                skjermingKlient = mockk(),
-                pdlKlient = mockk(),
+                oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
+                meldingOmVedtakKlient = mockk(),
             )
 
         shouldNotThrow<ManglendeTilgang> {

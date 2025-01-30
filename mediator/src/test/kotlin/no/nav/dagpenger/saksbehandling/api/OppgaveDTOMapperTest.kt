@@ -40,35 +40,38 @@ class OppgaveDTOMapperTest {
                     oprettet = etTidspunkt,
                 )
             OppgaveDTOMapper(
-                pdlKlient = pdlKlient,
-                relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
-                saksbehandlerOppslag =
-                    mockk<SaksbehandlerOppslag>().also {
-                        coEvery { it.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
-                            BehandlerDTO(
-                                ident = SAKSBEHANDLER_IDENT,
-                                fornavn = "sbfornavn",
-                                etternavn = "sbetternavn",
-                                enhet =
-                                    BehandlerEnhetDTO(
-                                        navn = "sbEnhet",
-                                        enhetNr = "sbEnhetNr",
-                                        postadresse = "sbPostadresse",
-                                    ),
-                            )
-                        coEvery { it.hentSaksbehandler(BESLUTTER_IDENT) } returns
-                            BehandlerDTO(
-                                ident = BESLUTTER_IDENT,
-                                fornavn = "befornavn",
-                                etternavn = "beetternavn",
-                                enhet =
-                                    BehandlerEnhetDTO(
-                                        navn = "beEnhet",
-                                        enhetNr = "beEnhetNr",
-                                        postadresse = "bePostadresse",
-                                    ),
-                            )
-                    },
+                oppslag =
+                    Oppslag(
+                        pdlKlient,
+                        relevanteJournalpostIdOppslag,
+                        mockk<SaksbehandlerOppslag>().also {
+                            coEvery { it.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
+                                BehandlerDTO(
+                                    ident = SAKSBEHANDLER_IDENT,
+                                    fornavn = "sbfornavn",
+                                    etternavn = "sbetternavn",
+                                    enhet =
+                                        BehandlerEnhetDTO(
+                                            navn = "sbEnhet",
+                                            enhetNr = "sbEnhetNr",
+                                            postadresse = "sbPostadresse",
+                                        ),
+                                )
+                            coEvery { it.hentSaksbehandler(BESLUTTER_IDENT) } returns
+                                BehandlerDTO(
+                                    ident = BESLUTTER_IDENT,
+                                    fornavn = "befornavn",
+                                    etternavn = "beetternavn",
+                                    enhet =
+                                        BehandlerEnhetDTO(
+                                            navn = "beEnhet",
+                                            enhetNr = "beEnhetNr",
+                                            postadresse = "bePostadresse",
+                                        ),
+                                )
+                        },
+                        skjermingKlient = mockk(),
+                    ),
                 oppgaveHistorikkDTOMapper =
                     mockk<OppgaveHistorikkDTOMapper>().also {
                         coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
