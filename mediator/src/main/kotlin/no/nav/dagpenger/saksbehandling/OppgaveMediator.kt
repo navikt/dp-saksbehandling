@@ -291,26 +291,26 @@ class OppgaveMediator(
                             oppslag.hentBehandler(beslutterIdent)
                         }
                     }
-                val html =
-                    meldingOmVedtakKlient.hentMeldingOmVedtak(
-                        person = person.await(),
-                        saksbehandler = saksbehandler.await(),
-                        beslutter = beslutter.await(),
-                        behandlingId = oppgave.behandling.behandlingId,
-                        saksbehandlerToken,
-                    ).onSuccess { html ->
-                        ferdigstillOppgave(
-                            godkjentBehandlingHendelse =
-                                GodkjentBehandlingHendelse(
-                                    oppgaveId = oppgaveId,
-                                    meldingOmVedtak = html,
-                                    utførtAv = saksBehandler,
-                                ),
-                            saksbehandlerToken = saksbehandlerToken,
-                        )
-                    }.onFailure {
-                        logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: ${oppgave.behandling.behandlingId}" }
-                    }
+
+                meldingOmVedtakKlient.hentMeldingOmVedtak(
+                    person = person.await(),
+                    saksbehandler = saksbehandler.await(),
+                    beslutter = beslutter.await(),
+                    behandlingId = oppgave.behandling.behandlingId,
+                    saksbehandlerToken,
+                ).onSuccess { html ->
+                    ferdigstillOppgave(
+                        godkjentBehandlingHendelse =
+                            GodkjentBehandlingHendelse(
+                                oppgaveId = oppgaveId,
+                                meldingOmVedtak = html,
+                                utførtAv = saksBehandler,
+                            ),
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                }.onFailure {
+                    logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: ${oppgave.behandling.behandlingId}" }
+                }
             }
         }
     }
@@ -318,8 +318,9 @@ class OppgaveMediator(
     fun ferdigstillOppgave(
         godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
         saksbehandlerToken: String,
+        oppgaveTilFerdigstilling: Oppgave? = null,
     ) {
-        repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
+        oppgaveTilFerdigstilling ?: repository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandling.behandlingId.toString(),
