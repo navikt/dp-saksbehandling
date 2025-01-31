@@ -37,3 +37,4 @@ dp-melding-om-vedtak:
   scope: "api://prod-gcp.teamdagpenger.dp-melding-om-vedtak/.default"
 
 wonderwalled: true
+pg_audit: true
