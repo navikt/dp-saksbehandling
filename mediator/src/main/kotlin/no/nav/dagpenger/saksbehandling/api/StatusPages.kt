@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.net.URI
 import java.time.format.DateTimeParseException
 
@@ -158,6 +159,19 @@ fun Application.statusPages() {
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Conflict, problem)
+                }
+                is MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak -> {
+                    val problem =
+                        HttpProblemDTO(
+                            title = "Feil ved laging av melding om vedtak",
+                            detail = cause.message,
+                            status = HttpStatusCode.InternalServerError.value,
+                            instance = call.request.path(),
+                            type =
+                                URI.create("dagpenger.nav.no/saksbehandling:problem:feil-lag-melding-om-vedtak")
+                                    .toString(),
+                        )
+                    call.respond(HttpStatusCode.InternalServerError, problem)
                 }
 
                 else -> {

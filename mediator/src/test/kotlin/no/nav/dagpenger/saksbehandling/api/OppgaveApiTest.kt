@@ -77,6 +77,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -448,6 +449,31 @@ class OppgaveApiTest {
                 autentisert(token = saksbehandlerToken)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            coVerify(exactly = 1) {
+                oppgaveMediatorMock.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken)
+            }
+        }
+    }
+
+    @Test
+    fun `Feilhåndtering for melding om vedtak v2`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                coEvery {
+                    it.ferdigstillOppgave2(any(), any(), any())
+                } throws MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak("Testmelding")
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak-v2") {
+                autentisert(token = saksbehandlerToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.InternalServerError
+                response.bodyAsText() shouldContain "Feil ved laging av melding om vedtak"
             }
 
             coVerify(exactly = 1) {

@@ -292,7 +292,7 @@ class OppgaveMediator(
                         }
                     }
 
-                meldingOmVedtakKlient.hentMeldingOmVedtak(
+                meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
                     person = person.await(),
                     saksbehandler = saksbehandler.await(),
                     beslutter = beslutter.await(),
@@ -309,7 +309,7 @@ class OppgaveMediator(
                         saksbehandlerToken = saksbehandlerToken,
                     )
                 }.onFailure {
-                    logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: ${oppgave.behandling.behandlingId}" }
+                    throw it
                 }
             }
         }

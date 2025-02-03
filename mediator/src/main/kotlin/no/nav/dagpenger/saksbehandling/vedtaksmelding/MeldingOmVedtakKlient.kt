@@ -39,7 +39,7 @@ class MeldingOmVedtakKlient(
         }
     }
 
-    suspend fun hentMeldingOmVedtak(
+    suspend fun lagOgHentMeldingOmVedtak(
         person: PDLPersonIntern,
         saksbehandler: BehandlerDTO,
         beslutter: BehandlerDTO?,
@@ -62,8 +62,11 @@ class MeldingOmVedtakKlient(
             }.bodyAsText()
         }.onFailure {
             logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: $behandlingId" }
+            throw KanIkkeLageMeldingOmVedtak("Kan ikke lage melding om vedtak for behandlingId: $behandlingId")
         }
     }
+
+    class KanIkkeLageMeldingOmVedtak(message: String) : RuntimeException(message)
 }
 
 private data class MeldingOmVedtakDataDTO(

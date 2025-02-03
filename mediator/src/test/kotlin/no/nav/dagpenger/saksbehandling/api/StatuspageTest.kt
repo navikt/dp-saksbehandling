@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeBeslutterTilgan
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
 
@@ -46,6 +47,35 @@ class StatuspageTest {
                       "title": "Ressurs ikke funnet",
                       "detail": "$message",
                       "status": 404,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Error håndtering av KanIkkeLageMeldingOmVedtak`() {
+        testApplication {
+            val message = "Kan ikke lage melding om vedtak"
+            val path = "/KanIkkeLageMeldingOmVedtak"
+            application {
+                installerApis(mockk(), mockk(), mockk())
+                routing {
+                    get(path) { throw MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak(message) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.InternalServerError
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:feil-lag-melding-om-vedtak",
+                      "title": "Feil ved laging av melding om vedtak",
+                      "detail": "$message",
+                      "status": 500,
                       "instance": "$path"
                     }
                     """.trimIndent()

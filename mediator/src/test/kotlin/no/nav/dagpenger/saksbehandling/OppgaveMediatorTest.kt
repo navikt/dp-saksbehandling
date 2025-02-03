@@ -365,7 +365,7 @@ class OppgaveMediatorTest {
         val meldingOmVedtakKlientMock =
             mockk<MeldingOmVedtakKlient>().also {
                 coEvery {
-                    it.hentMeldingOmVedtak(
+                    it.lagOgHentMeldingOmVedtak(
                         person = any(),
                         saksbehandler = any(),
                         beslutter = any(),
@@ -442,6 +442,93 @@ class OppgaveMediatorTest {
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+        }
+    }
+
+    @Test
+    fun `Livssyklus for søknadsbehandling som feiler ved laging av html`() {
+        val meldingOmVedtakKlientMock =
+            mockk<MeldingOmVedtakKlient>().also {
+                coEvery {
+                    it.lagOgHentMeldingOmVedtak(
+                        person = any(),
+                        saksbehandler = any(),
+                        beslutter = any(),
+                        behandlingId = any(),
+                        saksbehandlerToken = any(),
+                    )
+                } returns Result.failure(MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak("Feil ved henting/lagring av melding om vedtak"))
+            }
+
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(datasource),
+                    oppslag = oppslagMock,
+                    behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
+                    utsendingMediator = utsendingMediatorMock,
+                )
+
+            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
+
+            val søknadId = UUIDv7.ny()
+            val behandlingId = UUIDv7.ny()
+            val søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                )
+
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).let { oppgaver ->
+                oppgaver.size shouldBe 1
+                oppgaver.single().behandling.hendelse shouldBe søknadsbehandlingOpprettetHendelse
+            }
+
+            oppgaveMediator.settOppgaveKlarTilBehandling(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            )
+
+            val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
+
+            oppgaverKlarTilBehandling.size shouldBe 1
+            val oppgave = oppgaverKlarTilBehandling.single()
+            oppgave.behandling.behandlingId shouldBe behandlingId
+            oppgave.emneknagger shouldContainAll emneknagger
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+
+            runBlocking {
+                shouldThrow<MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak> {
+                    oppgaveMediator.ferdigstillOppgave2(
+                        oppgaveId = oppgave.oppgaveId,
+                        saksBehandler = saksbehandler,
+                        saksbehandlerToken = "token",
+                    )
+                }
+            }
+
+            val oppgaveUnderBehandling = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            oppgaveUnderBehandling.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
