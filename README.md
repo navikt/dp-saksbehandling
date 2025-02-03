@@ -21,6 +21,7 @@ Backend-applikasjon som lytter på behandlingshendelser og håndterer oppgavebeh
 Spørsmål knyttet til koden eller prosjektet kan rettes mot:
 teamdagpenger/team-stsb
 
+* teamdagpenger/stsb på Slack
 * Eller en annen måte for omverden å kontakte teamet på
 
 ## For NAV-ansatte
