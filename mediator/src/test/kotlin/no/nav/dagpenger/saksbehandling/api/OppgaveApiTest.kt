@@ -414,7 +414,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak-v2") {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
                 autentisert(token = saksbehandlerToken)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
@@ -438,7 +438,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak-v2") {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
                 autentisert(token = saksbehandlerToken)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.InternalServerError

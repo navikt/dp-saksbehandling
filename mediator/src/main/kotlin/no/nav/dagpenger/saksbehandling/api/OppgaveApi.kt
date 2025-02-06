@@ -229,22 +229,6 @@ internal fun Application.oppgaveApi(
                         }
                     }
 
-                    route("ferdigstill/melding-om-vedtak-v2") {
-                        put {
-                            val oppgaveId = call.finnUUID("oppgaveId")
-                            withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                val saksbehandler = applicationCallParser.sakbehandler(call)
-                                val saksbehandlerToken = call.request.jwt()
-                                oppgaveMediator.ferdigstillOppgave2(
-                                    oppgaveId = oppgaveId,
-                                    saksBehandler = saksbehandler,
-                                    saksbehandlerToken = saksbehandlerToken,
-                                )
-                                call.respond(HttpStatusCode.NoContent)
-                            }
-                        }
-                    }
-
                     route("ferdigstill/melding-om-vedtak-arena") {
                         put {
                             val saksbehandler = applicationCallParser.sakbehandler(call)
