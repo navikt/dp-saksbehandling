@@ -22,7 +22,7 @@ class ForslagTilVedtakMottakTest {
     }
 
     @Test
-    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag minsteinntekt`() {
+    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag minsteinntekt og rettighet permittering`() {
         testRapid.sendTestMessage(forslagTilVedtakAvslagMinsteinntektJson)
 
         val hendelse = slot<ForslagTilVedtakHendelse>()
@@ -32,11 +32,11 @@ class ForslagTilVedtakMottakTest {
         hendelse.captured.ident shouldBe ident
         hendelse.captured.søknadId shouldBe søknadId
         hendelse.captured.behandlingId shouldBe behandlingId
-        hendelse.captured.emneknagger shouldBe setOf("Avslag minsteinntekt")
+        hendelse.captured.emneknagger shouldBe setOf("Avslag minsteinntekt", "Permittering")
     }
 
     @Test
-    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag pga alder`() {
+    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag pga alder og rettighet ordinær`() {
         testRapid.sendTestMessage(forslagTilVedtakAvslagAlderJson)
 
         verify(exactly = 1) {
@@ -45,7 +45,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf("Avslag alder"),
+                    emneknagger = setOf("Avslag alder", "Ordinære dagpenger"),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -82,7 +82,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf("Innvilgelse verneplikt"),
+                    emneknagger = setOf("Innvilgelse", "Verneplikt"),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -98,7 +98,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf("Innvilgelse ordinær"),
+                    emneknagger = setOf("Innvilgelse", "Ordinære dagpenger"),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -114,7 +114,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf("Innvilgelse permittering"),
+                    emneknagger = setOf("Innvilgelse", "Permittering"),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -130,7 +130,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf("Innvilgelse permittering fisk"),
+                    emneknagger = setOf("Innvilgelse", "Permittering fisk"),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -146,7 +146,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf("Innvilgelse etter konkurs"),
+                    emneknagger = setOf("Innvilgelse", "Konkurs"),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -191,6 +191,33 @@ class ForslagTilVedtakMottakTest {
               "hjemmel": "folketrygdloven § 4-4"
             }
           ],
+            "opplysninger": [
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "true"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
+                  "verdi": "false"
+                }
+            ],
           "ident": "$ident",
           "behandlingId": "$behandlingId",
           "gjelderDato": "2024-11-19",
@@ -248,6 +275,33 @@ class ForslagTilVedtakMottakTest {
                     }
                 ]
             },
+            "opplysninger": [
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
+                  "verdi": "true"
+                }
+            ],
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",
@@ -307,19 +361,28 @@ class ForslagTilVedtakMottakTest {
             },
             "opplysninger": [
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
                   "navn": "Har rett til ordinære dagpenger",
                   "verdi": "true"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
                   "navn": "Har rett til dagpenger under permittering",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
                   "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
                   "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
                   "verdi": "false"
                 }
             ],
@@ -386,19 +449,28 @@ class ForslagTilVedtakMottakTest {
             },
             "opplysninger": [
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
                   "navn": "Har rett til ordinære dagpenger",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
                   "navn": "Har rett til dagpenger under permittering",
                   "verdi": "true"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
                   "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
                   "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
                   "verdi": "false"
                 }
             ],
@@ -465,19 +537,28 @@ class ForslagTilVedtakMottakTest {
             },
             "opplysninger": [
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
                   "navn": "Har rett til ordinære dagpenger",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
                   "navn": "Har rett til dagpenger under permittering",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
                   "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
                   "verdi": "true"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
                   "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
                   "verdi": "false"
                 }
             ],
@@ -544,20 +625,29 @@ class ForslagTilVedtakMottakTest {
             },
             "opplysninger": [
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
                   "navn": "Har rett til ordinære dagpenger",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
                   "navn": "Har rett til dagpenger under permittering",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
                   "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
                   "navn": "Har rett til dagpenger etter konkurs",
                   "verdi": "true"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
+                  "verdi": "false"
                 }
             ],
             "ident": "$ident",
@@ -619,19 +709,28 @@ class ForslagTilVedtakMottakTest {
             },
             "opplysninger": [
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
                   "navn": "Har rett til ordinære dagpenger",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
                   "navn": "Har rett til dagpenger under permittering",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
                   "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
                   "verdi": "false"
                 },
                 {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
                   "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
                   "verdi": "false"
                 }
             ],
@@ -666,6 +765,33 @@ class ForslagTilVedtakMottakTest {
               "hjemmel": "folketrygdloven § 4-4"
             }
           ],
+            "opplysninger": [
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "true"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
+                  "verdi": "false"
+                }
+            ],
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",

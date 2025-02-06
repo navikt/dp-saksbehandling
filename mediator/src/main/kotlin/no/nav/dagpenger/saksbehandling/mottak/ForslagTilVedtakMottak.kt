@@ -157,50 +157,60 @@ internal class ForslagTilVedtakMottak(
     private val JsonMessage.rettighetEmneknagg: Set<String>
         get() {
             val mutableEmneknagger = mutableSetOf<String>()
-            if (this["fastsatt"]["kvoter"]
-                    .map { Pair(it["navn"].asText(), it["verdi"].asInt()) }
-                    .any { (navn, antallUker) -> navn == "Verneplikt" && antallUker > 0 }
-            ) {
-                mutableEmneknagger.add("Innvilgelse verneplikt")
-            } else {
-                if (this["opplysninger"]
-                        .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
-                        .any { (navn, harRettighet) -> navn == "Har rett til ordinære dagpenger" && harRettighet }
-                ) {
-                    mutableEmneknagger.add("Innvilgelse ordinær")
-                }
 
-                if (this["opplysninger"]
-                        .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
-                        .any { (navn, harRettighet) -> navn == "Har rett til dagpenger under permittering" && harRettighet }
-                ) {
-                    mutableEmneknagger.add("Innvilgelse permittering")
-                }
-                if (this["opplysninger"]
-                        .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
-                        .any { (navn, harRettighet) ->
-                            navn == "Har rett til dagpenger under permittering i fiskeforedlingsindustri" && harRettighet
-                        }
-                ) {
-                    mutableEmneknagger.add("Innvilgelse permittering fisk")
-                }
-                if (this["opplysninger"]
-                        .map { Pair(it["navn"].asText(), it["verdi"].asBoolean()) }
-                        .any { (navn, harRettighet) -> navn == "Har rett til dagpenger etter konkurs" && harRettighet }
-                ) {
-                    mutableEmneknagger.add("Innvilgelse etter konkurs")
-                }
+            if (this["opplysninger"]
+                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
+                    .any { (navn, harRettighet) -> navn == OpplysningTyper.RettighetOrdinæreDagpenger.opplysningTypeId && harRettighet }
+            ) {
+                mutableEmneknagger.add("Ordinære dagpenger")
             }
-            if (mutableEmneknagger.isEmpty()) {
-                mutableEmneknagger.add("Innvilgelse")
+            if (this["opplysninger"]
+                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
+                    .any {
+                            (navn, harRettighet) ->
+                        navn == OpplysningTyper.RettighetDagpengerEtterVerneplikt.opplysningTypeId && harRettighet
+                    }
+            ) {
+                mutableEmneknagger.add("Verneplikt")
+            }
+            if (this["opplysninger"]
+                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
+                    .any {
+                            (navn, harRettighet) ->
+                        navn == OpplysningTyper.RettighetDagpegnerUnderPermittering.opplysningTypeId && harRettighet
+                    }
+            ) {
+                mutableEmneknagger.add("Permittering")
+            }
+            if (this["opplysninger"]
+                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
+                    .any {
+                            (navn, harRettighet) ->
+                        navn == OpplysningTyper.RettighetDagpengerUnderPermitteringIFiskeforedlingsindustri.opplysningTypeId && harRettighet
+                    }
+            ) {
+                mutableEmneknagger.add("Permittering fisk")
+            }
+            if (this["opplysninger"]
+                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
+                    .any { (navn, harRettighet) -> navn == OpplysningTyper.RettighetDagpengerEtterKonkurs.opplysningTypeId && harRettighet }
+            ) {
+                mutableEmneknagger.add("Konkurs")
             }
             return mutableEmneknagger.toSet()
         }
 
     private fun JsonMessage.emneknagger(): Set<String> {
+        val mutableEmneknagger = mutableSetOf<String>()
         when (this.utfall.asBoolean()) {
-            true -> return this.rettighetEmneknagg
-            false -> return this.avslagEmneknagger
+            true -> {
+                mutableEmneknagger.add("Innvilgelse")
+//                return this.rettighetEmneknagg
+            }
+
+            false -> mutableEmneknagger.addAll(this.avslagEmneknagger)
         }
+        mutableEmneknagger.addAll(this.rettighetEmneknagg)
+        return mutableEmneknagger.toSet()
     }
 }
