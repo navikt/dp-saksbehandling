@@ -67,7 +67,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -406,36 +405,6 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
-        val godkjentBehandlingHendelse =
-            GodkjentBehandlingHendelse(
-                oppgave.oppgaveId,
-                meldingOmVedtakHtml,
-                utførtAv = saksbehandler,
-            )
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                every { it.ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
-            }
-
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
-                autentisert(token = saksbehandlerToken)
-                setBody(meldingOmVedtakHtml)
-                contentType(ContentType.Text.Html)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
-
-            verify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse, any())
-            }
-        }
-    }
-
-    @Test
     fun `Skal kunne ferdigstille en oppgave med melding om vedtak v2`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
@@ -549,20 +518,6 @@ class OppgaveApiTest {
             }
             verify(exactly = 1) {
                 oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, beslutterToken)
-            }
-        }
-    }
-
-    @Test
-    fun `Ferdigstilling av en oppgave feiler dersom content type ikke er HTML `() {
-        val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
-        withOppgaveApi {
-            client.put("/oppgave/${UUIDv7.ny()}/ferdigstill/melding-om-vedtak") {
-                autentisert(gyldigSaksbehandlerToken(navIdent = "G151133"))
-                setBody(meldingOmVedtakHtml)
-                contentType(ContentType.Text.Plain)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.UnsupportedMediaType
             }
         }
     }

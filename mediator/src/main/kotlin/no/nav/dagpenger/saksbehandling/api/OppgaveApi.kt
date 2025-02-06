@@ -29,7 +29,6 @@ import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -216,29 +215,16 @@ internal fun Application.oppgaveApi(
 
                     route("ferdigstill/melding-om-vedtak") {
                         put {
-                            val meldingOmVedtak = call.receiveText()
                             val oppgaveId = call.finnUUID("oppgaveId")
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                try {
-                                    if (!htmlContentType) throw UgyldigContentType("Kun støtte for HTML")
-                                    sikkerlogger.info { "Motatt melding om vedtak for oppgave $oppgaveId: $meldingOmVedtak" }
-                                    val saksbehandler = applicationCallParser.sakbehandler(call)
-                                    val saksbehandlerToken = call.request.jwt()
-                                    oppgaveMediator.ferdigstillOppgave(
-                                        GodkjentBehandlingHendelse(
-                                            meldingOmVedtak = meldingOmVedtak,
-                                            oppgaveId = oppgaveId,
-                                            utførtAv = saksbehandler,
-                                        ),
-                                        saksbehandlerToken,
-                                    )
-                                    call.respond(HttpStatusCode.NoContent)
-                                } catch (e: UgyldigContentType) {
-                                    val feilmelding = "Feil ved mottak av melding om vedtak: ${e.message}"
-                                    logger.error(e) { feilmelding }
-                                    sikkerlogger.error(e) { "$feilmelding for $meldingOmVedtak" }
-                                    call.respond(HttpStatusCode.UnsupportedMediaType)
-                                }
+                                val saksbehandler = applicationCallParser.sakbehandler(call)
+                                val saksbehandlerToken = call.request.jwt()
+                                oppgaveMediator.ferdigstillOppgave2(
+                                    oppgaveId = oppgaveId,
+                                    saksBehandler = saksbehandler,
+                                    saksbehandlerToken = saksbehandlerToken,
+                                )
+                                call.respond(HttpStatusCode.NoContent)
                             }
                         }
                     }
