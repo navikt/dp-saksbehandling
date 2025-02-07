@@ -149,7 +149,7 @@ class OppgaveMediatorTest {
             skjermingKlient = skjermingKlientMock,
         )
 
-    private val emneknagger = setOf("EØSArbeid", "SykepengerSiste36Måneder")
+    private val emneknagger = setOf("Emneknagg 1", "Emneknagg 2")
 
     @Test
     fun `Skal kunne sette oppgave til kontroll`() {

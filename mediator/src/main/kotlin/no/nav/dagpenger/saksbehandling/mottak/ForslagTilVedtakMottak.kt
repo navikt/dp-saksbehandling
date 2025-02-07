@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
-import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -11,6 +10,30 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_ALDER
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_STREIK
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_UTDANNING
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_KONKURS
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPEGNER_UNDER_PERMITTERING
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_KONKURS
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI
+import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER
 
 internal class ForslagTilVedtakMottak(
     rapidsConnection: RapidsConnection,
@@ -64,153 +87,60 @@ internal class ForslagTilVedtakMottak(
         }
     }
 
-    private val JsonMessage.forslagUtfall get() = this["utfall"]
-    private val JsonMessage.fastsattUtfall get() = this["fastsatt"].get("utfall")
-    private val JsonMessage.utfall
-        get() =
-            when (this.forslagUtfall.isMissingOrNull()) {
-                true -> this.fastsattUtfall
-                false -> this.forslagUtfall
+    private fun JsonMessage.emneknagger(): Set<String> =
+        buildSet {
+            addAll(rettighetEmneknagg)
+            when (utfall) {
+                true -> add(INNVILGELSE.navn)
+                false -> addAll(avslagEmneknagger)
             }
+        }
+
+    private val JsonMessage.utfall get() = this["fastsatt"].get("utfall").asBoolean()
 
     private val JsonMessage.avslagEmneknagger: Set<String>
         get() {
-            val mutableEmneknagger = mutableSetOf<String>()
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Oppfyller kravet til minsteinntekt eller verneplikt" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag minsteinntekt")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Krav til tap av arbeidsinntekt" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag arbeidsinntekt")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Tap av arbeidstid er minst terskel" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag arbeidstid")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Oppfyller kravet til alder" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag alder")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Mottar ikke andre fulle ytelser" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag andre ytelser")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Oppfyller kravet til medlemskap" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag medlemskap")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Er medlemmet ikke påvirket av streik eller lock-out?" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag streik")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Oppfyller kravet til opphold i Norge" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag opphold utland")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Krav til arbeidssøker" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag reell arbeidssøker")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Registrert som arbeidssøker på søknadstidspunktet" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag ikke registrert")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Oppfyller krav til ikke utestengt" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag utestengt")
-            }
-            if (this["vilkår"]
-                    .map { Pair(it["navn"].asText(), it["status"].asText()) }
-                    .any { (navn, status) -> navn == "Krav til utdanning eller opplæring" && status == "IkkeOppfylt" }
-            ) {
-                mutableEmneknagger.add("Avslag utdanning")
-            }
-            if (mutableEmneknagger.isEmpty()) {
-                mutableEmneknagger.add("Avslag")
-            }
-            return mutableEmneknagger.toSet()
+            val avslagsgrunner = mutableSetOf(AVSLAG.navn)
+
+            val vilkårTilAvslagEmneknagg =
+                mapOf(
+                    "Oppfyller kravet til minsteinntekt eller verneplikt" to AVSLAG_MINSTEINNTEKT.navn,
+                    "Krav til tap av arbeidsinntekt" to AVSLAG_ARBEIDSINNTEKT.navn,
+                    "Tap av arbeidstid er minst terskel" to AVSLAG_ARBEIDSTID.navn,
+                    "Oppfyller kravet til alder" to AVSLAG_ALDER.navn,
+                    "Mottar ikke andre fulle ytelser" to AVSLAG_ANDRE_YTELSER.navn,
+                    "Oppfyller kravet til medlemskap" to AVSLAG_MEDLEMSKAP.navn,
+                    "Er medlemmet ikke påvirket av streik eller lock-out?" to AVSLAG_STREIK.navn,
+                    "Oppfyller kravet til opphold i Norge" to AVSLAG_OPPHOLD_UTLAND.navn,
+                    "Krav til arbeidssøker" to AVSLAG_REELL_ARBEIDSSØKER.navn,
+                    "Registrert som arbeidssøker på søknadstidspunktet" to AVSLAG_IKKE_REGISTRERT.navn,
+                    "Oppfyller krav til ikke utestengt" to AVSLAG_UTESTENGT.navn,
+                    "Krav til utdanning eller opplæring" to AVSLAG_UTDANNING.navn,
+                )
+
+            this["vilkår"].map { it["navn"].asText() to it["status"].asText() }
+                .filter { (_, status) -> status == "IkkeOppfylt" }
+                .mapNotNull { (navn, _) -> vilkårTilAvslagEmneknagg[navn] }
+                .forEach { avslagsgrunner.add(it) }
+
+            return avslagsgrunner
         }
 
     private val JsonMessage.rettighetEmneknagg: Set<String>
         get() {
-            val mutableEmneknagger = mutableSetOf<String>()
+            val rettighetTilEmneknagg =
+                mapOf(
+                    RETTIGHET_ORDINÆRE_DAGPENGER.opplysningTypeId to RETTIGHET_ORDINÆR.navn,
+                    RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT.opplysningTypeId to RETTIGHET_VERNEPLIKT.navn,
+                    RETTIGHET_DAGPEGNER_UNDER_PERMITTERING.opplysningTypeId to RETTIGHET_PERMITTERT.navn,
+                    RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI.opplysningTypeId to RETTIGHET_PERMITTERT_FISK.navn,
+                    RETTIGHET_DAGPENGER_ETTER_KONKURS.opplysningTypeId to RETTIGHET_KONKURS.navn,
+                )
 
-            if (this["opplysninger"]
-                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
-                    .any { (navn, harRettighet) -> navn == OpplysningTyper.RettighetOrdinæreDagpenger.opplysningTypeId && harRettighet }
-            ) {
-                mutableEmneknagger.add("Ordinære dagpenger")
-            }
-            if (this["opplysninger"]
-                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
-                    .any {
-                            (navn, harRettighet) ->
-                        navn == OpplysningTyper.RettighetDagpengerEtterVerneplikt.opplysningTypeId && harRettighet
-                    }
-            ) {
-                mutableEmneknagger.add("Verneplikt")
-            }
-            if (this["opplysninger"]
-                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
-                    .any {
-                            (navn, harRettighet) ->
-                        navn == OpplysningTyper.RettighetDagpegnerUnderPermittering.opplysningTypeId && harRettighet
-                    }
-            ) {
-                mutableEmneknagger.add("Permittering")
-            }
-            if (this["opplysninger"]
-                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
-                    .any {
-                            (navn, harRettighet) ->
-                        navn == OpplysningTyper.RettighetDagpengerUnderPermitteringIFiskeforedlingsindustri.opplysningTypeId && harRettighet
-                    }
-            ) {
-                mutableEmneknagger.add("Permittering fisk")
-            }
-            if (this["opplysninger"]
-                    .map { Pair(it["opplysningTypeId"].asUUID(), it["verdi"].asBoolean()) }
-                    .any { (navn, harRettighet) -> navn == OpplysningTyper.RettighetDagpengerEtterKonkurs.opplysningTypeId && harRettighet }
-            ) {
-                mutableEmneknagger.add("Konkurs")
-            }
-            return mutableEmneknagger.toSet()
+            return this["opplysninger"]
+                .map { it["opplysningTypeId"].asUUID() to it["verdi"].asBoolean() }
+                .filter { (_, harRettighet) -> harRettighet }
+                .mapNotNull { (id, _) -> rettighetTilEmneknagg[id] }
+                .toSet()
         }
-
-    private fun JsonMessage.emneknagger(): Set<String> {
-        val mutableEmneknagger = mutableSetOf<String>()
-        when (this.utfall.asBoolean()) {
-            true -> {
-                mutableEmneknagger.add("Innvilgelse")
-//                return this.rettighetEmneknagg
-            }
-
-            false -> mutableEmneknagger.addAll(this.avslagEmneknagger)
-        }
-        mutableEmneknagger.addAll(this.rettighetEmneknagg)
-        return mutableEmneknagger.toSet()
-    }
 }

@@ -54,6 +54,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
+import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.opprettetNå
 import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
@@ -1325,16 +1327,16 @@ class PostgresOppgaveRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf("Innvilgelse"))
+            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf(INNVILGELSE.navn))
             val oppgave2 =
                 lagOppgave(
                     UnderBehandling,
                     saksbehandlerIdent = saksbehandler2,
-                    emneknagger = setOf("Avslag minsteinntekt"),
+                    emneknagger = setOf(AVSLAG_MINSTEINNTEKT.navn),
                 )
             val oppgave3 =
-                lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf("Innvilgelse"))
-            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf("Innvilgelse"))
+                lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf(INNVILGELSE.navn))
+            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf(INNVILGELSE.navn))
 
             repo.lagre(oppgave1)
             repo.lagre(oppgave2)
@@ -1370,7 +1372,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
-                    emneknagger = setOf("Innvilgelse"),
+                    emneknagger = setOf(INNVILGELSE.navn),
                 ),
             ).oppgaver.size shouldBe 1
         }
