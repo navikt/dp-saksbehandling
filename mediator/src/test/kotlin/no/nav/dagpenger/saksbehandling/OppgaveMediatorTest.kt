@@ -37,7 +37,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -315,48 +314,6 @@ class OppgaveMediatorTest {
 
             oppdatertOppgave.emneknagger shouldBe testEmneknagger2
             oppdatertOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
-        }
-    }
-
-    @Test
-    fun `Skal kunne slette avklaringer når de blir irrelevante`() {
-        withMigratedDb { datasource ->
-            val testEmneknagger = setOf("a", "b", "c")
-
-            val oppgave = datasource.lagTestoppgave(tilstand = OPPRETTET)
-
-            val oppgaveMediator =
-                OppgaveMediator(
-                    repository = PostgresOppgaveRepository(datasource),
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = utsendingMediatorMock,
-                )
-
-            oppgaveMediator.settOppgaveKlarTilBehandling(
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    søknadId = UUIDv7.ny(),
-                    behandlingId = oppgave.behandling.behandlingId,
-                    emneknagger = testEmneknagger,
-                ),
-            )
-
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).emneknagger shouldContainAll testEmneknagger
-
-            oppgaveMediator.fjernEmneknagg(
-                IkkeRelevantAvklaringHendelse(
-                    ident = testIdent,
-                    behandlingId = oppgave.behandling.behandlingId,
-                    ikkeRelevantEmneknagg = "a",
-                ),
-            )
-
-            oppgaveMediator.hentOppgave(
-                oppgave.oppgaveId,
-                testInspektør,
-            ).emneknagger shouldContainAll testEmneknagger.minus("a")
         }
     }
 

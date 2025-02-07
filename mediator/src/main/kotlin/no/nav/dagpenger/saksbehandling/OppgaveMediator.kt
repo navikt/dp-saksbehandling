@@ -21,7 +21,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.IkkeRelevantAvklaringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -431,15 +430,6 @@ class OppgaveMediator(
         repository.hentOppgave(utsettOppgaveHendelse.oppgaveId).let { oppgave ->
             oppgave.utsett(utsettOppgaveHendelse)
             repository.lagre(oppgave)
-        }
-    }
-
-    fun fjernEmneknagg(hendelse: IkkeRelevantAvklaringHendelse) {
-        repository.fjerneEmneknagg(hendelse.behandlingId, hendelse.ikkeRelevantEmneknagg).let {
-            when (it) {
-                true -> logger.info { "Fjernet emneknagg: ${hendelse.ikkeRelevantEmneknagg}" }
-                false -> logger.warn { "Fant ikke emneknagg: ${hendelse.ikkeRelevantEmneknagg}" }
-            }
         }
     }
 
