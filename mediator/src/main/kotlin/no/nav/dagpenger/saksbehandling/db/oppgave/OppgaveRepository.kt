@@ -46,11 +46,6 @@ interface OppgaveRepository {
 
     fun finnOppgaveFor(behandlingId: UUID): Oppgave?
 
-    fun fjerneEmneknagg(
-        behandlingId: UUID,
-        ikkeRelevantEmneknagg: String,
-    ): Boolean
-
     fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
 
     fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering
