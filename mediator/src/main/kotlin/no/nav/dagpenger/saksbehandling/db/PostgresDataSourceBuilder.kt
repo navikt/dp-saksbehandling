@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.db
 import ch.qos.logback.core.util.OptionHelper.getEnv
 import ch.qos.logback.core.util.OptionHelper.getSystemProperty
 import com.zaxxer.hikari.HikariDataSource
+import mu.KotlinLogging
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.configuration.FluentConfiguration
 
@@ -37,6 +38,19 @@ internal object PostgresDataSourceBuilder {
     private val flyWayBuilder: FluentConfiguration = Flyway.configure().connectRetries(10)
 
     fun clean() = flyWayBuilder.cleanDisabled(false).dataSource(dataSource).load().clean()
+
+    private val logger = KotlinLogging.logger {}
+
+    fun reparerMigreringer() {
+        try {
+            val flyway = flyWayBuilder.dataSource(dataSource).load()
+            flyway.repair()
+            logger.info("Flyway repair fullført.")
+        } catch (e: Exception) {
+            logger.error("Feil under Flyway repair: ${e.message}")
+            throw e
+        }
+    }
 
     internal fun runMigration(initSql: String? = null): Int =
         flyWayBuilder

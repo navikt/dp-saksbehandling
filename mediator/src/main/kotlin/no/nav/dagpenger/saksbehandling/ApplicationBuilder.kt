@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.reparerMigreringer
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.frist.oppgaverSomIkkeLengerSkalVærePåVentJob
@@ -157,7 +158,9 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
+        reparerMigreringer()
         runMigration()
+
         logger.info { "Starter appen ${Configuration.APP_NAME}" }
     }
 

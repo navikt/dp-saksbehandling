@@ -27,7 +27,7 @@ BEGIN
           )
     LOOP
         -- Sett inn ny emneknagg for Avslag
-        INSERT INTO emneknagg_v1 ( id, oppgave_id, emneknagg)
-        VALUES ( gen_random_uuid(), emneknagg.oppgave_id, 'Avslag' );
+        INSERT INTO emneknagg_v1 (oppgave_id, emneknagg)
+        VALUES (emneknagg.oppgave_id, 'Avslag' );
     END LOOP;
 END $$;
