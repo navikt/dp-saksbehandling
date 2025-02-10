@@ -99,6 +99,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
         )
     private val utsendingAlarmJob: Timer
+    private val slettGamleOppgaverJob: Timer
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(
@@ -142,6 +143,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
             utsendingAlarmJob = UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob()
+            slettGamleOppgaverJob = SletteGamleOppgaverJob(rapidsConnection, GamleOppgaverRepository(dataSource)).startJob()
         }
 
     init {
