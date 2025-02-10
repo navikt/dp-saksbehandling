@@ -204,7 +204,7 @@ class ForslagTilVedtakMottakTest {
               "hjemmel": "folketrygdloven § 4-23"
             },
             {
-              "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+              "navn": "Oppfyller kravet til minsteinntekt",
               "status": "IkkeOppfylt",
               "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
               "hjemmel": "folketrygdloven § 4-4"
@@ -259,7 +259,7 @@ class ForslagTilVedtakMottakTest {
                   "hjemmel": "folketrygdloven § 4-23"
                 },
                 {
-                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "navn": "Oppfyller kravet til minsteinntekt",
                   "status": "Oppfylt",
                   "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
                   "hjemmel": "folketrygdloven § 4-4"
@@ -343,7 +343,7 @@ class ForslagTilVedtakMottakTest {
                   "hjemmel": "folketrygdloven § 4-23"
                 },
                 {
-                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "navn": "Oppfyller kravet til minsteinntekt",
                   "status": "Oppfylt",
                   "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
                   "hjemmel": "folketrygdloven § 4-4"
@@ -427,7 +427,7 @@ class ForslagTilVedtakMottakTest {
                   "hjemmel": "folketrygdloven § 4-23"
                 },
                 {
-                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "navn": "Oppfyller kravet til minsteinntekt",
                   "status": "Oppfylt",
                   "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
                   "hjemmel": "folketrygdloven § 4-4"
@@ -515,7 +515,7 @@ class ForslagTilVedtakMottakTest {
                   "hjemmel": "folketrygdloven § 4-23"
                 },
                 {
-                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "navn": "Oppfyller kravet til minsteinntekt",
                   "status": "Oppfylt",
                   "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
                   "hjemmel": "folketrygdloven § 4-4"
@@ -603,7 +603,7 @@ class ForslagTilVedtakMottakTest {
                   "hjemmel": "folketrygdloven § 4-23"
                 },
                 {
-                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "navn": "Oppfyller kravet til minsteinntekt",
                   "status": "Oppfylt",
                   "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
                   "hjemmel": "folketrygdloven § 4-4"
@@ -691,7 +691,7 @@ class ForslagTilVedtakMottakTest {
                   "hjemmel": "folketrygdloven § 4-23"
                 },
                 {
-                  "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+                  "navn": "Oppfyller kravet til minsteinntekt",
                   "status": "Oppfylt",
                   "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
                   "hjemmel": "folketrygdloven § 4-4"
@@ -778,7 +778,7 @@ class ForslagTilVedtakMottakTest {
               "hjemmel": "folketrygdloven § 4-23"
             },
             {
-              "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+              "navn": "Oppfyller kravet til minsteinntekt",
               "status": "Oppfylt",
               "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
               "hjemmel": "folketrygdloven § 4-4"
@@ -845,7 +845,7 @@ class ForslagTilVedtakMottakTest {
               "hjemmel": "folketrygdloven § 4-8"
             },
             {
-              "navn": "Oppfyller kravet til minsteinntekt eller verneplikt",
+              "navn": "Oppfyller kravet til minsteinntekt",
               "status": "IkkeOppfylt",
               "vurderingstidspunkt": "2025-01-08T13:28:26.284199",
               "hjemmel": "folketrygdloven § 4-4"

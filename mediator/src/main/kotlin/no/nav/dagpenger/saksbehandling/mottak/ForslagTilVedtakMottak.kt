@@ -105,6 +105,7 @@ internal class ForslagTilVedtakMottak(
             val vilkårTilAvslagEmneknagg =
                 mapOf(
                     "Oppfyller kravet til minsteinntekt eller verneplikt" to AVSLAG_MINSTEINNTEKT.navn,
+                    "Oppfyller kravet til minsteinntekt" to AVSLAG_MINSTEINNTEKT.navn,
                     "Krav til tap av arbeidsinntekt" to AVSLAG_ARBEIDSINNTEKT.navn,
                     "Tap av arbeidstid er minst terskel" to AVSLAG_ARBEIDSTID.navn,
                     "Oppfyller kravet til alder" to AVSLAG_ALDER.navn,
