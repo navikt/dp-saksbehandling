@@ -3,7 +3,7 @@ DECLARE
     emneknagg RECORD;
 BEGIN
     FOR emneknagg IN
-        SELECT  *
+        SELECT  DISTINCT(oppgave_id) as oppgave_id
         FROM    emneknagg_v1 emne
         WHERE   emne.emneknagg IN (
                 'Minsteinntekt',
