@@ -18,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.PåVentEmneknagger.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
@@ -76,7 +77,6 @@ data class Oppgave private constructor(
 
         internal const val RETUR_FRA_KONTROLL = "Retur fra kontroll"
         internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
-        const val TIDLIGERE_UTSATT = "Tidligere utsatt"
         internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
         internal val påVentEmneknagger: Set<String> = setOf(TIDLIGERE_UTSATT)
 
