@@ -2,9 +2,11 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.leaderelection.LeaderElector
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Date
@@ -48,30 +50,42 @@ internal class SletteGamleOppgaverJob(
     }
 
     fun avbrytGamleOppgaver(eldreEnn: Int = 21) {
-        finnGamleOppgaver(eldreEnn).forEach { oppgave ->
-            rapidsConnection.publish(
-                key = oppgave.ident,
-                JsonMessage.newMessage(
-                    eventName = "avbryt_behandling",
-                    map =
-                        mapOf(
-                            "behandlingId" to oppgave.behandlingId,
-                            "søknadId" to oppgave.soknadId,
-                            "ident" to oppgave.ident,
-                        ),
-                ).toJson(),
-            )
+        runBlocking {
+            LeaderElector.isLeader()
+                .onSuccess {
+                    when (it) {
+                        true ->
+                            finnGamleOppgaver(eldreEnn).forEach { oppgave ->
+                                rapidsConnection.publish(
+                                    key = oppgave.ident,
+                                    JsonMessage.newMessage(
+                                        eventName = "avbryt_behandling",
+                                        map =
+                                            mapOf(
+                                                "behandlingId" to oppgave.behandlingId,
+                                                "søknadId" to oppgave.soknadId,
+                                                "ident" to oppgave.ident,
+                                            ),
+                                    ).toJson(),
+                                )
+                            }
+
+                        false -> logger.info { "Er ikke leder, kjører ikke jobb" }
+                    }
+                }
+                .onFailure {
+                    logger.error(it) { "Kunne ikke avgjøre om jeg er leder, avbryter ikke gamle oppgaver" }
+                }
         }
     }
-}
 
-internal class GamleOppgaverRepository(private val ds: DataSource) {
-    fun finnGamleOppgaver(intervallAntallDager: Int): List<GamleOppgaver> {
-        return sessionOf(ds).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    """
+    internal class GamleOppgaverRepository(private val ds: DataSource) {
+        fun finnGamleOppgaver(intervallAntallDager: Int): List<GamleOppgaver> {
+            return sessionOf(ds).use { session ->
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        """
                     SELECT
                           person_v1.ident,
                           oppgave_v1.behandling_id,
@@ -89,20 +103,21 @@ internal class GamleOppgaverRepository(private val ds: DataSource) {
                         AND oppgave_v1.tilstand  IN ('OPPRETTET', 'KLAR_TIL_BEHANDLING', 'PAA_VENT')
                         AND oppgave_v1.saksbehandler_ident IS NULL
                     """.trimIndent(),
-                ).map { row ->
-                    GamleOppgaver(
-                        ident = row.string("ident"),
-                        soknadId = row.string("søknadId").let { UUID.fromString(it) },
-                        behandlingId = row.uuid("behandling_id"),
-                    )
-                }.asList,
-            )
+                    ).map { row ->
+                        GamleOppgaver(
+                            ident = row.string("ident"),
+                            soknadId = row.string("søknadId").let { UUID.fromString(it) },
+                            behandlingId = row.uuid("behandling_id"),
+                        )
+                    }.asList,
+                )
+            }
         }
     }
-}
 
-data class GamleOppgaver(
-    val ident: String,
-    val soknadId: UUID,
-    val behandlingId: UUID,
-)
+    data class GamleOppgaver(
+        val ident: String,
+        val soknadId: UUID,
+        val behandlingId: UUID,
+    )
+}
