@@ -47,7 +47,7 @@ internal class SletteGamleOppgaverJob(
         }
     }
 
-    fun avbrytGamleOppgaver(eldreEnn: Int = 30) {
+    fun avbrytGamleOppgaver(eldreEnn: Int = 14) {
         finnGamleOppgaver(eldreEnn).forEach { oppgave ->
             rapidsConnection.publish(
                 key = oppgave.ident,
@@ -86,7 +86,7 @@ internal class GamleOppgaverRepository(private val ds: DataSource) {
                           hendelse_v1 ON hendelse_v1.behandling_id = behandling_v1.id
                       WHERE
                           oppgave_v1.endret_tidspunkt < NOW() - INTERVAL '$intervallAntallDager days'
-                        AND oppgave_v1.tilstand NOT IN ('FERDIG_BEHANDLET', 'BEHANDLES_I_ARENA')
+                        AND oppgave_v1.tilstand NOT IN ('FERDIG_BEHANDLET', 'BEHANDLES_I_ARENA', 'PÅ_VENT')
                     """.trimIndent(),
                 ).map { row ->
                     GamleOppgaver(
