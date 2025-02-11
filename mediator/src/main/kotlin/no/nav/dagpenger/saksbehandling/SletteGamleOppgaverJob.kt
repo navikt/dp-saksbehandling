@@ -86,7 +86,7 @@ internal class GamleOppgaverRepository(private val ds: DataSource) {
                           hendelse_v1 ON hendelse_v1.behandling_id = behandling_v1.id
                       WHERE
                           oppgave_v1.opprettet < NOW() - INTERVAL '$intervallAntallDager days'
-                        AND oppgave_v1.tilstand  IN ('OPPRETTET, KLAR_TIL_BEHANDLING', 'PAA_VENT')
+                        AND oppgave_v1.tilstand  IN ('OPPRETTET', 'KLAR_TIL_BEHANDLING', 'PAA_VENT')
                         AND oppgave_v1.saksbehandler_ident IS NULL
                     """.trimIndent(),
                 ).map { row ->
