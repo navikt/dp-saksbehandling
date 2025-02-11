@@ -41,14 +41,14 @@ internal class SletteGamleOppgaverJob(
         )
     }
 
-    fun finnGamleOppgaver(): List<GamleOppgaver> {
-        return gamleOppgaverRepository.finnGamleOppgaver(28).also {
+    fun finnGamleOppgaver(eldreEnn: Int): List<GamleOppgaver> {
+        return gamleOppgaverRepository.finnGamleOppgaver(eldreEnn).also {
             logger.info { "Fant ${it.size} gamle oppgaver: $it" }
         }
     }
 
-    fun avbrytGamleOppgaver() {
-        finnGamleOppgaver().forEach { oppgave ->
+    fun avbrytGamleOppgaver(eldreEnn: Int = 30) {
+        finnGamleOppgaver(eldreEnn).forEach { oppgave ->
             rapidsConnection.publish(
                 key = oppgave.ident,
                 JsonMessage.newMessage(
