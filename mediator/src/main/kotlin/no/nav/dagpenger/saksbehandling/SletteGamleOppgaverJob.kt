@@ -47,7 +47,7 @@ internal class SletteGamleOppgaverJob(
         }
     }
 
-    fun avbrytGamleOppgaver(eldreEnn: Int = 14) {
+    fun avbrytGamleOppgaver(eldreEnn: Int = 30) {
         finnGamleOppgaver(eldreEnn).forEach { oppgave ->
             rapidsConnection.publish(
                 key = oppgave.ident,
