@@ -54,6 +54,7 @@ import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
+import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
@@ -61,6 +62,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -847,6 +849,14 @@ class OppgaveApiTest {
                                 ),
                             ),
                         notat = null,
+                        lovligeEndringer =
+                            LovligeEndringerDTO(
+                                paaVentAarsaker =
+                                    when (testOppgave.tilstand().type) {
+                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                                        else -> emptyList()
+                                    },
+                            ),
                     )
             }
 

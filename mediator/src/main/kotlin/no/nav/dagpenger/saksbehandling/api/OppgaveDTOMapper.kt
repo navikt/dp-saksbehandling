@@ -5,9 +5,11 @@ import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
+import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
@@ -15,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 
@@ -101,6 +104,14 @@ internal class OppgaveDTOMapper(
                         sistEndretTidspunkt = it.sistEndretTidspunkt,
                     )
                 },
+            lovligeEndringer =
+                LovligeEndringerDTO(
+                    paaVentAarsaker =
+                        when (oppgave.tilstand().type) {
+                            UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                            else -> emptyList()
+                        },
+                ),
         )
 }
 

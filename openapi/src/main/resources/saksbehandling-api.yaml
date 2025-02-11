@@ -536,6 +536,8 @@ components:
           $ref: '#/components/schemas/OppgaveTilstand'
         notat:
           $ref: '#/components/schemas/Notat'
+        lovligeEndringer:
+          $ref: '#/components/schemas/LovligeEndringer'
       required:
         - oppgaveId
         - behandlingId
@@ -543,6 +545,7 @@ components:
         - tidspunktOpprettet
         - tilstand
         - emneknagger
+        - lovligeEndringer
 
     Kjonn:
       type: string
@@ -563,6 +566,17 @@ components:
         - AVVENTER_LÅS_AV_BEHANDLING
         - AVVENTER_OPPLÅSING_AV_BEHANDLING
         - BEHANDLES_I_ARENA
+
+    LovligeEndringer:
+      type: object
+      properties:
+        paaVentAarsaker:
+          type: array
+          items:
+            type: string
+          description: Årsaker til at oppgaven settes på vent
+      required:
+        - paaVentAarsaker
 
     AdressebeskyttelseGradering:
       type: string
