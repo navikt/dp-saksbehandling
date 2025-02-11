@@ -1,7 +1,7 @@
-package no.nav.dagpenger.saksbehandling.mottak
+package no.nav.dagpenger.saksbehandling
 
 class Emneknagg(val navn: String) {
-    enum class Regelknagg(val navn: String) {
+    enum class Regelknagg(val visningsnavn: String) {
         AVSLAG("Avslag"),
         INNVILGELSE("Innvilgelse"),
         AVSLAG_MINSTEINNTEKT("Minsteinntekt"),
@@ -23,12 +23,14 @@ class Emneknagg(val navn: String) {
         RETTIGHET_KONKURS("Konkurs"),
     }
 
-    // TODO: Skal implementeres senere
-    enum class PåVentÅrsaker(val navn: String) {
+    enum class PåVent(val visningsnavn: String) {
         AVVENT_SVAR("Avvent svar"),
         AVVENT_DOKUMENTASJON("Avvent dokumentasjon"),
         AVVENT_MELDEKORT("Avvent meldekort"),
         AVVENT_RAPPORTERINGSFRIST("Avvent rapporteringsfrist"),
         AVVENT_SVAR_PÅ_FORESPØRSEL("Sendt forespørsel"),
+        ANNET("Utsatt annen årsak"),
+
+        TIDLIGERE_UTSATT("Tidligere utsatt"),
     }
 }

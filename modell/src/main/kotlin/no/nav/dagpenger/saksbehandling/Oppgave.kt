@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling.BESLUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
@@ -76,9 +77,12 @@ data class Oppgave private constructor(
 
         internal const val RETUR_FRA_KONTROLL = "Retur fra kontroll"
         internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
-        const val TIDLIGERE_UTSATT = "Tidligere utsatt"
         internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
-        internal val påVentEmneknagger: Set<String> = setOf(TIDLIGERE_UTSATT)
+        internal val påVentEmneknagger: Set<String> =
+            Emneknagg.PåVent.entries.map {
+                    påVentÅrsaker ->
+                påVentÅrsaker.visningsnavn
+            }.toSet()
 
         fun rehydrer(
             oppgaveId: UUID,
@@ -398,6 +402,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             utsettOppgaveHendelse: UtsettOppgaveHendelse,
         ) {
+            oppgave._emneknagger.add(utsettOppgaveHendelse.årsak.visningsnavn)
             oppgave.endreTilstand(PåVent, utsettOppgaveHendelse)
             oppgave.behandlerIdent =
                 when (utsettOppgaveHendelse.beholdOppgave) {
@@ -540,7 +545,7 @@ data class Oppgave private constructor(
                 }
             oppgave.endreTilstand(nyTilstand, hendelse)
             oppgave.utsattTil = null
-            oppgave._emneknagger.add("Tidligere utsatt")
+            oppgave._emneknagger.add(Emneknagg.PåVent.TIDLIGERE_UTSATT.visningsnavn)
         }
     }
 

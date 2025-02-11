@@ -27,6 +27,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -722,6 +723,7 @@ class OppgaveApiTest {
                 utsattTil = utsettTilDato,
                 beholdOppgave = true,
                 utførtAv = saksbehandler,
+                årsak = AVVENT_RAPPORTERINGSFRIST,
             )
 
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
@@ -738,7 +740,8 @@ class OppgaveApiTest {
                     """
                         {
                           "utsettTilDato":"$utsettTilDato",
-                          "beholdOppgave":"true"
+                          "beholdOppgave":"true",
+                          "aarsak":"AVVENT_RAPPORTERINGSFRIST"
                         }
                     """.trimMargin(),
                 )

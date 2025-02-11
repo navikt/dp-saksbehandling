@@ -11,6 +11,8 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -54,8 +56,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.opprettetNå
 import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
@@ -1327,16 +1327,16 @@ class PostgresOppgaveRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf(INNVILGELSE.navn))
+            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf(INNVILGELSE.visningsnavn))
             val oppgave2 =
                 lagOppgave(
                     UnderBehandling,
                     saksbehandlerIdent = saksbehandler2,
-                    emneknagger = setOf(AVSLAG_MINSTEINNTEKT.navn),
+                    emneknagger = setOf(AVSLAG_MINSTEINNTEKT.visningsnavn),
                 )
             val oppgave3 =
-                lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf(INNVILGELSE.navn))
-            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf(INNVILGELSE.navn))
+                lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf(INNVILGELSE.visningsnavn))
+            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf(INNVILGELSE.visningsnavn))
 
             repo.lagre(oppgave1)
             repo.lagre(oppgave2)
@@ -1372,7 +1372,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
-                    emneknagger = setOf(INNVILGELSE.navn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn),
                 ),
             ).oppgaver.size shouldBe 1
         }

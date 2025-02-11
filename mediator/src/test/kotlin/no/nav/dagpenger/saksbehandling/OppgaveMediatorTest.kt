@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -11,6 +12,7 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -976,10 +978,11 @@ class OppgaveMediatorTest {
                     utsattTil = utSattTil,
                     beholdOppgave = false,
                     utførtAv = saksbehandler,
+                    årsak = AVVENT_MELDEKORT,
                 ),
             )
 
-            oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT).size shouldBe 1
+            oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT).single().emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
         }
     }
 
