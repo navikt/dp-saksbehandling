@@ -630,9 +630,21 @@ components:
           format: date
         beholdOppgave:
           type: boolean
+        aarsak:
+          $ref: '#/components/schemas/UtsettOppgaveAarsak'
       required:
         - utsettTilDato
         - beholdOppgave
+
+    UtsettOppgaveAarsak:
+      type: string
+      enum:
+        - AVVENT_SVAR
+        - AVVENT_DOKUMENTASJON
+        - AVVENT_MELDEKORT
+        - AVVENT_RAPPORTERINGSFRIST
+        - AVVENT_SVAR_PÅ_FORESPØRSEL
+        - ANNET
 
     LagreNotatResponse:
       type: object

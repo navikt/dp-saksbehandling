@@ -5,28 +5,28 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_STREIK
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_KONKURS
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_ALDER
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_ARBEIDSINNTEKT
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_ARBEIDSTID
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_IKKE_REGISTRERT
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_MEDLEMSKAP
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_OPPHOLD_UTLAND
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDSSØKER
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_STREIK
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_UTDANNING
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.INNVILGELSE
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_KONKURS
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT_FISK
-import no.nav.dagpenger.saksbehandling.mottak.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import org.junit.jupiter.api.Test
 
 class ForslagTilVedtakMottakTest {
@@ -51,7 +51,10 @@ class ForslagTilVedtakMottakTest {
         hendelse.captured.ident shouldBe ident
         hendelse.captured.søknadId shouldBe søknadId
         hendelse.captured.behandlingId shouldBe behandlingId
-        hendelse.captured.emneknagger shouldBe setOf(AVSLAG.navn, AVSLAG_MINSTEINNTEKT.navn, RETTIGHET_PERMITTERT.navn)
+        hendelse.captured.emneknagger shouldBe
+            setOf(
+                AVSLAG.visningsnavn, AVSLAG_MINSTEINNTEKT.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn,
+            )
     }
 
     @Test
@@ -64,7 +67,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf(AVSLAG.navn, AVSLAG_ALDER.navn, RETTIGHET_ORDINÆR.navn),
+                    emneknagger = setOf(AVSLAG.visningsnavn, AVSLAG_ALDER.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -82,9 +85,19 @@ class ForslagTilVedtakMottakTest {
                     behandlingId = behandlingId,
                     emneknagger =
                         setOf(
-                            AVSLAG.navn, AVSLAG_MINSTEINNTEKT.navn, AVSLAG_ARBEIDSINNTEKT.navn, AVSLAG_ARBEIDSTID.navn, AVSLAG_ALDER.navn,
-                            AVSLAG_ANDRE_YTELSER.navn, AVSLAG_MEDLEMSKAP.navn, AVSLAG_STREIK.navn, AVSLAG_OPPHOLD_UTLAND.navn,
-                            AVSLAG_REELL_ARBEIDSSØKER.navn, AVSLAG_IKKE_REGISTRERT.navn, AVSLAG_UTESTENGT.navn, AVSLAG_UTDANNING.navn,
+                            AVSLAG.visningsnavn,
+                            AVSLAG_MINSTEINNTEKT.visningsnavn,
+                            AVSLAG_ARBEIDSINNTEKT.visningsnavn,
+                            AVSLAG_ARBEIDSTID.visningsnavn,
+                            AVSLAG_ALDER.visningsnavn,
+                            AVSLAG_ANDRE_YTELSER.visningsnavn,
+                            AVSLAG_MEDLEMSKAP.visningsnavn,
+                            AVSLAG_STREIK.visningsnavn,
+                            AVSLAG_OPPHOLD_UTLAND.visningsnavn,
+                            AVSLAG_REELL_ARBEIDSSØKER.visningsnavn,
+                            AVSLAG_IKKE_REGISTRERT.visningsnavn,
+                            AVSLAG_UTESTENGT.visningsnavn,
+                            AVSLAG_UTDANNING.visningsnavn,
                         ),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
@@ -101,7 +114,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.navn, RETTIGHET_VERNEPLIKT.navn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_VERNEPLIKT.visningsnavn),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -117,7 +130,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.navn, RETTIGHET_ORDINÆR.navn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -133,7 +146,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.navn, RETTIGHET_PERMITTERT.navn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -149,7 +162,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.navn, RETTIGHET_PERMITTERT_FISK.navn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT_FISK.visningsnavn),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -165,7 +178,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.navn, RETTIGHET_KONKURS.navn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_KONKURS.visningsnavn),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }
@@ -181,7 +194,7 @@ class ForslagTilVedtakMottakTest {
                     ident = ident,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.navn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn),
                 )
             oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
         }

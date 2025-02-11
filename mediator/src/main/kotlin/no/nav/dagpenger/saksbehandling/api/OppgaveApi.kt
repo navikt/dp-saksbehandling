@@ -6,12 +6,10 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.swagger.swaggerUI
-import io.ktor.server.request.contentType
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
-import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -20,11 +18,13 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import mu.withLoggingContext
+import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -266,11 +266,6 @@ internal fun Application.oppgaveApi(
     }
 }
 
-class UgyldigContentType(message: String) : RuntimeException(message)
-
-private val RoutingContext.htmlContentType: Boolean
-    get() = call.request.contentType().match(ContentType.Text.Html)
-
 private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbehandler): UtsettOppgaveHendelse {
     val utsettOppgaveDto = this.receive<UtsettOppgaveDTO>()
     return UtsettOppgaveHendelse(
@@ -279,6 +274,16 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbeh
         utsattTil = utsettOppgaveDto.utsettTilDato,
         beholdOppgave = utsettOppgaveDto.beholdOppgave,
         utførtAv = saksbehandler,
+        årsak =
+            when (utsettOppgaveDto.aarsak) {
+                UtsettOppgaveAarsakDTO.AVVENT_SVAR -> PåVent.AVVENT_SVAR
+                UtsettOppgaveAarsakDTO.AVVENT_MELDEKORT -> PåVent.AVVENT_MELDEKORT
+                UtsettOppgaveAarsakDTO.AVVENT_DOKUMENTASJON -> PåVent.AVVENT_DOKUMENTASJON
+                UtsettOppgaveAarsakDTO.AVVENT_RAPPORTERINGSFRIST -> PåVent.AVVENT_RAPPORTERINGSFRIST
+                UtsettOppgaveAarsakDTO.AVVENT_SVAR_PÅ_FORESPØRSEL -> PåVent.AVVENT_SVAR_PÅ_FORESPØRSEL
+                UtsettOppgaveAarsakDTO.ANNET -> PåVent.ANNET
+                null -> PåVent.ANNET
+            },
     )
 }
 
