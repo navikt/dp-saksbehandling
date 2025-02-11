@@ -91,7 +91,7 @@ internal class GamleOppgaverRepository(private val ds: DataSource) {
                 ).map { row ->
                     GamleOppgaver(
                         ident = row.string("ident"),
-                        soknadId = row.uuid("søknadId"),
+                        soknadId = row.string("søknadId").let { UUID.fromString(it) },
                         behandlingId = row.uuid("behandling_id"),
                     )
                 }.asList,
