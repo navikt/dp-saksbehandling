@@ -804,6 +804,7 @@ class OppgaveApiTest {
                                 adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                                 mellomnavn = testPerson.mellomnavn,
                                 statsborgerskap = testPerson.statsborgerskap,
+                                sikkerhetstiltak = testPerson.sikkerhetstiltak.first().tiltaksbeskrivelse,
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         emneknagger = testOppgave.emneknagger.toList(),

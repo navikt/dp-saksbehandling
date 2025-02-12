@@ -438,6 +438,8 @@ components:
           type: boolean
         adressebeskyttelseGradering:
           $ref: '#/components/schemas/AdressebeskyttelseGradering'
+        sikkerhetstiltak:
+          type: string
       required:
         - ident
         - fornavn
@@ -447,6 +449,7 @@ components:
         - kjonn
         - skjermesSomEgneAnsatte
         - adressebeskyttelseGradering
+        - sikkerhetstiltak
 
     OppgaveOversiktResultat:
       type: object

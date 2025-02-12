@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.pdl.sikkerhetstiltak.SikkerhetstiltakDto
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
@@ -106,6 +107,16 @@ class OppgaveMediatorTest {
                         statsborgerskap = null,
                         kjønn = PDLPerson.Kjonn.KVINNE,
                         adresseBeskyttelseGradering = UGRADERT,
+                        sikkerhetstiltak =
+                            listOf(
+                                SikkerhetstiltakDto(
+                                    tiltakstype = "Tiltakstype",
+                                    tiltaksbeskrivelse = "To ansatte i samtale",
+                                    kontaktperson = null,
+                                    gyldigFraOgMed = LocalDate.now(),
+                                    gyldigTilOgMed = LocalDate.now().plusDays(1),
+                                ),
+                            ),
                     ),
                 )
         }

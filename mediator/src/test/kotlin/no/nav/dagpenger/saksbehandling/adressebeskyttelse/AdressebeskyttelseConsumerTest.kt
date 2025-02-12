@@ -7,6 +7,7 @@ import io.mockk.verify
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.CounterSnapshot
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.pdl.sikkerhetstiltak.SikkerhetstiltakDto
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
@@ -66,6 +67,16 @@ internal class AdressebeskyttelseConsumerTest {
                 statsborgerskap = "NOR",
                 kjønn = PDLPerson.Kjonn.MANN,
                 adresseBeskyttelseGradering = adresseBeskyttelseGradering,
+                sikkerhetstiltak =
+                    listOf(
+                        SikkerhetstiltakDto(
+                            tiltakstype = "Tiltakstype",
+                            tiltaksbeskrivelse = "To ansatte i samtale",
+                            kontaktperson = null,
+                            gyldigFraOgMed = LocalDate.now(),
+                            gyldigTilOgMed = LocalDate.now().plusDays(1),
+                        ),
+                    ),
             ),
         )
     }

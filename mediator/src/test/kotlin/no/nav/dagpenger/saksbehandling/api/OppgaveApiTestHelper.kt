@@ -7,6 +7,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.pdl.sikkerhetstiltak.SikkerhetstiltakDto
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -200,5 +201,15 @@ internal object OppgaveApiTestHelper {
             statsborgerskap = "NOR",
             kjønn = PDLPerson.Kjonn.UKJENT,
             adresseBeskyttelseGradering = UGRADERT,
+            sikkerhetstiltak =
+                listOf(
+                    SikkerhetstiltakDto(
+                        tiltakstype = "Tiltakstype",
+                        tiltaksbeskrivelse = "To ansatte i samtale",
+                        kontaktperson = null,
+                        gyldigFraOgMed = LocalDate.now(),
+                        gyldigTilOgMed = LocalDate.now().plusDays(1),
+                    ),
+                ),
         )
 }
