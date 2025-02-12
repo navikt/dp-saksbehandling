@@ -7,10 +7,10 @@ import io.mockk.verify
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.CounterSnapshot
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.pdl.sikkerhetstiltak.SikkerhetstiltakDto
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Sikkerhetstiltak
 import no.nav.dagpenger.saksbehandling.getSnapShot
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -69,12 +69,11 @@ internal class AdressebeskyttelseConsumerTest {
                 adresseBeskyttelseGradering = adresseBeskyttelseGradering,
                 sikkerhetstiltak =
                     listOf(
-                        SikkerhetstiltakDto(
-                            tiltakstype = "Tiltakstype",
-                            tiltaksbeskrivelse = "To ansatte i samtale",
-                            kontaktperson = null,
-                            gyldigFraOgMed = LocalDate.now(),
-                            gyldigTilOgMed = LocalDate.now().plusDays(1),
+                        Sikkerhetstiltak(
+                            type = "Tiltakstype",
+                            beskrivelse = "To ansatte i samtale",
+                            gyldigFom = LocalDate.now(),
+                            gyldigTom = LocalDate.now().plusDays(1),
                         ),
                     ),
             ),

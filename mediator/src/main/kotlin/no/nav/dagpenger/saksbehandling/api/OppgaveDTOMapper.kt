@@ -81,7 +81,7 @@ internal class OppgaveDTOMapper(
                         },
                     statsborgerskap = person.statsborgerskap,
                     skjermesSomEgneAnsatte = oppgave.behandling.person.skjermesSomEgneAnsatte,
-                    sikkerhetstiltak = person.sikkerhetstiltak.first().tiltaksbeskrivelse,
+                    sikkerhetstiltak = person.sikkerhetstiltak.first().beskrivelse,
                     adressebeskyttelseGradering =
                         when (oppgave.behandling.person.adressebeskyttelseGradering) {
                             AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND

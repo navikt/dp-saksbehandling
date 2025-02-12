@@ -11,8 +11,8 @@ import io.ktor.http.HttpStatusCode
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.pdl.sikkerhetstiltak.SikkerhetstiltakDto
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Sikkerhetstiltak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
@@ -71,12 +71,11 @@ class MeldingOmVedtakKlientTest {
             adresseBeskyttelseGradering = UGRADERT,
             sikkerhetstiltak =
                 listOf(
-                    SikkerhetstiltakDto(
-                        tiltakstype = "Tiltakstype",
-                        tiltaksbeskrivelse = "To ansatte i samtale",
-                        kontaktperson = null,
-                        gyldigFraOgMed = LocalDate.now(),
-                        gyldigTilOgMed = LocalDate.now().plusDays(1),
+                    Sikkerhetstiltak(
+                        type = "Tiltakstype",
+                        beskrivelse = "To ansatte i samtale",
+                        gyldigFom = LocalDate.now(),
+                        gyldigTom = LocalDate.now().plusDays(1),
                     ),
                 ),
         )

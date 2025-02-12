@@ -804,7 +804,7 @@ class OppgaveApiTest {
                                 adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                                 mellomnavn = testPerson.mellomnavn,
                                 statsborgerskap = testPerson.statsborgerskap,
-                                sikkerhetstiltak = testPerson.sikkerhetstiltak.first().tiltaksbeskrivelse,
+                                sikkerhetstiltak = testPerson.sikkerhetstiltak.first().beskrivelse,
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         emneknagger = testOppgave.emneknagger.toList(),
@@ -881,6 +881,7 @@ class OppgaveApiTest {
                         "fodselsdato": "2000-01-01",
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR",
+                        "sikkerhetstiltak": "To ansatte i samtale",
                         "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],

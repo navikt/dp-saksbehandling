@@ -7,7 +7,6 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.pdl.sikkerhetstiltak.SikkerhetstiltakDto
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -34,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.Sikkerhetstiltak
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -203,12 +203,11 @@ internal object OppgaveApiTestHelper {
             adresseBeskyttelseGradering = UGRADERT,
             sikkerhetstiltak =
                 listOf(
-                    SikkerhetstiltakDto(
-                        tiltakstype = "Tiltakstype",
-                        tiltaksbeskrivelse = "To ansatte i samtale",
-                        kontaktperson = null,
-                        gyldigFraOgMed = LocalDate.now(),
-                        gyldigTilOgMed = LocalDate.now().plusDays(1),
+                    Sikkerhetstiltak(
+                        type = "Tiltakstype",
+                        beskrivelse = "To ansatte i samtale",
+                        gyldigFom = LocalDate.now(),
+                        gyldigTom = LocalDate.now().plusDays(1),
                     ),
                 ),
         )
