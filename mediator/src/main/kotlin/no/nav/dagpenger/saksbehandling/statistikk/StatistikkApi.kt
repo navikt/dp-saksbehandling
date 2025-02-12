@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.html.respondHtml
 import io.ktor.server.response.respond
@@ -40,8 +39,15 @@ internal fun Application.statistikkApi(statistikkTjeneste: StatistikkTjeneste) {
         authenticate("azureAd") {
             route("statistikk") {
                 get {
-                    val statistikk = statistikkTjeneste.hentStatistikk(call.navIdent())
-                    call.respond(HttpStatusCode.OK, statistikk)
+                    val statistikk = statistikkTjeneste.hentSaksbehandlerStatistikk(call.navIdent())
+                    val generellStatistikk = statistikkTjeneste.hentAntallVedtakGjort()
+                    call.respond(
+                        HttpStatusCode.OK,
+                        mapOf(
+                            "individuellStatistikk" to statistikk,
+                            "generellStatistikk" to generellStatistikk,
+                        ),
+                    )
                 }
             }
         }

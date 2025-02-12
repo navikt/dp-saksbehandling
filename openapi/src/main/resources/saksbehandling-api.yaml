@@ -402,14 +402,19 @@ paths:
   /statistikk:
     get:
       summary: Hent statistikk
-      description: Henter statistikk for innlogget saksbehandler.
+      description: Henter statistikk for innlogget saksbehandler samt generell statistikk.
       responses:
         '200':
           description: Statistikk hentet
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Statistikk'
+                type: object
+                properties:
+                  individuellStatistikk:
+                    $ref: '#/components/schemas/Statistikk'
+                  generellStatistikk:
+                    $ref: '#/components/schemas/Statistikk'
         '401':
           description: Uautorisert tilgang
 components:

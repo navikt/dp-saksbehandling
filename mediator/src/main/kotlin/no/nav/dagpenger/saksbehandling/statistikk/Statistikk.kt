@@ -6,13 +6,15 @@ import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import javax.sql.DataSource
 
 interface StatistikkTjeneste {
-    fun hentStatistikk(navIdent: String): StatistikkDTO
+    fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO
+
+    fun hentAntallVedtakGjort(): StatistikkDTO
 
     fun hentAntallBrevSendt(): Int
 }
 
 class PostgresStatistikkTjeneste(private val dataSource: DataSource) : StatistikkTjeneste {
-    override fun hentStatistikk(navIdent: String): StatistikkDTO {
+    override fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO {
         return sessionOf(dataSource = dataSource).use { session ->
             session.run(
                 queryOf(
@@ -40,6 +42,45 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                         
                     """,
                     paramMap = mapOf("navIdent" to navIdent),
+                ).map { row ->
+                    StatistikkDTO(
+                        dag = row.int("dag"),
+                        uke = row.int("uke"),
+                        totalt = row.int("total"),
+                    )
+                }.asSingle,
+            )
+        } ?: StatistikkDTO()
+    }
+
+    override fun hentAntallVedtakGjort(): StatistikkDTO {
+        return sessionOf(dataSource = dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                    SELECT
+                    -- Count for the current day
+                        (SELECT COUNT(*)
+                         FROM oppgave_v1
+                         WHERE tilstand = 'FERDIG_BEHANDLET'
+                         AND endret_tidspunkt >= CURRENT_DATE
+                         AND endret_tidspunkt < CURRENT_DATE + INTERVAL '1 day') AS dag,
+    
+                        -- Count for the current week
+                        (SELECT COUNT(*)
+                         FROM oppgave_v1
+                         WHERE tilstand = 'FERDIG_BEHANDLET'
+                         AND endret_tidspunkt >= date_trunc('week', CURRENT_DATE)
+                         AND endret_tidspunkt < date_trunc('week', CURRENT_DATE) + INTERVAL '1 week') AS uke,
+                         
+                        -- Total count
+                        (SELECT COUNT(*)
+                         FROM oppgave_v1
+                         WHERE tilstand = 'FERDIG_BEHANDLET') AS total;
+                        
+                    """,
+                    paramMap = mapOf(),
                 ).map { row ->
                     StatistikkDTO(
                         dag = row.int("dag"),
