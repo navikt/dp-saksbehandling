@@ -31,6 +31,7 @@ class SletteGamleOppgaverJobTest {
         SletteGamleOppgaverJob(
             rapidsConnection = testRapid,
             gamleOppgaverRepository = gamleOppgaverRepository,
+            leaderElector = { Result.success(true) },
         ).avbrytGamleOppgaver()
 
         testRapid.inspektør.size shouldBe 2

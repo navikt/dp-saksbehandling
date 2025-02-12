@@ -143,10 +143,11 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
             utsendingAlarmJob = UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob()
-            slettGamleOppgaverJob = SletteGamleOppgaverJob(
-                rapidsConnection,
-                SletteGamleOppgaverJob.GamleOppgaverRepository(dataSource)
-            ).startJob()
+            slettGamleOppgaverJob =
+                SletteGamleOppgaverJob(
+                    rapidsConnection,
+                    GamleOppgaverRepository(dataSource),
+                ).startJob()
         }
 
     init {

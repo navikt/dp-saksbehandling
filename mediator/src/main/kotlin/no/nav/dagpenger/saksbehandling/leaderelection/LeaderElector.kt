@@ -17,20 +17,22 @@ import java.net.InetAddress
 object LeaderElector {
     private val log = KotlinLogging.logger {}
 
-    private val httpClient = HttpClient() {
-        install(ContentNegotiation) {
-            jackson {
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            }
-        }
-        install(Logging) {
-            logger = object : Logger {
-                override fun log(message: String) {
-                    log.info { message }
+    private val httpClient =
+        HttpClient {
+            install(ContentNegotiation) {
+                jackson {
+                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 }
             }
+            install(Logging) {
+                logger =
+                    object : Logger {
+                        override fun log(message: String) {
+                            log.info { message }
+                        }
+                    }
+            }
         }
-    }
 
     private data class Leader(val name: String)
 
