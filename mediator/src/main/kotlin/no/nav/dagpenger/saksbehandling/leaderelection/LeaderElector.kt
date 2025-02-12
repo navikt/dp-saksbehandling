@@ -43,10 +43,10 @@ object LeaderElector {
             val url = Configuration.properties[Key("ELECTOR_GET_URL", stringType)]
             val hostName = InetAddress.getLocalHost().hostName
             httpClient.get(url).body<Leader>().let {
-                when (it.name == hostName) {
-                    true -> true
-                    else -> false
+                log.info {
+                    "leader is ${it.name}, I am $hostName"
                 }
+                it.name == hostName
             }
         }
     }
