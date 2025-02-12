@@ -59,12 +59,13 @@ internal class PDLHttpKlient(
                     statsborgerskap = pdlPerson.statsborgerskap,
                     kjønn = pdlPerson.kjonn,
                     fødselsdato = pdlPerson.fodselsdato,
-                    adresseBeskyttelseGradering = pdlPerson.adresseeBeskyttelseGradering(),
+                    adresseBeskyttelseGradering = pdlPerson.adresseBeskyttelseGradering(),
+                    sikkerhetstiltak = pdlPerson.sikkerhetstiltak,
                 )
             }
     }
 
-    private fun PDLPerson.adresseeBeskyttelseGradering() =
+    private fun PDLPerson.adresseBeskyttelseGradering() =
         when (this.adresseBeskyttelse) {
             FORTROLIG -> AdressebeskyttelseGradering.FORTROLIG
             STRENGT_FORTROLIG -> AdressebeskyttelseGradering.STRENGT_FORTROLIG
