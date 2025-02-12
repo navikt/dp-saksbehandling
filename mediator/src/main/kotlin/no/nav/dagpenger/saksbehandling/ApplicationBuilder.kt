@@ -170,6 +170,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
 
     override fun onShutdown(rapidsConnection: RapidsConnection) {
         utsendingAlarmJob.cancel()
+        slettGamleOppgaverJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 

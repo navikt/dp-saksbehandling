@@ -2,80 +2,41 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
-import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import mu.KLogger
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.leaderelection.LeaderElector
-import java.time.Instant
-import java.time.ZoneId
-import java.util.Date
-import java.util.Timer
+import no.nav.dagpenger.saksbehandling.job.Job
 import java.util.UUID
 import javax.sql.DataSource
-import kotlin.concurrent.fixedRateTimer
-
-private val logger = KotlinLogging.logger {}
 
 internal class SletteGamleOppgaverJob(
     private val rapidsConnection: RapidsConnection,
     private val gamleOppgaverRepository: GamleOppgaverRepository,
-    private val leaderElector: suspend () -> Result<Boolean> = LeaderElector::isLeader,
-) {
-    private val Int.Dag get() = this * 1000L * 60L * 60L * 24L
-
-    fun startJob(): Timer {
-        return fixedRateTimer(
-            name = "SletteGamleOppgaverJob",
-            daemon = true,
-            startAt = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant()),
-            period = 1.Dag,
-            action = {
-                try {
-                    SletteGamleOppgaverJob(
-                        rapidsConnection = rapidsConnection,
-                        gamleOppgaverRepository = gamleOppgaverRepository,
-                    ).avbrytGamleOppgaver()
-                } catch (e: Exception) {
-                    logger.error(e) { "SletteGamleOppgaverJob feilet: ${e.message} " }
-                }
-            },
-        )
+) : Job() {
+    companion object {
+        private const val ELDRE_ENN = 21
     }
 
-    fun finnGamleOppgaver(eldreEnn: Int): List<GamleOppgaver> {
-        return gamleOppgaverRepository.finnGamleOppgaver(eldreEnn).also {
+    override val jobName: String = "SletteGamleOppgaverJob"
+    override val logger: KLogger = KotlinLogging.logger {}
+
+    override suspend fun executeJob() {
+        gamleOppgaverRepository.finnGamleOppgaver(ELDRE_ENN).also {
             logger.info { "Fant ${it.size} gamle oppgaver: $it" }
-        }
-    }
-
-    fun avbrytGamleOppgaver(eldreEnn: Int = 21) {
-        runBlocking {
-            leaderElector().onSuccess {
-                when (it) {
-                    true -> {
-                        logger.info { "Starter SletteGamleOppgaverJob" }
-                        finnGamleOppgaver(eldreEnn).forEach { oppgave ->
-                            rapidsConnection.publish(
-                                key = oppgave.ident,
-                                JsonMessage.newMessage(
-                                    eventName = "avbryt_behandling",
-                                    map =
-                                        mapOf(
-                                            "behandlingId" to oppgave.behandlingId,
-                                            "søknadId" to oppgave.soknadId,
-                                            "ident" to oppgave.ident,
-                                        ),
-                                ).toJson(),
-                            )
-                        }
-                    }
-                    false -> logger.info { "Er ikke leder, kjører ikke jobb: SletteGamleOppgaverJob" }
-                }
-            }
-                .onFailure {
-                    logger.error(it) { "Kunne ikke avgjøre om jeg er leder, avbryter ikke gamle oppgaver" }
-                }
+        }.forEach { oppgave ->
+            rapidsConnection.publish(
+                key = oppgave.ident,
+                JsonMessage.newMessage(
+                    eventName = "avbryt_behandling",
+                    map =
+                        mapOf(
+                            "behandlingId" to oppgave.behandlingId,
+                            "søknadId" to oppgave.soknadId,
+                            "ident" to oppgave.ident,
+                        ),
+                ).toJson(),
+            )
         }
     }
 }
