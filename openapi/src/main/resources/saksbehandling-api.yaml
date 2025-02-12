@@ -738,12 +738,15 @@ components:
       properties:
         antallOppgaverKlarTilBehandling:
           type: integer
+          default: 0
           description: Antall oppgaver som er klar til behandling
         antallOppgaverKlarTilKontroll:
-            type: integer
-            description: Antall oppgaver som er klar til kontroll
+          type: integer
+          default: 0
+          description: Antall oppgaver som er klar til kontroll
         datoEldsteUbehandledeOppgave:
           type: string
+          default: 0
           format: string
           description: Dato for eldste oppgave som er klar til behandling
 
