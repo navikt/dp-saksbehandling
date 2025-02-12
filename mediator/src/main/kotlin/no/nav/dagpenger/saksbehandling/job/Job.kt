@@ -43,7 +43,7 @@ abstract class Job(
                 .onSuccess {
                     when (it) {
                         true -> {
-                            logger.info { "Starter $jobName" }
+                            logger.info { "Starter jobb $jobName" }
                             executeJob()
                         }
 
