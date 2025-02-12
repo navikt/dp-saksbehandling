@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
@@ -68,7 +69,9 @@ class OppgaveFristUtgåttJobTest {
             repo.lagre(oppgave3)
             repo.lagre(oppgave4)
 
-            håndterOppgaverSomIkkeLengerSkalVærePåVent(oppgaveMediator)
+            runBlocking {
+                OppgaveFristUtgåttJob(oppgaveMediator).executeJob()
+            }
 
             repo.hentOppgave(oppgave1.oppgaveId).let { oppgave ->
                 oppgave.tilstand() shouldBe KlarTilBehandling

@@ -16,7 +16,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.frist.oppgaverSomIkkeLengerSkalVærePåVentJob
+import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
 import no.nav.dagpenger.saksbehandling.metrikker.startMetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
@@ -100,6 +100,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val utsendingAlarmJob: Timer
     private val slettGamleOppgaverJob: Timer
+    private val oppgaveFristUtgåttJob: Timer
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(
@@ -148,6 +149,9 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     rapidsConnection,
                     GamleOppgaverRepository(dataSource),
                 ).startJob()
+            oppgaveFristUtgåttJob = OppgaveFristUtgåttJob(oppgaveMediator).startJob(
+                period = 1 * 60 * 1000L
+            )
         }
 
     init {
@@ -155,9 +159,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     fun start() {
-        oppgaverSomIkkeLengerSkalVærePåVentJob(
-            oppgaveMediator = oppgaveMediator,
-        )
         startMetrikkJob()
         rapidsConnection.start()
     }
@@ -171,6 +172,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     override fun onShutdown(rapidsConnection: RapidsConnection) {
         utsendingAlarmJob.cancel()
         slettGamleOppgaverJob.cancel()
+        oppgaveFristUtgåttJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 
