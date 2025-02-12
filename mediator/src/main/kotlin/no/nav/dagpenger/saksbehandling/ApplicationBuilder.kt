@@ -152,9 +152,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     GamleOppgaverRepository(dataSource),
                 ).startJob()
             oppgaveFristUtgåttJob =
-                OppgaveFristUtgåttJob(oppgaveMediator).startJob(
-                    period = 1 * 60 * 1000L,
-                )
+                OppgaveFristUtgåttJob(oppgaveMediator).startJob()
             metrikkJob =
                 MetrikkJob().startJob(
                     period = 5.Minutt,
