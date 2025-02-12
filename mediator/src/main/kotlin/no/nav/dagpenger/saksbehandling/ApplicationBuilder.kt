@@ -17,8 +17,9 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
-import no.nav.dagpenger.saksbehandling.metrikker.startMetrikkJob
+import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
@@ -101,6 +102,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val utsendingAlarmJob: Timer
     private val slettGamleOppgaverJob: Timer
     private val oppgaveFristUtgåttJob: Timer
+    private val metrikkJob: Timer
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(
@@ -149,9 +151,14 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     rapidsConnection,
                     GamleOppgaverRepository(dataSource),
                 ).startJob()
-            oppgaveFristUtgåttJob = OppgaveFristUtgåttJob(oppgaveMediator).startJob(
-                period = 1 * 60 * 1000L
-            )
+            oppgaveFristUtgåttJob =
+                OppgaveFristUtgåttJob(oppgaveMediator).startJob(
+                    period = 1 * 60 * 1000L,
+                )
+            metrikkJob =
+                MetrikkJob().startJob(
+                    period = 5.Minutt,
+                )
         }
 
     init {
@@ -159,7 +166,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     fun start() {
-        startMetrikkJob()
         rapidsConnection.start()
     }
 
@@ -173,6 +179,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         utsendingAlarmJob.cancel()
         slettGamleOppgaverJob.cancel()
         oppgaveFristUtgåttJob.cancel()
+        metrikkJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 

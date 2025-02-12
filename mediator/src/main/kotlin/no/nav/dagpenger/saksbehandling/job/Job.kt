@@ -15,6 +15,7 @@ abstract class Job(
     companion object {
         val now = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
         val Int.Dag get() = this * 1000L * 60L * 60L * 24L
+        val Int.Minutt get() = this * 1000L * 60L
     }
 
     abstract val jobName: String
