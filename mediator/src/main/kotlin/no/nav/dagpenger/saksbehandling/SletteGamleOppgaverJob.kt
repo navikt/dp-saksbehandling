@@ -32,7 +32,6 @@ internal class SletteGamleOppgaverJob(
             period = 1.Dag,
             action = {
                 try {
-                    logger.info { "Starter SletteGamleOppgaverJob" }
                     SletteGamleOppgaverJob(
                         rapidsConnection = rapidsConnection,
                         gamleOppgaverRepository = gamleOppgaverRepository,
@@ -54,7 +53,8 @@ internal class SletteGamleOppgaverJob(
         runBlocking {
             leaderElector().onSuccess {
                 when (it) {
-                    true ->
+                    true -> {
+                        logger.info { "Starter SletteGamleOppgaverJob" }
                         finnGamleOppgaver(eldreEnn).forEach { oppgave ->
                             rapidsConnection.publish(
                                 key = oppgave.ident,
@@ -69,8 +69,8 @@ internal class SletteGamleOppgaverJob(
                                 ).toJson(),
                             )
                         }
-
-                    false -> logger.info { "Er ikke leder, kjører ikke jobb" }
+                    }
+                    false -> logger.info { "Er ikke leder, kjører ikke jobb: SletteGamleOppgaverJob" }
                 }
             }
                 .onFailure {
