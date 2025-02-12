@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.statistikk
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.api.models.BeholdningsInfoDTO
 import no.nav.dagpenger.saksbehandling.api.models.StatistikkDTO
 import javax.sql.DataSource
 
@@ -9,6 +10,8 @@ interface StatistikkTjeneste {
     fun hentSaksbehandlerStatistikk(navIdent: String): StatistikkDTO
 
     fun hentAntallVedtakGjort(): StatistikkDTO
+
+    fun hentBeholdningsInfo(): BeholdningsInfoDTO
 
     fun hentAntallBrevSendt(): Int
 }
@@ -90,6 +93,40 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                 }.asSingle,
             )
         } ?: StatistikkDTO()
+    }
+
+    override fun hentBeholdningsInfo(): BeholdningsInfoDTO {
+        sessionOf(dataSource = dataSource).use { session ->
+            return session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = """
+                        SELECT
+                        -- Klar til behandling
+                        (SELECT COUNT(*)
+                         FROM oppgave_v1
+                         WHERE tilstand = 'KLAR_TIL_BEHANDLING') AS klar_til_behandling,
+                    
+                        -- Klar til kontroll
+                        (SELECT COUNT(*)
+                         FROM oppgave_v1
+                         WHERE tilstand = 'KLAR_TIL_KONTROLL') AS klar_til_kontroll,
+                         
+                        (SELECT (min(opprettet), 'DD-MM-YYYY')
+                         FROM oppgave_v1
+                         WHERE tilstand in ('KLAR_TIL_BEHANDLING', 'KLAR_TIL_KONTROLL', 'PAA_VENT')) AS eldste_dato
+                    
+                    """,
+                    paramMap = mapOf(),
+                ).map { row ->
+                    BeholdningsInfoDTO(
+                        antallOppgaverKlarTilBehandling = row.int("klar_til_behandling"),
+                        antallOppgaverKlarTilKontroll = row.int("klar_til_kontroll"),
+                        datoEldsteUbehandledeOppgave = row.string("eldste_dato"),
+                    )
+                }.asSingle,
+            ) ?: BeholdningsInfoDTO()
+        }
     }
 
     override fun hentAntallBrevSendt(): Int {

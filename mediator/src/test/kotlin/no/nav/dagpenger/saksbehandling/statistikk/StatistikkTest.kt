@@ -26,4 +26,19 @@ class StatistikkTest {
             result.totalt shouldBe 3
         }
     }
+
+    @Test
+    fun `test hentBeholdningsInfo`() {
+        withMigratedDb { ds: DataSource ->
+            // Insert test data
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(lagOppgave(tilstand = Oppgave.KlarTilBehandling))
+            repo.lagre(lagOppgave(tilstand = Oppgave.KlarTilBehandling))
+
+            val statistikkTjeneste = PostgresStatistikkTjeneste(ds)
+            val result = statistikkTjeneste.hentBeholdningsInfo()
+
+            result.antallOppgaverKlarTilBehandling shouldBe 2
+        }
+    }
 }
