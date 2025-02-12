@@ -746,8 +746,7 @@ components:
           description: Antall oppgaver som er klar til kontroll
         datoEldsteUbehandledeOppgave:
           type: string
-          default: 0
-          format: string
+          default: "20-01-2024"
           description: Dato for eldste oppgave som er klar til behandling
 
     HttpProblem:

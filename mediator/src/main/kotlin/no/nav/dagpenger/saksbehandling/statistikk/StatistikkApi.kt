@@ -41,11 +41,14 @@ internal fun Application.statistikkApi(statistikkTjeneste: StatistikkTjeneste) {
                 get {
                     val statistikk = statistikkTjeneste.hentSaksbehandlerStatistikk(call.navIdent())
                     val generellStatistikk = statistikkTjeneste.hentAntallVedtakGjort()
+                    val beholdningsinfo = statistikkTjeneste.hentBeholdningsInfo()
                     call.respond(
                         HttpStatusCode.OK,
                         mapOf(
                             "individuellStatistikk" to statistikk,
                             "generellStatistikk" to generellStatistikk,
+                            "beholdningsinfo" to beholdningsinfo
+
                         ),
                     )
                 }
