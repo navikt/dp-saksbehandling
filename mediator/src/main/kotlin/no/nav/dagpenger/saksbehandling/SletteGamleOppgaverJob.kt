@@ -2,9 +2,11 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import kotlinx.coroutines.runBlocking
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.leaderelection.LeaderElector
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Date
@@ -18,6 +20,7 @@ private val logger = KotlinLogging.logger {}
 internal class SletteGamleOppgaverJob(
     private val rapidsConnection: RapidsConnection,
     private val gamleOppgaverRepository: GamleOppgaverRepository,
+    private val leaderElector: suspend () -> Result<Boolean> = LeaderElector::isLeader,
 ) {
     private val Int.Dag get() = this * 1000L * 60L * 60L * 24L
 
@@ -29,7 +32,6 @@ internal class SletteGamleOppgaverJob(
             period = 1.Dag,
             action = {
                 try {
-                    logger.info { "Starter SletteGamleOppgaverJob" }
                     SletteGamleOppgaverJob(
                         rapidsConnection = rapidsConnection,
                         gamleOppgaverRepository = gamleOppgaverRepository,
@@ -48,19 +50,32 @@ internal class SletteGamleOppgaverJob(
     }
 
     fun avbrytGamleOppgaver(eldreEnn: Int = 21) {
-        finnGamleOppgaver(eldreEnn).forEach { oppgave ->
-            rapidsConnection.publish(
-                key = oppgave.ident,
-                JsonMessage.newMessage(
-                    eventName = "avbryt_behandling",
-                    map =
-                        mapOf(
-                            "behandlingId" to oppgave.behandlingId,
-                            "søknadId" to oppgave.soknadId,
-                            "ident" to oppgave.ident,
-                        ),
-                ).toJson(),
-            )
+        runBlocking {
+            leaderElector().onSuccess {
+                when (it) {
+                    true -> {
+                        logger.info { "Starter SletteGamleOppgaverJob" }
+                        finnGamleOppgaver(eldreEnn).forEach { oppgave ->
+                            rapidsConnection.publish(
+                                key = oppgave.ident,
+                                JsonMessage.newMessage(
+                                    eventName = "avbryt_behandling",
+                                    map =
+                                        mapOf(
+                                            "behandlingId" to oppgave.behandlingId,
+                                            "søknadId" to oppgave.soknadId,
+                                            "ident" to oppgave.ident,
+                                        ),
+                                ).toJson(),
+                            )
+                        }
+                    }
+                    false -> logger.info { "Er ikke leder, kjører ikke jobb: SletteGamleOppgaverJob" }
+                }
+            }
+                .onFailure {
+                    logger.error(it) { "Kunne ikke avgjøre om jeg er leder, avbryter ikke gamle oppgaver" }
+                }
         }
     }
 }

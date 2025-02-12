@@ -16,6 +16,7 @@ spec:
     autoInstrumentation:
       enabled: true
       runtime: java
+  leaderElection: true
   replicas:
     min: 3
     max: 3
