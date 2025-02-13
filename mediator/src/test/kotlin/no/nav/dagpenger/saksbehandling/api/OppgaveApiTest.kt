@@ -197,7 +197,6 @@ class OppgaveApiTest {
                           "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
                           "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                           "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
-                          "saksbehandlerIdent": "${oppgave1.behandlerIdent}",
                           "behandlerIdent": "${oppgave1.behandlerIdent}",
                           "utsattTilDato": "${oppgave1.utsattTil()}"
                         },

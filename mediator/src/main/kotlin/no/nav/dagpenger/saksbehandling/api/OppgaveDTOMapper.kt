@@ -148,7 +148,6 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
             },
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
-        saksbehandlerIdent = this.behandlerIdent,
         behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
     )

@@ -481,8 +481,6 @@ components:
           format: uuid
         personIdent:
           type: string
-        saksbehandlerIdent:
-          type: string
         behandlerIdent:
           type: string
         tidspunktOpprettet:
