@@ -25,7 +25,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.time.LocalDate
 
-private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
@@ -123,7 +123,9 @@ internal class OppgaveDTOMapper(
 
     private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern): List<SikkerhetstiltakDTO> {
         if (person.sikkerhetstiltak.size > 0) {
-            logger.info { "Personen har ${person.sikkerhetstiltak.size} sikkerhetstiltak" }
+            sikkerlogger.info { "Personen har ${person.sikkerhetstiltak.size} sikkerhetstiltak. Fødselsdato: ${person.fødselsdato}" }
+        } else {
+            sikkerlogger.info { "Personen har ingen sikkerhetstiltak. Fødselsdato: ${person.fødselsdato}" }
         }
         return person.sikkerhetstiltak.map { sikkerhetstiltakDto ->
             SikkerhetstiltakIntern(
