@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.job
 import kotlinx.coroutines.runBlocking
 import mu.KLogger
 import no.nav.dagpenger.saksbehandling.leaderelection.LeaderElector
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Date
@@ -14,6 +15,8 @@ abstract class Job(
 ) {
     companion object {
         val now = Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant())
+        val omFemMinutter =
+            Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant().plus(Duration.ofMinutes(10)))
         val Int.Dag get() = this * 1000L * 60L * 60L * 24L
         val Int.Minutt get() = this * 1000L * 60L
     }
@@ -26,7 +29,7 @@ abstract class Job(
 
     fun startJob(
         daemon: Boolean = true,
-        startAt: Date = now,
+        startAt: Date = omFemMinutter,
         period: Long = 1.Dag,
     ): Timer {
         return fixedRateTimer(

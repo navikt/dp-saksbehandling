@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import mu.KLogger
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
@@ -15,7 +16,7 @@ class JobTest {
     fun `Skal trigge job hvis leder`() {
         runBlocking {
             val testJob = TestJob()
-            testJob.startJob(period = 500L)
+            testJob.startJob(startAt = now, period = 500L)
 
             eventually(1.seconds) {
                 testJob.antallGangerKjørt shouldBeGreaterThan 1
@@ -27,7 +28,7 @@ class JobTest {
     fun `Skal ikke trigge job hvis ikke leder`() {
         runBlocking {
             val testJob = TestJob(leaderElector = { Result.success(false) })
-            testJob.startJob(period = 50L)
+            testJob.startJob(startAt = now, period = 50L)
 
             continually(1.seconds) {
                 testJob.antallGangerKjørt shouldBe 0
@@ -39,7 +40,7 @@ class JobTest {
     fun `Skal ikke trigge job dersom leader election feiler`() {
         runBlocking {
             val testJob = TestJob(leaderElector = { Result.failure(RuntimeException("Feil")) })
-            testJob.startJob(period = 50L)
+            testJob.startJob(startAt = now, period = 50L)
 
             continually(1.seconds) {
                 testJob.antallGangerKjørt shouldBe 0
