@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.api
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -23,6 +24,8 @@ import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.time.LocalDate
+
+private val logger = KotlinLogging.logger {}
 
 internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
@@ -118,8 +121,11 @@ internal class OppgaveDTOMapper(
                 ),
         )
 
-    private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern) =
-        person.sikkerhetstiltak.map { sikkerhetstiltakDto ->
+    private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern): List<SikkerhetstiltakDTO> {
+        if (person.sikkerhetstiltak.size > 0) {
+            logger.info { "Personen har ${person.sikkerhetstiltak.size} sikkerhetstiltak" }
+        }
+        return person.sikkerhetstiltak.map { sikkerhetstiltakDto ->
             SikkerhetstiltakIntern(
                 type = sikkerhetstiltakDto.type,
                 beskrivelse = sikkerhetstiltakDto.beskrivelse,
@@ -129,6 +135,7 @@ internal class OppgaveDTOMapper(
         }.filter { sikkerhetstiltakIntern -> sikkerhetstiltakIntern.erGyldig(LocalDate.now()) }.map {
             SikkerhetstiltakDTO(beskrivelse = it.beskrivelse, gyldigTom = it.gyldigTom)
         }
+    }
 }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() =

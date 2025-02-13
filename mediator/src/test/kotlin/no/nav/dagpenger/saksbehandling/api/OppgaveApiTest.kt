@@ -758,7 +758,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Hent oppgave med tilhørende personinfo og journalpostIder `() {
+    fun `Hent oppgave med tilhørende personinfo, sikkerhetstiltak og journalpostIder`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave =
             lagTestOppgaveMedTilstandOgBehandling(
@@ -893,6 +893,160 @@ class OppgaveApiTest {
                             "gyldigTom": "${testPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
+                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
+                      },
+                      "emneknagger": [],
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
+                      "journalpostIder": ["123456789"],
+                      "saksbehandler": {
+                        "ident": "${saksbehandler.navIdent}"
+                      },
+                      "beslutter": {
+                        "ident": "${beslutter.navIdent}"
+                      },
+                      "historikk": [
+                        {
+                          "type": "notat",
+                          "tidspunkt": "2021-01-01T12:00:00",
+                          "tittel": "Notat",
+                          "behandler": {
+                            "navn": "Ole Doffen",
+                            "rolle": "beslutter"
+                          },
+                          "body": "Dette er et notat"
+                        }
+                      ]
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Hent oppgave for person uten sikkerhetstiltak`() {
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
+        val testOppgave =
+            lagTestOppgaveMedTilstandOgBehandling(
+                tilstand = UNDER_KONTROLL,
+                tildeltBehandlerIdent = beslutter.navIdent,
+                behandling =
+                    Behandling(
+                        behandlingId = UUIDv7.ny(),
+                        opprettet = LocalDateTime.now(),
+                        person =
+                            Person(
+                                id = UUIDv7.ny(),
+                                ident = TEST_IDENT,
+                                skjermesSomEgneAnsatte = true,
+                                adressebeskyttelseGradering = UGRADERT,
+                            ),
+                        hendelse =
+                            SøknadsbehandlingOpprettetHendelse(
+                                søknadId = UUIDv7.ny(),
+                                behandlingId = UUIDv7.ny(),
+                                ident = TEST_IDENT,
+                                opprettet = LocalDateTime.now(),
+                            ),
+                    ),
+            )
+        coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
+        val oppgaveDTOMapper =
+            mockk<OppgaveDTOMapper>().also {
+                val tidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
+                coEvery { it.lagOppgaveDTO(testOppgave) } returns
+                    OppgaveDTO(
+                        oppgaveId = testOppgave.oppgaveId,
+                        behandlingId = testOppgave.behandling.behandlingId,
+                        person =
+                            PersonDTO(
+                                ident = testPerson.ident,
+                                fornavn = testPerson.fornavn,
+                                etternavn = testPerson.etternavn,
+                                fodselsdato = testPerson.fødselsdato,
+                                alder = testPerson.alder,
+                                kjonn = KjonnDTO.UKJENT,
+                                skjermesSomEgneAnsatte = testOppgave.behandling.person.skjermesSomEgneAnsatte,
+                                adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                                mellomnavn = testPerson.mellomnavn,
+                                statsborgerskap = testPerson.statsborgerskap,
+                                sikkerhetstiltak = emptyList(),
+                            ),
+                        tidspunktOpprettet = testOppgave.opprettet,
+                        emneknagger = testOppgave.emneknagger.toList(),
+                        tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
+                        saksbehandler =
+                            BehandlerDTO(
+                                ident = saksbehandler.navIdent,
+                                fornavn = "Saksbehandler fornavn",
+                                etternavn = "Saksbehandler etternavn",
+                                enhet =
+                                    BehandlerEnhetDTO(
+                                        navn = "Enhet navn",
+                                        enhetNr = "1234",
+                                        postadresse = "Adresseveien 3, 0101 ADRESSA",
+                                    ),
+                            ),
+                        beslutter =
+                            BehandlerDTO(
+                                ident = beslutter.navIdent,
+                                fornavn = "Saksbeandler fornavn",
+                                etternavn = "Saksbehandler etternavn",
+                                enhet =
+                                    BehandlerEnhetDTO(
+                                        navn = "Enhet navn",
+                                        enhetNr = "1234",
+                                        postadresse = "Adresseveien 3, 0101 ADRESSA",
+                                    ),
+                            ),
+                        utsattTilDato = null,
+                        journalpostIder = listOf("123456789"),
+                        historikk =
+                            listOf(
+                                OppgaveHistorikkDTO(
+                                    type = OppgaveHistorikkDTO.Type.notat,
+                                    tidspunkt = tidspunkt,
+                                    behandler =
+                                        OppgaveHistorikkBehandlerDTO(
+                                            navn = "Ole Doffen",
+                                            rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
+                                        ),
+                                    tittel = "Notat",
+                                    body = "Dette er et notat",
+                                ),
+                            ),
+                        notat = null,
+                        lovligeEndringer =
+                            LovligeEndringerDTO(
+                                paaVentAarsaker =
+                                    when (testOppgave.tilstand().type) {
+                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                                        else -> emptyList()
+                                    },
+                            ),
+                    )
+            }
+
+        withOppgaveApi(
+            oppgaveMediator = oppgaveMediatorMock,
+            oppgaveDTOMapper = oppgaveDTOMapper,
+        ) {
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                //language=JSON
+                json shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                    {
+                      "behandlingId": "${testOppgave.behandling.behandlingId}",
+                      "person": {
+                        "ident": "${testOppgave.behandling.person.ident}",
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
+                        "statsborgerskap": "NOR",
+                        "sikkerhetstiltak": [],
                         "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
