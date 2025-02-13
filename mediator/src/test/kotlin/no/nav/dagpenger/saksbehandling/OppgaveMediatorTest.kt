@@ -106,6 +106,15 @@ class OppgaveMediatorTest {
                         statsborgerskap = null,
                         kjønn = PDLPerson.Kjonn.KVINNE,
                         adresseBeskyttelseGradering = UGRADERT,
+                        sikkerhetstiltak =
+                            listOf(
+                                SikkerhetstiltakIntern(
+                                    type = "Tiltakstype",
+                                    beskrivelse = "To ansatte i samtale",
+                                    gyldigFom = LocalDate.now(),
+                                    gyldigTom = LocalDate.now().plusDays(1),
+                                ),
+                            ),
                     ),
                 )
         }

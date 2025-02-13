@@ -33,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -200,5 +201,14 @@ internal object OppgaveApiTestHelper {
             statsborgerskap = "NOR",
             kjønn = PDLPerson.Kjonn.UKJENT,
             adresseBeskyttelseGradering = UGRADERT,
+            sikkerhetstiltak =
+                listOf(
+                    SikkerhetstiltakIntern(
+                        type = "Tiltakstype",
+                        beskrivelse = "To ansatte i samtale",
+                        gyldigFom = LocalDate.now(),
+                        gyldigTom = LocalDate.now().plusDays(1),
+                    ),
+                ),
         )
 }

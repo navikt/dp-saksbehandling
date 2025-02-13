@@ -5,7 +5,6 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
@@ -17,10 +16,10 @@ import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class OppgaveDTOMapperTest {
-    private val oppgaveId = UUIDv7.ny()
     private val pdlKlient =
         mockk<PDLKlient>().also {
             coEvery { it.person(TEST_IDENT) } returns Result.success(OppgaveApiTestHelper.testPerson)
@@ -109,6 +108,12 @@ class OppgaveDTOMapperTest {
                         "kjonn": "UKJENT",
                         "skjermesSomEgneAnsatte": false,
                         "adressebeskyttelseGradering": "UGRADERT",
+                        "sikkerhetstiltak": [
+                          {
+                            "beskrivelse": "To ansatte i samtale",
+                            "gyldigTom": "${LocalDate.now().plusDays(1)}"
+                          }
+                        ],
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
@@ -239,20 +244,26 @@ class OppgaveDTOMapperTest {
                         "kjonn": "UKJENT",
                         "skjermesSomEgneAnsatte": false,
                         "adressebeskyttelseGradering": "UGRADERT",
+                        "sikkerhetstiltak": [
+                          {
+                            "beskrivelse": "To ansatte i samtale",
+                            "gyldigTom": "${OppgaveApiTestHelper.testPerson.sikkerhetstiltak.first().gyldigTom}"
+                          }
+                        ],
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
                       "emneknagger": [],
                       "tilstand": "UNDER_BEHANDLING",
                       "lovligeEndringer": {
-                          "paaVentAarsaker": [
-                            "AVVENT_SVAR",
-                            "AVVENT_DOKUMENTASJON",
-                            "AVVENT_MELDEKORT",
-                            "AVVENT_RAPPORTERINGSFRIST",
-                            "AVVENT_SVAR_PÅ_FORESPØRSEL",
-                            "ANNET"
-                            ]
+                        "paaVentAarsaker": [
+                          "AVVENT_SVAR",
+                          "AVVENT_DOKUMENTASJON",
+                          "AVVENT_MELDEKORT",
+                          "AVVENT_RAPPORTERINGSFRIST",
+                          "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                          "ANNET"
+                        ]
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",

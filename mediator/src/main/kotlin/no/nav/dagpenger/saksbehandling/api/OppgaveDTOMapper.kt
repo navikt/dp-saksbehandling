@@ -2,10 +2,12 @@ package no.nav.dagpenger.saksbehandling.api
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
@@ -17,9 +19,13 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import java.time.LocalDate
+
+private val logger = KotlinLogging.logger {}
 
 internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
@@ -81,6 +87,7 @@ internal class OppgaveDTOMapper(
                         },
                     statsborgerskap = person.statsborgerskap,
                     skjermesSomEgneAnsatte = oppgave.behandling.person.skjermesSomEgneAnsatte,
+                    sikkerhetstiltak = mapGyldigeSikkerhetstiltak(person),
                     adressebeskyttelseGradering =
                         when (oppgave.behandling.person.adressebeskyttelseGradering) {
                             AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
@@ -113,6 +120,22 @@ internal class OppgaveDTOMapper(
                         },
                 ),
         )
+
+    private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern): List<SikkerhetstiltakDTO> {
+        if (person.sikkerhetstiltak.size > 0) {
+            logger.info { "Personen har ${person.sikkerhetstiltak.size} sikkerhetstiltak" }
+        }
+        return person.sikkerhetstiltak.map { sikkerhetstiltakDto ->
+            SikkerhetstiltakIntern(
+                type = sikkerhetstiltakDto.type,
+                beskrivelse = sikkerhetstiltakDto.beskrivelse,
+                gyldigFom = sikkerhetstiltakDto.gyldigFom,
+                gyldigTom = sikkerhetstiltakDto.gyldigTom,
+            )
+        }.filter { sikkerhetstiltakIntern -> sikkerhetstiltakIntern.erGyldig(LocalDate.now()) }.map {
+            SikkerhetstiltakDTO(beskrivelse = it.beskrivelse, gyldigTom = it.gyldigTom)
+        }
+    }
 }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() =

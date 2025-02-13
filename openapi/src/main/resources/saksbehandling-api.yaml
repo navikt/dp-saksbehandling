@@ -445,6 +445,10 @@ components:
           type: boolean
         adressebeskyttelseGradering:
           $ref: '#/components/schemas/AdressebeskyttelseGradering'
+        sikkerhetstiltak:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sikkerhetstiltak'
       required:
         - ident
         - fornavn
@@ -454,6 +458,7 @@ components:
         - kjonn
         - skjermesSomEgneAnsatte
         - adressebeskyttelseGradering
+        - sikkerhetstiltak
 
     OppgaveOversiktResultat:
       type: object
@@ -592,6 +597,18 @@ components:
         - FORTROLIG
         - STRENGT_FORTROLIG
         - STRENGT_FORTROLIG_UTLAND
+
+    Sikkerhetstiltak:
+      type: object
+      properties:
+        beskrivelse:
+          type: string
+        gyldigTom:
+          type: string
+          format: date
+      required:
+        - beskrivelse
+        - gyldigTom
 
     PersonIdent:
       type: object

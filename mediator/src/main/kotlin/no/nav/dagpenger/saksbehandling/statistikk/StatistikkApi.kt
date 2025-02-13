@@ -47,8 +47,7 @@ internal fun Application.statistikkApi(statistikkTjeneste: StatistikkTjeneste) {
                         mapOf(
                             "individuellStatistikk" to statistikk,
                             "generellStatistikk" to generellStatistikk,
-                            "beholdningsinfo" to beholdningsinfo
-
+                            "beholdningsinfo" to beholdningsinfo,
                         ),
                     )
                 }
