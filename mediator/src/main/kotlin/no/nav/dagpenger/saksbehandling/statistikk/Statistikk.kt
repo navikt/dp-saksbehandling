@@ -112,7 +112,7 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                          FROM oppgave_v1
                          WHERE tilstand = 'KLAR_TIL_KONTROLL') AS klar_til_kontroll,
                          
-                        (SELECT (min(opprettet), 'DD-MM-YYYY')
+                        (SELECT min(opprettet)
                          FROM oppgave_v1
                          WHERE tilstand in ('KLAR_TIL_BEHANDLING', 'KLAR_TIL_KONTROLL', 'PAA_VENT')) AS eldste_dato
                     
@@ -122,7 +122,7 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                     BeholdningsInfoDTO(
                         antallOppgaverKlarTilBehandling = row.int("klar_til_behandling"),
                         antallOppgaverKlarTilKontroll = row.int("klar_til_kontroll"),
-                        datoEldsteUbehandledeOppgave = row.string("eldste_dato"),
+                        datoEldsteUbehandledeOppgave = row.localDateTime("eldste_dato"),
                     )
                 }.asSingle,
             ) ?: BeholdningsInfoDTO()
