@@ -146,9 +146,10 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 utsendingMediator,
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
-            utsendingAlarmJob = UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob(
-                period = 60.Minutt,
-            )
+            utsendingAlarmJob =
+                UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob(
+                    period = 60.Minutt,
+                )
             slettGamleOppgaverJob =
                 SletteGamleOppgaverJob(
                     rapidsConnection,
