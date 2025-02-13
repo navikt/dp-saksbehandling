@@ -12,7 +12,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Sikkerhetstiltak
+import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
@@ -71,7 +71,7 @@ class MeldingOmVedtakKlientTest {
             adresseBeskyttelseGradering = UGRADERT,
             sikkerhetstiltak =
                 listOf(
-                    Sikkerhetstiltak(
+                    SikkerhetstiltakIntern(
                         type = "Tiltakstype",
                         beskrivelse = "To ansatte i samtale",
                         gyldigFom = LocalDate.now(),

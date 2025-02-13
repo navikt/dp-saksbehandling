@@ -4,13 +4,12 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class SikkerhetstiltakTest {
-
+class SikkerhetstiltakInternTest {
     @Test
     fun `Sikkerhetstiltakets gyldighetsperiode`() {
         val nå = LocalDate.now()
         val sikkerhetstiltak =
-            Sikkerhetstiltak(
+            SikkerhetstiltakIntern(
                 type = "Sikkerhetstiltak",
                 beskrivelse = "Testbeskrivelse",
                 gyldigFom = nå,

@@ -62,6 +62,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -93,7 +94,6 @@ class OppgaveApiTest {
         mockAzure()
     }
 
-    private val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
     private val saksbehandler =
         Saksbehandler(
             SAKSBEHANDLER_IDENT,
@@ -804,7 +804,13 @@ class OppgaveApiTest {
                                 adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                                 mellomnavn = testPerson.mellomnavn,
                                 statsborgerskap = testPerson.statsborgerskap,
-                                sikkerhetstiltak = testPerson.sikkerhetstiltak.first().beskrivelse,
+                                sikkerhetstiltak =
+                                    listOf(
+                                        SikkerhetstiltakDTO(
+                                            beskrivelse = testPerson.sikkerhetstiltak.first().beskrivelse,
+                                            gyldigTom = testPerson.sikkerhetstiltak.first().gyldigTom,
+                                        ),
+                                    ),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         emneknagger = testOppgave.emneknagger.toList(),
@@ -881,7 +887,12 @@ class OppgaveApiTest {
                         "fodselsdato": "2000-01-01",
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR",
-                        "sikkerhetstiltak": "To ansatte i samtale",
+                        "sikkerhetstiltak": [
+                          {
+                            "beskrivelse": "${testPerson.sikkerhetstiltak.first().beskrivelse}",
+                            "gyldigTom": "${testPerson.sikkerhetstiltak.first().gyldigTom}"
+                          }
+                        ],
                         "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],

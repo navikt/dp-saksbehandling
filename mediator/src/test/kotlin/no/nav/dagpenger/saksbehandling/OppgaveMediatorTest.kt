@@ -108,7 +108,7 @@ class OppgaveMediatorTest {
                         adresseBeskyttelseGradering = UGRADERT,
                         sikkerhetstiltak =
                             listOf(
-                                Sikkerhetstiltak(
+                                SikkerhetstiltakIntern(
                                     type = "Tiltakstype",
                                     beskrivelse = "To ansatte i samtale",
                                     gyldigFom = LocalDate.now(),

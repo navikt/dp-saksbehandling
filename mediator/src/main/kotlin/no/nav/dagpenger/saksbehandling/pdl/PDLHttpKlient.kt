@@ -20,7 +20,7 @@ import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.STRENGT_FORTRO
 import no.nav.dagpenger.pdl.PDLPerson.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.pdl.createPersonOppslag
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Sikkerhetstiltak
+import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -63,7 +63,7 @@ internal class PDLHttpKlient(
                     adresseBeskyttelseGradering = pdlPerson.adresseBeskyttelseGradering(),
                     sikkerhetstiltak =
                         pdlPerson.sikkerhetstiltak.map { sikkerhetstiltakDto ->
-                            Sikkerhetstiltak(
+                            SikkerhetstiltakIntern(
                                 type = sikkerhetstiltakDto.tiltakstype,
                                 beskrivelse = sikkerhetstiltakDto.tiltaksbeskrivelse,
                                 gyldigFom = sikkerhetstiltakDto.gyldigFraOgMed,

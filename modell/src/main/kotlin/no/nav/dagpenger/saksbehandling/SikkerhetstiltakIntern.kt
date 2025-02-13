@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import java.time.LocalDate
 
-data class Sikkerhetstiltak(
+data class SikkerhetstiltakIntern(
     val type: String,
     val beskrivelse: String,
     val gyldigFom: LocalDate,
