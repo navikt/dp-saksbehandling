@@ -20,7 +20,7 @@ class SikkerhetstiltakTest {
     }
 
     @Test
-    fun `Dato lik eller etter gyldigTom`() {
+    fun `Sikkerhetstiltakets gyldighetsperiode`() {
         val nå = LocalDate.now()
         val sikkerhetstiltak =
             Sikkerhetstiltak(
@@ -30,8 +30,9 @@ class SikkerhetstiltakTest {
                 gyldigTom = nå.plusDays(10),
             )
 
-        sikkerhetstiltak.erGyldig(nå.plusDays(9)) shouldBe true
-        sikkerhetstiltak.erGyldig(nå.plusDays(10)) shouldBe false
+        sikkerhetstiltak.erGyldig(nå) shouldBe true
+        sikkerhetstiltak.erGyldig(nå.plusDays(10)) shouldBe true
         sikkerhetstiltak.erGyldig(nå.plusDays(11)) shouldBe false
+        sikkerhetstiltak.erGyldig(nå.minusDays(1)) shouldBe false
     }
 }

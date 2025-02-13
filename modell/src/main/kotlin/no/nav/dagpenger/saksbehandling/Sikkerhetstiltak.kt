@@ -8,5 +8,5 @@ data class Sikkerhetstiltak(
     val gyldigFom: LocalDate,
     val gyldigTom: LocalDate,
 ) {
-    fun erGyldig(dato: LocalDate) = !dato.isBefore(gyldigFom) && dato.isBefore(gyldigTom)
+    fun erGyldig(dato: LocalDate) = !dato.isBefore(gyldigFom) && !dato.isAfter(gyldigTom)
 }
