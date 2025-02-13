@@ -18,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
+import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
@@ -145,7 +146,9 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 utsendingMediator,
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
-            utsendingAlarmJob = UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob()
+            utsendingAlarmJob = UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob(
+                period = 60.Minutt,
+            )
             slettGamleOppgaverJob =
                 SletteGamleOppgaverJob(
                     rapidsConnection,
@@ -155,6 +158,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 OppgaveFristUtgåttJob(oppgaveMediator).startJob()
             metrikkJob =
                 MetrikkJob().startJob(
+                    startAt = now,
                     period = 5.Minutt,
                 )
         }
