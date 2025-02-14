@@ -100,7 +100,6 @@ internal fun Application.oppgaveApi(
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
                             val oppgaveDTO = oppgaveDTOMapper.lagOppgaveDTO(oppgave)
-                            sikkerlogger.info { "** OPPGAVE **: $oppgaveDTO" }
                             call.respond(HttpStatusCode.OK, oppgaveDTO)
                         }
                     }
