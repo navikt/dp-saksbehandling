@@ -114,7 +114,7 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                          
                         (SELECT min(opprettet)
                          FROM oppgave_v1
-                         WHERE tilstand in ('KLAR_TIL_BEHANDLING', 'KLAR_TIL_KONTROLL', 'PAA_VENT')) AS eldste_dato
+                         WHERE tilstand in ('KLAR_TIL_BEHANDLING','UNDER_BEHANDLING', 'KLAR_TIL_KONTROLL', 'UNDER_KONTROLL' ,'PAA_VENT')) AS eldste_dato
                     
                     """,
                     paramMap = mapOf(),
