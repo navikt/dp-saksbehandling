@@ -21,6 +21,7 @@ object Configuration {
                 "KAFKA_CONSUMER_GROUP_ID" to "dp-saksbehandling-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
                 "KAFKA_RESET_POLICY" to "LATEST",
+                "KAFKA_MAX_RECORDS" to "100",
                 "GRUPPE_EGNE_ANSATTE" to "EgneAnsatteADGruppe",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
                 "GRUPPE_BESLUTTER" to "BeslutterADGruppe",
