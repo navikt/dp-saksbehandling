@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.time.LocalDate
+import java.util.UUID
 
 internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
@@ -52,6 +53,7 @@ internal class OppgaveDTOMapper(
                 sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                 sisteBeslutterDTO = sisteBeslutterDTO?.await(),
                 oppgaveHistorikk = oppgaveHistorikk.await(),
+                soknadId = oppgave.soknadId(),
             )
         }
     }
@@ -63,6 +65,7 @@ internal class OppgaveDTOMapper(
         sisteSaksbehandlerDTO: BehandlerDTO? = null,
         sisteBeslutterDTO: BehandlerDTO? = null,
         oppgaveHistorikk: List<OppgaveHistorikkDTO> = emptyList(),
+        soknadId: UUID? = null,
     ): OppgaveDTO =
 
         OppgaveDTO(
@@ -116,6 +119,7 @@ internal class OppgaveDTOMapper(
                             else -> emptyList()
                         },
                 ),
+            soknadId = soknadId,
         )
 
     private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern): List<SikkerhetstiltakDTO> {

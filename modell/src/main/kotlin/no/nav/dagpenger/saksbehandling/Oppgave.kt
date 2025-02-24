@@ -282,6 +282,16 @@ data class Oppgave private constructor(
             .getOrThrow()
     }
 
+    fun soknadId(): UUID? {
+        return kotlin.runCatching {
+            _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
+                (it.hendelse as ForslagTilVedtakHendelse).søknadId
+            }
+        }
+            .onFailure { e -> logger.error(e) { "Feil ved henting av søknadId for oppgave:  ${this.oppgaveId}" } }
+            .getOrThrow()
+    }
+
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
 

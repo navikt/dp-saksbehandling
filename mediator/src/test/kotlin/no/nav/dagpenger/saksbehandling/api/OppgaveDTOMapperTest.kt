@@ -157,7 +157,8 @@ class OppgaveDTOMapperTest {
                             "rolle": "beslutter"
                           }
                         }
-                      ]
+                      ],
+                      "soknadId": "01953789-f215-744e-9f6e-a55509bae78b"
                     }
                     """.trimIndent()
             }
@@ -300,7 +301,8 @@ class OppgaveDTOMapperTest {
                             "rolle": "saksbehandler"
                           }
                         }
-                      ]
+                      ],
+                      "soknadId": "01953789-f215-744e-9f6e-a55509bae78b"
                     }
                     """.trimIndent()
             }

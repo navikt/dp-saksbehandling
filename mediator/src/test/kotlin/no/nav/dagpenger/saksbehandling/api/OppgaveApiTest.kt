@@ -43,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SOKNAD_ID
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
@@ -589,7 +590,8 @@ class OppgaveApiTest {
                         "skjermesSomEgneAnsatte": ${oppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
-                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
+                      "soknadId": "${SOKNAD_ID}"
                     }
                     """.trimIndent()
             }

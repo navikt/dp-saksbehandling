@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
@@ -38,6 +39,7 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -49,6 +51,7 @@ internal object OppgaveApiTestHelper {
     const val TEST_IDENT = "12345612345"
     const val SAKSBEHANDLER_IDENT = "SaksbehandlerIdent"
     const val BESLUTTER_IDENT = "BeslutterIdent"
+    val SOKNAD_ID = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
     private val mockAzure = mockAzure()
     private val fødselsdato = LocalDate.of(2000, 1, 1)
 
@@ -143,6 +146,16 @@ internal object OppgaveApiTestHelper {
             tilstandslogg =
                 Tilstandslogg.rehydrer(
                     listOf(
+                        Tilstandsendring(
+                            tilstand = tilstand,
+                            hendelse =
+                                ForslagTilVedtakHendelse(
+                                    ident = TEST_IDENT,
+                                    søknadId = SOKNAD_ID,
+                                    behandlingId = behandling.behandlingId,
+                                ),
+                            tidspunkt = opprettet,
+                        ),
                         Tilstandsendring(
                             tilstand = UNDER_BEHANDLING,
                             hendelse =
