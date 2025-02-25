@@ -75,6 +75,6 @@ class UtsendingMediator(
                 sikkerlogg.info { "Publiserer behov: $it for $utsending" }
             }
         logger.info { "Publiserer behov: ${behov.navn} for $utsending" }
-        rapidsConnection.publish(message)
+        rapidsConnection.publish(utsending.ident,message)
     }
 }
