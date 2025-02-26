@@ -40,6 +40,7 @@ internal class MeldingOmVedtakProdusentBehovløser(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asText().let { UUID.fromString(it) }
+        val ident = packet["ident"].asText()
         withLoggingContext("behandlingId" to "$behandlingId") {
             utsendingMediator.utsendingFinnesForBehandling(behandlingId).let {
                 when (it) {
@@ -53,7 +54,7 @@ internal class MeldingOmVedtakProdusentBehovløser(
                     }
                 }
             }
-            context.publish(packet.toJson())
+            context.publish(ident,packet.toJson())
         }
     }
 }

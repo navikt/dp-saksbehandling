@@ -53,6 +53,7 @@ class ArenaSinkVedtakOpprettetMottak(
     ) {
         val behandlingId = packet["kilde"]["id"].asUUID()
         val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
+        val ident = oppgave.behandling.person.ident
         val sakId = packet["sakId"].asText()
         val vedtakstatus = packet["vedtakstatus"].asText()
 
@@ -65,7 +66,7 @@ class ArenaSinkVedtakOpprettetMottak(
             sikkerlogg.info("Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}")
             if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
                 if (utsendingMediator.utsendingFinnesForOppgave(oppgave.oppgaveId)) {
-                    context.publish(lagStartUtsendingEvent(oppgave, sakId))
+                    context.publish(ident, lagStartUtsendingEvent(oppgave, sakId))
                     logg.info("Publiserte start_utsending hendelse")
                 } else {
                     logg.info("Fant ingen utsending for behandlingen. Sender ikke start_utsending event")
