@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.lagOppgave
@@ -61,18 +60,22 @@ class MetrikkJobTest {
     fun `Hent riktig distribusjon av utsendingtilstand`() {
         withMigratedDb { ds ->
             val oppgaveRepository = PostgresOppgaveRepository(ds)
-            val oppgaveId = UUIDv7.ny()
-            oppgaveRepository.lagre(lagOppgave(oppgaveId = oppgaveId))
             val utsendingRepository = PostgresUtsendingRepository(ds)
 
-            utsendingRepository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, oppgaveId))
-            utsendingRepository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, oppgaveId))
-            utsendingRepository.lagre(lagUtsending(tilstand = Utsending.AvventerArkiverbarVersjonAvBrev, oppgaveId))
-            utsendingRepository.lagre(lagUtsending(tilstand = Utsending.AvventerArkiverbarVersjonAvBrev, oppgaveId))
-            utsendingRepository.lagre(lagUtsending(tilstand = Utsending.AvventerJournalføring, oppgaveId))
-            utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, oppgaveId))
-            utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, oppgaveId))
-            utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, oppgaveId))
+            listOf(
+                Utsending.VenterPåVedtak,
+                Utsending.VenterPåVedtak,
+                Utsending.AvventerArkiverbarVersjonAvBrev,
+                Utsending.AvventerArkiverbarVersjonAvBrev,
+                Utsending.AvventerJournalføring,
+                Utsending.Distribuert,
+                Utsending.Distribuert,
+                Utsending.Distribuert,
+            ).forEach {
+                val oppgave = lagOppgave()
+                oppgaveRepository.lagre(oppgave)
+                utsendingRepository.lagre(lagUtsending(tilstand = it, oppgave.oppgaveId))
+            }
 
             val utsendingTilstandDistribusjon = hentUtsendingTilstandDistribusjon(ds)
 
