@@ -71,15 +71,16 @@ internal class BehandlingOpprettetMottak(
             } else {
                 context.publish(
                     key = ident,
-                    JsonMessage.newMessage(
-                        eventName = "avbryt_behandling",
-                        map =
-                            mapOf(
-                                "behandlingId" to behandlingId,
-                                "søknadId" to søknadId,
-                                "ident" to ident,
-                            ),
-                    ).toJson(),
+                    message =
+                        JsonMessage.newMessage(
+                            eventName = "avbryt_behandling",
+                            map =
+                                mapOf(
+                                    "behandlingId" to behandlingId,
+                                    "søknadId" to søknadId,
+                                    "ident" to ident,
+                                ),
+                        ).toJson(),
                 )
                 logger.info { "Publiserte avbryt_behandling hendelse" }
             }

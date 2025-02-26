@@ -27,15 +27,16 @@ internal class SletteGamleOppgaverJob(
         }.forEach { oppgave ->
             rapidsConnection.publish(
                 key = oppgave.ident,
-                JsonMessage.newMessage(
-                    eventName = "avbryt_behandling",
-                    map =
-                        mapOf(
-                            "behandlingId" to oppgave.behandlingId,
-                            "søknadId" to oppgave.soknadId,
-                            "ident" to oppgave.ident,
-                        ),
-                ).toJson(),
+                message =
+                    JsonMessage.newMessage(
+                        eventName = "avbryt_behandling",
+                        map =
+                            mapOf(
+                                "behandlingId" to oppgave.behandlingId,
+                                "søknadId" to oppgave.soknadId,
+                                "ident" to oppgave.ident,
+                            ),
+                    ).toJson(),
             )
         }
     }

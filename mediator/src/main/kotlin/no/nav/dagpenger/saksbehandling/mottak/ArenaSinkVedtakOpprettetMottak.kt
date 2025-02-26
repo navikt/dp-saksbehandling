@@ -66,7 +66,7 @@ class ArenaSinkVedtakOpprettetMottak(
             sikkerlogg.info("Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}")
             if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
                 if (utsendingMediator.utsendingFinnesForOppgave(oppgave.oppgaveId)) {
-                    context.publish(ident, lagStartUtsendingEvent(oppgave, sakId))
+                    context.publish(key = ident, message = lagStartUtsendingEvent(oppgave, sakId))
                     logg.info("Publiserte start_utsending hendelse")
                 } else {
                     logg.info("Fant ingen utsending for behandlingen. Sender ikke start_utsending event")
