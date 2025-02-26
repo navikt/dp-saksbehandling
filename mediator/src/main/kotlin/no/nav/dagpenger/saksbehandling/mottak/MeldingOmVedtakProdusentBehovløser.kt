@@ -54,7 +54,7 @@ internal class MeldingOmVedtakProdusentBehovløser(
                     }
                 }
             }
-            context.publish(ident,packet.toJson())
+            context.publish(ident, packet.toJson())
         }
     }
 }
