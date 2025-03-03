@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -51,6 +52,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
@@ -1637,6 +1639,23 @@ class PostgresOppgaveRepositoryTest {
                 )
             repo.lagre(oppgave)
             repo.adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
+        }
+    }
+
+    @Test
+    fun `Skal kunne lagre og hente en oppgave med SkriptHendelse i logginnslaget`() {
+        val tilstandsendring =
+            Tilstandsendring(
+                tilstand = BEHANDLES_I_ARENA,
+                hendelse = SkriptHendelse(Applikasjon("Dette er et skript")),
+                tidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
+            )
+        val testOppgave = lagOppgave(tilstandslogg = Tilstandslogg(mutableListOf(tilstandsendring)))
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testOppgave)
+            val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
+            oppgaveFraDatabase.tilstandslogg shouldBe testOppgave.tilstandslogg
         }
     }
 }
