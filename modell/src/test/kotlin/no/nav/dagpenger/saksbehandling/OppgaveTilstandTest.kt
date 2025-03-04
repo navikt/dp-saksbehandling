@@ -118,7 +118,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal ferdigstille en oppgave fra alle lovlige tilstander`() {
+    fun `Skal ferdigstille en oppgave på bakgrunn av et manuelt fattet vedtak fra alle lovlige tilstander`() {
         val lovligeTilstander =
             setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
         lovligeTilstander.forEach { tilstand ->
@@ -129,6 +129,7 @@ class OppgaveTilstandTest {
                         behandlingId = oppgave.behandling.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
+                        automatiskBehandlet = false,
                         sak = sak,
                     ),
                 )
@@ -155,6 +156,48 @@ class OppgaveTilstandTest {
                         behandlingId = oppgave.behandling.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
+                        automatiskBehandlet = false,
+                        sak = sak,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `Skal ferdigstille en oppgave på bakgrunn av et automatisk fattet vedtak fra alle lovlige tilstander`() {
+        val lovligeTilstander =
+            setOf(PAA_VENT, UNDER_BEHANDLING, OPPRETTET, KLAR_TIL_BEHANDLING, FERDIG_BEHANDLET, UNDER_KONTROLL)
+        lovligeTilstander.forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand)
+            val resultat =
+                oppgave.ferdigstill(
+                    VedtakFattetHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                        sak = sak,
+                        automatiskBehandlet = true,
+                    ),
+                )
+
+            oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+
+            when (tilstand) {
+                in setOf(FERDIG_BEHANDLET) -> resultat shouldBe Oppgave.Handling.INGEN
+                else -> resultat shouldBe Oppgave.Handling.LAGRE_OPPGAVE
+            }
+        }
+
+        (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand)
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.ferdigstill(
+                    VedtakFattetHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        søknadId = UUIDv7.ny(),
+                        ident = testIdent,
+                        automatiskBehandlet = true,
                         sak = sak,
                     ),
                 )

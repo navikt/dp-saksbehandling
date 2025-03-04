@@ -14,6 +14,7 @@ internal fun vedtakFattetHendelse(
     søknadId: UUID,
     behandlingId: UUID,
     sakId: Int,
+    automatiskBehandlet: Boolean = false,
 ): String {
     //language=JSON
     return """{
@@ -21,7 +22,8 @@ internal fun vedtakFattetHendelse(
       "søknadId": "$søknadId",
       "behandlingId": "$behandlingId",
       "ident": "$ident",
-      "fagsakId": $sakId
+      "fagsakId": $sakId,
+      "automatisk": $automatiskBehandlet
     }"""
 }
 

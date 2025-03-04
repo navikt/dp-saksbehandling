@@ -24,7 +24,7 @@ internal class VedtakFattetMottak(
                 it.requireValue("@event_name", "vedtak_fattet")
                 it.forbid("meldingOmVedtakProdusent")
             }
-            validate { it.requireKey("ident", "søknadId", "behandlingId", "fagsakId") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId", "fagsakId", "automatisk") }
         }
     }
 
@@ -40,8 +40,6 @@ internal class VedtakFattetMottak(
     ) {
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
-        val ident = packet["ident"].asText()
-        val sak = packet.sak()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak_fattet hendelse" }
@@ -49,8 +47,9 @@ internal class VedtakFattetMottak(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,
-                    ident = ident,
-                    sak = sak,
+                    ident = packet["ident"].asText(),
+                    sak = packet.sak(),
+                    automatiskBehandlet = packet["automatisk"].asBoolean(),
                 ),
             )
         }

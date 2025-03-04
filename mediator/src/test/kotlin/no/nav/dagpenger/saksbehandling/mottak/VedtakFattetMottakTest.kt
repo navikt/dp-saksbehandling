@@ -56,6 +56,7 @@ internal class VedtakFattetMottakTest {
                 ident = testIdent,
                 søknadId = søknadId,
                 behandlingId = behandlingId,
+                automatiskBehandlet = true,
                 sakId = sak.id.toInt(),
             ),
         )
@@ -65,6 +66,7 @@ internal class VedtakFattetMottakTest {
                 behandlingId = behandlingId,
                 søknadId = søknadId,
                 ident = testIdent,
+                automatiskBehandlet = true,
                 sak = sak,
             )
         verify(exactly = 1) {
@@ -80,6 +82,7 @@ internal class VedtakFattetMottakTest {
                 ident = testIdent,
                 søknadId = søknadId,
                 behandlingId = behandlingId,
+                automatiskBehandlet = false,
                 sakId = sak.id.toInt(),
             ),
         )
@@ -89,6 +92,7 @@ internal class VedtakFattetMottakTest {
                 behandlingId = behandlingId,
                 søknadId = søknadId,
                 ident = testIdent,
+                automatiskBehandlet = false,
                 sak = sak,
             )
         verify(exactly = 1) {

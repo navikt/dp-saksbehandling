@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling.BESLUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
@@ -79,8 +78,7 @@ data class Oppgave private constructor(
         internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
         internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
         internal val påVentEmneknagger: Set<String> =
-            Emneknagg.PåVent.entries.map {
-                    påVentÅrsaker ->
+            Emneknagg.PåVent.entries.map { påVentÅrsaker ->
                 påVentÅrsaker.visningsnavn
             }.toSet()
 
@@ -434,8 +432,18 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
-            logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
-            return Handling.INGEN
+            when (vedtakFattetHendelse.automatiskBehandlet) {
+                true -> {
+                    logger.info { "Mottok automatisk behandlet vedtak fattet i tilstand $type. Ferdigstiller oppgave." }
+                    oppgave.behandlerIdent = null
+                    oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+                    return Handling.LAGRE_OPPGAVE
+                }
+                else -> {
+                    logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
+                    return Handling.INGEN
+                }
+            }
         }
 
         override fun ferdigstill(
@@ -495,7 +503,7 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            logger.info { "Behandling er avbrutt. Skal behandles i Arena. Siden vi er i tilstand $type så gjør vi ingenting." }
+            logger.info { "Behandling er allerede avbrutt." }
         }
     }
 
@@ -604,8 +612,18 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             vedtakFattetHendelse: VedtakFattetHendelse,
         ): Handling {
-            logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
-            return Handling.INGEN
+            when (vedtakFattetHendelse.automatiskBehandlet) {
+                true -> {
+                    logger.info { "Mottok automatisk behandlet vedtak fattet i tilstand $type. Ferdigstiller oppgave." }
+                    oppgave.behandlerIdent = null
+                    oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
+                    return Handling.LAGRE_OPPGAVE
+                }
+                else -> {
+                    logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
+                    return Handling.INGEN
+                }
+            }
         }
 
         override fun ferdigstill(
