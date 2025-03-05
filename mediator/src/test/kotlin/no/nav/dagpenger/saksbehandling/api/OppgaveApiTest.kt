@@ -5,6 +5,7 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -26,6 +27,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -41,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SOKNAD_ID
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
@@ -52,6 +55,7 @@ import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
+import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
@@ -59,6 +63,8 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -66,15 +72,16 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -88,7 +95,6 @@ class OppgaveApiTest {
         mockAzure()
     }
 
-    private val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
     private val saksbehandler =
         Saksbehandler(
             SAKSBEHANDLER_IDENT,
@@ -192,7 +198,6 @@ class OppgaveApiTest {
                           "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
                           "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                           "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
-                          "saksbehandlerIdent": "${oppgave1.behandlerIdent}",
                           "behandlerIdent": "${oppgave1.behandlerIdent}",
                           "utsattTilDato": "${oppgave1.utsattTil()}"
                         },
@@ -369,31 +374,82 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
-        val godkjentBehandlingHendelse =
-            GodkjentBehandlingHendelse(
-                oppgave.oppgaveId,
-                meldingOmVedtakHtml,
-                utførtAv = saksbehandler,
+    fun `Skal kunne slette et notat på en oppgave`() {
+        val oppgaveId = UUIDv7.ny()
+        val beslutterToken =
+            gyldigSaksbehandlerToken(
+                adGrupper = listOf(Configuration.beslutterADGruppe),
+                navIdent = beslutter.navIdent,
             )
+        val sisteEndretTidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
+        val slettNotatHendelse = SlettNotatHendelse(oppgaveId, beslutter)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.ferdigstillOppgave(godkjentBehandlingHendelse, any()) } just Runs
+                every {
+                    it.slettNotat(slettNotatHendelse)
+                } returns sisteEndretTidspunkt
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.delete("/oppgave/$oppgaveId/notat") {
+                autentisert(token = beslutterToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    """
+                    {
+                       "sistEndretTidspunkt" : "2021-01-01T12:00:00"
+                    }
+                    """.trimIndent()
+            }
+        }
+        verify(exactly = 1) { oppgaveMediatorMock.slettNotat(slettNotatHendelse) }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en oppgave med melding om vedtak v2`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                coEvery { it.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
                 autentisert(token = saksbehandlerToken)
-                setBody(meldingOmVedtakHtml)
-                contentType(ContentType.Text.Html)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
 
-            verify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(godkjentBehandlingHendelse, any())
+            coVerify(exactly = 1) {
+                oppgaveMediatorMock.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken)
+            }
+        }
+    }
+
+    @Test
+    fun `Feilhåndtering for melding om vedtak v2`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                coEvery {
+                    it.ferdigstillOppgave2(any(), any(), any())
+                } throws MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak("Testmelding")
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+                autentisert(token = saksbehandlerToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.InternalServerError
+                response.bodyAsText() shouldContain "Feil ved laging av melding om vedtak"
+            }
+
+            coVerify(exactly = 1) {
+                oppgaveMediatorMock.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken)
             }
         }
     }
@@ -455,7 +511,7 @@ class OppgaveApiTest {
         val returnerTilSaksbehandlingHendelse = ReturnerTilSaksbehandlingHendelse(oppgave.oppgaveId, beslutter)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse) } just Runs
+                every { it.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, any()) } just Runs
             }
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${oppgave.oppgaveId}/returner-til-saksbehandler") {
@@ -464,21 +520,7 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.NoContent
             }
             verify(exactly = 1) {
-                oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
-            }
-        }
-    }
-
-    @Test
-    fun `Ferdigstilling av en oppgave feiler dersom content type ikke er HTML `() {
-        val meldingOmVedtakHtml = "<h1>Melding om vedtak</h1>"
-        withOppgaveApi {
-            client.put("/oppgave/${UUIDv7.ny()}/ferdigstill/melding-om-vedtak") {
-                autentisert(gyldigSaksbehandlerToken(navIdent = "G151133"))
-                setBody(meldingOmVedtakHtml)
-                contentType(ContentType.Text.Plain)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.UnsupportedMediaType
+                oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, beslutterToken)
             }
         }
     }
@@ -548,7 +590,8 @@ class OppgaveApiTest {
                         "skjermesSomEgneAnsatte": ${oppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
-                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
+                      "soknadId": "${SOKNAD_ID}"
                     }
                     """.trimIndent()
             }
@@ -683,6 +726,7 @@ class OppgaveApiTest {
                 utsattTil = utsettTilDato,
                 beholdOppgave = true,
                 utførtAv = saksbehandler,
+                årsak = AVVENT_RAPPORTERINGSFRIST,
             )
 
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
@@ -699,7 +743,8 @@ class OppgaveApiTest {
                     """
                         {
                           "utsettTilDato":"$utsettTilDato",
-                          "beholdOppgave":"true"
+                          "beholdOppgave":"true",
+                          "aarsak":"AVVENT_RAPPORTERINGSFRIST"
                         }
                     """.trimMargin(),
                 )
@@ -714,7 +759,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Hent oppgave med tilhørende personinfo og journalpostIder `() {
+    fun `Hent oppgave med tilhørende personinfo, sikkerhetstiltak og journalpostIder`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave =
             lagTestOppgaveMedTilstandOgBehandling(
@@ -760,6 +805,13 @@ class OppgaveApiTest {
                                 adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                                 mellomnavn = testPerson.mellomnavn,
                                 statsborgerskap = testPerson.statsborgerskap,
+                                sikkerhetstiltak =
+                                    listOf(
+                                        SikkerhetstiltakDTO(
+                                            beskrivelse = testPerson.sikkerhetstiltak.first().beskrivelse,
+                                            gyldigTom = testPerson.sikkerhetstiltak.first().gyldigTom,
+                                        ),
+                                    ),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         emneknagger = testOppgave.emneknagger.toList(),
@@ -797,13 +849,22 @@ class OppgaveApiTest {
                                     tidspunkt = tidspunkt,
                                     behandler =
                                         OppgaveHistorikkBehandlerDTO(
-                                            navn = "Ole Doffen", rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
+                                            navn = "Ole Doffen",
+                                            rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
                                         ),
                                     tittel = "Notat",
                                     body = "Dette er et notat",
                                 ),
                             ),
                         notat = null,
+                        lovligeEndringer =
+                            LovligeEndringerDTO(
+                                paaVentAarsaker =
+                                    when (testOppgave.tilstand().type) {
+                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                                        else -> emptyList()
+                                    },
+                            ),
                     )
             }
 
@@ -827,6 +888,166 @@ class OppgaveApiTest {
                         "fodselsdato": "2000-01-01",
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR",
+                        "sikkerhetstiltak": [
+                          {
+                            "beskrivelse": "${testPerson.sikkerhetstiltak.first().beskrivelse}",
+                            "gyldigTom": "${testPerson.sikkerhetstiltak.first().gyldigTom}"
+                          }
+                        ],
+                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
+                      },
+                      "emneknagger": [],
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
+                      "journalpostIder": ["123456789"],
+                      "saksbehandler": {
+                        "ident": "${saksbehandler.navIdent}"
+                      },
+                      "beslutter": {
+                        "ident": "${beslutter.navIdent}"
+                      },
+                      "historikk": [
+                        {
+                          "type": "notat",
+                          "tidspunkt": "2021-01-01T12:00:00",
+                          "tittel": "Notat",
+                          "behandler": {
+                            "navn": "Ole Doffen",
+                            "rolle": "beslutter"
+                          },
+                          "body": "Dette er et notat"
+                        }
+                      ]
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Hent oppgave for person uten sikkerhetstiltak`() {
+        val oppgaveMediatorMock = mockk<OppgaveMediator>()
+        val testOppgave =
+            lagTestOppgaveMedTilstandOgBehandling(
+                tilstand = UNDER_KONTROLL,
+                tildeltBehandlerIdent = beslutter.navIdent,
+                behandling =
+                    Behandling(
+                        behandlingId = UUIDv7.ny(),
+                        opprettet = LocalDateTime.now(),
+                        person =
+                            Person(
+                                id = UUIDv7.ny(),
+                                ident = TEST_IDENT,
+                                skjermesSomEgneAnsatte = true,
+                                adressebeskyttelseGradering = UGRADERT,
+                            ),
+                        hendelse =
+                            SøknadsbehandlingOpprettetHendelse(
+                                søknadId = UUIDv7.ny(),
+                                behandlingId = UUIDv7.ny(),
+                                ident = TEST_IDENT,
+                                opprettet = LocalDateTime.now(),
+                            ),
+                    ),
+            )
+        coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
+        val oppgaveDTOMapper =
+            mockk<OppgaveDTOMapper>().also {
+                val tidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
+                coEvery { it.lagOppgaveDTO(testOppgave) } returns
+                    OppgaveDTO(
+                        oppgaveId = testOppgave.oppgaveId,
+                        behandlingId = testOppgave.behandling.behandlingId,
+                        person =
+                            PersonDTO(
+                                ident = testPerson.ident,
+                                fornavn = testPerson.fornavn,
+                                etternavn = testPerson.etternavn,
+                                fodselsdato = testPerson.fødselsdato,
+                                alder = testPerson.alder,
+                                kjonn = KjonnDTO.UKJENT,
+                                skjermesSomEgneAnsatte = testOppgave.behandling.person.skjermesSomEgneAnsatte,
+                                adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                                mellomnavn = testPerson.mellomnavn,
+                                statsborgerskap = testPerson.statsborgerskap,
+                                sikkerhetstiltak = emptyList(),
+                            ),
+                        tidspunktOpprettet = testOppgave.opprettet,
+                        emneknagger = testOppgave.emneknagger.toList(),
+                        tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
+                        saksbehandler =
+                            BehandlerDTO(
+                                ident = saksbehandler.navIdent,
+                                fornavn = "Saksbehandler fornavn",
+                                etternavn = "Saksbehandler etternavn",
+                                enhet =
+                                    BehandlerEnhetDTO(
+                                        navn = "Enhet navn",
+                                        enhetNr = "1234",
+                                        postadresse = "Adresseveien 3, 0101 ADRESSA",
+                                    ),
+                            ),
+                        beslutter =
+                            BehandlerDTO(
+                                ident = beslutter.navIdent,
+                                fornavn = "Saksbeandler fornavn",
+                                etternavn = "Saksbehandler etternavn",
+                                enhet =
+                                    BehandlerEnhetDTO(
+                                        navn = "Enhet navn",
+                                        enhetNr = "1234",
+                                        postadresse = "Adresseveien 3, 0101 ADRESSA",
+                                    ),
+                            ),
+                        utsattTilDato = null,
+                        journalpostIder = listOf("123456789"),
+                        historikk =
+                            listOf(
+                                OppgaveHistorikkDTO(
+                                    type = OppgaveHistorikkDTO.Type.notat,
+                                    tidspunkt = tidspunkt,
+                                    behandler =
+                                        OppgaveHistorikkBehandlerDTO(
+                                            navn = "Ole Doffen",
+                                            rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
+                                        ),
+                                    tittel = "Notat",
+                                    body = "Dette er et notat",
+                                ),
+                            ),
+                        notat = null,
+                        lovligeEndringer =
+                            LovligeEndringerDTO(
+                                paaVentAarsaker =
+                                    when (testOppgave.tilstand().type) {
+                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                                        else -> emptyList()
+                                    },
+                            ),
+                    )
+            }
+
+        withOppgaveApi(
+            oppgaveMediator = oppgaveMediatorMock,
+            oppgaveDTOMapper = oppgaveDTOMapper,
+        ) {
+            client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                //language=JSON
+                json shouldEqualSpecifiedJsonIgnoringOrder
+                    """
+                    {
+                      "behandlingId": "${testOppgave.behandling.behandlingId}",
+                      "person": {
+                        "ident": "${testOppgave.behandling.person.ident}",
+                        "fornavn": "PETTER",
+                        "etternavn": "SMART",
+                        "fodselsdato": "2000-01-01",
+                        "kjonn": "UKJENT",
+                        "statsborgerskap": "NOR",
+                        "sikkerhetstiltak": [],
                         "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],

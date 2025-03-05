@@ -1,15 +1,11 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import com.github.navikt.tbd_libs.naisful.NaisEndpoints
-import com.github.navikt.tbd_libs.naisful.standardApiModule
+import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
-import io.ktor.server.application.Application
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.micrometer.prometheusmetrics.PrometheusConfig
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
@@ -38,15 +34,16 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
-import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -54,6 +51,7 @@ internal object OppgaveApiTestHelper {
     const val TEST_IDENT = "12345612345"
     const val SAKSBEHANDLER_IDENT = "SaksbehandlerIdent"
     const val BESLUTTER_IDENT = "BeslutterIdent"
+    val SOKNAD_ID = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
     private val mockAzure = mockAzure()
     private val fødselsdato = LocalDate.of(2000, 1, 1)
 
@@ -69,21 +67,9 @@ internal object OppgaveApiTestHelper {
                     oppgaveDTOMapper,
                     mockk(relaxed = true),
                 )
-                statusPages()
             }
             test()
         }
-    }
-
-    fun Application.statusPages() {
-        standardApiModule(
-            meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
-            objectMapper = objectMapper,
-            callLogger = environment.log,
-            naisEndpoints = NaisEndpoints.Default,
-            callIdHeaderName = "callId",
-            statusPagesConfig = { statusPages() },
-        )
     }
 
     fun withOppgaveApi(
@@ -99,14 +85,16 @@ internal object OppgaveApiTestHelper {
                 installerApis(
                     oppgaveMediator,
                     OppgaveDTOMapper(
-                        pdlKlient,
-                        relevanteJournalpostIdOppslag,
-                        saksbehandlerOppslag,
+                        Oppslag(
+                            pdlKlient,
+                            relevanteJournalpostIdOppslag,
+                            saksbehandlerOppslag,
+                            skjermingKlient = mockk(relaxed = true),
+                        ),
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                     ),
                     mockk(relaxed = true),
                 )
-                statusPages()
             }
             test()
         }
@@ -158,6 +146,16 @@ internal object OppgaveApiTestHelper {
             tilstandslogg =
                 Tilstandslogg.rehydrer(
                     listOf(
+                        Tilstandsendring(
+                            tilstand = tilstand,
+                            hendelse =
+                                ForslagTilVedtakHendelse(
+                                    ident = TEST_IDENT,
+                                    søknadId = SOKNAD_ID,
+                                    behandlingId = behandling.behandlingId,
+                                ),
+                            tidspunkt = opprettet,
+                        ),
                         Tilstandsendring(
                             tilstand = UNDER_BEHANDLING,
                             hendelse =
@@ -216,5 +214,14 @@ internal object OppgaveApiTestHelper {
             statsborgerskap = "NOR",
             kjønn = PDLPerson.Kjonn.UKJENT,
             adresseBeskyttelseGradering = UGRADERT,
+            sikkerhetstiltak =
+                listOf(
+                    SikkerhetstiltakIntern(
+                        type = "Tiltakstype",
+                        beskrivelse = "To ansatte i samtale",
+                        gyldigFom = LocalDate.now(),
+                        gyldigTom = LocalDate.now().plusDays(1),
+                    ),
+                ),
         )
 }

@@ -9,10 +9,10 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven("https://www.jitpack.io")
 }
 
 dependencies {
+    implementation(platform(kotlin("bom")))
     testImplementation(kotlin("test"))
 }
 
@@ -30,10 +30,10 @@ tasks.test {
     }
 }
 
-tasks.withType<Jar>().configureEach {
-    dependsOn("test")
-}
-
 tasks.withType<KotlinCompile>().configureEach {
     dependsOn("ktlintFormat")
+}
+
+tasks.named("check") {
+    dependsOn("ktlintCheck")
 }

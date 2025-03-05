@@ -53,6 +53,7 @@ class ArenaSinkVedtakOpprettetMottak(
     ) {
         val behandlingId = packet["kilde"]["id"].asUUID()
         val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
+        val ident = oppgave.behandling.person.ident
         val sakId = packet["sakId"].asText()
         val vedtakstatus = packet["vedtakstatus"].asText()
 
@@ -61,22 +62,17 @@ class ArenaSinkVedtakOpprettetMottak(
             "oppgaveId" to oppgave.oppgaveId.toString(),
             "sakId" to sakId,
         ) {
-            logg.info("Mottok arenasink_vedtak_opprettet hendelse for behandlingId $behandlingId")
+            logg.info("Mottok arenasink_vedtak_opprettet hendelse")
             sikkerlogg.info("Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}")
             if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
                 if (utsendingMediator.utsendingFinnesForOppgave(oppgave.oppgaveId)) {
-                    context.publish(lagStartUtsendingEvent(oppgave, sakId))
-                    logg.info {
-                        "Publiserte start_utsending hendelse for behandlingId $behandlingId og oppgaveId ${oppgave.oppgaveId}"
-                    }
+                    context.publish(key = ident, message = lagStartUtsendingEvent(oppgave, sakId))
+                    logg.info("Publiserte start_utsending hendelse")
                 } else {
-                    logg.info(
-                        "Fant ingen utsending for behandlingId $behandlingId og oppgaveId: ${oppgave.oppgaveId}." +
-                            " Sender ikke start_utsending event",
-                    )
+                    logg.info("Fant ingen utsending for behandlingen. Sender ikke start_utsending event")
                 }
             } else {
-                logg.info("Vedtakstatus fra Arena er $vedtakstatus. Sender ikke start_utsending event for behandlingId $behandlingId")
+                logg.info("Vedtakstatus fra Arena er $vedtakstatus. Sender ikke start_utsending event for behandlingen")
             }
         }
     }

@@ -11,15 +11,12 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
 internal class VedtakFattetMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
-    private val utsendingMediator: UtsendingMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -27,7 +24,7 @@ internal class VedtakFattetMottak(
                 it.requireValue("@event_name", "vedtak_fattet")
                 it.forbid("meldingOmVedtakProdusent")
             }
-            validate { it.requireKey("ident", "søknadId", "behandlingId", "fagsakId") }
+            validate { it.requireKey("ident", "søknadId", "behandlingId", "fagsakId", "automatisk") }
         }
     }
 
@@ -43,35 +40,20 @@ internal class VedtakFattetMottak(
     ) {
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
-        val ident = packet["ident"].asText()
-        val sak = packet.sak()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-            logger.info {
-                "Mottok vedtak_fattet hendelse for søknadId $søknadId og behandlingId $behandlingId. "
-            }
+            logger.info { "Mottok vedtak_fattet hendelse" }
             oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
                     søknadId = søknadId,
-                    ident = ident,
-                    sak = sak,
+                    ident = packet["ident"].asText(),
+                    sak = packet.sak(),
+                    automatiskBehandlet = packet["automatisk"].asBoolean(),
                 ),
             )
-            packet["@event_name"] = "vedtak_fattet_til_arena"
-            packet["meldingOmVedtakProdusent"] = vedtakProdusent(behandlingId)
-            context.publish(packet.toJson())
-            logger.info {
-                "Publiserte vedtak_fattet_til_arena hendelse for søknadId $søknadId og behandlingId $behandlingId"
-            }
         }
     }
-
-    private fun vedtakProdusent(behandlingId: UUID): String =
-        when (utsendingMediator.utsendingFinnesForBehandling(behandlingId)) {
-            true -> "Dagpenger"
-            false -> "Arena"
-        }
 }
 
 private fun JsonMessage.sak(): Sak = Sak(id = this["fagsakId"].asText())

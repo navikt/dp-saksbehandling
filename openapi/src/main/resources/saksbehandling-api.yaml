@@ -143,6 +143,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+    delete:
+      summary: Slett notat på en oppgave
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notatet slettet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LagreNotatResponse'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/send-til-kontroll:
     put:
       summary: Saksbehandler sender oppgaven til kontroll og innstiller vedtaket
@@ -379,14 +402,21 @@ paths:
   /statistikk:
     get:
       summary: Hent statistikk
-      description: Henter statistikk for innlogget saksbehandler.
+      description: Henter statistikk for innlogget saksbehandler samt generell statistikk.
       responses:
         '200':
           description: Statistikk hentet
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Statistikk'
+                type: object
+                properties:
+                  individuellStatistikk:
+                    $ref: '#/components/schemas/Statistikk'
+                  generellStatistikk:
+                    $ref: '#/components/schemas/Statistikk'
+                  beholdningsinfo:
+                    $ref: '#/components/schemas/BeholdningsInfo'
         '401':
           description: Uautorisert tilgang
 components:
@@ -415,6 +445,10 @@ components:
           type: boolean
         adressebeskyttelseGradering:
           $ref: '#/components/schemas/AdressebeskyttelseGradering'
+        sikkerhetstiltak:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sikkerhetstiltak'
       required:
         - ident
         - fornavn
@@ -424,6 +458,7 @@ components:
         - kjonn
         - skjermesSomEgneAnsatte
         - adressebeskyttelseGradering
+        - sikkerhetstiltak
 
     OppgaveOversiktResultat:
       type: object
@@ -445,8 +480,6 @@ components:
           type: string
           format: uuid
         personIdent:
-          type: string
-        saksbehandlerIdent:
           type: string
         behandlerIdent:
           type: string
@@ -513,6 +546,11 @@ components:
           $ref: '#/components/schemas/OppgaveTilstand'
         notat:
           $ref: '#/components/schemas/Notat'
+        lovligeEndringer:
+          $ref: '#/components/schemas/LovligeEndringer'
+        soknadId:
+          type: string
+          format: uuid
       required:
         - oppgaveId
         - behandlingId
@@ -520,6 +558,7 @@ components:
         - tidspunktOpprettet
         - tilstand
         - emneknagger
+        - lovligeEndringer
 
     Kjonn:
       type: string
@@ -541,6 +580,17 @@ components:
         - AVVENTER_OPPLÅSING_AV_BEHANDLING
         - BEHANDLES_I_ARENA
 
+    LovligeEndringer:
+      type: object
+      properties:
+        paaVentAarsaker:
+          type: array
+          items:
+            type: string
+          description: Årsaker til at oppgaven settes på vent
+      required:
+        - paaVentAarsaker
+
     AdressebeskyttelseGradering:
       type: string
       enum:
@@ -548,6 +598,18 @@ components:
         - FORTROLIG
         - STRENGT_FORTROLIG
         - STRENGT_FORTROLIG_UTLAND
+
+    Sikkerhetstiltak:
+      type: object
+      properties:
+        beskrivelse:
+          type: string
+        gyldigTom:
+          type: string
+          format: date
+      required:
+        - beskrivelse
+        - gyldigTom
 
     PersonIdent:
       type: object
@@ -607,9 +669,21 @@ components:
           format: date
         beholdOppgave:
           type: boolean
+        aarsak:
+          $ref: '#/components/schemas/UtsettOppgaveAarsak'
       required:
         - utsettTilDato
         - beholdOppgave
+
+    UtsettOppgaveAarsak:
+      type: string
+      enum:
+        - AVVENT_SVAR
+        - AVVENT_DOKUMENTASJON
+        - AVVENT_MELDEKORT
+        - AVVENT_RAPPORTERINGSFRIST
+        - AVVENT_SVAR_PÅ_FORESPØRSEL
+        - ANNET
 
     LagreNotatResponse:
       type: object
@@ -678,6 +752,21 @@ components:
           description: Totalt antall behandlede oppgaver.
           example: 200
 
+    BeholdningsInfo:
+      properties:
+        antallOppgaverKlarTilBehandling:
+          type: integer
+          default: 0
+          description: Antall oppgaver som er klar til behandling
+        antallOppgaverKlarTilKontroll:
+          type: integer
+          default: 0
+          description: Antall oppgaver som er klar til kontroll
+        datoEldsteUbehandledeOppgave:
+          type: string
+          format: date-time
+          description: Dato for eldste oppgave som er klar til behandling
+
     HttpProblem:
       type: object
       properties:
@@ -692,3 +781,14 @@ components:
           type: string
         instance:
           type: string
+  securitySchemes:
+    azureAd:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Bruker [AzureAD](https://docs.nais.io/security/auth/azure-ad) til autentisering. 
+        Token må ha `audience` satt til `[cluster].teamdagpenger.dp-saksbehandling`.
+        
+        For å teste APIet kan du lage et gyldig OBO-token ved å bruke wonderwalled:
+        - [dev-gcp](https://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp.teamdagpenger.dp-saksbehandling)

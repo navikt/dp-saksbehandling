@@ -19,8 +19,9 @@ Backend-applikasjon som lytter på behandlingshendelser og håndterer oppgavebeh
 # Henvendelser
 
 Spørsmål knyttet til koden eller prosjektet kan rettes mot:
+teamdagpenger/team-stsb
 
-* André Roaldseth, andre.roaldseth@nav.no
+* teamdagpenger/stsb på Slack
 * Eller en annen måte for omverden å kontakte teamet på
 
 ## For NAV-ansatte

@@ -21,21 +21,21 @@ jobs:
           java-version: 21
 
 
-      - uses: gradle/gradle-build-action@v3
+      - uses: gradle/actions/wrapper-validation@v4
+      - uses: gradle/actions/setup-gradle@v4
         id: build
         env:
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath
-          ORG_GRADLE_PROJECT_githubUser: x-access-token
-          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
         with:
           dependency-graph: generate-and-submit
-          arguments: --configuration-cache build installDist
+          cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
+      - run: ./gradlew --configuration-cache build
 
-      #      - name: Publish results (unit test)
-      #        uses: EnricoMi/publish-unit-test-result-action@v2
-      #        if: success() || failure()
-      #        with:
-      #          junit_files: "**/build/test-results/test/TEST-*.xml"
+#      - name: Publish results (unit test)
+#        uses: EnricoMi/publish-unit-test-result-action@v2
+#        if: success() || failure()
+#        with:
+#          junit_files: "**/build/test-results/test/TEST-*.xml"
 
       - name: docker-build-push
         uses: nais/docker-build-push@v0

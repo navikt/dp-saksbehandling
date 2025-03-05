@@ -46,9 +46,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
@@ -57,6 +59,7 @@ import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import org.postgresql.util.PGobject
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -121,18 +124,18 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 // language=SQL
                 val selectKlarTilBehandlingOppgaver =
                     """
-                            SELECT   oppg.*
-                            FROM     oppgave_v1    oppg
-                            JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
-                            JOIN     person_v1     pers ON pers.id = beha.person_id
-                            WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
-                            AND      oppg.saksbehandler_ident IS NULL
-                            AND      oppg.opprettet >= :fom
-                            AND      oppg.opprettet <  :tom_pluss_1_dag
-                            AND    ( NOT pers.skjermes_som_egne_ansatte
-                                  OR :har_tilgang_til_egne_ansatte )
-                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
-                            """ + emneknaggClause
+                    SELECT   oppg.*
+                    FROM     oppgave_v1    oppg
+                    JOIN     behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN     person_v1     pers ON pers.id = beha.person_id
+                    WHERE    oppg.tilstand = 'KLAR_TIL_BEHANDLING'
+                    AND      oppg.saksbehandler_ident IS NULL
+                    AND      oppg.opprettet >= :fom
+                    AND      oppg.opprettet <  :tom_pluss_1_dag
+                    AND    ( NOT pers.skjermes_som_egne_ansatte
+                          OR :har_tilgang_til_egne_ansatte )
+                    AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
+                    """ + emneknaggClause
 
                 // language=SQL
                 val unionAll = """UNION ALL"""
@@ -140,30 +143,33 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 // language=SQL
                 val selectKlarTilKontrollOppgaver =
                     """
-                            SELECT  oppg.*
-                            FROM    oppgave_v1    oppg
-                            JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
-                            JOIN    person_v1     pers ON pers.id = beha.person_id
-                            JOIN    oppgave_tilstand_logg_v1 logg ON logg.id = 
-                                ( SELECT logg2.id
-                                  FROM   oppgave_tilstand_logg_v1 logg2
-                                  WHERE  logg2.oppgave_id = oppg.id
-                                  AND    logg2.tidspunkt = 
-                                    (   SELECT MAX(logg3.tidspunkt)
-                                        FROM   oppgave_tilstand_logg_v1 logg3
-                                        WHERE  logg3.oppgave_id = oppg.id
-                                        AND    logg3.tilstand = 'UNDER_BEHANDLING'
-                                    )
-                                )
-                            WHERE   :har_beslutter_rolle
-                            AND     oppg.tilstand = 'KLAR_TIL_KONTROLL'
-                            AND     oppg.saksbehandler_ident IS NULL
-                            AND     oppg.opprettet >= :fom
-                            AND     oppg.opprettet <  :tom_pluss_1_dag
-                            AND   ( NOT pers.skjermes_som_egne_ansatte
-                                 OR :har_tilgang_til_egne_ansatte )
-                            AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
-                            AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
+                    SELECT  oppg.*
+                    FROM    oppgave_v1    oppg
+                    JOIN    behandling_v1 beha ON beha.id = oppg.behandling_id
+                    JOIN    person_v1     pers ON pers.id = beha.person_id
+                    JOIN    oppgave_tilstand_logg_v1 logg ON logg.id = 
+                        (   SELECT logg2.id
+                            FROM   oppgave_tilstand_logg_v1 logg2
+                            WHERE  logg2.oppgave_id = oppg.id
+                            AND    logg2.tilstand = 'UNDER_BEHANDLING'
+                            AND    logg2.hendelse_type IN ('NesteOppgaveHendelse','SettOppgaveAnsvarHendelse')
+                            AND    logg2.tidspunkt = 
+                            (   SELECT MAX(logg3.tidspunkt)
+                                FROM   oppgave_tilstand_logg_v1 logg3
+                                WHERE  logg3.oppgave_id = oppg.id
+                                AND    logg3.tilstand = 'UNDER_BEHANDLING'
+                                AND    logg3.hendelse_type IN ('NesteOppgaveHendelse','SettOppgaveAnsvarHendelse')
+                            )
+                        )
+                    WHERE   :har_beslutter_rolle
+                    AND     oppg.tilstand = 'KLAR_TIL_KONTROLL'
+                    AND     oppg.saksbehandler_ident IS NULL
+                    AND     oppg.opprettet >= :fom
+                    AND     oppg.opprettet <  :tom_pluss_1_dag
+                    AND   ( NOT pers.skjermes_som_egne_ansatte
+                         OR :har_tilgang_til_egne_ansatte )
+                    AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
+                    AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
                 """ + emneknaggClause +
                         """
                         )
@@ -192,7 +198,6 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 WHERE next.id = oppu.id
                 RETURNING *
                 """
-
                 val statement =
                     withStatement +
                         selectKlarTilBehandlingOppgaver +
@@ -200,6 +205,9 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         selectKlarTilKontrollOppgaver +
                         selectAlleAktuelleOppgaverOrderByOpprettet +
                         updateNesteOppgave
+
+                sikkerlogger.info { "Henter oppgaver med SQL i tildelNesteOppgave: $statement - Filter = $filter" }
+
                 val oppgaveIdOgTilstandType: Pair<UUID, Type>? =
                     tx.run(
                         queryOf(
@@ -385,32 +393,6 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 ),
         ).oppgaver.singleOrNull()
 
-    override fun fjerneEmneknagg(
-        behandlingId: UUID,
-        ikkeRelevantEmneknagg: String,
-    ): Boolean {
-        return sessionOf(datasource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        DELETE FROM emneknagg_v1
-                        WHERE  oppgave_id = (SELECT oppg.id
-                                             FROM   oppgave_v1 oppg
-                                             WHERE  oppg.behandling_id = :behandling_id)
-                        AND    emneknagg = :emneknagg
-                        """.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "behandling_id" to behandlingId,
-                            "emneknagg" to ikkeRelevantEmneknagg,
-                        ),
-                ).asUpdate,
-            ) > 0
-        }
-    }
-
     override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? {
         return sessionOf(datasource).use { session ->
             session.run(
@@ -466,6 +448,44 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     )
                 }
             }
+        }
+    }
+
+    override fun slettNotatFor(oppgave: Oppgave) {
+        val tilstandsloggId = oppgave.tilstandslogg.first().id
+
+        sessionOf(datasource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement = "DELETE FROM notat_v1 WHERE oppgave_tilstand_logg_id = :oppgave_tilstand_logg_id",
+                    paramMap = mapOf("oppgave_tilstand_logg_id" to tilstandsloggId),
+                ).asUpdate,
+            )
+        }
+    }
+
+    override fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> {
+        return sessionOf(datasource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT  id
+                        FROM    oppgave_v1
+                        WHERE   tilstand = :tilstand
+                        AND     utsatt_til <= :frist
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "frist" to frist,
+                            "tilstand" to PAA_VENT.name,
+                        ),
+                ).map { row ->
+                    row.uuid("id")
+                }.asList,
+            )
         }
     }
 
@@ -766,6 +786,8 @@ private fun rehydrerTilstandsendringHendelse(
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
         "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
+        "PåVentFristUtgåttHendelse" -> hendelseJson.tilHendelse<PåVentFristUtgåttHendelse>()
+        "SkriptHendelse" -> hendelseJson.tilHendelse<SkriptHendelse>()
         else -> {
             logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }

@@ -7,8 +7,6 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -24,10 +22,10 @@ class OppgaveMediatorAlertTest {
                 mockk<OppgaveRepository>().also {
                     every { it.finnOppgaveFor(any()) } returns null
                 },
-            skjermingKlient = mockk(),
-            pdlKlient = mockk(),
+            oppslag = mockk(),
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
+            meldingOmVedtakKlient = mockk(),
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
 
             oppgaveMediator.settOppgaveKlarTilBehandling(
@@ -40,24 +38,6 @@ class OppgaveMediatorAlertTest {
             )
             rapid.inspektør.size shouldBe 1
             rapid.inspektør.message(0).forventetAlert(behandlingId) shouldBe true
-
-            oppgaveMediator.settOppgaveUnderBehandling(
-                BehandlingOpplåstHendelse(
-                    behandlingId = behandlingId,
-                    ident = "12345678910",
-                ),
-            )
-            rapid.inspektør.size shouldBe 2
-            rapid.inspektør.message(1).forventetAlert(behandlingId) shouldBe true
-
-            oppgaveMediator.settOppgaveKlarTilKontroll(
-                BehandlingLåstHendelse(
-                    behandlingId = behandlingId,
-                    ident = "12345678910",
-                ),
-            )
-            rapid.inspektør.size shouldBe 3
-            rapid.inspektør.message(1).forventetAlert(behandlingId) shouldBe true
         }
     }
 

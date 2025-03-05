@@ -10,14 +10,19 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
@@ -41,13 +46,15 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Paginering
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
@@ -386,7 +393,7 @@ class PostgresOppgaveRepositoryTest {
                 )
             val oppgaveId = UUIDv7.ny()
 
-            fun tilstandsloggUnderBehandling() =
+            val tilstandsloggUnderBehandling =
                 Tilstandslogg(
                     tilstandsendringer =
                         mutableListOf(
@@ -397,7 +404,7 @@ class PostgresOppgaveRepositoryTest {
                                         ansvarligIdent = annenBeslutter.navIdent,
                                         utførtAv = annenBeslutter,
                                     ),
-                                tidspunkt = LocalDateTime.now().minusDays(2),
+                                tidspunkt = LocalDateTime.now().minusDays(3),
                             ),
                             Tilstandsendring(
                                 tilstand = UNDER_BEHANDLING,
@@ -406,7 +413,28 @@ class PostgresOppgaveRepositoryTest {
                                         ansvarligIdent = saksbehandlerUtført.navIdent,
                                         utførtAv = saksbehandlerUtført,
                                     ),
+                                tidspunkt = LocalDateTime.now().minusDays(2),
+                            ),
+                            Tilstandsendring(
+                                tilstand = PAA_VENT,
+                                hendelse =
+                                    UtsettOppgaveHendelse(
+                                        oppgaveId = oppgaveId,
+                                        navIdent = saksbehandlerUtført.navIdent,
+                                        utsattTil = LocalDate.now(),
+                                        beholdOppgave = true,
+                                        utførtAv = saksbehandlerUtført,
+                                    ),
                                 tidspunkt = LocalDateTime.now().minusDays(1),
+                            ),
+                            Tilstandsendring(
+                                tilstand = UNDER_BEHANDLING,
+                                hendelse =
+                                    PåVentFristUtgåttHendelse(
+                                        oppgaveId = oppgaveId,
+                                        utførtAv = Applikasjon("dp-saksbehandling"),
+                                    ),
+                                tidspunkt = LocalDateTime.now().minusHours(1),
                             ),
                             Tilstandsendring(
                                 tilstand = KLAR_TIL_KONTROLL,
@@ -424,7 +452,7 @@ class PostgresOppgaveRepositoryTest {
                 lagOppgave(
                     oppgaveId = oppgaveId,
                     tilstand = Oppgave.KlarTilKontroll,
-                    tilstandslogg = tilstandsloggUnderBehandling(),
+                    tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val repo = PostgresOppgaveRepository(ds)
@@ -690,6 +718,31 @@ class PostgresOppgaveRepositoryTest {
                 }
             }
 
+            // Skal ikke hente beslutter-oppgaver
+            repo.tildelOgHentNesteOppgave(
+                nesteOppgaveHendelse =
+                    NesteOppgaveHendelse(
+                        ansvarligIdent = testSaksbehandler.navIdent,
+                        utførtAv = testSaksbehandler,
+                    ),
+                filter =
+                    TildelNesteOppgaveFilter(
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagg = emptySet(),
+                        egneAnsatteTilgang = testSaksbehandler.tilganger.contains(EGNE_ANSATTE),
+                        adressebeskyttelseTilganger = testSaksbehandler.adressebeskyttelseTilganger(),
+                        harBeslutterRolle = testSaksbehandler.tilganger.contains(BESLUTTER),
+                        navIdent = testSaksbehandler.navIdent,
+                    ),
+            ).let {
+                assertSoftly {
+                    require(it != null) { "Skal finne en oppgave" }
+                    it.oppgaveId shouldBe eldsteLedigeOppgaveKlarTilBehandling.oppgaveId
+                    it.behandlerIdent shouldBe testSaksbehandler.navIdent
+                    it.tilstand() shouldBe UnderBehandling
+                }
+            }
+
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
                     NesteOppgaveHendelse(
@@ -703,7 +756,7 @@ class PostgresOppgaveRepositoryTest {
                         egneAnsatteTilgang = beslutter.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutter.tilganger.contains(BESLUTTER),
-                        navIdent = vanligBeslutter.navIdent,
+                        navIdent = beslutter.navIdent,
                     ),
             ).let {
                 assertSoftly {
@@ -1038,18 +1091,47 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne slette et notat for en oppgave`() {
+        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        testOppgave.tildel(
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = testOppgave.oppgaveId,
+                ansvarligIdent = beslutter.navIdent,
+                utførtAv = beslutter,
+            ),
+        )
+        testOppgave.lagreNotat(
+            NotatHendelse(
+                oppgaveId = testOppgave.oppgaveId,
+                tekst = "Dette er et notat",
+                utførtAv = beslutter,
+            ),
+        )
+
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testOppgave)
+            val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
+            oppgaveFraDatabase shouldBe testOppgave
+            oppgaveFraDatabase.tilstand().notat()!!.hentTekst() shouldBe "Dette er et notat"
+            repo.slettNotatFor(oppgaveFraDatabase)
+            repo.hentOppgave(testOppgave.oppgaveId).tilstand().notat() shouldBe null
+            repo.slettNotatFor(oppgaveFraDatabase)
+        }
+    }
+
+    @Test
     fun `Skal kunne lagre og hente tilstandslogg for en spesifikk oppgave`() {
         val nå = LocalDateTime.now()
-
         val tilstandslogg =
             Tilstandslogg(
                 mutableListOf(
                     Tilstandsendring(
                         tilstand = KLAR_TIL_KONTROLL,
                         hendelse =
-                            BehandlingLåstHendelse(
-                                behandlingId = UUIDv7.ny(),
-                                ident = "12345612345",
+                            SendTilKontrollHendelse(
+                                oppgaveId = oppgaveIdTest,
+                                utførtAv = saksbehandler,
                             ),
                         tidspunkt = nå.minusDays(2).truncatedTo(ChronoUnit.SECONDS),
                     ),
@@ -1247,10 +1329,16 @@ class PostgresOppgaveRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf("Innvilgelse"))
-            val oppgave2 = lagOppgave(UnderBehandling, saksbehandlerIdent = saksbehandler2, emneknagger = setOf("Avslag minsteinntekt"))
-            val oppgave3 = lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf("Innvilgelse"))
-            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf("Innvilgelse"))
+            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf(INNVILGELSE.visningsnavn))
+            val oppgave2 =
+                lagOppgave(
+                    UnderBehandling,
+                    saksbehandlerIdent = saksbehandler2,
+                    emneknagger = setOf(AVSLAG_MINSTEINNTEKT.visningsnavn),
+                )
+            val oppgave3 =
+                lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf(INNVILGELSE.visningsnavn))
+            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf(INNVILGELSE.visningsnavn))
 
             repo.lagre(oppgave1)
             repo.lagre(oppgave2)
@@ -1286,7 +1374,7 @@ class PostgresOppgaveRepositoryTest {
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                     periode = UBEGRENSET_PERIODE,
                     saksbehandlerIdent = saksbehandler2,
-                    emneknagger = setOf("Innvilgelse"),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn),
                 ),
             ).oppgaver.size shouldBe 1
         }
@@ -1551,6 +1639,23 @@ class PostgresOppgaveRepositoryTest {
                 )
             repo.lagre(oppgave)
             repo.adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
+        }
+    }
+
+    @Test
+    fun `Skal kunne lagre og hente en oppgave med SkriptHendelse i logginnslaget`() {
+        val tilstandsendring =
+            Tilstandsendring(
+                tilstand = BEHANDLES_I_ARENA,
+                hendelse = SkriptHendelse(Applikasjon("Dette er et skript")),
+                tidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
+            )
+        val testOppgave = lagOppgave(tilstandslogg = Tilstandslogg(mutableListOf(tilstandsendring)))
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(testOppgave)
+            val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
+            oppgaveFraDatabase.tilstandslogg shouldBe testOppgave.tilstandslogg
         }
     }
 }

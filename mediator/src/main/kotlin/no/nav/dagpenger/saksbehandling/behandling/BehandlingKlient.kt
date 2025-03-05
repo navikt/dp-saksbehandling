@@ -9,6 +9,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.prometheus.metrics.model.registry.PrometheusRegistry
@@ -59,6 +60,7 @@ internal class BehandlingHttpKlient(
                 engine = engine,
                 metricsBaseName = metricsBaseName,
                 prometheusRegistry = registry,
+                expectSuccess = false,
             )
         }
     }
@@ -109,20 +111,27 @@ internal class BehandlingHttpKlient(
         ident: String,
     ): Result<Unit> {
         val urlString = "$dpBehandlingApiUrl/$behandlingId/$endepunkt"
-        return kotlin.runCatching {
-            runBlocking {
-                httpClient.post(urlString = urlString) {
-                    header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json)
-                    accept(ContentType.Application.Json)
-                    setBody(Request(ident))
+        return runBlocking {
+            httpClient.post(urlString = urlString) {
+                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke(saksbehandlerToken)}")
+                header(HttpHeaders.ContentType, ContentType.Application.Json)
+                accept(ContentType.Application.Json)
+                setBody(Request(ident))
+            }.let {
+                val statuskode = it.status.value
+                logger.info { "Kall til dp-behandling for $endepunkt returnerte status $statuskode" }
+                when (statuskode) {
+                    in 200..299 -> Result.success(Unit)
+                    else -> Result.failure(BehandlingException(it.bodyAsText(), it.status.value))
                 }
-            }.let { }
-        }.onFailure { logger.error(it) { "Kall til dp-behandling feilet ved kall mot $urlString ${it.message}" } }
+            }
+        }
     }
 }
 
-class GodkjennBehandlingFeiletException(message: String) : RuntimeException(message)
+data class BehandlingException(val text: String?, val status: Int) : RuntimeException(
+    "Feil ved kall mot dp-behandling: $text, status: $status",
+)
 
 class BehandlingKreverIkkeTotrinnskontrollException(message: String) : RuntimeException(message)
 

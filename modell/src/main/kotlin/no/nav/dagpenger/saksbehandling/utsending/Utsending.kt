@@ -4,6 +4,7 @@ import de.slub.urn.URN
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.toUrnOrNull
@@ -14,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendels
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 data class Utsending(
     val id: UUID = UUIDv7.ny(),
@@ -103,12 +105,14 @@ data class Utsending(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
-            logger.info {
-                "Mottok start_utsending hendelse for behandlingId ${startUtsendingHendelse.behandlingId} og" +
-                    " oppgaveId ${startUtsendingHendelse.oppgaveId}"
+            withLoggingContext(
+                "oppgaveId" to startUtsendingHendelse.oppgaveId.toString(),
+                "behandlingId" to startUtsendingHendelse.behandlingId.toString(),
+            ) {
+                logger.info { "Mottok start_utsending hendelse" }
+                utsending.tilstand = AvventerArkiverbarVersjonAvBrev
+                utsending.sak = startUtsendingHendelse.sak
             }
-            utsending.tilstand = AvventerArkiverbarVersjonAvBrev
-            utsending.sak = startUtsendingHendelse.sak
         }
     }
 
@@ -127,11 +131,10 @@ data class Utsending(
             utsending: Utsending,
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
         ) {
-            logger.info {
-                "Mottok arkiverbart dokument med urn: ${arkiverbartBrevHendelse.pdfUrn}" +
-                    " for oppgaveId: ${arkiverbartBrevHendelse.oppgaveId}"
+            withLoggingContext("oppgaveId" to arkiverbartBrevHendelse.oppgaveId.toString()) {
+                logger.info { "Mottok arkiverbart dokument med urn: ${arkiverbartBrevHendelse.pdfUrn}" }
+                utsending.tilstand = AvventerJournalføring
             }
-            utsending.tilstand = AvventerJournalføring
         }
     }
 
@@ -151,15 +154,21 @@ data class Utsending(
             utsending: Utsending,
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
         ) {
-            if (utsending.pdfUrn == arkiverbartBrevHendelse.pdfUrn) {
-                logger.warn {
-                    "Mystisk! Fikk pdfUrn på nytt. Den var lik. ArkiverbartBrevHendelse: $arkiverbartBrevHendelse " +
-                        "Utsending =$utsending"
-                }
-            } else {
-                logger.warn {
-                    "Mystisk! Fikk pdfUrn på nytt. Den var ulik. Utsending.pdfurn = ${utsending.pdfUrn} " +
-                        "ArkiverbartBrevHendelse: $arkiverbartBrevHendelse Utsending =$utsending "
+            withLoggingContext(
+                "oppgaveId" to arkiverbartBrevHendelse.oppgaveId.toString(),
+            ) {
+                if (utsending.pdfUrn == arkiverbartBrevHendelse.pdfUrn) {
+                    logger.warn { "Mystisk! Fikk pdfUrn på nytt. Den var lik. Se sikkerlogg." }
+                    sikkerlogger.warn {
+                        "Mystisk! Fikk pdfUrn på nytt. Den var lik. ArkiverbartBrevHendelse: $arkiverbartBrevHendelse " +
+                            "Utsending: $utsending"
+                    }
+                } else {
+                    logger.warn { "Mystisk! Fikk pdfUrn på nytt. Den var ulik. Se sikkerlogg." }
+                    sikkerlogger.warn {
+                        "Mystisk! Fikk pdfUrn på nytt. Den var ulik. Utsending.pdfurn = ${utsending.pdfUrn} " +
+                            "ArkiverbartBrevHendelse: $arkiverbartBrevHendelse Utsending: $utsending "
+                    }
                 }
             }
         }
@@ -168,12 +177,14 @@ data class Utsending(
             utsending: Utsending,
             journalførtHendelse: JournalførtHendelse,
         ) {
-            logger.info {
-                "Mottok journalført kvittering med journalpostId: ${journalførtHendelse.journalpostId}" +
-                    " for oppgaveId: ${journalførtHendelse.oppgaveId}"
+            withLoggingContext(
+                "oppgaveId" to journalførtHendelse.oppgaveId.toString(),
+                "journalpostId" to journalførtHendelse.journalpostId,
+            ) {
+                logger.info { "Mottok journalført kvittering" }
+                utsending.journalpostId = journalførtHendelse.journalpostId
+                utsending.tilstand = AvventerDistribuering
             }
-            utsending.journalpostId = journalførtHendelse.journalpostId
-            utsending.tilstand = AvventerDistribuering
         }
     }
 
@@ -191,13 +202,17 @@ data class Utsending(
             utsending: Utsending,
             distribuertHendelse: DistribuertHendelse,
         ) {
-            logger.info {
-                "Mottok distribuert kvittering med distribusjonId: ${distribuertHendelse.distribusjonId}" +
-                    " for oppgaveId: ${distribuertHendelse.oppgaveId}"
+            withLoggingContext(
+                "oppgaveId" to utsending.oppgaveId.toString(),
+                "distribusjonId" to distribuertHendelse.distribusjonId,
+            ) {
+                logger.info {
+                    "Mottok distribuert kvittering"
+                }
+                // TODO: Sanity check av noe slag
+                utsending.distribusjonId = distribuertHendelse.distribusjonId
+                utsending.tilstand = Distribuert
             }
-            // TODO: Sanity check av noe slag
-            utsending.distribusjonId = distribuertHendelse.distribusjonId
-            utsending.tilstand = Distribuert
         }
     }
 

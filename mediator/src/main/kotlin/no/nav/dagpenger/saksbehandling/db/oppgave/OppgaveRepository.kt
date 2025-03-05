@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -45,11 +46,6 @@ interface OppgaveRepository {
 
     fun finnOppgaveFor(behandlingId: UUID): Oppgave?
 
-    fun fjerneEmneknagg(
-        behandlingId: UUID,
-        ikkeRelevantEmneknagg: String,
-    ): Boolean
-
     fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean?
 
     fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering
@@ -57,4 +53,8 @@ interface OppgaveRepository {
     fun finnNotat(oppgaveTilstandLoggId: UUID): Notat?
 
     fun lagreNotatFor(oppgave: Oppgave): LocalDateTime
+
+    fun slettNotatFor(oppgave: Oppgave)
+
+    fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID>
 }

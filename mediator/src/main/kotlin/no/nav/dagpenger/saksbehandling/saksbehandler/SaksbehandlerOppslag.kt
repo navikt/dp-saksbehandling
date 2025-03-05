@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
 
 private val logger = KotlinLogging.logger { }
 
-internal interface SaksbehandlerOppslag {
+interface SaksbehandlerOppslag {
     suspend fun hentSaksbehandler(navIdent: String): BehandlerDTO
 }
 

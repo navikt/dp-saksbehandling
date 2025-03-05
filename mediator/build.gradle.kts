@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     val ktorVersion = libs.versions.ktor.get()
-    val dpBibliotekerVersion = "2024.10.31-15.02.1d4f08a38d24"
+    val dpBibliotekerVersion = "2025.02.13-18.02.052b7c34baab"
 
     implementation(project(":modell"))
     implementation(project(":openapi"))
@@ -24,7 +24,7 @@ dependencies {
 
     implementation(libs.kotlin.logging)
     implementation(libs.rapids.and.rivers)
-    implementation("io.prometheus:prometheus-metrics-core:1.3.4")
+    implementation("io.prometheus:prometheus-metrics-core:1.3.6")
     implementation(libs.konfig)
     implementation(libs.bundles.ktor.server)
     implementation("io.ktor:ktor-server-html-builder:$ktorVersion")

@@ -5,9 +5,12 @@ import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
+import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
@@ -15,28 +18,28 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
-import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
+import java.time.LocalDate
+import java.util.UUID
 
 internal class OppgaveDTOMapper(
-    private val pdlKlient: PDLKlient,
-    private val relevanteJournalpostIdOppslag: RelevanteJournalpostIdOppslag,
-    private val saksbehandlerOppslag: SaksbehandlerOppslag,
+    private val oppslag: Oppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
     suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
         return coroutineScope {
-            val person = async { pdlKlient.person(oppgave.behandling.person.ident).getOrThrow() }
-            val journalpostIder = async { relevanteJournalpostIdOppslag.hentJournalpostIder(oppgave) }
+            val person = async { oppslag.hentPerson(oppgave.behandling.person.ident) }
+            val journalpostIder = async { oppslag.hentJournalpostIder(oppgave) }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
-                    async { saksbehandlerOppslag.hentSaksbehandler(saksbehandlerIdent) }
+                    async { oppslag.hentBehandler(saksbehandlerIdent) }
                 }
             val sisteBeslutterDTO =
                 oppgave.sisteBeslutter()?.let { beslutterIdent ->
-                    async { saksbehandlerOppslag.hentSaksbehandler(beslutterIdent) }
+                    async { oppslag.hentBehandler(beslutterIdent) }
                 }
 
             val oppgaveHistorikk =
@@ -50,6 +53,7 @@ internal class OppgaveDTOMapper(
                 sisteSaksbehandlerDTO = sisteSaksbehandlerDTO?.await(),
                 sisteBeslutterDTO = sisteBeslutterDTO?.await(),
                 oppgaveHistorikk = oppgaveHistorikk.await(),
+                soknadId = oppgave.soknadId(),
             )
         }
     }
@@ -61,6 +65,7 @@ internal class OppgaveDTOMapper(
         sisteSaksbehandlerDTO: BehandlerDTO? = null,
         sisteBeslutterDTO: BehandlerDTO? = null,
         oppgaveHistorikk: List<OppgaveHistorikkDTO> = emptyList(),
+        soknadId: UUID? = null,
     ): OppgaveDTO =
 
         OppgaveDTO(
@@ -82,6 +87,7 @@ internal class OppgaveDTOMapper(
                         },
                     statsborgerskap = person.statsborgerskap,
                     skjermesSomEgneAnsatte = oppgave.behandling.person.skjermesSomEgneAnsatte,
+                    sikkerhetstiltak = mapGyldigeSikkerhetstiltak(person),
                     adressebeskyttelseGradering =
                         when (oppgave.behandling.person.adressebeskyttelseGradering) {
                             AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
@@ -105,7 +111,29 @@ internal class OppgaveDTOMapper(
                         sistEndretTidspunkt = it.sistEndretTidspunkt,
                     )
                 },
+            lovligeEndringer =
+                LovligeEndringerDTO(
+                    paaVentAarsaker =
+                        when (oppgave.tilstand().type) {
+                            UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                            else -> emptyList()
+                        },
+                ),
+            soknadId = soknadId,
         )
+
+    private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern): List<SikkerhetstiltakDTO> {
+        return person.sikkerhetstiltak.map { sikkerhetstiltakDto ->
+            SikkerhetstiltakIntern(
+                type = sikkerhetstiltakDto.type,
+                beskrivelse = sikkerhetstiltakDto.beskrivelse,
+                gyldigFom = sikkerhetstiltakDto.gyldigFom,
+                gyldigTom = sikkerhetstiltakDto.gyldigTom,
+            )
+        }.filter { sikkerhetstiltakIntern -> sikkerhetstiltakIntern.erGyldig(LocalDate.now()) }.map {
+            SikkerhetstiltakDTO(beskrivelse = it.beskrivelse, gyldigTom = it.gyldigTom)
+        }
+    }
 }
 
 internal fun Oppgave.tilOppgaveOversiktDTO() =
@@ -124,7 +152,6 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
                 AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
             },
         tilstand = this.tilstand().tilOppgaveTilstandDTO(),
-        saksbehandlerIdent = this.behandlerIdent,
         behandlerIdent = this.behandlerIdent,
         utsattTilDato = this.utsattTil(),
     )

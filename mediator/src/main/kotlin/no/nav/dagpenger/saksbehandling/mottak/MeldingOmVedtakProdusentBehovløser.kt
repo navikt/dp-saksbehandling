@@ -7,8 +7,12 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
+import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 internal class MeldingOmVedtakProdusentBehovløser(
     rapidsConnection: RapidsConnection,
@@ -36,13 +40,21 @@ internal class MeldingOmVedtakProdusentBehovløser(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asText().let { UUID.fromString(it) }
-
-        utsendingMediator.utsendingFinnesForBehandling(behandlingId).let {
-            when (it) {
-                true -> packet["@løsning"] = mapOf("MeldingOmVedtakProdusent" to "Dagpenger")
-                false -> packet["@løsning"] = mapOf("MeldingOmVedtakProdusent" to "Arena")
+        val ident = packet["ident"].asText()
+        withLoggingContext("behandlingId" to "$behandlingId") {
+            utsendingMediator.utsendingFinnesForBehandling(behandlingId).let {
+                when (it) {
+                    true -> {
+                        packet["@løsning"] = mapOf("MeldingOmVedtakProdusent" to "Dagpenger")
+                        logger.info { "MeldingOmVedtakProdusent er Dagpenger" }
+                    }
+                    false -> {
+                        packet["@løsning"] = mapOf("MeldingOmVedtakProdusent" to "Arena")
+                        logger.info { "MeldingOmVedtakProdusent er Arena" }
+                    }
+                }
             }
+            context.publish(key = ident, message = packet.toJson())
         }
-        context.publish(packet.toJson())
     }
 }

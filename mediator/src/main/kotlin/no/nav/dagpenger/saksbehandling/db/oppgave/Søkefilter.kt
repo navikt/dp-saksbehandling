@@ -1,8 +1,8 @@
 package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import io.ktor.http.Parameters
+import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
-import io.ktor.util.StringValuesBuilderImpl
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
@@ -47,18 +47,6 @@ class FilterBuilder {
     fun tilstand(): Set<Oppgave.Tilstand.Type>? {
         return stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
     }
-
-    private fun parseQueryString(queryString: String): StringValues {
-        if (queryString.isEmpty()) return StringValues.Empty
-
-        val builder = StringValuesBuilderImpl()
-
-        queryString
-            .split("&")
-            .map { it.split("=") }
-            .map { it: List<String> -> builder.append(it[0], it[1]) }
-        return builder.build()
-    }
 }
 
 data class TildelNesteOppgaveFilter(
@@ -78,9 +66,10 @@ data class TildelNesteOppgaveFilter(
             val egneAnsatteTilgang = saksbehandler.tilganger.contains(TilgangType.EGNE_ANSATTE)
             val adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger()
             val harBeslutterRolle: Boolean = saksbehandler.tilganger.contains(TilgangType.BESLUTTER)
+            val emneknagger = builder.emneknagg() ?: emptySet()
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
-                emneknagg = builder.emneknagg() ?: emptySet(),
+                emneknagg = emneknagger,
                 egneAnsatteTilgang = egneAnsatteTilgang,
                 adressebeskyttelseTilganger = adressebeskyttelseTilganger,
                 harBeslutterRolle = harBeslutterRolle,

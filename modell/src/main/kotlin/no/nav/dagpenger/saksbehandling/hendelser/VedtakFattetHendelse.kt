@@ -9,5 +9,6 @@ data class VedtakFattetHendelse(
     val søknadId: UUID,
     val ident: String,
     val sak: Sak,
+    val automatiskBehandlet: Boolean? = null,
     override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
 ) : Hendelse(utførtAv)

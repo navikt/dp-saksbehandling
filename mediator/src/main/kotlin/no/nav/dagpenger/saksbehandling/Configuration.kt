@@ -21,6 +21,7 @@ object Configuration {
                 "KAFKA_CONSUMER_GROUP_ID" to "dp-saksbehandling-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
                 "KAFKA_RESET_POLICY" to "LATEST",
+                "KAFKA_MAX_RECORDS" to "100",
                 "GRUPPE_EGNE_ANSATTE" to "EgneAnsatteADGruppe",
                 "GRUPPE_SAKSBEHANDLER" to "SaksbehandlerADGruppe",
                 "GRUPPE_BESLUTTER" to "BeslutterADGruppe",
@@ -63,7 +64,7 @@ object Configuration {
     val skjermingTokenProvider = { clientCredentialsTokenProvider(skjermingApiScope) }
 
     private val clientCredentialsTokenProvider = { scope: String ->
-        azureAdClient.clientCredentials(scope).accessToken
+        azureAdClient.clientCredentials(scope).access_token
             ?: throw RuntimeException("Failed to get access token")
     }
 
@@ -103,7 +104,7 @@ object Configuration {
     val dpBehandlingOboExchanger: (String) -> String by lazy {
         val scope = properties[Key("DP_BEHANDLING_API_SCOPE", stringType)]
         { token: String ->
-            val accessToken = azureAdClient.onBehalfOf(token, scope).accessToken
+            val accessToken = azureAdClient.onBehalfOf(token, scope).access_token
             requireNotNull(accessToken) { "Failed to get access token" }
             accessToken
         }
@@ -115,5 +116,15 @@ object Configuration {
     val kafkaStreamsConsumerId = "dp-saksbehandling-streams-consumer-v1"
     val kafkaStreamProperties by lazy {
         KafkaConfiguration.kafkaStreamsConfiguration(consumerId = kafkaStreamsConsumerId)
+    }
+
+    val dpMeldingOmVedtakBaseUrl = "http://dp-melding-om-vedtak"
+    val dpMeldingOmVedtakOboExchanger: (String) -> String by lazy {
+        val scope = properties[Key("DP_MELDING_OM_VEDTAK_API_SCOPE", stringType)]
+        { token: String ->
+            val accessToken = azureAdClient.onBehalfOf(token, scope).access_token
+            requireNotNull(accessToken) { "Failed to get access token" }
+            accessToken
+        }
     }
 }

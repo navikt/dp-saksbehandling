@@ -9,21 +9,20 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
+import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
-import no.nav.dagpenger.saksbehandling.api.statusPages
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.frist.settOppgaverKlarTilBehandlingEllerUnderBehandling
+import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
+import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
-import no.nav.dagpenger.saksbehandling.metrikker.startMetrikkJob
+import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
-import no.nav.dagpenger.saksbehandling.mottak.AvklaringIkkeRelevantMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingLåstMottak
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpplåstMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
@@ -31,7 +30,6 @@ import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.CachedSaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
-import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingHttpKlient
 import no.nav.dagpenger.saksbehandling.statistikk.PostgresStatistikkTjeneste
@@ -45,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.helse.rapids_rivers.RapidApplication
 import java.util.Timer
 
@@ -73,31 +72,42 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.dpBehandlingOboExchanger,
         )
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
-    private val oppgaveMediator =
-        OppgaveMediator(
-            repository = oppgaveRepository,
-            skjermingKlient = skjermingKlient,
-            pdlKlient = pdlKlient,
-            behandlingKlient = behandlingKlient,
-            utsendingMediator = utsendingMediator,
-        )
     private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
     private val saksbehandlerOppslag =
         CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider))
+    private val oppslag: Oppslag =
+        Oppslag(
+            pdlKlient = pdlKlient,
+            relevanteJournalpostIdOppslag = RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
+            saksbehandlerOppslag = saksbehandlerOppslag,
+            skjermingKlient = skjermingKlient,
+        )
+    private val oppgaveMediator =
+        OppgaveMediator(
+            repository = oppgaveRepository,
+            oppslag = oppslag,
+            behandlingKlient = behandlingKlient,
+            utsendingMediator = utsendingMediator,
+            meldingOmVedtakKlient =
+                MeldingOmVedtakKlient(
+                    dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
+                    tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
+                ),
+        )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
-            pdlKlient,
-            RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
-            saksbehandlerOppslag,
-            OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+            oppslag = oppslag,
+            oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
         )
     private val utsendingAlarmJob: Timer
+    private val slettGamleOppgaverJob: Timer
+    private val oppgaveFristUtgåttJob: Timer
+    private val metrikkJob: Timer
 
     private val rapidsConnection: RapidsConnection =
         RapidApplication.create(
             env = configuration,
-            objectMapper = objectMapper,
             builder = {
                 withKtorModule {
                     installerApis(
@@ -105,7 +115,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         oppgaveDTOMapper,
                         PostgresStatistikkTjeneste(dataSource),
                     )
-                    withStatusPagesConfig { statusPages() }
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =
                             kafkaStreams(Configuration.kafkaStreamProperties) {
@@ -125,22 +134,34 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         }.also { rapidsConnection ->
             utsendingMediator.setRapidsConnection(rapidsConnection)
             oppgaveMediator.setRapidsConnection(rapidsConnection)
-            VedtakFattetMottak(rapidsConnection, oppgaveMediator, utsendingMediator)
+            VedtakFattetMottak(rapidsConnection, oppgaveMediator)
             BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, pdlKlient, skjermingKlient)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
             ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
             UtsendingMottak(rapidsConnection, utsendingMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
-            AvklaringIkkeRelevantMottak(rapidsConnection, oppgaveMediator)
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection,
                 oppgaveRepository,
                 utsendingMediator,
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
-            BehandlingLåstMottak(rapidsConnection, oppgaveMediator)
-            BehandlingOpplåstMottak(rapidsConnection, oppgaveMediator)
-            utsendingAlarmJob = UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob()
+            utsendingAlarmJob =
+                UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob(
+                    period = 60.Minutt,
+                )
+            slettGamleOppgaverJob =
+                SletteGamleOppgaverJob(
+                    rapidsConnection,
+                    GamleOppgaverRepository(dataSource),
+                ).startJob()
+            oppgaveFristUtgåttJob =
+                OppgaveFristUtgåttJob(oppgaveMediator).startJob()
+            metrikkJob =
+                MetrikkJob().startJob(
+                    startAt = now,
+                    period = 5.Minutt,
+                )
         }
 
     init {
@@ -148,18 +169,20 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     }
 
     fun start() {
-        settOppgaverKlarTilBehandlingEllerUnderBehandling()
-        startMetrikkJob()
         rapidsConnection.start()
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
+
         logger.info { "Starter appen ${Configuration.APP_NAME}" }
     }
 
     override fun onShutdown(rapidsConnection: RapidsConnection) {
         utsendingAlarmJob.cancel()
+        slettGamleOppgaverJob.cancel()
+        oppgaveFristUtgåttJob.cancel()
+        metrikkJob.cancel()
         logger.info { "Skrur av applikasjonen" }
     }
 

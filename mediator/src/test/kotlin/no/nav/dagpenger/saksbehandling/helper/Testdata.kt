@@ -14,31 +14,16 @@ internal fun vedtakFattetHendelse(
     søknadId: UUID,
     behandlingId: UUID,
     sakId: Int,
+    automatiskBehandlet: Boolean = false,
 ): String {
     //language=JSON
     return """{
       "@event_name": "vedtak_fattet",
       "søknadId": "$søknadId",
-      "behandlingId": "$behandlingId",
-      "ident": "$ident",
-      "fagsakId": $sakId
-    }"""
-}
-
-internal fun vedtakFattetHendelseMedMeldingOmVedtakProdusent(
-    ident: String,
-    søknadId: UUID,
-    behandlingId: UUID,
-    sakId: Int,
-): String {
-    //language=JSON
-    return """{
-      "@event_name": "vedtak_fattet",
-      "søknadId": "$søknadId",
-      "meldingOmVedtakProdusent": "Arena",
       "behandlingId": "$behandlingId",
       "ident": "$ident",
       "fagsakId": $sakId,
+      "automatisk": $automatiskBehandlet
     }"""
 }
 

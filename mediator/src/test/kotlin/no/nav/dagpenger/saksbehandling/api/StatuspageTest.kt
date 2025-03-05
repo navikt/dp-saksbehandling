@@ -8,13 +8,14 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeBeslutterTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.statusPages
-import no.nav.dagpenger.saksbehandling.behandling.GodkjennBehandlingFeiletException
+import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
 
@@ -30,7 +31,7 @@ class StatuspageTest {
             val message = "Fant ikke oppgave med id"
             val path = "/v1/oppgave/id/DataNotFoundException"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
                     get(path) { throw DataNotFoundException(message) }
                 }
@@ -54,12 +55,41 @@ class StatuspageTest {
     }
 
     @Test
+    fun `Error håndtering av KanIkkeLageMeldingOmVedtak`() {
+        testApplication {
+            val message = "Kan ikke lage melding om vedtak"
+            val path = "/KanIkkeLageMeldingOmVedtak"
+            application {
+                installerApis(mockk(), mockk(), mockk())
+                routing {
+                    get(path) { throw MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak(message) }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.InternalServerError
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:feil-lag-melding-om-vedtak",
+                      "title": "Feil ved laging av melding om vedtak",
+                      "detail": "$message",
+                      "status": 500,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
     fun `Error håndtering av UgyldigTilstandException`() {
         testApplication {
             val message = "Kunne ikke rehydrere med ugyldig tilstand"
             val path = "/UkjentTilstandException"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
                     get(path) { throw Tilstand.UgyldigTilstandException(message) }
                 }
@@ -88,7 +118,7 @@ class StatuspageTest {
             val message = "Kan ikke håndtere hendelsen i denne tilstanden"
             val path = "/UlovligTilstandsendringException"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
                     get(path) { throw UlovligTilstandsendringException(message) }
                 }
@@ -117,7 +147,7 @@ class StatuspageTest {
             val message = "Kunne ikke finne oppgaveId i path"
             val path = "/IllegalArgumentException"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
                     get(path) { throw IllegalArgumentException(message) }
                 }
@@ -146,9 +176,9 @@ class StatuspageTest {
             val message = "Mangler tilgang"
             val path = "/ManglendeTilgang"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
-                    get(path) { throw ManglendeTilgang(message) }
+                    get(path) { throw ManglendeBeslutterTilgang(message) }
                 }
             }
 
@@ -159,7 +189,7 @@ class StatuspageTest {
                     """
                     {
                       "type": "dagpenger.nav.no/saksbehandling:problem:manglende-tilgang",
-                      "title": "Mangler tilgang",
+                      "title": "ManglendeBeslutterTilgang",
                       "detail": "$message",
                       "status": 403,
                       "instance": "$path"
@@ -175,7 +205,7 @@ class StatuspageTest {
             val message = "Feil ved parsing av dato/tid"
             val path = "/DateTimeParseException"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
                     get(path) {
                         throw DateTimeParseException(message, "syttende mai 2024 klokka 19:43", 1)
@@ -206,7 +236,7 @@ class StatuspageTest {
             val message = "Uhåndtert feil i koden"
             val path = "/Exception"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
                     get(path) {
                         throw RuntimeException(message)
@@ -237,7 +267,7 @@ class StatuspageTest {
             val message = "Oppgaven eies av noen andre"
             val path = "/AlleredeTildeltException"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
                     get(path) { throw Oppgave.AlleredeTildeltException(message) }
                 }
@@ -261,27 +291,27 @@ class StatuspageTest {
     }
 
     @Test
-    fun `Error håndtering av GodkjennBehandlingFeiletException`() {
+    fun `Error håndtering av BehandlingException`() {
         testApplication {
             val message = "Kall mot dp-behandling feilet"
-            val path = "/GodkjennBehandlingFeiletException"
+            val path = "/BehandlingException"
             application {
-                statusPages()
+                installerApis(mockk(), mockk(), mockk())
                 routing {
-                    get(path) { throw GodkjennBehandlingFeiletException(message) }
+                    get(path) { throw BehandlingException("403", 403) }
                 }
             }
 
             client.get(path).let { response ->
-                response.status shouldBe HttpStatusCode.InternalServerError
+                response.status.value shouldBe 403
                 response.bodyAsText() shouldEqualSpecifiedJson
                     //language=JSON
                     """
                     {
-                      "type": "dagpenger.nav.no/saksbehandling:problem:godkjenning-av-behandling-feilet",
-                      "title": "Godkjenning av behandling feilet",
-                      "detail": "$message",
-                      "status": 500,
+                      "type": "dagpenger.nav.no/saksbehandling:problem:behandling-feil",
+                      "title": "Feil ved kall mot dp-behandling",
+                      "detail": "403",
+                      "status": 403,
                       "instance": "$path"
                     }
                     """.trimIndent()

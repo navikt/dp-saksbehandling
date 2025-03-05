@@ -10,6 +10,7 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.getSnapShot
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -66,6 +67,15 @@ internal class AdressebeskyttelseConsumerTest {
                 statsborgerskap = "NOR",
                 kjønn = PDLPerson.Kjonn.MANN,
                 adresseBeskyttelseGradering = adresseBeskyttelseGradering,
+                sikkerhetstiltak =
+                    listOf(
+                        SikkerhetstiltakIntern(
+                            type = "Tiltakstype",
+                            beskrivelse = "To ansatte i samtale",
+                            gyldigFom = LocalDate.now(),
+                            gyldigTom = LocalDate.now().plusDays(1),
+                        ),
+                    ),
             ),
         )
     }

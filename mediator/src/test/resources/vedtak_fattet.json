@@ -6,6 +6,7 @@
   "vedtakstidspunkt" : "2024-09-24T14:56:11.612574",
   "virkningsdato" : "2021-05-06",
   "ident" : "01234567890",
+  "automatisk" : false,
   "fastsatt" : {
     "utfall" : false,
     "status" : null,
