@@ -469,6 +469,9 @@ components:
             $ref: '#/components/schemas/OppgaveOversikt'
         totaltAntallOppgaver:
           type: integer
+      required:
+        - oppgaver
+        - totaltAntallOppgaver
 
     OppgaveOversikt:
       type: object
