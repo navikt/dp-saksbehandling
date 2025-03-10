@@ -63,6 +63,10 @@ internal class ForslagTilVedtakMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
+        if (packet["søknadId"].asText() == "1868594761") {
+           return
+        }
+
         val søknadId = packet["søknadId"].asUUID()
         val behandlingId = packet["behandlingId"].asUUID()
 
