@@ -66,6 +66,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OppgaveOversiktResultat'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /oppgave/neste:
     put:
@@ -85,7 +91,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Oppgave'
         '404':
-          description: Ingen flere oppgaver å behandle akkurat nå
+            description: Ingen flere oppgaver å behandle akkurat nå
+            content:
+              application/problem+json:
+                schema:
+                  $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
           content:
             application/problem+json:
               schema:
@@ -113,6 +125,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
   /oppgave/{oppgaveId}/notat:
     put:
       summary: Legg til et notat på en oppgave
@@ -126,9 +144,9 @@ paths:
       requestBody:
         required: true
         content:
-          application/json:
+          text/plain:
             schema:
-              $ref: '#/components/schemas/Notat'
+              type: string
       responses:
         '200':
           description: Notatet ble lagt til
@@ -138,6 +156,12 @@ paths:
                 $ref: '#/components/schemas/LagreNotatResponse'
         '404':
           description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
           content:
             application/problem+json:
               schema:
@@ -161,6 +185,12 @@ paths:
                 $ref: '#/components/schemas/LagreNotatResponse'
         '404':
           description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
           content:
             application/problem+json:
               schema:
@@ -192,6 +222,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /oppgave/{oppgaveId}/returner-til-saksbehandler:
     put:
@@ -219,6 +255,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak:
     put:
@@ -230,13 +272,6 @@ paths:
           schema:
             type: string
             format: uuid
-      requestBody:
-        required: true
-        content:
-          text/html:
-            schema:
-              type: string
-              description: Melding om vedtak i HTML-format
       responses:
         '204':
           description: Oppgaven er ferdig behandlet og utsending av melding om vedtak har startet
@@ -252,6 +287,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak-arena:
     put:
       summary: Ferdigstill en Oppgave ved å la arena lage melding om vedtak.
@@ -271,6 +313,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/utsett:
     put:
       summary: Saksbehandler utsetter oppgaven
@@ -303,6 +352,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/tildel:
     put:
       summary: Saksbehandler blir tildelt ansvaret for oppgaven
@@ -317,9 +373,9 @@ paths:
         '200':
           description: Returnerer oppdatert tilstand etter tildeling av oppgave til saksbehandler eller beslutter
           content:
-            text/plain:
+            application/json:
               schema:
-                $ref: '#/components/schemas/OppgaveTilstand'
+                $ref: '#/components/schemas/OppdatertTilstand'
         '404':
           description: Oppgaven ble ikke funnet
           content:
@@ -332,6 +388,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/legg-tilbake:
     put:
       summary: Saksbehandler/beslutter fjernes som ansvarlig for oppgaven, og oppgaven går tilbake til oppgavelisten
@@ -357,6 +420,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /person/oppgaver:
     post:
       summary: Hent alle oppgaver til en person
@@ -375,6 +445,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OppgaveOversikt'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /behandling/{behandlingId}/oppgaveId:
     get:
       summary: Henter oppgaveId basert på en behandlingId
@@ -399,6 +476,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /statistikk:
     get:
       summary: Hent statistikk
@@ -419,6 +503,16 @@ paths:
                     $ref: '#/components/schemas/BeholdningsInfo'
         '401':
           description: Uautorisert tilgang
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '500':
+          description: Intern serverfeil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 components:
   schemas:
     Person:
@@ -562,6 +656,8 @@ components:
         - tilstand
         - emneknagger
         - lovligeEndringer
+        - journalpostIder
+        - historikk
 
     Kjonn:
       type: string
@@ -677,6 +773,7 @@ components:
       required:
         - utsettTilDato
         - beholdOppgave
+        - aarsak
 
     UtsettOppgaveAarsak:
       type: string
@@ -770,6 +867,13 @@ components:
           format: date-time
           description: Dato for eldste oppgave som er klar til behandling
 
+    OppdatertTilstand:
+      properties:
+        nyTilstand:
+          $ref: '#/components/schemas/OppgaveTilstand'
+      required:
+        - nyTilstand
+
     HttpProblem:
       type: object
       properties:
@@ -784,6 +888,12 @@ components:
           type: string
         instance:
           type: string
+      required:
+        - type
+        - title
+        - status
+        - instance
+
   securitySchemes:
     azureAd:
       type: http

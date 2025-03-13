@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppdatertTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
@@ -149,12 +150,13 @@ internal fun Application.oppgaveApi(
                             val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
                             val oppgaveId = call.finnUUID("oppgaveId")
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                                val oppdatertTilstand =
-                                    oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse).tilOppgaveTilstandDTO()
-                                call.respondText(
-                                    contentType = ContentType.Text.Plain,
+                                val nyTilstand: OppdatertTilstandDTO =
+                                    OppdatertTilstandDTO(
+                                        oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse).tilOppgaveTilstandDTO(),
+                                    )
+                                call.respond(
                                     status = HttpStatusCode.OK,
-                                    text = oppdatertTilstand.toString(),
+                                    message = nyTilstand,
                                 )
                             }
                         }
@@ -219,7 +221,7 @@ internal fun Application.oppgaveApi(
                             withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                                 val saksbehandler = applicationCallParser.sakbehandler(call)
                                 val saksbehandlerToken = call.request.jwt()
-                                oppgaveMediator.ferdigstillOppgave2(
+                                oppgaveMediator.ferdigstillOppgave(
                                     oppgaveId = oppgaveId,
                                     saksBehandler = saksbehandler,
                                     saksbehandlerToken = saksbehandlerToken,

@@ -401,7 +401,7 @@ class OppgaveMediatorTest {
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
             runBlocking {
-                oppgaveMediator.ferdigstillOppgave2(
+                oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     saksBehandler = saksbehandler,
                     saksbehandlerToken = "token",
@@ -487,7 +487,7 @@ class OppgaveMediatorTest {
 
             runBlocking {
                 shouldThrow<MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak> {
-                    oppgaveMediator.ferdigstillOppgave2(
+                    oppgaveMediator.ferdigstillOppgave(
                         oppgaveId = oppgave.oppgaveId,
                         saksBehandler = saksbehandler,
                         saksbehandlerToken = "token",

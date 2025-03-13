@@ -88,6 +88,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 import java.util.stream.Stream
 
 class OppgaveApiTest {
@@ -413,7 +414,7 @@ class OppgaveApiTest {
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                coEvery { it.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
+                coEvery { it.ferdigstillOppgave(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -424,7 +425,7 @@ class OppgaveApiTest {
             }
 
             coVerify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken)
+                oppgaveMediatorMock.ferdigstillOppgave(oppgave.oppgaveId, any(), saksbehandlerToken)
             }
         }
     }
@@ -436,7 +437,7 @@ class OppgaveApiTest {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 coEvery {
-                    it.ferdigstillOppgave2(any(), any(), any())
+                    it.ferdigstillOppgave(any<UUID>(), any(), any())
                 } throws MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak("Testmelding")
             }
 
@@ -449,7 +450,7 @@ class OppgaveApiTest {
             }
 
             coVerify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave2(oppgave.oppgaveId, any(), saksbehandlerToken)
+                oppgaveMediatorMock.ferdigstillOppgave(oppgave.oppgaveId, any(), saksbehandlerToken)
             }
         }
     }
@@ -639,8 +640,13 @@ class OppgaveApiTest {
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "text/plain"
-                response.bodyAsText() shouldBe "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    """
+                    {
+                      "nyTilstand" : "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                    }
+                    """.trimIndent()
             }
         }
     }

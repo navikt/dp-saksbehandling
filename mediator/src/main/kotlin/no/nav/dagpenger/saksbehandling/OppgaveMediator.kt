@@ -270,7 +270,7 @@ class OppgaveMediator(
         }
     }
 
-    suspend fun ferdigstillOppgave2(
+    suspend fun ferdigstillOppgave(
         oppgaveId: UUID,
         saksBehandler: Saksbehandler,
         saksbehandlerToken: String,
