@@ -417,6 +417,10 @@ paths:
                     $ref: '#/components/schemas/Statistikk'
                   beholdningsinfo:
                     $ref: '#/components/schemas/BeholdningsInfo'
+                required:
+                  - individuellStatistikk
+                  - generellStatistikk
+                  - beholdningsinfo
         '401':
           description: Uautorisert tilgang
 components:
@@ -754,6 +758,10 @@ components:
           default: 0
           description: Totalt antall behandlede oppgaver.
           example: 200
+      required:
+        - dag
+        - uke
+        - totalt
 
     BeholdningsInfo:
       properties:
@@ -769,6 +777,9 @@ components:
           type: string
           format: date-time
           description: Dato for eldste oppgave som er klar til behandling
+      required:
+        - antallOppgaverKlarTilBehandling
+        - antallOppgaverKlarTilKontroll
 
     HttpProblem:
       type: object
