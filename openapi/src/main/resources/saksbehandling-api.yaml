@@ -66,8 +66,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OppgaveOversiktResultat'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -96,8 +96,8 @@ paths:
               application/problem+json:
                 schema:
                   $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -125,8 +125,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -160,8 +160,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -189,8 +189,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -222,8 +222,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -255,8 +255,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -281,14 +281,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '415':
-          description: Unsupported Media Type - Innholdstypen må være text/html
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -313,8 +307,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -352,8 +346,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -388,8 +382,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -420,8 +414,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -445,8 +439,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OppgaveOversikt'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -476,8 +470,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
@@ -511,8 +505,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '500':
-          description: Intern serverfeil
+        default:
+          description: Feil
           content:
             application/problem+json:
               schema:
