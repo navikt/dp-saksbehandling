@@ -15,7 +15,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -27,13 +26,6 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class OppgaveHistorikkDTOMapperTest {
-    private val enhet =
-        BehandlerEnhetDTO(
-            navn = "Enhet",
-            enhetNr = "1234",
-            postadresse = "Postadresse",
-        )
-
     @Test
     fun `lage historikk for notat`(): Unit =
         runBlocking {
@@ -63,7 +55,7 @@ class OppgaveHistorikkDTOMapperTest {
                                 ident = beslutter.navIdent,
                                 fornavn = "fornavn",
                                 etternavn = "etternavn",
-                                enhet = enhet,
+                                enhet = null,
                             )
                     },
             ).let { mapper ->
@@ -185,14 +177,14 @@ class OppgaveHistorikkDTOMapperTest {
                                 ident = "saksbehandlerIdent",
                                 fornavn = "saksbehandlerFornavn",
                                 etternavn = "saksbehandlerEtternavn",
-                                enhet = enhet,
+                                enhet = null,
                             )
                         coEvery { it.hentSaksbehandler("beslutterIdent") } returns
                             BehandlerDTO(
                                 ident = "beslutterIdent",
                                 fornavn = "beslutterFornavn",
                                 etternavn = "beslutterEtternavn",
-                                enhet = enhet,
+                                enhet = null,
                             )
                     },
             ).let { mapper ->

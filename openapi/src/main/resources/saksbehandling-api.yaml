@@ -739,7 +739,7 @@ components:
         - ident
         - fornavn
         - etternavn
-        - enhet
+
     Statistikk:
       type: object
       properties:
