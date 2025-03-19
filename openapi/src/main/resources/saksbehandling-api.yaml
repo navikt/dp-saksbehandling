@@ -144,9 +144,9 @@ paths:
       requestBody:
         required: true
         content:
-          text/plain:
+          application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/Notat'
       responses:
         '200':
           description: Notatet ble lagt til
@@ -830,7 +830,7 @@ components:
         - ident
         - fornavn
         - etternavn
-
+        - enhet
     Statistikk:
       type: object
       properties:
