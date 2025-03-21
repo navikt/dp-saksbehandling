@@ -1,11 +1,11 @@
 package no.nav.dagpenger.saksbehandling.journalpostid
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondBadRequest
+import io.ktor.client.engine.mock.toByteArray
 import io.ktor.http.HttpHeaders
 import io.ktor.http.headersOf
 import io.prometheus.metrics.model.registry.PrometheusRegistry
@@ -16,34 +16,44 @@ import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class JournalpostIdHttpClientTest {
-    val søknadId = UUID.randomUUID()
+class MottakHttpClientTest {
+    private val søknadId = UUID.randomUUID()
+    private val testIdent: String = "123123"
 
     @Test
-    fun `Hent journalpostId`() {
+    fun `Hent journalpostIder`() {
+        var requestBody: String? = null
         val mockEngine =
             MockEngine { request ->
-                request.headers[HttpHeaders.Authorization] shouldBe "Bearer tøken"
+                request.headers[HttpHeaders.Authorization] shouldBe "Bearer token"
                 request.url.host shouldBe "localhost"
-                request.url.pathSegments shouldContain (søknadId.toString())
-                respond("1234", headers = headersOf("Content-Type", "plain/text"))
+                request.url.segments shouldBe listOf("v1", "journalpost", "sok")
+                requestBody = request.body.toByteArray().toString(Charsets.UTF_8)
+                respond(
+                    """
+                    {
+                      "journalpostIder": ["1234", "5678"]
+                    } 
+                    """.trimIndent(),
+                    headers = headersOf("Content-Type", "application/json"),
+                )
             }
 
         val journalpostIdClient =
-            JournalpostIdHttpClient(
+            MottakHttpKlient(
                 journalpostIdApiUrl = "http://localhost:8080",
-                tokenProvider = { "tøken" },
+                tokenProvider = { "token" },
                 httpClient =
                     httpClient(
                         prometheusRegistry = PrometheusRegistry(),
                         engine = mockEngine,
                     ),
             )
-        val journalpostIdResultat: Result<String> =
+        val journalpostIdResultat: Result<List<String>> =
             runBlocking {
-                journalpostIdClient.hentJournalpostId(søknadId = søknadId)
+                journalpostIdClient.hentJournalpostIder(søknadId = søknadId, testIdent)
             }
-        journalpostIdResultat shouldBe Result.success("1234")
+        journalpostIdResultat shouldBe Result.success(listOf("1234", "5678"))
     }
 
     @Test
@@ -54,8 +64,8 @@ class JournalpostIdHttpClientTest {
             }
 
         val journalpostIdClient =
-            JournalpostIdHttpClient(
-                journalpostIdApiUrl = "http://localhost:8080/$søknadId",
+            MottakHttpKlient(
+                journalpostIdApiUrl = "http://localhost:8080",
                 tokenProvider = { "tøken" },
                 httpClient =
                     httpClient(
@@ -63,9 +73,9 @@ class JournalpostIdHttpClientTest {
                         engine = mockEngine,
                     ),
             )
-        val journalpostIdResultat: Result<String> =
+        val journalpostIdResultat =
             runBlocking {
-                journalpostIdClient.hentJournalpostId(søknadId = søknadId)
+                journalpostIdClient.hentJournalpostIder(søknadId = søknadId, ident = testIdent)
             }
         journalpostIdResultat.isFailure shouldBe true
     }
@@ -79,8 +89,8 @@ class JournalpostIdHttpClientTest {
 
         val collectorRegistry = PrometheusRegistry()
         val journalpostIdClient =
-            JournalpostIdHttpClient(
-                journalpostIdApiUrl = "http://localhost:8080/$søknadId",
+            MottakHttpKlient(
+                journalpostIdApiUrl = "http://localhost:8080",
                 tokenProvider = { "tøken" },
                 httpClient =
                     httpClient(
@@ -90,18 +100,18 @@ class JournalpostIdHttpClientTest {
             )
         runBlocking {
             repeat(5) {
-                journalpostIdClient.hentJournalpostId(søknadId = søknadId)
+                journalpostIdClient.hentJournalpostIder(søknadId = søknadId, ident = testIdent)
             }
         }
 
         collectorRegistry.getSnapShot<CounterSnapshot> {
-            it == "dp_saksbehandling_joark_http_klient_status"
+            it == "dp_saksbehandling_dp_mottak_http_klient_status"
         }.let { counterSnapshot ->
             counterSnapshot.dataPoints.single { it.labels["status"] == "400" }.value shouldBe 5.0
         }
 
         shouldNotThrowAny {
-            collectorRegistry.getSnapShot<HistogramSnapshot> { it == "dp_saksbehandling_joark_http_klient_duration" }
+            collectorRegistry.getSnapShot<HistogramSnapshot> { it == "dp_saksbehandling_dp_mottak_http_klient_duration" }
         }
     }
 }
