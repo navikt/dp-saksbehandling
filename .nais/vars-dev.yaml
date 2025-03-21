@@ -21,7 +21,7 @@ ingresses: |
 kafka_pool: nav-dev
 
 dp-mottak:
-  scope: "api://dev-gcp.teamdagpenger.dp-mottak.default"
+  scope: "api://dev-gcp.teamdagpenger.dp-mottak/.default"
 
 pdl:
   host: "pdl-api.dev-fss-pub.nais.io"
