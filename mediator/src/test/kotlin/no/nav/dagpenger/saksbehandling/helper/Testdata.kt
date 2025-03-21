@@ -19,7 +19,11 @@ internal fun vedtakFattetHendelse(
     //language=JSON
     return """{
       "@event_name": "vedtak_fattet",
-      "søknadId": "$søknadId",
+      "behandletHendelse": {
+        "datatype": "UUID",
+        "id": "$søknadId",
+        "type": "Søknad"
+      },
       "behandlingId": "$behandlingId",
       "ident": "$ident",
       "fagsakId": $sakId,
