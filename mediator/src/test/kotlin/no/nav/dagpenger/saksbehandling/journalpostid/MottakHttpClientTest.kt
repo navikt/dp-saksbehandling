@@ -41,7 +41,7 @@ class MottakHttpClientTest {
 
         val journalpostIdClient =
             MottakHttpKlient(
-                journalpostIdApiUrl = "http://localhost:8080",
+                dpMottakApiUrl = "http://localhost:8080",
                 tokenProvider = { "token" },
                 httpClient =
                     httpClient(
@@ -65,7 +65,7 @@ class MottakHttpClientTest {
 
         val journalpostIdClient =
             MottakHttpKlient(
-                journalpostIdApiUrl = "http://localhost:8080",
+                dpMottakApiUrl = "http://localhost:8080",
                 tokenProvider = { "tøken" },
                 httpClient =
                     httpClient(
@@ -90,7 +90,7 @@ class MottakHttpClientTest {
         val collectorRegistry = PrometheusRegistry()
         val journalpostIdClient =
             MottakHttpKlient(
-                journalpostIdApiUrl = "http://localhost:8080",
+                dpMottakApiUrl = "http://localhost:8080",
                 tokenProvider = { "tøken" },
                 httpClient =
                     httpClient(

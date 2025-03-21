@@ -56,8 +56,8 @@ spec:
       value: {{skjerming.url}}
     - name: SKJERMING_API_SCOPE
       value: {{skjerming.scope}}
-    - name: JOURNALPOSTID_API_SCOOPE
-      value: {{ journalpostid.scope }}
+    - name: DP_MOTTAK_API_SCOPE
+      value: {{ dp-mottak.scope }}
     - name: DP_BEHANDLING_API_SCOPE
       value: {{ dp-behandling.scope }}
     - name: DP_MELDING_OM_VEDTAK_API_SCOPE

@@ -63,7 +63,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
 
     private val journalpostIdClient =
         MottakHttpKlient(
-            journalpostIdApiUrl = Configuration.journalpostIdApiUrl,
+            dpMottakApiUrl = Configuration.dpMottakApiUrl,
             tokenProvider = Configuration.journalpostTokenProvider,
         )
     private val behandlingKlient =

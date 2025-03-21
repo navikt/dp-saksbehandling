@@ -21,7 +21,7 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 class MottakHttpKlient(
-    private val journalpostIdApiUrl: String,
+    private val dpMottakApiUrl: String,
     private val tokenProvider: () -> String,
     private val httpClient: HttpClient = httpClient(),
 ) : JournalpostIdClient {
@@ -30,7 +30,7 @@ class MottakHttpKlient(
         ident: String,
     ): Result<List<String>> {
         return kotlin.runCatching {
-            httpClient.post(urlString = "$journalpostIdApiUrl/v1/journalpost/sok") {
+            httpClient.post(urlString = "$dpMottakApiUrl/v1/journalpost/sok") {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(
