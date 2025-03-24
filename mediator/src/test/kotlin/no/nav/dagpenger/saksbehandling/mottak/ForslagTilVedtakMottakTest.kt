@@ -253,8 +253,11 @@ class ForslagTilVedtakMottakTest {
           "ident": "$ident",
           "behandlingId": "$behandlingId",
           "gjelderDato": "2024-11-19",
-          "søknadId": "$søknadId",
-          "søknad_uuid": "$søknadId"
+          "behandletHendelse": {
+            "datatype": "UUID",
+            "id": "$søknadId",
+            "type": "Søknad"
+          }
         }
         """.trimIndent()
 
@@ -337,8 +340,11 @@ class ForslagTilVedtakMottakTest {
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",
-            "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId"
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+              }
         }
         """.trimIndent()
 
@@ -421,8 +427,11 @@ class ForslagTilVedtakMottakTest {
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",
-            "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId"
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+              }
         }
         """.trimIndent()
 
@@ -509,8 +518,11 @@ class ForslagTilVedtakMottakTest {
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",
-            "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId"
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+              }
         }
         """.trimIndent()
 
@@ -597,8 +609,11 @@ class ForslagTilVedtakMottakTest {
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",
-            "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId"
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+              }
         }
         """.trimIndent()
 
@@ -685,8 +700,11 @@ class ForslagTilVedtakMottakTest {
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",
-            "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId"
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+              }
         }
         """.trimIndent()
 
@@ -769,8 +787,11 @@ class ForslagTilVedtakMottakTest {
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",
-            "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId"
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+              }
         }
         """.trimIndent()
 
@@ -827,8 +848,11 @@ class ForslagTilVedtakMottakTest {
             "ident": "$ident",
             "behandlingId": "$behandlingId",
             "gjelderDato": "2024-11-19",
-            "søknadId": "$søknadId",
-            "søknad_uuid": "$søknadId"
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+              }
         }
         """.trimIndent()
 
@@ -839,7 +863,11 @@ class ForslagTilVedtakMottakTest {
           "@event_name": "forslag_til_vedtak",
           "behandlingId": "$behandlingId",
           "fagsakId": "123",
-          "søknadId": "$søknadId",
+          "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+              },
           "ident": "$ident",
           "vedtakstidspunkt": "2025-01-08T13:28:28.164624",
           "virkningsdato": "2021-05-06",

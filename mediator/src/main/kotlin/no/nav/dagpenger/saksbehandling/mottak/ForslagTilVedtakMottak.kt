@@ -34,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGE
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER
+import java.util.UUID
 
 internal class ForslagTilVedtakMottak(
     rapidsConnection: RapidsConnection,
@@ -46,10 +47,12 @@ internal class ForslagTilVedtakMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "forslag_til_vedtak")
+                it.requireValue("behandletHendelse.type", "Søknad")
             }
-            validate { it.requireKey("ident", "søknadId", "behandlingId") }
+            validate { it.requireKey("ident", "behandlingId") }
             validate { it.interestedIn("utfall", "harAvklart") }
             validate { it.interestedIn("fastsatt", "vilkår", "opplysninger") }
+            validate { it.interestedIn("behandletHendelse") }
         }
     }
 
@@ -63,7 +66,7 @@ internal class ForslagTilVedtakMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val søknadId = packet["søknadId"].asUUID()
+        val søknadId = packet.søknadId()
         val behandlingId = packet["behandlingId"].asUUID()
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
@@ -146,3 +149,5 @@ internal class ForslagTilVedtakMottak(
                 .toSet()
         }
 }
+
+private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
