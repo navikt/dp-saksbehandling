@@ -102,6 +102,35 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+  /oppgave/hentOppgaveTilstand/{soknadId}:
+    get:
+      summary: Hent tilstand for en oppgave basert på søknadId
+      parameters:
+        - in: path
+          name: soknadId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med tilstand for oppgaven
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OppgaveTilstand'
+        '404':
+          description: Søknaden har ingen korresponderende oppgave
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
   /oppgave/{oppgaveId}:
     get:
       summary: Hent en oppgave ved hjelp av dens ID

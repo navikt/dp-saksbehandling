@@ -1159,4 +1159,11 @@ class OppgaveApiTest {
             }
         }
     }
+    @Test
+    fun `Skal hente oppgavetilstand basert på søknadId`(){
+        val søknadId = UUIDv7.ny()
+        val oppgaveMediatorMock = mockk<OppgaveMediator>().also {
+            every { it.hentOppgaveTilstandForSøknad(søknadId) } returns OppgaveTilstandDTO.UNDER_BEHANDLING
+        }
+    }
 }

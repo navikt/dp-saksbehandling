@@ -94,6 +94,13 @@ internal fun Application.oppgaveApi(
                     }
                 }
 
+                route("hentOppgaveTilstand/{soknadId}"){
+                    get{
+                        val søknadId = call.finnUUID("soknadId") //kan jeg gjennbruke denne, isåfall brude feilmeldingen endres
+
+                    }
+                }
+
                 route("{oppgaveId}") {
                     get {
                         val saksbehandler = applicationCallParser.sakbehandler(call)
