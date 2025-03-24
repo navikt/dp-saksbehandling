@@ -28,8 +28,8 @@ object Configuration {
                 "GRUPPE_FORTROLIG" to "FortroligADGruppe",
                 "GRUPPE_STRENGT_FORTROLIG_UTLAND" to "StrengtFortroligUtlandADGruppe",
                 "GRUPPE_STRENGT_FORTROLIG" to "StrengtFortroligADGruppe",
-                "JOURNALPOSTID_API_URL" to "http://dp-oppslag-journalpost-id/v1/journalpost",
-                "JOURNALPOSTID_API_SCOOPE" to "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default",
+                "DP_MOTTAK_API_URL" to "http://dp-mottak",
+                "DP_MOTTAK_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-mottak/.default",
                 "DP_BEHANDLING_API_SCOPE" to "api://dev-gcp.teamdagpenger.dp-behandling/.default",
                 "DP_BEHANDLING_API_URL" to "http://dp-behandling/behandling",
                 "NORG2_API_URL" to "http://norg2.org/norg2",
@@ -52,10 +52,10 @@ object Configuration {
     val msGraphBaseUrl: String = "https://graph.microsoft.com"
     val norg2BaseUrl: String = properties[Key("NORG2_API_URL", stringType)]
 
-    val journalpostIdApiUrl: String = properties[Key("JOURNALPOSTID_API_URL", stringType)]
-    val journalpostApiScope: String = properties[Key("JOURNALPOSTID_API_SCOOPE", stringType)]
+    val dpMottakApiUrl: String = properties[Key("DP_MOTTAK_API_URL", stringType)]
+    val dpMottakApiScope: String = properties[Key("DP_MOTTAK_API_SCOPE", stringType)]
 
-    val journalpostTokenProvider = { clientCredentialsTokenProvider(journalpostApiScope) }
+    val journalpostTokenProvider = { clientCredentialsTokenProvider(dpMottakApiScope) }
 
     val skjermingApiUrl: String = properties[Key("SKJERMING_API_URL", stringType)]
     val skjermingApiScope: String = properties[Key("SKJERMING_API_SCOPE", stringType)]

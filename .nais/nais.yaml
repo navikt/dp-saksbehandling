@@ -56,8 +56,8 @@ spec:
       value: {{skjerming.url}}
     - name: SKJERMING_API_SCOPE
       value: {{skjerming.scope}}
-    - name: JOURNALPOSTID_API_SCOOPE
-      value: {{ journalpostid.scope }}
+    - name: DP_MOTTAK_API_SCOPE
+      value: {{ dp-mottak.scope }}
     - name: DP_BEHANDLING_API_SCOPE
       value: {{ dp-behandling.scope }}
     - name: DP_MELDING_OM_VEDTAK_API_SCOPE
@@ -86,14 +86,12 @@ spec:
         {{/if}}
     outbound:
       rules:
+        - application: dp-oppslag-journalpost-id
+        - application: dp-behandling
+        - application: dp-melding-om-vedtak
+        - application: dp-mottak
         - application: skjermede-personer-pip
           namespace: nom
-        - application: dp-oppslag-journalpost-id
-          namespace: teamdagpenger
-        - application: dp-behandling
-          namespace: teamdagpenger
-        - application: dp-melding-om-vedtak
-          namespace: teamdagpenger
         - application: norg2
           namespace: org
       external:

@@ -20,8 +20,8 @@ ingresses: |
 
 kafka_pool: nav-dev
 
-journalpostid:
-  scope: "api://dev-gcp.teamdagpenger.dp-oppslag-journalpost-id/.default"
+dp-mottak:
+  scope: "api://dev-gcp.teamdagpenger.dp-mottak/.default"
 
 pdl:
   host: "pdl-api.dev-fss-pub.nais.io"

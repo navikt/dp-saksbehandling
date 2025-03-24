@@ -19,7 +19,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
-import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdHttpClient
+import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -62,8 +62,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
 
     private val journalpostIdClient =
-        JournalpostIdHttpClient(
-            journalpostIdApiUrl = Configuration.journalpostIdApiUrl,
+        MottakHttpKlient(
+            dpMottakApiUrl = Configuration.dpMottakApiUrl,
             tokenProvider = Configuration.journalpostTokenProvider,
         )
     private val behandlingKlient =
