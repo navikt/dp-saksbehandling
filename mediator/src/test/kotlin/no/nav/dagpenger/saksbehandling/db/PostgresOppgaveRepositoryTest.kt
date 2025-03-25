@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -1261,6 +1262,46 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Skal kunne hente oppgavetilstand for søknad`() {
+        val hendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+                ident = "12345678910",
+                opprettet = LocalDateTime.now(),
+            )
+        val behandling =
+            Behandling(
+                behandlingId = hendelse.behandlingId,
+                person =
+                    Person(
+                        id = UUIDv7.ny(),
+                        ident = hendelse.ident,
+                        skjermesSomEgneAnsatte = false,
+                        adressebeskyttelseGradering = UGRADERT,
+                    ),
+                opprettet = LocalDateTime.now(),
+                hendelse = hendelse,
+            )
+        val oppgaveKlarTilBehandling = lagOppgave(tilstand = KlarTilBehandling, behandling = behandling)
+
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(oppgaveKlarTilBehandling)
+
+            repo.oppgaveTilstandForSøknad(
+                ident = hendelse.ident,
+                søknadId = hendelse.søknadId,
+            ) shouldBe KLAR_TIL_BEHANDLING
+
+            repo.oppgaveTilstandForSøknad(
+                ident = "12345678910",
+                søknadId = UUIDv7.ny(),
+            ) shouldBe null
+        }
+    }
+
+    @Test
     fun `Skal hente oppgaveId fra behandlingId`() {
         val behandling = lagBehandling()
         val oppgave = lagOppgave(behandling = behandling)
@@ -1329,7 +1370,8 @@ class PostgresOppgaveRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave1 = lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf(INNVILGELSE.visningsnavn))
+            val oppgave1 =
+                lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf(INNVILGELSE.visningsnavn))
             val oppgave2 =
                 lagOppgave(
                     UnderBehandling,
@@ -1337,8 +1379,13 @@ class PostgresOppgaveRepositoryTest {
                     emneknagger = setOf(AVSLAG_MINSTEINNTEKT.visningsnavn),
                 )
             val oppgave3 =
-                lagOppgave(FerdigBehandlet, saksbehandlerIdent = saksbehandler2, emneknagger = setOf(INNVILGELSE.visningsnavn))
-            val oppgave4 = lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf(INNVILGELSE.visningsnavn))
+                lagOppgave(
+                    FerdigBehandlet,
+                    saksbehandlerIdent = saksbehandler2,
+                    emneknagger = setOf(INNVILGELSE.visningsnavn),
+                )
+            val oppgave4 =
+                lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf(INNVILGELSE.visningsnavn))
 
             repo.lagre(oppgave1)
             repo.lagre(oppgave2)

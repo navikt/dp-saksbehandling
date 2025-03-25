@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdatertTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.api.models.SoknadDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -59,6 +60,13 @@ internal fun Application.oppgaveApi(
                         oppgaveMediator.finnOppgaverFor(call.receive<PersonIdentDTO>().ident)
                             .tilOppgaveOversiktDTOListe()
                     call.respond(status = HttpStatusCode.OK, oppgaver)
+                }
+            }
+            route("person/skal-varsle-om-ettersending") {
+                post {
+                    val soknad: SoknadDTO = call.receive<SoknadDTO>()
+                    val skalVarsle = oppgaveMediator.skalEttersendingTilSøknadVarsles(søknadId = soknad.soknadId, ident = soknad.ident)
+                    call.respond(status = HttpStatusCode.OK, skalVarsle)
                 }
             }
             route("oppgave") {

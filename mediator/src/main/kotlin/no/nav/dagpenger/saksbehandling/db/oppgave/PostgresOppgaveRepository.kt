@@ -489,6 +489,34 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         }
     }
 
+    override fun oppgaveTilstandForSøknad(
+        ident: String,
+        søknadId: UUID,
+    ): Type? {
+        return sessionOf(datasource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    """
+                        SELECT  oppg.tilstand AS tilstand
+                        FROM    oppgave_v1      oppg
+                        JOIN    behandling_v1   beha ON beha.id = oppg.behandling_id
+                        JOIN    person_v1       pers ON pers.id = beha.person_id
+                        JOIN    hendelse_v1     hend ON beha.id = hend.behandling_id
+                        WHERE   pers.ident = :ident
+                        AND     hend.hendelse_data->>'søknadId' = :soknad_id
+                    """.trimMargin(),
+                    mapOf(
+                        "ident" to ident,
+                        "soknad_id" to søknadId.toString(),
+                    ),
+                ).map { row ->
+                    Type.valueOf(row.string("tilstand"))
+                }.asSingle,
+            )
+        }
+    }
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(

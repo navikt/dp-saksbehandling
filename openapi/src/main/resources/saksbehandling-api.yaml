@@ -446,6 +446,41 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+  /person/skal-varsle-om-ettersending:
+    post:
+      summary: Sjeker om det søknaden er sett på av saksbehandler og ikke sendt til Arena
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Soknad'
+      parameters:
+        - in: path
+          name: soknadId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med tilstand for oppgaven
+          content:
+            plain/text:
+              schema:
+                type: boolean
+        '404':
+          description: Søknaden har ingen korresponderende oppgave
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /behandling/{behandlingId}/oppgaveId:
     get:
@@ -716,6 +751,18 @@ components:
           type: string
       required:
         - ident
+
+    Soknad:
+      type: object
+      properties:
+        ident:
+          type: string
+        soknadId:
+          type: string
+          format: uuid
+      required:
+        - ident
+        - soknadId
 
     OppgaveHistorikk:
       type: object

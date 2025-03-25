@@ -13,6 +13,14 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
+import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.BehandlesIArena
+import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -21,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
 import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
@@ -57,8 +66,12 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.stream.Stream
 import javax.sql.DataSource
 
 class OppgaveMediatorTest {
@@ -325,6 +338,71 @@ class OppgaveMediatorTest {
 
             oppdatertOppgave.emneknagger shouldBe testEmneknagger2
             oppdatertOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        private fun skalEttersendingTilSøknadVarsles(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of(Opprettet, false),
+                Arguments.of(KlarTilBehandling, false),
+                Arguments.of(BehandlesIArena, false),
+                Arguments.of(AvventerOpplåsingAvBehandling, false),
+                Arguments.of(AvventerLåsAvBehandling, false),
+                Arguments.of(Oppgave.PåVent, true),
+                Arguments.of(UnderBehandling, true),
+                Arguments.of(KlarTilKontroll, true),
+                Arguments.of(Oppgave.UnderKontroll(), true),
+                Arguments.of(FerdigBehandlet, true),
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("skalEttersendingTilSøknadVarsles")
+    fun `Finnes det en oppgave til behandling`(
+        tilstand: Oppgave.Tilstand,
+        skalLageGosysOppgave: Boolean,
+    ) {
+        val hendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+                ident = "12345678910",
+                opprettet = LocalDateTime.now(),
+            )
+        val behandling =
+            Behandling(
+                behandlingId = hendelse.behandlingId,
+                person =
+                    Person(
+                        id = UUIDv7.ny(),
+                        ident = hendelse.ident,
+                        skjermesSomEgneAnsatte = false,
+                        adressebeskyttelseGradering = UGRADERT,
+                    ),
+                opprettet = LocalDateTime.now(),
+                hendelse = hendelse,
+            )
+        val oppgave = lagOppgave(tilstand = tilstand, behandling = behandling)
+
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(oppgave)
+
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(ds),
+                    oppslag = oppslagMock,
+                    behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
+                    utsendingMediator = mockk(),
+                )
+            oppgaveMediator.skalEttersendingTilSøknadVarsles(
+                hendelse.søknadId,
+                hendelse.ident,
+            ) shouldBe skalLageGosysOppgave
         }
     }
 
@@ -991,7 +1069,8 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT).single().emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
+            oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT)
+                .single().emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
         }
     }
 
@@ -1165,7 +1244,7 @@ class OppgaveMediatorTest {
         }
     }
 
-    private fun DataSource.lagTestoppgave(tilstand: Oppgave.Tilstand.Type): Oppgave {
+    private fun DataSource.lagTestoppgave(tilstand: Type): Oppgave {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = PostgresOppgaveRepository(this),

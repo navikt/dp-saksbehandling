@@ -57,4 +57,9 @@ interface OppgaveRepository {
     fun slettNotatFor(oppgave: Oppgave)
 
     fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID>
+
+    fun oppgaveTilstandForSøknad(
+        ident: String,
+        søknadId: UUID,
+    ): Oppgave.Tilstand.Type?
 }
