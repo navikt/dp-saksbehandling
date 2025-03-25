@@ -131,6 +131,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
+                Arguments.of("/person/finnes-soknad-til-behandling", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
         }
@@ -1159,11 +1160,25 @@ class OppgaveApiTest {
             }
         }
     }
+
     @Test
-    fun `Skal hente oppgavetilstand basert på søknadId`(){
+    fun `Skal sjekke om det finnes korresponderende oppgave som saksbehandler har sett på`() {
         val søknadId = UUIDv7.ny()
-        val oppgaveMediatorMock = mockk<OppgaveMediator>().also {
-            every { it.hentOppgaveTilstandForSøknad(søknadId) } returns OppgaveTilstandDTO.UNDER_BEHANDLING
+
+        withOppgaveApi {
+            client.post("/person/finnes-soknad-til-behandling") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"ident": "$TEST_IDENT", 
+                        "soknadId":  "$søknadId"}
+                    """.trimMargin(),
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldBe "true"
+            }
         }
     }
 }

@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdatertTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.api.models.SoknadDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -61,6 +62,14 @@ internal fun Application.oppgaveApi(
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
             }
+            route("person/finnes-soknad-til-behandling") {
+                post {
+                    val soknad: SoknadDTO = call.receive<SoknadDTO>()
+                    // todo finn oppgave og sjekk tilstand
+                    val finnesSoknadTilBehandling = true
+                    call.respond(status = HttpStatusCode.OK, finnesSoknadTilBehandling)
+                }
+            }
             route("oppgave") {
                 get {
                     val søkefilter = Søkefilter.fra(call.request.queryParameters, call.navIdent())
@@ -91,13 +100,6 @@ internal fun Application.oppgaveApi(
                             null -> call.respond(HttpStatusCode.NotFound)
                             else -> call.respond(HttpStatusCode.OK, oppgaveDTOMapper.lagOppgaveDTO(oppgave))
                         }
-                    }
-                }
-
-                route("hentOppgaveTilstand/{soknadId}"){
-                    get{
-                        val søknadId = call.finnUUID("soknadId") //kan jeg gjennbruke denne, isåfall brude feilmeldingen endres
-
                     }
                 }
 
