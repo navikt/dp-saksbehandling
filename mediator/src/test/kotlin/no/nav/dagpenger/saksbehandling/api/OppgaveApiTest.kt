@@ -131,7 +131,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
-                Arguments.of("/person/finnes-soknad-til-behandling", HttpMethod.Post),
+                Arguments.of("/person/skal-varsle-om-ettersending", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
         }
@@ -1164,9 +1164,14 @@ class OppgaveApiTest {
     @Test
     fun `Skal sjekke om det finnes korresponderende oppgave som saksbehandler har sett på`() {
         val søknadId = UUIDv7.ny()
-
-        withOppgaveApi {
-            client.post("/person/finnes-soknad-til-behandling") {
+        val søknadIdFalse = UUIDv7.ny()
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.skalEttersendingTilSøknadVarsles(søknadId = søknadId, ident = TEST_IDENT) } returns true
+                every { it.skalEttersendingTilSøknadVarsles(søknadId = søknadIdFalse, ident = TEST_IDENT) } returns false
+            }
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.post("/person/skal-varsle-om-ettersending") {
                 autentisert()
                 contentType(ContentType.Application.Json)
                 setBody(
@@ -1178,6 +1183,20 @@ class OppgaveApiTest {
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 response.bodyAsText() shouldBe "true"
+            }
+
+            client.post("/person/skal-varsle-om-ettersending") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"ident": "$TEST_IDENT", 
+                        "soknadId":  "$søknadIdFalse"}
+                    """.trimMargin(),
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldBe "false"
             }
         }
     }

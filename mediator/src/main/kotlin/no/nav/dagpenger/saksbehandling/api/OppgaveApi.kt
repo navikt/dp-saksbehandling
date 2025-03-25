@@ -62,12 +62,11 @@ internal fun Application.oppgaveApi(
                     call.respond(status = HttpStatusCode.OK, oppgaver)
                 }
             }
-            route("person/finnes-soknad-til-behandling") {
+            route("person/skal-varsle-om-ettersending") {
                 post {
                     val soknad: SoknadDTO = call.receive<SoknadDTO>()
-                    // todo finn oppgave og sjekk tilstand
-                    val finnesSoknadTilBehandling = true
-                    call.respond(status = HttpStatusCode.OK, finnesSoknadTilBehandling)
+                    val skalVarsle = oppgaveMediator.skalEttersendingTilSøknadVarsles(søknadId = soknad.soknadId, ident = soknad.ident)
+                    call.respond(status = HttpStatusCode.OK, skalVarsle)
                 }
             }
             route("oppgave") {

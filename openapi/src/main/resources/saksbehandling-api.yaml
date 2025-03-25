@@ -446,7 +446,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-  /person/finnes-soknad-til-behandling:
+  /person/skal-varsle-om-ettersending:
     post:
       summary: Sjeker om det søknaden er sett på av saksbehandler og ikke sendt til Arena
       requestBody:
