@@ -1293,6 +1293,11 @@ class PostgresOppgaveRepositoryTest {
                 ident = hendelse.ident,
                 søknadId = hendelse.søknadId,
             ) shouldBe KLAR_TIL_BEHANDLING
+
+            repo.oppgaveTilstandForSøknad(
+                ident = "12345678910",
+                søknadId = UUIDv7.ny(),
+            ) shouldBe null
         }
     }
 

@@ -9,6 +9,9 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.OPPGAVE_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -480,6 +483,20 @@ class OppgaveMediator(
                 saksbehandler = nesteOppgaveHendelse.utførtAv,
             )
         return repository.tildelOgHentNesteOppgave(nesteOppgaveHendelse, tildelNesteOppgaveFilter)
+    }
+
+    fun finnesSøknadTilBehandling(
+        søknadId: UUID,
+        ident: String,
+    ): Boolean {
+        val tilstand = repository.oppgaveTilstandForSøknad(søknadId = søknadId, ident = ident)
+
+        return when (tilstand) {
+            OPPRETTET -> false
+            KLAR_TIL_BEHANDLING -> false
+            BEHANDLES_I_ARENA -> false
+            else -> true
+        }
     }
 
     private fun sendAlertTilRapid(

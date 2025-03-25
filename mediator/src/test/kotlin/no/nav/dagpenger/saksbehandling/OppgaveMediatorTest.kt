@@ -11,8 +11,15 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -57,8 +64,12 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.stream.Stream
 import javax.sql.DataSource
 
 class OppgaveMediatorTest {
@@ -71,11 +82,11 @@ class OppgaveMediatorTest {
             fornavn = "Saks",
             etternavn = "Behandler",
             enhet =
-                BehandlerEnhetDTO(
-                    navn = "Enhet",
-                    enhetNr = "1234",
-                    postadresse = "Postadresse",
-                ),
+            BehandlerEnhetDTO(
+                navn = "Enhet",
+                enhetNr = "1234",
+                postadresse = "Postadresse",
+            ),
         )
 
     private val testInspektør =
@@ -95,18 +106,18 @@ class OppgaveMediatorTest {
     private val pdlKlientMock =
         mockk<PDLKlient>(relaxed = true).also {
             coEvery { it.person(any()) } returns
-                Result.success(
-                    PDLPersonIntern(
-                        ident = "tacimates",
-                        fornavn = "commune",
-                        etternavn = "convallis",
-                        mellomnavn = null,
-                        fødselsdato = LocalDate.of(1984, 3, 1),
-                        alder = 20,
-                        statsborgerskap = null,
-                        kjønn = PDLPerson.Kjonn.KVINNE,
-                        adresseBeskyttelseGradering = UGRADERT,
-                        sikkerhetstiltak =
+                    Result.success(
+                        PDLPersonIntern(
+                            ident = "tacimates",
+                            fornavn = "commune",
+                            etternavn = "convallis",
+                            mellomnavn = null,
+                            fødselsdato = LocalDate.of(1984, 3, 1),
+                            alder = 20,
+                            statsborgerskap = null,
+                            kjønn = PDLPerson.Kjonn.KVINNE,
+                            adresseBeskyttelseGradering = UGRADERT,
+                            sikkerhetstiltak =
                             listOf(
                                 SikkerhetstiltakIntern(
                                     type = "Tiltakstype",
@@ -115,8 +126,8 @@ class OppgaveMediatorTest {
                                     gyldigTom = LocalDate.now().plusDays(1),
                                 ),
                             ),
-                    ),
-                )
+                        ),
+                    )
         }
 
     val behandlingIDKreverIkkeTotrinnskontroll = UUIDv7.ny()
@@ -125,9 +136,9 @@ class OppgaveMediatorTest {
         mockk<BehandlingKlient>().also {
             every { it.godkjenn(any(), any(), any()) } returns Result.success(Unit)
             coEvery { it.kreverTotrinnskontroll(behandlingIDKreverIkkeTotrinnskontroll, any()) } returns
-                Result.success(
-                    false,
-                )
+                    Result.success(
+                        false,
+                    )
             coEvery {
                 it.kreverTotrinnskontroll(
                     not(behandlingIDKreverIkkeTotrinnskontroll),
@@ -236,11 +247,11 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.lagreNotat(
                 notatHendelse =
-                    NotatHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        tekst = "Dette er et notat",
-                        utførtAv = testInspektør,
-                    ),
+                NotatHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    tekst = "Dette er et notat",
+                    utførtAv = testInspektør,
+                ),
             )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat().let {
@@ -250,10 +261,10 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.slettNotat(
                 slettNotatHendelse =
-                    SlettNotatHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        utførtAv = testInspektør,
-                    ),
+                SlettNotatHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = testInspektør,
+                ),
             )
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat() shouldBe null
         }
@@ -325,6 +336,68 @@ class OppgaveMediatorTest {
 
             oppdatertOppgave.emneknagger shouldBe testEmneknagger2
             oppdatertOppgave.tilstand() shouldBe Oppgave.KlarTilBehandling
+        }
+    }
+
+
+    companion object {
+        @JvmStatic
+        private fun finnesDetOppgaveTilBehandlingTester(): Stream<Arguments> {
+            return Stream.of(
+                return Oppgave.Tilstand.Type.entries.map { Arguments.of(it, skalLageGosysOppgave(it)) }.stream()
+            )
+        }
+
+        private fun skalLageGosysOppgave(tilstand: Oppgave.Tilstand) {
+            when (tilstand) {
+                Oppgave.Opprettet, KlarTilBehandling, Oppgave.BehandlesIArena, Oppgave.AvventerLåsAvBehandling, Oppgave.AvventerOpplåsingAvBehandling -> false
+                Oppgave.UnderBehandling, Oppgave.KlarTilKontroll, Oppgave.FerdigBehandlet, Oppgave.PåVent -> true
+                is Oppgave.UnderKontroll -> true
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("finnesDetOppgaveTilBehandlingTester")
+    fun `Finnes det en oppgave til behandling`(
+        tilstandType: Oppgave.Tilstand,
+        skalLageGosysOppgave: Boolean,
+    ) {
+        val hendelse =
+            SøknadsbehandlingOpprettetHendelse(
+                søknadId = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+                ident = "12345678910",
+                opprettet = LocalDateTime.now(),
+            )
+        val behandling =
+            Behandling(
+                behandlingId = hendelse.behandlingId,
+                person =
+                Person(
+                    id = UUIDv7.ny(),
+                    ident = hendelse.ident,
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                ),
+                opprettet = LocalDateTime.now(),
+                hendelse = hendelse,
+            )
+        val oppgaveKlarTilBehandling = lagOppgave(tilstand = KlarTilBehandling, behandling = behandling)
+
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(oppgaveKlarTilBehandling)
+
+            val oppgaveMediator =
+                OppgaveMediator(
+                    repository = PostgresOppgaveRepository(ds),
+                    oppslag = oppslagMock,
+                    behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
+                    utsendingMediator = mockk(),
+                )
+            oppgaveMediator.finnesSøknadTilBehandling(hendelse.søknadId, hendelse.ident) shouldBe false
         }
     }
 
@@ -858,12 +931,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
 
@@ -916,12 +989,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
@@ -954,12 +1027,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
@@ -991,7 +1064,8 @@ class OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT).single().emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
+            oppgaveMediator.hentAlleOppgaverMedTilstand(PAA_VENT)
+                .single().emneknagger shouldContain AVVENT_MELDEKORT.visningsnavn
         }
     }
 
@@ -1003,15 +1077,15 @@ class OppgaveMediatorTest {
                     repository = PostgresOppgaveRepository(datasource),
                     oppslag = oppslagMock,
                     behandlingKlient =
-                        behandlingKlientMock.also {
-                            coEvery {
-                                it.godkjenn(
-                                    any(),
-                                    any(),
-                                    any(),
-                                )
-                            } throws BehandlingException("Behandling krever ikke totrinnskontroll", 403)
-                        },
+                    behandlingKlientMock.also {
+                        coEvery {
+                            it.godkjenn(
+                                any(),
+                                any(),
+                                any(),
+                            )
+                        } throws BehandlingException("Behandling krever ikke totrinnskontroll", 403)
+                    },
                     utsendingMediator = mockk(),
                     meldingOmVedtakKlient = mockk(),
                 ).also {
@@ -1025,12 +1099,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
@@ -1053,10 +1127,10 @@ class OppgaveMediatorTest {
             shouldThrow<BehandlingKreverIkkeTotrinnskontrollException> {
                 oppgaveMediator.sendTilKontroll(
                     sendTilKontrollHendelse =
-                        SendTilKontrollHendelse(
-                            oppgaveId = oppgave.oppgaveId,
-                            utførtAv = saksbehandler,
-                        ),
+                    SendTilKontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
                     saksbehandlerToken = "testtoken",
                 )
             }
@@ -1095,12 +1169,12 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                ),
             )
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
@@ -1122,10 +1196,10 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.sendTilKontroll(
                 sendTilKontrollHendelse =
-                    SendTilKontrollHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        utførtAv = saksbehandler,
-                    ),
+                SendTilKontrollHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
                 saksbehandlerToken = "testtoken",
             )
 
@@ -1147,10 +1221,10 @@ class OppgaveMediatorTest {
 
             oppgaveMediator.sendTilKontroll(
                 sendTilKontrollHendelse =
-                    SendTilKontrollHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        utførtAv = saksbehandler,
-                    ),
+                SendTilKontrollHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandler,
+                ),
                 saksbehandlerToken = "testtoken",
             )
 
@@ -1165,7 +1239,7 @@ class OppgaveMediatorTest {
         }
     }
 
-    private fun DataSource.lagTestoppgave(tilstand: Oppgave.Tilstand.Type): Oppgave {
+    private fun DataSource.lagTestoppgave(tilstand: Type): Oppgave {
         val oppgaveMediator =
             OppgaveMediator(
                 repository = PostgresOppgaveRepository(this),
