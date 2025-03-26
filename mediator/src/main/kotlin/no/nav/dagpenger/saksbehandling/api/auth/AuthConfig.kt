@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api.auth
 
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.AuthenticationConfig
@@ -14,7 +15,14 @@ private val logger = KotlinLogging.logger {}
 
 fun Application.authConfig() {
     install(Authentication) {
-        jwt("azureAd")
+        jwt("azureAd") { jwtClaims ->
+            jwtClaims.måInneholde(autorisertADGruppe = Configuration.saksbehandlerADGruppe)
+            JWTPrincipal(jwtClaims.payload)
+        }
+
+        jwt("azureAd-maskin") { jwtClaims ->
+            JWTPrincipal(jwtClaims.payload)
+        }
     }
 }
 
@@ -25,6 +33,16 @@ fun AuthenticationConfig.jwt(name: String) {
             jwtClaims.måInneholde(autorisertADGruppe = Configuration.saksbehandlerADGruppe)
             JWTPrincipal(jwtClaims.payload)
         }
+    }
+}
+
+fun AuthenticationConfig.jwt(
+    name: String,
+    validateFunc: suspend ApplicationCall.(JWTCredential) -> JWTPrincipal,
+) {
+    jwt(name) {
+        verifier(AzureAd)
+        validate(validateFunc)
     }
 }
 

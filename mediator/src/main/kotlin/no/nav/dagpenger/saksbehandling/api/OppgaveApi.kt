@@ -53,6 +53,21 @@ internal fun Application.oppgaveApi(
 ) {
     routing {
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
+
+        authenticate("azureAd-maskin") {
+            route("person/skal-varsle-om-ettersending") {
+                post {
+                    val soknad: SoknadDTO = call.receive<SoknadDTO>()
+                    val skalVarsle =
+                        oppgaveMediator.skalEttersendingTilSøknadVarsles(
+                            søknadId = soknad.soknadId,
+                            ident = soknad.ident,
+                        )
+                    call.respond(status = HttpStatusCode.OK, skalVarsle)
+                }
+            }
+        }
+
         authenticate("azureAd") {
             route("person/oppgaver") {
                 post {
@@ -60,13 +75,6 @@ internal fun Application.oppgaveApi(
                         oppgaveMediator.finnOppgaverFor(call.receive<PersonIdentDTO>().ident)
                             .tilOppgaveOversiktDTOListe()
                     call.respond(status = HttpStatusCode.OK, oppgaver)
-                }
-            }
-            route("person/skal-varsle-om-ettersending") {
-                post {
-                    val soknad: SoknadDTO = call.receive<SoknadDTO>()
-                    val skalVarsle = oppgaveMediator.skalEttersendingTilSøknadVarsles(søknadId = soknad.soknadId, ident = soknad.ident)
-                    call.respond(status = HttpStatusCode.OK, skalVarsle)
                 }
             }
             route("oppgave") {

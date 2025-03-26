@@ -115,6 +115,8 @@ internal object OppgaveApiTestHelper {
             ),
         )
 
+    fun gyldigMaskinToken(): String = mockAzure.lagTokenMedClaims(emptyMap())
+
     fun lagTestOppgaveMedTilstandOgBehandling(
         tilstand: Oppgave.Tilstand.Type,
         tildeltBehandlerIdent: String? = null,

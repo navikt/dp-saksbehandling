@@ -46,6 +46,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_ID
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SOKNAD_ID
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstand
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstandOgBehandling
@@ -131,15 +132,24 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
-                Arguments.of("/person/skal-varsle-om-ettersending", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
         }
     }
 
+    @Test
+    fun `Skal avvise kall uten gyldig maskin til maskin token`() {
+        withOppgaveApi {
+            client.request("/person/skal-varsle-om-ettersending") {
+                method = HttpMethod.Post
+                autentisert(token = ugyldigToken)
+            }.status shouldBe HttpStatusCode.Unauthorized
+        }
+    }
+
     @ParameterizedTest
     @MethodSource("endepunktOgHttpMetodeProvider")
-    fun `Skal avvise kall uten gyldig token`(
+    fun `Skal avvise kall uten gyldig saksbehandler token`(
         endepunkt: String,
         httpMethod: HttpMethod,
     ) {
@@ -1168,11 +1178,16 @@ class OppgaveApiTest {
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.skalEttersendingTilSøknadVarsles(søknadId = søknadId, ident = TEST_IDENT) } returns true
-                every { it.skalEttersendingTilSøknadVarsles(søknadId = søknadIdFalse, ident = TEST_IDENT) } returns false
+                every {
+                    it.skalEttersendingTilSøknadVarsles(
+                        søknadId = søknadIdFalse,
+                        ident = TEST_IDENT,
+                    )
+                } returns false
             }
         withOppgaveApi(oppgaveMediatorMock) {
             client.post("/person/skal-varsle-om-ettersending") {
-                autentisert()
+                autentisert(token = gyldigMaskinToken())
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
@@ -1186,7 +1201,7 @@ class OppgaveApiTest {
             }
 
             client.post("/person/skal-varsle-om-ettersending") {
-                autentisert()
+                autentisert(token = gyldigMaskinToken())
                 contentType(ContentType.Application.Json)
                 setBody(
                     //language=JSON
