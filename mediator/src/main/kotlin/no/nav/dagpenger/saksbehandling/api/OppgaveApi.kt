@@ -6,6 +6,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.swagger.swaggerUI
+import io.ktor.server.request.path
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
@@ -21,6 +22,7 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdatertTilstandDTO
@@ -41,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 import no.nav.dagpenger.saksbehandling.jwt.jwt
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
+import java.net.URI
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
@@ -104,7 +107,18 @@ internal fun Application.oppgaveApi(
                                 queryString = dto.queryParams,
                             )
                         when (oppgave) {
-                            null -> call.respond(HttpStatusCode.NotFound)
+                            null ->
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    HttpProblemDTO(
+                                        title = "Ingen oppgave funnet",
+                                        status = 404,
+                                        instance = call.request.path(),
+                                        detail = "Ingen oppgave funnet for søket",
+                                        type = URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet").toString(),
+                                    ),
+                                )
+
                             else -> call.respond(HttpStatusCode.OK, oppgaveDTOMapper.lagOppgaveDTO(oppgave))
                         }
                     }

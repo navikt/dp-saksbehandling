@@ -87,7 +87,6 @@ spec:
         {{/if}}
     outbound:
       rules:
-        - application: dp-oppslag-journalpost-id
         - application: dp-behandling
         - application: dp-melding-om-vedtak
         - application: dp-mottak
