@@ -10,6 +10,7 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import java.util.UUID
 
 internal class BehandlingAvbruttMottak(
     rapidsConnection: RapidsConnection,
@@ -18,8 +19,12 @@ internal class BehandlingAvbruttMottak(
     companion object {
         private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
-            precondition { it.requireValue("@event_name", "behandling_avbrutt") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId") }
+            precondition {
+                it.requireValue("@event_name", "behandling_avbrutt")
+                it.requireValue("behandletHendelse.type", "Søknad")
+            }
+            validate { it.requireKey("ident", "behandlingId") }
+            validate { it.interestedIn("behandletHendelse") }
         }
     }
 
@@ -34,7 +39,7 @@ internal class BehandlingAvbruttMottak(
         meterRegistry: MeterRegistry,
     ) {
         val ident = packet["ident"].asText()
-        val søknadId = packet["søknadId"].asUUID()
+        val søknadId = packet.søknadId()
         val behandlingId = packet["behandlingId"].asUUID()
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_avbrutt hendelse" }
@@ -48,3 +53,5 @@ internal class BehandlingAvbruttMottak(
         }
     }
 }
+
+private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
