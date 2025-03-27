@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -17,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.net.URI
 import java.time.format.DateTimeParseException
@@ -120,7 +122,14 @@ fun Application.statusPages() {
                 is BehandlingException -> {
                     val behandlingException: BehandlingException = cause
                     val problem =
-                        HttpProblemDTO(
+                        behandlingException.text?.let {
+                            try {
+                                objectMapper.readValue<HttpProblemDTO>(it)
+                            } catch (e: Exception) {
+                                logger.warn { "Fikk ikke parset til HttpProblemDTO: $it" }
+                                null
+                            }
+                        } ?: HttpProblemDTO(
                             title = "Feil ved kall mot dp-behandling",
                             detail = behandlingException.text,
                             status = behandlingException.status,
@@ -160,6 +169,7 @@ fun Application.statusPages() {
                         )
                     call.respond(HttpStatusCode.Conflict, problem)
                 }
+
                 is MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak -> {
                     val problem =
                         HttpProblemDTO(

@@ -292,13 +292,21 @@ class StatuspageTest {
 
     @Test
     fun `Error håndtering av BehandlingException`() {
+        val path = "/BehandlingException"
+        val httpProblem = """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:behandling-feil",
+                      "title": "Feil ved kall mot dp-behandling",
+                      "detail": "403",
+                      "status": 403,
+                      "instance": "instance"
+                    }
+                    """
         testApplication {
-            val message = "Kall mot dp-behandling feilet"
-            val path = "/BehandlingException"
             application {
                 installerApis(mockk(), mockk(), mockk())
                 routing {
-                    get(path) { throw BehandlingException("403", 403) }
+                    get("/BehandlingException") { throw BehandlingException(httpProblem, 403) }
                 }
             }
 
@@ -306,15 +314,7 @@ class StatuspageTest {
                 response.status.value shouldBe 403
                 response.bodyAsText() shouldEqualSpecifiedJson
                     //language=JSON
-                    """
-                    {
-                      "type": "dagpenger.nav.no/saksbehandling:problem:behandling-feil",
-                      "title": "Feil ved kall mot dp-behandling",
-                      "detail": "403",
-                      "status": 403,
-                      "instance": "$path"
-                    }
-                    """.trimIndent()
+                    httpProblem.trimIndent()
             }
         }
     }
