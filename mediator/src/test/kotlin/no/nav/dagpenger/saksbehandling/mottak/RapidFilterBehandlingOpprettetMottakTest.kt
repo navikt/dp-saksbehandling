@@ -20,7 +20,12 @@ class RapidFilterBehandlingOpprettetMottakTest {
             "@event_name" to "behandling_opprettet",
             "@id" to "id1",
             "@opprettet" to "2024-02-27T10:41:52.800935377",
-            "søknadId" to "søknadId33",
+            "behandletHendelse" to
+                mapOf(
+                    "datatype" to "UUID",
+                    "id" to "søknadId33",
+                    "type" to "Søknad",
+                ),
             "behandlingId" to "behandlingId4949494",
             "ident" to "ident123",
         )
@@ -35,7 +40,7 @@ class RapidFilterBehandlingOpprettetMottakTest {
 
     @ParameterizedTest
     @CsvSource(
-        "søknadId, false",
+        "behandletHendelse, false",
         "behandlingId, false",
         "ident, false",
     )

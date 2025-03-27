@@ -88,7 +88,11 @@ class BehandligOpprettetMottakTest {
             "@event_name": "behandling_opprettet",
             "@opprettet": "$opprettet",
             "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
-            "søknadId": "$søknadId",
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+            },
             "behandlingId": "$behandlingId",
             "ident": "$ident"
         }

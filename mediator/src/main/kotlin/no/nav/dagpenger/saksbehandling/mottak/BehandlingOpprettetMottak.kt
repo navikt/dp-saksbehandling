@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
+import java.util.UUID
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
@@ -26,8 +27,14 @@ internal class BehandlingOpprettetMottak(
         private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
 
-            precondition { it.requireValue("@event_name", "behandling_opprettet") }
-            validate { it.requireKey("ident", "søknadId", "behandlingId", "@opprettet") }
+            precondition {
+                it.requireValue("@event_name", "behandling_opprettet")
+                it.requireValue("behandletHendelse.type", "Søknad")
+            }
+            validate {
+                it.requireKey("ident", "behandlingId", "@opprettet")
+                it.interestedIn("behandletHendelse")
+            }
         }
     }
 
@@ -41,7 +48,7 @@ internal class BehandlingOpprettetMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val søknadId = packet["søknadId"].asUUID()
+        val søknadId = packet.søknadId()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
@@ -95,3 +102,5 @@ internal class BehandlingOpprettetMottak(
         logger.error { "Forstod ikke behandling_opprettet hendelse. \n $problems" }
     }
 }
+
+private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
