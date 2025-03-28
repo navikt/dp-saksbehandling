@@ -27,7 +27,7 @@ class RelevanteJournalpostIdOppslag(
     private suspend fun JournalpostIdClient.hentJournalPostIder(behandling: Behandling): Set<String> {
         return when (val hendelse = behandling.hendelse) {
             is SøknadsbehandlingOpprettetHendelse -> {
-                this.hentJournalpostIder(hendelse.søknadId, behandling.person.ident).getOrNull()?.toSet() ?: emptySet()
+                this.hentJournalpostIder(hendelse.søknadId, behandling.person.ident).getOrNull()?.toSortedSet() ?: emptySet()
             }
             else -> emptySet()
         }
