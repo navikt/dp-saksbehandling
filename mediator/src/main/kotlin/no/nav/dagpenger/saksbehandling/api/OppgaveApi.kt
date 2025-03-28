@@ -311,10 +311,11 @@ private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbeh
                 UtsettOppgaveAarsakDTO.AVVENT_SVAR -> PåVent.AVVENT_SVAR
                 UtsettOppgaveAarsakDTO.AVVENT_MELDEKORT -> PåVent.AVVENT_MELDEKORT
                 UtsettOppgaveAarsakDTO.AVVENT_DOKUMENTASJON -> PåVent.AVVENT_DOKUMENTASJON
+                UtsettOppgaveAarsakDTO.AVVENT_PERMITTERINGSÅRSAK -> PåVent.AVVENT_PERMITTERINGSÅRSAK
                 UtsettOppgaveAarsakDTO.AVVENT_RAPPORTERINGSFRIST -> PåVent.AVVENT_RAPPORTERINGSFRIST
                 UtsettOppgaveAarsakDTO.AVVENT_SVAR_PÅ_FORESPØRSEL -> PåVent.AVVENT_SVAR_PÅ_FORESPØRSEL
-                UtsettOppgaveAarsakDTO.ANNET -> PåVent.ANNET
-                null -> PåVent.ANNET
+                UtsettOppgaveAarsakDTO.ANNET -> PåVent.AVVENT_ANNET
+                null -> PåVent.AVVENT_ANNET
             },
     )
 }

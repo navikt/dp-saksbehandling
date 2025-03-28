@@ -27,9 +27,10 @@ class Emneknagg(val navn: String) {
         AVVENT_SVAR("Avvent svar"),
         AVVENT_DOKUMENTASJON("Avvent dokumentasjon"),
         AVVENT_MELDEKORT("Avvent meldekort"),
+        AVVENT_PERMITTERINGSÅRSAK("Avvent permitteringsårsak"),
         AVVENT_RAPPORTERINGSFRIST("Avvent rapporteringsfrist"),
         AVVENT_SVAR_PÅ_FORESPØRSEL("Sendt forespørsel"),
-        ANNET("Utsatt annen årsak"),
+        AVVENT_ANNET("Utsatt annen årsak"),
 
         TIDLIGERE_UTSATT("Tidligere utsatt"),
     }

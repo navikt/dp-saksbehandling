@@ -261,6 +261,7 @@ class OppgaveDTOMapperTest {
                           "AVVENT_SVAR",
                           "AVVENT_DOKUMENTASJON",
                           "AVVENT_MELDEKORT",
+                          "AVVENT_PERMITTERINGSÅRSAK",
                           "AVVENT_RAPPORTERINGSFRIST",
                           "AVVENT_SVAR_PÅ_FORESPØRSEL",
                           "ANNET"

@@ -349,7 +349,7 @@ class OppgaveTilgangTest {
                         navIdent = saksbehandler.navIdent,
                         utsattTil = LocalDate.MAX,
                         beholdOppgave = true,
-                        årsak = Emneknagg.PåVent.ANNET,
+                        årsak = Emneknagg.PåVent.AVVENT_ANNET,
                     ),
                 )
             }
