@@ -91,11 +91,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Oppgave'
         '404':
-            description: Ingen flere oppgaver å behandle akkurat nå
-            content:
-              application/problem+json:
-                schema:
-                  $ref: '#/components/schemas/HttpProblem'
+          description: Ingen flere oppgaver å behandle akkurat nå
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         default:
           description: Feil
           content:
@@ -422,6 +422,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /oppgave/klage/{klageId}:
+    get:
+      summary: Hent klage basert på klageId
+      parameters:
+        - in: path
+          name: klageId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med detaljer om klagen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Klage'
+        '404':
+          description: Klagen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /person/oppgaver:
     post:
       summary: Hent alle oppgaver til en person
@@ -668,7 +698,7 @@ components:
         historikk:
           type: array
           items:
-             $ref: '#/components/schemas/OppgaveHistorikk'
+            $ref: '#/components/schemas/OppgaveHistorikk'
         emneknagger:
           type: array
           items:
@@ -776,7 +806,7 @@ components:
           type: string
           format: date-time
         tittel:
-         type: string
+          type: string
         behandler:
           type: object
           properties:
@@ -928,6 +958,112 @@ components:
       required:
         - nyTilstand
 
+    Klage:
+      type: object
+      properties:
+        Id:
+          type: string
+          format: uuid
+        saksbehandler:
+          $ref: '#/components/schemas/Behandler'
+        opplysninger:
+          $ref: '#/components/schemas/KlageOpplysning'
+        utfall:
+          $ref: '#/components/schemas/Utfall'
+        meldingOmVedtak:
+          $ref: '#/components/schemas/MeldingOmVedtakResponse'
+      required:
+        - Id
+        - opplysninger
+
+    KlageOpplysning:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        navn:
+          type: string
+        type:
+          type: string
+          enum:
+            - TEKST
+            - BOOLSK
+            - DATO
+            - LISTEVALG
+            - FLER-LISTEVALG
+        paakrevd:
+          type: boolean
+        gruppe:
+          type: string
+          enum:
+            - FORMKRAV
+            - KLAGESAK
+            - FRIST
+            - KLAGE-ANKE
+      required:
+        - id
+        - navn
+        - type
+        - paakrevd
+        - gruppe
+
+
+
+    Utfall:
+      type: object
+      properties:
+        verdi:
+          type: string
+          enum:
+            - AVVIST
+            - OPPRETTHOLDELSE
+            - DELVIS-MEDHOLD
+            - MEDHOLD
+        tilgjeneligeUtfall:
+          type: array
+          items:
+            type: string
+          description: Tilgjengelige utfall for klagebehandling
+      required:
+        - verdi
+        - tilgjeneligeUtfall
+
+
+
+    MeldingOmVedtakResponse:
+      type: object
+      properties:
+        html:
+          type: string
+          description: HTML for melding om vedtak
+        utvidedeBeskrivelser:
+          type: array
+          items:
+            $ref: '#/components/schemas/UtvidetBeskrivelse'
+      required:
+        - html
+        - utvidedeBeskrivelser
+
+
+
+    UtvidetBeskrivelse:
+      type: object
+      properties:
+        brevblokkId:
+          type: string
+        tekst:
+          type: string
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+        tittel:
+          type: string
+      required:
+        - brevblokkId
+        - tekst
+        - tittel
+
     HttpProblem:
       type: object
       properties:
@@ -947,6 +1083,7 @@ components:
         - title
         - status
         - instance
+
 
   securitySchemes:
     azureAd:
