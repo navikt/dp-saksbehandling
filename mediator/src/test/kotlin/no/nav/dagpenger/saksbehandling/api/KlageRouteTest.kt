@@ -8,13 +8,13 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
+import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
 import org.junit.jupiter.api.Test
-import java.util.UUID
 
 class KlageRouteTest {
     init {
@@ -40,12 +40,9 @@ class KlageRouteTest {
                 meldingOmVedtak = null,
             )
         val mediator =
-            object : KlageMediator {
-                override fun hentKlage(klageId: UUID): KlageDTO {
-                    return klageDTO
-                }
+            mockk<KlageMediator>().also {
+                every { it.hentKlage(klageId) } returns klageDTO
             }
-
         testApplication {
             this.application {
                 installerApis(mockk(), mockk(), mockk())
@@ -57,18 +54,17 @@ class KlageRouteTest {
                 headers[HttpHeaders.ContentType] = "application/json"
             }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
-                response.bodyAsText() shouldEqualJson
-                    // language=json
+                response.bodyAsText() shouldEqualJson // language=json
                     """{
-                  "Id": "$klageId",
-                  "opplysninger": {
-                    "id": "$klageId",
-                    "navn": "Testopplysning",
-                    "type": "TEKST",
-                    "paakrevd": false,
-                    "gruppe": "KLAGE-ANKE"
-                  }
-}
+                     "Id": "$klageId",
+                     "opplysninger": {
+                       "id": "$klageId",
+                       "navn": "Testopplysning",
+                       "type": "TEKST",
+                       "paakrevd": false,
+                       "gruppe": "KLAGE-ANKE"
+                     }
+                   }
 
                     """.trimMargin()
             }
