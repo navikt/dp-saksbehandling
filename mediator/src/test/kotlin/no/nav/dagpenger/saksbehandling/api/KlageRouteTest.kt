@@ -12,6 +12,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -24,6 +25,9 @@ class KlageRouteTest {
     init {
         mockAzure()
     }
+
+    private val klageId = UUIDv7.ny()
+    private val opplysningId = UUIDv7.ny()
 
     @Test
     fun `Skal hente klageDTO`() {
@@ -67,16 +71,13 @@ class KlageRouteTest {
     }
 
     @Test
-    fun `Skal kunne oppdater en opplysning i en klage `() {
-        val klageId = UUIDv7.ny()
-        val opplysningId = UUIDv7.ny()
-
+    fun `Skal kunne oppdatere en  opplysning av type flervalg `() {
+        val tekstListe = OpplysningerVerdi.TekstListe("tekst1", "tekst2")
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.oppdaterKlageOpplysning(klageId, opplysningId, OpplysningerVerdi.Tekst("tekst")) } returns Unit
-                every { it.oppdaterKlageOpplysning(klageId, opplysningId, OpplysningerVerdi.TekstListe("tekst1", "tekst2")) } returns Unit
-                every { it.oppdaterKlageOpplysning(klageId, opplysningId, OpplysningerVerdi.Boolsk(false)) } returns Unit
-                every { it.oppdaterKlageOpplysning(klageId, opplysningId, OpplysningerVerdi.Dato(LocalDate.of(2000, 1, 1))) } returns Unit
+                every {
+                    it.oppdaterKlageOpplysning(klageId, opplysningId, tekstListe)
+                } returns Unit
             }
         withKlageRoute(mediator) {
             client.put("/klage/$klageId/opplysning/$opplysningId") {
@@ -85,6 +86,94 @@ class KlageRouteTest {
                 setBody("""{ "verdi": ["tekst1","tekst2"], "opplysningType":"FLER-LISTEVALG" }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
+                verify(exactly = 1) {
+                    mediator.oppdaterKlageOpplysning(
+                        klageId = klageId,
+                        opplysningId = opplysningId,
+                        verdi = tekstListe,
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne oppdatere en opplysning av type tekst `() {
+        val tekst = OpplysningerVerdi.Tekst("tekst")
+        val mediator =
+            mockk<KlageMediator>().also {
+                every {
+                    it.oppdaterKlageOpplysning(klageId, opplysningId, tekst)
+                } returns Unit
+            }
+        withKlageRoute(mediator) {
+            client.put("/klage/$klageId/opplysning/$opplysningId") {
+                headers[HttpHeaders.ContentType] = "application/json"
+                //language=json
+                setBody("""{ "verdi": "tekst", "opplysningType":"TEKST" }""".trimIndent())
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+                verify(exactly = 1) {
+                    mediator.oppdaterKlageOpplysning(
+                        klageId = klageId,
+                        opplysningId = opplysningId,
+                        verdi = tekst,
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne oppdatere en opplysning av type boolean `() {
+        val boolsk = OpplysningerVerdi.Boolsk(false)
+        val mediator =
+            mockk<KlageMediator>().also {
+                every {
+                    it.oppdaterKlageOpplysning(klageId, opplysningId, boolsk)
+                } returns Unit
+            }
+        withKlageRoute(mediator) {
+            client.put("/klage/$klageId/opplysning/$opplysningId") {
+                headers[HttpHeaders.ContentType] = "application/json"
+                //language=json
+                setBody("""{ "verdi": false, "opplysningType":"BOOLSK" }""".trimIndent())
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+                verify(exactly = 1) {
+                    mediator.oppdaterKlageOpplysning(
+                        klageId = klageId,
+                        opplysningId = opplysningId,
+                        verdi = boolsk,
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne oppdatere en opplysning av type dato `() {
+        val dato = OpplysningerVerdi.Dato(LocalDate.of(2021, 1, 1))
+        val mediator =
+            mockk<KlageMediator>().also {
+                every {
+                    it.oppdaterKlageOpplysning(klageId, opplysningId, dato)
+                } returns Unit
+            }
+        withKlageRoute(mediator) {
+            client.put("/klage/$klageId/opplysning/$opplysningId") {
+                headers[HttpHeaders.ContentType] = "application/json"
+                //language=json
+                setBody("""{ "verdi": "2021-01-01", "opplysningType":"DATO" }""".trimIndent())
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+                verify(exactly = 1) {
+                    mediator.oppdaterKlageOpplysning(
+                        klageId = klageId,
+                        opplysningId = opplysningId,
+                        verdi = dato,
+                    )
+                }
             }
         }
     }

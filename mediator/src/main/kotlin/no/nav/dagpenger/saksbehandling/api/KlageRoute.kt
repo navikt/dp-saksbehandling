@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -43,8 +42,6 @@ fun Route.klageApi(mediator: KlageMediator) {
 }
 
 object KlageDtoMapper {
-    val objectMapper = jacksonObjectMapper()
-
     fun OppdaterKlageOpplysningDTO.hentVerdi(): OpplysningerVerdi {
         return when (this.opplysningType) {
             OppdaterKlageOpplysningDTO.OpplysningType.TEKST -> OpplysningerVerdi.Tekst(this.verdi as String)
