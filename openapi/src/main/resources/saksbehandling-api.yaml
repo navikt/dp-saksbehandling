@@ -422,6 +422,38 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /oppgave/klage/{klageId}/opplysning/{opplysningId}:
+    put:
+      summary: Oppdaterer opplysning i klage
+      parameters:
+        - in: path
+          name: klageId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: opplysningId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OppdaterKlageOpplysning'
+      responses:
+        '201':
+          description: Vellykket oppdatering av opplysning i klage
+        '404':
+          description: Klagen eller opplysningen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/klage/{klageId}:
     get:
       summary: Hent klage basert på klageId
@@ -975,6 +1007,23 @@ components:
       required:
         - Id
         - opplysninger
+
+    OppdaterKlageOpplysning:
+      type: object
+      properties:
+        opplysningType:
+          type: string
+          enum:
+            - TEKST
+            - BOOLSK
+            - DATO
+            - LISTEVALG
+            - FLER-LISTEVALG
+        verdi:
+          type: object
+      required:
+        - opplysningType
+        - verdi
 
     KlageOpplysning:
       type: object
