@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -14,26 +15,28 @@ import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import java.time.LocalDate
 
 fun Route.klageApi(mediator: KlageMediator) {
-    route("klage") {
-        route("{klageId}") {
-            get {
-                val klageId = call.finnUUID("klageId")
-                val klageDTO = mediator.hentKlage(klageId)
-                call.respond(HttpStatusCode.OK, klageDTO)
-            }
+    authenticate("azureAd") {
+        route("klage") {
+            route("{klageId}") {
+                get {
+                    val klageId = call.finnUUID("klageId")
+                    val klageDTO = mediator.hentKlage(klageId)
+                    call.respond(HttpStatusCode.OK, klageDTO)
+                }
 
-            route("opplysning") {
-                route("{opplysningId}") {
-                    put {
-                        val klageId = call.finnUUID("klageId")
-                        val opplysningId = call.finnUUID("opplysningId")
-                        val oppdaterKlageOpplysningDTO = call.receive<OppdaterKlageOpplysningDTO>()
-                        mediator.oppdaterKlageOpplysning(
-                            klageId = klageId,
-                            opplysningId = opplysningId,
-                            verdi = oppdaterKlageOpplysningDTO.hentVerdi(),
-                        )
-                        call.respond(HttpStatusCode.NoContent)
+                route("opplysning") {
+                    route("{opplysningId}") {
+                        put {
+                            val klageId = call.finnUUID("klageId")
+                            val opplysningId = call.finnUUID("opplysningId")
+                            val oppdaterKlageOpplysningDTO = call.receive<OppdaterKlageOpplysningDTO>()
+                            mediator.oppdaterKlageOpplysning(
+                                klageId = klageId,
+                                opplysningId = opplysningId,
+                                verdi = oppdaterKlageOpplysningDTO.hentVerdi(),
+                            )
+                            call.respond(HttpStatusCode.NoContent)
+                        }
                     }
                 }
             }

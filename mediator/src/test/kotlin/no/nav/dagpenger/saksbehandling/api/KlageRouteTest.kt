@@ -16,6 +16,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
 import org.junit.jupiter.api.Test
@@ -28,6 +29,16 @@ class KlageRouteTest {
 
     private val klageId = UUIDv7.ny()
     private val opplysningId = UUIDv7.ny()
+
+    @Test
+    fun `skal kaste feil når det mangler autentisering`() {
+        val mediator = mockk<KlageMediator>()
+        withKlageRoute(mediator) {
+            client.get("/klage/$klageId").let { response ->
+                response.status shouldBe HttpStatusCode.Unauthorized
+            }
+        }
+    }
 
     @Test
     fun `Skal hente klageDTO`() {
@@ -52,7 +63,7 @@ class KlageRouteTest {
                 every { it.hentKlage(klageId) } returns klageDTO
             }
         withKlageRoute(mediator) {
-            client.get("/klage/$klageId").let { response ->
+            client.get("/klage/$klageId") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 response.bodyAsText() shouldEqualJson // language=json
                     """{
@@ -81,6 +92,7 @@ class KlageRouteTest {
             }
         withKlageRoute(mediator) {
             client.put("/klage/$klageId/opplysning/$opplysningId") {
+                autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
                 setBody("""{ "verdi": ["tekst1","tekst2"], "opplysningType":"FLER-LISTEVALG" }""".trimIndent())
@@ -108,6 +120,7 @@ class KlageRouteTest {
             }
         withKlageRoute(mediator) {
             client.put("/klage/$klageId/opplysning/$opplysningId") {
+                autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
                 setBody("""{ "verdi": "tekst", "opplysningType":"TEKST" }""".trimIndent())
@@ -135,6 +148,7 @@ class KlageRouteTest {
             }
         withKlageRoute(mediator) {
             client.put("/klage/$klageId/opplysning/$opplysningId") {
+                autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
                 setBody("""{ "verdi": false, "opplysningType":"BOOLSK" }""".trimIndent())
@@ -162,6 +176,7 @@ class KlageRouteTest {
             }
         withKlageRoute(mediator) {
             client.put("/klage/$klageId/opplysning/$opplysningId") {
+                autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
                 setBody("""{ "verdi": "2021-01-01", "opplysningType":"DATO" }""".trimIndent())
