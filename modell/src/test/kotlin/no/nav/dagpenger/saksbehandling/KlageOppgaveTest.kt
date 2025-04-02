@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -38,5 +39,35 @@ class KlageOppgaveTest {
 
         klageOppgave.ferdigstill(FerdigstillKlageOppgave(utførtAv = saksbehandler))
         klageOppgave.tilstand() shouldBe KlageOppgave.FerdigBehandlet
+    }
+
+    @Test
+    fun `ulovlig tilstandsendring`() {
+        shouldThrow<IllegalStateException> {
+            KlageOppgave(
+                oppgaveId = UUIDv7.ny(),
+                opprettet = LocalDateTime.now(),
+            ).ferdigstill(FerdigstillKlageOppgave(utførtAv = saksbehandler))
+        }
+
+        val settOppgaveAnsvarHendelse =
+            SettOppgaveAnsvarHendelse(
+                oppgaveId = oppgaveId,
+                ansvarligIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
+            )
+        val ferdigstiltKlageOppgave =
+            KlageOppgave(
+                oppgaveId = UUIDv7.ny(),
+                opprettet = LocalDateTime.now(),
+            ).also {
+                it.tildel(
+                    settOppgaveAnsvarHendelse,
+                )
+                it.ferdigstill(FerdigstillKlageOppgave(utførtAv = saksbehandler))
+            }
+        shouldThrow<IllegalStateException> {
+            ferdigstiltKlageOppgave.tildel(settOppgaveAnsvarHendelse)
+        }
     }
 }
