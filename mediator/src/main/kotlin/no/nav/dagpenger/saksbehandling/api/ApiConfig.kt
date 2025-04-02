@@ -8,10 +8,13 @@ import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.calllogging.processingTimeMillis
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.request.document
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
+import io.ktor.server.routing.routing
 import no.nav.dagpenger.saksbehandling.Configuration.applicationCallParser
+import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.auth.authConfig
@@ -23,16 +26,9 @@ internal fun Application.installerApis(
     oppgaveMediator: OppgaveMediator,
     oppgaveDTOMapper: OppgaveDTOMapper,
     statistikkTjeneste: StatistikkTjeneste,
+    klageMediator: KlageMediator,
 ) {
     this.authConfig()
-    this.oppgaveApi(
-        oppgaveMediator,
-        oppgaveDTOMapper,
-        applicationCallParser,
-    )
-    this.statusPages()
-    statistikkApi(statistikkTjeneste)
-
     install(CallId) {
         header("callId")
         verify { it.isNotEmpty() }
@@ -60,5 +56,17 @@ internal fun Application.installerApis(
             val queryParams = call.request.queryParameters.entries()
             "$status $method $path $queryParams $duration ms"
         }
+    }
+    this.statusPages()
+
+    routing {
+        swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
+        this.oppgaveApi(
+            oppgaveMediator,
+            oppgaveDTOMapper,
+            applicationCallParser,
+        )
+        statistikkApi(statistikkTjeneste)
+        klageApi(klageMediator)
     }
 }

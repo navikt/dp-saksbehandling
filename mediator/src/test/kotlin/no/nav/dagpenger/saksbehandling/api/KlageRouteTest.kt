@@ -184,10 +184,7 @@ class KlageRouteTest {
     ) {
         testApplication {
             this.application {
-                installerApis(mockk(), mockk(), mockk())
-            }
-            routing {
-                klageApi(klageMediator)
+                installerApis(mockk(), mockk(), mockk(), klageMediator)
             }
             test()
         }

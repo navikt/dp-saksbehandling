@@ -111,9 +111,10 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             builder = {
                 withKtorModule {
                     installerApis(
-                        oppgaveMediator,
-                        oppgaveDTOMapper,
-                        PostgresStatistikkTjeneste(dataSource),
+                        oppgaveMediator = oppgaveMediator,
+                        oppgaveDTOMapper = oppgaveDTOMapper,
+                        statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
+                        klageMediator = NotImplementKlageMediator,
                     )
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =
