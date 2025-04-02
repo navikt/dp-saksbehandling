@@ -261,7 +261,7 @@ data class Oppgave private constructor(
     }
 
     fun sisteSaksbehandler(): String? {
-        return kotlin.runCatching {
+        return runCatching {
             _tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse }?.let {
                 (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
@@ -271,7 +271,7 @@ data class Oppgave private constructor(
     }
 
     fun sisteBeslutter(): String? {
-        return kotlin.runCatching {
+        return runCatching {
             _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL && it.hendelse is AnsvarHendelse }?.let {
                 (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
@@ -281,7 +281,7 @@ data class Oppgave private constructor(
     }
 
     fun soknadId(): UUID? {
-        return kotlin.runCatching {
+        return runCatching {
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
                 (it.hendelse as ForslagTilVedtakHendelse).søknadId
             }
@@ -439,6 +439,7 @@ data class Oppgave private constructor(
                     oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
                     return Handling.LAGRE_OPPGAVE
                 }
+
                 else -> {
                     logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
                     return Handling.INGEN
@@ -619,6 +620,7 @@ data class Oppgave private constructor(
                     oppgave.endreTilstand(FerdigBehandlet, vedtakFattetHendelse)
                     return Handling.LAGRE_OPPGAVE
                 }
+
                 else -> {
                     logger.info { "Mottok vedtak fattet i tilstand $type. Ignorerer meldingen." }
                     return Handling.INGEN
