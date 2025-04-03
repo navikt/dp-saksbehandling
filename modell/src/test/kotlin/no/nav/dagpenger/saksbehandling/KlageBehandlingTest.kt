@@ -57,8 +57,21 @@ class KlageBehandlingTest {
             it.value shouldBe "String"
         }
 
-        klageBehandling.svar(datoOpplysningId, LocalDate.now())
+        klageBehandling.svar(datoOpplysningId, LocalDate.MIN)
+        klageBehandling.hentOpplysning(datoOpplysningId).verdi.let {
+            require(it is Verdi.Dato)
+            it.value shouldBe LocalDate.MIN
+        }
+
         klageBehandling.svar(listeOpplysningId, listOf("String1", "String2"))
+        klageBehandling.hentOpplysning(listeOpplysningId).verdi.let {
+            require(it is Verdi.Flervalg)
+            it.value shouldBe listOf("String1", "String2")
+        }
+    }
+
+    @Test
+    fun `Hvis utfall er opprettholdelse så skal tilhørende opplysninger vises`() {
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
