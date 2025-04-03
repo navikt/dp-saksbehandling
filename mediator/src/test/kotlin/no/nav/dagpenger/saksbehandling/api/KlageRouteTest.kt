@@ -19,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -46,17 +47,21 @@ class KlageRouteTest {
         val klageDTO =
             KlageDTO(
                 id = klageId,
-                opplysninger =
-                    KlageOpplysningDTO(
-                        id = klageId,
-                        navn = "Testopplysning",
-                        type = KlageOpplysningDTO.Type.TEKST,
-                        paakrevd = false,
-                        gruppe = KlageOpplysningDTO.Gruppe.KLAGEMinusANKE,
+                behandlingOpplysninger =
+                    listOf(
+                        KlageOpplysningDTO(
+                            id = klageId,
+                            navn = "Testopplysning",
+                            type = KlageOpplysningDTO.Type.TEKST,
+                            paakrevd = false,
+                            gruppe = KlageOpplysningDTO.Gruppe.KLAGE_ANKE,
+                            redigerbar = false,
+                        ),
                     ),
                 saksbehandler = null,
-                utfall = null,
+                utfall = UtfallDTO(verdi = UtfallDTO.Verdi.IKKE_SATT, tilgjeneligeUtfall = listOf()),
                 meldingOmVedtak = null,
+                utfallOpplysninger = listOf(),
             )
         val mediator =
             mockk<KlageMediator>().also {
@@ -67,15 +72,23 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.OK
                 response.bodyAsText() shouldEqualJson // language=json
                     """{
-                     "Id": "$klageId",
-                     "opplysninger": {
-                       "id": "$klageId",
-                       "navn": "Testopplysning",
-                       "type": "TEKST",
-                       "paakrevd": false,
-                       "gruppe": "KLAGE-ANKE"
-                     }
-                   }
+                      "id": "$klageId",
+                      "behandlingOpplysninger": [
+                        {
+                          "id": "$klageId",
+                          "navn": "Testopplysning",
+                          "type": "TEKST",
+                          "paakrevd": false,
+                          "gruppe": "KLAGE_ANKE",
+                          "redigerbar": false
+                        }
+                      ],
+                      "utfallOpplysninger": [],
+                      "utfall": {
+                        "verdi": "IKKE_SATT",
+                        "tilgjeneligeUtfall": []
+                      }
+                    }
                     """.trimMargin()
             }
         }

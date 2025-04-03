@@ -1048,7 +1048,7 @@ components:
             - BOOLSK
             - DATO
             - LISTEVALG
-            - FLER-LISTEVALG
+            - FLER_LISTEVALG
         paakrevd:
           type: boolean
         gruppe:
@@ -1057,7 +1057,7 @@ components:
             - FORMKRAV
             - KLAGESAK
             - FRIST
-            - KLAGE-ANKE
+            - KLAGE_ANKE
         verdi:
           oneOf:
             - type: string
@@ -1093,7 +1093,7 @@ components:
             - OPPRETTHOLDELSE
             - DELVIS-MEDHOLD
             - MEDHOLD
-            - IKKE-SATT
+            - IKKE_SATT
         tilgjeneligeUtfall:
           type: array
           items:
