@@ -993,20 +993,28 @@ components:
     Klage:
       type: object
       properties:
-        Id:
+        id:
           type: string
           format: uuid
         saksbehandler:
           $ref: '#/components/schemas/Behandler'
-        opplysninger:
-          $ref: '#/components/schemas/KlageOpplysning'
+        behandlingOpplysninger:
+          type: array
+          items:
+            $ref: '#/components/schemas/KlageOpplysning'
+        utfallOpplysninger:
+          type: array
+          items:
+            $ref: '#/components/schemas/KlageOpplysning'
         utfall:
           $ref: '#/components/schemas/Utfall'
         meldingOmVedtak:
           $ref: '#/components/schemas/MeldingOmVedtakResponse'
       required:
-        - Id
-        - opplysninger
+        - id
+        - utfall
+        - behandlingOpplysninger
+        - utfallOpplysninger
 
     OppdaterKlageOpplysning:
       type: object
@@ -1050,12 +1058,28 @@ components:
             - KLAGESAK
             - FRIST
             - KLAGE-ANKE
+        verdi:
+          oneOf:
+            - type: string
+            - type: boolean
+            - type: string
+              format: date
+            - type: array
+              items:
+                type: string
+        valgmuligheter:
+          type: array
+          items:
+            type: string
+        redigerbar:
+          type: boolean
       required:
         - id
         - navn
         - type
         - paakrevd
         - gruppe
+        - redigerbar
 
 
 
@@ -1069,6 +1093,7 @@ components:
             - OPPRETTHOLDELSE
             - DELVIS-MEDHOLD
             - MEDHOLD
+            - IKKE-SATT
         tilgjeneligeUtfall:
           type: array
           items:
