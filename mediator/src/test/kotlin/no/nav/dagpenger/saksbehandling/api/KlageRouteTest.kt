@@ -19,7 +19,10 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTOGruppeDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
+import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -52,14 +55,14 @@ class KlageRouteTest {
                         KlageOpplysningDTO(
                             id = klageId,
                             navn = "Testopplysning",
-                            type = KlageOpplysningDTO.Type.TEKST,
+                            type = KlageOpplysningDTOTypeDTO.TEKST,
                             paakrevd = false,
-                            gruppe = KlageOpplysningDTO.Gruppe.KLAGE_ANKE,
+                            gruppe = KlageOpplysningDTOGruppeDTO.KLAGE_ANKE,
                             redigerbar = false,
                         ),
                     ),
                 saksbehandler = null,
-                utfall = UtfallDTO(verdi = UtfallDTO.Verdi.IKKE_SATT, tilgjeneligeUtfall = listOf()),
+                utfall = UtfallDTO(verdi = UtfallDTOVerdiDTO.IKKE_SATT, tilgjeneligeUtfall = listOf()),
                 meldingOmVedtak = null,
                 utfallOpplysninger = listOf(),
             )

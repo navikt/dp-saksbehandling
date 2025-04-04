@@ -1,0 +1,1212 @@
+openapi: 3.0.3
+info:
+  title: Saksbehandling API
+  version: 1.0.0
+  description: Et API for å administrere oppgaver og deres tilstandsoverganger.
+servers:
+  - url: https://dp-saksbehandling.intern.dev.nav.no
+    description: dev
+  - url: https://dp-saksbehandling # Service discovery internt i clusteret
+    description: prod
+paths:
+  /oppgave:
+    get:
+      summary: Hent alle oppgaver med status Klar til behandling
+      parameters:
+        - in: query
+          name: emneknagg
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: tilstand
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/OppgaveTilstand'
+        - in: query
+          name: fom
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: tom
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: mineOppgaver
+          required: false
+          schema:
+            type: boolean
+        - in: query
+          name: antallOppgaver
+          required: false
+          schema:
+            type: integer
+        - in: query
+          name: side
+          required: false
+          schema:
+            type: integer
+
+      responses:
+        '200':
+          description: Vellykket respons med en liste over oppgaver
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OppgaveOversiktResultat'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/neste:
+    put:
+      summary: Hent neste oppgave og tildel denne til saksbehandler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NesteOppgave'
+
+      responses:
+        '200':
+          description: Vellykket respons med detaljer om oppgaven som tildeles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oppgave'
+        '404':
+          description: Ingen flere oppgaver å behandle akkurat nå
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+  /oppgave/{oppgaveId}:
+    get:
+      summary: Hent en oppgave ved hjelp av dens ID
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med detaljer om oppgaven
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Oppgave'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+  /oppgave/{oppgaveId}/notat:
+    put:
+      summary: Legg til et notat på en oppgave
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          plain/text:
+            schema:
+              type: string
+
+      responses:
+        '200':
+          description: Notatet ble lagt til
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LagreNotatResponse'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+    delete:
+      summary: Slett notat på en oppgave
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notatet slettet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LagreNotatResponse'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/send-til-kontroll:
+    put:
+      summary: Saksbehandler sender oppgaven til kontroll og innstiller vedtaket
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '204':
+          description: Vellykket respons
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven er allerede sendt til kontroll eller den krever ikke kontroll.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/returner-til-saksbehandler:
+    put:
+      summary: Beslutter sender oppgaven tilbake til saksbehandler
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        '204':
+          description: Vellykket respons
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven er allerede sendt tilbake til saksbehandler
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak:
+    put:
+      summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending.
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Oppgaven er ferdig behandlet og utsending av melding om vedtak har startet
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak-arena:
+    put:
+      summary: Ferdigstill en Oppgave ved å la arena lage melding om vedtak.
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Oppgaven er ferdig behandlet og utsending av melding om vedtak håndteres i Arena
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/utsett:
+    put:
+      summary: Saksbehandler utsetter oppgaven
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UtsettOppgave'
+
+      responses:
+        '200':
+          description: Vellykket respons
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven er allerede tatt til behandling
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/tildel:
+    put:
+      summary: Saksbehandler blir tildelt ansvaret for oppgaven
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Returnerer oppdatert tilstand etter tildeling av oppgave til saksbehandler eller beslutter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OppdatertTilstand'
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven er allerede tatt til behandling
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/legg-tilbake:
+    put:
+      summary: Saksbehandler/beslutter fjernes som ansvarlig for oppgaven, og oppgaven går tilbake til oppgavelisten
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Fjernet saksbehandler/beslutter som ansvarlig for oppgaven, og oppgaven gjøres klar til behandling/kontroll
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven kan ikke legges tilbake i oppgavelisten igjen
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/klage/{klageId}/opplysning/{opplysningId}:
+    put:
+      summary: Oppdaterer opplysning i klage
+      parameters:
+        - in: path
+          name: klageId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: opplysningId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OppdaterKlageOpplysning'
+      responses:
+        '201':
+          description: Vellykket oppdatering av opplysning i klage
+        '404':
+          description: Klagen eller opplysningen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/klage/{klageId}:
+    get:
+      summary: Hent klage basert på klageId
+      parameters:
+        - in: path
+          name: klageId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med detaljer om klagen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Klage'
+        '404':
+          description: Klagen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /person/oppgaver:
+    post:
+      summary: Hent alle oppgaver til en person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonIdent'
+      responses:
+        '200':
+          description: Vellykket respons med en liste over oppgaver som samsvarer med ident
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OppgaveOversikt'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+  /person/skal-varsle-om-ettersending:
+    post:
+      summary: Sjeker om det søknaden er sett på av saksbehandler og ikke sendt til Arena
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Soknad'
+      parameters:
+        - in: path
+          name: soknadId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med tilstand for oppgaven
+          content:
+            plain/text:
+              schema:
+                type: boolean
+        '404':
+          description: Søknaden har ingen korresponderende oppgave
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /behandling/{behandlingId}/oppgaveId:
+    get:
+      summary: Henter oppgaveId basert på en behandlingId
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Fant oppgaveId for behandlingId
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: uuid
+        '404':
+          description: Fant ikke oppgaveId for behandlingId
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /statistikk:
+    get:
+      summary: Hent statistikk
+      description: Henter statistikk for innlogget saksbehandler samt generell statistikk.
+      responses:
+        '200':
+          description: Statistikk hentet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  individuellStatistikk:
+                    $ref: '#/components/schemas/Statistikk'
+                  generellStatistikk:
+                    $ref: '#/components/schemas/Statistikk'
+                  beholdningsinfo:
+                    $ref: '#/components/schemas/BeholdningsInfo'
+                required:
+                  - individuellStatistikk
+                  - generellStatistikk
+                  - beholdningsinfo
+        '401':
+          description: Uautorisert tilgang
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        ident:
+          type: string
+        fornavn:
+          type: string
+        etternavn:
+          type: string
+        mellomnavn:
+          type: string
+        fodselsdato:
+          type: string
+          format: date
+        alder:
+          type: integer
+        statsborgerskap:
+          type: string
+        kjonn:
+          $ref: '#/components/schemas/Kjonn'
+        skjermesSomEgneAnsatte:
+          type: boolean
+        adressebeskyttelseGradering:
+          $ref: '#/components/schemas/AdressebeskyttelseGradering'
+        sikkerhetstiltak:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sikkerhetstiltak'
+      required:
+        - ident
+        - fornavn
+        - etternavn
+        - fodselsdato
+        - alder
+        - kjonn
+        - skjermesSomEgneAnsatte
+        - adressebeskyttelseGradering
+        - sikkerhetstiltak
+
+    OppgaveOversiktResultat:
+      type: object
+      properties:
+        oppgaver:
+          type: array
+          items:
+            $ref: '#/components/schemas/OppgaveOversikt'
+        totaltAntallOppgaver:
+          type: integer
+      required:
+        - oppgaver
+        - totaltAntallOppgaver
+
+    OppgaveOversikt:
+      type: object
+      properties:
+        oppgaveId:
+          type: string
+          format: uuid
+        behandlingId:
+          type: string
+          format: uuid
+        personIdent:
+          type: string
+        behandlerIdent:
+          type: string
+        tidspunktOpprettet:
+          type: string
+          format: date-time
+        emneknagger:
+          type: array
+          items:
+            type: string
+        skjermesSomEgneAnsatte:
+          type: boolean
+        adressebeskyttelseGradering:
+          $ref: '#/components/schemas/AdressebeskyttelseGradering'
+        tilstand:
+          $ref: '#/components/schemas/OppgaveTilstand'
+        utsattTilDato:
+          type: string
+          format: date
+      required:
+        - oppgaveId
+        - behandlingId
+        - personIdent
+        - tidspunktOpprettet
+        - tilstand
+        - emneknagger
+        - adressebeskyttelseGradering
+        - skjermesSomEgneAnsatte
+
+    Oppgave:
+      type: object
+      properties:
+        oppgaveId:
+          type: string
+          format: uuid
+        behandlingId:
+          type: string
+          format: uuid
+        saksbehandler:
+          $ref: '#/components/schemas/Behandler'
+        beslutter:
+          $ref: '#/components/schemas/Behandler'
+        person:
+          $ref: '#/components/schemas/Person'
+        tidspunktOpprettet:
+          type: string
+          format: date-time
+        utsattTilDato:
+          type: string
+          format: date
+        journalpostIder:
+          type: array
+          items:
+            type: string
+        historikk:
+          type: array
+          items:
+            $ref: '#/components/schemas/OppgaveHistorikk'
+        emneknagger:
+          type: array
+          items:
+            type: string
+        tilstand:
+          $ref: '#/components/schemas/OppgaveTilstand'
+        notat:
+          $ref: '#/components/schemas/Notat'
+        lovligeEndringer:
+          $ref: '#/components/schemas/LovligeEndringer'
+        soknadId:
+          type: string
+          format: uuid
+      required:
+        - oppgaveId
+        - behandlingId
+        - person
+        - tidspunktOpprettet
+        - tilstand
+        - emneknagger
+        - lovligeEndringer
+        - journalpostIder
+        - historikk
+
+    Kjonn:
+      type: string
+      enum:
+        - MANN
+        - KVINNE
+        - UKJENT
+
+    OppgaveTilstand:
+      type: string
+      enum:
+        - KLAR_TIL_BEHANDLING
+        - UNDER_BEHANDLING
+        - KLAR_TIL_KONTROLL
+        - UNDER_KONTROLL
+        - FERDIG_BEHANDLET
+        - PAA_VENT
+        - AVVENTER_LÅS_AV_BEHANDLING
+        - AVVENTER_OPPLÅSING_AV_BEHANDLING
+        - BEHANDLES_I_ARENA
+
+    LovligeEndringer:
+      type: object
+      properties:
+        paaVentAarsaker:
+          type: array
+          items:
+            type: string
+          description: Årsaker til at oppgaven settes på vent
+      required:
+        - paaVentAarsaker
+
+    AdressebeskyttelseGradering:
+      type: string
+      enum:
+        - UGRADERT
+        - FORTROLIG
+        - STRENGT_FORTROLIG
+        - STRENGT_FORTROLIG_UTLAND
+
+    Sikkerhetstiltak:
+      type: object
+      properties:
+        beskrivelse:
+          type: string
+        gyldigTom:
+          type: string
+          format: date
+      required:
+        - beskrivelse
+        - gyldigTom
+
+    PersonIdent:
+      type: object
+      properties:
+        ident:
+          type: string
+      required:
+        - ident
+
+    Soknad:
+      type: object
+      properties:
+        ident:
+          type: string
+        soknadId:
+          type: string
+          format: uuid
+      required:
+        - ident
+        - soknadId
+
+    OppgaveHistorikk:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - notat
+            - statusendring
+        tidspunkt:
+          type: string
+          format: date-time
+        tittel:
+          type: string
+        behandler:
+          type: object
+          properties:
+            navn:
+              type: string
+            rolle:
+              type: string
+              enum:
+                - saksbehandler
+                - beslutter
+                - system
+          required:
+            - navn
+        body:
+          type: string
+      required:
+        - type
+        - tidspunkt
+        - tittel
+        - behandler
+
+    NesteOppgave:
+      type: object
+      properties:
+        queryParams:
+          type: string
+      required:
+        - queryParams
+
+    UtsettOppgave:
+      type: object
+      properties:
+        utsettTilDato:
+          type: string
+          format: date
+        beholdOppgave:
+          type: boolean
+        aarsak:
+          $ref: '#/components/schemas/UtsettOppgaveAarsak'
+      required:
+        - utsettTilDato
+        - beholdOppgave
+        - aarsak
+
+    UtsettOppgaveAarsak:
+      type: string
+      enum:
+        - AVVENT_SVAR
+        - AVVENT_DOKUMENTASJON
+        - AVVENT_MELDEKORT
+        - AVVENT_PERMITTERINGSÅRSAK
+        - AVVENT_RAPPORTERINGSFRIST
+        - AVVENT_SVAR_PÅ_FORESPØRSEL
+        - ANNET
+
+    LagreNotatResponse:
+      type: object
+      properties:
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+          description: Tidspunkt notat sist ble endret
+      required:
+        - sistEndretTidspunkt
+    Notat:
+      type: object
+      properties:
+        tekst:
+          type: string
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+          description: Tidspunkt notat sist ble endret
+      required:
+        - tekst
+        - sistEndretTidspunkt
+    Behandler:
+      type: object
+      properties:
+        ident:
+          type: string
+        fornavn:
+          type: string
+        etternavn:
+          type: string
+        enhet:
+          type: object
+          properties:
+            navn:
+              type: string
+            enhetNr:
+              type: string
+            postadresse:
+              type: string
+          required:
+            - navn
+            - enhetNr
+            - postadresse
+      required:
+        - ident
+        - fornavn
+        - etternavn
+        - enhet
+    Statistikk:
+      type: object
+      properties:
+        dag:
+          type: integer
+          default: 0
+          description: Antall behandlede oppgaver i løpet av dagen.
+          example: 5
+        uke:
+          type: integer
+          default: 0
+          description: Antall behandlede oppgaver i løpet av uken.
+          example: 30
+        totalt:
+          type: integer
+          default: 0
+          description: Totalt antall behandlede oppgaver.
+          example: 200
+      required:
+        - dag
+        - uke
+        - totalt
+
+    BeholdningsInfo:
+      properties:
+        antallOppgaverKlarTilBehandling:
+          type: integer
+          default: 0
+          description: Antall oppgaver som er klar til behandling
+        antallOppgaverKlarTilKontroll:
+          type: integer
+          default: 0
+          description: Antall oppgaver som er klar til kontroll
+        datoEldsteUbehandledeOppgave:
+          type: string
+          format: date-time
+          description: Dato for eldste oppgave som er klar til behandling
+      required:
+        - antallOppgaverKlarTilBehandling
+        - antallOppgaverKlarTilKontroll
+
+    OppdatertTilstand:
+      properties:
+        nyTilstand:
+          $ref: '#/components/schemas/OppgaveTilstand'
+      required:
+        - nyTilstand
+
+    Klage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        saksbehandler:
+          $ref: '#/components/schemas/Behandler'
+        behandlingOpplysninger:
+          type: array
+          items:
+            $ref: '#/components/schemas/KlageOpplysning'
+        utfallOpplysninger:
+          type: array
+          items:
+            $ref: '#/components/schemas/KlageOpplysning'
+        utfall:
+          $ref: '#/components/schemas/Utfall'
+        meldingOmVedtak:
+          $ref: '#/components/schemas/MeldingOmVedtakResponse'
+      required:
+        - id
+        - utfall
+        - behandlingOpplysninger
+        - utfallOpplysninger
+
+    OppdaterKlageOpplysning:
+      type: object
+      properties:
+        opplysningType:
+          type: string
+          enum:
+            - TEKST
+            - BOOLSK
+            - DATO
+            - LISTEVALG
+            - FLER-LISTEVALG
+        verdi:
+          type: object
+      required:
+        - opplysningType
+        - verdi
+
+    KlageOpplysningFlerListeValg:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: array
+          items:
+            type: string
+    KlageOpplysningTekst:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: string
+    KlageOpplysningBoolsk:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: boolean
+    KlageOpplysningDato:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: string
+          format: date
+
+    KlageOpplysningType:
+      type: string
+      enum:
+        - TEKST
+        - BOOLSK
+#        - DATO
+#        - FLER_LISTEVALG
+    Verdi:
+      oneOf:
+        - $ref: '#/components/schemas/KlageOpplysningTekst'
+        - $ref: '#/components/schemas/KlageOpplysningBoolsk'
+#        - $ref: '#/components/schemas/KlageOpplysningDato'
+#        - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
+      discriminator:
+        propertyName: klageOpplysningType
+        mapping:
+          TEKST: '#/components/schemas/KlageOpplysningTekst'
+          BOOLSK: '#/components/schemas/KlageOpplysningBoolsk'
+#          DATO: '#/components/schemas/KlageOpplysningDato'
+#          FLER_LISTEVALG: '#/components/schemas/KlageOpplysningFlerListevalg'
+
+    KlageOpplysning:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        navn:
+          type: string
+        klageopplysningType:
+            $ref: '#/components/schemas/KlageOpplysningType'
+        paakrevd:
+          type: boolean
+        gruppe:
+          type: string
+          enum:
+            - FORMKRAV
+            - KLAGESAK
+            - FRIST
+            - KLAGE_ANKE
+        verdi:
+          $ref: '#/components/schemas/Verdi'
+        valgmuligheter:
+          type: array
+          items:
+            type: string
+        redigerbar:
+          type: boolean
+      required:
+        - id
+        - navn
+        - type
+        - paakrevd
+        - gruppe
+        - redigerbar
+
+
+
+    Utfall:
+      type: object
+      properties:
+        verdi:
+          type: string
+          enum:
+            - AVVIST
+            - OPPRETTHOLDELSE
+            - DELVIS-MEDHOLD
+            - MEDHOLD
+            - IKKE_SATT
+        tilgjeneligeUtfall:
+          type: array
+          items:
+            type: string
+          description: Tilgjengelige utfall for klagebehandling
+      required:
+        - verdi
+        - tilgjeneligeUtfall
+
+
+
+    MeldingOmVedtakResponse:
+      type: object
+      properties:
+        html:
+          type: string
+          description: HTML for melding om vedtak
+        utvidedeBeskrivelser:
+          type: array
+          items:
+            $ref: '#/components/schemas/UtvidetBeskrivelse'
+      required:
+        - html
+        - utvidedeBeskrivelser
+
+
+
+    UtvidetBeskrivelse:
+      type: object
+      properties:
+        brevblokkId:
+          type: string
+        tekst:
+          type: string
+        sistEndretTidspunkt:
+          type: string
+          format: date-time
+        tittel:
+          type: string
+      required:
+        - brevblokkId
+        - tekst
+        - tittel
+
+    HttpProblem:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+      required:
+        - type
+        - title
+        - status
+        - instance
+
+
+  securitySchemes:
+    azureAd:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Bruker [AzureAD](https://docs.nais.io/security/auth/azure-ad) til autentisering. 
+        Token må ha `audience` satt til `[cluster].teamdagpenger.dp-saksbehandling`.
+        
+        For å teste APIet kan du lage et gyldig OBO-token ved å bruke wonderwalled:
+        - [dev-gcp](https://azure-token-generator.intern.dev.nav.no/api/obo?aud=dev-gcp.teamdagpenger.dp-saksbehandling)

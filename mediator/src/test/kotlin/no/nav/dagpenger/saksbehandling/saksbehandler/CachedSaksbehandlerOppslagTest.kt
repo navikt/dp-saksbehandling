@@ -8,7 +8,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.CounterSnapshot
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 
@@ -19,7 +19,7 @@ internal class CachedSaksbehandlerOppslagTest {
             fornavn = "vitae",
             etternavn = "quaestio",
             enhet =
-                BehandlerEnhetDTO(
+                BehandlerDTOEnhetDTO(
                     navn = "lorem",
                     enhetNr = "theophrastus",
                     postadresse = "pericula",

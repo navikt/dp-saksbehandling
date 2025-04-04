@@ -15,6 +15,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "dp-saksbehandling"
 include("modell")
-include("openapi")
+include("openapi2")
 include("mediator")
 include("streams-consumer")

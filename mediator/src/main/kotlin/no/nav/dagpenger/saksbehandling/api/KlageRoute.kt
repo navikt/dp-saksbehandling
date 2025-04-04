@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.hentVerdi
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTOOpplysningTypeDTO
 import java.time.LocalDate
 
 fun Route.klageApi(mediator: KlageMediator) {
@@ -47,11 +48,11 @@ fun Route.klageApi(mediator: KlageMediator) {
 object KlageDtoMapper {
     fun OppdaterKlageOpplysningDTO.hentVerdi(): OpplysningerVerdi {
         return when (this.opplysningType) {
-            OppdaterKlageOpplysningDTO.OpplysningType.TEKST -> OpplysningerVerdi.Tekst(this.verdi as String)
-            OppdaterKlageOpplysningDTO.OpplysningType.BOOLSK -> OpplysningerVerdi.Boolsk(this.verdi as Boolean)
-            OppdaterKlageOpplysningDTO.OpplysningType.DATO -> OpplysningerVerdi.Dato(LocalDate.parse(this.verdi as String))
-            OppdaterKlageOpplysningDTO.OpplysningType.LISTEVALG -> OpplysningerVerdi.Tekst(this.verdi as String)
-            OppdaterKlageOpplysningDTO.OpplysningType.FLERMinusLISTEVALG -> OpplysningerVerdi.TekstListe(this.verdi as List<String>)
+            OppdaterKlageOpplysningDTOOpplysningTypeDTO.TEKST -> OpplysningerVerdi.Tekst(this.verdi as String)
+            OppdaterKlageOpplysningDTOOpplysningTypeDTO.BOOLSK -> OpplysningerVerdi.Boolsk(this.verdi as Boolean)
+            OppdaterKlageOpplysningDTOOpplysningTypeDTO.DATO -> OpplysningerVerdi.Dato(LocalDate.parse(this.verdi as String))
+            OppdaterKlageOpplysningDTOOpplysningTypeDTO.LISTEVALG -> OpplysningerVerdi.Tekst(this.verdi as String)
+            OppdaterKlageOpplysningDTOOpplysningTypeDTO.FLER_LISTEVALG -> OpplysningerVerdi.TekstListe(this.verdi as List<String>)
         }
     }
 }
