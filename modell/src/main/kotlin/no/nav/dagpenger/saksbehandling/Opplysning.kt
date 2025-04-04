@@ -8,6 +8,7 @@ class Opplysning(
     val navn: String,
     val type: OpplysningType,
     var verdi: Verdi,
+    val valgmuligheter: List<String> = emptyList(),
 ) {
     fun svar(verdi: Boolean) {
         when (type) {
