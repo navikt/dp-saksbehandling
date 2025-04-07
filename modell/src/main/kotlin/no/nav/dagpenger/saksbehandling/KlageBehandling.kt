@@ -1,8 +1,54 @@
 package no.nav.dagpenger.saksbehandling
 
+import no.nav.dagpenger.saksbehandling.Opplysning.Datatype
 import no.nav.dagpenger.saksbehandling.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
+
+
+
+class Opplysning2(
+    val id: UUID = UUIDv7.ny(),
+    val template: OpplysningTemplate,
+    var verdi: Verdi,
+   )
+
+
+
+
+enum class OpplysningTemplate(
+    val navn: String,
+    val datatype: Datatype,
+) {
+    ER_KLAGEN_SKRIFTLIG(
+        navn = "Er klagen skriftlig",
+        datatype = Datatype.BOOLSK,
+    ),
+
+    ER_KLAGEN_UNDERSKREVET(
+        navn = "Er klagen underskrevet",
+        datatype = Datatype.BOOLSK,
+    )
+
+}
+
+object OpplysngerBygger {
+    val formkrav = setOf(
+        OpplysningTemplate.ER_KLAGEN_SKRIFTLIG,
+        OpplysningTemplate.ER_KLAGEN_UNDERSKREVET,
+    )
+
+    fun lagOpplysninger(): Set<Opplysning2> {
+        return formkrav.map {
+            Opplysning2(
+                id = UUID.randomUUID(),
+                template = it,
+                verdi = Verdi.TomVerdi,
+            )
+        }.toSet()
+    }
+}
+
 
 class KlageBehandling(
     val id: UUID,
@@ -17,12 +63,12 @@ class KlageBehandling(
                 setOf(
                     Opplysning(
                         navn = "Hva klagen gjelder",
-                        type = Opplysning.OpplysningType.TEKST,
+                        type = Datatype.TEKST,
                         verdi = Verdi.TomVerdi,
                     ),
                     Opplysning(
                         navn = "Vedtak klagen gjelder",
-                        type = Opplysning.OpplysningType.TEKST,
+                        type = Datatype.TEKST,
                         verdi = Verdi.TomVerdi,
                     ),
                 ),
@@ -34,17 +80,17 @@ class KlageBehandling(
                 setOf(
                     Opplysning(
                         navn = "Frist for å klage",
-                        type = Opplysning.OpplysningType.DATO,
+                        type = Datatype.DATO,
                         verdi = Verdi.TomVerdi,
                     ),
                     Opplysning(
                         navn = "Frist mottatt",
-                        type = Opplysning.OpplysningType.DATO,
+                        type = Datatype.DATO,
                         verdi = Verdi.TomVerdi,
                     ),
                     Opplysning(
                         navn = "Har klager klaget innen fristen",
-                        type = Opplysning.OpplysningType.BOOLSK,
+                        type = Datatype.BOOLSK,
                         verdi = Verdi.TomVerdi,
                     ),
                 ),
@@ -57,22 +103,22 @@ class KlageBehandling(
                 setOf(
                     Opplysning(
                         navn = "Er klagen skriftlig",
-                        type = Opplysning.OpplysningType.BOOLSK,
+                        type = Datatype.BOOLSK,
                         verdi = Verdi.TomVerdi,
                     ),
                     Opplysning(
                         navn = "Er klagen underskrevet",
-                        type = Opplysning.OpplysningType.BOOLSK,
+                        type = Datatype.BOOLSK,
                         verdi = Verdi.TomVerdi,
                     ),
                     Opplysning(
                         navn = "Nevner klagen den endring som krevest",
-                        type = Opplysning.OpplysningType.BOOLSK,
+                        type = Datatype.BOOLSK,
                         verdi = Verdi.TomVerdi,
                     ),
                     Opplysning(
                         navn = "Har klager rettslig klageinteresse",
-                        type = Opplysning.OpplysningType.BOOLSK,
+                        type = Datatype.BOOLSK,
                         verdi = Verdi.TomVerdi,
                     ),
                 ),
@@ -84,7 +130,7 @@ class KlageBehandling(
                 setOf(
                     Opplysning(
                         navn = "Hvilke hjemler gjelder klagen",
-                        type = Opplysning.OpplysningType.FLERVALG,
+                        type = Datatype.FLERVALG,
                         verdi = Verdi.TomVerdi,
                     ),
                 ),

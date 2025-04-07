@@ -93,12 +93,12 @@ object KlageDtoMapper {
         }
     }
 
-    fun Opplysning.OpplysningType.tilDto(): KlageOpplysningDTO.Type {
+    fun Opplysning.Datatype.tilDto(): KlageOpplysningDTO.Type {
         return when (this) {
-            Opplysning.OpplysningType.TEKST -> KlageOpplysningDTO.Type.TEKST
-            Opplysning.OpplysningType.DATO -> KlageOpplysningDTO.Type.DATO
-            Opplysning.OpplysningType.BOOLSK -> KlageOpplysningDTO.Type.BOOLSK
-            Opplysning.OpplysningType.FLERVALG -> KlageOpplysningDTO.Type.LISTEVALG
+            Opplysning.Datatype.TEKST -> KlageOpplysningDTO.Type.TEKST
+            Opplysning.Datatype.DATO -> KlageOpplysningDTO.Type.DATO
+            Opplysning.Datatype.BOOLSK -> KlageOpplysningDTO.Type.BOOLSK
+            Opplysning.Datatype.FLERVALG -> KlageOpplysningDTO.Type.LISTEVALG
         }
     }
 

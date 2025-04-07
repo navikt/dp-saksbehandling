@@ -75,18 +75,18 @@ class KlageBehandlingTest {
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.opplysninger.first { it.type == Opplysning.OpplysningType.BOOLSK }.id
+        return this.opplysninger.first { it.type == Opplysning.Datatype.BOOLSK }.id
     }
 
     private fun KlageBehandling.finnEnStringOpplysningId(): UUID {
-        return this.opplysninger.first { it.type == Opplysning.OpplysningType.TEKST }.id
+        return this.opplysninger.first { it.type == Opplysning.Datatype.TEKST }.id
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
-        return this.opplysninger.first { it.type == Opplysning.OpplysningType.DATO }.id
+        return this.opplysninger.first { it.type == Opplysning.Datatype.DATO }.id
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.opplysninger.first { it.type == Opplysning.OpplysningType.FLERVALG }.id
+        return this.opplysninger.first { it.type == Opplysning.Datatype.FLERVALG }.id
     }
 }

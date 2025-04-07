@@ -6,39 +6,39 @@ import java.util.UUID
 class Opplysning(
     val id: UUID = UUIDv7.ny(),
     val navn: String,
-    val type: OpplysningType,
+    val type: Datatype,
     var verdi: Verdi,
     val valgmuligheter: List<String> = emptyList(),
 ) {
     fun svar(verdi: Boolean) {
         when (type) {
-            OpplysningType.BOOLSK -> this.verdi = Verdi.Boolsk(verdi)
+            Datatype.BOOLSK -> this.verdi = Verdi.Boolsk(verdi)
             else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med boolsk verdi")
         }
     }
 
     fun svar(verdi: String) {
         when (type) {
-            OpplysningType.TEKST -> this.verdi = Verdi.TekstVerdi(verdi)
+            Datatype.TEKST -> this.verdi = Verdi.TekstVerdi(verdi)
             else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med tekst verdi")
         }
     }
 
     fun svar(verdi: List<String>) {
         when (type) {
-            OpplysningType.FLERVALG -> this.verdi = Verdi.Flervalg(verdi)
+            Datatype.FLERVALG -> this.verdi = Verdi.Flervalg(verdi)
             else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med liste verdi")
         }
     }
 
     fun svar(verdi: LocalDate) {
         when (type) {
-            OpplysningType.DATO -> this.verdi = Verdi.Dato(verdi)
+            Datatype.DATO -> this.verdi = Verdi.Dato(verdi)
             else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med dato verdi")
         }
     }
 
-    enum class OpplysningType {
+    enum class Datatype {
         TEKST,
         DATO,
         BOOLSK,
