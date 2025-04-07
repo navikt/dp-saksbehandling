@@ -1,8 +1,9 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.OpplysningTemplate.ER_KLAGEN_SKRIFTLIG
-import org.junit.jupiter.api.Disabled
+import no.nav.dagpenger.saksbehandling.OpplysningTemplate.ER_KLAGEN_UNDERSKREVET
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -21,15 +22,14 @@ class KlageBehandlingTest {
                     ),
             )
 
-        val opplysninngId = klageBehandling.opplysninger.single { it.template == ER_KLAGEN_SKRIFTLIG }.id
+        val opplysninngId = klageBehandling.hentOpplysninger().single { it.template == ER_KLAGEN_SKRIFTLIG }.id
 
         klageBehandling.svar(opplysninngId, false)
         klageBehandling.utfall shouldBe Utfall.Avvist
     }
 
     @Test
-    @Disabled
-    fun `Skal kunne svare på opplysninger av ulike typer`() {
+    fun `Skal kunne svare og endre på opplysninger av ulike typer`() {
         val klageBehandling =
             KlageBehandling(
                 id = java.util.UUID.randomUUID(),
@@ -50,6 +50,11 @@ class KlageBehandlingTest {
         klageBehandling.hentOpplysning(boolskOpplysningId).verdi.let {
             require(it is Verdi.Boolsk)
             it.value shouldBe false
+        }
+        klageBehandling.svar(boolskOpplysningId, true)
+        klageBehandling.hentOpplysning(boolskOpplysningId).verdi.let {
+            require(it is Verdi.Boolsk)
+            it.value shouldBe true
         }
 
         klageBehandling.svar(stringOpplysningId, "String")
@@ -72,22 +77,42 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Hvis utfall er opprettholdelse så skal tilhørende opplysninger vises`() {
+    fun `Hvis formkrav er utfylt skal utfall kunne velges`() {
+        val klageBehandling =
+            KlageBehandling(
+                id = java.util.UUID.randomUUID(),
+                person =
+                    Person(
+                        ident = "12345678901",
+                        skjermesSomEgneAnsatte = false,
+                        adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                    ),
+            )
+        klageBehandling.hentOpplysninger().filter { it.template in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET) }
+            .forEach {
+                klageBehandling.svar(it.id, true)
+            }
+
+        klageBehandling.hentUtfallOpplysninger() shouldNotBe emptySet<Opplysning>()
+    }
+
+    private fun KlageBehandling.finnEnOpplysning(template: OpplysningTemplate): UUID {
+        return this.hentOpplysninger().first { it.template == template }.id
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.opplysninger.first { it.template.datatype == Opplysning.Datatype.BOOLSK }.id
+        return this.hentOpplysninger().first { it.template.datatype == Opplysning.Datatype.BOOLSK }.id
     }
 
     private fun KlageBehandling.finnEnStringOpplysningId(): UUID {
-        return this.opplysninger.first { it.template.datatype == Opplysning.Datatype.TEKST }.id
+        return this.hentOpplysninger().first { it.template.datatype == Opplysning.Datatype.TEKST }.id
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
-        return this.opplysninger.first { it.template.datatype == Opplysning.Datatype.DATO }.id
+        return this.hentOpplysninger().first { it.template.datatype == Opplysning.Datatype.DATO }.id
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.opplysninger.first { it.template.datatype == Opplysning.Datatype.FLERVALG }.id
+        return this.hentOpplysninger().first { it.template.datatype == Opplysning.Datatype.FLERVALG }.id
     }
 }

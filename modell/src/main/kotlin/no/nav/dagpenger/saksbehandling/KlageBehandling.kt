@@ -18,13 +18,31 @@ enum class OpplysningTemplate(
         navn = "Er klagen underskrevet",
         datatype = Datatype.BOOLSK,
     ),
+
+    KLAGE_FRIST(
+        navn = "Frist for å klage",
+        datatype = Datatype.DATO,
+    ),
+
+    KLAGEN_GJELDER(
+        navn = "Hva klagen gjelder",
+        datatype = Datatype.FLERVALG,
+    ),
+
+    FRIST_SAKSBEHANDLERS_BEGRUNNELSE(
+        navn = "Saksbehandlerens begrunnelse for frist",
+        datatype = Datatype.TEKST,
+    ),
 }
 
-object OpplysngerBygger {
+object OpplysningerBygger {
     val opplysninger =
         setOf(
             OpplysningTemplate.ER_KLAGEN_SKRIFTLIG,
             OpplysningTemplate.ER_KLAGEN_UNDERSKREVET,
+            OpplysningTemplate.KLAGE_FRIST,
+            OpplysningTemplate.KLAGEN_GJELDER,
+            OpplysningTemplate.FRIST_SAKSBEHANDLERS_BEGRUNNELSE,
         )
 
     fun lagOpplysninger(): Set<Opplysning> {
@@ -41,11 +59,30 @@ object OpplysngerBygger {
 class KlageBehandling(
     val id: UUID,
     val person: Person,
-    val opplysninger: Set<Opplysning> = OpplysngerBygger.lagOpplysninger(),
+    private val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(),
 ) {
     private var _utfall: Utfall = TomtUtfall
 
     val utfall: Utfall get() = _utfall
+
+    fun hentOpplysninger(): Set<Opplysning> {
+        return opplysninger
+    }
+
+    fun settUtfall(utfall: Utfall) {
+        this._utfall = utfall
+    }
+
+    fun hentUtfallOpplysninger(): Set<Opplysning> {
+        if (utfall in setOf(Utfall.Opprettholdelse)){
+
+        }
+        return if (utfall == TomtUtfall) {
+            emptySet()
+        } else {
+            emptySet()
+        }
+    }
 
     fun svar(
         opplysninngId: UUID,
@@ -121,4 +158,7 @@ sealed class Utfall {
     data object TomtUtfall : Utfall()
 
     data object Avvist : Utfall()
+
+    data object Opprettholdelse : Utfall()
+
 }
