@@ -5,17 +5,6 @@ import no.nav.dagpenger.saksbehandling.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
 
-
-
-class Opplysning2(
-    val id: UUID = UUIDv7.ny(),
-    val template: OpplysningTemplate,
-    var verdi: Verdi,
-   )
-
-
-
-
 enum class OpplysningTemplate(
     val navn: String,
     val datatype: Datatype,
@@ -28,19 +17,19 @@ enum class OpplysningTemplate(
     ER_KLAGEN_UNDERSKREVET(
         navn = "Er klagen underskrevet",
         datatype = Datatype.BOOLSK,
-    )
-
+    ),
 }
 
 object OpplysngerBygger {
-    val formkrav = setOf(
-        OpplysningTemplate.ER_KLAGEN_SKRIFTLIG,
-        OpplysningTemplate.ER_KLAGEN_UNDERSKREVET,
-    )
+    val opplysninger =
+        setOf(
+            OpplysningTemplate.ER_KLAGEN_SKRIFTLIG,
+            OpplysningTemplate.ER_KLAGEN_UNDERSKREVET,
+        )
 
-    fun lagOpplysninger(): Set<Opplysning2> {
-        return formkrav.map {
-            Opplysning2(
+    fun lagOpplysninger(): Set<Opplysning> {
+        return opplysninger.map {
+            Opplysning(
                 id = UUID.randomUUID(),
                 template = it,
                 verdi = Verdi.TomVerdi,
@@ -49,98 +38,12 @@ object OpplysngerBygger {
     }
 }
 
-
 class KlageBehandling(
     val id: UUID,
     val person: Person,
+    val opplysninger: Set<Opplysning> = OpplysngerBygger.lagOpplysninger(),
 ) {
     private var _utfall: Utfall = TomtUtfall
-
-    private val klagesakGruppe =
-        Gruppe(
-            navn = GrupperNavn.KLAGESAK,
-            opplysninger =
-                setOf(
-                    Opplysning(
-                        navn = "Hva klagen gjelder",
-                        type = Datatype.TEKST,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                    Opplysning(
-                        navn = "Vedtak klagen gjelder",
-                        type = Datatype.TEKST,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                ),
-        )
-    private val fristGruppe =
-        Gruppe(
-            navn = GrupperNavn.FRIST,
-            opplysninger =
-                setOf(
-                    Opplysning(
-                        navn = "Frist for å klage",
-                        type = Datatype.DATO,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                    Opplysning(
-                        navn = "Frist mottatt",
-                        type = Datatype.DATO,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                    Opplysning(
-                        navn = "Har klager klaget innen fristen",
-                        type = Datatype.BOOLSK,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                ),
-        )
-
-    private val formkravGruppe =
-        Gruppe(
-            navn = GrupperNavn.FORMKRAV,
-            opplysninger =
-                setOf(
-                    Opplysning(
-                        navn = "Er klagen skriftlig",
-                        type = Datatype.BOOLSK,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                    Opplysning(
-                        navn = "Er klagen underskrevet",
-                        type = Datatype.BOOLSK,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                    Opplysning(
-                        navn = "Nevner klagen den endring som krevest",
-                        type = Datatype.BOOLSK,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                    Opplysning(
-                        navn = "Har klager rettslig klageinteresse",
-                        type = Datatype.BOOLSK,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                ),
-        )
-    private val oversendelseGruppe =
-        Gruppe(
-            navn = GrupperNavn.OVERSENDELSE,
-            opplysninger =
-                setOf(
-                    Opplysning(
-                        navn = "Hvilke hjemler gjelder klagen",
-                        type = Datatype.FLERVALG,
-                        verdi = Verdi.TomVerdi,
-                    ),
-                ),
-        )
-
-    val grupper = setOf(klagesakGruppe, fristGruppe, formkravGruppe, oversendelseGruppe)
-    val opplysninger: Set<Opplysning> =
-        grupper
-            .flatMap { it.opplysninger }
-            .toSet()
 
     val utfall: Utfall get() = _utfall
 
@@ -190,28 +93,17 @@ class KlageBehandling(
     }
 
     private fun revurderUtfall() {
-        formkravGruppe.opplysninger.filter { it.verdi is Verdi.Boolsk }.any {
-            !(it.verdi as Verdi.Boolsk).value
-        }.let {
-            when (it) {
-                true -> this._utfall = Utfall.Avvist
-                false -> {}
+        opplysninger.filter { it.template in setOf(OpplysningTemplate.ER_KLAGEN_UNDERSKREVET, OpplysningTemplate.ER_KLAGEN_SKRIFTLIG) }
+            .filter { it.verdi is Verdi.Boolsk }
+            .any { !(it.verdi as Verdi.Boolsk).value }
+            .let {
+                when (it) {
+                    true -> this._utfall = Utfall.Avvist
+                    false -> {}
+                }
             }
-        }
     }
 }
-
-enum class GrupperNavn {
-    FORMKRAV,
-    KLAGESAK,
-    FRIST,
-    OVERSENDELSE,
-}
-
-class Gruppe(
-    val navn: GrupperNavn,
-    val opplysninger: Set<Opplysning>,
-)
 
 sealed class Verdi {
     data object TomVerdi : Verdi()
