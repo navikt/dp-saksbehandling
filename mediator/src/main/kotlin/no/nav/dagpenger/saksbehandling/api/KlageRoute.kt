@@ -23,7 +23,7 @@ import java.time.LocalDate
 
 fun Route.klageApi(mediator: KlageMediator) {
     authenticate("azureAd") {
-        route("klage") {
+        route("oppgave/klage") {
             route("{klageId}") {
                 get {
                     val klageId = call.finnUUID("klageId")

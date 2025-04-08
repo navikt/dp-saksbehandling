@@ -34,7 +34,7 @@ class KlageRouteTest {
     fun `skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<KlageMediator>()
         withKlageRoute(mediator) {
-            client.get("/klage/$klageId").let { response ->
+            client.get("oppgave//klage/$klageId").let { response ->
                 response.status shouldBe HttpStatusCode.Unauthorized
             }
         }
@@ -58,7 +58,7 @@ class KlageRouteTest {
                     )
             }
         withKlageRoute(mediator) {
-            client.get("/klage/$klageId") { autentisert() }.status shouldBe HttpStatusCode.OK
+            client.get("oppgave/klage/$klageId") { autentisert() }.status shouldBe HttpStatusCode.OK
             // todo mer testing
         }
     }
@@ -73,7 +73,7 @@ class KlageRouteTest {
                 } returns Unit
             }
         withKlageRoute(mediator) {
-            client.put("/klage/$klageId/opplysning/$opplysningId") {
+            client.put("oppgave/klage/$klageId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -101,7 +101,7 @@ class KlageRouteTest {
                 } returns Unit
             }
         withKlageRoute(mediator) {
-            client.put("/klage/$klageId/opplysning/$opplysningId") {
+            client.put("oppgave/klage/$klageId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -129,7 +129,7 @@ class KlageRouteTest {
                 } returns Unit
             }
         withKlageRoute(mediator) {
-            client.put("/klage/$klageId/opplysning/$opplysningId") {
+            client.put("oppgave/klage/$klageId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -157,7 +157,7 @@ class KlageRouteTest {
                 } returns Unit
             }
         withKlageRoute(mediator) {
-            client.put("/klage/$klageId/opplysning/$opplysningId") {
+            client.put("oppgave/klage/$klageId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
