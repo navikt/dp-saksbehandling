@@ -2,18 +2,28 @@ package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.lagOpplysninger
+import no.nav.dagpenger.saksbehandling.OpplysningerBygger.oversittetFristOpplysningTyper
 import java.time.LocalDate
 import java.util.UUID
 
 interface Steg {
-    fun hentOpplysninger(): List<Opplysning>
+    fun opplysninger(): List<Opplysning>
 }
 
 class FristvurderingSteg : Steg {
-    val opplysninger = lagOpplysninger(fristvurderingOpplysningTyper)
+    val fristvurderingOpplysninger = lagOpplysninger(fristvurderingOpplysningTyper)
+    val oversittetFristOpplysninger = lagOpplysninger(oversittetFristOpplysningTyper)
 
-    override fun hentOpplysninger(): List<Opplysning> {
-        return opplysninger.toList()
+    override fun opplysninger(): List<Opplysning> {
+        return when (klagefristOppfylt()) {
+            true -> fristvurderingOpplysninger.toList()
+            false -> fristvurderingOpplysninger.toList() + oversittetFristOpplysninger.toList()
+        }
+    }
+
+    private fun klagefristOppfylt(): Boolean {
+        val klagefristOpplysning = fristvurderingOpplysninger.single { opplysning -> opplysning.type == OpplysningType.KLAGEFRIST_OPPFYLT }
+        return klagefristOpplysning.verdi is Verdi.Boolsk && (klagefristOpplysning.verdi as Verdi.Boolsk).value == true
     }
 }
 

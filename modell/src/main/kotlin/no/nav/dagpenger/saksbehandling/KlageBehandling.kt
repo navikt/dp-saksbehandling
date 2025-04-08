@@ -1,11 +1,13 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.Opplysning.Datatype
+import no.nav.dagpenger.saksbehandling.OpplysningType.BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST
 import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_SKRIFTLIG
 import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_UNDERSKREVET
 import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_FRIST
 import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_MOTTATT
+import no.nav.dagpenger.saksbehandling.OpplysningType.OPPREISNING_OVERSITTET_FRIST
 import no.nav.dagpenger.saksbehandling.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
@@ -40,8 +42,18 @@ enum class OpplysningType(
     ),
 
     KLAGEFRIST_OPPFYLT(
-        navn = "Har klager klaget innen fristen",
+        navn = "Har klager klaget innen fristen?",
         datatype = Datatype.BOOLSK,
+    ),
+
+    OPPREISNING_OVERSITTET_FRIST(
+        navn = "Gis klager oppreisning for oversittet frist?",
+        datatype = Datatype.BOOLSK,
+    ),
+
+    BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST(
+        navn = "Begrunnelse",
+        datatype = Datatype.TEKST,
     ),
 
     FRIST_SAKSBEHANDLERS_BEGRUNNELSE(
@@ -62,6 +74,12 @@ object OpplysningerBygger {
             KLAGE_FRIST,
             KLAGE_MOTTATT,
             KLAGEFRIST_OPPFYLT,
+        )
+
+    val oversittetFristOpplysningTyper =
+        setOf(
+            OPPREISNING_OVERSITTET_FRIST,
+            BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST,
         )
 
     val opplysninger =
