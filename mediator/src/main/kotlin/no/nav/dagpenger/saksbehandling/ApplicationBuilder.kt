@@ -114,7 +114,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         oppgaveMediator = oppgaveMediator,
                         oppgaveDTOMapper = oppgaveDTOMapper,
                         statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
-                        klageMediator = NotImplementKlageMediator,
+                        klageMediator = KlageMediator(),
                     )
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =
