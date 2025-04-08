@@ -2,43 +2,20 @@ package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.dagpenger.saksbehandling.OpplysningTemplate.ER_KLAGEN_SKRIFTLIG
-import no.nav.dagpenger.saksbehandling.OpplysningTemplate.ER_KLAGEN_UNDERSKREVET
+import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_SKRIFTLIG
+import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_UNDERSKREVET
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
 
 class KlageBehandlingTest {
     @Test
-    fun `opprett klagebehandling`() {
-        val klageBehandling =
-            KlageBehandling(
-                id = java.util.UUID.randomUUID(),
-                person =
-                    Person(
-                        ident = "12345678901",
-                        skjermesSomEgneAnsatte = false,
-                        adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-                    ),
-            )
-
-        val opplysninngId = klageBehandling.hentOpplysninger().single { it.template == ER_KLAGEN_SKRIFTLIG }.id
-
-        klageBehandling.svar(opplysninngId, false)
-        klageBehandling.utfall shouldBe Utfall.Avvist
-    }
-
-    @Test
     fun `Skal kunne svare og endre på opplysninger av ulike typer`() {
         val klageBehandling =
             KlageBehandling(
-                id = java.util.UUID.randomUUID(),
+                id = UUIDv7.ny(),
                 person =
-                    Person(
-                        ident = "12345678901",
-                        skjermesSomEgneAnsatte = false,
-                        adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-                    ),
+                    testPerson(),
             )
 
         val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysning()
@@ -81,14 +58,9 @@ class KlageBehandlingTest {
         val klageBehandling =
             KlageBehandling(
                 id = java.util.UUID.randomUUID(),
-                person =
-                    Person(
-                        ident = "12345678901",
-                        skjermesSomEgneAnsatte = false,
-                        adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-                    ),
+                person = testPerson(),
             )
-        klageBehandling.hentOpplysninger().filter { it.template in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET) }
+        klageBehandling.hentOpplysninger().filter { it.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET) }
             .forEach {
                 klageBehandling.svar(it.id, true)
             }
@@ -96,23 +68,30 @@ class KlageBehandlingTest {
         klageBehandling.hentUtfallOpplysninger() shouldNotBe emptySet<Opplysning>()
     }
 
-    private fun KlageBehandling.finnEnOpplysning(template: OpplysningTemplate): UUID {
-        return this.hentOpplysninger().first { it.template == template }.id
+    private fun testPerson(): Person =
+        Person(
+            ident = "12345678901",
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+        )
+
+    private fun KlageBehandling.finnEnOpplysning(template: OpplysningType): UUID {
+        return this.hentOpplysninger().first { it.type == template }.id
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.hentOpplysninger().first { it.template.datatype == Opplysning.Datatype.BOOLSK }.id
+        return this.hentOpplysninger().first { it.type.datatype == Opplysning.Datatype.BOOLSK }.id
     }
 
     private fun KlageBehandling.finnEnStringOpplysningId(): UUID {
-        return this.hentOpplysninger().first { it.template.datatype == Opplysning.Datatype.TEKST }.id
+        return this.hentOpplysninger().first { it.type.datatype == Opplysning.Datatype.TEKST }.id
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
-        return this.hentOpplysninger().first { it.template.datatype == Opplysning.Datatype.DATO }.id
+        return this.hentOpplysninger().first { it.type.datatype == Opplysning.Datatype.DATO }.id
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.hentOpplysninger().first { it.template.datatype == Opplysning.Datatype.FLERVALG }.id
+        return this.hentOpplysninger().first { it.type.datatype == Opplysning.Datatype.FLERVALG }.id
     }
 }

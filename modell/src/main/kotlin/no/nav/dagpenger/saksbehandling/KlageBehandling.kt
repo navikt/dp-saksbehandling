@@ -1,11 +1,16 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.Opplysning.Datatype
+import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_SKRIFTLIG
+import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_UNDERSKREVET
+import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGEFRIST_OPPFYLT
+import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_FRIST
+import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
 
-enum class OpplysningTemplate(
+enum class OpplysningType(
     val navn: String,
     val datatype: Datatype,
 ) {
@@ -19,14 +24,24 @@ enum class OpplysningTemplate(
         datatype = Datatype.BOOLSK,
     ),
 
+    KLAGEN_GJELDER(
+        navn = "Hva klagen gjelder",
+        datatype = Datatype.FLERVALG,
+    ),
+
     KLAGE_FRIST(
         navn = "Frist for å klage",
         datatype = Datatype.DATO,
     ),
 
-    KLAGEN_GJELDER(
-        navn = "Hva klagen gjelder",
-        datatype = Datatype.FLERVALG,
+    KLAGE_MOTTATT(
+        navn = "Klage mottatt",
+        datatype = Datatype.DATO,
+    ),
+
+    KLAGEFRIST_OPPFYLT(
+        navn = "Har klager klaget innen fristen",
+        datatype = Datatype.BOOLSK,
     ),
 
     FRIST_SAKSBEHANDLERS_BEGRUNNELSE(
@@ -36,20 +51,32 @@ enum class OpplysningTemplate(
 }
 
 object OpplysningerBygger {
-    val opplysninger =
+    val formkravOpplysningTyper =
         setOf(
-            OpplysningTemplate.ER_KLAGEN_SKRIFTLIG,
-            OpplysningTemplate.ER_KLAGEN_UNDERSKREVET,
-            OpplysningTemplate.KLAGE_FRIST,
-            OpplysningTemplate.KLAGEN_GJELDER,
-            OpplysningTemplate.FRIST_SAKSBEHANDLERS_BEGRUNNELSE,
+            ER_KLAGEN_SKRIFTLIG,
+            ER_KLAGEN_UNDERSKREVET,
         )
 
-    fun lagOpplysninger(): Set<Opplysning> {
+    val fristvurderingOpplysningTyper =
+        setOf(
+            KLAGE_FRIST,
+            KLAGE_MOTTATT,
+            KLAGEFRIST_OPPFYLT,
+        )
+
+    val opplysninger =
+        setOf(
+            ER_KLAGEN_SKRIFTLIG,
+            ER_KLAGEN_UNDERSKREVET,
+            OpplysningType.KLAGEN_GJELDER,
+            OpplysningType.FRIST_SAKSBEHANDLERS_BEGRUNNELSE,
+        )
+
+    fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> {
         return opplysninger.map {
             Opplysning(
                 id = UUID.randomUUID(),
-                template = it,
+                type = it,
                 verdi = Verdi.TomVerdi,
             )
         }.toSet()
@@ -60,6 +87,7 @@ class KlageBehandling(
     val id: UUID,
     val person: Person,
     private val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(),
+    private val steg: LinkedHashSet<Steg> = linkedSetOf<Steg>(),
 ) {
     private var _utfall: Utfall = TomtUtfall
 
@@ -74,8 +102,7 @@ class KlageBehandling(
     }
 
     fun hentUtfallOpplysninger(): Set<Opplysning> {
-        if (utfall in setOf(Utfall.Opprettholdelse)){
-
+        if (utfall in setOf(Utfall.Opprettholdelse)) {
         }
         return if (utfall == TomtUtfall) {
             emptySet()
@@ -130,7 +157,7 @@ class KlageBehandling(
     }
 
     private fun revurderUtfall() {
-        opplysninger.filter { it.template in setOf(OpplysningTemplate.ER_KLAGEN_UNDERSKREVET, OpplysningTemplate.ER_KLAGEN_SKRIFTLIG) }
+        opplysninger.filter { it.type in setOf(ER_KLAGEN_UNDERSKREVET, ER_KLAGEN_SKRIFTLIG) }
             .filter { it.verdi is Verdi.Boolsk }
             .any { !(it.verdi as Verdi.Boolsk).value }
             .let {
@@ -140,6 +167,8 @@ class KlageBehandling(
                 }
             }
     }
+
+    fun hentSteg(): List<Steg> = this.steg.toList()
 }
 
 sealed class Verdi {
@@ -160,5 +189,4 @@ sealed class Utfall {
     data object Avvist : Utfall()
 
     data object Opprettholdelse : Utfall()
-
 }
