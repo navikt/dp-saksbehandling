@@ -38,4 +38,6 @@ sealed class OpplysningerVerdi {
     data class Dato(val value: LocalDate) : OpplysningerVerdi()
 
     data class Boolsk(val value: Boolean) : OpplysningerVerdi()
+
+    companion object
 }

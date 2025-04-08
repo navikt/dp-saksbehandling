@@ -58,7 +58,9 @@ class KlageRouteTest {
                     )
             }
         withKlageRoute(mediator) {
-            client.get("oppgave/klage/$klageId") { autentisert() }.status shouldBe HttpStatusCode.OK
+            client.get("oppgave/klage/$klageId") { autentisert() }.let {
+                it.status shouldBe HttpStatusCode.OK
+            }
             // todo mer testing
         }
     }
@@ -77,7 +79,7 @@ class KlageRouteTest {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
-                setBody("""{ "verdi": ["tekst1","tekst2"], "opplysningType":"FLER-LISTEVALG" }""".trimIndent())
+                setBody("""{ "verdi" : { "verdi" : [ "tekst1", "tekst2" ], "klageOpplysningType" : "FLER_LISTEVALG" } }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
@@ -105,7 +107,7 @@ class KlageRouteTest {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
-                setBody("""{ "verdi": "tekst", "opplysningType":"TEKST" }""".trimIndent())
+                setBody("""{ "verdi" : { "verdi" : "tekst", "klageOpplysningType" : "TEKST" } }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
@@ -133,7 +135,7 @@ class KlageRouteTest {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
-                setBody("""{ "verdi": false, "opplysningType":"BOOLSK" }""".trimIndent())
+                setBody("""{ "verdi" : { "verdi" : ${boolsk.value}, "klageOpplysningType" : "BOOLSK" } }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
@@ -161,7 +163,7 @@ class KlageRouteTest {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
-                setBody("""{ "verdi": "2021-01-01", "opplysningType":"DATO" }""".trimIndent())
+                setBody("""{ "verdi" : { "verdi" : "2021-01-01", "klageOpplysningType" : "DATO" } }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {

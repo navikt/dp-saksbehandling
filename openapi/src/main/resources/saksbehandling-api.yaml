@@ -966,6 +966,7 @@ components:
         - totalt
 
     BeholdningsInfo:
+      type: object
       properties:
         antallOppgaverKlarTilBehandling:
           type: integer
@@ -984,6 +985,7 @@ components:
         - antallOppgaverKlarTilKontroll
 
     OppdatertTilstand:
+      type: object
       properties:
         nyTilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
@@ -1019,19 +1021,88 @@ components:
     OppdaterKlageOpplysning:
       type: object
       properties:
-        opplysningType:
-          type: string
-          enum:
-            - TEKST
-            - BOOLSK
-            - DATO
-            - LISTEVALG
-            - FLER-LISTEVALG
         verdi:
-          type: object
+          $ref: '#/components/schemas/KlageOpplysningVerdi'
       required:
-        - opplysningType
         - verdi
+
+    KlageOpplysningFlerListeValg:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: array
+          items:
+            type: string
+      required:
+        - klageOpplysningType
+        - verdi
+    KlageOpplysningListeValg:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: string
+      required:
+        - klageOpplysningType
+        - verdi
+    KlageOpplysningTekst:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: string
+      required:
+        - klageOpplysningType
+        - verdi
+    KlageOpplysningBoolsk:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: boolean
+      required:
+        - klageOpplysningType
+        - verdi
+    KlageOpplysningDato:
+      type: object
+      properties:
+        klageOpplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
+        verdi:
+          type: string
+          format: date
+      required:
+        - klageOpplysningType
+        - verdi
+
+    KlageOpplysningType:
+      type: string
+      enum:
+        - TEKST
+        - BOOLSK
+        - DATO
+        - LISTEVALG
+        - FLER_LISTEVALG
+    KlageOpplysningVerdi:
+      oneOf:
+        - $ref: '#/components/schemas/KlageOpplysningTekst'
+        - $ref: '#/components/schemas/KlageOpplysningBoolsk'
+        - $ref: '#/components/schemas/KlageOpplysningDato'
+        - $ref: '#/components/schemas/KlageOpplysningListeValg'
+        - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
+      discriminator:
+        propertyName: klageOpplysningType
+        mapping:
+          TEKST: '#/components/schemas/KlageOpplysningTekst'
+          BOOLSK: '#/components/schemas/KlageOpplysningBoolsk'
+          DATO: '#/components/schemas/KlageOpplysningDato'
+          LISTEVALG: '#/components/schemas/KlageOpplysningListeValg'
+          FLER_LISTEVALG: '#/components/schemas/KlageOpplysningFlerListeValg'
 
     KlageOpplysning:
       type: object
@@ -1041,14 +1112,8 @@ components:
           format: uuid
         navn:
           type: string
-        type:
-          type: string
-          enum:
-            - TEKST
-            - BOOLSK
-            - DATO
-            - LISTEVALG
-            - FLER_LISTEVALG
+        klageopplysningType:
+          $ref: '#/components/schemas/KlageOpplysningType'
         paakrevd:
           type: boolean
         gruppe:
@@ -1059,14 +1124,7 @@ components:
             - FRIST
             - KLAGE_ANKE
         verdi:
-          oneOf:
-            - type: string
-            - type: boolean
-            - type: string
-              format: date
-            - type: array
-              items:
-                type: string
+          $ref: '#/components/schemas/KlageOpplysningVerdi'
         valgmuligheter:
           type: array
           items:

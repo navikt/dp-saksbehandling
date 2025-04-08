@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient.Companion.lagMeldingOmVedtakKlient
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak
@@ -85,7 +85,7 @@ class MeldingOmVedtakKlientTest {
             fornavn = "Saks",
             etternavn = "Behandler",
             enhet =
-                BehandlerEnhetDTO(
+                BehandlerDTOEnhetDTO(
                     navn = "Enhet",
                     enhetNr = "1234",
                     postadresse = "Postadresse",
