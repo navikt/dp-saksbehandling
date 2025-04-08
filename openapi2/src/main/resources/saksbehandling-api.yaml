@@ -1070,21 +1070,21 @@ components:
       enum:
         - TEKST
         - BOOLSK
-#        - DATO
-#        - FLER_LISTEVALG
-    Verdi:
+        - DATO
+        - FLER_LISTEVALG
+    KlageOpplysningVerdi:
       oneOf:
         - $ref: '#/components/schemas/KlageOpplysningTekst'
         - $ref: '#/components/schemas/KlageOpplysningBoolsk'
-#        - $ref: '#/components/schemas/KlageOpplysningDato'
-#        - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
+        - $ref: '#/components/schemas/KlageOpplysningDato'
+        - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
       discriminator:
         propertyName: klageOpplysningType
         mapping:
           TEKST: '#/components/schemas/KlageOpplysningTekst'
           BOOLSK: '#/components/schemas/KlageOpplysningBoolsk'
-#          DATO: '#/components/schemas/KlageOpplysningDato'
-#          FLER_LISTEVALG: '#/components/schemas/KlageOpplysningFlerListevalg'
+          DATO: '#/components/schemas/KlageOpplysningDato'
+          FLER_LISTEVALG: '#/components/schemas/KlageOpplysningFlerListeValg'
 
     KlageOpplysning:
       type: object
@@ -1106,7 +1106,7 @@ components:
             - FRIST
             - KLAGE_ANKE
         verdi:
-          $ref: '#/components/schemas/Verdi'
+          $ref: '#/components/schemas/KlageOpplysningVerdi'
         valgmuligheter:
           type: array
           items:

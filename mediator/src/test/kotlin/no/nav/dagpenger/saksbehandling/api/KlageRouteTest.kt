@@ -20,7 +20,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTOGruppeDTO
-import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTOTypeDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import org.junit.jupiter.api.Test
@@ -55,7 +55,7 @@ class KlageRouteTest {
                         KlageOpplysningDTO(
                             id = klageId,
                             navn = "Testopplysning",
-                            type = KlageOpplysningDTOTypeDTO.TEKST,
+                            klageopplysningType = KlageOpplysningTypeDTO.TEKST,
                             paakrevd = false,
                             gruppe = KlageOpplysningDTOGruppeDTO.KLAGE_ANKE,
                             redigerbar = false,
