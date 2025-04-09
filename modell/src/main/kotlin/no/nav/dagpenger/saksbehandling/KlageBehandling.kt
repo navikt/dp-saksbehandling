@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_FRIST
 import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.OpplysningType.OPPREISNING_OVERSITTET_FRIST
+import no.nav.dagpenger.saksbehandling.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
@@ -60,6 +61,11 @@ enum class OpplysningType(
         navn = "Saksbehandlerens begrunnelse for frist",
         datatype = Datatype.TEKST,
     ),
+
+    UTFALL(
+        navn = "Utfall",
+        datatype = Datatype.TEKST,
+    );
 }
 
 object OpplysningerBygger {
@@ -81,7 +87,7 @@ object OpplysningerBygger {
             OPPREISNING_OVERSITTET_FRIST,
             BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST,
         )
-
+    val utfallOpplysningTyper = setOf(UTFALL)
     val opplysninger =
         setOf(
             ER_KLAGEN_SKRIFTLIG,
@@ -100,6 +106,8 @@ object OpplysningerBygger {
         }.toSet()
     }
 }
+
+
 
 class KlageBehandling(
     val id: UUID,

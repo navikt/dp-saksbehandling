@@ -1,8 +1,10 @@
 package no.nav.dagpenger.saksbehandling
 
+import no.nav.dagpenger.saksbehandling.OpplysningerBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.lagOpplysninger
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.OpplysningerBygger.utfallOpplysningTyper
 import java.time.LocalDate
 import java.util.UUID
 
@@ -22,10 +24,29 @@ class FristvurderingSteg : Steg {
     }
 
     private fun klagefristOppfylt(): Boolean {
-        val klagefristOpplysning = fristvurderingOpplysninger.single { opplysning -> opplysning.type == OpplysningType.KLAGEFRIST_OPPFYLT }
+        val klagefristOpplysning =
+            fristvurderingOpplysninger.single { opplysning -> opplysning.type == OpplysningType.KLAGEFRIST_OPPFYLT }
         return klagefristOpplysning.verdi is Verdi.Boolsk && (klagefristOpplysning.verdi as Verdi.Boolsk).value == true
     }
 }
+
+class VurderUtfallSteg : Steg {
+    val formkravOpplysninger = lagOpplysninger(formkravOpplysningTyper)
+    val oversittetFristOpplysninger = lagOpplysninger(oversittetFristOpplysningTyper)
+    val utfallAvvistGrunnetFormkrav = formkravOpplysninger.any { it.verdi is Verdi.Boolsk && !(it.verdi as Verdi.Boolsk).value }
+
+   /* val utfallAvvistGrunnetFrist = oversittetFristOpplysninger.any{ it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST
+            && it.verdi is Verdi.Boolsk && !(it.verdi as Verdi.Boolsk).value }*/
+    val utfallAvvist = utfallAvvistGrunnetFormkrav
+
+    val utfallOpplysning = lagOpplysninger(utfallOpplysningTyper).single().
+
+
+    override fun opplysninger(): List<Opplysning> {
+        return utfallOpplysninger.toList()
+    }
+}
+
 
 class Opplysning(
     val id: UUID = UUIDv7.ny(),

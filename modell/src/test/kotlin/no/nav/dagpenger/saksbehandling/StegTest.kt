@@ -18,11 +18,11 @@ class StegTest {
         klagefristOppfylt.svar(verdi = false)
         steg.opplysninger().size shouldBe 5
         (klagefristOppfylt.verdi as Verdi.Boolsk).value shouldBe false
-        val opplysning = steg.opplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST }
-        opplysning.svar(verdi = false)
+        val opplysningOversittetFrist = steg.opplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST }
+        opplysningOversittetFrist.svar(verdi = false)
 
         klagefristOppfylt.svar(verdi = true)
         steg.opplysninger().size shouldBe 3
-        //TODO: Når klagefrist er oppfylt skal ikke oversittet frist opplysninger ha verdi
+        // TODO: Når klagefrist er oppfylt skal ikke oversittet frist opplysninger ha verdi
     }
 }
