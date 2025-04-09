@@ -23,6 +23,6 @@ class StegTest {
 
         klagefristOppfylt.svar(verdi = true)
         steg.opplysninger().size shouldBe 3
-        //TODO: Når klagefrist er oppfylt skal ikke oversittet frist opplysninger ha verdi
+        // TODO: Når klagefrist er oppfylt skal ikke oversittet frist opplysninger ha verdi
     }
 }

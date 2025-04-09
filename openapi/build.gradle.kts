@@ -1,22 +1,24 @@
 plugins {
-    id("org.openapi.generator") version "7.12.0"
+    id("ch.acanda.gradle.fabrikt") version "1.13.0"
     id("common")
+    idea
     `java-library`
 }
 
 tasks {
     compileKotlin {
-        dependsOn("openApiGenerate")
+        dependsOn("fabriktGenerate")
     }
 }
 
 tasks.named("runKtlintCheckOverMainSourceSet").configure {
-    dependsOn("openApiGenerate")
+    dependsOn("fabriktGenerate")
 }
 
 tasks.named("runKtlintFormatOverMainSourceSet").configure {
-    dependsOn("openApiGenerate")
+    dependsOn("fabriktGenerate")
 }
+
 sourceSets {
     main {
         java {
@@ -35,36 +37,24 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.18.3")
 }
 
-openApiGenerate {
-    generatorName.set(
-        "kotlin",
-    )
-    inputSpec.set("$projectDir/src/main/resources/saksbehandling-api.yaml")
-    outputDir.set("${layout.buildDirectory.get()}/generated/")
-    packageName.set("no.nav.dagpenger.saksbehandling.api")
-    globalProperties.set(
-        mapOf(
-            "apis" to "none",
-            "models" to "",
-        ),
-    )
-    modelNameSuffix.set("DTO")
-    templateDir.set("$projectDir/src/main/resources/templates")
-    configOptions.set(
-        mapOf(
-            "serializationLibrary" to "jackson",
-            "enumPropertyNaming" to "original",
-        ),
-    )
-    typeMappings.set(
-        mapOf(
-            "DateTime" to "LocalDateTime",
-        ),
-    )
-
-    importMappings.set(
-        mapOf(
-            "LocalDateTime" to "java.time.LocalDateTime",
-        ),
-    )
+fabrikt {
+    generate("saksbehandling") {
+        apiFile = file("$projectDir/src/main/resources/saksbehandling-api.yaml")
+        basePackage = "no.nav.dagpenger.saksbehandling.api"
+        skip = false
+        quarkusReflectionConfig = disabled
+        typeOverrides {
+            datetime = LocalDateTime
+        }
+        model {
+            generate = enabled
+            validationLibrary = NoValidation
+            extensibleEnums = disabled
+            sealedInterfacesForOneOf = enabled
+            ignoreUnknownProperties = disabled
+            nonNullMapValues = enabled
+            serializationLibrary = Jackson
+            suffix = "DTO"
+        }
+    }
 }

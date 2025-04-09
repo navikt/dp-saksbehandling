@@ -24,7 +24,7 @@ import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import java.util.concurrent.TimeUnit
 
 private val logger = KotlinLogging.logger { }
@@ -125,7 +125,7 @@ internal class SaksbehandlerOppslagImpl(
                 fornavn = user.givenName,
                 etternavn = user.surname,
                 enhet =
-                    BehandlerEnhetDTO(
+                    BehandlerDTOEnhetDTO(
                         navn = enhet.await().navn,
                         enhetNr = enhetsNr,
                         postadresse = kontaktInformasjon.await().formatertPostAdresse(),

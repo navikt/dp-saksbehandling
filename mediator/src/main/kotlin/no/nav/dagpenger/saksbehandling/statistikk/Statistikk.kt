@@ -53,7 +53,7 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                     )
                 }.asSingle,
             )
-        } ?: StatistikkDTO()
+        } ?: StatistikkDTO(0, 0, 0)
     }
 
     override fun hentAntallVedtakGjort(): StatistikkDTO {
@@ -92,7 +92,7 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                     )
                 }.asSingle,
             )
-        } ?: StatistikkDTO()
+        } ?: StatistikkDTO(0, 0, 0)
     }
 
     override fun hentBeholdningsInfo(): BeholdningsInfoDTO {
@@ -125,7 +125,7 @@ class PostgresStatistikkTjeneste(private val dataSource: DataSource) : Statistik
                         datoEldsteUbehandledeOppgave = row.localDateTime("eldste_dato"),
                     )
                 }.asSingle,
-            ) ?: BeholdningsInfoDTO()
+            ) ?: BeholdningsInfoDTO(0, 0)
         }
     }
 

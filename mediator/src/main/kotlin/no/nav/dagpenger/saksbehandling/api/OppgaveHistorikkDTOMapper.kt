@@ -15,8 +15,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
@@ -32,7 +34,7 @@ internal class OppgaveHistorikkDTOMapper(
                 repository.finnNotat(tilstandsendring.id)?.let { notat ->
                     historikk.add(
                         OppgaveHistorikkDTO(
-                            type = OppgaveHistorikkDTO.Type.notat,
+                            type = OppgaveHistorikkDTOTypeDTO.NOTAT,
                             tidspunkt = notat.sistEndretTidspunkt,
                             tittel = "Notat",
                             behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
@@ -44,7 +46,7 @@ internal class OppgaveHistorikkDTOMapper(
 
             historikk.add(
                 OppgaveHistorikkDTO(
-                    type = OppgaveHistorikkDTO.Type.statusendring,
+                    type = OppgaveHistorikkDTOTypeDTO.STATUSENDRING,
                     tidspunkt = tilstandsendring.tidspunkt,
                     tittel = tilstandsendringTittel(tilstandsendring),
                     behandler = hentOppgavehistorikkBehandler(tilstandsendring.hendelse.utførtAv),
@@ -69,18 +71,18 @@ internal class OppgaveHistorikkDTOMapper(
         }
     }
 
-    private suspend fun hentOppgavehistorikkBehandler(behandler: Behandler): OppgaveHistorikkBehandlerDTO {
+    private suspend fun hentOppgavehistorikkBehandler(behandler: Behandler): OppgaveHistorikkDTOBehandlerDTO {
         return when (behandler) {
             is Saksbehandler ->
-                OppgaveHistorikkBehandlerDTO(
+                OppgaveHistorikkDTOBehandlerDTO(
                     navn = hentNavn(behandler.navIdent),
-                    rolle = OppgaveHistorikkBehandlerDTO.Rolle.saksbehandler,
+                    rolle = BehandlerDTORolleDTO.SAKSBEHANDLER,
                 )
 
             is Applikasjon ->
-                OppgaveHistorikkBehandlerDTO(
+                OppgaveHistorikkDTOBehandlerDTO(
                     navn = behandler.navn,
-                    rolle = OppgaveHistorikkBehandlerDTO.Rolle.system,
+                    rolle = BehandlerDTORolleDTO.SYSTEM,
                 )
         }
     }
