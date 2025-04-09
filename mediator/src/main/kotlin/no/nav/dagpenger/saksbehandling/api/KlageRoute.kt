@@ -85,8 +85,8 @@ object KlageDtoMapper {
                 this.opplysninger.map { opplysning ->
                     KlageOpplysningDTO(
                         id = opplysning.id,
-                        navn = opplysning.navn,
-                        klageopplysningType = opplysning.type.tilDto(),
+                        navn = opplysning.type.navn,
+                        klageopplysningType = opplysning.type.datatype.tilDto(),
                         // todo
                         paakrevd = true,
                         // todo
@@ -109,18 +109,19 @@ object KlageDtoMapper {
                 when (this) {
                     Utfall.Avvist -> UtfallDTOVerdiDTO.AVVIST
                     Utfall.TomtUtfall -> UtfallDTOVerdiDTO.IKKE_SATT
+                    Utfall.Opprettholdelse -> UtfallDTOVerdiDTO.IKKE_SATT
                 },
             // todo
             tilgjeneligeUtfall = emptyList(),
         )
     }
 
-    fun Opplysning.OpplysningType.tilDto(): KlageOpplysningTypeDTO {
+    fun Opplysning.Datatype.tilDto(): KlageOpplysningTypeDTO {
         return when (this) {
-            Opplysning.OpplysningType.TEKST -> KlageOpplysningTypeDTO.TEKST
-            Opplysning.OpplysningType.DATO -> KlageOpplysningTypeDTO.DATO
-            Opplysning.OpplysningType.BOOLSK -> KlageOpplysningTypeDTO.BOOLSK
-            Opplysning.OpplysningType.FLERVALG -> KlageOpplysningTypeDTO.FLER_LISTEVALG
+            Opplysning.Datatype.TEKST -> KlageOpplysningTypeDTO.TEKST
+            Opplysning.Datatype.DATO -> KlageOpplysningTypeDTO.DATO
+            Opplysning.Datatype.BOOLSK -> KlageOpplysningTypeDTO.BOOLSK
+            Opplysning.Datatype.FLERVALG -> KlageOpplysningTypeDTO.FLER_LISTEVALG
         }
     }
 

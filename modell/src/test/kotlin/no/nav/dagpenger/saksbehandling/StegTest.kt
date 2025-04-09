@@ -2,6 +2,9 @@ package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGEFRIST_OPPFYLT
+import no.nav.dagpenger.saksbehandling.OpplysningerBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.OpplysningerBygger.lagOpplysninger
+import no.nav.dagpenger.saksbehandling.OpplysningerBygger.oversittetFristOpplysningTyper
 import org.junit.jupiter.api.Test
 
 class StegTest {
@@ -9,20 +12,17 @@ class StegTest {
     fun `Opprett fristvurdering steg`() {
         val steg = FristvurderingSteg()
 
-        val klagefristOppfylt = steg.opplysninger().single { it.type == KLAGEFRIST_OPPFYLT }
+        val opplysninger =
+            lagOpplysninger(
+                oversittetFristOpplysningTyper + fristvurderingOpplysningTyper,
+            )
 
+        val klagefristOppfylt = opplysninger.single { it.type == KLAGEFRIST_OPPFYLT }
+        steg.reevaluerOpplysngninger(opplysninger.toList())
         klagefristOppfylt.svar(verdi = true)
-        steg.opplysninger().size shouldBe 3
+        steg.reevaluerOpplysngninger(opplysninger.toList())
         (klagefristOppfylt.verdi as Verdi.Boolsk).value shouldBe true
-
-        klagefristOppfylt.svar(verdi = false)
-        steg.opplysninger().size shouldBe 5
-        (klagefristOppfylt.verdi as Verdi.Boolsk).value shouldBe false
-        val opplysningOversittetFrist = steg.opplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST }
-        opplysningOversittetFrist.svar(verdi = false)
-
-        klagefristOppfylt.svar(verdi = true)
-        steg.opplysninger().size shouldBe 3
-        // TODO: Når klagefrist er oppfylt skal ikke oversittet frist opplysninger ha verdi
+        opplysninger.filter { it.type in oversittetFristOpplysningTyper }
+            .forEach { it.synlighet() shouldBe false }
     }
 }

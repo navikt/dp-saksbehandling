@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.OpplysningerBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.lagOpplysninger
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.oversittetFristOpplysningTyper
@@ -9,51 +8,59 @@ import java.time.LocalDate
 import java.util.UUID
 
 interface Steg {
-    fun opplysninger(): List<Opplysning>
+    // fun opplysninger(): List<Opplysning>
+    fun reevaluerOpplysngninger(opplysinger: List<Opplysning>)
 }
 
 class FristvurderingSteg : Steg {
     val fristvurderingOpplysninger = lagOpplysninger(fristvurderingOpplysningTyper)
     val oversittetFristOpplysninger = lagOpplysninger(oversittetFristOpplysningTyper)
 
-    override fun opplysninger(): List<Opplysning> {
-        return when (klagefristOppfylt()) {
-            true -> fristvurderingOpplysninger.toList()
-            false -> fristvurderingOpplysninger.toList() + oversittetFristOpplysninger.toList()
+    override fun reevaluerOpplysngninger(opplysinger: List<Opplysning>) {
+        when (klagefristOppfylt(opplysinger)) {
+            true -> opplysinger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(false) }
+            false -> {
+                opplysinger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(true) }
+            }
         }
     }
 
-    private fun klagefristOppfylt(): Boolean {
+    private fun klagefristOppfylt(opplysinger: List<Opplysning>): Boolean {
         val klagefristOpplysning =
-            fristvurderingOpplysninger.single { opplysning -> opplysning.type == OpplysningType.KLAGEFRIST_OPPFYLT }
+            opplysinger.single { opplysning -> opplysning.type == OpplysningType.KLAGEFRIST_OPPFYLT }
         return klagefristOpplysning.verdi is Verdi.Boolsk && (klagefristOpplysning.verdi as Verdi.Boolsk).value == true
     }
 }
 
 class VurderUtfallSteg : Steg {
-    val formkravOpplysninger = lagOpplysninger(formkravOpplysningTyper)
-    val oversittetFristOpplysninger = lagOpplysninger(oversittetFristOpplysningTyper)
-    val utfallAvvistGrunnetFormkrav = formkravOpplysninger.any { it.verdi is Verdi.Boolsk && !(it.verdi as Verdi.Boolsk).value }
+    val utfallOpplysning = lagOpplysninger(utfallOpplysningTyper)
 
-   /* val utfallAvvistGrunnetFrist = oversittetFristOpplysninger.any{ it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST
-            && it.verdi is Verdi.Boolsk && !(it.verdi as Verdi.Boolsk).value }*/
-    val utfallAvvist = utfallAvvistGrunnetFormkrav
-
-    val utfallOpplysning = lagOpplysninger(utfallOpplysningTyper).single().
-
-
-    override fun opplysninger(): List<Opplysning> {
-        return utfallOpplysninger.toList()
+    override fun reevaluerOpplysngninger(opplysinger: List<Opplysning>) {
+        TODO("Not yet implemented")
     }
 }
-
 
 class Opplysning(
     val id: UUID = UUIDv7.ny(),
     val type: OpplysningType,
     var verdi: Verdi,
+    private var synlig: Boolean = true,
     val valgmuligheter: List<String> = emptyList(),
 ) {
+    fun settSynlighet(synlig: Boolean) {
+        when (synlig) {
+            true -> this.synlig = true
+            false -> {
+                this.synlig = false
+                this.verdi = Verdi.TomVerdi
+            }
+        }
+    }
+
+    fun synlighet(): Boolean {
+        return this.synlig
+    }
+
     fun svar(verdi: Boolean) {
         when (val type = type.datatype) {
             Datatype.BOOLSK -> this.verdi = Verdi.Boolsk(verdi)

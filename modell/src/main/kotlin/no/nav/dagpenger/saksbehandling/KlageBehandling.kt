@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_FRIST
 import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.OpplysningType.OPPREISNING_OVERSITTET_FRIST
 import no.nav.dagpenger.saksbehandling.OpplysningType.UTFALL
+import no.nav.dagpenger.saksbehandling.OpplysningType.VURDERNIG_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
@@ -65,7 +66,12 @@ enum class OpplysningType(
     UTFALL(
         navn = "Utfall",
         datatype = Datatype.TEKST,
-    );
+    ),
+
+    VURDERNIG_AV_KLAGEN(
+        navn = "Vurdering av klagen",
+        datatype = Datatype.TEKST,
+    ),
 }
 
 object OpplysningerBygger {
@@ -87,7 +93,7 @@ object OpplysningerBygger {
             OPPREISNING_OVERSITTET_FRIST,
             BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST,
         )
-    val utfallOpplysningTyper = setOf(UTFALL)
+    val utfallOpplysningTyper = setOf(UTFALL, VURDERNIG_AV_KLAGEN)
     val opplysninger =
         setOf(
             ER_KLAGEN_SKRIFTLIG,
@@ -107,12 +113,10 @@ object OpplysningerBygger {
     }
 }
 
-
-
 class KlageBehandling(
     val id: UUID,
     val person: Person,
-    private val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(),
+    val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private val steg: LinkedHashSet<Steg> = linkedSetOf<Steg>(),
 ) {
     private var _utfall: Utfall = TomtUtfall
