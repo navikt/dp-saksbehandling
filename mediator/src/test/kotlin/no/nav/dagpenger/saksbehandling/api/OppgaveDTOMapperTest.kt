@@ -9,9 +9,11 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkBehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -50,7 +52,7 @@ class OppgaveDTOMapperTest {
                                     fornavn = "sbfornavn",
                                     etternavn = "sbetternavn",
                                     enhet =
-                                        BehandlerEnhetDTO(
+                                        BehandlerDTOEnhetDTO(
                                             navn = "sbEnhet",
                                             enhetNr = "sbEnhetNr",
                                             postadresse = "sbPostadresse",
@@ -62,7 +64,7 @@ class OppgaveDTOMapperTest {
                                     fornavn = "befornavn",
                                     etternavn = "beetternavn",
                                     enhet =
-                                        BehandlerEnhetDTO(
+                                        BehandlerDTOEnhetDTO(
                                             navn = "beEnhet",
                                             enhetNr = "beEnhetNr",
                                             postadresse = "bePostadresse",
@@ -76,14 +78,14 @@ class OppgaveDTOMapperTest {
                         coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
                             listOf(
                                 OppgaveHistorikkDTO(
-                                    type = OppgaveHistorikkDTO.Type.notat,
+                                    type = OppgaveHistorikkDTOTypeDTO.NOTAT,
                                     tidspunkt = etTidspunkt,
                                     tittel = "Notat",
                                     body = "Dette er et notat",
                                     behandler =
-                                        OppgaveHistorikkBehandlerDTO(
+                                        OppgaveHistorikkDTOBehandlerDTO(
                                             navn = "BeslutterNavn",
-                                            rolle = OppgaveHistorikkBehandlerDTO.Rolle.beslutter,
+                                            rolle = BehandlerDTORolleDTO.BESLUTTER,
                                         ),
                                 ),
                             )
@@ -187,7 +189,7 @@ class OppgaveDTOMapperTest {
                                         fornavn = "sbfornavn",
                                         etternavn = "sbetternavn",
                                         enhet =
-                                            BehandlerEnhetDTO(
+                                            BehandlerDTOEnhetDTO(
                                                 navn = "sbEnhet",
                                                 enhetNr = "sbEnhetNr",
                                                 postadresse = "sbPostadresse",
@@ -199,7 +201,7 @@ class OppgaveDTOMapperTest {
                                         fornavn = "befornavn",
                                         etternavn = "beetternavn",
                                         enhet =
-                                            BehandlerEnhetDTO(
+                                            BehandlerDTOEnhetDTO(
                                                 navn = "beEnhet",
                                                 enhetNr = "beEnhetNr",
                                                 postadresse = "bePostadresse",
@@ -213,14 +215,14 @@ class OppgaveDTOMapperTest {
                         coEvery { it.lagOppgaveHistorikk(oppgave.tilstandslogg) } returns
                             listOf(
                                 OppgaveHistorikkDTO(
-                                    type = OppgaveHistorikkDTO.Type.notat,
+                                    type = OppgaveHistorikkDTOTypeDTO.NOTAT,
                                     tidspunkt = etTidspunkt,
                                     tittel = "Notat",
                                     body = "Dette er et notat",
                                     behandler =
-                                        OppgaveHistorikkBehandlerDTO(
+                                        OppgaveHistorikkDTOBehandlerDTO(
                                             navn = "SaksbehandlerNavn",
-                                            rolle = OppgaveHistorikkBehandlerDTO.Rolle.saksbehandler,
+                                            rolle = BehandlerDTORolleDTO.SAKSBEHANDLER,
                                         ),
                                 ),
                             )

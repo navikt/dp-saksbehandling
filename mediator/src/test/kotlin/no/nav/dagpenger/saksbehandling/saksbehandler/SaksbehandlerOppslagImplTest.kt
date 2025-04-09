@@ -12,13 +12,13 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import io.prometheus.metrics.model.snapshots.HistogramSnapshot
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
-import no.nav.dagpenger.saksbehandling.api.models.BehandlerEnhetDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 
 class SaksbehandlerOppslagImplTest {
     val enhet =
-        BehandlerEnhetDTO(
+        BehandlerDTOEnhetDTO(
             navn = "Test Enhet",
             enhetNr = "1234",
             postadresse = "Postboks 5678, Test, 1234 Oslo",

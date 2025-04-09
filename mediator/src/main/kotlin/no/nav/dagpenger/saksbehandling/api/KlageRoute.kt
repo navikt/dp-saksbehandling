@@ -13,24 +13,31 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Opplysning
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.Utfall
-import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.hentVerdi
+import no.nav.dagpenger.saksbehandling.Verdi
+import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.tilDto
+import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.tilVerdi
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningBoolskDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTOGruppeDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDatoDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningFlerListeValgDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningListeValgDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTekstDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
-import java.time.LocalDate
+import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 
 fun Route.klageApi(mediator: KlageMediator) {
     authenticate("azureAd") {
-        route("klage") {
+        route("oppgave/klage") {
             route("{klageId}") {
                 get {
                     val klageId = call.finnUUID("klageId")
                     val klageDTO =
-                        mediator.hentKlage(klageId).let { klage ->
-                            KlageDtoMapper.lageKlageDTO(klage)
-                        }
+                        mediator.hentKlage(klageId).tilDto()
                     call.respond(HttpStatusCode.OK, klageDTO)
                 }
 
@@ -43,7 +50,7 @@ fun Route.klageApi(mediator: KlageMediator) {
                             mediator.oppdaterKlageOpplysning(
                                 klageId = klageId,
                                 opplysningId = opplysningId,
-                                verdi = oppdaterKlageOpplysningDTO.hentVerdi(),
+                                verdi = oppdaterKlageOpplysningDTO.tilVerdi(),
                             )
                             call.respond(HttpStatusCode.NoContent)
                         }
@@ -55,60 +62,75 @@ fun Route.klageApi(mediator: KlageMediator) {
 }
 
 object KlageDtoMapper {
-    fun lageKlageDTO(klage: KlageBehandling): KlageDTO {
+    fun OppdaterKlageOpplysningDTO.tilVerdi(): OpplysningerVerdi {
+        return this.verdi.tilVerdi()
+    }
+
+    fun KlageOpplysningVerdiDTO.tilVerdi(): OpplysningerVerdi {
+        return when (this) {
+            is KlageOpplysningBoolskDTO -> OpplysningerVerdi.Boolsk(this.verdi)
+            is KlageOpplysningDatoDTO -> OpplysningerVerdi.Dato(this.verdi)
+            is KlageOpplysningFlerListeValgDTO -> OpplysningerVerdi.TekstListe(this.verdi)
+            is KlageOpplysningListeValgDTO -> OpplysningerVerdi.Tekst(this.verdi)
+            is KlageOpplysningTekstDTO -> OpplysningerVerdi.Tekst(this.verdi)
+        }
+    }
+
+    fun KlageBehandling.tilDto(): KlageDTO {
         return KlageDTO(
-            id = klage.id,
+            id = this.id,
+            // todo
+            saksbehandler = null,
             behandlingOpplysninger =
-                klage.opplysninger.map { opplysning ->
+                this.opplysninger.map { opplysning ->
                     KlageOpplysningDTO(
                         id = opplysning.id,
                         navn = opplysning.navn,
-                        type = opplysning.type.tilDto(),
+                        klageopplysningType = opplysning.type.tilDto(),
                         // todo
                         paakrevd = true,
                         // todo
-                        gruppe = KlageOpplysningDTO.Gruppe.FORMKRAV,
-                        // todo
-                        redigerbar = true,
-                        verdi = KlageOpplysningVerdiDTO(),
+                        gruppe = KlageOpplysningDTOGruppeDTO.KLAGESAK,
+                        verdi = opplysning.verdi.tilDto(),
                         // todo
                         valgmuligheter = emptyList(),
+                        // todo
+                        redigerbar = true,
                     )
                 },
             utfallOpplysninger = emptyList(),
-            utfall =
-                UtfallDTO(
-                    verdi = klage.utfall.tilDto(),
-                    tilgjeneligeUtfall = emptyList(),
-                ),
-            saksbehandler = null,
-            meldingOmVedtak = null,
+            utfall = this.utfall.tilDto(),
         )
     }
 
-    fun Utfall.tilDto(): UtfallDTO.Verdi {
+    fun Utfall.tilDto(): UtfallDTO {
+        return UtfallDTO(
+            verdi =
+                when (this) {
+                    Utfall.Avvist -> UtfallDTOVerdiDTO.AVVIST
+                    Utfall.TomtUtfall -> UtfallDTOVerdiDTO.IKKE_SATT
+                },
+            // todo
+            tilgjeneligeUtfall = emptyList(),
+        )
+    }
+
+    fun Opplysning.OpplysningType.tilDto(): KlageOpplysningTypeDTO {
         return when (this) {
-            Utfall.Avvist -> UtfallDTO.Verdi.AVVIST
-            Utfall.TomtUtfall -> UtfallDTO.Verdi.IKKE_SATT
+            Opplysning.OpplysningType.TEKST -> KlageOpplysningTypeDTO.TEKST
+            Opplysning.OpplysningType.DATO -> KlageOpplysningTypeDTO.DATO
+            Opplysning.OpplysningType.BOOLSK -> KlageOpplysningTypeDTO.BOOLSK
+            Opplysning.OpplysningType.FLERVALG -> KlageOpplysningTypeDTO.FLER_LISTEVALG
         }
     }
 
-    fun Opplysning.Datatype.tilDto(): KlageOpplysningDTO.Type {
+    fun Verdi.tilDto(): KlageOpplysningVerdiDTO? {
         return when (this) {
-            Opplysning.Datatype.TEKST -> KlageOpplysningDTO.Type.TEKST
-            Opplysning.Datatype.DATO -> KlageOpplysningDTO.Type.DATO
-            Opplysning.Datatype.BOOLSK -> KlageOpplysningDTO.Type.BOOLSK
-            Opplysning.Datatype.FLERVALG -> KlageOpplysningDTO.Type.LISTEVALG
-        }
-    }
-
-    fun OppdaterKlageOpplysningDTO.hentVerdi(): OpplysningerVerdi {
-        return when (this.opplysningType) {
-            OppdaterKlageOpplysningDTO.OpplysningType.TEKST -> OpplysningerVerdi.Tekst(this.verdi as String)
-            OppdaterKlageOpplysningDTO.OpplysningType.BOOLSK -> OpplysningerVerdi.Boolsk(this.verdi as Boolean)
-            OppdaterKlageOpplysningDTO.OpplysningType.DATO -> OpplysningerVerdi.Dato(LocalDate.parse(this.verdi as String))
-            OppdaterKlageOpplysningDTO.OpplysningType.LISTEVALG -> OpplysningerVerdi.Tekst(this.verdi as String)
-            OppdaterKlageOpplysningDTO.OpplysningType.FLERMinusLISTEVALG -> OpplysningerVerdi.TekstListe(this.verdi as List<String>)
+            is Verdi.Boolsk -> KlageOpplysningBoolskDTO(this.value)
+            is Verdi.Dato -> KlageOpplysningDatoDTO(this.value)
+            is Verdi.Flervalg -> KlageOpplysningFlerListeValgDTO(this.value)
+            is Verdi.TekstVerdi -> KlageOpplysningTekstDTO(this.value)
+            Verdi.TomVerdi -> null
         }
     }
 }

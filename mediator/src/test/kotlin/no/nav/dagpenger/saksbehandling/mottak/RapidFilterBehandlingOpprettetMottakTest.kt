@@ -5,7 +5,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.kotest.matchers.shouldBe
 import io.micrometer.core.instrument.MeterRegistry
@@ -78,21 +77,6 @@ class RapidFilterBehandlingOpprettetMottakTest {
         ) {
             this.onPacketCalled = true
             this.packet = packet
-        }
-
-        override fun onError(
-            problems: MessageProblems,
-            context: MessageContext,
-            metadata: MessageMetadata,
-        ) {
-            println(problems.toExtendedReport())
-        }
-
-        override fun onSevere(
-            error: MessageProblems.MessageException,
-            context: MessageContext,
-        ) {
-            println(error.problems.toExtendedReport())
         }
     }
 }
