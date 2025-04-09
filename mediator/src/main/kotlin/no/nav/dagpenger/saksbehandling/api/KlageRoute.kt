@@ -82,7 +82,7 @@ object KlageDtoMapper {
             // todo
             saksbehandler = null,
             behandlingOpplysninger =
-                this.opplysninger.map { opplysning ->
+                this.synligeOpplysninger().map { opplysning ->
                     KlageOpplysningDTO(
                         id = opplysning.id,
                         navn = opplysning.type.navn,

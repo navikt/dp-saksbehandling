@@ -1,26 +1,19 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.OpplysningerBygger.fristvurderingOpplysningTyper
-import no.nav.dagpenger.saksbehandling.OpplysningerBygger.lagOpplysninger
 import no.nav.dagpenger.saksbehandling.OpplysningerBygger.oversittetFristOpplysningTyper
-import no.nav.dagpenger.saksbehandling.OpplysningerBygger.utfallOpplysningTyper
 import java.time.LocalDate
 import java.util.UUID
 
 interface Steg {
-    // fun opplysninger(): List<Opplysning>
-    fun reevaluerOpplysngninger(opplysinger: List<Opplysning>)
+    fun reevaluerOpplysninger(opplysinger: List<Opplysning>)
 }
 
 class FristvurderingSteg : Steg {
-    val fristvurderingOpplysninger = lagOpplysninger(fristvurderingOpplysningTyper)
-    val oversittetFristOpplysninger = lagOpplysninger(oversittetFristOpplysningTyper)
-
-    override fun reevaluerOpplysngninger(opplysinger: List<Opplysning>) {
-        when (klagefristOppfylt(opplysinger)) {
-            true -> opplysinger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(false) }
+    override fun reevaluerOpplysninger(opplysninger: List<Opplysning>) {
+        when (klagefristOppfylt(opplysninger)) {
+            true -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(false) }
             false -> {
-                opplysinger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(true) }
+                opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(true) }
             }
         }
     }
@@ -32,11 +25,13 @@ class FristvurderingSteg : Steg {
     }
 }
 
-class VurderUtfallSteg : Steg {
-    val utfallOpplysning = lagOpplysninger(utfallOpplysningTyper)
+object FormkravSteg : Steg {
+    override fun reevaluerOpplysninger(opplysinger: List<Opplysning>) {
+    }
+}
 
-    override fun reevaluerOpplysngninger(opplysinger: List<Opplysning>) {
-        TODO("Not yet implemented")
+class VurderUtfallSteg : Steg {
+    override fun reevaluerOpplysninger(opplysinger: List<Opplysning>) {
     }
 }
 

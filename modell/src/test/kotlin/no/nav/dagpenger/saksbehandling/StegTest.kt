@@ -18,9 +18,9 @@ class StegTest {
             )
 
         val klagefristOppfylt = opplysninger.single { it.type == KLAGEFRIST_OPPFYLT }
-        steg.reevaluerOpplysngninger(opplysninger.toList())
+        steg.reevaluerOpplysninger(opplysninger.toList())
         klagefristOppfylt.svar(verdi = true)
-        steg.reevaluerOpplysngninger(opplysninger.toList())
+        steg.reevaluerOpplysninger(opplysninger.toList())
         (klagefristOppfylt.verdi as Verdi.Boolsk).value shouldBe true
         opplysninger.filter { it.type in oversittetFristOpplysningTyper }
             .forEach { it.synlighet() shouldBe false }

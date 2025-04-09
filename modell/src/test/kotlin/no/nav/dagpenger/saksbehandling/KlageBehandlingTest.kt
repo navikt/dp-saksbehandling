@@ -60,7 +60,7 @@ class KlageBehandlingTest {
                 id = java.util.UUID.randomUUID(),
                 person = testPerson(),
             )
-        klageBehandling.hentOpplysninger().filter { it.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET) }
+        klageBehandling.synligeOpplysninger().filter { it.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET) }
             .forEach {
                 klageBehandling.svar(it.id, true)
             }
@@ -76,22 +76,22 @@ class KlageBehandlingTest {
         )
 
     private fun KlageBehandling.finnEnOpplysning(template: OpplysningType): UUID {
-        return this.hentOpplysninger().first { it.type == template }.id
+        return this.synligeOpplysninger().first { it.type == template }.id
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.hentOpplysninger().first { it.type.datatype == Opplysning.Datatype.BOOLSK }.id
+        return this.synligeOpplysninger().first { it.type.datatype == Opplysning.Datatype.BOOLSK }.id
     }
 
     private fun KlageBehandling.finnEnStringOpplysningId(): UUID {
-        return this.hentOpplysninger().first { it.type.datatype == Opplysning.Datatype.TEKST }.id
+        return this.synligeOpplysninger().first { it.type.datatype == Opplysning.Datatype.TEKST }.id
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
-        return this.hentOpplysninger().first { it.type.datatype == Opplysning.Datatype.DATO }.id
+        return this.synligeOpplysninger().first { it.type.datatype == Opplysning.Datatype.DATO }.id
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.hentOpplysninger().first { it.type.datatype == Opplysning.Datatype.FLERVALG }.id
+        return this.synligeOpplysninger().first { it.type.datatype == Opplysning.Datatype.FLERVALG }.id
     }
 }

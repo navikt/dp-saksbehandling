@@ -93,7 +93,11 @@ object OpplysningerBygger {
             OPPREISNING_OVERSITTET_FRIST,
             BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST,
         )
-    val utfallOpplysningTyper = setOf(UTFALL, VURDERNIG_AV_KLAGEN)
+    val utfallOpplysningTyper =
+        setOf(
+            UTFALL,
+            VURDERNIG_AV_KLAGEN,
+        )
     val opplysninger =
         setOf(
             ER_KLAGEN_SKRIFTLIG,
@@ -114,17 +118,22 @@ object OpplysningerBygger {
 }
 
 class KlageBehandling(
-    val id: UUID,
+    val id: UUID = UUIDv7.ny(),
     val person: Person,
-    val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(OpplysningType.entries.toSet()),
-    private val steg: LinkedHashSet<Steg> = linkedSetOf<Steg>(),
+    private val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+    private val steg: List<Steg> =
+        listOf(
+            FristvurderingSteg(),
+            FormkravSteg,
+            VurderUtfallSteg(),
+        ),
 ) {
     private var _utfall: Utfall = TomtUtfall
 
     val utfall: Utfall get() = _utfall
 
-    fun hentOpplysninger(): Set<Opplysning> {
-        return opplysninger
+    fun synligeOpplysninger(): Set<Opplysning> {
+        return opplysninger.filter { it.synlighet() }.toSet()
     }
 
     fun settUtfall(utfall: Utfall) {
