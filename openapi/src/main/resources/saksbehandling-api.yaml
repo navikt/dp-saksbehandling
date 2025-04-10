@@ -1255,7 +1255,7 @@ components:
 
       type: object
       discriminator:
-        propertyName: klageOpplysningType
+        propertyName: type
         mapping:
           TEKST: '#/components/schemas/KlageOpplysningTekst'
           BOOLSK: '#/components/schemas/KlageOpplysningBoolsk'
