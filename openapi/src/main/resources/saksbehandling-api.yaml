@@ -1003,11 +1003,22 @@ components:
         behandlingOpplysninger:
           type: array
           items:
-            $ref: '#/components/schemas/KlageOpplysning'
+            oneOf:
+            - $ref: '#/components/schemas/KlageOpplysningBoolsk'
+            - $ref: '#/components/schemas/KlageOpplysningDato'
+            - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
+            - $ref: '#/components/schemas/KlageOpplysningListeValg'
+            - $ref: '#/components/schemas/KlageOpplysningTekst'
+
         utfallOpplysninger:
           type: array
           items:
-            $ref: '#/components/schemas/KlageOpplysning'
+            oneOf:
+              - $ref: '#/components/schemas/KlageOpplysningBoolsk'
+              - $ref: '#/components/schemas/KlageOpplysningDato'
+              - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
+              - $ref: '#/components/schemas/KlageOpplysningListeValg'
+              - $ref: '#/components/schemas/KlageOpplysningTekst'
         utfall:
           $ref: '#/components/schemas/Utfall'
         meldingOmVedtak:
@@ -1123,6 +1134,7 @@ components:
             verdi:
               type: string
               format: date
+
 
     KlageOpplysningType:
       type: string
