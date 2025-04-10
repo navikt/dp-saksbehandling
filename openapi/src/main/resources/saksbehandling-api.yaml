@@ -992,6 +992,16 @@ components:
       required:
         - nyTilstand
 
+    Hubba:
+      type: array
+      items:
+        oneOf:
+          - $ref: '#/components/schemas/KlageOpplysningBoolsk'
+          - $ref: '#/components/schemas/KlageOpplysningDato'
+          - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
+          - $ref: '#/components/schemas/KlageOpplysningListeValg'
+          - $ref: '#/components/schemas/KlageOpplysningTekst'
+
     Klage:
       type: object
       properties:
@@ -1001,24 +1011,10 @@ components:
         saksbehandler:
           $ref: '#/components/schemas/Behandler'
         behandlingOpplysninger:
-          type: array
-          items:
-            oneOf:
-            - $ref: '#/components/schemas/KlageOpplysningBoolsk'
-            - $ref: '#/components/schemas/KlageOpplysningDato'
-            - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
-            - $ref: '#/components/schemas/KlageOpplysningListeValg'
-            - $ref: '#/components/schemas/KlageOpplysningTekst'
+          $ref: '#/components/schemas/Hubba'
 
         utfallOpplysninger:
-          type: array
-          items:
-            oneOf:
-              - $ref: '#/components/schemas/KlageOpplysningBoolsk'
-              - $ref: '#/components/schemas/KlageOpplysningDato'
-              - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
-              - $ref: '#/components/schemas/KlageOpplysningListeValg'
-              - $ref: '#/components/schemas/KlageOpplysningTekst'
+          $ref: '#/components/schemas/Hubba'
         utfall:
           $ref: '#/components/schemas/Utfall'
         meldingOmVedtak:
