@@ -992,7 +992,7 @@ components:
       required:
         - nyTilstand
 
-    Hubba:
+    KlageOpplysninger:
       type: array
       items:
         oneOf:
@@ -1011,10 +1011,9 @@ components:
         saksbehandler:
           $ref: '#/components/schemas/Behandler'
         behandlingOpplysninger:
-          $ref: '#/components/schemas/Hubba'
-
+          $ref: '#/components/schemas/KlageOpplysninger'
         utfallOpplysninger:
-          $ref: '#/components/schemas/Hubba'
+          $ref: '#/components/schemas/KlageOpplysninger'
         utfall:
           $ref: '#/components/schemas/Utfall'
         meldingOmVedtak:
