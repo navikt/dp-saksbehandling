@@ -12,8 +12,20 @@ import org.junit.jupiter.api.Test
 
 class StegTest {
     @Test
+    fun `Opprett klagen-gjelder-steg og verifiser synlighet`() {
+        val steg = KlagenGjelderSteg
+        val opplysninger =
+            lagOpplysninger(klagenGjelderOpplysningTyper)
+        steg.evaluerSynlighet(opplysninger)
+
+        opplysninger.filter { opplysning ->
+            opplysning.type in klagenGjelderOpplysningTyper
+        }.forEach { it.synlighet() shouldBe true }
+    }
+
+    @Test
     fun `Opprett fristvurdering-steg og verifiser synlighet`() {
-        val steg = FristvurderingSteg()
+        val steg = FristvurderingSteg
         val opplysninger =
             lagOpplysninger(
                 fristvurderingOpplysningTyper + oversittetFristOpplysningTyper,
@@ -41,7 +53,6 @@ class StegTest {
     @Test
     fun `Opprett formkrav-steg og verifiser synlighet`() {
         val steg = FormkravSteg
-
         val opplysninger =
             lagOpplysninger(
                 klagenGjelderOpplysningTyper +
@@ -57,7 +68,7 @@ class StegTest {
 
     @Test
     fun `Opprett utfall-steg og verifiser synlighet`() {
-        val steg = VurderUtfallSteg()
+        val steg = VurderUtfallSteg
 
         val opplysninger =
             lagOpplysninger(

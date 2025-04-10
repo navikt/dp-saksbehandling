@@ -10,7 +10,12 @@ interface Steg {
     fun evaluerSynlighet(opplysinger: Collection<Opplysning>)
 }
 
-class FristvurderingSteg : Steg {
+object KlagenGjelderSteg : Steg {
+    override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
+    }
+}
+
+object FristvurderingSteg : Steg {
     override fun evaluerSynlighet(opplysninger: Collection<Opplysning>) {
         when (klagefristOppfylt(opplysninger)) {
             true -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(false) }
@@ -30,7 +35,7 @@ object FormkravSteg : Steg {
     }
 }
 
-class VurderUtfallSteg : Steg {
+object VurderUtfallSteg : Steg {
     override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
         val skjulUtfallOpplysninger =
             opplysinger.any {

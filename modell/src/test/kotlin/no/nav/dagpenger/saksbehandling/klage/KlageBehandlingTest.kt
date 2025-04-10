@@ -20,8 +20,7 @@ class KlageBehandlingTest {
         val klageBehandling =
             KlageBehandling(
                 id = UUIDv7.ny(),
-                person =
-                    testPerson(),
+                person = testPerson(),
             )
 
         val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysning()
@@ -71,6 +70,7 @@ class KlageBehandlingTest {
                 opplysning.synlighet()
         } shouldBe emptySet()
 
+        // Besvarer alle opplysninger som er synlige, unntatt formkrav
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in klagenGjelderOpplysningTyper +
                 fristvurderingOpplysningTyper +
@@ -89,6 +89,7 @@ class KlageBehandlingTest {
                 opplysning.synlighet()
         } shouldBe emptySet()
 
+        // Besvarer formkrav
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in formkravOpplysningTyper
         }.forEach {
@@ -101,19 +102,6 @@ class KlageBehandlingTest {
         } shouldNotBe emptySet<Opplysning>()
     }
 
-    @Test
-    fun `Utfall er ikke synlig når behandlingsopplysninger ikke er utfylt`() {
-        val person =
-            Person(
-                ident = "12345612345",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
-            )
-        val klageBehandling = KlageBehandling(person = person)
-        klageBehandling.synligeOpplysninger()
-            .filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 0
-    }
-
     private fun testPerson(): Person =
         Person(
             ident = "12345678901",
@@ -121,23 +109,23 @@ class KlageBehandlingTest {
             adressebeskyttelseGradering = UGRADERT,
         )
 
-    private fun KlageBehandling.finnEnOpplysning(template: OpplysningType): UUID {
-        return this.synligeOpplysninger().first { it.type == template }.id
+    private fun KlageBehandling.finnEnOpplysning(opplysningType: OpplysningType): UUID {
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type == opplysningType }.id
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.synligeOpplysninger().first { it.type.datatype == Datatype.BOOLSK }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.id
     }
 
     private fun KlageBehandling.finnEnStringOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { it.type.datatype == Datatype.TEKST }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.id
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
-        return this.synligeOpplysninger().first { it.type.datatype == Datatype.DATO }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.id
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { it.type.datatype == Datatype.FLERVALG }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }.id
     }
 }
