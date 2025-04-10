@@ -1025,32 +1025,32 @@ components:
       properties:
         verdi:
           type: string
-        klageOpplysningType:
+        type:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - verdi
-        - klageOpplysningType
+        - type
     BoolskVerdi:
       type: object
       properties:
         verdi:
           type: boolean
-        klageOpplysningType:
+        type:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - verdi
-        - klageOpplysningType
+        - type
     DatoVerdi:
       type: object
       properties:
         verdi:
           type: string
           format: date
-        klageOpplysningType:
+        type:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - verdi
-        - klageOpplysningType
+        - type
     ListeVerdi:
       type: object
       properties:
@@ -1058,11 +1058,11 @@ components:
           type: array
           items:
             type: string
-        klageOpplysningType:
+        type:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - verdi
-        - klageOpplysningType
+        - type
     OppdaterKlageOpplysning:
       oneOf:
         - $ref: '#/components/schemas/TekstVerdi'
@@ -1070,7 +1070,7 @@ components:
         - $ref: '#/components/schemas/DatoVerdi'
         - $ref: '#/components/schemas/ListeVerdi'
       discriminator:
-        propertyName: klageOpplysningType
+        propertyName: type
         mapping:
           TEKST: '#/components/schemas/TekstVerdi'
           BOOLSK: '#/components/schemas/BoolskVerdi'
