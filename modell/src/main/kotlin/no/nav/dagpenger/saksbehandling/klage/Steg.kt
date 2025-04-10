@@ -7,18 +7,18 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristO
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 
 interface Steg {
-    fun evaluerSynlighet(opplysinger: List<Opplysning>)
+    fun evaluerSynlighet(opplysinger: Collection<Opplysning>)
 }
 
 class FristvurderingSteg : Steg {
-    override fun evaluerSynlighet(opplysninger: List<Opplysning>) {
+    override fun evaluerSynlighet(opplysninger: Collection<Opplysning>) {
         when (klagefristOppfylt(opplysninger)) {
             true -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(false) }
             false -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(true) }
         }
     }
 
-    private fun klagefristOppfylt(opplysinger: List<Opplysning>): Boolean {
+    private fun klagefristOppfylt(opplysinger: Collection<Opplysning>): Boolean {
         val klagefristOpplysning =
             opplysinger.single { opplysning -> opplysning.type == OpplysningType.KLAGEFRIST_OPPFYLT }
         return klagefristOpplysning.verdi is Verdi.Boolsk && (klagefristOpplysning.verdi as Verdi.Boolsk).value == true
@@ -26,12 +26,12 @@ class FristvurderingSteg : Steg {
 }
 
 object FormkravSteg : Steg {
-    override fun evaluerSynlighet(opplysinger: List<Opplysning>) {
+    override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
     }
 }
 
 class VurderUtfallSteg : Steg {
-    override fun evaluerSynlighet(opplysinger: List<Opplysning>) {
+    override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
         val skjulUtfallOpplysninger =
             opplysinger.any {
                 it.type in formkravOpplysningTyper + fristvurderingOpplysningTyper + oversittetFristOpplysningTyper +

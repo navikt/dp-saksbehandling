@@ -5,8 +5,11 @@ import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_SKRIFTLIG
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_UNDERSKREVET
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -57,32 +60,45 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Hvis formkrav er utfylt skal utfall kunne velges`() {
+    fun `Hvis alle behandlingsopplysninger er utfylt - skal utfall kunne velges`() {
         val klageBehandling =
             KlageBehandling(
                 id = UUID.randomUUID(),
                 person = testPerson(),
             )
         klageBehandling.synligeOpplysninger().filter { opplysning ->
-            opplysning.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET)
+            opplysning.type in utfallOpplysningTyper &&
+                opplysning.synlighet()
+        } shouldBe emptySet()
+
+        klageBehandling.synligeOpplysninger().filter { opplysning ->
+            opplysning.type in klagenGjelderOpplysningTyper +
+                fristvurderingOpplysningTyper +
+                oversittetFristOpplysningTyper
+        }.forEach {
+            when (it.type.datatype) {
+                Datatype.BOOLSK -> klageBehandling.svar(it.id, true)
+                Datatype.TEKST -> klageBehandling.svar(it.id, "String")
+                Datatype.DATO -> klageBehandling.svar(it.id, LocalDate.MIN)
+                Datatype.FLERVALG -> klageBehandling.svar(it.id, listOf("String1", "String2"))
+            }
+        }
+
+        klageBehandling.synligeOpplysninger().filter { opplysning ->
+            opplysning.type in utfallOpplysningTyper &&
+                opplysning.synlighet()
+        } shouldBe emptySet()
+
+        klageBehandling.synligeOpplysninger().filter { opplysning ->
+            opplysning.type in formkravOpplysningTyper
         }.forEach {
             klageBehandling.svar(it.id, true)
         }
 
-        klageBehandling.hentUtfallOpplysninger() shouldNotBe emptySet<Opplysning>()
-    }
-
-    @Test
-    fun `Utfall er synlig når foregående steg er utfylt`() {
-        val person =
-            Person(
-                ident = "12345612345",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
-            )
-        val klageBehandling = KlageBehandling(person = person)
-        klageBehandling.synligeOpplysninger()
-            .filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 2
+        klageBehandling.synligeOpplysninger().filter { opplysning ->
+            opplysning.type in utfallOpplysningTyper &&
+                opplysning.synlighet()
+        } shouldNotBe emptySet<Opplysning>()
     }
 
     @Test

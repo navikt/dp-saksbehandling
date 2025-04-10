@@ -28,6 +28,12 @@ import java.time.LocalDate
 import java.util.UUID
 
 object OpplysningerBygger {
+    val klagenGjelderOpplysningTyper =
+        setOf(
+            KLAGEN_GJELDER,
+            KLAGEN_GJELDER_VEDTAK,
+        )
+
     val formkravOpplysningTyper =
         setOf(
             ER_KLAGEN_SKRIFTLIG,
@@ -50,12 +56,6 @@ object OpplysningerBygger {
         setOf(
             UTFALL,
             VURDERNIG_AV_KLAGEN,
-        )
-
-    val klagenGjelderOpplysningTyper =
-        setOf(
-            KLAGEN_GJELDER,
-            KLAGEN_GJELDER_VEDTAK,
         )
 
     val tilKlageinstansOpplysningTyper =
@@ -97,6 +97,10 @@ class KlageBehandling(
             VurderUtfallSteg(),
         ),
 ) {
+    init {
+        steg.forEach { it.evaluerSynlighet(opplysninger) }
+    }
+
     private var _utfall: Utfall = TomtUtfall
 
     val utfall: Utfall get() = _utfall
@@ -109,52 +113,51 @@ class KlageBehandling(
         this._utfall = utfall
     }
 
-    fun hentUtfallOpplysninger(): Set<Opplysning> {
-        return if (utfall == TomtUtfall) {
-            emptySet()
-        } else {
-            emptySet()
-        }
-    }
-
     fun svar(
-        opplysninngId: UUID,
+        opplysningId: UUID,
         svar: Boolean,
     ) {
-        hentOpplysning(opplysninngId).also { opplysning ->
+        hentOpplysning(opplysningId).also { opplysning ->
             opplysning.svar(svar)
-            this.revurderUtfall()
+            evaluerSynlighetOgUtfall()
         }
     }
 
     fun svar(
-        opplysninngId: UUID,
+        opplysningId: UUID,
         svar: String,
     ) {
-        hentOpplysning(opplysninngId).also { opplysning ->
+        hentOpplysning(opplysningId).also { opplysning ->
             opplysning.svar(svar)
-            this.revurderUtfall()
+            evaluerSynlighetOgUtfall()
         }
     }
 
     fun svar(
-        opplysninngId: UUID,
+        opplysningId: UUID,
         svar: LocalDate,
     ) {
-        hentOpplysning(opplysninngId).also { opplysning ->
+        hentOpplysning(opplysningId).also { opplysning ->
             opplysning.svar(svar)
-            this.revurderUtfall()
+            evaluerSynlighetOgUtfall()
         }
     }
 
     fun svar(
-        opplysninngId: UUID,
+        opplysningId: UUID,
         svar: List<String>,
     ) {
-        hentOpplysning(opplysninngId).also { opplysning ->
+        hentOpplysning(opplysningId).also { opplysning ->
             opplysning.svar(svar)
-            this.revurderUtfall()
+            evaluerSynlighetOgUtfall()
         }
+    }
+
+    private fun evaluerSynlighetOgUtfall() {
+        this.steg.forEach { steg ->
+            steg.evaluerSynlighet(opplysninger)
+        }
+        this.revurderUtfall()
     }
 
     fun hentOpplysning(opplysningId: UUID): Opplysning {

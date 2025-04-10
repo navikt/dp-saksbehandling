@@ -16,12 +16,19 @@ enum class OpplysningType(
 
     // Formkrav
     ER_KLAGEN_SKRIFTLIG(
-        navn = "Er klagen skriftlig",
+        navn = "Er klagen skriftlig?",
         datatype = Datatype.BOOLSK,
     ),
-
     ER_KLAGEN_UNDERSKREVET(
-        navn = "Er klagen underskrevet",
+        navn = "Er klagen underskrevet?",
+        datatype = Datatype.BOOLSK,
+    ),
+    KLAGEN_NEVNER_ENDRING(
+        navn = "Nevner klagen den endring som kreves?",
+        datatype = Datatype.BOOLSK,
+    ),
+    RETTSLIG_KLAGEINTERESSE(
+        navn = "Har klager rettslig klageinteresse?",
         datatype = Datatype.BOOLSK,
     ),
 
