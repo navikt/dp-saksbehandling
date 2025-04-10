@@ -1,7 +1,9 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.klage
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import org.junit.jupiter.api.Test

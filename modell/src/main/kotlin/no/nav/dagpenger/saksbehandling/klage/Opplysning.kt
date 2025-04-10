@@ -1,39 +1,8 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.klage
 
-import no.nav.dagpenger.saksbehandling.OpplysningerBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import java.time.LocalDate
 import java.util.UUID
-
-interface Steg {
-    fun reevaluerOpplysninger(opplysinger: List<Opplysning>)
-}
-
-class FristvurderingSteg : Steg {
-    override fun reevaluerOpplysninger(opplysninger: List<Opplysning>) {
-        when (klagefristOppfylt(opplysninger)) {
-            true -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(false) }
-            false -> {
-                opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(true) }
-            }
-        }
-    }
-
-    private fun klagefristOppfylt(opplysinger: List<Opplysning>): Boolean {
-        val klagefristOpplysning =
-            opplysinger.single { opplysning -> opplysning.type == OpplysningType.KLAGEFRIST_OPPFYLT }
-        return klagefristOpplysning.verdi is Verdi.Boolsk && (klagefristOpplysning.verdi as Verdi.Boolsk).value == true
-    }
-}
-
-object FormkravSteg : Steg {
-    override fun reevaluerOpplysninger(opplysinger: List<Opplysning>) {
-    }
-}
-
-class VurderUtfallSteg : Steg {
-    override fun reevaluerOpplysninger(opplysinger: List<Opplysning>) {
-    }
-}
 
 class Opplysning(
     val id: UUID = UUIDv7.ny(),
@@ -57,9 +26,9 @@ class Opplysning(
     }
 
     fun svar(verdi: Boolean) {
-        when (val type = type.datatype) {
+        when (val datatype = type.datatype) {
             Datatype.BOOLSK -> this.verdi = Verdi.Boolsk(verdi)
-            else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med boolsk verdi")
+            else -> throw IllegalArgumentException("Opplysning av type $datatype kan ikke besvares med boolsk verdi")
         }
     }
 
@@ -83,11 +52,16 @@ class Opplysning(
             else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med dato verdi")
         }
     }
+}
 
-    enum class Datatype {
-        TEKST,
-        DATO,
-        BOOLSK,
-        FLERVALG,
-    }
+sealed class Verdi {
+    data object TomVerdi : Verdi()
+
+    data class TekstVerdi(val value: String) : Verdi()
+
+    data class Dato(val value: LocalDate) : Verdi()
+
+    data class Boolsk(val value: Boolean) : Verdi()
+
+    data class Flervalg(val value: List<String>) : Verdi()
 }

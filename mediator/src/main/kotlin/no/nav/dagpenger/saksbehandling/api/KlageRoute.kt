@@ -8,12 +8,8 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import no.nav.dagpenger.saksbehandling.KlageBehandling
 import no.nav.dagpenger.saksbehandling.KlageMediator
-import no.nav.dagpenger.saksbehandling.Opplysning
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
-import no.nav.dagpenger.saksbehandling.Utfall
-import no.nav.dagpenger.saksbehandling.Verdi
 import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.tilDto
 import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.tilVerdi
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
@@ -29,6 +25,10 @@ import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
+import no.nav.dagpenger.saksbehandling.klage.Datatype
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.Utfall
+import no.nav.dagpenger.saksbehandling.klage.Verdi
 
 fun Route.klageApi(mediator: KlageMediator) {
     authenticate("azureAd") {
@@ -116,12 +116,12 @@ object KlageDtoMapper {
         )
     }
 
-    fun Opplysning.Datatype.tilDto(): KlageOpplysningTypeDTO {
+    fun Datatype.tilDto(): KlageOpplysningTypeDTO {
         return when (this) {
-            Opplysning.Datatype.TEKST -> KlageOpplysningTypeDTO.TEKST
-            Opplysning.Datatype.DATO -> KlageOpplysningTypeDTO.DATO
-            Opplysning.Datatype.BOOLSK -> KlageOpplysningTypeDTO.BOOLSK
-            Opplysning.Datatype.FLERVALG -> KlageOpplysningTypeDTO.FLER_LISTEVALG
+            Datatype.TEKST -> KlageOpplysningTypeDTO.TEKST
+            Datatype.DATO -> KlageOpplysningTypeDTO.DATO
+            Datatype.BOOLSK -> KlageOpplysningTypeDTO.BOOLSK
+            Datatype.FLERVALG -> KlageOpplysningTypeDTO.FLER_LISTEVALG
         }
     }
 

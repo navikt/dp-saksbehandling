@@ -1,5 +1,6 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.klage
 
+import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import java.time.LocalDateTime
 import java.util.UUID
 

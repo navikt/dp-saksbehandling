@@ -1,78 +1,19 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.klage
 
-import no.nav.dagpenger.saksbehandling.Opplysning.Datatype
-import no.nav.dagpenger.saksbehandling.OpplysningType.BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST
-import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_SKRIFTLIG
-import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_UNDERSKREVET
-import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGEFRIST_OPPFYLT
-import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_FRIST
-import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGE_MOTTATT
-import no.nav.dagpenger.saksbehandling.OpplysningType.OPPREISNING_OVERSITTET_FRIST
-import no.nav.dagpenger.saksbehandling.OpplysningType.UTFALL
-import no.nav.dagpenger.saksbehandling.OpplysningType.VURDERNIG_AV_KLAGEN
-import no.nav.dagpenger.saksbehandling.Utfall.TomtUtfall
+import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_SKRIFTLIG
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_UNDERSKREVET
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERNIG_AV_KLAGEN
+import no.nav.dagpenger.saksbehandling.klage.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
-
-enum class OpplysningType(
-    val navn: String,
-    val datatype: Datatype,
-) {
-    ER_KLAGEN_SKRIFTLIG(
-        navn = "Er klagen skriftlig",
-        datatype = Datatype.BOOLSK,
-    ),
-
-    ER_KLAGEN_UNDERSKREVET(
-        navn = "Er klagen underskrevet",
-        datatype = Datatype.BOOLSK,
-    ),
-
-    KLAGEN_GJELDER(
-        navn = "Hva klagen gjelder",
-        datatype = Datatype.FLERVALG,
-    ),
-
-    KLAGE_FRIST(
-        navn = "Frist for å klage",
-        datatype = Datatype.DATO,
-    ),
-
-    KLAGE_MOTTATT(
-        navn = "Klage mottatt",
-        datatype = Datatype.DATO,
-    ),
-
-    KLAGEFRIST_OPPFYLT(
-        navn = "Har klager klaget innen fristen?",
-        datatype = Datatype.BOOLSK,
-    ),
-
-    OPPREISNING_OVERSITTET_FRIST(
-        navn = "Gis klager oppreisning for oversittet frist?",
-        datatype = Datatype.BOOLSK,
-    ),
-
-    BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST(
-        navn = "Begrunnelse",
-        datatype = Datatype.TEKST,
-    ),
-
-    FRIST_SAKSBEHANDLERS_BEGRUNNELSE(
-        navn = "Saksbehandlerens begrunnelse for frist",
-        datatype = Datatype.TEKST,
-    ),
-
-    UTFALL(
-        navn = "Utfall",
-        datatype = Datatype.TEKST,
-    ),
-
-    VURDERNIG_AV_KLAGEN(
-        navn = "Vurdering av klagen",
-        datatype = Datatype.TEKST,
-    ),
-}
 
 object OpplysningerBygger {
     val formkravOpplysningTyper =
@@ -83,7 +24,7 @@ object OpplysningerBygger {
 
     val fristvurderingOpplysningTyper =
         setOf(
-            KLAGE_FRIST,
+            KLAGEFRIST,
             KLAGE_MOTTATT,
             KLAGEFRIST_OPPFYLT,
         )
@@ -91,19 +32,12 @@ object OpplysningerBygger {
     val oversittetFristOpplysningTyper =
         setOf(
             OPPREISNING_OVERSITTET_FRIST,
-            BEGRUNNELSE_OPPREISNING_OVERSITTET_FRIST,
+            OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE,
         )
     val utfallOpplysningTyper =
         setOf(
             UTFALL,
             VURDERNIG_AV_KLAGEN,
-        )
-    val opplysninger =
-        setOf(
-            ER_KLAGEN_SKRIFTLIG,
-            ER_KLAGEN_UNDERSKREVET,
-            OpplysningType.KLAGEN_GJELDER,
-            OpplysningType.FRIST_SAKSBEHANDLERS_BEGRUNNELSE,
         )
 
     fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> {
@@ -141,8 +75,7 @@ class KlageBehandling(
     }
 
     fun hentUtfallOpplysninger(): Set<Opplysning> {
-        if (utfall in setOf(Utfall.Opprettholdelse)) {
-        }
+
         return if (utfall == TomtUtfall) {
             emptySet()
         } else {
@@ -208,18 +141,6 @@ class KlageBehandling(
     }
 
     fun hentSteg(): List<Steg> = this.steg.toList()
-}
-
-sealed class Verdi {
-    data object TomVerdi : Verdi()
-
-    data class TekstVerdi(val value: String) : Verdi()
-
-    data class Dato(val value: LocalDate) : Verdi()
-
-    data class Boolsk(val value: Boolean) : Verdi()
-
-    data class Flervalg(val value: List<String>) : Verdi()
 }
 
 sealed class Utfall {

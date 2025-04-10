@@ -1,9 +1,12 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.klage
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_SKRIFTLIG
-import no.nav.dagpenger.saksbehandling.OpplysningType.ER_KLAGEN_UNDERSKREVET
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_SKRIFTLIG
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_UNDERSKREVET
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -57,10 +60,11 @@ class KlageBehandlingTest {
     fun `Hvis formkrav er utfylt skal utfall kunne velges`() {
         val klageBehandling =
             KlageBehandling(
-                id = java.util.UUID.randomUUID(),
+                id = UUID.randomUUID(),
                 person = testPerson(),
             )
-        klageBehandling.synligeOpplysninger().filter { it.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET) }
+        klageBehandling.synligeOpplysninger().filter { opplysning ->
+            opplysning.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET) }
             .forEach {
                 klageBehandling.svar(it.id, true)
             }
@@ -68,11 +72,23 @@ class KlageBehandlingTest {
         klageBehandling.hentUtfallOpplysninger() shouldNotBe emptySet<Opplysning>()
     }
 
+    @Test
+    fun `Utfall er synlig når foregående steg er utfylt`() {
+        val person =
+            Person(
+                ident = "12345612345",
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            )
+        val klageBehandling = KlageBehandling(person = person)
+        klageBehandling.synligeOpplysninger().filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 2
+    }
+
     private fun testPerson(): Person =
         Person(
             ident = "12345678901",
             skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            adressebeskyttelseGradering = UGRADERT,
         )
 
     private fun KlageBehandling.finnEnOpplysning(template: OpplysningType): UUID {
@@ -80,18 +96,18 @@ class KlageBehandlingTest {
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.synligeOpplysninger().first { it.type.datatype == Opplysning.Datatype.BOOLSK }.id
+        return this.synligeOpplysninger().first { it.type.datatype == Datatype.BOOLSK }.id
     }
 
     private fun KlageBehandling.finnEnStringOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { it.type.datatype == Opplysning.Datatype.TEKST }.id
+        return this.synligeOpplysninger().first { it.type.datatype == Datatype.TEKST }.id
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
-        return this.synligeOpplysninger().first { it.type.datatype == Opplysning.Datatype.DATO }.id
+        return this.synligeOpplysninger().first { it.type.datatype == Datatype.DATO }.id
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { it.type.datatype == Opplysning.Datatype.FLERVALG }.id
+        return this.synligeOpplysninger().first { it.type.datatype == Datatype.FLERVALG }.id
     }
 }

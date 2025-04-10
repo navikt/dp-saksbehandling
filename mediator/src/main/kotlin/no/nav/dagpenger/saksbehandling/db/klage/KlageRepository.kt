@@ -1,8 +1,8 @@
 package no.nav.dagpenger.saksbehandling.db.klage
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.KlageBehandling
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import java.util.UUID
 
 interface KlageRepository {

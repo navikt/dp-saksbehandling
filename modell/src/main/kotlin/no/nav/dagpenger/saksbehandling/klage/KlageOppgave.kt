@@ -1,4 +1,4 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -37,7 +37,7 @@ class KlageOppgave(
             klageOppgave: KlageOppgave,
             settOppgaveAnsvarHendelse: FerdigstillKlageOppgave,
         ) {
-            throw IllegalStateException("Kan ikke tildele oppgave i denne tilstanden")
+            throw IllegalStateException("Kan ikke ferdigstille oppgave i denne tilstanden")
         }
 
         val type: Type

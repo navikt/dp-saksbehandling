@@ -1,10 +1,10 @@
-package no.nav.dagpenger.saksbehandling
+package no.nav.dagpenger.saksbehandling.klage
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.OpplysningType.KLAGEFRIST_OPPFYLT
-import no.nav.dagpenger.saksbehandling.OpplysningerBygger.fristvurderingOpplysningTyper
-import no.nav.dagpenger.saksbehandling.OpplysningerBygger.lagOpplysninger
-import no.nav.dagpenger.saksbehandling.OpplysningerBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.lagOpplysninger
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
 import org.junit.jupiter.api.Test
 
 class StegTest {

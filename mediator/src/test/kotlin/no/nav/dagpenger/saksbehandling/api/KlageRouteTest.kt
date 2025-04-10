@@ -12,12 +12,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.KlageBehandling
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID

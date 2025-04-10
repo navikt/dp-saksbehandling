@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import java.time.LocalDate
 import java.util.UUID
 
