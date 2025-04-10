@@ -18,6 +18,8 @@ import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
+import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
+import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -79,7 +81,7 @@ class KlageRouteTest {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
-                setBody("""{ "verdi" : { "verdi" : [ "tekst1", "tekst2" ], "klageOpplysningType" : "FLER_LISTEVALG" } }""".trimIndent())
+                setBody("""{ "verdi" : [ "tekst1", "tekst2" ], "type" : "FLER_LISTEVALG" }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
@@ -107,7 +109,7 @@ class KlageRouteTest {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
-                setBody("""{ "verdi" : { "verdi" : "tekst", "klageOpplysningType" : "TEKST" } }""".trimIndent())
+                setBody("""{ "verdi" : "tekst", "type" : "TEKST" }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
@@ -135,7 +137,7 @@ class KlageRouteTest {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
-                setBody("""{ "verdi" : { "verdi" : ${boolsk.value}, "klageOpplysningType" : "BOOLSK" } }""".trimIndent())
+                setBody("""{ "verdi" : ${boolsk.value}, "type" : "BOOLSK" }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
@@ -163,7 +165,7 @@ class KlageRouteTest {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
-                setBody("""{ "verdi" : { "verdi" : "2021-01-01", "klageOpplysningType" : "DATO" } }""".trimIndent())
+                setBody("""{ "verdi" : "2021-01-01", "type" : "DATO" }""".trimIndent())
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
@@ -188,4 +190,8 @@ class KlageRouteTest {
             test()
         }
     }
+}
+
+fun main() {
+    objectMapper.writeValueAsString(BoolskVerdiDTO(true)).let { println(it) }
 }
