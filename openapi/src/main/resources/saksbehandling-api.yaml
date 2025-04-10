@@ -1002,9 +1002,9 @@ components:
         saksbehandler:
           $ref: '#/components/schemas/Behandler'
         behandlingOpplysninger:
-            type: array
-            items:
-              $ref: '#/components/schemas/KlageOpplysning'
+          type: array
+          items:
+            $ref: '#/components/schemas/KlageOpplysning'
         utfallOpplysninger:
           type: array
           items:
@@ -1018,8 +1018,6 @@ components:
         - utfall
         - behandlingOpplysninger
         - utfallOpplysninger
-
-
 
 
     TekstVerdi:
