@@ -2,7 +2,27 @@ package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.*
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_SKRIFTLIG
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_UNDERSKREVET
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_1
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_2
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_3
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_LAND
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_NAVN
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_POSTNR
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_POSTSTED
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HVEM_KLAGER
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.INTERN_MELDING
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAK
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERNIG_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
@@ -32,18 +52,19 @@ object OpplysningerBygger {
             VURDERNIG_AV_KLAGEN,
         )
 
-    val klagenGjelserOpplysningTyper =
+    val klagenGjelderOpplysningTyper =
         setOf(
             KLAGEN_GJELDER,
+            KLAGEN_GJELDER_VEDTAK,
         )
 
-    val oversendelseKlageinnstansOpplysningTyper =
+    val tilKlageinstansOpplysningTyper =
         setOf(
             HVEM_KLAGER,
             HJEMLER,
-            INTERN_MELDING
+            INTERN_MELDING,
         )
-    val fullmektigTilKlageInnstansOpplysningTyper =
+    val fullmektigTilKlageinstansOpplysningTyper =
         setOf(
             FULLMEKTIG_NAVN,
             FULLMEKTIG_ADRESSE_1,
@@ -52,7 +73,6 @@ object OpplysningerBygger {
             FULLMEKTIG_POSTNR,
             FULLMEKTIG_POSTSTED,
             FULLMEKTIG_LAND,
-
         )
 
     fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> {

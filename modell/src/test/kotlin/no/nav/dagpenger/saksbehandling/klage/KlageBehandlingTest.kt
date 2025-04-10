@@ -65,10 +65,9 @@ class KlageBehandlingTest {
             )
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET)
+        }.forEach {
+            klageBehandling.svar(it.id, true)
         }
-            .forEach {
-                klageBehandling.svar(it.id, true)
-            }
 
         klageBehandling.hentUtfallOpplysninger() shouldNotBe emptySet<Opplysning>()
     }
@@ -82,7 +81,8 @@ class KlageBehandlingTest {
                 adressebeskyttelseGradering = UGRADERT,
             )
         val klageBehandling = KlageBehandling(person = person)
-        klageBehandling.synligeOpplysninger().filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 2
+        klageBehandling.synligeOpplysninger()
+            .filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 2
     }
 
     @Test
@@ -94,7 +94,8 @@ class KlageBehandlingTest {
                 adressebeskyttelseGradering = UGRADERT,
             )
         val klageBehandling = KlageBehandling(person = person)
-        klageBehandling.synligeOpplysninger().filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 0
+        klageBehandling.synligeOpplysninger()
+            .filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 0
     }
 
     private fun testPerson(): Person =

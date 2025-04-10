@@ -9,7 +9,7 @@ enum class OpplysningType(
         navn = "Hva klagen gjelder",
         datatype = Datatype.FLERVALG,
     ),
-    VEDTAK_KLAGEN_GJELDER(
+    KLAGEN_GJELDER_VEDTAK(
         navn = "Vedtak klagen gjelder",
         datatype = Datatype.TEKST,
     ),
@@ -76,6 +76,7 @@ enum class OpplysningType(
         navn = "Intern melding",
         datatype = Datatype.TEKST,
     ),
+
     // Info til klageinstans om fullmektig
     FULLMEKTIG_NAVN(
         navn = "Navn",
@@ -105,8 +106,6 @@ enum class OpplysningType(
         navn = "Land",
         datatype = Datatype.TEKST,
     ),
-
-
 }
 
 enum class Datatype {
