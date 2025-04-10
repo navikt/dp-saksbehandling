@@ -992,6 +992,7 @@ components:
       required:
         - nyTilstand
 
+
     Klage:
       type: object
       properties:
@@ -1018,67 +1019,222 @@ components:
         - behandlingOpplysninger
         - utfallOpplysninger
 
-    OppdaterKlageOpplysning:
+
+    TekstVerdi:
       type: object
       properties:
         verdi:
-          $ref: '#/components/schemas/KlageOpplysningVerdi'
+          type: string
+        type:
+          $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - verdi
-
-    KlageOpplysningFlerListeValg:
+        - type
+    BoolskVerdi:
       type: object
       properties:
-        klageOpplysningType:
+        verdi:
+          type: boolean
+        type:
           $ref: '#/components/schemas/KlageOpplysningType'
+      required:
+        - verdi
+        - type
+    DatoVerdi:
+      type: object
+      properties:
+        verdi:
+          type: string
+          format: date
+        type:
+          $ref: '#/components/schemas/KlageOpplysningType'
+      required:
+        - verdi
+        - type
+    ListeVerdi:
+      type: object
+      properties:
         verdi:
           type: array
           items:
             type: string
-      required:
-        - klageOpplysningType
-        - verdi
-    KlageOpplysningListeValg:
-      type: object
-      properties:
-        klageOpplysningType:
+        type:
           $ref: '#/components/schemas/KlageOpplysningType'
-        verdi:
-          type: string
       required:
-        - klageOpplysningType
         - verdi
+        - type
+    OppdaterKlageOpplysning:
+      oneOf:
+        - $ref: '#/components/schemas/TekstVerdi'
+        - $ref: '#/components/schemas/BoolskVerdi'
+        - $ref: '#/components/schemas/DatoVerdi'
+        - $ref: '#/components/schemas/ListeVerdi'
+      discriminator:
+        propertyName: type
+        mapping:
+          TEKST: '#/components/schemas/TekstVerdi'
+          BOOLSK: '#/components/schemas/BoolskVerdi'
+          DATO: '#/components/schemas/DatoVerdi'
+          LISTEVALG: '#/components/schemas/TekstVerdi'
+          FLER_LISTEVALG: '#/components/schemas/ListeVerdi'
+
+    KlageGruppe:
+      type: string
+      enum:
+        - FORMKRAV
+        - KLAGESAK
+        - FRIST
+        - KLAGE_ANKE
     KlageOpplysningTekst:
       type: object
       properties:
-        klageOpplysningType:
-          $ref: '#/components/schemas/KlageOpplysningType'
+        id:
+          type: string
+          format: uuid
+        navn:
+          type: string
+        paakrevd:
+          type: boolean
+        gruppe:
+          $ref: '#/components/schemas/KlageGruppe'
+        valgmuligheter:
+          type: array
+          items:
+            type: string
+        redigerbar:
+          type: boolean
         verdi:
           type: string
+        type:
+          $ref: '#/components/schemas/KlageOpplysningType'
       required:
-        - klageOpplysningType
-        - verdi
+        - type
+        - id
+        - navn
+        - paakrevd
+        - gruppe
+        - redigerbar
     KlageOpplysningBoolsk:
       type: object
       properties:
-        klageOpplysningType:
-          $ref: '#/components/schemas/KlageOpplysningType'
+        id:
+          type: string
+          format: uuid
+        navn:
+          type: string
+        paakrevd:
+          type: boolean
+        gruppe:
+          $ref: '#/components/schemas/KlageGruppe'
+        valgmuligheter:
+          type: array
+          items:
+            type: string
+        redigerbar:
+          type: boolean
         verdi:
           type: boolean
+        type:
+          $ref: '#/components/schemas/KlageOpplysningType'
       required:
-        - klageOpplysningType
-        - verdi
+        - type
+        - id
+        - navn
+        - paakrevd
+        - gruppe
+        - redigerbar
+
     KlageOpplysningDato:
       type: object
       properties:
-        klageOpplysningType:
-          $ref: '#/components/schemas/KlageOpplysningType'
+        id:
+          type: string
+          format: uuid
+        navn:
+          type: string
+        paakrevd:
+          type: boolean
+        gruppe:
+          $ref: '#/components/schemas/KlageGruppe'
+        valgmuligheter:
+          type: array
+          items:
+            type: string
+        redigerbar:
+          type: boolean
         verdi:
           type: string
           format: date
+        type:
+          $ref: '#/components/schemas/KlageOpplysningType'
       required:
-        - klageOpplysningType
-        - verdi
+        - type
+        - id
+        - navn
+        - paakrevd
+        - gruppe
+        - redigerbar
+        -
+    KlageOpplysningFlerListeValg:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        navn:
+          type: string
+        paakrevd:
+          type: boolean
+        gruppe:
+          $ref: '#/components/schemas/KlageGruppe'
+        valgmuligheter:
+          type: array
+          items:
+            type: string
+        redigerbar:
+          type: boolean
+        verdi:
+          type: array
+          items:
+            type: string
+        type:
+          $ref: '#/components/schemas/KlageOpplysningType'
+      required:
+        - type
+        - id
+        - navn
+        - paakrevd
+        - gruppe
+        - redigerbar
+    KlageOpplysningListeValg:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        navn:
+          type: string
+        paakrevd:
+          type: boolean
+        gruppe:
+          $ref: '#/components/schemas/KlageGruppe'
+        valgmuligheter:
+          type: array
+          items:
+            type: string
+        redigerbar:
+          type: boolean
+        verdi:
+          type: string
+        type:
+          $ref: '#/components/schemas/KlageOpplysningType'
+      required:
+        - type
+        - id
+        - navn
+        - paakrevd
+        - gruppe
+        - redigerbar
 
     KlageOpplysningType:
       type: string
@@ -1088,58 +1244,24 @@ components:
         - DATO
         - LISTEVALG
         - FLER_LISTEVALG
-    KlageOpplysningVerdi:
+
+    KlageOpplysning:
       oneOf:
-        - $ref: '#/components/schemas/KlageOpplysningTekst'
-        - $ref: '#/components/schemas/KlageOpplysningBoolsk'
-        - $ref: '#/components/schemas/KlageOpplysningDato'
-        - $ref: '#/components/schemas/KlageOpplysningListeValg'
-        - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
+         - $ref: '#/components/schemas/KlageOpplysningTekst'
+         - $ref: '#/components/schemas/KlageOpplysningBoolsk'
+         - $ref: '#/components/schemas/KlageOpplysningDato'
+         - $ref: '#/components/schemas/KlageOpplysningListeValg'
+         - $ref: '#/components/schemas/KlageOpplysningFlerListeValg'
+
+      type: object
       discriminator:
-        propertyName: klageOpplysningType
+        propertyName: type
         mapping:
           TEKST: '#/components/schemas/KlageOpplysningTekst'
           BOOLSK: '#/components/schemas/KlageOpplysningBoolsk'
           DATO: '#/components/schemas/KlageOpplysningDato'
           LISTEVALG: '#/components/schemas/KlageOpplysningListeValg'
           FLER_LISTEVALG: '#/components/schemas/KlageOpplysningFlerListeValg'
-
-    KlageOpplysning:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        navn:
-          type: string
-        klageopplysningType:
-          $ref: '#/components/schemas/KlageOpplysningType'
-        paakrevd:
-          type: boolean
-        gruppe:
-          type: string
-          enum:
-            - FORMKRAV
-            - KLAGESAK
-            - FRIST
-            - KLAGE_ANKE
-        verdi:
-          $ref: '#/components/schemas/KlageOpplysningVerdi'
-        valgmuligheter:
-          type: array
-          items:
-            type: string
-        redigerbar:
-          type: boolean
-      required:
-        - id
-        - navn
-        - type
-        - paakrevd
-        - gruppe
-        - redigerbar
-
-
 
     Utfall:
       type: object
