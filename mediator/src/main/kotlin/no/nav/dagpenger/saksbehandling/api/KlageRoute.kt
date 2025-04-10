@@ -16,6 +16,8 @@ import no.nav.dagpenger.saksbehandling.Utfall
 import no.nav.dagpenger.saksbehandling.Verdi
 import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.tilDto
 import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.tilVerdi
+import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
+import no.nav.dagpenger.saksbehandling.api.models.DatoVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningBoolskDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
@@ -26,7 +28,9 @@ import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningListeValgDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTekstDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningVerdiDTO
+import no.nav.dagpenger.saksbehandling.api.models.ListeVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.TekstVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 
@@ -63,6 +67,13 @@ fun Route.klageApi(mediator: KlageMediator) {
 
 object KlageDtoMapper {
     fun OppdaterKlageOpplysningDTO.tilVerdi(): OpplysningerVerdi {
+        return when(this) {
+            is BoolskVerdiDTO ->  OpplysningerVerdi.Boolsk(this.verdi)
+            is DatoVerdiDTO -> OpplysningerVerdi.Dato(this.verdi)
+            is ListeVerdiDTO -> OpplysningerVerdi.L
+            is TekstVerdiDTO -> TODO()
+        }
+
         return this.verdi.tilVerdi()
     }
 

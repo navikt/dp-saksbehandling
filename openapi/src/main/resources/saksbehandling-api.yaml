@@ -1077,7 +1077,6 @@ components:
           DATO: '#/components/schemas/DatoVerdi'
           LISTEVALG: '#/components/schemas/TekstVerdi'
           FLER_LISTEVALG: '#/components/schemas/ListeVerdi'
-      properties:
 
     KlageGruppe:
       type: string
@@ -1196,7 +1195,8 @@ components:
           type: boolean
         verdi:
           type: array
-          items: string
+          items:
+            type: string
         type:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
