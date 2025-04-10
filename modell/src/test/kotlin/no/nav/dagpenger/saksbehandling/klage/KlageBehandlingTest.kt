@@ -64,7 +64,8 @@ class KlageBehandlingTest {
                 person = testPerson(),
             )
         klageBehandling.synligeOpplysninger().filter { opplysning ->
-            opplysning.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET) }
+            opplysning.type in setOf(ER_KLAGEN_SKRIFTLIG, ER_KLAGEN_UNDERSKREVET)
+        }
             .forEach {
                 klageBehandling.svar(it.id, true)
             }
@@ -82,6 +83,18 @@ class KlageBehandlingTest {
             )
         val klageBehandling = KlageBehandling(person = person)
         klageBehandling.synligeOpplysninger().filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 2
+    }
+
+    @Test
+    fun `Utfall er ikke synlig når behandlingsopplysninger ikke er utfylt`() {
+        val person =
+            Person(
+                ident = "12345612345",
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            )
+        val klageBehandling = KlageBehandling(person = person)
+        klageBehandling.synligeOpplysninger().filter { it.type in OpplysningerBygger.utfallOpplysningTyper }.size shouldBe 0
     }
 
     private fun testPerson(): Person =

@@ -1,6 +1,10 @@
 package no.nav.dagpenger.saksbehandling.klage
 
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelserOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 
 interface Steg {
     fun reevaluerOpplysninger(opplysinger: List<Opplysning>)
@@ -30,5 +34,14 @@ object FormkravSteg : Steg {
 
 class VurderUtfallSteg : Steg {
     override fun reevaluerOpplysninger(opplysinger: List<Opplysning>) {
+        val skalIkkeViseUtfallOpplysninger =
+            opplysinger.any {
+                it.type in formkravOpplysningTyper + fristvurderingOpplysningTyper + oversittetFristOpplysningTyper +
+                    klagenGjelserOpplysningTyper && it.synlighet() && it.verdi == Verdi.TomVerdi
+            }
+        when (skalIkkeViseUtfallOpplysninger) {
+            true -> opplysinger.filter { it.type in utfallOpplysningTyper }.forEach { it.settSynlighet(false) }
+            false -> opplysinger.filter { it.type in utfallOpplysningTyper }.forEach { it.settSynlighet(true) }
+        }
     }
 }

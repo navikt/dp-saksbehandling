@@ -9,6 +9,10 @@ enum class OpplysningType(
         navn = "Hva klagen gjelder",
         datatype = Datatype.FLERVALG,
     ),
+    VEDTAK_KLAGEN_GJELDER(
+        navn = "Vedtak klagen gjelder",
+        datatype = Datatype.TEKST,
+    ),
 
     // Formkrav
     ER_KLAGEN_SKRIFTLIG(
@@ -63,6 +67,15 @@ enum class OpplysningType(
         datatype = Datatype.TEKST,
     ),
 
+    // Info til klageinstans del 2
+    HJEMLER(
+        navn = "Hvilke hjemler gjelder klagen?",
+        datatype = Datatype.TEKST,
+    ),
+    INTERN_MELDING(
+        navn = "Intern melding",
+        datatype = Datatype.TEKST,
+    ),
     // Info til klageinstans om fullmektig
     FULLMEKTIG_NAVN(
         navn = "Navn",
@@ -93,15 +106,7 @@ enum class OpplysningType(
         datatype = Datatype.TEKST,
     ),
 
-    // Info til klageinstans del 2
-    HJEMLER(
-        navn = "Hvilke hjemler gjelder klagen?",
-        datatype = Datatype.TEKST,
-    ),
-    INTERN_MELDING(
-        navn = "Intern melding",
-        datatype = Datatype.TEKST,
-    ),
+
 }
 
 enum class Datatype {

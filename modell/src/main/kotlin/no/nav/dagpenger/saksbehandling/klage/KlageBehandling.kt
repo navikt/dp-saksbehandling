@@ -2,15 +2,7 @@ package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_SKRIFTLIG
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_UNDERSKREVET
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERNIG_AV_KLAGEN
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.*
 import no.nav.dagpenger.saksbehandling.klage.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
@@ -38,6 +30,29 @@ object OpplysningerBygger {
         setOf(
             UTFALL,
             VURDERNIG_AV_KLAGEN,
+        )
+
+    val klagenGjelserOpplysningTyper =
+        setOf(
+            KLAGEN_GJELDER,
+        )
+
+    val oversendelseKlageinnstansOpplysningTyper =
+        setOf(
+            HVEM_KLAGER,
+            HJEMLER,
+            INTERN_MELDING
+        )
+    val fullmektigTilKlageInnstansOpplysningTyper =
+        setOf(
+            FULLMEKTIG_NAVN,
+            FULLMEKTIG_ADRESSE_1,
+            FULLMEKTIG_ADRESSE_2,
+            FULLMEKTIG_ADRESSE_3,
+            FULLMEKTIG_POSTNR,
+            FULLMEKTIG_POSTSTED,
+            FULLMEKTIG_LAND,
+
         )
 
     fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> {
@@ -75,7 +90,6 @@ class KlageBehandling(
     }
 
     fun hentUtfallOpplysninger(): Set<Opplysning> {
-
         return if (utfall == TomtUtfall) {
             emptySet()
         } else {
