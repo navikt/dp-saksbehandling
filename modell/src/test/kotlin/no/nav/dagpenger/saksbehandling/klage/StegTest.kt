@@ -2,17 +2,19 @@ package no.nav.dagpenger.saksbehandling.klage
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.lagOpplysninger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.tilKlageinstansOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 import org.junit.jupiter.api.Test
 
 class StegTest {
     @Test
-    fun `Opprett klagen-gjelder-steg og verifiser synlighet`() {
+    fun `Opprett steg for å angi hva klagen gjelder og verifiser synlighet`() {
         val steg = KlagenGjelderSteg
         val opplysninger =
             lagOpplysninger(klagenGjelderOpplysningTyper)
@@ -24,7 +26,7 @@ class StegTest {
     }
 
     @Test
-    fun `Opprett fristvurdering-steg og verifiser synlighet`() {
+    fun `Opprett steg for fristvurdering og verifiser synlighet`() {
         val steg = FristvurderingSteg
         val opplysninger =
             lagOpplysninger(
@@ -51,7 +53,7 @@ class StegTest {
     }
 
     @Test
-    fun `Opprett formkrav-steg og verifiser synlighet`() {
+    fun `Opprett steg for formkrav og verifiser synlighet`() {
         val steg = FormkravSteg
         val opplysninger =
             lagOpplysninger(
@@ -67,7 +69,7 @@ class StegTest {
     }
 
     @Test
-    fun `Opprett utfall-steg og verifiser synlighet`() {
+    fun `Opprett steg for utfall og verifiser synlighet`() {
         val steg = VurderUtfallSteg
 
         val opplysninger =
@@ -88,5 +90,41 @@ class StegTest {
         opplysninger.filter { opplysning ->
             opplysning.type in utfallOpplysningTyper
         }.forEach { it.synlighet() shouldBe true }
+    }
+
+    @Test
+    fun `Opprett steg for oversendelse til klageinstans og verifiser synlighet`() {
+        val steg = OversendKlageinstansSteg
+        val opplysninger =
+            lagOpplysninger(
+                utfallOpplysningTyper + tilKlageinstansOpplysningTyper,
+            )
+        val utfallOpplysning =
+            opplysninger.single { opplysning ->
+                opplysning.type == UTFALL
+            }
+        val tilKlageinstansOpplysninger =
+            opplysninger.filter { opplysning ->
+                opplysning.type in tilKlageinstansOpplysningTyper
+            }
+
+        steg.evaluerSynlighet(opplysninger.toList())
+        tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
+
+        utfallOpplysning.svar(verdi = UtfallType.MEDHOLD.name)
+        steg.evaluerSynlighet(opplysninger.toList())
+        tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
+
+        utfallOpplysning.svar(verdi = UtfallType.DELVIS_MEDHOLD.name)
+        steg.evaluerSynlighet(opplysninger.toList())
+        tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
+
+        utfallOpplysning.svar(verdi = UtfallType.AVVIST.name)
+        steg.evaluerSynlighet(opplysninger.toList())
+        tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
+
+        utfallOpplysning.svar(verdi = UtfallType.OPPRETTHOLDELSE.name)
+        steg.evaluerSynlighet(opplysninger.toList())
+        tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe true }
     }
 }

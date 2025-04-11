@@ -92,9 +92,11 @@ class KlageBehandling(
     private val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private val steg: List<Steg> =
         listOf(
+            KlagenGjelderSteg,
             FristvurderingSteg,
             FormkravSteg,
             VurderUtfallSteg,
+            OversendKlageinstansSteg,
         ),
 ) {
     init {

@@ -4,6 +4,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysni
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.tilKlageinstansOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 
 interface Steg {
@@ -18,7 +19,11 @@ object KlagenGjelderSteg : Steg {
 object FristvurderingSteg : Steg {
     override fun evaluerSynlighet(opplysninger: Collection<Opplysning>) {
         when (klagefristOppfylt(opplysninger)) {
-            true -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(false) }
+            true ->
+                opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach {
+                    it.settSynlighet(false)
+//                it.svar(Verdi.TomVerdi)
+                }
             false -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(true) }
         }
     }
@@ -38,13 +43,42 @@ object FormkravSteg : Steg {
 object VurderUtfallSteg : Steg {
     override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
         val skjulUtfallOpplysninger =
-            opplysinger.any {
-                it.type in formkravOpplysningTyper + fristvurderingOpplysningTyper + oversittetFristOpplysningTyper +
-                    klagenGjelderOpplysningTyper && it.synlighet() && it.verdi == Verdi.TomVerdi
+            opplysinger.any { opplysning ->
+                opplysning.type in
+                    formkravOpplysningTyper +
+                    fristvurderingOpplysningTyper +
+                    oversittetFristOpplysningTyper +
+                    klagenGjelderOpplysningTyper &&
+                    opplysning.synlighet() &&
+                    opplysning.verdi == Verdi.TomVerdi
             }
         when (skjulUtfallOpplysninger) {
-            true -> opplysinger.filter { it.type in utfallOpplysningTyper }.forEach { it.settSynlighet(false) }
+            true ->
+                opplysinger.filter { it.type in utfallOpplysningTyper }.forEach {
+                    it.settSynlighet(false)
+//                it.svar(Verdi.TomVerdi)
+                }
             false -> opplysinger.filter { it.type in utfallOpplysningTyper }.forEach { it.settSynlighet(true) }
+        }
+    }
+}
+
+object OversendKlageinstansSteg : Steg {
+    override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
+        // TODO Hva med vurdering av utfall? Må den også være utfylt?
+        val visOversendelseKlageinstans =
+            opplysinger.any { opplysning ->
+                opplysning.type == OpplysningType.UTFALL &&
+                    opplysning.verdi is Verdi.TekstVerdi &&
+                    (opplysning.verdi as Verdi.TekstVerdi).value == UtfallType.OPPRETTHOLDELSE.name
+            }
+        when (visOversendelseKlageinstans) {
+            true -> opplysinger.filter { it.type in tilKlageinstansOpplysningTyper }.forEach { it.settSynlighet(true) }
+            false ->
+                opplysinger.filter { it.type in tilKlageinstansOpplysningTyper }.forEach {
+                    it.settSynlighet(false)
+//                it.svar(Verdi.TomVerdi)
+                }
         }
     }
 }
