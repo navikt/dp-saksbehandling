@@ -97,6 +97,7 @@ class KlageBehandling(
             FormkravSteg,
             VurderUtfallSteg,
             OversendKlageinstansSteg,
+            FullmektigSteg,
         ),
 ) {
     init {

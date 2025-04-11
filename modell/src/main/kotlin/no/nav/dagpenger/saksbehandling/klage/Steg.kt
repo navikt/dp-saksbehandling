@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fullmektigTilKlageinstansOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.tilKlageinstansOpplysningTyper
@@ -22,7 +23,6 @@ object FristvurderingSteg : Steg {
             true ->
                 opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach {
                     it.settSynlighet(false)
-//                it.svar(Verdi.TomVerdi)
                 }
             false -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(true) }
         }
@@ -56,7 +56,6 @@ object VurderUtfallSteg : Steg {
             true ->
                 opplysinger.filter { it.type in utfallOpplysningTyper }.forEach {
                     it.settSynlighet(false)
-//                it.svar(Verdi.TomVerdi)
                 }
             false -> opplysinger.filter { it.type in utfallOpplysningTyper }.forEach { it.settSynlighet(true) }
         }
@@ -65,7 +64,6 @@ object VurderUtfallSteg : Steg {
 
 object OversendKlageinstansSteg : Steg {
     override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
-        // TODO Hva med vurdering av utfall? Må den også være utfylt?
         val visOversendelseKlageinstans =
             opplysinger.any { opplysning ->
                 opplysning.type == OpplysningType.UTFALL &&
@@ -77,7 +75,25 @@ object OversendKlageinstansSteg : Steg {
             false ->
                 opplysinger.filter { it.type in tilKlageinstansOpplysningTyper }.forEach {
                     it.settSynlighet(false)
-//                it.svar(Verdi.TomVerdi)
+                }
+        }
+    }
+}
+
+object FullmektigSteg : Steg {
+    override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
+        val fullMektigKlager =
+            opplysinger.any { opplysning ->
+                opplysning.type == OpplysningType.HVEM_KLAGER &&
+                    opplysning.verdi is Verdi.TekstVerdi &&
+                    (opplysning.verdi as Verdi.TekstVerdi).value == HvemKlagerType.FULLMEKTIG.name
+            }
+
+        when (fullMektigKlager) {
+            true -> opplysinger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }.forEach { it.settSynlighet(true) }
+            false ->
+                opplysinger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }.forEach {
+                    it.settSynlighet(false)
                 }
         }
     }

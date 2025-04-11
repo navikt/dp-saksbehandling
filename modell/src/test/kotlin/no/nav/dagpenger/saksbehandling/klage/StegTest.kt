@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fullmektigTilKlageinstansOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.lagOpplysninger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
@@ -126,5 +127,39 @@ class StegTest {
         utfallOpplysning.svar(verdi = UtfallType.OPPRETTHOLDELSE.name)
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe true }
+    }
+
+    @Test
+    fun `Opprett steg for fullmektig og verifiser synlighet`() {
+        val opplysninger =
+            lagOpplysninger(
+                utfallOpplysningTyper + tilKlageinstansOpplysningTyper + fullmektigTilKlageinstansOpplysningTyper,
+            )
+
+        val utfallOpplysning =
+            opplysninger.single { opplysning ->
+                opplysning.type == UTFALL
+            }
+        val hvemKlager = opplysninger.single { it.type == OpplysningType.HVEM_KLAGER }
+
+        val fullmektigTilKlageinstansOpplysninger = opplysninger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
+        fullmektigTilKlageinstansOpplysninger.size shouldBe fullmektigTilKlageinstansOpplysningTyper.size
+
+        utfallOpplysning.svar(verdi = UtfallType.OPPRETTHOLDELSE.name)
+        FullmektigSteg.evaluerSynlighet(opplysninger.toList())
+        fullmektigTilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
+
+        hvemKlager.svar(HvemKlagerType.FULLMEKTIG.name)
+        FullmektigSteg.evaluerSynlighet(opplysninger.toList())
+        fullmektigTilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe true }
+
+        fullmektigTilKlageinstansOpplysninger.forEach { it.svar("en tekst verdi") }
+
+        hvemKlager.svar(HvemKlagerType.BRUKER.name)
+        FullmektigSteg.evaluerSynlighet(opplysninger.toList())
+        fullmektigTilKlageinstansOpplysninger.forEach {
+            it.synlighet() shouldBe false
+            it.verdi shouldBe Verdi.TomVerdi
+        }
     }
 }

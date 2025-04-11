@@ -6,3 +6,8 @@ enum class UtfallType {
     DELVIS_MEDHOLD,
     AVVIST,
 }
+
+enum class HvemKlagerType {
+    BRUKER,
+    FULLMEKTIG,
+}
