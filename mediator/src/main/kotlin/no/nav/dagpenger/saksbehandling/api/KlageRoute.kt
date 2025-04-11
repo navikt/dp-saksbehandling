@@ -27,7 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.Utfall
+import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 
 fun Route.klageApi(mediator: KlageMediator) {
@@ -156,10 +156,12 @@ object KlageDtoMapper {
             utfall =
                 UtfallDTO(
                     verdi =
-                        when (this.utfall) {
-                            Utfall.Avvist -> UtfallDTOVerdiDTO.AVVIST
-                            Utfall.TomtUtfall -> UtfallDTOVerdiDTO.IKKE_SATT
-                            Utfall.Opprettholdelse -> UtfallDTOVerdiDTO.OPPRETTHOLDELSE
+                        when (this.utfall()) {
+                            UtfallType.OPPRETTHOLDELSE -> UtfallDTOVerdiDTO.OPPRETTHOLDELSE
+                            UtfallType.MEDHOLD -> UtfallDTOVerdiDTO.MEDHOLD
+                            UtfallType.DELVIS_MEDHOLD -> UtfallDTOVerdiDTO.DELVIS_MEDHOLD
+                            UtfallType.AVVIST -> UtfallDTOVerdiDTO.AVVIST
+                            null -> UtfallDTOVerdiDTO.IKKE_SATT
                         },
                     tilgjeneligeUtfall = emptyList(),
                 ),

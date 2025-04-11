@@ -23,7 +23,6 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERNIG_AV_KLAGEN
-import no.nav.dagpenger.saksbehandling.klage.Utfall.TomtUtfall
 import java.time.LocalDate
 import java.util.UUID
 
@@ -104,16 +103,21 @@ class KlageBehandling(
         steg.forEach { it.evaluerSynlighet(opplysninger) }
     }
 
-    private var _utfall: Utfall = TomtUtfall
-
-    val utfall: Utfall get() = _utfall
+    fun utfall(): UtfallType? {
+        return opplysninger
+            .single { it.type == UTFALL }
+            .verdi
+            .let {
+                when (it) {
+                    is Verdi.TekstVerdi -> UtfallType.valueOf(it.value)
+                    is Verdi.TomVerdi -> null
+                    else -> throw IllegalStateException("Utfall er av feil type: $it")
+                }
+            }
+    }
 
     fun synligeOpplysninger(): Set<Opplysning> {
         return opplysninger.filter { it.synlighet() }.toSet()
-    }
-
-    fun settUtfall(utfall: Utfall) {
-        this._utfall = utfall
     }
 
     fun svar(
@@ -160,33 +164,10 @@ class KlageBehandling(
         this.steg.forEach { steg ->
             steg.evaluerSynlighet(opplysninger)
         }
-        this.revurderUtfall()
     }
 
     fun hentOpplysning(opplysningId: UUID): Opplysning {
         return opplysninger.singleOrNull { it.id == opplysningId }
             ?: throw IllegalArgumentException("Fant ikke opplysning med id $opplysningId")
     }
-
-    private fun revurderUtfall() {
-        opplysninger.filter { it.type in setOf(ER_KLAGEN_UNDERSKREVET, ER_KLAGEN_SKRIFTLIG) }
-            .filter { it.verdi is Verdi.Boolsk }
-            .any { !(it.verdi as Verdi.Boolsk).value }
-            .let {
-                when (it) {
-                    true -> this._utfall = Utfall.Avvist
-                    false -> {}
-                }
-            }
-    }
-
-    fun hentSteg(): List<Steg> = this.steg.toList()
-}
-
-sealed class Utfall {
-    data object TomtUtfall : Utfall()
-
-    data object Avvist : Utfall()
-
-    data object Opprettholdelse : Utfall()
 }
