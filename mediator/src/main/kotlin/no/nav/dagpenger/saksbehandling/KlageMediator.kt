@@ -2,7 +2,9 @@ package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
+import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageOppgave
 import java.time.LocalDate
 import java.util.UUID
 
@@ -11,6 +13,26 @@ class KlageMediator(
 ) {
     fun hentKlage(klageId: UUID): KlageBehandling {
         return klageRepository.hentKlage(klageId)
+    }
+
+    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): KlageOppgave {
+        val oppgave =
+            KlageOppgave(
+                oppgaveId = UUIDv7.ny(),
+                opprettet = klageMottattHendelse.opprettet,
+                klageBehandling =
+                    KlageBehandling(
+                        person =
+                            Person(
+                                id = TODO(),
+                                ident = TODO(),
+                                skjermesSomEgneAnsatte = TODO(),
+                                adressebeskyttelseGradering = TODO(),
+                            ),
+                        opplysninger = TODO(),
+                        steg = TODO(),
+                    ),
+            )
     }
 
     fun oppdaterKlageOpplysning(

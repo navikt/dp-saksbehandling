@@ -8,6 +8,7 @@ import java.util.UUID
 class KlageOppgave(
     oppgaveId: UUID,
     opprettet: LocalDateTime,
+    val klageBehandling: KlageBehandling,
 ) : GeneriskOppgave(
         oppgaveId = oppgaveId,
         opprettet = opprettet,
