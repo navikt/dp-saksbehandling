@@ -30,9 +30,9 @@ object KlageView {
         val behandlingOpplysninger =
             opplysninger.filter {
                 it.type in (
-                        klagenGjelderOpplysningTyper + formkravOpplysningTyper +
-                                fristvurderingOpplysningTyper + oversittetFristOpplysningTyper
-                        )
+                    klagenGjelderOpplysningTyper + formkravOpplysningTyper +
+                        fristvurderingOpplysningTyper + oversittetFristOpplysningTyper
+                )
             }
 
         val sortedBy =
@@ -50,6 +50,35 @@ object KlageView {
                         OpplysningType.ER_KLAGEN_UNDERSKREVET,
                         OpplysningType.KLAGEN_NEVNER_ENDRING,
                         OpplysningType.RETTSLIG_KLAGEINTERESSE,
+                    )
+                customOrder.indexOf(it.type)
+            }
+        return sortedBy
+    }
+
+    fun utfallOpplysninger(opplysninger: List<Opplysning>): List<Opplysning> {
+        val utfallOpplysninger =
+            opplysninger.filter { opplysning ->
+                opplysning.type in
+                    utfallOpplysningTyper + tilKlageinstansOpplysningTyper +
+                    fullmektigTilKlageinstansOpplysningTyper
+            }
+        val sortedBy =
+            utfallOpplysninger.sortedBy {
+                val customOrder =
+                    listOf(
+                        OpplysningType.UTFALL,
+                        OpplysningType.VURDERNIG_AV_KLAGEN,
+                        OpplysningType.HVEM_KLAGER,
+                        OpplysningType.HJEMLER,
+                        OpplysningType.INTERN_MELDING,
+                        OpplysningType.FULLMEKTIG_NAVN,
+                        OpplysningType.FULLMEKTIG_ADRESSE_1,
+                        OpplysningType.FULLMEKTIG_ADRESSE_2,
+                        OpplysningType.FULLMEKTIG_ADRESSE_3,
+                        OpplysningType.FULLMEKTIG_POSTNR,
+                        OpplysningType.FULLMEKTIG_POSTSTED,
+                        OpplysningType.FULLMEKTIG_LAND,
                     )
                 customOrder.indexOf(it.type)
             }

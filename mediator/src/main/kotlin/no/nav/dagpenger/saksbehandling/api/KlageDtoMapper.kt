@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.api
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.api.KlageView.behandlingOpplysninger
 import no.nav.dagpenger.saksbehandling.api.KlageView.finnGruppe
+import no.nav.dagpenger.saksbehandling.api.KlageView.utfallOpplysninger
 import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.DatoVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
@@ -19,9 +20,6 @@ import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fullmektigTilKlageinstansOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.tilKlageinstansOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 
@@ -35,15 +33,6 @@ object KlageDtoMapper {
         }
     }
 
-    fun utFallOpplysninger(opplysninger: List<Opplysning>): List<Opplysning> {
-        return opplysninger.filter {
-            it.type in (
-                utfallOpplysningTyper + tilKlageinstansOpplysningTyper +
-                    fullmektigTilKlageinstansOpplysningTyper
-            )
-        }
-    }
-
     fun KlageBehandling.tilDto(): KlageDTO {
         val synligeOpplysninger = synligeOpplysninger().toList()
         return KlageDTO(
@@ -51,7 +40,7 @@ object KlageDtoMapper {
             // todo
             saksbehandler = null,
             behandlingOpplysninger = behandlingOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
-            utfallOpplysninger = utFallOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
+            utfallOpplysninger = utfallOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             utfall =
                 UtfallDTO(
                     verdi =
