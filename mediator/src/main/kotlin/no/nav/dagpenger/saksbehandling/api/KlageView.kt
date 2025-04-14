@@ -70,8 +70,6 @@ object KlageView {
                         OpplysningType.UTFALL,
                         OpplysningType.VURDERNIG_AV_KLAGEN,
                         OpplysningType.HVEM_KLAGER,
-                        OpplysningType.HJEMLER,
-                        OpplysningType.INTERN_MELDING,
                         OpplysningType.FULLMEKTIG_NAVN,
                         OpplysningType.FULLMEKTIG_ADRESSE_1,
                         OpplysningType.FULLMEKTIG_ADRESSE_2,
@@ -79,6 +77,8 @@ object KlageView {
                         OpplysningType.FULLMEKTIG_POSTNR,
                         OpplysningType.FULLMEKTIG_POSTSTED,
                         OpplysningType.FULLMEKTIG_LAND,
+                        OpplysningType.HJEMLER,
+                        OpplysningType.INTERN_MELDING,
                     )
                 customOrder.indexOf(it.type)
             }

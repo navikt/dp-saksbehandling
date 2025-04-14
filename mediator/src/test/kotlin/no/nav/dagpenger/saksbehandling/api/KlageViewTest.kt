@@ -84,8 +84,6 @@ class KlageViewTest {
                 UTFALL,
                 VURDERNIG_AV_KLAGEN,
                 HVEM_KLAGER,
-                HJEMLER,
-                INTERN_MELDING,
                 FULLMEKTIG_NAVN,
                 FULLMEKTIG_ADRESSE_1,
                 FULLMEKTIG_ADRESSE_2,
@@ -93,6 +91,8 @@ class KlageViewTest {
                 FULLMEKTIG_POSTNR,
                 FULLMEKTIG_POSTSTED,
                 FULLMEKTIG_LAND,
+                HJEMLER,
+                INTERN_MELDING,
             )
     }
 }
