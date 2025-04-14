@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.api.models.DatoVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningBoolskDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDatoDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningFlerListeValgDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTekstDTO
@@ -16,6 +17,15 @@ import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.Opplysning
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fullmektigTilKlageinstansOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.tilKlageinstansOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 
@@ -29,91 +39,45 @@ object KlageDtoMapper {
         }
     }
 
+    fun finnGruppe(opplysningType: OpplysningType): KlageGruppeDTO {
+        return when (opplysningType) {
+            in klagenGjelderOpplysningTyper -> KlageGruppeDTO.KLAGESAK
+            in fristvurderingOpplysningTyper + oversittetFristOpplysningTyper -> KlageGruppeDTO.FRIST
+            in formkravOpplysningTyper -> KlageGruppeDTO.FORMKRAV
+            in (utfallOpplysningTyper + tilKlageinstansOpplysningTyper + fullmektigTilKlageinstansOpplysningTyper) ->
+                KlageGruppeDTO.KLAGE_ANKE
+            else -> {
+                throw IllegalStateException("KlageGruppeOpplysningType $opplysningType ikke støttet")
+            }
+        }
+    }
+
+    fun behandlingOpplysninger(opplysninger: List<Opplysning>): List<Opplysning> {
+        return opplysninger.filter {
+            it.type in (
+                klagenGjelderOpplysningTyper + formkravOpplysningTyper +
+                    fristvurderingOpplysningTyper + oversittetFristOpplysningTyper
+            )
+        }
+    }
+
+    fun utFallOpplysninger(opplysninger: List<Opplysning>): List<Opplysning> {
+        return opplysninger.filter {
+            it.type in (
+                utfallOpplysningTyper + tilKlageinstansOpplysningTyper +
+                    fullmektigTilKlageinstansOpplysningTyper
+            )
+        }
+    }
+
     fun KlageBehandling.tilDto(): KlageDTO {
+        val synligeOpplysninger = synligeOpplysninger().toList()
         return KlageDTO(
             id = this.id,
             // todo
             saksbehandler = null,
-            behandlingOpplysninger =
-                this.synligeOpplysninger().map { opplysning ->
-                    when (opplysning.type.datatype) {
-                        Datatype.TEKST ->
-                            KlageOpplysningTekstDTO(
-                                id = opplysning.id,
-                                navn = opplysning.type.navn,
-                                // todo
-                                paakrevd = true,
-                                // todo
-                                gruppe = KlageGruppeDTO.FRIST,
-                                valgmuligheter = emptyList(),
-                                redigerbar = true,
-                                verdi =
-                                    if (opplysning.verdi is Verdi.TomVerdi) {
-                                        null
-                                    } else {
-                                        (opplysning.verdi as Verdi.TekstVerdi).value
-                                    },
-                            )
-
-                        Datatype.DATO -> {
-                            KlageOpplysningDatoDTO(
-                                id = opplysning.id,
-                                navn = opplysning.type.navn,
-                                // todo
-                                paakrevd = true,
-                                // todo
-                                gruppe = KlageGruppeDTO.FRIST,
-                                valgmuligheter = emptyList(),
-                                redigerbar = true,
-                                verdi =
-                                    if (opplysning.verdi is Verdi.TomVerdi) {
-                                        null
-                                    } else {
-                                        (opplysning.verdi as Verdi.Dato).value
-                                    },
-                            )
-                        }
-
-                        Datatype.BOOLSK -> {
-                            KlageOpplysningBoolskDTO(
-                                id = opplysning.id,
-                                navn = opplysning.type.navn,
-                                // todo
-                                paakrevd = true,
-                                // todo
-                                gruppe = KlageGruppeDTO.FRIST,
-                                valgmuligheter = emptyList(),
-                                redigerbar = true,
-                                verdi =
-                                    if (opplysning.verdi is Verdi.TomVerdi) {
-                                        null
-                                    } else {
-                                        (opplysning.verdi as Verdi.Boolsk).value
-                                    },
-                            )
-                        }
-
-                        Datatype.FLERVALG -> {
-                            KlageOpplysningFlerListeValgDTO(
-                                id = opplysning.id,
-                                navn = opplysning.type.navn,
-                                // todo
-                                paakrevd = true,
-                                // todo
-                                gruppe = KlageGruppeDTO.FRIST,
-                                valgmuligheter = emptyList(),
-                                redigerbar = true,
-                                verdi =
-                                    if (opplysning.verdi is Verdi.TomVerdi) {
-                                        null
-                                    } else {
-                                        (opplysning.verdi as Verdi.Flervalg).value
-                                    },
-                            )
-                        }
-                    }
-                },
-            utfallOpplysninger = emptyList(),
+            behandlingOpplysninger = behandlingOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
+            utfallOpplysninger = utFallOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             utfall =
                 UtfallDTO(
                     verdi =
@@ -129,4 +93,76 @@ object KlageDtoMapper {
             meldingOmVedtak = null,
         )
     }
+
+    private fun List<Opplysning>.klageOpplysningDTO(): List<KlageOpplysningDTO> =
+        map { opplysning ->
+            when (opplysning.type.datatype) {
+                Datatype.TEKST ->
+                    KlageOpplysningTekstDTO(
+                        id = opplysning.id,
+                        navn = opplysning.type.navn,
+                        paakrevd = true,
+                        gruppe = finnGruppe(opplysning.type),
+                        valgmuligheter = emptyList(),
+                        redigerbar = true,
+                        verdi =
+                            if (opplysning.verdi is Verdi.TomVerdi) {
+                                null
+                            } else {
+                                (opplysning.verdi as Verdi.TekstVerdi).value
+                            },
+                    )
+
+                Datatype.DATO -> {
+                    KlageOpplysningDatoDTO(
+                        id = opplysning.id,
+                        navn = opplysning.type.navn,
+                        paakrevd = true,
+                        gruppe = finnGruppe(opplysning.type),
+                        valgmuligheter = emptyList(),
+                        redigerbar = true,
+                        verdi =
+                            if (opplysning.verdi is Verdi.TomVerdi) {
+                                null
+                            } else {
+                                (opplysning.verdi as Verdi.Dato).value
+                            },
+                    )
+                }
+
+                Datatype.BOOLSK -> {
+                    KlageOpplysningBoolskDTO(
+                        id = opplysning.id,
+                        navn = opplysning.type.navn,
+                        paakrevd = true,
+                        gruppe = finnGruppe(opplysning.type),
+                        valgmuligheter = emptyList(),
+                        redigerbar = true,
+                        verdi =
+                            if (opplysning.verdi is Verdi.TomVerdi) {
+                                null
+                            } else {
+                                (opplysning.verdi as Verdi.Boolsk).value
+                            },
+                    )
+                }
+
+                Datatype.FLERVALG -> {
+                    KlageOpplysningFlerListeValgDTO(
+                        id = opplysning.id,
+                        navn = opplysning.type.navn,
+                        paakrevd = true,
+                        gruppe = finnGruppe(opplysning.type),
+                        valgmuligheter = emptyList(),
+                        redigerbar = true,
+                        verdi =
+                            if (opplysning.verdi is Verdi.TomVerdi) {
+                                null
+                            } else {
+                                (opplysning.verdi as Verdi.Flervalg).value
+                            },
+                    )
+                }
+            }
+        }
 }
