@@ -4,19 +4,12 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
 interface OppgaveRepository {
-    fun finnPerson(ident: String): Person?
-
-    fun hentPerson(ident: String): Person
-
-    fun lagre(person: Person)
-
     fun finnBehandling(behandlingId: UUID): Behandling?
 
     fun hentBehandling(behandlingId: UUID): Behandling

@@ -65,7 +65,8 @@ class OppgaveMediatorTilgangskontrollTest {
         val oppgaveRepositoryMock = mockk<OppgaveRepository>().also { every { it.hentOppgave(oppgave.oppgaveId) } returns oppgave }
         val oppgaveMediator =
             OppgaveMediator(
-                repository = oppgaveRepositoryMock,
+                personRepository = mockk(),
+                oppgaveRepository = oppgaveRepositoryMock,
                 oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
@@ -86,7 +87,8 @@ class OppgaveMediatorTilgangskontrollTest {
         val oppgaveRepositoryMock = mockk<OppgaveRepository>().also { every { it.hentOppgave(oppgave.oppgaveId) } returns oppgave }
         val oppgaveMediator =
             OppgaveMediator(
-                repository = oppgaveRepositoryMock,
+                personRepository = mockk(),
+                oppgaveRepository = oppgaveRepositoryMock,
                 oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),

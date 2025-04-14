@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
@@ -48,7 +49,8 @@ import no.nav.helse.rapids_rivers.RapidApplication
 import java.util.Timer
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
-    private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
+    private val personRepository = PostgresPersonRepository(dataSource)
+    private val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
     private val utsendingRepository = PostgresUtsendingRepository(dataSource)
     private val skjermingKlient =
         SkjermingHttpKlient(
@@ -72,8 +74,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.dpBehandlingOboExchanger,
         )
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
-    private val skjermingConsumer = SkjermingConsumer(oppgaveRepository)
-    private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(oppgaveRepository, pdlKlient)
+    private val skjermingConsumer = SkjermingConsumer(personRepository)
+    private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(personRepository, pdlKlient)
     private val saksbehandlerOppslag =
         CachedSaksbehandlerOppslag(SaksbehandlerOppslagImpl(tokenProvider = Configuration.entraTokenProvider))
     private val oppslag: Oppslag =
@@ -85,7 +87,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
     private val oppgaveMediator =
         OppgaveMediator(
-            repository = oppgaveRepository,
+            personRepository = personRepository,
+            oppgaveRepository = oppgaveRepository,
             oppslag = oppslag,
             behandlingKlient = behandlingKlient,
             utsendingMediator = utsendingMediator,

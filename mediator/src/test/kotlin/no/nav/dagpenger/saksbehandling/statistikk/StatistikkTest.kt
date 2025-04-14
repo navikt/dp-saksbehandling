@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 import javax.sql.DataSource
@@ -13,7 +14,8 @@ class StatistikkTest {
     fun `test hentAntallVedtakGjort`() {
         withMigratedDb { ds: DataSource ->
             // Insert test data
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(lagOppgave(tilstand = Oppgave.FerdigBehandlet))
             repo.lagre(lagOppgave(tilstand = Oppgave.FerdigBehandlet))
             repo.lagre(lagOppgave(tilstand = Oppgave.FerdigBehandlet))
@@ -31,7 +33,8 @@ class StatistikkTest {
     fun `test hentBeholdningsInfo`() {
         withMigratedDb { ds: DataSource ->
             // Insert test data
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(lagOppgave(tilstand = Oppgave.KlarTilBehandling))
             repo.lagre(lagOppgave(tilstand = Oppgave.KlarTilBehandling))
 

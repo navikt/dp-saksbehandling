@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import org.junit.jupiter.api.Test
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -36,7 +37,8 @@ class PostgresTriggerTest {
                 behandling = testBehandling,
             )
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(testOppgave)
             val endretTidspunkt = ds.hentEndretTidspunkt(testOppgave.oppgaveId)
             Thread.sleep(100)
