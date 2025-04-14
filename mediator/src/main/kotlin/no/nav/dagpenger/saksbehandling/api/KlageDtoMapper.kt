@@ -1,10 +1,11 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
+import no.nav.dagpenger.saksbehandling.api.KlageView.behandlingOpplysninger
+import no.nav.dagpenger.saksbehandling.api.KlageView.finnGruppe
 import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.DatoVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageDTO
-import no.nav.dagpenger.saksbehandling.api.models.KlageGruppeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningBoolskDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDatoDTO
@@ -18,12 +19,7 @@ import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fullmektigTilKlageinstansOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.tilKlageinstansOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
@@ -36,28 +32,6 @@ object KlageDtoMapper {
             is DatoVerdiDTO -> OpplysningerVerdi.Dato(this.verdi)
             is ListeVerdiDTO -> OpplysningerVerdi.TekstListe(this.verdi)
             is TekstVerdiDTO -> OpplysningerVerdi.Tekst(this.verdi)
-        }
-    }
-
-    fun finnGruppe(opplysningType: OpplysningType): KlageGruppeDTO {
-        return when (opplysningType) {
-            in klagenGjelderOpplysningTyper -> KlageGruppeDTO.KLAGESAK
-            in fristvurderingOpplysningTyper + oversittetFristOpplysningTyper -> KlageGruppeDTO.FRIST
-            in formkravOpplysningTyper -> KlageGruppeDTO.FORMKRAV
-            in (utfallOpplysningTyper + tilKlageinstansOpplysningTyper + fullmektigTilKlageinstansOpplysningTyper) ->
-                KlageGruppeDTO.KLAGE_ANKE
-            else -> {
-                throw IllegalStateException("KlageGruppeOpplysningType $opplysningType ikke støttet")
-            }
-        }
-    }
-
-    fun behandlingOpplysninger(opplysninger: List<Opplysning>): List<Opplysning> {
-        return opplysninger.filter {
-            it.type in (
-                klagenGjelderOpplysningTyper + formkravOpplysningTyper +
-                    fristvurderingOpplysningTyper + oversittetFristOpplysningTyper
-            )
         }
     }
 

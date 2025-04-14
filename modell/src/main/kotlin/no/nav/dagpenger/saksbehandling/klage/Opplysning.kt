@@ -52,6 +52,10 @@ class Opplysning(
             else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med dato verdi")
         }
     }
+
+    override fun toString(): String {
+        return this.type.toString()
+    }
 }
 
 sealed class Verdi {

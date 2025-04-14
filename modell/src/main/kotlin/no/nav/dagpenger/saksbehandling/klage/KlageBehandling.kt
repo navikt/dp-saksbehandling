@@ -18,9 +18,11 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAK
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_NEVNER_ENDRING
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.RETTSLIG_KLAGEINTERESSE
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERNIG_AV_KLAGEN
 import java.time.LocalDate
@@ -31,12 +33,6 @@ object OpplysningerBygger {
         setOf(
             KLAGEN_GJELDER,
             KLAGEN_GJELDER_VEDTAK,
-        )
-
-    val formkravOpplysningTyper =
-        setOf(
-            ER_KLAGEN_SKRIFTLIG,
-            ER_KLAGEN_UNDERSKREVET,
         )
 
     val fristvurderingOpplysningTyper =
@@ -51,6 +47,15 @@ object OpplysningerBygger {
             OPPREISNING_OVERSITTET_FRIST,
             OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE,
         )
+
+    val formkravOpplysningTyper =
+        setOf(
+            ER_KLAGEN_SKRIFTLIG,
+            ER_KLAGEN_UNDERSKREVET,
+            KLAGEN_NEVNER_ENDRING,
+            RETTSLIG_KLAGEINTERESSE,
+        )
+
     val utfallOpplysningTyper =
         setOf(
             UTFALL,
