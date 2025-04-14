@@ -35,8 +35,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
-import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
+import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
@@ -57,7 +57,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilJson
-import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import org.postgresql.util.PGobject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -67,18 +66,8 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-class PostgresOppgaveRepository(private val datasource: DataSource) :
-    OppgaveRepository,
-    SkjermingRepository,
-    AdressebeskyttelseRepository {
-    override fun lagre(person: Person) {
-        sessionOf(datasource).use { session ->
-            session.transaction { tx ->
-                tx.lagre(person)
-            }
-        }
-    }
-
+class PostgresOppgaveRepository(private val datasource: DataSource, private val personRepository: PersonRepository) :
+    OppgaveRepository {
     override fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
@@ -240,35 +229,6 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         }
     }
 
-    override fun finnPerson(ident: String): Person? {
-        sessionOf(datasource).use { session ->
-            return session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT * 
-                        FROM   person_v1
-                        WHERE  ident = :ident
-                        """.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "ident" to ident,
-                        ),
-                ).map { row ->
-                    Person(
-                        id = row.uuid("id"),
-                        ident = row.string("ident"),
-                        skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
-                        adressebeskyttelseGradering = row.adresseBeskyttelseGradering(),
-                    )
-                }.asSingle,
-            )
-        }
-    }
-
-    override fun hentPerson(ident: String) = finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
-
     override fun slettBehandling(behandlingId: UUID) {
         val behandling =
             try {
@@ -318,7 +278,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     val ident = row.string("ident")
                     Behandling.rehydrer(
                         behandlingId = behandlingId,
-                        person = finnPerson(ident)!!,
+                        person = personRepository.finnPerson(ident)!!,
                         opprettet = row.localDateTime("opprettet"),
                         hendelse = finnHendelseForBehandling(behandlingId, datasource),
                     )
@@ -672,73 +632,6 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     }.asList,
                 )
             OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
-        }
-    }
-
-    override fun oppdaterSkjermingStatus(
-        fnr: String,
-        skjermet: Boolean,
-    ): Int {
-        return sessionOf(datasource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        UPDATE person_v1
-                        SET    skjermes_som_egne_ansatte = :skjermet
-                        WHERE  ident = :fnr
-                        """.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "fnr" to fnr,
-                            "skjermet" to skjermet,
-                        ),
-                ).asUpdate,
-            )
-        }
-    }
-
-    override fun oppdaterAdressebeskyttetStatus(
-        fnr: String,
-        adresseBeskyttelseGradering: AdressebeskyttelseGradering,
-    ): Int {
-        return sessionOf(datasource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        UPDATE person_v1
-                        SET    adressebeskyttelse_gradering = :adresseBeskyttelseGradering
-                        WHERE  ident = :fnr
-                        """.trimIndent(),
-                    paramMap =
-                        mapOf(
-                            "fnr" to fnr,
-                            "adresseBeskyttelseGradering" to adresseBeskyttelseGradering.name,
-                        ),
-                ).asUpdate,
-            )
-        }
-    }
-
-    override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
-        val identer = fnrs.joinToString { "'$it'" }
-        return sessionOf(datasource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT ident
-                        FROM   person_v1
-                        WHERE  ident IN ($identer)
-                        """.trimIndent(),
-                ).map { row ->
-                    row.string("ident")
-                }.asList,
-            ).toSet()
         }
     }
 }

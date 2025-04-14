@@ -47,6 +47,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Paginering
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -80,57 +81,10 @@ class PostgresOppgaveRepositoryTest {
     private val oppgaveIdTest = UUIDv7.ny()
 
     @Test
-    fun `Skal kunne lagre og hente person`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testPerson)
-
-            val personFraDatabase = repo.finnPerson(testPerson.ident)
-            personFraDatabase shouldBe testPerson
-        }
-    }
-
-    @Test
-    fun `Skal kunne oppdatere egen ansatt skjerming på en person`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testPerson)
-            repo.finnPerson(testPerson.ident) shouldBe testPerson
-
-            val oppdatertPerson = testPerson.copy(skjermesSomEgneAnsatte = true)
-            repo.lagre(oppdatertPerson)
-            repo.finnPerson(oppdatertPerson.ident) shouldBe oppdatertPerson
-        }
-    }
-
-    @Test
-    fun `Skal kunne oppdatere bare egen ansatt skjerming på en person`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testPerson)
-            repo.hentPerson(testPerson.ident).skjermesSomEgneAnsatte shouldBe false
-
-            repo.oppdaterSkjermingStatus(testPerson.ident, true)
-            repo.hentPerson(testPerson.ident).skjermesSomEgneAnsatte shouldBe true
-        }
-    }
-
-    @Test
-    fun `Skal kunne oppdatere adresse beskyttet status på en person`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testPerson)
-            repo.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe UGRADERT
-
-            repo.oppdaterAdressebeskyttetStatus(testPerson.ident, STRENGT_FORTROLIG)
-            repo.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe STRENGT_FORTROLIG
-        }
-    }
-
-    @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val saksbehandler =
                 Saksbehandler(
                     navIdent = "NAVIdent2",
@@ -157,7 +111,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Finn neste ledige oppgave som ikke gjelder egne ansatte`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
 
             val eldsteOppgaveMedSkjermingSomEgneAnsatte =
                 lagOppgave(
@@ -254,7 +209,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Finn neste ledige oppgave som ikke gjelder adressebeskyttede personer`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
 
             val eldsteOppgaveMedAdressebeskyttelse =
                 lagOppgave(
@@ -347,7 +303,8 @@ class PostgresOppgaveRepositoryTest {
                     navIdent = "NAVIdent",
                     grupper = emptySet(),
                 )
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val nesteOppgaveHendelse =
                 NesteOppgaveHendelse(
                     ansvarligIdent = saksbehandler.navIdent,
@@ -456,7 +413,8 @@ class PostgresOppgaveRepositoryTest {
                     tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(oppgave)
 
             repo.tildelOgHentNesteOppgave(
@@ -569,7 +527,8 @@ class PostgresOppgaveRepositoryTest {
                     grupper = emptySet(),
                     tilganger = setOf(SAKSBEHANDLER, BESLUTTER, STRENGT_FORTROLIG_ADRESSE, EGNE_ANSATTE),
                 )
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
 
             val yngsteLedigeOppgaveOpprettetIDag =
                 lagOppgave(
@@ -901,7 +860,8 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne slette behandling`() {
         val testOppgave = lagOppgave(emneknagger = setOf("hugga", "bugga"))
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(testOppgave)
             repo.slettBehandling(testOppgave.behandling.behandlingId)
 
@@ -910,7 +870,7 @@ class PostgresOppgaveRepositoryTest {
             }
 
             assertThrows<DataNotFoundException> {
-                repo.hentPerson(testPerson.ident)
+                personRepository.hentPerson(testPerson.ident)
             }
 
             assertThrows<DataNotFoundException> {
@@ -931,20 +891,10 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Exception hvis vi ikke får hentet person basert på ident`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-
-            shouldThrow<DataNotFoundException> {
-                repo.hentPerson(testPerson.ident)
-            }
-        }
-    }
-
-    @Test
     fun `Exception hvis vi ikke får hentet behandling basert på behandlingId`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
 
             shouldThrow<DataNotFoundException> {
                 repo.hentBehandling(UUIDv7.ny())
@@ -967,7 +917,8 @@ class PostgresOppgaveRepositoryTest {
             )
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(testBehandling)
             val behandlingFraDatabase = repo.hentBehandling(testBehandling.behandlingId)
             behandlingFraDatabase shouldBe testBehandling
@@ -983,7 +934,8 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne lagre en oppgave flere ganger`() {
         val testOppgave = lagOppgave()
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
 
             shouldNotThrowAny {
                 repo.lagre(testOppgave)
@@ -1011,7 +963,8 @@ class PostgresOppgaveRepositoryTest {
         )
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase shouldBe testOppgave
@@ -1021,7 +974,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre notatet til en oppgave`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             lagOppgave(tilstand = Oppgave.KlarTilKontroll).also { oppgave: Oppgave ->
                 repo.lagre(oppgave)
                 oppgave.tildel(
@@ -1052,7 +1006,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne finne et notat`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgave =
                 lagOppgave(tilstand = Oppgave.KlarTilKontroll).also { oppgave: Oppgave ->
                     oppgave.tildel(
@@ -1084,7 +1039,8 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne lagre og hente en oppgave`() {
         val testOppgave = lagOppgave()
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase shouldBe testOppgave
@@ -1110,7 +1066,8 @@ class PostgresOppgaveRepositoryTest {
         )
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase shouldBe testOppgave
@@ -1160,7 +1117,8 @@ class PostgresOppgaveRepositoryTest {
             )
         val testOppgave = lagOppgave(tilstandslogg = tilstandslogg, oppgaveId = oppgaveIdTest)
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase.tilstandslogg.size shouldBe testOppgave.tilstandslogg.size
@@ -1179,7 +1137,8 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne endre tilstand på en oppgave`() {
         val testOppgave = lagOppgave(tilstand = KlarTilBehandling)
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
 
             repo.lagre(testOppgave)
             repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe KLAR_TIL_BEHANDLING
@@ -1194,7 +1153,8 @@ class PostgresOppgaveRepositoryTest {
         val testOppgave = lagOppgave(tilstand = UnderBehandling)
         val utsattTil = LocalDate.now().plusDays(1)
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
 
             repo.lagre(
                 testOppgave.copy(
@@ -1215,7 +1175,8 @@ class PostgresOppgaveRepositoryTest {
         val oppgaveFerdigBehandlet = lagOppgave(tilstand = FerdigBehandlet)
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(oppgaveKlarTilBehandling)
             repo.lagre(oppgaveFerdigBehandlet)
 
@@ -1251,7 +1212,8 @@ class PostgresOppgaveRepositoryTest {
         val oppgave1TilKari = lagOppgave(person = kari, tilstand = FerdigBehandlet)
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(oppgave1TilOla)
             repo.lagre(oppgave2TilOla)
             repo.lagre(oppgave1TilKari)
@@ -1286,7 +1248,8 @@ class PostgresOppgaveRepositoryTest {
         val oppgaveKlarTilBehandling = lagOppgave(tilstand = KlarTilBehandling, behandling = behandling)
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(oppgaveKlarTilBehandling)
 
             repo.oppgaveTilstandForSøknad(
@@ -1307,7 +1270,8 @@ class PostgresOppgaveRepositoryTest {
         val oppgave = lagOppgave(behandling = behandling)
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(oppgave)
             repo.lagre(behandling)
 
@@ -1319,7 +1283,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på emneknagger`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgave1 = lagOppgave(emneknagger = setOf("hubba", "bubba"))
             val oppgave2 = lagOppgave(emneknagger = setOf("hubba"))
             val oppgave3 = lagOppgave(emneknagger = emptySet())
@@ -1369,7 +1334,8 @@ class PostgresOppgaveRepositoryTest {
         val saksbehandler2 = "saksbehandler2"
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgave1 =
                 lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf(INNVILGELSE.visningsnavn))
             val oppgave2 =
@@ -1430,7 +1396,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne hente paginerte oppgaver`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val nyesteOppgave = lagOppgave(opprettet = opprettetNå)
             val nestNyesteOppgave = lagOppgave(opprettet = opprettetNå.minusDays(1))
             val nestEldsteOppgave = lagOppgave(opprettet = opprettetNå.minusDays(3))
@@ -1510,7 +1477,8 @@ class PostgresOppgaveRepositoryTest {
         val enUkeSiden = opprettetNå.minusDays(7)
 
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgaveUnderBehandlingEnUkeGammel =
                 lagOppgave(UnderBehandling, opprettet = enUkeSiden, saksbehandlerIdent = saksbehandler.navIdent)
             val oppgaveKlarTilBehandlingIDag = lagOppgave(KlarTilBehandling)
@@ -1609,7 +1577,8 @@ class PostgresOppgaveRepositoryTest {
             val iGårSåTidligPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MIN)
             val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX)
             val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgaveOpprettetSeintForgårs =
                 lagOppgave(KlarTilBehandling, opprettet = iForgårsSåSeintPåDagenSomMulig)
             val oppgaveOpprettetTidligIGår = lagOppgave(KlarTilBehandling, opprettet = iGårSåTidligPåDagenSomMulig)
@@ -1637,7 +1606,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal hente en oppgave basert på behandlingId`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgave = lagOppgave()
             repo.lagre(oppgave)
             repo.hentOppgaveFor(oppgave.behandling.behandlingId) shouldBe oppgave
@@ -1651,7 +1621,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgave = lagOppgave()
             repo.lagre(oppgave)
             repo.finnOppgaveFor(oppgave.behandling.behandlingId) shouldBe oppgave
@@ -1660,22 +1631,10 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Sjekk om fødselsnumre eksisterer i vårt system`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-            val (fnr1, fnr2, fnr3) = Triple("12345678910", "10987654321", "12345678931")
-
-            repo.lagre(lagPerson(fnr1))
-            repo.lagre(lagPerson(fnr2))
-            repo.lagre(lagPerson("12345678941"))
-            repo.eksistererIDPsystem(setOf(fnr1, fnr2, fnr3)) shouldBe setOf(fnr1, fnr2)
-        }
-    }
-
-    @Test
     fun `Hent adressegraderingsbeskyttelse for person gitt oppgave`() {
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgave =
                 lagOppgave(
                     person =
@@ -1699,7 +1658,8 @@ class PostgresOppgaveRepositoryTest {
             )
         val testOppgave = lagOppgave(tilstandslogg = Tilstandslogg(mutableListOf(tilstandsendring)))
         withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase.tilstandslogg shouldBe testOppgave.tilstandslogg

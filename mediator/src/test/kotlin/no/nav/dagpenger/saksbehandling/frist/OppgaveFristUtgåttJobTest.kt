@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -23,9 +24,12 @@ class OppgaveFristUtgåttJobTest {
     @Test
     fun `Sett utgåtte oppgaver klare igjen`() =
         withMigratedDb { ds ->
+            val personRepository = PostgresPersonRepository(ds)
+            val repo = PostgresOppgaveRepository(ds, personRepository)
             val oppgaveMediator =
                 OppgaveMediator(
-                    repository = PostgresOppgaveRepository(ds),
+                    personRepository = personRepository,
+                    oppgaveRepository = repo,
                     oppslag = mockk(),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
@@ -33,8 +37,6 @@ class OppgaveFristUtgåttJobTest {
                 )
             val saksbehandlerIdent1 = "ident 1"
             val saksbehandlerIdent2 = "ident 2"
-            val repo = PostgresOppgaveRepository(ds)
-
             val iDag = LocalDate.now()
             val iMorgen = iDag.plusDays(1)
 
