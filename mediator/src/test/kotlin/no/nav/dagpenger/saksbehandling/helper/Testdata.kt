@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.helper
 
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
@@ -102,8 +101,7 @@ internal fun arkiverbartDokumentBehovLøsning(
 internal fun lagreOppgave(dataSource: DataSource): Oppgave {
     val oppgave = lagOppgave()
 
-    val personRepository = PostgresPersonRepository(dataSource)
-    val repository = PostgresOppgaveRepository(dataSource, personRepository)
+    val repository = PostgresOppgaveRepository(dataSource)
     repository.lagre(oppgave)
     return oppgave
 }

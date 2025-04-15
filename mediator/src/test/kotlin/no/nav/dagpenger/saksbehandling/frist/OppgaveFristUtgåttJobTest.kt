@@ -25,7 +25,7 @@ class OppgaveFristUtgåttJobTest {
     fun `Sett utgåtte oppgaver klare igjen`() =
         withMigratedDb { ds ->
             val personRepository = PostgresPersonRepository(ds)
-            val repo = PostgresOppgaveRepository(ds, personRepository)
+            val repo = PostgresOppgaveRepository(ds)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,

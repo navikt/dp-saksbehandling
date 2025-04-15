@@ -13,7 +13,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagUtsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
@@ -24,8 +23,7 @@ class MetrikkJobTest {
     @Test
     fun `Hent riktig distribusjon av oppgavetilstand`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val repo = PostgresOppgaveRepository(ds, personRepository)
+            val repo = PostgresOppgaveRepository(ds)
             repo.lagre(lagOppgave(tilstand = PåVent))
             repo.lagre(lagOppgave(tilstand = PåVent))
             repo.lagre(lagOppgave(tilstand = KlarTilBehandling))
@@ -61,8 +59,7 @@ class MetrikkJobTest {
     @Test
     fun `Hent riktig distribusjon av utsendingtilstand`() {
         withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val oppgaveRepository = PostgresOppgaveRepository(ds, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
             val utsendingRepository = PostgresUtsendingRepository(ds)
 
             listOf(

@@ -50,7 +50,7 @@ import java.util.Timer
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
     private val personRepository = PostgresPersonRepository(dataSource)
-    private val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+    private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
     private val utsendingRepository = PostgresUtsendingRepository(dataSource)
     private val skjermingKlient =
         SkjermingHttpKlient(
