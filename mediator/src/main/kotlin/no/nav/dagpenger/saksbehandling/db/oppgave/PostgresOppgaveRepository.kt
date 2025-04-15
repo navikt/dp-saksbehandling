@@ -268,17 +268,27 @@ class PostgresOppgaveRepository(private val datasource: DataSource, private val 
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident
+                        SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident,
+                               pers.skjermes_som_egne_ansatte, pers.adressebeskyttelse_gradering
                         FROM   behandling_v1 beha
                         JOIN   person_v1     pers ON pers.id = beha.person_id
                         WHERE  beha.id     = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row ->
-                    val ident = row.string("ident")
+                    val person =
+                        Person(
+                            id = row.uuid("person_id"),
+                            ident = row.string("ident"),
+                            skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
+                            adressebeskyttelseGradering =
+                                AdressebeskyttelseGradering.valueOf(
+                                    row.string("adressebeskyttelse_gradering"),
+                                ),
+                        )
                     Behandling.rehydrer(
                         behandlingId = behandlingId,
-                        person = personRepository.finnPerson(ident)!!,
+                        person = person,
                         opprettet = row.localDateTime("opprettet"),
                         hendelse = finnHendelseForBehandling(behandlingId, datasource),
                     )
