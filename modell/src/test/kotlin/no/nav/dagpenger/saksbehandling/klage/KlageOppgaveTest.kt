@@ -2,6 +2,8 @@ package no.nav.dagpenger.saksbehandling.klage
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
@@ -19,6 +21,12 @@ class KlageOppgaveTest {
         )
 
     private val oppgaveId: UUID = UUIDv7.ny()
+    private val testPerson =
+        Person(
+            ident = "12345612345",
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+        )
 
     @Test
     fun `Livsyklus på klage oppgavens tilstander`() {
@@ -26,6 +34,7 @@ class KlageOppgaveTest {
             KlageOppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
+                klageBehandling = KlageBehandling(person = testPerson),
             ).also {
                 it.tilstand() shouldBe KlageOppgave.KlarTilBehandling
             }
@@ -49,6 +58,7 @@ class KlageOppgaveTest {
             KlageOppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
+                klageBehandling = KlageBehandling(person = testPerson),
             ).ferdigstill(FerdigstillKlageOppgave(utførtAv = saksbehandler))
         }
 
@@ -62,6 +72,7 @@ class KlageOppgaveTest {
             KlageOppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
+                klageBehandling = KlageBehandling(person = testPerson),
             ).also {
                 it.tildel(
                     settOppgaveAnsvarHendelse,
