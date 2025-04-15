@@ -19,9 +19,11 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageOppgave
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class KlageRouteTest {
@@ -44,23 +46,28 @@ class KlageRouteTest {
 
     @Test
     fun `Skal hente klageDTO`() {
-        val klageId = UUIDv7.ny()
+        val klageOppgaveId = UUIDv7.ny()
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.hentKlage(klageId) } returns
-                    KlageBehandling(
-                        id = klageId,
-                        person =
-                            Person(
-                                id = UUID.randomUUID(),
-                                ident = "12345678901",
-                                skjermesSomEgneAnsatte = false,
-                                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                every { it.hentKlageOppgave(klageOppgaveId) } returns
+                    KlageOppgave(
+                        oppgaveId = klageOppgaveId,
+                        opprettet = LocalDateTime.now(),
+                        journalpostId = null,
+                        klageBehandling =
+                            KlageBehandling(
+                                person =
+                                    Person(
+                                        id = UUID.randomUUID(),
+                                        ident = "12345678901",
+                                        skjermesSomEgneAnsatte = false,
+                                        adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                                    ),
                             ),
                     )
             }
         withKlageRoute(mediator) {
-            client.get("oppgave/klage/$klageId") { autentisert() }.let {
+            client.get("oppgave/klage/$klageOppgaveId") { autentisert() }.let {
                 it.status shouldBe HttpStatusCode.OK
             }
             // todo mer testing
@@ -86,7 +93,7 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
                     mediator.oppdaterKlageOpplysning(
-                        klageId = klageId,
+                        klageOppgaveId = klageId,
                         opplysningId = opplysningId,
                         verdi = tekstListe,
                     )
@@ -114,7 +121,7 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
                     mediator.oppdaterKlageOpplysning(
-                        klageId = klageId,
+                        klageOppgaveId = klageId,
                         opplysningId = opplysningId,
                         verdi = tekst,
                     )
@@ -142,7 +149,7 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
                     mediator.oppdaterKlageOpplysning(
-                        klageId = klageId,
+                        klageOppgaveId = klageId,
                         opplysningId = opplysningId,
                         verdi = boolsk,
                     )
@@ -170,7 +177,7 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
                     mediator.oppdaterKlageOpplysning(
-                        klageId = klageId,
+                        klageOppgaveId = klageId,
                         opplysningId = opplysningId,
                         verdi = dato,
                     )

@@ -2,13 +2,18 @@ package no.nav.dagpenger.saksbehandling.db.klage
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageOppgave
+import java.time.LocalDateTime
 import java.util.UUID
 
 interface KlageRepository {
-    fun hentKlage(klageId: UUID): KlageBehandling
+    fun hentKlageOppgave(klageId: UUID): KlageOppgave
 
-    fun hentKlager(): List<KlageBehandling>
+    fun hentKlager(): List<KlageOppgave>
+
+    fun lagre(klage: KlageOppgave)
 
     class KlageIkkeFunnet(message: String) : RuntimeException(message)
 }
@@ -30,18 +35,28 @@ object InmemoryKlageRepository : KlageRepository {
         }
 
     private val klager =
-        mutableMapOf<UUID, KlageBehandling>().also { klager ->
+        mutableMapOf<UUID, KlageOppgave>().also { klager ->
             testKlageId1.let { id ->
                 klager[id] =
-                    KlageBehandling(
-                        id = id,
-                        person = personer[id] ?: throw IllegalStateException("Fant ikke person med id $id"),
+                    KlageOppgave(
+                        oppgaveId = id,
+                        opprettet = LocalDateTime.now(),
+                        klageBehandling =
+                            KlageBehandling(
+                                id = UUIDv7.ny(),
+                                person = personer[id]!!,
+                            ),
                     )
             }
         }
 
-    override fun hentKlage(klageId: UUID): KlageBehandling =
+    override fun hentKlageOppgave(klageId: UUID): KlageOppgave =
         klager[klageId] ?: throw KlageRepository.KlageIkkeFunnet("Fant ikke klage med id $klageId")
 
-    override fun hentKlager(): List<KlageBehandling> = klager.values.toList()
+    override fun hentKlager(): List<KlageOppgave> = klager.values.toList()
+
+    override fun lagre(klage: KlageOppgave) {
+        klager[klage.oppgaveId] = klage
+        personer[klage.klageBehandling.person.id] = klage.klageBehandling.person
+    }
 }

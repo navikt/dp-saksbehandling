@@ -1,7 +1,10 @@
 package no.nav.dagpenger.saksbehandling
 
+import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageOppgave
@@ -10,37 +13,39 @@ import java.util.UUID
 
 class KlageMediator(
     private val klageRepository: KlageRepository = InmemoryKlageRepository,
+    private val personRepository: PersonRepository,
+    private val oppslag: Oppslag,
 ) {
-    fun hentKlage(klageId: UUID): KlageBehandling {
-        return klageRepository.hentKlage(klageId)
+    fun hentKlageOppgave(klageOppgaveId: UUID): KlageOppgave {
+        return klageRepository.hentKlageOppgave(klageOppgaveId)
     }
 
-    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): KlageOppgave {
+    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse) {
+        val person =
+            personRepository.finnPerson(klageMottattHendelse.ident) ?: runBlocking {
+                oppslag.hentPersonMedSkjermingOgGradering(klageMottattHendelse.ident)
+            }
+
         val oppgave =
             KlageOppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = klageMottattHendelse.opprettet,
+                journalpostId = klageMottattHendelse.journalpostId,
                 klageBehandling =
                     KlageBehandling(
-                        person =
-                            Person(
-                                id = TODO(),
-                                ident = TODO(),
-                                skjermesSomEgneAnsatte = TODO(),
-                                adressebeskyttelseGradering = TODO(),
-                            ),
-                        opplysninger = TODO(),
-                        steg = TODO(),
+                        person = person,
                     ),
             )
+
+        klageRepository.lagre(oppgave)
     }
 
     fun oppdaterKlageOpplysning(
-        klageId: UUID,
+        klageOppgaveId: UUID,
         opplysningId: UUID,
         verdi: OpplysningerVerdi,
     ) {
-        klageRepository.hentKlage(klageId).let { klage ->
+        klageRepository.hentKlageOppgave(klageOppgaveId).klageBehandling.let { klage ->
             when (verdi) {
                 is OpplysningerVerdi.Tekst -> klage.svar(opplysningId, verdi.value)
                 is OpplysningerVerdi.TekstListe -> klage.svar(opplysningId, verdi.value)

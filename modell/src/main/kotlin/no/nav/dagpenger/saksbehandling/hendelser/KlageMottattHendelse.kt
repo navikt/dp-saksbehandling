@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.hendelser
 
+import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import java.time.LocalDateTime
@@ -9,5 +10,6 @@ data class KlageMottattHendelse(
     val klageId: UUID = UUIDv7.ny(),
     val ident: String,
     val opprettet: LocalDateTime,
-    override val utførtAv: Behandler,
+    val journalpostId: String,
+    override val utførtAv: Behandler = Applikasjon("dp-mottak"),
 ) : Hendelse(utførtAv)
