@@ -181,7 +181,7 @@ class OppgaveMediatorTest {
     fun `Skal kunne sette oppgave til kontroll`() {
         withMigratedDb { dataSource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgave = dataSource.lagTestoppgave(UNDER_BEHANDLING)
             val oppgaveMediator =
                 OppgaveMediator(
@@ -212,7 +212,7 @@ class OppgaveMediatorTest {
     fun `Skal kunne ta en oppgave under kontroll`() {
         withMigratedDb { dataSource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgave = dataSource.lagTestoppgave(KLAR_TIL_KONTROLL)
             val oppgaveMediator =
                 OppgaveMediator(
@@ -244,7 +244,7 @@ class OppgaveMediatorTest {
     fun `Skal kunne lagre og slette et notat på en oppgave`() {
         withMigratedDb { dataSource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgave = dataSource.lagTestoppgave(UNDER_KONTROLL)
             val oppgaveMediator =
                 OppgaveMediator(
@@ -287,7 +287,7 @@ class OppgaveMediatorTest {
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,
@@ -316,7 +316,7 @@ class OppgaveMediatorTest {
     fun `Skal kunne motta flere forslag til vedtak hendelser og oppdatere emneknaggene med de siste mottatte`() {
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val testEmneknagger1 = setOf("a", "b", "c")
             val testEmneknagger2 = setOf("x", "y")
             val oppgave = datasource.lagTestoppgave(tilstand = OPPRETTET)
@@ -404,7 +404,7 @@ class OppgaveMediatorTest {
 
         withMigratedDb { ds ->
             val personRepository = PostgresPersonRepository(ds)
-            val oppgaveRepository = PostgresOppgaveRepository(ds, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
 
             oppgaveRepository.lagre(oppgave)
 
@@ -441,7 +441,7 @@ class OppgaveMediatorTest {
 
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,
@@ -529,7 +529,7 @@ class OppgaveMediatorTest {
 
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,
@@ -618,7 +618,7 @@ class OppgaveMediatorTest {
             }
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
                 OppgaveMediator(
@@ -717,7 +717,7 @@ class OppgaveMediatorTest {
 
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
                 OppgaveMediator(
@@ -815,7 +815,7 @@ class OppgaveMediatorTest {
             }
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
                 OppgaveMediator(
@@ -892,7 +892,7 @@ class OppgaveMediatorTest {
             }
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
                 OppgaveMediator(
@@ -957,7 +957,7 @@ class OppgaveMediatorTest {
     fun `Livssyklus for søknadsbehandling som blir avbrutt`() {
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,
@@ -1018,7 +1018,7 @@ class OppgaveMediatorTest {
     fun `Livssyklus for søknadsbehandling som blir opprettet og så avbrutt`() {
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,
@@ -1059,7 +1059,7 @@ class OppgaveMediatorTest {
     fun `Livssyklus for søknadsbehandling som blir satt på vent`() {
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,
@@ -1123,7 +1123,7 @@ class OppgaveMediatorTest {
     fun `Kast feil når send til kontroll kalles uten at det kreves totrinnskontroll`() {
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,
@@ -1208,7 +1208,7 @@ class OppgaveMediatorTest {
 
         withMigratedDb { datasource ->
             val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource, personRepository)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = personRepository,
@@ -1300,7 +1300,7 @@ class OppgaveMediatorTest {
         val oppgaveMediator =
             OppgaveMediator(
                 personRepository = personRepository,
-                oppgaveRepository = PostgresOppgaveRepository(this, personRepository),
+                oppgaveRepository = PostgresOppgaveRepository(this),
                 behandlingKlient = behandlingKlientMock,
                 oppslag = oppslagMock,
                 utsendingMediator = mockk(),

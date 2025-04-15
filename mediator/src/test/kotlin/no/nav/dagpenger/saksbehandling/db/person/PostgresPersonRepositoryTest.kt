@@ -6,7 +6,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
@@ -64,7 +63,6 @@ class PostgresPersonRepositoryTest {
     fun `Exception hvis vi ikke får hentet person basert på ident`() {
         withMigratedDb { ds ->
             val personRepository = PostgresPersonRepository(ds)
-            val repo = PostgresOppgaveRepository(ds, personRepository)
 
             shouldThrow<DataNotFoundException> {
                 personRepository.hentPerson(testPerson.ident)
