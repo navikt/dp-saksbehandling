@@ -1,7 +1,10 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -32,5 +35,25 @@ class Oppslag(
 
     suspend fun erAdressebeskyttetPerson(ident: String): AdressebeskyttelseGradering {
         return pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
+    }
+
+    suspend fun hentPersonMedSkjermingOgGradering(ident: String): Person {
+        return coroutineScope {
+            val skjermesSomEgneAnsatte =
+                async {
+                    erSkjermetPerson(ident)
+                }
+
+            val adresseBeskyttelseGradering =
+                async {
+                    erAdressebeskyttetPerson(ident)
+                }
+
+            Person(
+                ident = ident,
+                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte.await(),
+                adressebeskyttelseGradering = adresseBeskyttelseGradering.await(),
+            )
+        }
     }
 }

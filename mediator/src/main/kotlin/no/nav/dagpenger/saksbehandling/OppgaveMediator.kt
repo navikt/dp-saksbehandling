@@ -61,9 +61,10 @@ class OppgaveMediator(
 
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val person =
-            personRepository.finnPerson(søknadsbehandlingOpprettetHendelse.ident) ?: lagPerson(
-                ident = søknadsbehandlingOpprettetHendelse.ident,
-            )
+            personRepository.finnPerson(søknadsbehandlingOpprettetHendelse.ident)
+                ?: runBlocking {
+                    oppslag.hentPersonMedSkjermingOgGradering(søknadsbehandlingOpprettetHendelse.ident)
+                }
 
         if (oppgaveRepository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) {
             logger.warn { "Mottatt hendelse behandling_opprettet, men behandling finnes allerede." }
@@ -448,26 +449,6 @@ class OppgaveMediator(
         oppgaveRepository.hentOppgave(påVentFristUtgåttHendelse.oppgaveId).let { oppgave ->
             oppgave.oppgaverPåVentMedUtgåttFrist(påVentFristUtgåttHendelse)
             oppgaveRepository.lagre(oppgave)
-        }
-    }
-
-    private fun lagPerson(ident: String): Person {
-        return runBlocking {
-            val skjermesSomEgneAnsatte =
-                async {
-                    oppslag.erSkjermetPerson(ident)
-                }
-
-            val adresseBeskyttelseGradering =
-                async {
-                    oppslag.erAdressebeskyttetPerson(ident)
-                }
-
-            Person(
-                ident = ident,
-                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte.await(),
-                adressebeskyttelseGradering = adresseBeskyttelseGradering.await(),
-            )
         }
     }
 
