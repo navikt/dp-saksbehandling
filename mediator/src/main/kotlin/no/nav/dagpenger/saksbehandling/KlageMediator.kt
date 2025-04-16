@@ -7,7 +7,6 @@ import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.KlageOppgave
 import java.time.LocalDate
 import java.util.UUID
 
@@ -16,9 +15,7 @@ class KlageMediator(
     private val personRepository: PersonRepository,
     private val oppslag: Oppslag,
 ) {
-    fun hentKlageOppgave(klageOppgaveId: UUID): KlageOppgave {
-        return klageRepository.hentKlageOppgave(klageOppgaveId)
-    }
+    fun hentKLageBehandling(behandlingId: UUID): KlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse) {
         val person =
@@ -26,31 +23,43 @@ class KlageMediator(
                 oppslag.hentPersonMedSkjermingOgGradering(klageMottattHendelse.ident)
             }
 
+        val klageBehandling =
+            KlageBehandling(
+                behandlingId = UUIDv7.ny(),
+            )
+
         val oppgave =
-            KlageOppgave(
+            Oppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = klageMottattHendelse.opprettet,
-                journalpostId = klageMottattHendelse.journalpostId,
-                klageBehandling =
-                    KlageBehandling(
+                tilstand = Oppgave.KlarTilBehandling,
+                behandling =
+                    Behandling(
+                        behandlingId = klageBehandling.behandlingId,
                         person = person,
+                        opprettet = klageMottattHendelse.opprettet,
+                        hendelse = klageMottattHendelse,
+                        type = BehandlingType.KLAGE,
                     ),
             )
 
+        // todo
+        // klageRepository.lagreOppgaveOgKlage(oppgave, klageBehandling)
         klageRepository.lagre(oppgave)
+        klageRepository.lagre(klageBehandling)
     }
 
     fun oppdaterKlageOpplysning(
-        klageOppgaveId: UUID,
+        behandlingId: UUID,
         opplysningId: UUID,
         verdi: OpplysningerVerdi,
     ) {
-        klageRepository.hentKlageOppgave(klageOppgaveId).klageBehandling.let { klage ->
+        klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
             when (verdi) {
-                is OpplysningerVerdi.Tekst -> klage.svar(opplysningId, verdi.value)
-                is OpplysningerVerdi.TekstListe -> klage.svar(opplysningId, verdi.value)
-                is OpplysningerVerdi.Dato -> klage.svar(opplysningId, verdi.value)
-                is OpplysningerVerdi.Boolsk -> klage.svar(opplysningId, verdi.value)
+                is OpplysningerVerdi.Tekst -> klageBehandling.svar(opplysningId, verdi.value)
+                is OpplysningerVerdi.TekstListe -> klageBehandling.svar(opplysningId, verdi.value)
+                is OpplysningerVerdi.Dato -> klageBehandling.svar(opplysningId, verdi.value)
+                is OpplysningerVerdi.Boolsk -> klageBehandling.svar(opplysningId, verdi.value)
             }
         }
     }

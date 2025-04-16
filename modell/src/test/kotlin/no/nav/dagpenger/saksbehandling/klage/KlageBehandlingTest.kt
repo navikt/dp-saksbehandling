@@ -2,8 +2,6 @@ package no.nav.dagpenger.saksbehandling.klage
 
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
@@ -19,8 +17,7 @@ class KlageBehandlingTest {
     fun `Skal kunne svare og endre på opplysninger av ulike typer`() {
         val klageBehandling =
             KlageBehandling(
-                id = UUIDv7.ny(),
-                person = testPerson(),
+                behandlingId = UUIDv7.ny(),
             )
 
         val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysning()
@@ -62,8 +59,7 @@ class KlageBehandlingTest {
     fun `Hvis alle behandlingsopplysninger er utfylt - skal utfall kunne velges`() {
         val klageBehandling =
             KlageBehandling(
-                id = UUID.randomUUID(),
-                person = testPerson(),
+                behandlingId = UUID.randomUUID(),
             )
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
@@ -101,13 +97,6 @@ class KlageBehandlingTest {
                 opplysning.synlighet()
         } shouldNotBe emptySet<Opplysning>()
     }
-
-    private fun testPerson(): Person =
-        Person(
-            ident = "12345678901",
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = UGRADERT,
-        )
 
     private fun KlageBehandling.finnEnOpplysning(opplysningType: OpplysningType): UUID {
         return this.synligeOpplysninger().first { opplysning -> opplysning.type == opplysningType }.id

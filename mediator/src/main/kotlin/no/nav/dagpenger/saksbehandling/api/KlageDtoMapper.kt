@@ -36,7 +36,7 @@ object KlageDtoMapper {
     fun KlageBehandling.tilDto(): KlageDTO {
         val synligeOpplysninger = synligeOpplysninger().toList()
         return KlageDTO(
-            id = this.id,
+            id = this.behandlingId,
             // todo
             saksbehandler = null,
             behandlingOpplysninger = behandlingOpplysninger(synligeOpplysninger).klageOpplysningDTO(),

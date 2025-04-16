@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.klage
 
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_SKRIFTLIG
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_UNDERSKREVET
@@ -91,8 +90,7 @@ object OpplysningerBygger {
 }
 
 class KlageBehandling(
-    val id: UUID = UUIDv7.ny(),
-    val person: Person,
+    val behandlingId: UUID = UUIDv7.ny(),
     private val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private val steg: List<Steg> =
         listOf(

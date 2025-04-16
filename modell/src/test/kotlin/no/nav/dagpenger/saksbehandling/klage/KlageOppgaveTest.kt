@@ -34,7 +34,7 @@ class KlageOppgaveTest {
             KlageOppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
-                klageBehandling = KlageBehandling(person = testPerson),
+                klageBehandling = KlageBehandling(),
             ).also {
                 it.tilstand() shouldBe KlageOppgave.KlarTilBehandling
             }
@@ -58,7 +58,7 @@ class KlageOppgaveTest {
             KlageOppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
-                klageBehandling = KlageBehandling(person = testPerson),
+                klageBehandling = KlageBehandling(),
             ).ferdigstill(FerdigstillKlageOppgave(utførtAv = saksbehandler))
         }
 
@@ -72,7 +72,7 @@ class KlageOppgaveTest {
             KlageOppgave(
                 oppgaveId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
-                klageBehandling = KlageBehandling(person = testPerson),
+                klageBehandling = KlageBehandling(),
             ).also {
                 it.tildel(
                     settOppgaveAnsvarHendelse,
