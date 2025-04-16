@@ -46,7 +46,7 @@ class KlageMediatorTest {
             )
 
             val oppgave: Oppgave =
-                InmemoryKlageRepository.hentKlager().single {
+                InmemoryKlageRepository.hentOppgaver().single {
                     it.behandling.person.ident == testPersonIdent
                 }
 

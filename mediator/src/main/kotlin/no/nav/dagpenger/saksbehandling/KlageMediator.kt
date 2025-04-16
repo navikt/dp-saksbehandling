@@ -43,10 +43,7 @@ class KlageMediator(
                     ),
             )
 
-        // todo
-        // klageRepository.lagreOppgaveOgKlage(oppgave, klageBehandling)
-        klageRepository.lagre(oppgave)
-        klageRepository.lagre(klageBehandling)
+        klageRepository.lagreOppgaveOgKlage(oppgave, klageBehandling)
     }
 
     fun oppdaterKlageOpplysning(

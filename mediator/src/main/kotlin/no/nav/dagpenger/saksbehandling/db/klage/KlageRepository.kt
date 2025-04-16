@@ -10,15 +10,20 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface KlageRepository {
-    fun hentKlageOppgave(klageId: UUID): Oppgave
+    fun hentOppgaver(): List<Oppgave>
 
-    fun hentKlager(): List<Oppgave>
+    fun hentOppgaveFor(behandlingId: UUID): Oppgave
 
-    fun lagre(klage: Oppgave)
+    fun hentKlageBehandling(behandlingId: UUID): KlageBehandling
+
+    fun lagre(oppgave: Oppgave)
 
     fun lagre(klageBehandling: KlageBehandling)
 
-    fun hentKlageBehandling(behandlingId: UUID): KlageBehandling
+    fun lagreOppgaveOgKlage(
+        oppgave: Oppgave,
+        klageBehandling: KlageBehandling,
+    )
 
     class KlageIkkeFunnet(message: String) : RuntimeException(message)
 
@@ -70,10 +75,11 @@ object InmemoryKlageRepository : KlageRepository {
             ?: throw KlageRepository.KlageBehandlingIkkeFunnet("Fant ikke klagebehandling med id $behandlingId")
     }
 
-    override fun hentKlageOppgave(klageId: UUID): Oppgave =
-        oppgaver[klageId] ?: throw KlageRepository.KlageIkkeFunnet("Fant ikke oppgave med id $klageId")
+    // TODO trenger vi denne?
+    override fun hentOppgaveFor(behandlingId: UUID): Oppgave =
+        oppgaver[behandlingId] ?: throw KlageRepository.KlageIkkeFunnet("Fant ikke oppgave for klagebehandling med id $behandlingId")
 
-    override fun hentKlager(): List<Oppgave> = oppgaver.values.toList()
+    override fun hentOppgaver(): List<Oppgave> = oppgaver.values.toList()
 
     override fun lagre(oppgave: Oppgave) {
         oppgaver[oppgave.oppgaveId] = oppgave
@@ -81,6 +87,15 @@ object InmemoryKlageRepository : KlageRepository {
     }
 
     override fun lagre(klageBehandling: KlageBehandling) {
+        klageBehandlinger[klageBehandling.behandlingId] = klageBehandling
+    }
+
+    override fun lagreOppgaveOgKlage(
+        oppgave: Oppgave,
+        klageBehandling: KlageBehandling,
+    ) {
+        oppgaver[oppgave.oppgaveId] = oppgave
+        personer[oppgave.behandling.person.id] = oppgave.behandling.person
         klageBehandlinger[klageBehandling.behandlingId] = klageBehandling
     }
 }
