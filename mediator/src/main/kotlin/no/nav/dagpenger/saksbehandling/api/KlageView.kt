@@ -2,14 +2,14 @@ package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.saksbehandling.api.models.KlageGruppeDTO
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.tilKlageinstansOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.utfallOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fullmektigTilKlageinstansOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.tilKlageinstansOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 
 object KlageView {
     fun finnGruppe(opplysningType: OpplysningType): KlageGruppeDTO {

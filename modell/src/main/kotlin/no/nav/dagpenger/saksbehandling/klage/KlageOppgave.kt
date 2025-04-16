@@ -5,6 +5,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
+// TODO: SLETTES - denne har sannsynligvis ikke livets rett. Oppgave er generisk i seg selv.
 class KlageOppgave(
     oppgaveId: UUID,
     opprettet: LocalDateTime,
@@ -45,14 +46,14 @@ class KlageOppgave(
         val type: Type
 
         enum class Type {
-            KLAR_TIL_BEHANDLING,
-            UNDER_BEHANDLING,
-            FERDIG_BEHANDLET,
+            KLAGE_KLAR_TIL_BEHANDLING,
+            KLAGE_UNDER_BEHANDLING,
+            KLAGE_FERDIG_BEHANDLET,
         }
     }
 
     data object KlarTilBehandling : Tilstand {
-        override val type: Tilstand.Type = Tilstand.Type.KLAR_TIL_BEHANDLING
+        override val type: Tilstand.Type = Tilstand.Type.KLAGE_KLAR_TIL_BEHANDLING
 
         override fun tildel(
             klageOppgave: KlageOppgave,
@@ -63,7 +64,7 @@ class KlageOppgave(
     }
 
     data object UnderBehandling : Tilstand {
-        override val type: Tilstand.Type = Tilstand.Type.UNDER_BEHANDLING
+        override val type: Tilstand.Type = Tilstand.Type.KLAGE_UNDER_BEHANDLING
 
         override fun ferdigstill(
             klageOppgave: KlageOppgave,
@@ -74,6 +75,6 @@ class KlageOppgave(
     }
 
     data object FerdigBehandlet : Tilstand {
-        override val type: Tilstand.Type = Tilstand.Type.FERDIG_BEHANDLET
+        override val type: Tilstand.Type = Tilstand.Type.KLAGE_FERDIG_BEHANDLET
     }
 }

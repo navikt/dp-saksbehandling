@@ -15,7 +15,7 @@ class KlageMediator(
     private val personRepository: PersonRepository,
     private val oppslag: Oppslag,
 ) {
-    fun hentKLageBehandling(behandlingId: UUID): KlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
+    fun hentKlageBehandling(behandlingId: UUID): KlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse) {
         val person =

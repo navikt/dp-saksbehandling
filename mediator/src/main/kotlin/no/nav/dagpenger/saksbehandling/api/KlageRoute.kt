@@ -19,7 +19,7 @@ fun Route.klageApi(mediator: KlageMediator) {
             route("{klageId}") {
                 get {
                     val klageId = call.finnUUID("klageId")
-                    val klageBehandling = mediator.hentKLageBehandling(klageId)
+                    val klageBehandling = mediator.hentKlageBehandling(klageId)
                     val klageDTO = klageBehandling.tilDto()
                     call.respond(HttpStatusCode.OK, klageDTO)
                 }

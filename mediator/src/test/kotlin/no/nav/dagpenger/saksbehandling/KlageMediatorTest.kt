@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -27,7 +28,7 @@ class KlageMediatorTest {
         }
 
     @Test
-    fun `livsyklus til en klage`() {
+    fun `Livssyklus til en klage`() {
         withMigratedDb { ds ->
             val klageMediator =
                 KlageMediator(
@@ -44,12 +45,17 @@ class KlageMediatorTest {
                 ),
             )
 
-            val klageOppgave =
+            val oppgave: Oppgave =
                 InmemoryKlageRepository.hentKlager().single {
                     it.behandling.person.ident == testPersonIdent
                 }
 
-            klageOppgave shouldNotBe null
+            oppgave shouldNotBe null
+            oppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+
+            val klageBehandling = InmemoryKlageRepository.hentKlageBehandling(oppgave.behandling.behandlingId)
+
+            klageBehandling.behandlingId shouldBe oppgave.behandling.behandlingId
         }
     }
 }

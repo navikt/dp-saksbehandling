@@ -1,16 +1,16 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.lagOpplysninger
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.tilKlageinstansOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.utfallOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fullmektigTilKlageinstansOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.lagOpplysninger
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.tilKlageinstansOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
 import org.junit.jupiter.api.Test
 
 class StegTest {

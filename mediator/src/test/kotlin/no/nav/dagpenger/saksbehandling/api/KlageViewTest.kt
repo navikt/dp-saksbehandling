@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.lagOpplysninger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_SKRIFTLIG
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_UNDERSKREVET
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_1
@@ -24,7 +25,6 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.RETTSLIG_KLAGEINTERESSE
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERNIG_AV_KLAGEN
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.lagOpplysninger
 import org.junit.jupiter.api.Test
 
 class KlageViewTest {

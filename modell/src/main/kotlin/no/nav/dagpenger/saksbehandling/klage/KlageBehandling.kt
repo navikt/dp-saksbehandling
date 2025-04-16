@@ -27,7 +27,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERNIG_AV_KLAGEN
 import java.time.LocalDate
 import java.util.UUID
 
-object OpplysningerBygger {
+object OpplysningBygger {
     val klagenGjelderOpplysningTyper =
         setOf(
             KLAGEN_GJELDER,
@@ -67,6 +67,7 @@ object OpplysningerBygger {
             HJEMLER,
             INTERN_MELDING,
         )
+
     val fullmektigTilKlageinstansOpplysningTyper =
         setOf(
             FULLMEKTIG_NAVN,
@@ -91,7 +92,7 @@ object OpplysningerBygger {
 
 class KlageBehandling(
     val behandlingId: UUID = UUIDv7.ny(),
-    private val opplysninger: Set<Opplysning> = OpplysningerBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+    private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private val steg: List<Steg> =
         listOf(
             KlagenGjelderSteg,

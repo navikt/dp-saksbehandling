@@ -3,11 +3,11 @@ package no.nav.dagpenger.saksbehandling.klage
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.formkravOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.fristvurderingOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.klagenGjelderOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.oversittetFristOpplysningTyper
-import no.nav.dagpenger.saksbehandling.klage.OpplysningerBygger.utfallOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.oversittetFristOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.utfallOpplysningTyper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
