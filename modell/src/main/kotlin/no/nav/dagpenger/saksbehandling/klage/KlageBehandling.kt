@@ -164,6 +164,12 @@ class KlageBehandling(
         }
     }
 
+    fun kanFerdigstilles(): Boolean {
+        return opplysninger.all {
+            it.synlighet() && it.verdi != Verdi.TomVerdi
+        }
+    }
+
     private fun evaluerSynlighetOgUtfall() {
         this.steg.forEach { steg ->
             steg.evaluerSynlighet(opplysninger)

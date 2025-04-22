@@ -9,7 +9,9 @@ import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -56,6 +58,19 @@ class KlageMediatorTest {
             val klageBehandling = InmemoryKlageRepository.hentKlageBehandling(oppgave.behandling.behandlingId)
 
             klageBehandling.behandlingId shouldBe oppgave.behandling.behandlingId
+
+            klageBehandling.opprettholdelse()
+
+            klageMediator.ferdigstill(FerdigstillKlageOppgave(
+                utførtAv = Saksbehandler("saksbehandler", grupper = emptySet()),
+                behandlingId = klageBehandling.behandlingId,
+            ))
+
         }
     }
+
+    private fun KlageBehandling.opprettholdelse() {
+        TODO("Not yet implemented")
+    }
 }
+

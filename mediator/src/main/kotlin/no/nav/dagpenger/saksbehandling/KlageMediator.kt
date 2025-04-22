@@ -5,6 +5,8 @@ import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import java.time.LocalDate
@@ -59,6 +61,29 @@ class KlageMediator(
                 is OpplysningerVerdi.Boolsk -> klageBehandling.svar(opplysningId, verdi.value)
             }
         }
+    }
+
+    fun ferdigstill(hendelse: FerdigstillKlageOppgave) {
+
+        val html = "må hente html"
+
+        val oppgave = klageRepository.hentOppgaveFor(hendelse.behandlingId).also { oppgave ->
+            oppgave.ferdigstill(GodkjentBehandlingHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                meldingOmVedtak = "todo",
+                utførtAv = hendelse.utførtAv
+            ))
+        }
+
+        klageRepository.hentKlageBehandling(hendelse.behandlingId).let { klageBehandling ->
+            klageBehandling.kanFerdigstilles()
+        }
+
+        //Opprett utsending
+
+        klageRepository.lagre(oppgave)
+        //Start utsending
+
     }
 }
 
