@@ -138,8 +138,14 @@ class OppgaveMediator(
         }
     }
 
-    fun hentOppgaveFor(behandlingId: UUID): Oppgave {
-        return oppgaveRepository.hentOppgaveFor(behandlingId)
+    fun hentOppgaveFor(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Oppgave {
+        return oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
+            oppgave.egneAnsatteTilgangskontroll(saksbehandler)
+            oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
+        }
     }
 
     fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {

@@ -47,6 +47,11 @@ class KlageMediator(
         opplysningId: UUID,
         verdi: OpplysningerVerdi,
     ) {
+        // TODO("Sjekk at saksbehandler har tilgang til oppgaven")
+//        val oppgave = hentOppgaveMedTilgangsstyring(
+//            behandlingId = behandlingId,
+//            saksbehandler = hendelse.utførtAv,
+//        )
         klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
             when (verdi) {
                 is OpplysningerVerdi.Tekst -> klageBehandling.svar(opplysningId, verdi.value)
@@ -57,19 +62,25 @@ class KlageMediator(
         }
     }
 
+    private fun hentOppgaveMedTilgangsstyring(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Oppgave {
+        val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId, saksbehandler)
+        if (oppgave.behandlerIdent != saksbehandler.navIdent) {
+            throw RuntimeException("Saksbehandler er ikke eier av oppgave for klagebehandling $behandlingId")
+        }
+        return oppgave
+    }
+
     fun ferdigstill(hendelse: FerdigstillKlageOppgave) {
         val html = "må hente html"
 
         val oppgave =
-            oppgaveMediator.hentOppgaveFor(hendelse.behandlingId).also { oppgave ->
-                oppgave.ferdigstill(
-                    GodkjentBehandlingHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        meldingOmVedtak = "todo",
-                        utførtAv = hendelse.utførtAv,
-                    ),
-                )
-            }
+            hentOppgaveMedTilgangsstyring(
+                behandlingId = hendelse.behandlingId,
+                saksbehandler = hendelse.utførtAv,
+            )
 
         val klageBehandling =
             klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
@@ -93,7 +104,7 @@ class KlageMediator(
             brev = html,
             ident = oppgave.behandling.person.ident,
         )
-        // todo: lagre behandlingen med rett tilstand
+
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(
             godkjentBehandlingHendelse =

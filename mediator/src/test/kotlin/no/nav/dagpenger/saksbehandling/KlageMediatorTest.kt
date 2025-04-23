@@ -67,19 +67,18 @@ class KlageMediatorTest {
                     ),
                 )
 
-            oppgaveMediator.hentOppgaveFor(behandlingId)
-                .tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            val oppgaveKlarTilBehandling =
+                oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            oppgaveKlarTilBehandling.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 
-            oppgaveMediator.hentOppgaveFor(behandlingId).let {
-                oppgaveMediator.tildelOppgave(
-                    settOppgaveAnsvarHendelse =
-                        SettOppgaveAnsvarHendelse(
-                            oppgaveId = it.oppgaveId,
-                            ansvarligIdent = saksbehandler.navIdent,
-                            utførtAv = saksbehandler,
-                        ),
-                )
-            }
+            oppgaveMediator.tildelOppgave(
+                settOppgaveAnsvarHendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgaveKlarTilBehandling.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+            )
 
             val klageBehandling = klageMediator.hentKlageBehandling(behandlingId)
             klageBehandling.opprettholdelse()
@@ -91,14 +90,16 @@ class KlageMediatorTest {
                 ),
             )
 
-            oppgaveMediator.hentOppgaveFor(behandlingId).tilstand().type shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+            val ferdigbehandletOppgave =
+                oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            ferdigbehandletOppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
             // todo sjekke tilstand til klagebehandling
 
             verify(exactly = 1) {
                 utsendingMediator.opprettUtsending(
-                    oppgaveId = oppgaveMediator.hentOppgaveFor(behandlingId).oppgaveId,
+                    oppgaveId = ferdigbehandletOppgave.oppgaveId,
                     brev = "må hente html",
-                    ident = oppgaveMediator.hentOppgaveFor(behandlingId).behandling.person.ident,
+                    ident = ferdigbehandletOppgave.behandling.person.ident,
                 )
             }
             verify(exactly = 1) {
