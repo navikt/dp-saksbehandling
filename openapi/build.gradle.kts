@@ -1,5 +1,5 @@
 plugins {
-    id("ch.acanda.gradle.fabrikt") version "1.14.0"
+    id("ch.acanda.gradle.fabrikt") version "1.15.0"
     id("common")
     idea
     `java-library`
