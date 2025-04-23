@@ -39,6 +39,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_P
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -730,6 +731,7 @@ private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
         "TomHendelse" -> return TomHendelse
         "SøknadsbehandlingOpprettetHendelse" -> SøknadsbehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
+        "BehandlingOpprettetHendelse" -> BehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }

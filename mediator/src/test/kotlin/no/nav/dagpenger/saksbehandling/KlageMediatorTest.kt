@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
@@ -9,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
+import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -17,7 +17,7 @@ import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,44 +40,48 @@ class KlageMediatorTest {
     fun `Livssyklus til en klage`() {
         val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-
         withMigratedDb { ds ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    personRepository = PostgresPersonRepository(datasource = ds),
+                    oppgaveRepository = PostgresOppgaveRepository(ds),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = utsendingMediator,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = mockk<MeldingOmVedtakKlient>(),
+                )
 
-            val utsendingRepository = PostgresUtsendingRepository(ds)
             val klageMediator =
                 KlageMediator(
                     klageRepository = InmemoryKlageRepository,
-                    personRepository = PostgresPersonRepository(ds),
-                    oppslag = oppslagMock,
+                    oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
                 )
 
-            klageMediator.opprettKlage(
-                KlageMottattHendelse(
-                    ident = testPersonIdent,
-                    opprettet = LocalDateTime.now(),
-                    journalpostId = "journalpostId",
-                ),
-            )
+            val behandlingId =
+                klageMediator.opprettKlage(
+                    KlageMottattHendelse(
+                        ident = testPersonIdent,
+                        opprettet = LocalDateTime.now(),
+                        journalpostId = "journalpostId",
+                    ),
+                )
 
-            val oppgave: Oppgave =
-                InmemoryKlageRepository.hentOppgaver().single {
-                    it.behandling.person.ident == testPersonIdent
-                }
+            oppgaveMediator.hentOppgaveFor(behandlingId)
+                .tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 
-            oppgave shouldNotBe null
-            oppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            oppgaveMediator.hentOppgaveFor(behandlingId).let {
+                oppgaveMediator.tildelOppgave(
+                    settOppgaveAnsvarHendelse =
+                        SettOppgaveAnsvarHendelse(
+                            oppgaveId = it.oppgaveId,
+                            ansvarligIdent = saksbehandler.navIdent,
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
 
-            val klageBehandling = InmemoryKlageRepository.hentKlageBehandling(oppgave.behandling.behandlingId)
-
-            oppgave.tildel(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
-                    utførtAv = saksbehandler,
-                ),
-            )
-
+            val klageBehandling = klageMediator.hentKlageBehandling(behandlingId)
             klageBehandling.opprettholdelse()
 
             klageMediator.ferdigstill(
@@ -87,14 +91,14 @@ class KlageMediatorTest {
                 ),
             )
 
-            oppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+            oppgaveMediator.hentOppgaveFor(behandlingId).tilstand().type shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
             // todo sjekke tilstand til klagebehandling
 
             verify(exactly = 1) {
                 utsendingMediator.opprettUtsending(
-                    oppgaveId = oppgave.oppgaveId,
+                    oppgaveId = oppgaveMediator.hentOppgaveFor(behandlingId).oppgaveId,
                     brev = "må hente html",
-                    ident = oppgave.behandling.person.ident,
+                    ident = oppgaveMediator.hentOppgaveFor(behandlingId).behandling.person.ident,
                 )
             }
             verify(exactly = 1) {

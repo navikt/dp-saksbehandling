@@ -1,10 +1,8 @@
 package no.nav.dagpenger.saksbehandling
 
-import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
-import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -16,39 +14,32 @@ import java.util.UUID
 
 class KlageMediator(
     private val klageRepository: KlageRepository = InmemoryKlageRepository,
-    private val personRepository: PersonRepository,
-    private val oppslag: Oppslag,
+    private val oppgaveMediator: OppgaveMediator,
     private val utsendingMediator: UtsendingMediator,
 ) {
     fun hentKlageBehandling(behandlingId: UUID): KlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
 
-    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse) {
-        val person =
-            personRepository.finnPerson(klageMottattHendelse.ident) ?: runBlocking {
-                oppslag.hentPersonMedSkjermingOgGradering(klageMottattHendelse.ident)
-            }
-
+    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): UUID {
         val klageBehandling =
             KlageBehandling(
                 behandlingId = UUIDv7.ny(),
             )
 
-        val oppgave =
-            Oppgave(
-                oppgaveId = UUIDv7.ny(),
-                opprettet = klageMottattHendelse.opprettet,
-                tilstand = Oppgave.KlarTilBehandling,
-                behandling =
-                    Behandling(
-                        behandlingId = klageBehandling.behandlingId,
-                        person = person,
-                        opprettet = klageMottattHendelse.opprettet,
-                        hendelse = klageMottattHendelse,
-                        type = BehandlingType.KLAGE,
-                    ),
-            )
+        klageRepository.lagre(klageBehandling)
 
-        klageRepository.lagreOppgaveOgKlage(oppgave, klageBehandling)
+        oppgaveMediator.opprettOppgaveForBehandling(
+            behandlingOpprettetHendelse =
+                BehandlingOpprettetHendelse(
+                    behandlingId = klageBehandling.behandlingId,
+                    ident = klageMottattHendelse.ident,
+                    opprettet = klageMottattHendelse.opprettet,
+                    type = BehandlingType.KLAGE,
+                    utførtAv = klageMottattHendelse.utførtAv,
+                ),
+        )
+        return klageBehandling.behandlingId
+        // todo: vaktjobb som sjekker om det finnes behandling som ikke har en oppgave slik at vi fanger
+        // opp dersom opprettoppgave feiler
     }
 
     fun oppdaterKlageOpplysning(
@@ -70,7 +61,7 @@ class KlageMediator(
         val html = "må hente html"
 
         val oppgave =
-            klageRepository.hentOppgaveFor(hendelse.behandlingId).also { oppgave ->
+            oppgaveMediator.hentOppgaveFor(hendelse.behandlingId).also { oppgave ->
                 oppgave.ferdigstill(
                     GodkjentBehandlingHendelse(
                         oppgaveId = oppgave.oppgaveId,
@@ -102,7 +93,16 @@ class KlageMediator(
             brev = html,
             ident = oppgave.behandling.person.ident,
         )
-        klageRepository.lagreOppgaveOgKlage(oppgave, klageBehandling)
+        // todo: lagre behandlingen med rett tilstand
+        klageRepository.lagre(klageBehandling)
+        oppgaveMediator.ferdigstillOppgave(
+            godkjentBehandlingHendelse =
+                GodkjentBehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtak = html,
+                    utførtAv = hendelse.utførtAv,
+                ),
+        )
         utsendingMediator.mottaStartUtsending(
             startUtsendingHendelse,
         )

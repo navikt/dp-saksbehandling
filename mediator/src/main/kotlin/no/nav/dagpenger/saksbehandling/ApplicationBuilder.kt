@@ -121,8 +121,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         klageMediator =
                             KlageMediator(
                                 klageRepository = InmemoryKlageRepository,
-                                personRepository = personRepository,
-                                oppslag = oppslag,
+                                oppgaveMediator = oppgaveMediator,
                                 utsendingMediator = utsendingMediator,
                             ),
                     )
