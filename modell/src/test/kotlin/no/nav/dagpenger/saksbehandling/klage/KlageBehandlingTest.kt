@@ -99,7 +99,7 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `En klagebehandling er ferdigstilt når alle synlige opplysninger er utfylt`() {
+    fun `En klagebehandling er ferdigstilt når alle synlige og påkrevde opplysninger er utfylt`() {
         val opplysning1 =
             Opplysning(
                 type = OpplysningType.OPPREISNING_OVERSITTET_FRIST,
@@ -113,21 +113,28 @@ class KlageBehandlingTest {
                 verdi = Verdi.TomVerdi,
                 synlig = true,
             )
-        val opplysning3 =
+        val ikkeSynligOpplysning =
             Opplysning(
                 type = OpplysningType.FULLMEKTIG_LAND,
+                verdi = Verdi.TomVerdi,
+                synlig = false,
+            )
+
+        val ikkePåkrevdOpplysning =
+            Opplysning(
+                type = OpplysningType.FULLMEKTIG_ADRESSE_3,
                 verdi = Verdi.TomVerdi,
                 synlig = true,
             )
         KlageBehandling(
             steg = emptyList(),
-            opplysninger = setOf(opplysning1, opplysning2, opplysning3),
+            opplysninger = setOf(opplysning1, opplysning2, ikkePåkrevdOpplysning, ikkeSynligOpplysning),
         ).let { klageBehandling ->
             klageBehandling.kanFerdigstilles() shouldBe false
 
             klageBehandling.svar(opplysning1.id, false)
             klageBehandling.svar(opplysning2.id, false)
-            klageBehandling.svar(opplysning3.id, "hubba")
+
             klageBehandling.kanFerdigstilles() shouldBe true
         }
     }

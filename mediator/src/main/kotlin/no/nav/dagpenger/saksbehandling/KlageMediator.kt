@@ -9,6 +9,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import java.time.LocalDate
 import java.util.UUID
 
@@ -16,6 +18,7 @@ class KlageMediator(
     private val klageRepository: KlageRepository = InmemoryKlageRepository,
     private val personRepository: PersonRepository,
     private val oppslag: Oppslag,
+    private val utsendingMediator: UtsendingMediator,
 ) {
     fun hentKlageBehandling(behandlingId: UUID): KlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
 
@@ -64,26 +67,45 @@ class KlageMediator(
     }
 
     fun ferdigstill(hendelse: FerdigstillKlageOppgave) {
-
         val html = "må hente html"
 
-        val oppgave = klageRepository.hentOppgaveFor(hendelse.behandlingId).also { oppgave ->
-            oppgave.ferdigstill(GodkjentBehandlingHendelse(
+        val oppgave =
+            klageRepository.hentOppgaveFor(hendelse.behandlingId).also { oppgave ->
+                oppgave.ferdigstill(
+                    GodkjentBehandlingHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        meldingOmVedtak = "todo",
+                        utførtAv = hendelse.utførtAv,
+                    ),
+                )
+            }
+
+        val klageBehandling =
+            klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
+                klageBehandling.ferdigstill()
+            }
+
+        val startUtsendingHendelse =
+            StartUtsendingHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                meldingOmVedtak = "todo",
-                utførtAv = hendelse.utførtAv
-            ))
-        }
+                sak =
+                    Sak(
+                        id = UUIDv7.ny().toString(),
+                        kontekst = "Dagpenger",
+                    ),
+                behandlingId = klageBehandling.behandlingId,
+                ident = oppgave.behandling.person.ident,
+            )
 
-        klageRepository.hentKlageBehandling(hendelse.behandlingId).let { klageBehandling ->
-            klageBehandling.kanFerdigstilles()
-        }
-
-        //Opprett utsending
-
-        klageRepository.lagre(oppgave)
-        //Start utsending
-
+        utsendingMediator.opprettUtsending(
+            oppgaveId = oppgave.oppgaveId,
+            brev = html,
+            ident = oppgave.behandling.person.ident,
+        )
+        klageRepository.lagreOppgaveOgKlage(oppgave, klageBehandling)
+        utsendingMediator.mottaStartUtsending(
+            startUtsendingHendelse,
+        )
     }
 }
 

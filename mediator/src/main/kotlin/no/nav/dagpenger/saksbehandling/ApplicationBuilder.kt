@@ -123,6 +123,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                                 klageRepository = InmemoryKlageRepository,
                                 personRepository = personRepository,
                                 oppslag = oppslag,
+                                utsendingMediator = utsendingMediator,
                             ),
                     )
                     this.install(KafkaStreamsPlugin) {

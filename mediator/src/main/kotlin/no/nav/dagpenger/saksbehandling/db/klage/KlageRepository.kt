@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -76,8 +77,11 @@ object InmemoryKlageRepository : KlageRepository {
     }
 
     // TODO trenger vi denne?
-    override fun hentOppgaveFor(behandlingId: UUID): Oppgave =
-        oppgaver[behandlingId] ?: throw KlageRepository.KlageIkkeFunnet("Fant ikke oppgave for klagebehandling med id $behandlingId")
+    override fun hentOppgaveFor(behandlingId: UUID): Oppgave {
+        return oppgaver.values.singleOrNull {
+            it.behandling.behandlingId == behandlingId
+        } ?: throw IllegalArgumentException("Fant ikke oppgave med behandlingid $behandlingId")
+    }
 
     override fun hentOppgaver(): List<Oppgave> = oppgaver.values.toList()
 

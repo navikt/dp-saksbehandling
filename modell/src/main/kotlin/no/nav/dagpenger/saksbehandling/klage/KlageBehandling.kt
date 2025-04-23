@@ -167,8 +167,14 @@ class KlageBehandling(
     }
 
     fun kanFerdigstilles(): Boolean {
-        return opplysninger.all {
-            it.synlighet() && it.verdi != Verdi.TomVerdi
+        return !opplysninger.any {
+            it.synlighet() && it.type.påkrevd && it.verdi == Verdi.TomVerdi
+        }
+    }
+
+    fun ferdigstill() {
+        if (!kanFerdigstilles()) {
+            throw IllegalStateException("Kan ikke ferdigstille klagebehandling, opplysninger er ikke utfylt")
         }
     }
 

@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.klage
 enum class OpplysningType(
     val navn: String,
     val datatype: Datatype,
+    val påkrevd: Boolean = true,
 ) {
     // Klagen gjelder
     KLAGEN_GJELDER(
@@ -100,6 +101,7 @@ enum class OpplysningType(
     FULLMEKTIG_ADRESSE_3(
         navn = "Adresselinje 3",
         datatype = Datatype.TEKST,
+        påkrevd = false,
     ),
     FULLMEKTIG_POSTNR(
         navn = "Postnummer",
