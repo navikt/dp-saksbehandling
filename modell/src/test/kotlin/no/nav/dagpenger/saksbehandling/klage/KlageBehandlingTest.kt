@@ -98,6 +98,40 @@ class KlageBehandlingTest {
         } shouldNotBe emptySet<Opplysning>()
     }
 
+    @Test
+    fun `En klagebehandling er ferdigstilt når alle synlige opplysninger er utfylt`() {
+        val opplysning1 =
+            Opplysning(
+                type = OpplysningType.OPPREISNING_OVERSITTET_FRIST,
+                verdi = Verdi.TomVerdi,
+                synlig = true,
+            )
+
+        val opplysning2 =
+            Opplysning(
+                type = OpplysningType.KLAGEFRIST_OPPFYLT,
+                verdi = Verdi.TomVerdi,
+                synlig = true,
+            )
+        val opplysning3 =
+            Opplysning(
+                type = OpplysningType.FULLMEKTIG_LAND,
+                verdi = Verdi.TomVerdi,
+                synlig = true,
+            )
+        KlageBehandling(
+            steg = emptyList(),
+            opplysninger = setOf(opplysning1, opplysning2, opplysning3),
+        ).let { klageBehandling ->
+            klageBehandling.kanFerdigstilles() shouldBe false
+
+            klageBehandling.svar(opplysning1.id, false)
+            klageBehandling.svar(opplysning2.id, false)
+            klageBehandling.svar(opplysning3.id, "hubba")
+            klageBehandling.kanFerdigstilles() shouldBe true
+        }
+    }
+
     private fun KlageBehandling.finnEnOpplysning(opplysningType: OpplysningType): UUID {
         return this.synligeOpplysninger().first { opplysning -> opplysning.type == opplysningType }.id
     }

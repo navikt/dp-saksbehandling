@@ -79,10 +79,12 @@ object OpplysningBygger {
             FULLMEKTIG_LAND,
         )
 
+    fun lagOpplysninger(vararg opplysninger: OpplysningType): Set<Opplysning> = lagOpplysninger(opplysninger.toSet())
+
     fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> {
         return opplysninger.map {
             Opplysning(
-                id = UUID.randomUUID(),
+                id = UUIDv7.ny(),
                 type = it,
                 verdi = Verdi.TomVerdi,
             )
