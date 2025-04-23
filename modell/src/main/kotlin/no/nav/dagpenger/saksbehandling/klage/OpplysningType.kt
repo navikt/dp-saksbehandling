@@ -9,6 +9,7 @@ enum class OpplysningType(
     KLAGEN_GJELDER(
         navn = "Hva klagen gjelder",
         datatype = Datatype.FLERVALG,
+        påkrevd = false,
     ),
     KLAGEN_GJELDER_VEDTAK(
         navn = "Vedtak klagen gjelder",
@@ -83,6 +84,7 @@ enum class OpplysningType(
     INTERN_MELDING(
         navn = "Intern melding",
         datatype = Datatype.TEKST,
+        påkrevd = false,
     ),
 
     // Info til klageinstans om fullmektig
@@ -97,6 +99,7 @@ enum class OpplysningType(
     FULLMEKTIG_ADRESSE_2(
         navn = "Adresselinje 2",
         datatype = Datatype.TEKST,
+        påkrevd = false,
     ),
     FULLMEKTIG_ADRESSE_3(
         navn = "Adresselinje 3",
