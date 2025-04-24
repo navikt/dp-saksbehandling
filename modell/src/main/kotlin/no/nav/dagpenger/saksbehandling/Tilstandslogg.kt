@@ -8,6 +8,12 @@ import java.util.UUID
 data class Tilstandslogg(
     private val tilstandsendringer: MutableList<Tilstandsendring> = mutableListOf(),
 ) : List<Tilstandsendring> by tilstandsendringer {
+    constructor(
+        vararg tilstandsendringer: Tilstandsendring,
+    ) : this() {
+        this.tilstandsendringer.addAll(tilstandsendringer.toList())
+    }
+
     companion object {
         fun rehydrer(tilstandsendringer: List<Tilstandsendring>): Tilstandslogg = Tilstandslogg(tilstandsendringer.toMutableList())
     }

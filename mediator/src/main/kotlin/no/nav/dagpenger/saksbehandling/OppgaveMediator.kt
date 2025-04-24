@@ -85,6 +85,13 @@ class OppgaveMediator(
                 emneknagger = emptySet(),
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                 behandling = behandling,
+                tilstandslogg =
+                    Tilstandslogg(
+                        Tilstandsendring(
+                            tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                            hendelse = søknadsbehandlingOpprettetHendelse,
+                        ),
+                    ),
             )
 
         oppgaveRepository.lagre(oppgave)

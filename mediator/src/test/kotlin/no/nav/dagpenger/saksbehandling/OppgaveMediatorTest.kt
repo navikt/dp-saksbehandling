@@ -5,6 +5,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -76,7 +77,8 @@ import java.time.LocalDateTime
 import java.util.stream.Stream
 import javax.sql.DataSource
 
-class OppgaveMediatorTest {
+class
+OppgaveMediatorTest {
     private val testIdent = "12345612345"
     private val saksbehandler = Saksbehandler("saksbehandlerIdent", setOf())
     private val beslutter = Saksbehandler("beslutterIdent", setOf(), setOf(BESLUTTER))
@@ -1232,6 +1234,12 @@ class OppgaveMediatorTest {
                         opprettet = LocalDateTime.now(),
                     ),
             )
+
+            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).single().tilstandslogg.single().let {
+                it.tilstand shouldBe OPPRETTET
+                it.hendelse.shouldBeInstanceOf<SøknadsbehandlingOpprettetHendelse>()
+            }
+
             oppgaveMediator.settOppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
