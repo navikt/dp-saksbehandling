@@ -8,6 +8,7 @@ import kotliquery.sessionOf
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
@@ -268,7 +269,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident,
+                        SELECT beha.id behandling_id, beha.opprettet, beha.behandling_type, pers.id person_id, pers.ident,
                                pers.skjermes_som_egne_ansatte, pers.adressebeskyttelse_gradering
                         FROM   behandling_v1 beha
                         JOIN   person_v1     pers ON pers.id = beha.person_id
@@ -291,6 +292,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         person = person,
                         opprettet = row.localDateTime("opprettet"),
                         hendelse = finnHendelseForBehandling(behandlingId, datasource),
+                        type = BehandlingType.valueOf(row.string("behandling_type")),
                     )
                 }.asSingle,
             )
@@ -731,7 +733,10 @@ private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
         "TomHendelse" -> return TomHendelse
         "SøknadsbehandlingOpprettetHendelse" -> SøknadsbehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
-        "BehandlingOpprettetHendelse" -> BehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
+        "BehandlingOpprettetHendelse" -> {
+            val json = this.string("hendelse_data")
+            BehandlingOpprettetHendelse.fromJson(json)
+        }
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
@@ -879,9 +884,9 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
             statement =
                 """
                 INSERT INTO behandling_v1
-                    (id, person_id, opprettet)
+                    (id, person_id, opprettet, behandling_type)
                 VALUES
-                    (:id, :person_id, :opprettet) 
+                    (:id, :person_id, :opprettet, :behandling_type) 
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
             paramMap =
@@ -889,6 +894,7 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
                     "id" to behandling.behandlingId,
                     "person_id" to behandling.person.id,
                     "opprettet" to behandling.opprettet,
+                    "behandling_type" to behandling.type.name,
                 ),
         ).asUpdate,
     )

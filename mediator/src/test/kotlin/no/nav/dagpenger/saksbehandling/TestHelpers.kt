@@ -55,12 +55,14 @@ fun lagBehandling(
     opprettet: LocalDateTime = opprettetNå,
     person: Person = testPerson,
     hendelse: Hendelse = TomHendelse,
+    type: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
 ): Behandling {
     return Behandling(
         behandlingId = behandlingId,
         person = person,
         opprettet = opprettet,
         hendelse = hendelse,
+        type = type,
     )
 }
 

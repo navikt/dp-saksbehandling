@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -48,6 +49,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Paginering
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -897,9 +899,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre en behandling`() {
-        val testBehandling = lagBehandling()
-        val behandlingMedSøknadsbehandlingOpprettetHendelse =
+        val søknadBehandling =
             lagBehandling(
+                type = BehandlingType.RETT_TIL_DAGPENGER,
                 hendelse =
                     SøknadsbehandlingOpprettetHendelse(
                         søknadId = UUIDv7.ny(),
@@ -909,16 +911,26 @@ class PostgresOppgaveRepositoryTest {
                     ),
             )
 
+        val klageBehandling =
+            lagBehandling(
+                type = BehandlingType.KLAGE,
+                hendelse =
+                    BehandlingOpprettetHendelse(
+                        behandlingId = UUIDv7.ny(),
+                        ident = testPerson.ident,
+                        opprettet = LocalDateTime.MIN,
+                        type = BehandlingType.KLAGE,
+                    ),
+            )
+
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testBehandling)
-            val behandlingFraDatabase = repo.hentBehandling(testBehandling.behandlingId)
-            behandlingFraDatabase shouldBe testBehandling
 
-            repo.lagre(behandlingMedSøknadsbehandlingOpprettetHendelse)
-            repo.hentBehandling(
-                behandlingMedSøknadsbehandlingOpprettetHendelse.behandlingId,
-            ) shouldBe behandlingMedSøknadsbehandlingOpprettetHendelse
+            repo.lagre(søknadBehandling)
+            repo.lagre(klageBehandling)
+
+            repo.hentBehandling(søknadBehandling.behandlingId) shouldBe søknadBehandling
+            repo.hentBehandling(klageBehandling.behandlingId) shouldBe klageBehandling
         }
     }
 

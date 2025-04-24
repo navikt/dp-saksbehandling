@@ -1,0 +1,3 @@
+ALTER TABLE behandling_v1
+    ADD COLUMN behandling_type TEXT DEFAULT 'RETT_TIL_DAGPENGER';
+

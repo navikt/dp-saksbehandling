@@ -16,7 +16,7 @@ data class BehandlingOpprettetHendelse(
     val ident: String,
     val opprettet: LocalDateTime,
     val type: BehandlingType,
-    override val utførtAv: Behandler,
+    override val utførtAv: Behandler = Applikasjon("dp-mottak"),
 ) : Hendelse(utførtAv) {
     companion object {
         private val objectMapper: ObjectMapper =
@@ -34,7 +34,7 @@ data class BehandlingOpprettetHendelse(
                 ident = jsonTree["ident"].asText(),
                 opprettet = LocalDateTime.parse(jsonTree["opprettet"].asText()),
                 type = jsonTree["type"].asText().let(BehandlingType::valueOf),
-                utførtAv = Applikasjon(jsonTree["utførtAv"].asText()),
+                utførtAv = Applikasjon(jsonTree["utførtAv"]["navn"].asText()),
             )
         }
     }
