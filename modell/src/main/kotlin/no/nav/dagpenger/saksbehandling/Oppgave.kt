@@ -108,7 +108,7 @@ data class Oppgave private constructor(
             saksbehandler: Saksbehandler,
             hendelseNavn: String,
         ) {
-            require(oppgave.behandlerIdent == saksbehandler.navIdent) {
+            require(oppgave.erEierAvOppgave(saksbehandler)) {
                 throw Tilstand.SaksbehandlerEierIkkeOppgaven(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
                         "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
@@ -247,6 +247,8 @@ data class Oppgave private constructor(
     fun oppgaverPåVentMedUtgåttFrist(hendelse: PåVentFristUtgåttHendelse) {
         tilstand.oppgavePåVentMedUtgåttFrist(this, hendelse)
     }
+
+    fun erEierAvOppgave(saksbehandler: Saksbehandler): Boolean = this.behandlerIdent == saksbehandler.navIdent
 
     private fun endreTilstand(
         nyTilstand: Tilstand,

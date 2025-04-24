@@ -50,6 +50,7 @@ import java.time.LocalDateTime
 internal object OppgaveApiTestHelper {
     const val TEST_IDENT = "12345612345"
     const val SAKSBEHANDLER_IDENT = "SaksbehandlerIdent"
+    val defaultSaksbehandlerADGruppe = listOf("SaksbehandlerADGruppe")
     const val BESLUTTER_IDENT = "BeslutterIdent"
     val SOKNAD_ID = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
     private val mockAzure = mockAzure()
@@ -109,13 +110,14 @@ internal object OppgaveApiTestHelper {
     fun gyldigSaksbehandlerToken(
         adGrupper: List<String> = emptyList(),
         navIdent: String = SAKSBEHANDLER_IDENT,
-    ): String =
-        mockAzure.lagTokenMedClaims(
+    ): String {
+        return mockAzure.lagTokenMedClaims(
             mapOf(
-                "groups" to listOf("SaksbehandlerADGruppe") + adGrupper,
+                "groups" to defaultSaksbehandlerADGruppe + adGrupper,
                 "NAVident" to navIdent,
             ),
         )
+    }
 
     fun gyldigMaskinToken(): String = mockAzure.lagTokenMedClaims(emptyMap())
 

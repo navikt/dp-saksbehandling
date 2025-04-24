@@ -46,12 +46,14 @@ class KlageMediator(
         behandlingId: UUID,
         opplysningId: UUID,
         verdi: OpplysningerVerdi,
+        saksbehandler: Saksbehandler,
     ) {
-        // TODO("Sjekk at saksbehandler har tilgang til oppgaven")
-//        val oppgave = hentOppgaveMedTilgangsstyring(
-//            behandlingId = behandlingId,
-//            saksbehandler = hendelse.utførtAv,
-//        )
+        oppgaveMediator.hentOppgaveHvisTilgang(
+            behandlingId = behandlingId,
+            saksbehandler = saksbehandler,
+        ).also {
+            requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
+        }
         klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
             when (verdi) {
                 is OpplysningerVerdi.Tekst -> klageBehandling.svar(opplysningId, verdi.value)
@@ -62,25 +64,25 @@ class KlageMediator(
         }
     }
 
-    private fun hentOppgaveMedTilgangsstyring(
-        behandlingId: UUID,
+    private fun requireEierAvOppgave(
+        oppgave: Oppgave,
         saksbehandler: Saksbehandler,
-    ): Oppgave {
-        val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId, saksbehandler)
-        if (oppgave.behandlerIdent != saksbehandler.navIdent) {
-            throw RuntimeException("Saksbehandler er ikke eier av oppgave for klagebehandling $behandlingId")
+    ) {
+        require(oppgave.erEierAvOppgave(saksbehandler)) {
+            "Saksbehandler ${saksbehandler.navIdent} må eie oppgaven ${oppgave.oppgaveId}"
         }
-        return oppgave
     }
 
     fun ferdigstill(hendelse: FerdigstillKlageOppgave) {
         val html = "må hente html"
 
         val oppgave =
-            hentOppgaveMedTilgangsstyring(
+            oppgaveMediator.hentOppgaveHvisTilgang(
                 behandlingId = hendelse.behandlingId,
                 saksbehandler = hendelse.utførtAv,
-            )
+            ).also {
+                requireEierAvOppgave(oppgave = it, saksbehandler = hendelse.utførtAv)
+            }
 
         val klageBehandling =
             klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->

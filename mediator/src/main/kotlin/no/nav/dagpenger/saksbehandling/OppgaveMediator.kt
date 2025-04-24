@@ -148,6 +148,16 @@ class OppgaveMediator(
         }
     }
 
+    fun hentOppgaveHvisTilgang(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Oppgave {
+        return oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
+            oppgave.egneAnsatteTilgangskontroll(saksbehandler)
+            oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
+        }
+    }
+
     fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
         val oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
         when (oppgave) {

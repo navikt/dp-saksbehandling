@@ -13,8 +13,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
+import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.defaultSaksbehandlerADGruppe
 import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -28,12 +32,18 @@ class KlageRouteTest {
 
     private val klageId = UUIDv7.ny()
     private val opplysningId = UUIDv7.ny()
+    private val saksbehandler =
+        Saksbehandler(
+            navIdent = SAKSBEHANDLER_IDENT,
+            grupper = defaultSaksbehandlerADGruppe.toSet(),
+            tilganger = setOf(TilgangType.SAKSBEHANDLER),
+        )
 
     @Test
     fun `skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<KlageMediator>()
         withKlageRoute(mediator) {
-            client.get("oppgave//klage/$klageId").let { response ->
+            client.get("oppgave/klage/$klageId").let { response ->
                 response.status shouldBe HttpStatusCode.Unauthorized
             }
         }
@@ -63,7 +73,7 @@ class KlageRouteTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageId, opplysningId, tekstListe)
+                    it.oppdaterKlageOpplysning(klageId, opplysningId, tekstListe, saksbehandler)
                 } returns Unit
             }
         withKlageRoute(mediator) {
@@ -79,6 +89,7 @@ class KlageRouteTest {
                         behandlingId = klageId,
                         opplysningId = opplysningId,
                         verdi = tekstListe,
+                        saksbehandler = saksbehandler,
                     )
                 }
             }
@@ -91,7 +102,7 @@ class KlageRouteTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageId, opplysningId, tekst)
+                    it.oppdaterKlageOpplysning(klageId, opplysningId, tekst, saksbehandler)
                 } returns Unit
             }
         withKlageRoute(mediator) {
@@ -107,6 +118,7 @@ class KlageRouteTest {
                         behandlingId = klageId,
                         opplysningId = opplysningId,
                         verdi = tekst,
+                        saksbehandler = saksbehandler,
                     )
                 }
             }
@@ -119,7 +131,7 @@ class KlageRouteTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageId, opplysningId, boolsk)
+                    it.oppdaterKlageOpplysning(klageId, opplysningId, boolsk, saksbehandler)
                 } returns Unit
             }
         withKlageRoute(mediator) {
@@ -135,6 +147,7 @@ class KlageRouteTest {
                         behandlingId = klageId,
                         opplysningId = opplysningId,
                         verdi = boolsk,
+                        saksbehandler = saksbehandler,
                     )
                 }
             }
@@ -147,7 +160,7 @@ class KlageRouteTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageId, opplysningId, dato)
+                    it.oppdaterKlageOpplysning(klageId, opplysningId, dato, saksbehandler)
                 } returns Unit
             }
         withKlageRoute(mediator) {
@@ -163,6 +176,7 @@ class KlageRouteTest {
                         behandlingId = klageId,
                         opplysningId = opplysningId,
                         verdi = dato,
+                        saksbehandler = saksbehandler,
                     )
                 }
             }
