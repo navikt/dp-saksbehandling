@@ -122,6 +122,10 @@ class KlageBehandling(
             }
     }
 
+    fun alleOpplysninger(): Set<Opplysning> {
+        return opplysninger
+    }
+
     fun synligeOpplysninger(): Set<Opplysning> {
         return opplysninger.filter { it.synlighet() }.toSet()
     }

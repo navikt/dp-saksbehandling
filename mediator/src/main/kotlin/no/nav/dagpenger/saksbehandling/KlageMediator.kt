@@ -25,8 +25,6 @@ class KlageMediator(
                 behandlingId = UUIDv7.ny(),
             )
 
-        klageRepository.lagre(klageBehandling)
-
         oppgaveMediator.opprettOppgaveForBehandling(
             behandlingOpprettetHendelse =
                 BehandlingOpprettetHendelse(
@@ -37,9 +35,11 @@ class KlageMediator(
                     utførtAv = klageMottattHendelse.utførtAv,
                 ),
         )
+
+        // todo: Hva skjer dersom vi lager oppgaver. behandling men ikke greier å lagre klagebehandling?
+        klageRepository.lagre(klageBehandling)
+
         return klageBehandling.behandlingId
-        // todo: vaktjobb som sjekker om det finnes behandling som ikke har en oppgave slik at vi fanger
-        // opp dersom opprettoppgave feiler
     }
 
     fun oppdaterKlageOpplysning(
