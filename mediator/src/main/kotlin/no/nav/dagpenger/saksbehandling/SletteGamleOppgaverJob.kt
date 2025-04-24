@@ -33,7 +33,6 @@ internal class SletteGamleOppgaverJob(
                         map =
                             mapOf(
                                 "behandlingId" to oppgave.behandlingId,
-                                "søknadId" to oppgave.soknadId,
                                 "ident" to oppgave.ident,
                             ),
                     ).toJson(),
@@ -51,25 +50,20 @@ internal class GamleOppgaverRepository(private val ds: DataSource) {
                     """
                     SELECT
                           person_v1.ident,
-                          oppgave_v1.behandling_id,
-                          hendelse_v1.hendelse_data->>'søknadId' AS søknadId
+                          oppgave_v1.behandling_id
                       FROM
                           oppgave_v1
                               JOIN
                           behandling_v1 ON oppgave_v1.behandling_id = behandling_v1.id
                               JOIN
                           person_v1 ON behandling_v1.person_id = person_v1.id
-                              JOIN
-                          hendelse_v1 ON hendelse_v1.behandling_id = behandling_v1.id
-                      WHERE
-                          oppgave_v1.opprettet < NOW() - INTERVAL '$intervallAntallDager days'
+                      WHERE oppgave_v1.opprettet < NOW() - INTERVAL '$intervallAntallDager days'
                         AND oppgave_v1.tilstand  IN ('OPPRETTET', 'KLAR_TIL_BEHANDLING', 'PAA_VENT')
                         AND oppgave_v1.saksbehandler_ident IS NULL
                     """.trimIndent(),
                 ).map { row ->
                     GamleOppgaver(
                         ident = row.string("ident"),
-                        soknadId = row.string("søknadId").let { UUID.fromString(it) },
                         behandlingId = row.uuid("behandling_id"),
                     )
                 }.asList,
@@ -80,6 +74,5 @@ internal class GamleOppgaverRepository(private val ds: DataSource) {
 
 data class GamleOppgaver(
     val ident: String,
-    val soknadId: UUID,
     val behandlingId: UUID,
 )
