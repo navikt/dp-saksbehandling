@@ -8,8 +8,6 @@ interface KlageRepository {
 
     fun lagre(klageBehandling: KlageBehandling)
 
-    class KlageIkkeFunnet(message: String) : RuntimeException(message)
-
     class KlageBehandlingIkkeFunnet(message: String) : RuntimeException(message)
 }
 
