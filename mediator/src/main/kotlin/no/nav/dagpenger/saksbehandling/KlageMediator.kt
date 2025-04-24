@@ -25,6 +25,9 @@ class KlageMediator(
                 behandlingId = UUIDv7.ny(),
             )
 
+        // TODO Lag en Alert-jobb som sjekker om det finnes klager uten oppgave, som kan fange om hvis klage er
+        // lagret og oppretting av oppgave feiler
+        klageRepository.lagre(klageBehandling)
         oppgaveMediator.opprettOppgaveForBehandling(
             behandlingOpprettetHendelse =
                 BehandlingOpprettetHendelse(
@@ -35,10 +38,6 @@ class KlageMediator(
                     utførtAv = klageMottattHendelse.utførtAv,
                 ),
         )
-
-        // todo: Hva skjer dersom vi lager oppgaver. behandling men ikke greier å lagre klagebehandling?
-        klageRepository.lagre(klageBehandling)
-
         return klageBehandling.behandlingId
     }
 
