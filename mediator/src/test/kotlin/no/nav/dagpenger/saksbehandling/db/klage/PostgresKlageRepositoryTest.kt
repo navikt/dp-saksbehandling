@@ -19,8 +19,8 @@ class PostgresKlageRepositoryTest {
 
             val hentetKlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
 
-            klageBehandling.behandlingId shouldBe hentetKlageBehandling.behandlingId
-            klageBehandling.alleOpplysninger().size shouldBe hentetKlageBehandling.alleOpplysninger().size
+            hentetKlageBehandling.behandlingId shouldBe klageBehandling.behandlingId
+            hentetKlageBehandling.alleOpplysninger().size shouldBe klageBehandling.alleOpplysninger().size
 //            klageBehandling shouldBe hentetKlageBehandling
         }
     }

@@ -1,14 +1,15 @@
 package no.nav.dagpenger.saksbehandling.db.klage
 
-import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningMapper.tilJson
+import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningMapper.tilKlageOpplysninger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType
-import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.serder.objectMapper
+import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -33,58 +34,20 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         //language=PostgreSQL
                         statement =
                             """
-                            SELECT id, tilstand 
+                            SELECT id, tilstand, opplysninger
                             FROM   klage_v1 
                             WHERE  id = :id
                             """.trimIndent(),
                         paramMap = mapOf("id" to behandlingId),
                     ).map { row ->
-                        row.rehydrerKlageBehandling(datasource)
+                        KlageBehandling(
+                            behandlingId = row.uuid("id"),
+                            opplysninger = row.string("opplysninger").tilKlageOpplysninger(),
+                        )
                     }.asSingle,
                 )
             }
         return klageBehandling
-    }
-
-    private fun Row.rehydrerKlageBehandling(dataSource: DataSource): KlageBehandling {
-        val klageId = this.uuid("id")
-        val opplysninger =
-            hentKlageOpplysningerFor(
-                klageId = klageId,
-                dataSource = dataSource,
-            )
-        return KlageBehandling(
-            behandlingId = klageId,
-            opplysninger = opplysninger,
-            steg = emptyList(),
-        )
-    }
-
-    private fun hentKlageOpplysningerFor(
-        klageId: UUID,
-        dataSource: DataSource,
-    ): Set<Opplysning> {
-        // TODO fix type og verdi i Opplysning
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT id, type
-                        FROM   klage_opplysning_v1
-                        WHERE  klage_id = :klage_id
-                        """.trimIndent(),
-                    paramMap = mapOf("klage_id" to klageId),
-                ).map { row ->
-                    Opplysning(
-                        id = row.uuid("id"),
-                        type = OpplysningType.UTFALL,
-                        verdi = Verdi.TomVerdi,
-                    )
-                }.asList,
-            )
-        }.toSet()
     }
 
     private fun TransactionalSession.lagre(klageBehandling: KlageBehandling) {
@@ -94,51 +57,38 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 statement =
                     """
                     INSERT INTO klage_v1
-                        (id, tilstand)
+                        (id, tilstand, opplysninger)
                     VALUES
-                        (:id, :tilstand) 
+                        (:id, :tilstand, :opplysninger) 
                     ON CONFLICT(id) DO UPDATE SET
-                     tilstand = :tilstand
+                     tilstand = :tilstand,
+                     opplysninger = :opplysninger
                     """.trimIndent(),
                 paramMap =
                     mapOf(
                         "id" to klageBehandling.behandlingId,
                         "tilstand" to "BEHANDLES",
+                        "opplysninger" to
+                            PGobject().also {
+                                it.type = "JSONB"
+                                it.value = klageBehandling.alleOpplysninger().tilJson()
+                            },
                     ),
             ).asUpdate,
         )
-        this.lagreOpplysninger(klageBehandling)
+    }
+}
+
+private object KlageOpplysningMapper {
+    fun Set<Opplysning>.tilJson(): String {
+        return objectMapper.writeValueAsString(this).also {
+            println(it)
+        }
     }
 
-    private fun TransactionalSession.lagreOpplysninger(klageBehandling: KlageBehandling) {
-        val opplysninger: List<Map<String, Any>> =
-            klageBehandling.alleOpplysninger().map {
-                mapOf(
-                    "id" to it.id,
-                    "klage_id" to klageBehandling.behandlingId,
-                    "type" to it.type.name,
-//                    ,
-//                    "verdi" to when (it.type.datatype) {
-//                        Datatype.DATO -> (it.verdi as Verdi.Dato).toString()
-//                        Datatype.TEKST -> (it.verdi as Verdi.TekstVerdi).toString()
-//                        Datatype.FLERVALG -> (it.verdi as Verdi.Flervalg).toString()
-//                        Datatype.BOOLSK -> (it.verdi as Verdi.Boolsk).toString()
-//                        else -> throw IllegalArgumentException("Ukjent datatype ${it.type.datatype}")
-//                    },
-                )
-            }
-        this.batchPreparedNamedStatement(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO klage_opplysning_v1
-                    (id, klage_id, type
-                    )
-                VALUES
-                    (:id, :klage_id, :type
-                    )
-                """.trimIndent(),
-            params = opplysninger,
-        )
+    fun String.tilKlageOpplysninger(): Set<Opplysning> {
+        return objectMapper.readValue(this, Set::class.java).map { opplysning ->
+            objectMapper.convertValue(opplysning, Opplysning::class.java)
+        }.toSet()
     }
 }
