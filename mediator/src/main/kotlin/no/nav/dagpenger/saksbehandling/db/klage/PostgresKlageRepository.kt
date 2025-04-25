@@ -3,12 +3,10 @@ package no.nav.dagpenger.saksbehandling.db.klage
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningMapper.tilJson
-import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningMapper.tilKlageOpplysninger
+import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
+import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.Opplysning
-import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
@@ -76,19 +74,5 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                     ),
             ).asUpdate,
         )
-    }
-}
-
-private object KlageOpplysningMapper {
-    fun Set<Opplysning>.tilJson(): String {
-        return objectMapper.writeValueAsString(this).also {
-            println(it)
-        }
-    }
-
-    fun String.tilKlageOpplysninger(): Set<Opplysning> {
-        return objectMapper.readValue(this, Set::class.java).map { opplysning ->
-            objectMapper.convertValue(opplysning, Opplysning::class.java)
-        }.toSet()
     }
 }

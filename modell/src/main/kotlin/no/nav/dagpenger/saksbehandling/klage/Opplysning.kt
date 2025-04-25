@@ -53,8 +53,15 @@ class Opplysning(
         }
     }
 
-    override fun toString(): String {
-        return this.type.toString()
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Opplysning) return false
+
+        return id == other.id && type == other.type
+    }
+
+    override fun hashCode(): Int {
+        return 31 * id.hashCode() + type.hashCode()
     }
 }
 
@@ -67,5 +74,7 @@ sealed class Verdi {
 
     data class Boolsk(val value: Boolean) : Verdi()
 
-    data class Flervalg(val value: List<String>) : Verdi()
+    data class Flervalg(val value: List<String>) : Verdi() {
+        constructor(vararg value: String) : this(value.toList())
+    }
 }

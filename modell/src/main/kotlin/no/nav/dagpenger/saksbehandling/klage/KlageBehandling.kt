@@ -92,7 +92,7 @@ object OpplysningBygger {
     }
 }
 
-class KlageBehandling(
+data class KlageBehandling(
     val behandlingId: UUID = UUIDv7.ny(),
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private val steg: List<Steg> =
