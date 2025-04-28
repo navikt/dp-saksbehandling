@@ -1,8 +1,11 @@
 package no.nav.dagpenger.saksbehandling.klage
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
@@ -136,6 +139,68 @@ class KlageBehandlingTest {
             klageBehandling.svar(opplysning2.id, false)
 
             klageBehandling.kanFerdigstilles() shouldBe true
+        }
+    }
+
+    @Test
+    fun `Skal kunne opprette en klage i tilstanden KLAR_TIL_BEHANDLING`() {
+        val klageBehandling =
+            KlageBehandling(
+                behandlingId = UUID.randomUUID(),
+            )
+        klageBehandling.hentTilstand() shouldBe KLAR_TIL_BEHANDLING
+    }
+
+    @Test
+    fun `Når klagebehandlingen har fylt ut alle nødvendige opplysninger skal tilsanden kunne settes til ferdigstilt`() {
+        val klageBehandling =
+            KlageBehandling(
+                behandlingId = UUID.randomUUID(),
+            )
+        klageBehandling.hentTilstand() shouldBe KLAR_TIL_BEHANDLING
+
+        // Besvarer alle opplysninger som er synlige, unntatt formkrav
+        svarPåAlleOpplysninger(klageBehandling)
+        // ender bare opp med å ha 11 synlige opplysninger så her er det noe litt funky
+        // TODO: lag en ordentlig livssyklustest der alle opplysningene svares på eksplisitt.
+        klageBehandling.hentTilstand() shouldNotBe BehandlingTilstand.FERDIGSTILT
+        klageBehandling.kanFerdigstilles() shouldBe true
+        klageBehandling.ferdigstill()
+        klageBehandling.hentTilstand() shouldBe BehandlingTilstand.FERDIGSTILT
+    }
+
+    @Test
+    fun `klagen skal kunne avbrytes fra tilstand klar_til_behandling`() {
+        val klageBehandling =
+            KlageBehandling(
+                behandlingId = UUID.randomUUID(),
+            )
+        klageBehandling.hentTilstand() shouldBe KLAR_TIL_BEHANDLING
+
+        klageBehandling.avbryt()
+        klageBehandling.hentTilstand() shouldBe BehandlingTilstand.AVBRUTT
+    }
+
+    @Test
+    fun `klagen skal ikke kunne avbrytes fra tilstand ferdigstilt`() {
+        val klageBehandling =
+            KlageBehandling(
+                behandlingId = UUID.randomUUID(),
+            )
+        svarPåAlleOpplysninger(klageBehandling)
+        klageBehandling.ferdigstill()
+
+        shouldThrow<IllegalStateException> { klageBehandling.avbryt() }
+    }
+
+    private fun svarPåAlleOpplysninger(klageBehandling: KlageBehandling) {
+        klageBehandling.alleOpplysninger().forEach {
+            when (it.type.datatype) {
+                Datatype.BOOLSK -> klageBehandling.svar(it.id, true)
+                Datatype.TEKST -> klageBehandling.svar(it.id, "String")
+                Datatype.DATO -> klageBehandling.svar(it.id, LocalDate.MIN)
+                Datatype.FLERVALG -> klageBehandling.svar(it.id, listOf("String1", "String2"))
+            }
         }
     }
 

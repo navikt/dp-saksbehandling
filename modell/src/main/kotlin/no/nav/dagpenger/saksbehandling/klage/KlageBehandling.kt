@@ -104,6 +104,7 @@ data class KlageBehandling(
             OversendKlageinstansSteg,
             FullmektigSteg,
         ),
+    private var behandlingTilstand: BehandlingTilstand = BehandlingTilstand.KLAR_TIL_BEHANDLING,
 ) {
     init {
         steg.forEach { it.evaluerSynlighet(opplysninger) }
@@ -180,6 +181,7 @@ data class KlageBehandling(
         if (!kanFerdigstilles()) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling, opplysninger er ikke utfylt")
         }
+        this.behandlingTilstand = BehandlingTilstand.FERDIGSTILT
     }
 
     private fun evaluerSynlighetOgUtfall() {
@@ -191,5 +193,22 @@ data class KlageBehandling(
     fun hentOpplysning(opplysningId: UUID): Opplysning {
         return opplysninger.singleOrNull { it.id == opplysningId }
             ?: throw IllegalArgumentException("Fant ikke opplysning med id $opplysningId")
+    }
+
+    fun hentTilstand(): BehandlingTilstand {
+        return behandlingTilstand
+    }
+
+    fun avbryt() {
+        if (this.behandlingTilstand == BehandlingTilstand.FERDIGSTILT) {
+            throw IllegalStateException("Kan ikke avbryte klagebehandling, den er allerede ferdigstilt")
+        }
+        this.behandlingTilstand = BehandlingTilstand.AVBRUTT
+    }
+
+    enum class BehandlingTilstand {
+        KLAR_TIL_BEHANDLING,
+        FERDIGSTILT,
+        AVBRUTT,
     }
 }
