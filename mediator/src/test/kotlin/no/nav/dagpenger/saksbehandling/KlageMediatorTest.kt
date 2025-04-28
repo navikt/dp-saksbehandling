@@ -15,7 +15,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
@@ -24,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 class KlageMediatorTest {
     private val testPersonIdent = "12345678901"
@@ -84,22 +84,23 @@ class KlageMediatorTest {
             )
 
             val klageBehandling = klageMediator.hentKlageBehandling(behandlingId)
-            klageBehandling.svarBehandlingsopplysninger()
+            klageMediator.svarBehandlingsopplysninger(behandlingId, saksbehandler)
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
                     FerdigstillKlageOppgave(
                         utførtAv = saksbehandler,
-                        behandlingId = klageBehandling.behandlingId,
+                        behandlingId = behandlingId,
                     ),
                 )
             }
+            // klageBehandling.synligeOpplysninger()
+            klageMediator.svarUtfallOpprettholdelse(behandlingId, saksbehandler)
 
-            klageBehandling.svarUtfallOpprettholdelse()
             klageMediator.ferdigstill(
                 FerdigstillKlageOppgave(
                     utførtAv = saksbehandler,
-                    behandlingId = klageBehandling.behandlingId,
+                    behandlingId = behandlingId,
                 ),
             )
 
@@ -121,44 +122,87 @@ class KlageMediatorTest {
         }
     }
 
-    private fun KlageBehandling.svarBehandlingsopplysninger() {
-        this.svar(
-            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }.id,
-            svar = "klagen gjelder vedtak",
+    private fun KlageMediator.svarBehandlingsopplysninger(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ) {
+        fun oppdaterOpplysning(
+            opplysningId: UUID,
+            svar: OpplysningerVerdi,
+        ) {
+            return oppdaterKlageOpplysning(
+                behandlingId = behandlingId,
+                opplysningId = opplysningId,
+                verdi = svar,
+                saksbehandler = saksbehandler,
+            )
+        }
+        // OpplysnigerVerdi kan være TEKST, BOOLSK, DATO eller FLERVALG
+
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId,
+                ).synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }.id,
+            svar = OpplysningerVerdi.Tekst("klagen gjelder vedtak"),
         )
-        this.svar(
-            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.id,
-            svar = LocalDate.MIN,
+
+        oppdaterOpplysning(
+            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.id,
+            svar = OpplysningerVerdi.Dato(LocalDate.MIN),
         )
-        this.svar(
-            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.KLAGE_MOTTATT }.id,
-            svar = LocalDate.MIN,
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId,
+                ).synligeOpplysninger().single { it.type == OpplysningType.KLAGE_MOTTATT }.id,
+            svar = OpplysningerVerdi.Dato(LocalDate.MIN),
         )
-        this.svar(
-            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST_OPPFYLT }.id,
-            svar = true,
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId,
+                ).synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST_OPPFYLT }.id,
+            svar = OpplysningerVerdi.Boolsk(true),
         )
-        this.synligeOpplysninger().filter { it.type in formkravOpplysningTyper }.forEach {
-            this.svar(opplysningId = it.id, svar = true)
+        this.hentKlageBehandling(behandlingId).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }.forEach {
+            oppdaterOpplysning(opplysningId = it.id, svar = OpplysningerVerdi.Boolsk(true))
         }
     }
 
-    private fun KlageBehandling.svarUtfallOpprettholdelse() {
-        this.svar(
-            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.UTFALL }.id,
-            svar = UtfallType.OPPRETTHOLDELSE.name,
+    private fun KlageMediator.svarUtfallOpprettholdelse(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ) {
+        fun oppdaterOpplysning(
+            opplysningId: UUID,
+            svar: OpplysningerVerdi,
+        ) {
+            return oppdaterKlageOpplysning(
+                behandlingId = behandlingId,
+                opplysningId = opplysningId,
+                verdi = svar,
+                saksbehandler = saksbehandler,
+            )
+        }
+        oppdaterOpplysning(
+            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == OpplysningType.UTFALL }.id,
+            svar = OpplysningerVerdi.Tekst(UtfallType.OPPRETTHOLDELSE.name),
         )
-        this.svar(
-            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.VURDERNIG_AV_KLAGEN }.id,
-            svar = "Vi opprettholder vedtaket.",
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId,
+                ).synligeOpplysninger().single { it.type == OpplysningType.VURDERNIG_AV_KLAGEN }.id,
+            svar = OpplysningerVerdi.Tekst("Vi opprettholder vedtaket."),
         )
-        this.svar(
-            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.HVEM_KLAGER }.id,
-            svar = HvemKlagerType.BRUKER.name,
+        oppdaterOpplysning(
+            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == OpplysningType.HVEM_KLAGER }.id,
+            svar = OpplysningerVerdi.Tekst(HvemKlagerType.BRUKER.name),
         )
-        this.svar(
-            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.HJEMLER }.id,
-            svar = listOf("§ 4-5", "§ 4-2"),
+        oppdaterOpplysning(
+            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == OpplysningType.HJEMLER }.id,
+            svar = OpplysningerVerdi.TekstListe("§ 4-5", "§ 4-2"),
         )
     }
 }
