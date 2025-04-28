@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
@@ -40,7 +41,7 @@ class KlageMediatorTest {
         }
 
     @Test
-    fun `Livssyklus til en klage`() {
+    fun `Livssyklus til en klage som ferdigstilles`() {
         val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
         withMigratedDb { ds ->
@@ -70,6 +71,9 @@ class KlageMediatorTest {
                     ),
                 )
 
+            klageMediator.hentKlageBehandling(behandlingId).hentTilstand() shouldBe
+                KlageBehandling.BehandlingTilstand.KLAR_TIL_BEHANDLING
+
             val oppgaveKlarTilBehandling =
                 oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
             oppgaveKlarTilBehandling.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -83,7 +87,6 @@ class KlageMediatorTest {
                     ),
             )
 
-            val klageBehandling = klageMediator.hentKlageBehandling(behandlingId)
             klageMediator.svarBehandlingsopplysninger(behandlingId, saksbehandler)
 
             shouldThrow<IllegalStateException> {
@@ -94,7 +97,7 @@ class KlageMediatorTest {
                     ),
                 )
             }
-            // klageBehandling.synligeOpplysninger()
+
             klageMediator.svarUtfallOpprettholdelse(behandlingId, saksbehandler)
 
             klageMediator.ferdigstill(
@@ -103,6 +106,9 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                 ),
             )
+
+            klageMediator.hentKlageBehandling(behandlingId).hentTilstand() shouldBe
+                KlageBehandling.BehandlingTilstand.FERDIGSTILT
 
             val ferdigbehandletOppgave =
                 oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
