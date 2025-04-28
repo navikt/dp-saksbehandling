@@ -14,7 +14,7 @@ import java.util.UUID
 
 class PostgresKlageRepositoryTest {
     @Test
-    fun `Skal kunne lagre og hente klage behandlinger`() {
+    fun `Skal kunne lagre og hente klagebehandlinger`() {
         val behandlingId = UUIDv7.ny()
 
         withMigratedDb { ds ->

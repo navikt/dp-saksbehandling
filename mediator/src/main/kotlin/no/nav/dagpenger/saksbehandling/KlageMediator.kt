@@ -60,6 +60,7 @@ class KlageMediator(
                 is OpplysningerVerdi.Dato -> klageBehandling.svar(opplysningId, verdi.value)
                 is OpplysningerVerdi.Boolsk -> klageBehandling.svar(opplysningId, verdi.value)
             }
+            klageRepository.lagre(klageBehandling = klageBehandling)
         }
     }
 

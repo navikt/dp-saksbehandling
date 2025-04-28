@@ -172,9 +172,11 @@ data class KlageBehandling(
     }
 
     fun kanFerdigstilles(): Boolean {
-        return !opplysninger.any {
-            it.synlighet() && it.type.påkrevd && it.verdi == Verdi.TomVerdi
-        }
+        val tommeOpplysninger =
+            opplysninger.filter {
+                it.synlighet() && it.type.påkrevd && it.verdi == Verdi.TomVerdi
+            }
+        return tommeOpplysninger.isEmpty()
     }
 
     fun ferdigstill() {

@@ -79,7 +79,7 @@ enum class OpplysningType(
     // Info til klageinstans del 2
     HJEMLER(
         navn = "Hvilke hjemler gjelder klagen?",
-        datatype = Datatype.TEKST,
+        datatype = Datatype.FLERVALG,
     ),
     INTERN_MELDING(
         navn = "Intern melding",

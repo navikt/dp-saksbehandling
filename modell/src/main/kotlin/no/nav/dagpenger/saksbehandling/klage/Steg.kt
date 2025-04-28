@@ -24,7 +24,10 @@ object FristvurderingSteg : Steg {
                 opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach {
                     it.settSynlighet(false)
                 }
-            false -> opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach { it.settSynlighet(true) }
+
+            false ->
+                opplysninger.filter { it.type in oversittetFristOpplysningTyper }
+                    .forEach { it.settSynlighet(true) }
         }
     }
 
@@ -50,6 +53,7 @@ object VurderUtfallSteg : Steg {
                     oversittetFristOpplysningTyper +
                     klagenGjelderOpplysningTyper &&
                     opplysning.synlighet() &&
+                    opplysning.type.påkrevd &&
                     opplysning.verdi == Verdi.TomVerdi
             }
         when (skjulUtfallOpplysninger) {
@@ -57,6 +61,7 @@ object VurderUtfallSteg : Steg {
                 opplysinger.filter { it.type in utfallOpplysningTyper }.forEach {
                     it.settSynlighet(false)
                 }
+
             false -> opplysinger.filter { it.type in utfallOpplysningTyper }.forEach { it.settSynlighet(true) }
         }
     }
@@ -90,7 +95,10 @@ object FullmektigSteg : Steg {
             }
 
         when (fullMektigKlager) {
-            true -> opplysinger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }.forEach { it.settSynlighet(true) }
+            true ->
+                opplysinger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
+                    .forEach { it.settSynlighet(true) }
+
             false ->
                 opplysinger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }.forEach {
                     it.settSynlighet(false)

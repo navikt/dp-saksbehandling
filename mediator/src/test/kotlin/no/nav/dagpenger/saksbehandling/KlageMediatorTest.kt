@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -7,15 +8,17 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
-import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
+import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.klage.Datatype
+import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType
+import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
@@ -53,7 +56,7 @@ class KlageMediatorTest {
 
             val klageMediator =
                 KlageMediator(
-                    klageRepository = InmemoryKlageRepository,
+                    klageRepository = PostgresKlageRepository(ds),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
                 )
@@ -81,8 +84,18 @@ class KlageMediatorTest {
             )
 
             val klageBehandling = klageMediator.hentKlageBehandling(behandlingId)
-            klageBehandling.opprettholdelse()
+            klageBehandling.svarBehandlingsopplysninger()
 
+            shouldThrow<IllegalStateException> {
+                klageMediator.ferdigstill(
+                    FerdigstillKlageOppgave(
+                        utførtAv = saksbehandler,
+                        behandlingId = klageBehandling.behandlingId,
+                    ),
+                )
+            }
+
+            klageBehandling.svarUtfallOpprettholdelse()
             klageMediator.ferdigstill(
                 FerdigstillKlageOppgave(
                     utførtAv = saksbehandler,
@@ -108,17 +121,44 @@ class KlageMediatorTest {
         }
     }
 
-    private fun KlageBehandling.opprettholdelse() {
-        while (!this.kanFerdigstilles()) {
-            val list = this.synligeOpplysninger().filter { it.verdi == Verdi.TomVerdi && it.type.påkrevd }
-            list.forEach {
-                when (it.type.datatype) {
-                    Datatype.TEKST -> this.svar(it.id, "svar")
-                    Datatype.DATO -> this.svar(it.id, LocalDate.MIN)
-                    Datatype.BOOLSK -> this.svar(it.id, false)
-                    Datatype.FLERVALG -> this.svar(it.id, listOf("1", "2"))
-                }
-            }
+    private fun KlageBehandling.svarBehandlingsopplysninger() {
+        this.svar(
+            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }.id,
+            svar = "klagen gjelder vedtak",
+        )
+        this.svar(
+            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.id,
+            svar = LocalDate.MIN,
+        )
+        this.svar(
+            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.KLAGE_MOTTATT }.id,
+            svar = LocalDate.MIN,
+        )
+        this.svar(
+            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST_OPPFYLT }.id,
+            svar = true,
+        )
+        this.synligeOpplysninger().filter { it.type in formkravOpplysningTyper }.forEach {
+            this.svar(opplysningId = it.id, svar = true)
         }
+    }
+
+    private fun KlageBehandling.svarUtfallOpprettholdelse() {
+        this.svar(
+            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.UTFALL }.id,
+            svar = UtfallType.OPPRETTHOLDELSE.name,
+        )
+        this.svar(
+            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.VURDERNIG_AV_KLAGEN }.id,
+            svar = "Vi opprettholder vedtaket.",
+        )
+        this.svar(
+            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.HVEM_KLAGER }.id,
+            svar = HvemKlagerType.BRUKER.name,
+        )
+        this.svar(
+            opplysningId = this.synligeOpplysninger().single { it.type == OpplysningType.HJEMLER }.id,
+            svar = listOf("§ 4-5", "§ 4-2"),
+        )
     }
 }

@@ -159,10 +159,10 @@ class KlageBehandlingTest {
             )
         klageBehandling.hentTilstand() shouldBe KLAR_TIL_BEHANDLING
 
-        // Besvarer alle opplysninger som er synlige, unntatt formkrav
+        shouldThrow<IllegalStateException> {
+            klageBehandling.ferdigstill()
+        }
         svarPåAlleOpplysninger(klageBehandling)
-        // ender bare opp med å ha 11 synlige opplysninger så her er det noe litt funky
-        // TODO: lag en ordentlig livssyklustest der alle opplysningene svares på eksplisitt.
         klageBehandling.hentTilstand() shouldNotBe BehandlingTilstand.FERDIGSTILT
         klageBehandling.kanFerdigstilles() shouldBe true
         klageBehandling.ferdigstill()
