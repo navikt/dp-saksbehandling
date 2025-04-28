@@ -679,6 +679,8 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
         emneknagger:
           type: array
           items:
@@ -697,6 +699,7 @@ components:
         - behandlingId
         - personIdent
         - tidspunktOpprettet
+        - behandlingType
         - tilstand
         - emneknagger
         - adressebeskyttelseGradering
@@ -720,6 +723,8 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
         utsattTilDato:
           type: string
           format: date
@@ -749,6 +754,7 @@ components:
         - behandlingId
         - person
         - tidspunktOpprettet
+        - behandlingType
         - tilstand
         - emneknagger
         - lovligeEndringer
@@ -774,6 +780,12 @@ components:
         - AVVENTER_LÅS_AV_BEHANDLING
         - AVVENTER_OPPLÅSING_AV_BEHANDLING
         - BEHANDLES_I_ARENA
+
+    BehandlingType:
+      type: string
+      enum:
+        - RETT_TIL_DAGPENGER
+        - KLAGE
 
     LovligeEndringer:
       type: object

@@ -833,6 +833,7 @@ class OppgaveApiTest {
                                     ),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
+                        behandlingType = testOppgave.behandling.tilBehandlingTypeDTO(),
                         emneknagger = testOppgave.emneknagger.toList(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
@@ -992,6 +993,7 @@ class OppgaveApiTest {
                                 sikkerhetstiltak = emptyList(),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
+                        behandlingType = testOppgave.behandling.tilBehandlingTypeDTO(),
                         emneknagger = testOppgave.emneknagger.toList(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =

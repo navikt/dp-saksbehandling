@@ -119,6 +119,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
+                      "behandlingType": "RETT_TIL_DAGPENGER",
                       "emneknagger": [],
                       "tilstand": "UNDER_KONTROLL",
                       "lovligeEndringer": {
@@ -256,6 +257,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
+                      "behandlingType": "RETT_TIL_DAGPENGER",
                       "emneknagger": [],
                       "tilstand": "UNDER_BEHANDLING",
                       "lovligeEndringer": {
