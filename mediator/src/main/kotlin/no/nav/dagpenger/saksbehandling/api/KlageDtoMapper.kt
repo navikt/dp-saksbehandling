@@ -51,7 +51,7 @@ object KlageDtoMapper {
                             UtfallType.AVVIST -> UtfallDTOVerdiDTO.AVVIST
                             null -> UtfallDTOVerdiDTO.IKKE_SATT
                         },
-                    tilgjeneligeUtfall = emptyList(),
+                    tilgjengeligeUtfall = emptyList(),
                 ),
             meldingOmVedtak = null,
         )

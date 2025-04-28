@@ -1194,8 +1194,6 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for søknadsbehandling som krever totrinnskontroll`() {
-        // todo sjekke kall mot dp-beahandling
-
         val søknadId = UUIDv7.ny()
         val behandlingId = UUIDv7.ny()
         val behandlingKlientMock =

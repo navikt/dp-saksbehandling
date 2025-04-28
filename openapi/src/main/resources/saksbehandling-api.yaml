@@ -1004,7 +1004,6 @@ components:
       required:
         - nyTilstand
 
-
     Klage:
       type: object
       properties:
@@ -1283,19 +1282,17 @@ components:
           enum:
             - AVVIST
             - OPPRETTHOLDELSE
-            - DELVIS-MEDHOLD
+            - DELVIS_MEDHOLD
             - MEDHOLD
             - IKKE_SATT
-        tilgjeneligeUtfall:
+        tilgjengeligeUtfall:
           type: array
           items:
             type: string
           description: Tilgjengelige utfall for klagebehandling
       required:
         - verdi
-        - tilgjeneligeUtfall
-
-
+        - tilgjengeligeUtfall
 
     MeldingOmVedtakResponse:
       type: object
@@ -1310,8 +1307,6 @@ components:
       required:
         - html
         - utvidedeBeskrivelser
-
-
 
     UtvidetBeskrivelse:
       type: object

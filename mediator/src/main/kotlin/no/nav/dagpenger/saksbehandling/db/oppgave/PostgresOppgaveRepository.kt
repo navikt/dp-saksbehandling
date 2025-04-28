@@ -518,6 +518,8 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat {
         return sessionOf(datasource).use { session ->
             val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
+
+            // TODO: sjekk på tilstand != OPPRETTET bør erstattes med noe logikk for ikke-søkbare tilstander
             val tilstandClause =
                 if (søkeFilter.tilstander.isEmpty()) {
                     " AND oppg.tilstand != 'OPPRETTET' "
@@ -555,8 +557,6 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 søkeFilter.paginering?.let {
                     """ LIMIT ${it.antallOppgaver} OFFSET ${it.side * it.antallOppgaver} """
                 } ?: ""
-
-            // TODO: sjekk på tilstand OPPRETTET bør erstattes med noe logikk for ikke-søkbare-tilstander
 
             // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
             //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
