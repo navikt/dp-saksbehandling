@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
@@ -13,7 +12,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 class KlageMediator(
-    private val klageRepository: KlageRepository = InmemoryKlageRepository,
+    private val klageRepository: KlageRepository,
     private val oppgaveMediator: OppgaveMediator,
     private val utsendingMediator: UtsendingMediator,
 ) {

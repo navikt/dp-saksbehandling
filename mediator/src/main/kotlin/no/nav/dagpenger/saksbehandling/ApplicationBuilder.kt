@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
-import no.nav.dagpenger.saksbehandling.db.klage.InmemoryKlageRepository
+import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
@@ -120,7 +120,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
                         klageMediator =
                             KlageMediator(
-                                klageRepository = InmemoryKlageRepository,
+                                klageRepository = PostgresKlageRepository(dataSource),
                                 oppgaveMediator = oppgaveMediator,
                                 utsendingMediator = utsendingMediator,
                             ),

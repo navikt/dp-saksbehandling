@@ -68,7 +68,7 @@ object KlageView {
                 val customOrder =
                     listOf(
                         OpplysningType.UTFALL,
-                        OpplysningType.VURDERNIG_AV_KLAGEN,
+                        OpplysningType.VURDERIG_AV_KLAGEN,
                         OpplysningType.HVEM_KLAGER,
                         OpplysningType.FULLMEKTIG_NAVN,
                         OpplysningType.FULLMEKTIG_ADRESSE_1,

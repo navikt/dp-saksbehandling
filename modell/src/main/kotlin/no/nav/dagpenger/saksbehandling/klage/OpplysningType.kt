@@ -65,7 +65,7 @@ enum class OpplysningType(
         datatype = Datatype.TEKST,
     ),
 
-    VURDERNIG_AV_KLAGEN(
+    VURDERIG_AV_KLAGEN(
         navn = "Vurdering av klagen",
         datatype = Datatype.TEKST,
     ),

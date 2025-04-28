@@ -24,7 +24,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.RETTSLIG_KLAGEINTERESSE
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERNIG_AV_KLAGEN
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERIG_AV_KLAGEN
 import org.junit.jupiter.api.Test
 
 class KlageViewTest {
@@ -43,7 +43,7 @@ class KlageViewTest {
                 OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE,
                 RETTSLIG_KLAGEINTERESSE,
                 UTFALL,
-                VURDERNIG_AV_KLAGEN,
+                VURDERIG_AV_KLAGEN,
                 HVEM_KLAGER,
                 HJEMLER,
                 INTERN_MELDING,
@@ -82,7 +82,7 @@ class KlageViewTest {
             .map { opplysning -> opplysning.type } shouldBe
             listOf(
                 UTFALL,
-                VURDERNIG_AV_KLAGEN,
+                VURDERIG_AV_KLAGEN,
                 HVEM_KLAGER,
                 FULLMEKTIG_NAVN,
                 FULLMEKTIG_ADRESSE_1,

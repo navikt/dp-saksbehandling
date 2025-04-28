@@ -1,11 +1,13 @@
 package no.nav.dagpenger.saksbehandling.klage
 
+import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.AVBRUTT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
@@ -17,15 +19,15 @@ import java.util.UUID
 
 class KlageBehandlingTest {
     @Test
-    fun `Skal kunne svare og endre på opplysninger av ulike typer`() {
+    fun `Skal kunne svare og endre på opplysninger med ulike datatyper`() {
         val klageBehandling =
             KlageBehandling(
                 behandlingId = UUIDv7.ny(),
             )
 
-        val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysning()
-        val stringOpplysningId = klageBehandling.finnEnStringOpplysningId()
-        val datoOpplysningId = klageBehandling.finnEnDatoOpplysningerId()
+        val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysningId()
+        val stringOpplysningId = klageBehandling.finnEnTekstOpplysningId()
+        val datoOpplysningId = klageBehandling.finnEnDatoOpplysningId()
         val listeOpplysningId = klageBehandling.finnEnListeOpplysningId()
 
         klageBehandling.svar(boolskOpplysningId, false)
@@ -59,7 +61,7 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Hvis alle behandlingsopplysninger er utfylt - skal utfall kunne velges`() {
+    fun `Utfall skal kunne velges når alle behandlingsopplysninger er utfylt`() {
         val klageBehandling =
             KlageBehandling(
                 behandlingId = UUID.randomUUID(),
@@ -102,15 +104,8 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `En klagebehandling er ferdigstilt når alle synlige og påkrevde opplysninger er utfylt`() {
-        val opplysning1 =
-            Opplysning(
-                type = OpplysningType.OPPREISNING_OVERSITTET_FRIST,
-                verdi = Verdi.TomVerdi,
-                synlig = true,
-            )
-
-        val opplysning2 =
+    fun `Klagebehandling kan ferdigstilles når alle synlige og påkrevde opplysninger er utfylt`() {
+        val synligOgPåkrevdOpplysning =
             Opplysning(
                 type = OpplysningType.KLAGEFRIST_OPPFYLT,
                 verdi = Verdi.TomVerdi,
@@ -129,64 +124,33 @@ class KlageBehandlingTest {
                 verdi = Verdi.TomVerdi,
                 synlig = true,
             )
-        KlageBehandling(
-            steg = emptyList(),
-            opplysninger = setOf(opplysning1, opplysning2, ikkePåkrevdOpplysning, ikkeSynligOpplysning),
-        ).let { klageBehandling ->
-            klageBehandling.kanFerdigstilles() shouldBe false
+        val klageBehandling =
+            KlageBehandling(
+                steg = emptyList(),
+                opplysninger = setOf(synligOgPåkrevdOpplysning, ikkePåkrevdOpplysning, ikkeSynligOpplysning),
+            )
+        klageBehandling.tilstand() shouldBe BEHANDLES
 
-            klageBehandling.svar(opplysning1.id, false)
-            klageBehandling.svar(opplysning2.id, false)
+        shouldThrow<IllegalStateException> { klageBehandling.ferdigstill() }
 
-            klageBehandling.kanFerdigstilles() shouldBe true
-        }
+        klageBehandling.svar(synligOgPåkrevdOpplysning.id, false)
+
+        shouldNotThrow<IllegalStateException> { klageBehandling.ferdigstill() }
+        klageBehandling.tilstand() shouldBe FERDIGSTILT
     }
 
     @Test
-    fun `Skal kunne opprette en klage i tilstanden KLAR_TIL_BEHANDLING`() {
-        val klageBehandling =
-            KlageBehandling(
-                behandlingId = UUID.randomUUID(),
-            )
-        klageBehandling.hentTilstand() shouldBe KLAR_TIL_BEHANDLING
-    }
-
-    @Test
-    fun `Når klagebehandlingen har fylt ut alle nødvendige opplysninger skal tilsanden kunne settes til ferdigstilt`() {
-        val klageBehandling =
-            KlageBehandling(
-                behandlingId = UUID.randomUUID(),
-            )
-        klageBehandling.hentTilstand() shouldBe KLAR_TIL_BEHANDLING
-
-        shouldThrow<IllegalStateException> {
-            klageBehandling.ferdigstill()
-        }
-        svarPåAlleOpplysninger(klageBehandling)
-        klageBehandling.hentTilstand() shouldNotBe BehandlingTilstand.FERDIGSTILT
-        klageBehandling.kanFerdigstilles() shouldBe true
-        klageBehandling.ferdigstill()
-        klageBehandling.hentTilstand() shouldBe BehandlingTilstand.FERDIGSTILT
-    }
-
-    @Test
-    fun `klagen skal kunne avbrytes fra tilstand klar_til_behandling`() {
-        val klageBehandling =
-            KlageBehandling(
-                behandlingId = UUID.randomUUID(),
-            )
-        klageBehandling.hentTilstand() shouldBe KLAR_TIL_BEHANDLING
+    fun `Klagebehandling skal kunne avbrytes fra tilstand BEHANDLES`() {
+        val klageBehandling = KlageBehandling()
+        klageBehandling.tilstand() shouldBe BEHANDLES
 
         klageBehandling.avbryt()
-        klageBehandling.hentTilstand() shouldBe BehandlingTilstand.AVBRUTT
+        klageBehandling.tilstand() shouldBe AVBRUTT
     }
 
     @Test
-    fun `klagen skal ikke kunne avbrytes fra tilstand ferdigstilt`() {
-        val klageBehandling =
-            KlageBehandling(
-                behandlingId = UUID.randomUUID(),
-            )
+    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT`() {
+        val klageBehandling = KlageBehandling()
         svarPåAlleOpplysninger(klageBehandling)
         klageBehandling.ferdigstill()
 
@@ -204,19 +168,15 @@ class KlageBehandlingTest {
         }
     }
 
-    private fun KlageBehandling.finnEnOpplysning(opplysningType: OpplysningType): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type == opplysningType }.id
-    }
-
-    private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
+    private fun KlageBehandling.finnEnBoolskOpplysningId(): UUID {
         return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.id
     }
 
-    private fun KlageBehandling.finnEnStringOpplysningId(): UUID {
+    private fun KlageBehandling.finnEnTekstOpplysningId(): UUID {
         return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.id
     }
 
-    private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
+    private fun KlageBehandling.finnEnDatoOpplysningId(): UUID {
         return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.id
     }
 

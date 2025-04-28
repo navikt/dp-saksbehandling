@@ -87,14 +87,14 @@ object OversendKlageinstansSteg : Steg {
 
 object FullmektigSteg : Steg {
     override fun evaluerSynlighet(opplysinger: Collection<Opplysning>) {
-        val fullMektigKlager =
+        val fullmektigKlager =
             opplysinger.any { opplysning ->
                 opplysning.type == OpplysningType.HVEM_KLAGER &&
                     opplysning.verdi is Verdi.TekstVerdi &&
                     (opplysning.verdi as Verdi.TekstVerdi).value == HvemKlagerType.FULLMEKTIG.name
             }
 
-        when (fullMektigKlager) {
+        when (fullmektigKlager) {
             true ->
                 opplysinger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
                     .forEach { it.settSynlighet(true) }

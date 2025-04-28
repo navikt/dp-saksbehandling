@@ -40,7 +40,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                     ).map { row ->
                         KlageBehandling(
                             behandlingId = row.uuid("id"),
-                            behandlingTilstand = KlageBehandling.BehandlingTilstand.valueOf(row.string("tilstand")),
+                            tilstand = KlageBehandling.BehandlingTilstand.valueOf(row.string("tilstand")),
                             opplysninger = row.string("opplysninger").tilKlageOpplysninger(),
                         )
                     }.asSingle,
@@ -66,7 +66,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 paramMap =
                     mapOf(
                         "id" to klageBehandling.behandlingId,
-                        "tilstand" to klageBehandling.hentTilstand().toString(),
+                        "tilstand" to klageBehandling.tilstand().toString(),
                         "opplysninger" to
                             PGobject().also {
                                 it.type = "JSONB"
