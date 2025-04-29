@@ -16,7 +16,14 @@ class KlageMediator(
     private val oppgaveMediator: OppgaveMediator,
     private val utsendingMediator: UtsendingMediator,
 ) {
-    fun hentKlageBehandling(behandlingId: UUID): KlageBehandling {
+    fun hentKlageBehandling(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): KlageBehandling {
+        sjekkTilgangTilOppgave(
+            behandlingId = behandlingId,
+            saksbehandler = saksbehandler,
+        )
         return klageRepository.hentKlageBehandling(behandlingId)
     }
 

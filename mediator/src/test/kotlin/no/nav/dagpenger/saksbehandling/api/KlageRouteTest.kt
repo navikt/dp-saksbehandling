@@ -56,7 +56,12 @@ class KlageRouteTest {
         val behandlingId = UUIDv7.ny()
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.hentKlageBehandling(behandlingId) } returns
+                every {
+                    it.hentKlageBehandling(
+                        behandlingId = behandlingId,
+                        saksbehandler = saksbehandler,
+                    )
+                } returns
                     KlageBehandling(
                         behandlingId = behandlingId,
                     )

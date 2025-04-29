@@ -78,7 +78,7 @@ class KlageMediatorTest {
                     ),
                 )
 
-            klageMediator.hentKlageBehandling(behandlingId).tilstand() shouldBe
+            klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand() shouldBe
                 KlageBehandling.BehandlingTilstand.BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -110,7 +110,8 @@ class KlageMediatorTest {
                 saksbehandler = saksbehandler,
             )
 
-            klageMediator.hentKlageBehandling(behandlingId).tilstand() shouldBe FERDIGSTILT
+            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand() shouldBe FERDIGSTILT
 
             oppgaveMediator.hentOppgaveFor(
                 behandlingId = behandlingId,
@@ -161,7 +162,10 @@ class KlageMediatorTest {
                     ),
                 )
 
-            klageMediator.hentKlageBehandling(behandlingId).tilstand() shouldBe
+            klageMediator.hentKlageBehandling(
+                behandlingId = behandlingId,
+                saksbehandler = saksbehandler,
+            ).tilstand() shouldBe
                 KlageBehandling.BehandlingTilstand.BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -182,7 +186,10 @@ class KlageMediatorTest {
                 saksbehandler = saksbehandler,
             )
 
-            klageMediator.hentKlageBehandling(behandlingId).tilstand() shouldBe
+            klageMediator.hentKlageBehandling(
+                behandlingId = behandlingId,
+                saksbehandler = saksbehandler,
+            ).tilstand() shouldBe
                 KlageBehandling.BehandlingTilstand.AVBRUTT
 
             oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -208,30 +215,45 @@ class KlageMediatorTest {
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }.id,
             svar = OpplysningerVerdi.Tekst("Vedtak 1"),
         )
 
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
                     .single { it.type == KLAGEFRIST }.id,
             svar = OpplysningerVerdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
                     .single { it.type == KLAGE_MOTTATT }.id,
             svar = OpplysningerVerdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
                     .single { it.type == KLAGEFRIST_OPPFYLT }.id,
             svar = OpplysningerVerdi.Boolsk(true),
         )
-        this.hentKlageBehandling(behandlingId).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }
+        this.hentKlageBehandling(
+            behandlingId = behandlingId,
+            saksbehandler = saksbehandler,
+        ).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }
             .forEach {
                 oppdaterOpplysning(opplysningId = it.id, svar = OpplysningerVerdi.Boolsk(true))
             }
@@ -253,24 +275,37 @@ class KlageMediatorTest {
             )
         }
         oppdaterOpplysning(
-            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == UTFALL }.id,
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger().single { it.type == UTFALL }.id,
             svar = OpplysningerVerdi.Tekst(UtfallType.OPPRETTHOLDELSE.name),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
                     .single { it.type == VURDERIG_AV_KLAGEN }.id,
             svar = OpplysningerVerdi.Tekst("Vi opprettholder vedtaket."),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
                     .single { it.type == HVEM_KLAGER }.id,
             svar = OpplysningerVerdi.Tekst(HvemKlagerType.BRUKER.name),
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
                     .single { it.type == HJEMLER }.id,
             svar = OpplysningerVerdi.TekstListe("§ 4-5", "§ 4-2"),
         )
