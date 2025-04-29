@@ -8,7 +8,9 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
@@ -64,6 +66,44 @@ class KlageRouteTest {
                 it.status shouldBe HttpStatusCode.OK
             }
             // todo mer testing
+        }
+    }
+
+    @Test
+    fun `Skal kunne trekke en klage`() {
+        val klageId = UUIDv7.ny()
+
+        val mediator =
+            mockk<KlageMediator>().also {
+                every { it.avbrytKlage(klageId = klageId, saksbehandler = saksbehandler) } just Runs
+            }
+
+        withKlageRoute(mediator) {
+            client.put("oppgave/klage/$klageId/trekk") { autentisert() }.status shouldBe HttpStatusCode.NoContent
+        }
+
+        verify(exactly = 1) {
+            mediator.avbrytKlage(
+                klageId = klageId,
+                saksbehandler = saksbehandler,
+            )
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en klage`() {
+        val klageId = UUIDv7.ny()
+        val mediator =
+            mockk<KlageMediator>().also {
+                every { it.ferdigstill(klageId = klageId, saksbehandler = saksbehandler) } just Runs
+            }
+
+        withKlageRoute(mediator) {
+            client.put("oppgave/klage/$klageId/ferdigstill") { autentisert() }.status shouldBe HttpStatusCode.NoContent
+        }
+
+        verify(exactly = 1) {
+            mediator.ferdigstill(klageId = klageId, saksbehandler = saksbehandler)
         }
     }
 

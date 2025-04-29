@@ -12,8 +12,6 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
@@ -100,20 +98,16 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
-                    FerdigstillKlageOppgave(
-                        utførtAv = saksbehandler,
-                        behandlingId = behandlingId,
-                    ),
+                    klageId = behandlingId,
+                    saksbehandler = saksbehandler,
                 )
             }
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
 
             klageMediator.ferdigstill(
-                FerdigstillKlageOppgave(
-                    utførtAv = saksbehandler,
-                    behandlingId = behandlingId,
-                ),
+                klageId = behandlingId,
+                saksbehandler = saksbehandler,
             )
 
             klageMediator.hentKlageBehandling(behandlingId).tilstand() shouldBe FERDIGSTILT
@@ -126,7 +120,7 @@ class KlageMediatorTest {
             verify(exactly = 1) {
                 utsendingMediator.opprettUtsending(
                     oppgaveId = oppgave.oppgaveId,
-                    brev = "må hente html",
+                    brev = "<html><h1>Dette må vi gjøre noe med</h1></html>",
                     ident = oppgave.behandling.person.ident,
                 )
             }
@@ -184,19 +178,15 @@ class KlageMediatorTest {
             )
 
             klageMediator.avbrytKlage(
-                hendelse =
-                    AvbruttHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
-                        ident = oppgave.behandling.person.ident,
-                        utførtAv = saksbehandler,
-                    ),
+                klageId = behandlingId,
+                saksbehandler = saksbehandler,
             )
 
             klageMediator.hentKlageBehandling(behandlingId).tilstand() shouldBe
                 KlageBehandling.BehandlingTilstand.AVBRUTT
 
             oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand().type shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+                .tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
 
@@ -217,25 +207,34 @@ class KlageMediatorTest {
         }
 
         oppdaterOpplysning(
-            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == KLAGEN_GJELDER_VEDTAK }.id,
+            opplysningId =
+                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                    .single { it.type == KLAGEN_GJELDER_VEDTAK }.id,
             svar = OpplysningerVerdi.Tekst("Vedtak 1"),
         )
 
         oppdaterOpplysning(
-            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == KLAGEFRIST }.id,
+            opplysningId =
+                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                    .single { it.type == KLAGEFRIST }.id,
             svar = OpplysningerVerdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
-            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == KLAGE_MOTTATT }.id,
+            opplysningId =
+                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                    .single { it.type == KLAGE_MOTTATT }.id,
             svar = OpplysningerVerdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
-            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == KLAGEFRIST_OPPFYLT }.id,
+            opplysningId =
+                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                    .single { it.type == KLAGEFRIST_OPPFYLT }.id,
             svar = OpplysningerVerdi.Boolsk(true),
         )
-        this.hentKlageBehandling(behandlingId).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }.forEach {
-            oppdaterOpplysning(opplysningId = it.id, svar = OpplysningerVerdi.Boolsk(true))
-        }
+        this.hentKlageBehandling(behandlingId).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }
+            .forEach {
+                oppdaterOpplysning(opplysningId = it.id, svar = OpplysningerVerdi.Boolsk(true))
+            }
     }
 
     private fun KlageMediator.registrerUtfallOpprettholdelseOpplysninger(
@@ -259,15 +258,20 @@ class KlageMediatorTest {
         )
         oppdaterOpplysning(
             opplysningId =
-                this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == VURDERIG_AV_KLAGEN }.id,
+                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                    .single { it.type == VURDERIG_AV_KLAGEN }.id,
             svar = OpplysningerVerdi.Tekst("Vi opprettholder vedtaket."),
         )
         oppdaterOpplysning(
-            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == HVEM_KLAGER }.id,
+            opplysningId =
+                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                    .single { it.type == HVEM_KLAGER }.id,
             svar = OpplysningerVerdi.Tekst(HvemKlagerType.BRUKER.name),
         )
         oppdaterOpplysning(
-            opplysningId = this.hentKlageBehandling(behandlingId).synligeOpplysninger().single { it.type == HJEMLER }.id,
+            opplysningId =
+                this.hentKlageBehandling(behandlingId).synligeOpplysninger()
+                    .single { it.type == HJEMLER }.id,
             svar = OpplysningerVerdi.TekstListe("§ 4-5", "§ 4-2"),
         )
     }

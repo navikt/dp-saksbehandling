@@ -25,7 +25,28 @@ fun Route.klageApi(mediator: KlageMediator) {
                     val klageDTO = klageBehandling.tilDto()
                     call.respond(HttpStatusCode.OK, klageDTO)
                 }
-
+                route("trekk") {
+                    put {
+                        val klageId = call.finnUUID("klageId")
+                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        mediator.avbrytKlage(
+                            klageId = klageId,
+                            saksbehandler = saksbehandler,
+                        )
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
+                route("ferdigstill") {
+                    put {
+                        val klageId = call.finnUUID("klageId")
+                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        mediator.ferdigstill(
+                            klageId = klageId,
+                            saksbehandler = saksbehandler,
+                        )
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
                 route("opplysning") {
                     route("{opplysningId}") {
                         put {

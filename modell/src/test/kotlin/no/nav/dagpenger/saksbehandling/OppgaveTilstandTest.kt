@@ -218,7 +218,6 @@ class OppgaveTilstandTest {
                     avbruttHendelse =
                         AvbruttHendelse(
                             behandlingId = oppgave.behandling.behandlingId,
-                            ident = oppgave.behandling.person.ident,
                             utførtAv = saksbehandler,
                         ),
                 )
@@ -233,7 +232,6 @@ class OppgaveTilstandTest {
                     avbruttHendelse =
                         AvbruttHendelse(
                             behandlingId = oppgave.behandling.behandlingId,
-                            ident = oppgave.behandling.person.ident,
                             utførtAv = saksbehandler,
                         ),
                 )

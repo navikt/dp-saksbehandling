@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
@@ -66,13 +65,16 @@ class KlageMediator(
         }
     }
 
-    fun ferdigstill(hendelse: FerdigstillKlageOppgave) {
-        val html = "må hente html"
+    fun ferdigstill(
+        klageId: UUID,
+        saksbehandler: Saksbehandler,
+    ) {
+        val html = "<html><h1>Dette må vi gjøre noe med</h1></html>"
 
-        val oppgave = sjekkTilgangOgEierAvOppgave(hendelse.behandlingId, hendelse.utførtAv)
+        val oppgave = sjekkTilgangOgEierAvOppgave(behandlingId = klageId, saksbehandler = saksbehandler)
 
         val klageBehandling =
-            klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
+            klageRepository.hentKlageBehandling(klageId).also { klageBehandling ->
                 klageBehandling.ferdigstill()
             }
 
@@ -100,7 +102,7 @@ class KlageMediator(
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = html,
-                    utførtAv = hendelse.utførtAv,
+                    utførtAv = saksbehandler,
                 ),
         )
         utsendingMediator.mottaStartUtsending(
@@ -108,16 +110,30 @@ class KlageMediator(
         )
     }
 
-    fun avbrytKlage(hendelse: AvbruttHendelse) {
-        sjekkTilgangOgEierAvOppgave(hendelse.behandlingId, hendelse.utførtAv)
+    fun avbrytKlage(
+        klageId: UUID,
+        saksbehandler: Saksbehandler,
+    ) {
+        sjekkTilgangOgEierAvOppgave(
+            behandlingId = klageId,
+            saksbehandler = saksbehandler,
+        )
         val klageBehandling =
-            klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
+            klageRepository.hentKlageBehandling(
+                behandlingId = klageId,
+            ).also { klageBehandling ->
                 klageBehandling.avbryt()
             }
 
         klageRepository.lagre(klageBehandling)
 
-        oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
+        oppgaveMediator.ferdigstillOppgave(
+            avbruttHendelse =
+                AvbruttHendelse(
+                    behandlingId = klageId,
+                    utførtAv = saksbehandler,
+                ),
+        )
     }
 
     private fun sjekkTilgangOgEierAvOppgave(
