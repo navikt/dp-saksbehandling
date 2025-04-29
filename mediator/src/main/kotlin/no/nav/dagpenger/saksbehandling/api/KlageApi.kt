@@ -5,7 +5,6 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.application
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
@@ -34,7 +33,9 @@ fun Route.klageApi(
                     utførtAv = Applikasjon("dp-mottak"),
                     ident = call.receive<PersonIdentDTO>().ident
                 )
-            )
+            ).let {
+                call.respond(HttpStatusCode.Created, it)
+            }
         }
     }
 
@@ -99,3 +100,4 @@ fun Route.klageApi(
         }
     }
 }
+
