@@ -454,6 +454,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /oppgave/klage/{klageId}/ferdigstill:
+    put:
+      summary: Ferdigstill klage
+      parameters:
+        - in: path
+          name: klageId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Klagen er ferdigbehandlet
+        '404':
+          description: Klagen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+  /oppgave/klage/{klageId}/trekk:
+    put:
+      summary: Trekk klage
+      parameters:
+        - in: path
+          name: klageId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Klagen er trukket
+        '404':
+          description: Klagen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
   /oppgave/klage/{klageId}:
     get:
       summary: Hent klage basert på klageId
