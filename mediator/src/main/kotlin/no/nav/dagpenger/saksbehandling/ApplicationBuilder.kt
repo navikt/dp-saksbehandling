@@ -7,6 +7,7 @@ import io.ktor.server.cio.CIOApplicationEngine
 import io.ktor.server.engine.EmbeddedServer
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
+import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
 import no.nav.dagpenger.saksbehandling.api.Oppslag
@@ -124,6 +125,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                                 oppgaveMediator = oppgaveMediator,
                                 utsendingMediator = utsendingMediator,
                             ),
+                        klageDtoMapper = KlageDtoMapper(oppslag),
                     )
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =

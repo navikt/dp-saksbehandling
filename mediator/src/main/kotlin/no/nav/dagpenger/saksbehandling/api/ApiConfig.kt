@@ -27,6 +27,7 @@ internal fun Application.installerApis(
     oppgaveDTOMapper: OppgaveDTOMapper,
     statistikkTjeneste: StatistikkTjeneste,
     klageMediator: KlageMediator,
+    klageDtoMapper: KlageDtoMapper,
 ) {
     this.authConfig()
     install(CallId) {
@@ -67,6 +68,6 @@ internal fun Application.installerApis(
             applicationCallParser,
         )
         statistikkApi(statistikkTjeneste)
-        klageApi(klageMediator)
+        klageApi(klageMediator, klageDtoMapper)
     }
 }

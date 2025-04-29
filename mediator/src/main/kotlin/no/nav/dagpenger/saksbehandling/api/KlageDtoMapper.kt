@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
+import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.KlageView.behandlingOpplysninger
 import no.nav.dagpenger.saksbehandling.api.KlageView.finnGruppe
 import no.nav.dagpenger.saksbehandling.api.KlageView.utfallOpplysninger
@@ -23,28 +24,30 @@ import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 
-object KlageDtoMapper {
-    fun OppdaterKlageOpplysningDTO.tilVerdi(): OpplysningerVerdi {
-        return when (this) {
-            is BoolskVerdiDTO -> OpplysningerVerdi.Boolsk(this.verdi)
-            is DatoVerdiDTO -> OpplysningerVerdi.Dato(this.verdi)
-            is ListeVerdiDTO -> OpplysningerVerdi.TekstListe(this.verdi)
-            is TekstVerdiDTO -> OpplysningerVerdi.Tekst(this.verdi)
+class KlageDtoMapper(private val oppslag: Oppslag) {
+    fun tilVerdi(oppdaterKlageOpplysningDTO: OppdaterKlageOpplysningDTO): OpplysningerVerdi {
+        return when (oppdaterKlageOpplysningDTO) {
+            is BoolskVerdiDTO -> OpplysningerVerdi.Boolsk(oppdaterKlageOpplysningDTO.verdi)
+            is DatoVerdiDTO -> OpplysningerVerdi.Dato(oppdaterKlageOpplysningDTO.verdi)
+            is ListeVerdiDTO -> OpplysningerVerdi.TekstListe(oppdaterKlageOpplysningDTO.verdi)
+            is TekstVerdiDTO -> OpplysningerVerdi.Tekst(oppdaterKlageOpplysningDTO.verdi)
         }
     }
 
-    fun KlageBehandling.tilDto(): KlageDTO {
-        val synligeOpplysninger = synligeOpplysninger().toList()
+    suspend fun tilDto(
+        klageBehandling: KlageBehandling,
+        saksbehandler: Saksbehandler,
+    ): KlageDTO {
+        val synligeOpplysninger = klageBehandling.synligeOpplysninger().toList()
         return KlageDTO(
-            id = this.behandlingId,
-            // todo
-            saksbehandler = null,
+            id = klageBehandling.behandlingId,
+            saksbehandler = oppslag.hentBehandler(saksbehandler.navIdent),
             behandlingOpplysninger = behandlingOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             utfallOpplysninger = utfallOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             utfall =
                 UtfallDTO(
                     verdi =
-                        when (this.utfall()) {
+                        when (klageBehandling.utfall()) {
                             UtfallType.OPPRETTHOLDELSE -> UtfallDTOVerdiDTO.OPPRETTHOLDELSE
                             UtfallType.MEDHOLD -> UtfallDTOVerdiDTO.MEDHOLD
                             UtfallType.DELVIS_MEDHOLD -> UtfallDTOVerdiDTO.DELVIS_MEDHOLD

@@ -10,11 +10,12 @@ import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.KlageMediator
-import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.tilDto
-import no.nav.dagpenger.saksbehandling.api.KlageDtoMapper.tilVerdi
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 
-fun Route.klageApi(mediator: KlageMediator) {
+fun Route.klageApi(
+    mediator: KlageMediator,
+    klageDtoMapper: KlageDtoMapper,
+) {
     val applicationCallParser = Configuration.applicationCallParser
     authenticate("azureAd") {
         route("oppgave/klage") {
@@ -27,7 +28,11 @@ fun Route.klageApi(mediator: KlageMediator) {
                             behandlingId = klageId,
                             saksbehandler = saksbehandler,
                         )
-                    val klageDTO = klageBehandling.tilDto()
+                    val klageDTO =
+                        klageDtoMapper.tilDto(
+                            klageBehandling = klageBehandling,
+                            saksbehandler = saksbehandler,
+                        )
                     call.respond(HttpStatusCode.OK, klageDTO)
                 }
                 route("trekk") {
@@ -62,7 +67,7 @@ fun Route.klageApi(mediator: KlageMediator) {
                             mediator.oppdaterKlageOpplysning(
                                 behandlingId = klageId,
                                 opplysningId = opplysningId,
-                                verdi = oppdaterKlageOpplysningDTO.tilVerdi(),
+                                verdi = klageDtoMapper.tilVerdi(oppdaterKlageOpplysningDTO),
                                 saksbehandler = saksbehandler,
                             )
                             call.respond(HttpStatusCode.NoContent)

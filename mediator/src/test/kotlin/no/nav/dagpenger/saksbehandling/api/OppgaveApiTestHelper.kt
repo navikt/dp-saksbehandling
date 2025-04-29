@@ -68,6 +68,7 @@ internal object OppgaveApiTestHelper {
                     oppgaveDTOMapper,
                     mockk(relaxed = true),
                     mockk(relaxed = true),
+                    mockk(relaxed = true),
                 )
             }
             test()
@@ -95,6 +96,7 @@ internal object OppgaveApiTestHelper {
                         ),
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
                     ),
+                    mockk(relaxed = true),
                     mockk(relaxed = true),
                     mockk(relaxed = true),
                 )
