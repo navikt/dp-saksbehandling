@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -132,6 +133,70 @@ class KlageMediatorTest {
             verify(exactly = 1) {
                 utsendingMediator.mottaStartUtsending(any())
             }
+        }
+    }
+
+    @Test
+    fun `Livssyklus til en klage som avbrytes`() {
+        val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
+        val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    personRepository = PostgresPersonRepository(datasource),
+                    oppgaveRepository = PostgresOppgaveRepository(datasource),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = utsendingMediator,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = mockk(),
+                )
+
+            val klageMediator =
+                KlageMediator(
+                    klageRepository = PostgresKlageRepository(datasource),
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = utsendingMediator,
+                )
+
+            val behandlingId =
+                klageMediator.opprettKlage(
+                    KlageMottattHendelse(
+                        ident = testPersonIdent,
+                        opprettet = LocalDateTime.now(),
+                        journalpostId = "journalpostId",
+                    ),
+                )
+
+            klageMediator.hentKlageBehandling(behandlingId).tilstand() shouldBe
+                KlageBehandling.BehandlingTilstand.BEHANDLES
+
+            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+
+            oppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+
+            oppgaveMediator.tildelOppgave(
+                settOppgaveAnsvarHendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+
+            klageMediator.avbrytKlage(
+                hendelse =
+                    AvbruttHendelse(
+                        behandlingId = oppgave.behandling.behandlingId,
+                        ident = oppgave.behandling.person.ident,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+
+            klageMediator.hentKlageBehandling(behandlingId).tilstand() shouldBe
+                KlageBehandling.BehandlingTilstand.AVBRUTT
+
+            oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand().type shouldBe Oppgave.Tilstand.Type.FERDIG_BEHANDLET
         }
     }
 

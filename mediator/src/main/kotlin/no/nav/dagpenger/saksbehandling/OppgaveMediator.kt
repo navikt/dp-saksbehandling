@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.Oppg
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -317,6 +318,24 @@ class OppgaveMediator(
             oppgaveRepository.slettNotatFor(oppgave)
         }
         return LocalDateTime.now()
+    }
+
+    fun ferdigstillOppgave(avbruttHendelse: AvbruttHendelse) {
+        oppgaveRepository.hentOppgaveFor(avbruttHendelse.behandlingId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt AvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                oppgave.ferdigstill(avbruttHendelse)
+                oppgaveRepository.lagre(oppgave)
+                logger.info {
+                    "Behandlet AvbruttHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                }
+            }
+        }
     }
 
     fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {

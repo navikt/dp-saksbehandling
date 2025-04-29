@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringE
 import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -200,6 +201,41 @@ class OppgaveTilstandTest {
                         automatiskBehandlet = true,
                         sak = sak,
                     ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `skal ferdigstille en oppgave bassert på avbrytHendelse`() {
+        val lovligeTilstander =
+            setOf(UNDER_BEHANDLING)
+
+        lovligeTilstander.forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand, behandler = saksbehandler)
+            shouldNotThrowAny {
+                oppgave.ferdigstill(
+                    avbruttHendelse =
+                        AvbruttHendelse(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            ident = oppgave.behandling.person.ident,
+                            utførtAv = saksbehandler,
+                        ),
+                )
+            }
+            oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+        }
+
+        (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand, behandler = saksbehandler)
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.ferdigstill(
+                    avbruttHendelse =
+                        AvbruttHendelse(
+                            behandlingId = oppgave.behandling.behandlingId,
+                            ident = oppgave.behandling.person.ident,
+                            utførtAv = saksbehandler,
+                        ),
                 )
             }
         }

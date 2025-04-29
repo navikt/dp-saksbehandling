@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FerdigstillKlageOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -44,12 +45,7 @@ class KlageMediator(
         verdi: OpplysningerVerdi,
         saksbehandler: Saksbehandler,
     ) {
-        oppgaveMediator.hentOppgaveHvisTilgang(
-            behandlingId = behandlingId,
-            saksbehandler = saksbehandler,
-        ).also {
-            requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
-        }
+        sjekkTilgangOgEierAvOppgave(behandlingId, saksbehandler)
         klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
             when (verdi) {
                 is OpplysningerVerdi.Tekst -> klageBehandling.svar(opplysningId, verdi.value)
@@ -73,13 +69,7 @@ class KlageMediator(
     fun ferdigstill(hendelse: FerdigstillKlageOppgave) {
         val html = "må hente html"
 
-        val oppgave =
-            oppgaveMediator.hentOppgaveHvisTilgang(
-                behandlingId = hendelse.behandlingId,
-                saksbehandler = hendelse.utførtAv,
-            ).also {
-                requireEierAvOppgave(oppgave = it, saksbehandler = hendelse.utførtAv)
-            }
+        val oppgave = sjekkTilgangOgEierAvOppgave(hendelse.behandlingId, hendelse.utførtAv)
 
         val klageBehandling =
             klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
@@ -116,6 +106,30 @@ class KlageMediator(
         utsendingMediator.mottaStartUtsending(
             startUtsendingHendelse,
         )
+    }
+
+    fun avbrytKlage(hendelse: AvbruttHendelse) {
+        sjekkTilgangOgEierAvOppgave(hendelse.behandlingId, hendelse.utførtAv)
+        val klageBehandling =
+            klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
+                klageBehandling.avbryt()
+            }
+
+        klageRepository.lagre(klageBehandling)
+
+        oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
+    }
+
+    private fun sjekkTilgangOgEierAvOppgave(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Oppgave {
+        return oppgaveMediator.hentOppgaveHvisTilgang(
+            behandlingId = behandlingId,
+            saksbehandler = saksbehandler,
+        ).also {
+            requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
+        }
     }
 }
 

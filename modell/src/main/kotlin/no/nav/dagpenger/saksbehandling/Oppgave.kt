@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -194,6 +195,12 @@ data class Oppgave private constructor(
         adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         egneAnsatteTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
         return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
+    }
+
+    fun ferdigstill(avbruttHendelse: AvbruttHendelse) {
+        adressebeskyttelseTilgangskontroll(avbruttHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(avbruttHendelse.utførtAv)
+        tilstand.ferdigstill(this, avbruttHendelse)
     }
 
     fun ferdigstill(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
@@ -472,6 +479,18 @@ data class Oppgave private constructor(
                 godkjennBehandlingMedBrevIArena.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            avbruttHendelse: AvbruttHendelse,
+        ) {
+            requireEierskapTilOppgave(
+                oppgave,
+                avbruttHendelse.utførtAv,
+                avbruttHendelse.javaClass.simpleName,
+            )
+            oppgave.endreTilstand(FerdigBehandlet, avbruttHendelse)
         }
     }
 
@@ -835,6 +854,18 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
+            )
+        }
+
+        fun ferdigstill(
+            oppgave: Oppgave,
+            avbruttHendelse: AvbruttHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${avbruttHendelse.javaClass.simpleName}",
             )
         }
 
