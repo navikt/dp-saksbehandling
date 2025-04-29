@@ -16,7 +16,9 @@ class KlageMediator(
     private val oppgaveMediator: OppgaveMediator,
     private val utsendingMediator: UtsendingMediator,
 ) {
-    fun hentKlageBehandling(behandlingId: UUID): KlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
+    fun hentKlageBehandling(behandlingId: UUID): KlageBehandling {
+        return klageRepository.hentKlageBehandling(behandlingId)
+    }
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): UUID {
         val klageBehandling =
@@ -136,11 +138,21 @@ class KlageMediator(
         )
     }
 
-    private fun sjekkTilgangOgEierAvOppgave(
+    private fun sjekkTilgangTilOppgave(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ): Oppgave {
         return oppgaveMediator.hentOppgaveHvisTilgang(
+            behandlingId = behandlingId,
+            saksbehandler = saksbehandler,
+        )
+    }
+
+    private fun sjekkTilgangOgEierAvOppgave(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Oppgave {
+        return sjekkTilgangTilOppgave(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         ).also {
