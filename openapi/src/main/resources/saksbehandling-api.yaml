@@ -1065,6 +1065,7 @@ components:
 
       required:
         - nyTilstand
+        - behandlingType
 
     Klage:
       type: object
