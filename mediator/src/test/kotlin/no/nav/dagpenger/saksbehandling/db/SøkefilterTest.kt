@@ -17,6 +17,7 @@ class SøkefilterTest {
     fun `Skal kunne initialisere et søkefilter fra Ktor sin QueryParameters`() {
         Parameters.build {
             this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
+            this.appendAll("emneknagg", listOf("Permittert", "Permittert fisk"))
             this["fom"] = "2021-01-01"
             this["tom"] = "2023-01-01"
             this["mineOppgaver"] = "true"
@@ -31,6 +32,7 @@ class SøkefilterTest {
                             tom = LocalDate.of(2023, 1, 1),
                         ),
                     tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                    emneknagger = setOf("Permittert", "Permittert fisk"),
                     saksbehandlerIdent = "testIdent",
                     paginering = Søkefilter.Paginering(10, 0),
                 )

@@ -32,6 +32,15 @@ paths:
             items:
               $ref: '#/components/schemas/OppgaveTilstand'
         - in: query
+          name: behandlingType
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/BehandlingType'
+        - in: query
           name: fom
           required: false
           schema:
