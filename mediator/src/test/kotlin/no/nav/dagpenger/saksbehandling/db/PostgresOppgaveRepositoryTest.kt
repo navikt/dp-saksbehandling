@@ -110,6 +110,59 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
+    fun `Tildel neste ledige klage-oppgave`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+
+            val søknadOppgave =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(1),
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                        ),
+                )
+            val klageOppgave =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå,
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                        ),
+                    behandling = lagBehandling(type = BehandlingType.KLAGE),
+                )
+            repo.lagre(søknadOppgave)
+            repo.lagre(klageOppgave)
+            val nesteOppgave =
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = saksbehandler.navIdent,
+                            utførtAv = saksbehandler,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            behandlingTyper = setOf(BehandlingType.KLAGE),
+                            egneAnsatteTilgang = false,
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = saksbehandler.navIdent,
+                        ),
+                )!!
+            nesteOppgave.oppgaveId shouldBe klageOppgave.oppgaveId
+            nesteOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+        }
+    }
+
+    @Test
     fun `Finn neste ledige oppgave som ikke gjelder egne ansatte`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -1183,6 +1236,31 @@ class PostgresOppgaveRepositoryTest {
                 oppgaver.size shouldBe 1
                 oppgaver.single().oppgaveId shouldBe oppgaveKlarTilBehandling.oppgaveId
             }
+        }
+    }
+
+    @Test
+    fun `Skal kunne søke etter oppgaver filtrert på behandlingstype`() {
+        val søknadOppgave = lagOppgave(tilstand = KlarTilBehandling)
+
+        val klageOppgave =
+            lagOppgave(
+                tilstand = KlarTilBehandling,
+                behandling = lagBehandling(type = BehandlingType.KLAGE),
+            )
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(søknadOppgave)
+            repo.lagre(klageOppgave)
+            repo.søk(
+                søkeFilter =
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagger = emptySet(),
+                        behandlingTyper = setOf(BehandlingType.KLAGE),
+                    ),
+            ).oppgaver shouldBe listOf(klageOppgave)
         }
     }
 

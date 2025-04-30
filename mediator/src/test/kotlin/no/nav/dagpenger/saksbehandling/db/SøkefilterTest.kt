@@ -4,6 +4,8 @@ import io.kotest.assertions.throwables.shouldNotThrowAnyUnit
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Parameters
+import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
+import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
@@ -17,6 +19,7 @@ class SøkefilterTest {
     fun `Skal kunne initialisere et søkefilter fra Ktor sin QueryParameters`() {
         Parameters.build {
             this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
+            this.appendAll("behandlingType", listOf("RETT_TIL_DAGPENGER", "KLAGE"))
             this.appendAll("emneknagg", listOf("Permittert", "Permittert fisk"))
             this["fom"] = "2021-01-01"
             this["tom"] = "2023-01-01"
@@ -32,6 +35,11 @@ class SøkefilterTest {
                             tom = LocalDate.of(2023, 1, 1),
                         ),
                     tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                    behandlingTyper =
+                        setOf(
+                            RETT_TIL_DAGPENGER,
+                            KLAGE,
+                        ),
                     emneknagger = setOf("Permittert", "Permittert fisk"),
                     saksbehandlerIdent = "testIdent",
                     paginering = Søkefilter.Paginering(10, 0),

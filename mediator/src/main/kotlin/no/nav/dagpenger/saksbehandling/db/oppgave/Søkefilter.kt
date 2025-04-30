@@ -70,6 +70,7 @@ data class Søkefilter(
 data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagg: Set<String>,
+    val behandlingTyper: Set<BehandlingType> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
     val adressebeskyttelseTilganger: Set<AdressebeskyttelseGradering>,
     val harBeslutterRolle: Boolean = false,
@@ -85,9 +86,11 @@ data class TildelNesteOppgaveFilter(
             val adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger()
             val harBeslutterRolle: Boolean = saksbehandler.tilganger.contains(TilgangType.BESLUTTER)
             val emneknagger = builder.emneknagg() ?: emptySet()
+            val behandlingTyper = builder.behandlingTyper() ?: emptySet()
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknagg = emneknagger,
+                behandlingTyper = behandlingTyper,
                 egneAnsatteTilgang = egneAnsatteTilgang,
                 adressebeskyttelseTilganger = adressebeskyttelseTilganger,
                 harBeslutterRolle = harBeslutterRolle,
