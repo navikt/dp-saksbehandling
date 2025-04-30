@@ -26,7 +26,7 @@ data class KlageBehandling(
     fun utfall(): UtfallType? {
         return opplysninger
             .single { it.type == UTFALL }
-            .verdi
+            .verdi()
             .let {
                 when (it) {
                     is Verdi.TekstVerdi -> UtfallType.valueOf(it.value)
@@ -119,7 +119,7 @@ data class KlageBehandling(
     private fun kanFerdigstilles(): Boolean {
         val tommeOpplysninger =
             opplysninger.filter {
-                it.synlighet() && it.type.påkrevd && it.verdi == Verdi.TomVerdi
+                it.synlighet() && it.type.påkrevd && it.verdi() == Verdi.TomVerdi
             }
         return tommeOpplysninger.isEmpty()
     }

@@ -7,10 +7,50 @@ import java.util.UUID
 class Opplysning(
     val opplysningId: UUID = UUIDv7.ny(),
     val type: OpplysningType,
+    // todo fikse ved neste commit
     var verdi: Verdi,
     private var synlig: Boolean = true,
     val valgmuligheter: List<String> = emptyList(),
 ) {
+    init {
+        requireRiktigDatatype(verdi)
+    }
+
+    private fun requireRiktigDatatype(verdi: Verdi): Verdi {
+        when (verdi) {
+            is Verdi.Boolsk -> {
+                require(
+                    type.datatype == Datatype.BOOLSK,
+                ) { "Opplysning av type ${type.datatype} kan ikke ha verdi av type ${verdi::class.simpleName}" }
+            }
+
+            is Verdi.Dato -> {
+                require(
+                    type.datatype == Datatype.DATO,
+                ) { "Opplysning av type ${type.datatype} kan ikke ha verdi av type ${verdi::class.simpleName}" }
+            }
+
+            is Verdi.Flervalg -> {
+                require(
+                    type.datatype == Datatype.FLERVALG,
+                ) { "Opplysning av type ${type.datatype} kan ikke ha verdi av type ${verdi::class.simpleName}" }
+            }
+
+            is Verdi.TekstVerdi -> {
+                require(
+                    type.datatype == Datatype.TEKST,
+                ) { "Opplysning av type ${type.datatype} kan ikke ha verdi av type ${verdi::class.simpleName}" }
+            }
+
+            Verdi.TomVerdi -> { }
+        }
+        return verdi
+    }
+
+    fun verdi(): Verdi {
+        return this.verdi
+    }
+
     fun settSynlighet(synlig: Boolean) {
         when (synlig) {
             true -> this.synlig = true
@@ -26,31 +66,19 @@ class Opplysning(
     }
 
     fun svar(verdi: Boolean) {
-        when (val datatype = type.datatype) {
-            Datatype.BOOLSK -> this.verdi = Verdi.Boolsk(verdi)
-            else -> throw IllegalArgumentException("Opplysning av type $datatype kan ikke besvares med boolsk verdi")
-        }
+        requireRiktigDatatype(Verdi.Boolsk(verdi)).also { this.verdi = it }
     }
 
     fun svar(verdi: String) {
-        when (val type = type.datatype) {
-            Datatype.TEKST -> this.verdi = Verdi.TekstVerdi(verdi)
-            else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med tekst verdi")
-        }
+        requireRiktigDatatype(Verdi.TekstVerdi(verdi)).also { this.verdi = it }
     }
 
     fun svar(verdi: List<String>) {
-        when (val type = type.datatype) {
-            Datatype.FLERVALG -> this.verdi = Verdi.Flervalg(verdi)
-            else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med liste verdi")
-        }
+        requireRiktigDatatype(Verdi.Flervalg(verdi)).also { this.verdi = it }
     }
 
     fun svar(verdi: LocalDate) {
-        when (val type = type.datatype) {
-            Datatype.DATO -> this.verdi = Verdi.Dato(verdi)
-            else -> throw IllegalArgumentException("Opplysning av type $type kan ikke besvares med dato verdi")
-        }
+        requireRiktigDatatype(Verdi.Dato(verdi)).also { this.verdi = it }
     }
 
     override fun equals(other: Any?): Boolean {

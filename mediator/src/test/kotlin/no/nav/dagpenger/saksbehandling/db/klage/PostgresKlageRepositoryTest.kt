@@ -47,7 +47,7 @@ class PostgresKlageRepositoryTest {
 
             val boolskOpplysningMedTomVerdi =
                 klageBehandling.synligeOpplysninger().first {
-                    it.type.datatype == Datatype.BOOLSK && it.verdi is Verdi.TomVerdi
+                    it.type.datatype == Datatype.BOOLSK && it.verdi() is Verdi.TomVerdi
                 }.opplysningId
 
             klageRepository.lagre(klageBehandling)
@@ -58,11 +58,11 @@ class PostgresKlageRepositoryTest {
             hentetKlageBehandling.tilstand() shouldBe BEHANDLES
             hentetKlageBehandling.alleOpplysninger() shouldContainExactly klageBehandling.alleOpplysninger()
 
-            hentetKlageBehandling.finnEnOpplysning(boolskOpplysningId).verdi shouldBe Verdi.Boolsk(true)
-            hentetKlageBehandling.finnEnOpplysning(datoOpplysningerId).verdi shouldBe Verdi.Dato(LocalDate.MIN)
-            hentetKlageBehandling.finnEnOpplysning(listeOpplysningId).verdi shouldBe Verdi.Flervalg(listOf("String1", "String2"))
-            hentetKlageBehandling.finnEnOpplysning(tekstOpplysningId).verdi shouldBe Verdi.TekstVerdi("String")
-            hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi shouldBe Verdi.TomVerdi
+            hentetKlageBehandling.finnEnOpplysning(boolskOpplysningId).verdi() shouldBe Verdi.Boolsk(true)
+            hentetKlageBehandling.finnEnOpplysning(datoOpplysningerId).verdi() shouldBe Verdi.Dato(LocalDate.MIN)
+            hentetKlageBehandling.finnEnOpplysning(listeOpplysningId).verdi() shouldBe Verdi.Flervalg(listOf("String1", "String2"))
+            hentetKlageBehandling.finnEnOpplysning(tekstOpplysningId).verdi() shouldBe Verdi.TekstVerdi("String")
+            hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi() shouldBe Verdi.TomVerdi
         }
     }
 

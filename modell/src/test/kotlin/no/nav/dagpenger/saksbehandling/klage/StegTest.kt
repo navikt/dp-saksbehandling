@@ -39,7 +39,7 @@ class StegTest {
         klagefristOppfylt.svar(verdi = true)
         steg.evaluerSynlighet(opplysninger.toList())
 
-        (klagefristOppfylt.verdi as Verdi.Boolsk).value shouldBe true
+        (klagefristOppfylt.verdi() as Verdi.Boolsk).value shouldBe true
         opplysninger.filter { opplysning ->
             opplysning.type in oversittetFristOpplysningTyper
         }.forEach { it.synlighet() shouldBe false }
@@ -47,7 +47,7 @@ class StegTest {
         klagefristOppfylt.svar(verdi = false)
         steg.evaluerSynlighet(opplysninger.toList())
 
-        (klagefristOppfylt.verdi as Verdi.Boolsk).value shouldBe false
+        (klagefristOppfylt.verdi() as Verdi.Boolsk).value shouldBe false
         opplysninger.filter { opplysning ->
             opplysning.type in oversittetFristOpplysningTyper
         }.forEach { it.synlighet() shouldBe true }
@@ -159,7 +159,7 @@ class StegTest {
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())
         fullmektigTilKlageinstansOpplysninger.forEach {
             it.synlighet() shouldBe false
-            it.verdi shouldBe Verdi.TomVerdi
+            it.verdi() shouldBe Verdi.TomVerdi
         }
     }
 }

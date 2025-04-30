@@ -27,9 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.defaultSaksbehandlerADGruppe
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
-import no.nav.dagpenger.saksbehandling.api.models.BoolskVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -264,8 +262,4 @@ class KlageApiTest {
             test()
         }
     }
-}
-
-fun main() {
-    objectMapper.writeValueAsString(BoolskVerdiDTO(true)).let { println(it) }
 }

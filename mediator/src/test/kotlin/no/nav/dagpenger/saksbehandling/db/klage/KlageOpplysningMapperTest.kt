@@ -52,20 +52,20 @@ class KlageOpplysningMapperTest {
             deserialiserteOpplysninger shouldContainExactly opplysninger
 
             deserialiserteOpplysninger.single { it.type == OPPREISNING_OVERSITTET_FRIST }
-                .verdi shouldBe Verdi.Boolsk(false)
+                .verdi() shouldBe Verdi.Boolsk(false)
 
             deserialiserteOpplysninger.single { it.type == OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE }
-                .verdi shouldBe Verdi.TekstVerdi("Test")
+                .verdi() shouldBe Verdi.TekstVerdi("Test")
 
             deserialiserteOpplysninger.single { it.type == KLAGE_MOTTATT }
-                .verdi shouldBe Verdi.Dato(LocalDate.MIN)
+                .verdi() shouldBe Verdi.Dato(LocalDate.MIN)
 
             val klagenGjelder = deserialiserteOpplysninger.single { it.type == KLAGEN_GJELDER }
-            klagenGjelder.verdi shouldBe Verdi.Flervalg("Avslag på søknad", "Annet")
+            klagenGjelder.verdi() shouldBe Verdi.Flervalg("Avslag på søknad", "Annet")
             klagenGjelder.valgmuligheter shouldBe listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet")
 
             deserialiserteOpplysninger.single { it.type == KLAGEN_NEVNER_ENDRING }
-                .verdi shouldBe Verdi.TomVerdi
+                .verdi() shouldBe Verdi.TomVerdi
         }
     }
 }

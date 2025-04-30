@@ -80,10 +80,10 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                         valgmuligheter = emptyList(),
                         redigerbar = true,
                         verdi =
-                            if (opplysning.verdi is Verdi.TomVerdi) {
+                            if (opplysning.verdi() is Verdi.TomVerdi) {
                                 null
                             } else {
-                                (opplysning.verdi as Verdi.TekstVerdi).value
+                                (opplysning.verdi() as Verdi.TekstVerdi).value
                             },
                     )
 
@@ -96,10 +96,10 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                         valgmuligheter = emptyList(),
                         redigerbar = true,
                         verdi =
-                            if (opplysning.verdi is Verdi.TomVerdi) {
+                            if (opplysning.verdi() is Verdi.TomVerdi) {
                                 null
                             } else {
-                                (opplysning.verdi as Verdi.Dato).value
+                                (opplysning.verdi() as Verdi.Dato).value
                             },
                     )
                 }
@@ -113,10 +113,10 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                         valgmuligheter = emptyList(),
                         redigerbar = true,
                         verdi =
-                            if (opplysning.verdi is Verdi.TomVerdi) {
+                            if (opplysning.verdi() is Verdi.TomVerdi) {
                                 null
                             } else {
-                                (opplysning.verdi as Verdi.Boolsk).value
+                                (opplysning.verdi() as Verdi.Boolsk).value
                             },
                     )
                 }
@@ -130,10 +130,10 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                         valgmuligheter = opplysning.valgmuligheter,
                         redigerbar = true,
                         verdi =
-                            if (opplysning.verdi is Verdi.TomVerdi) {
+                            if (opplysning.verdi() is Verdi.TomVerdi) {
                                 null
                             } else {
-                                (opplysning.verdi as Verdi.Flervalg).value
+                                (opplysning.verdi() as Verdi.Flervalg).value
                             },
                     )
                 }

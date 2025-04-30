@@ -31,30 +31,30 @@ class KlageBehandlingTest {
         val listeOpplysningId = klageBehandling.finnEnListeOpplysningId()
 
         klageBehandling.svar(boolskOpplysningId, false)
-        klageBehandling.hentOpplysning(boolskOpplysningId).verdi.let {
+        klageBehandling.hentOpplysning(boolskOpplysningId).verdi().let {
             require(it is Verdi.Boolsk)
             it.value shouldBe false
         }
         klageBehandling.svar(boolskOpplysningId, true)
-        klageBehandling.hentOpplysning(boolskOpplysningId).verdi.let {
+        klageBehandling.hentOpplysning(boolskOpplysningId).verdi().let {
             require(it is Verdi.Boolsk)
             it.value shouldBe true
         }
 
         klageBehandling.svar(stringOpplysningId, "String")
-        klageBehandling.hentOpplysning(stringOpplysningId).verdi.let {
+        klageBehandling.hentOpplysning(stringOpplysningId).verdi().let {
             require(it is Verdi.TekstVerdi)
             it.value shouldBe "String"
         }
 
         klageBehandling.svar(datoOpplysningId, LocalDate.MIN)
-        klageBehandling.hentOpplysning(datoOpplysningId).verdi.let {
+        klageBehandling.hentOpplysning(datoOpplysningId).verdi().let {
             require(it is Verdi.Dato)
             it.value shouldBe LocalDate.MIN
         }
 
         klageBehandling.svar(listeOpplysningId, listOf("String1", "String2"))
-        klageBehandling.hentOpplysning(listeOpplysningId).verdi.let {
+        klageBehandling.hentOpplysning(listeOpplysningId).verdi().let {
             require(it is Verdi.Flervalg)
             it.value shouldBe listOf("String1", "String2")
         }
