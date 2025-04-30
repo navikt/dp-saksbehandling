@@ -431,12 +431,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-  /klage/{klageId}/opplysning/{opplysningId}:
+  /klage/{behandlingId}/opplysning/{opplysningId}:
     put:
       summary: Oppdaterer opplysning i klage
       parameters:
         - in: path
-          name: klageId
+          name: behandlingId
           required: true
           schema:
             type: string
@@ -463,12 +463,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-  /klage/{klageId}/ferdigstill:
+  /klage/{behandlingId}/ferdigstill:
     put:
       summary: Ferdigstill klage
       parameters:
         - in: path
-          name: klageId
+          name: behandlingId
           required: true
           schema:
             type: string
@@ -488,12 +488,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-  /klage/{klageId}/trekk:
+  /klage/{behandlingId}/trekk:
     put:
       summary: Trekk klage
       parameters:
         - in: path
-          name: klageId
+          name: behandlingId
           required: true
           schema:
             type: string
@@ -513,12 +513,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-  /klage/{klageId}:
+  /klage/{behandlingId}:
     get:
-      summary: Hent klage basert på klageId
+      summary: Hent klage basert på behandlingId til klagen
       parameters:
         - in: path
-          name: klageId
+          name: behandlingId
           required: true
           schema:
             type: string
@@ -1070,7 +1070,7 @@ components:
     Klage:
       type: object
       properties:
-        id:
+        behandlingId:
           type: string
           format: uuid
         saksbehandler:
@@ -1088,7 +1088,7 @@ components:
         meldingOmVedtak:
           $ref: '#/components/schemas/MeldingOmVedtakResponse'
       required:
-        - id
+        - behandlingId
         - utfall
         - behandlingOpplysninger
         - utfallOpplysninger
@@ -1162,7 +1162,7 @@ components:
     KlageOpplysningTekst:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1183,7 +1183,7 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
@@ -1191,7 +1191,7 @@ components:
     KlageOpplysningBoolsk:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1212,7 +1212,7 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
@@ -1221,7 +1221,7 @@ components:
     KlageOpplysningDato:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1243,7 +1243,7 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
@@ -1252,7 +1252,7 @@ components:
     KlageOpplysningFlerListeValg:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1275,7 +1275,7 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
@@ -1284,7 +1284,7 @@ components:
     KlageOpplysningListeValg:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1305,7 +1305,7 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe

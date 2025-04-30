@@ -83,7 +83,7 @@ class KlageApiTest {
     fun `Skal kunne trekke en klage`() {
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.avbrytKlage(klageId = klageBehandlingId, saksbehandler = saksbehandler) } just Runs
+                every { it.avbrytKlage(behandlingId = klageBehandlingId, saksbehandler = saksbehandler) } just Runs
             }
 
         withKlageApi(mediator) {
@@ -92,7 +92,7 @@ class KlageApiTest {
 
         verify(exactly = 1) {
             mediator.avbrytKlage(
-                klageId = klageBehandlingId,
+                behandlingId = klageBehandlingId,
                 saksbehandler = saksbehandler,
             )
         }
@@ -102,7 +102,7 @@ class KlageApiTest {
     fun `Skal kunne ferdigstille en klage`() {
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.ferdigstill(klageId = klageBehandlingId, saksbehandler = saksbehandler) } just Runs
+                every { it.ferdigstill(behandlingId = klageBehandlingId, saksbehandler = saksbehandler) } just Runs
             }
 
         withKlageApi(mediator) {
@@ -110,7 +110,7 @@ class KlageApiTest {
         }
 
         verify(exactly = 1) {
-            mediator.ferdigstill(klageId = klageBehandlingId, saksbehandler = saksbehandler)
+            mediator.ferdigstill(behandlingId = klageBehandlingId, saksbehandler = saksbehandler)
         }
     }
 

@@ -98,7 +98,7 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
-                    klageId = behandlingId,
+                    behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 )
             }
@@ -106,7 +106,7 @@ class KlageMediatorTest {
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
 
             klageMediator.ferdigstill(
-                klageId = behandlingId,
+                behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
             )
 
@@ -182,7 +182,7 @@ class KlageMediatorTest {
             )
 
             klageMediator.avbrytKlage(
-                klageId = behandlingId,
+                behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
             )
 

@@ -42,13 +42,13 @@ fun Route.klageApi(
 
     authenticate("azureAd") {
         route("klage") {
-            route("{klageId}") {
+            route("{behandlingId}") {
                 get {
-                    val klageId = call.finnUUID("klageId")
+                    val behandlingId = call.finnUUID("behandlingId")
                     val saksbehandler = applicationCallParser.sakbehandler(call)
                     val klageBehandling =
                         mediator.hentKlageBehandling(
-                            behandlingId = klageId,
+                            behandlingId = behandlingId,
                             saksbehandler = saksbehandler,
                         )
                     val klageDTO =
@@ -60,10 +60,10 @@ fun Route.klageApi(
                 }
                 route("trekk") {
                     put {
-                        val klageId = call.finnUUID("klageId")
+                        val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.sakbehandler(call)
                         mediator.avbrytKlage(
-                            klageId = klageId,
+                            behandlingId = behandlingId,
                             saksbehandler = saksbehandler,
                         )
                         call.respond(HttpStatusCode.NoContent)
@@ -71,10 +71,10 @@ fun Route.klageApi(
                 }
                 route("ferdigstill") {
                     put {
-                        val klageId = call.finnUUID("klageId")
+                        val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.sakbehandler(call)
                         mediator.ferdigstill(
-                            klageId = klageId,
+                            behandlingId = behandlingId,
                             saksbehandler = saksbehandler,
                         )
                         call.respond(HttpStatusCode.NoContent)
@@ -83,12 +83,12 @@ fun Route.klageApi(
                 route("opplysning") {
                     route("{opplysningId}") {
                         put {
-                            val klageId = call.finnUUID("klageId")
+                            val behandlingId = call.finnUUID("behandlingId")
                             val opplysningId = call.finnUUID("opplysningId")
                             val oppdaterKlageOpplysningDTO = call.receive<OppdaterKlageOpplysningDTO>()
                             val saksbehandler = applicationCallParser.sakbehandler(call)
                             mediator.oppdaterKlageOpplysning(
-                                behandlingId = klageId,
+                                behandlingId = behandlingId,
                                 opplysningId = opplysningId,
                                 verdi = klageDtoMapper.tilVerdi(oppdaterKlageOpplysningDTO),
                                 saksbehandler = saksbehandler,

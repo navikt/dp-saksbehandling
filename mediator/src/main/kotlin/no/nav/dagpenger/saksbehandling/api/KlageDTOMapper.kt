@@ -41,7 +41,7 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
     ): KlageDTO {
         val synligeOpplysninger = klageBehandling.synligeOpplysninger().toList()
         return KlageDTO(
-            id = klageBehandling.behandlingId,
+            behandlingId = klageBehandling.behandlingId,
             saksbehandler = oppslag.hentBehandler(saksbehandler.navIdent),
             behandlingOpplysninger = behandlingOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
             utfallOpplysninger = utfallOpplysninger(synligeOpplysninger).klageOpplysningDTO(),
@@ -73,7 +73,7 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
             when (opplysning.type.datatype) {
                 Datatype.TEKST ->
                     KlageOpplysningTekstDTO(
-                        id = opplysning.opplysningId,
+                        opplysningId = opplysning.opplysningId,
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),
@@ -89,7 +89,7 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
 
                 Datatype.DATO -> {
                     KlageOpplysningDatoDTO(
-                        id = opplysning.opplysningId,
+                        opplysningId = opplysning.opplysningId,
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),
@@ -106,7 +106,7 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
 
                 Datatype.BOOLSK -> {
                     KlageOpplysningBoolskDTO(
-                        id = opplysning.opplysningId,
+                        opplysningId = opplysning.opplysningId,
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),
@@ -123,7 +123,7 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
 
                 Datatype.FLERVALG -> {
                     KlageOpplysningFlerListeValgDTO(
-                        id = opplysning.opplysningId,
+                        opplysningId = opplysning.opplysningId,
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),

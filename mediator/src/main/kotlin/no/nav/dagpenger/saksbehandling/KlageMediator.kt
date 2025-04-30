@@ -75,15 +75,15 @@ class KlageMediator(
     }
 
     fun ferdigstill(
-        klageId: UUID,
+        behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ) {
         val html = "<html><h1>Dette må vi gjøre noe med</h1></html>"
 
-        val oppgave = sjekkTilgangOgEierAvOppgave(behandlingId = klageId, saksbehandler = saksbehandler)
+        val oppgave = sjekkTilgangOgEierAvOppgave(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
         val klageBehandling =
-            klageRepository.hentKlageBehandling(klageId).also { klageBehandling ->
+            klageRepository.hentKlageBehandling(behandlingId).also { klageBehandling ->
                 klageBehandling.ferdigstill()
             }
 
@@ -120,16 +120,16 @@ class KlageMediator(
     }
 
     fun avbrytKlage(
-        klageId: UUID,
+        behandlingId: UUID,
         saksbehandler: Saksbehandler,
     ) {
         sjekkTilgangOgEierAvOppgave(
-            behandlingId = klageId,
+            behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         )
         val klageBehandling =
             klageRepository.hentKlageBehandling(
-                behandlingId = klageId,
+                behandlingId = behandlingId,
             ).also { klageBehandling ->
                 klageBehandling.avbryt()
             }
@@ -139,7 +139,7 @@ class KlageMediator(
         oppgaveMediator.ferdigstillOppgave(
             avbruttHendelse =
                 AvbruttHendelse(
-                    behandlingId = klageId,
+                    behandlingId = behandlingId,
                     utførtAv = saksbehandler,
                 ),
         )
