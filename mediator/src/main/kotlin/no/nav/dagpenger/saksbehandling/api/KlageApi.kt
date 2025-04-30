@@ -27,12 +27,13 @@ fun Route.klageApi(
     route("oppgave/klage/opprett") {
         post {
             mediator.opprettKlage(
-                klageMottattHendelse = KlageMottattHendelse(
-                    opprettet = LocalDateTime.now(),
-                    journalpostId = UUIDv7.ny().toString(),
-                    utførtAv = Applikasjon("dp-mottak"),
-                    ident = call.receive<PersonIdentDTO>().ident
-                )
+                klageMottattHendelse =
+                    KlageMottattHendelse(
+                        opprettet = LocalDateTime.now(),
+                        journalpostId = UUIDv7.ny().toString(),
+                        utførtAv = Applikasjon("dp-mottak"),
+                        ident = call.receive<PersonIdentDTO>().ident,
+                    ),
             ).let {
                 call.respond(HttpStatusCode.Created, it)
             }
@@ -100,4 +101,3 @@ fun Route.klageApi(
         }
     }
 }
-

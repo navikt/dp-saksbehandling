@@ -370,7 +370,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OppdatertTilstand'
+                $ref: '#/components/schemas/TildeltOppgave'
         '404':
           description: Oppgaven ble ikke funnet
           content:
@@ -1046,11 +1046,14 @@ components:
         - antallOppgaverKlarTilBehandling
         - antallOppgaverKlarTilKontroll
 
-    OppdatertTilstand:
+    TildeltOppgave:
       type: object
       properties:
         nyTilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
+        behandlingType:
+            $ref: '#/components/schemas/BehandlingType'
+
       required:
         - nyTilstand
 

@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
+import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -186,6 +187,13 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.BehandlesIArena -> OppgaveTilstandDTO.BEHANDLES_I_ARENA
         else -> throw InternDataException("Ukjent tilstand: $this")
     }
+}
+
+internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
+    return TildeltOppgaveDTO(
+        nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        behandlingType = this.behandling.tilBehandlingTypeDTO(),
+    )
 }
 
 internal fun Behandling.tilBehandlingTypeDTO(): BehandlingTypeDTO {

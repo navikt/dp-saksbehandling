@@ -26,6 +26,7 @@ import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -82,6 +83,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
+import no.nav.dagpenger.saksbehandling.lagBehandling
+import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
@@ -648,7 +651,7 @@ class OppgaveApiTest {
                     utførtAv = saksbehandler,
                 ),
             )
-        } returns Oppgave.UnderBehandling
+        } returns lagOppgave(tilstand = Oppgave.UnderBehandling, behandling = lagBehandling(type = BehandlingType.RETT_TIL_DAGPENGER))
 
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
@@ -657,7 +660,8 @@ class OppgaveApiTest {
                 response.bodyAsText() shouldEqualSpecifiedJson
                     """
                     {
-                      "nyTilstand" : "${OppgaveTilstandDTO.UNDER_BEHANDLING}"
+                      "nyTilstand" : "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
+                      "behandlingType" : "RETT_TIL_DAGPENGER"
                     }
                     """.trimIndent()
             }
