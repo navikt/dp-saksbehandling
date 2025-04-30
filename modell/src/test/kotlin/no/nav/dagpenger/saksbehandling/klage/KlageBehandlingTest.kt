@@ -78,10 +78,10 @@ class KlageBehandlingTest {
                 oversittetFristOpplysningTyper
         }.forEach {
             when (it.type.datatype) {
-                Datatype.BOOLSK -> klageBehandling.svar(it.id, true)
-                Datatype.TEKST -> klageBehandling.svar(it.id, "String")
-                Datatype.DATO -> klageBehandling.svar(it.id, LocalDate.MIN)
-                Datatype.FLERVALG -> klageBehandling.svar(it.id, listOf("String1", "String2"))
+                Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, true)
+                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, "String")
+                Datatype.DATO -> klageBehandling.svar(it.opplysningId, LocalDate.MIN)
+                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, listOf("String1", "String2"))
             }
         }
 
@@ -94,7 +94,7 @@ class KlageBehandlingTest {
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in formkravOpplysningTyper
         }.forEach {
-            klageBehandling.svar(it.id, true)
+            klageBehandling.svar(it.opplysningId, true)
         }
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
@@ -133,7 +133,7 @@ class KlageBehandlingTest {
 
         shouldThrow<IllegalStateException> { klageBehandling.ferdigstill() }
 
-        klageBehandling.svar(synligOgPåkrevdOpplysning.id, false)
+        klageBehandling.svar(synligOgPåkrevdOpplysning.opplysningId, false)
 
         shouldNotThrow<IllegalStateException> { klageBehandling.ferdigstill() }
         klageBehandling.tilstand() shouldBe FERDIGSTILT
@@ -160,27 +160,27 @@ class KlageBehandlingTest {
     private fun svarPåAlleOpplysninger(klageBehandling: KlageBehandling) {
         klageBehandling.alleOpplysninger().forEach {
             when (it.type.datatype) {
-                Datatype.BOOLSK -> klageBehandling.svar(it.id, true)
-                Datatype.TEKST -> klageBehandling.svar(it.id, "String")
-                Datatype.DATO -> klageBehandling.svar(it.id, LocalDate.MIN)
-                Datatype.FLERVALG -> klageBehandling.svar(it.id, listOf("String1", "String2"))
+                Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, true)
+                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, "String")
+                Datatype.DATO -> klageBehandling.svar(it.opplysningId, LocalDate.MIN)
+                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, listOf("String1", "String2"))
             }
         }
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
     }
 
     private fun KlageBehandling.finnEnTekstOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.opplysningId
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.opplysningId
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }.opplysningId
     }
 }

@@ -5,7 +5,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 class Opplysning(
-    val id: UUID = UUIDv7.ny(),
+    val opplysningId: UUID = UUIDv7.ny(),
     val type: OpplysningType,
     var verdi: Verdi,
     private var synlig: Boolean = true,
@@ -57,11 +57,11 @@ class Opplysning(
         if (this === other) return true
         if (other !is Opplysning) return false
 
-        return id == other.id && type == other.type
+        return opplysningId == other.opplysningId && type == other.type
     }
 
     override fun hashCode(): Int {
-        return 31 * id.hashCode() + type.hashCode()
+        return 31 * opplysningId.hashCode() + type.hashCode()
     }
 }
 
