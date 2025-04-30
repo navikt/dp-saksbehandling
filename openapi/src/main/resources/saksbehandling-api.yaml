@@ -1091,7 +1091,7 @@ components:
         - utfall
         - behandlingOpplysninger
         - utfallOpplysninger
-
+        - meldingOmVedtak
 
     TekstVerdi:
       type: object
@@ -1279,6 +1279,7 @@ components:
         - paakrevd
         - gruppe
         - redigerbar
+        - valgmuligheter
     KlageOpplysningListeValg:
       type: object
       properties:

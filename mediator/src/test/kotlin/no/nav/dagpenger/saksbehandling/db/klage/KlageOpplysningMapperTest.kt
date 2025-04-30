@@ -34,7 +34,8 @@ class KlageOpplysningMapperTest {
                 ),
                 Opplysning(
                     type = KLAGEN_GJELDER,
-                    verdi = Verdi.Flervalg("valg1", "valg2"),
+                    verdi = Verdi.Flervalg("Avslag på søknad", "Annet"),
+                    valgmuligheter = listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet"),
                 ),
                 Opplysning(
                     type = KLAGEN_NEVNER_ENDRING,
@@ -59,8 +60,9 @@ class KlageOpplysningMapperTest {
             deserialiserteOpplysninger.single { it.type == KLAGE_MOTTATT }
                 .verdi shouldBe Verdi.Dato(LocalDate.MIN)
 
-            deserialiserteOpplysninger.single { it.type == KLAGEN_GJELDER }
-                .verdi shouldBe Verdi.Flervalg("valg1", "valg2")
+            val klagenGjelder = deserialiserteOpplysninger.single { it.type == KLAGEN_GJELDER }
+            klagenGjelder.verdi shouldBe Verdi.Flervalg("Avslag på søknad", "Annet")
+            klagenGjelder.valgmuligheter shouldBe listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet")
 
             deserialiserteOpplysninger.single { it.type == KLAGEN_NEVNER_ENDRING }
                 .verdi shouldBe Verdi.TomVerdi

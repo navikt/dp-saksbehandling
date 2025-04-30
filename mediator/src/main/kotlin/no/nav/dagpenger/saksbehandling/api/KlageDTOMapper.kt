@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDatoDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningFlerListeValgDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTekstDTO
 import no.nav.dagpenger.saksbehandling.api.models.ListeVerdiDTO
+import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.TekstVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
@@ -59,7 +60,11 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                             .filterNot { it == UtfallDTOVerdiDTO.IKKE_SATT }
                             .map { it.value },
                 ),
-            meldingOmVedtak = null,
+            meldingOmVedtak =
+                MeldingOmVedtakResponseDTO(
+                    html = "<html><h1>Hei</H1></html>",
+                    utvidedeBeskrivelser = emptyList(),
+                ),
         )
     }
 
@@ -122,7 +127,7 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),
-                        valgmuligheter = emptyList(),
+                        valgmuligheter = opplysning.valgmuligheter,
                         redigerbar = true,
                         verdi =
                             if (opplysning.verdi is Verdi.TomVerdi) {
