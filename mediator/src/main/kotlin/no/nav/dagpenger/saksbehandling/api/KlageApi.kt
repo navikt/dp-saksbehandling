@@ -24,7 +24,7 @@ fun Route.klageApi(
 ) {
     val applicationCallParser = Configuration.applicationCallParser
 
-    route("oppgave/klage/opprett") {
+    route("klage/opprett") {
         post {
             mediator.opprettKlage(
                 klageMottattHendelse =
@@ -41,7 +41,7 @@ fun Route.klageApi(
     }
 
     authenticate("azureAd") {
-        route("oppgave/klage") {
+        route("klage") {
             route("{klageId}") {
                 get {
                     val klageId = call.finnUUID("klageId")

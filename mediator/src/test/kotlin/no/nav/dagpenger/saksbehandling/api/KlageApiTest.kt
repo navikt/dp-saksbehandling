@@ -51,7 +51,7 @@ class KlageApiTest {
     fun `Skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<KlageMediator>()
         withKlageApi(mediator) {
-            client.get("oppgave/klage/$klageBehandlingId").let { response ->
+            client.get("klage/$klageBehandlingId").let { response ->
                 response.status shouldBe HttpStatusCode.Unauthorized
             }
         }
@@ -70,7 +70,7 @@ class KlageApiTest {
             }
 
         withKlageApi(mediator) {
-            client.get("oppgave/klage/$klageBehandlingId") { autentisert() }.let { response ->
+            client.get("klage/$klageBehandlingId") { autentisert() }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 val json = response.bodyAsText()
@@ -87,7 +87,7 @@ class KlageApiTest {
             }
 
         withKlageApi(mediator) {
-            client.put("oppgave/klage/$klageBehandlingId/trekk") { autentisert() }.status shouldBe HttpStatusCode.NoContent
+            client.put("klage/$klageBehandlingId/trekk") { autentisert() }.status shouldBe HttpStatusCode.NoContent
         }
 
         verify(exactly = 1) {
@@ -106,7 +106,7 @@ class KlageApiTest {
             }
 
         withKlageApi(mediator) {
-            client.put("oppgave/klage/$klageBehandlingId/ferdigstill") { autentisert() }.status shouldBe HttpStatusCode.NoContent
+            client.put("klage/$klageBehandlingId/ferdigstill") { autentisert() }.status shouldBe HttpStatusCode.NoContent
         }
 
         verify(exactly = 1) {
@@ -124,7 +124,7 @@ class KlageApiTest {
                 } returns Unit
             }
         withKlageApi(mediator) {
-            client.put("oppgave/klage/$klageBehandlingId/opplysning/$opplysningId") {
+            client.put("klage/$klageBehandlingId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -153,7 +153,7 @@ class KlageApiTest {
                 } returns Unit
             }
         withKlageApi(mediator) {
-            client.put("oppgave/klage/$klageBehandlingId/opplysning/$opplysningId") {
+            client.put("klage/$klageBehandlingId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -182,7 +182,7 @@ class KlageApiTest {
                 } returns Unit
             }
         withKlageApi(mediator) {
-            client.put("oppgave/klage/$klageBehandlingId/opplysning/$opplysningId") {
+            client.put("klage/$klageBehandlingId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -211,7 +211,7 @@ class KlageApiTest {
                 } returns Unit
             }
         withKlageApi(mediator) {
-            client.put("oppgave/klage/$klageBehandlingId/opplysning/$opplysningId") {
+            client.put("klage/$klageBehandlingId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
