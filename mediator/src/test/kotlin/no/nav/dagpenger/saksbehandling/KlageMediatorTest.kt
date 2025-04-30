@@ -219,7 +219,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
-                    .single { it.type == KLAGEN_GJELDER_VEDTAK }.id,
+                    .single { it.type == KLAGEN_GJELDER_VEDTAK }.opplysningId,
             svar = OpplysningerVerdi.Tekst("Vedtak 1"),
         )
 
@@ -229,7 +229,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
-                    .single { it.type == KLAGEFRIST }.id,
+                    .single { it.type == KLAGEFRIST }.opplysningId,
             svar = OpplysningerVerdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
@@ -238,7 +238,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
-                    .single { it.type == KLAGE_MOTTATT }.id,
+                    .single { it.type == KLAGE_MOTTATT }.opplysningId,
             svar = OpplysningerVerdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
@@ -247,7 +247,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
-                    .single { it.type == KLAGEFRIST_OPPFYLT }.id,
+                    .single { it.type == KLAGEFRIST_OPPFYLT }.opplysningId,
             svar = OpplysningerVerdi.Boolsk(true),
         )
         this.hentKlageBehandling(
@@ -255,7 +255,7 @@ class KlageMediatorTest {
             saksbehandler = saksbehandler,
         ).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }
             .forEach {
-                oppdaterOpplysning(opplysningId = it.id, svar = OpplysningerVerdi.Boolsk(true))
+                oppdaterOpplysning(opplysningId = it.opplysningId, svar = OpplysningerVerdi.Boolsk(true))
             }
     }
 
@@ -279,7 +279,7 @@ class KlageMediatorTest {
                 this.hentKlageBehandling(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
-                ).synligeOpplysninger().single { it.type == UTFALL }.id,
+                ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
             svar = OpplysningerVerdi.Tekst(UtfallType.OPPRETTHOLDELSE.name),
         )
         oppdaterOpplysning(
@@ -288,7 +288,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
-                    .single { it.type == VURDERIG_AV_KLAGEN }.id,
+                    .single { it.type == VURDERIG_AV_KLAGEN }.opplysningId,
             svar = OpplysningerVerdi.Tekst("Vi opprettholder vedtaket."),
         )
         oppdaterOpplysning(
@@ -297,7 +297,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
-                    .single { it.type == HVEM_KLAGER }.id,
+                    .single { it.type == HVEM_KLAGER }.opplysningId,
             svar = OpplysningerVerdi.Tekst(HvemKlagerType.BRUKER.name),
         )
         oppdaterOpplysning(
@@ -306,7 +306,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
-                    .single { it.type == HJEMLER }.id,
+                    .single { it.type == HJEMLER }.opplysningId,
             svar = OpplysningerVerdi.TekstListe("§ 4-5", "§ 4-2"),
         )
     }

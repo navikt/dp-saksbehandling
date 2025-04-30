@@ -48,7 +48,7 @@ class PostgresKlageRepositoryTest {
             val boolskOpplysningMedTomVerdi =
                 klageBehandling.synligeOpplysninger().first {
                     it.type.datatype == Datatype.BOOLSK && it.verdi is Verdi.TomVerdi
-                }.id
+                }.opplysningId
 
             klageRepository.lagre(klageBehandling)
 
@@ -67,22 +67,22 @@ class PostgresKlageRepositoryTest {
     }
 
     private fun KlageBehandling.finnEnOpplysning(id: UUID): Opplysning {
-        return this.alleOpplysninger().single { opplysning -> opplysning.id == id }
+        return this.alleOpplysninger().single { opplysning -> opplysning.opplysningId == id }
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
     }
 
     private fun KlageBehandling.finnEnStringOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.opplysningId
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.opplysningId
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }.id
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }.opplysningId
     }
 }

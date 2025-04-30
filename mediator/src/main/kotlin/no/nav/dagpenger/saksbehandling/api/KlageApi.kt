@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 
 fun Route.klageApi(
     mediator: KlageMediator,
-    klageDtoMapper: KlageDtoMapper,
+    klageDtoMapper: KlageDTOMapper,
 ) {
     val applicationCallParser = Configuration.applicationCallParser
 

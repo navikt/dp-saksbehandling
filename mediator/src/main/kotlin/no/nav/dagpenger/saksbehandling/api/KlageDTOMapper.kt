@@ -24,7 +24,7 @@ import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 
-class KlageDtoMapper(private val oppslag: Oppslag) {
+class KlageDTOMapper(private val oppslag: Oppslag) {
     fun tilVerdi(oppdaterKlageOpplysningDTO: OppdaterKlageOpplysningDTO): OpplysningerVerdi {
         return when (oppdaterKlageOpplysningDTO) {
             is BoolskVerdiDTO -> OpplysningerVerdi.Boolsk(oppdaterKlageOpplysningDTO.verdi)
@@ -54,7 +54,10 @@ class KlageDtoMapper(private val oppslag: Oppslag) {
                             UtfallType.AVVIST -> UtfallDTOVerdiDTO.AVVIST
                             null -> UtfallDTOVerdiDTO.IKKE_SATT
                         },
-                    tilgjengeligeUtfall = emptyList(),
+                    tilgjengeligeUtfall =
+                        UtfallDTOVerdiDTO.entries
+                            .filterNot { it == UtfallDTOVerdiDTO.IKKE_SATT }
+                            .map { it.value },
                 ),
             meldingOmVedtak = null,
         )
@@ -65,7 +68,7 @@ class KlageDtoMapper(private val oppslag: Oppslag) {
             when (opplysning.type.datatype) {
                 Datatype.TEKST ->
                     KlageOpplysningTekstDTO(
-                        id = opplysning.id,
+                        id = opplysning.opplysningId,
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),
@@ -81,7 +84,7 @@ class KlageDtoMapper(private val oppslag: Oppslag) {
 
                 Datatype.DATO -> {
                     KlageOpplysningDatoDTO(
-                        id = opplysning.id,
+                        id = opplysning.opplysningId,
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),
@@ -98,7 +101,7 @@ class KlageDtoMapper(private val oppslag: Oppslag) {
 
                 Datatype.BOOLSK -> {
                     KlageOpplysningBoolskDTO(
-                        id = opplysning.id,
+                        id = opplysning.opplysningId,
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),
@@ -115,7 +118,7 @@ class KlageDtoMapper(private val oppslag: Oppslag) {
 
                 Datatype.FLERVALG -> {
                     KlageOpplysningFlerListeValgDTO(
-                        id = opplysning.id,
+                        id = opplysning.opplysningId,
                         navn = opplysning.type.navn,
                         paakrevd = true,
                         gruppe = finnGruppe(opplysning.type),

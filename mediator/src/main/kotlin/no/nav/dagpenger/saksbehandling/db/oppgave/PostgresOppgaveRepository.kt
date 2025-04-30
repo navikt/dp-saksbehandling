@@ -86,6 +86,13 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             session.transaction { tx ->
                 val emneknagger = filter.emneknagg.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
+                val behandlingTyperAsText = filter.behandlingTyper.joinToString { "'$it'" }
+                val behandlingTypeClause =
+                    if (filter.behandlingTyper.isNotEmpty()) {
+                        " AND beha.behandling_type IN ($behandlingTyperAsText) "
+                    } else {
+                        ""
+                    }
 
                 // language=SQL
                 val emneknaggClause =
@@ -126,7 +133,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     AND    ( NOT pers.skjermes_som_egne_ansatte
                           OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
-                    """ + emneknaggClause
+                    """ + behandlingTypeClause + emneknaggClause
 
                 // language=SQL
                 val unionAll = """UNION ALL"""
@@ -161,7 +168,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                          OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                     AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
-                """ + emneknaggClause +
+                """ + behandlingTypeClause + emneknaggClause +
                         """
                         )
                         """.trimIndent()
@@ -519,13 +526,20 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat {
         return sessionOf(datasource).use { session ->
             val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
-
             // TODO: sjekk på tilstand != OPPRETTET bør erstattes med noe logikk for ikke-søkbare tilstander
             val tilstandClause =
                 if (søkeFilter.tilstander.isEmpty()) {
                     " AND oppg.tilstand != 'OPPRETTET' "
                 } else {
                     " AND oppg.tilstand IN ($tilstander) "
+                }
+
+            val behandlingTyperAsText: String = søkeFilter.behandlingTyper.joinToString { "'$it'" }
+            val behandlingTypeClause =
+                if (behandlingTyperAsText.isNotEmpty()) {
+                    " AND beha.behandling_type IN ($behandlingTyperAsText) "
+                } else {
+                    ""
                 }
 
             val saksbehandlerClause =
@@ -566,16 +580,17 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             val oppgaveSelect =
                 """
                 SELECT  pers.id AS person_id, 
-                            pers.ident AS person_ident,
-                            pers.skjermes_som_egne_ansatte,
-                            pers.adressebeskyttelse_gradering,
-                            oppg.id AS oppgave_id, 
-                            oppg.tilstand, 
-                            oppg.opprettet AS oppgave_opprettet, 
-                            oppg.behandling_id, 
-                            oppg.saksbehandler_ident,
-                            oppg.utsatt_til,
-                            beha.opprettet AS behandling_opprettet
+                        pers.ident AS person_ident,
+                        pers.skjermes_som_egne_ansatte,
+                        pers.adressebeskyttelse_gradering,
+                        oppg.id AS oppgave_id, 
+                        oppg.tilstand, 
+                        oppg.opprettet AS oppgave_opprettet, 
+                        oppg.behandling_id, 
+                        oppg.saksbehandler_ident,
+                        oppg.utsatt_til,
+                        beha.opprettet AS behandling_opprettet,
+                        beha.behandling_type
                 """.trimIndent()
 
             val antallSelect =
@@ -594,6 +609,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 )
                     .append(
                         tilstandClause,
+                        behandlingTypeClause,
                         saksbehandlerClause,
                         personIdentClause,
                         oppgaveIdClause,
@@ -1064,6 +1080,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
                 ),
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId, dataSource),
+            type = BehandlingType.valueOf(this.string("behandling_type")),
         )
 
     val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId, dataSource)

@@ -1,11 +1,14 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.Runs
@@ -30,12 +33,12 @@ import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class KlageRouteTest {
+class KlageApiTest {
     init {
         mockAzure()
     }
 
-    private val klageId = UUIDv7.ny()
+    private val klageBehandlingId = UUIDv7.ny()
     private val opplysningId = UUIDv7.ny()
     private val saksbehandler =
         Saksbehandler(
@@ -45,10 +48,10 @@ class KlageRouteTest {
         )
 
     @Test
-    fun `skal kaste feil når det mangler autentisering`() {
+    fun `Skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<KlageMediator>()
-        withKlageRoute(mediator) {
-            client.get("oppgave/klage/$klageId").let { response ->
+        withKlageApi(mediator) {
+            client.get("oppgave/klage/$klageBehandlingId").let { response ->
                 response.status shouldBe HttpStatusCode.Unauthorized
             }
         }
@@ -56,43 +59,40 @@ class KlageRouteTest {
 
     @Test
     fun `Skal hente klageDTO`() {
-        val behandlingId = UUIDv7.ny()
         val mediator =
             mockk<KlageMediator>().also {
                 every {
                     it.hentKlageBehandling(
-                        behandlingId = behandlingId,
+                        behandlingId = klageBehandlingId,
                         saksbehandler = saksbehandler,
                     )
-                } returns
-                    KlageBehandling(
-                        behandlingId = behandlingId,
-                    )
+                } returns KlageBehandling(behandlingId = klageBehandlingId)
             }
-        withKlageRoute(mediator) {
-            client.get("oppgave/klage/$behandlingId") { autentisert() }.let {
-                it.status shouldBe HttpStatusCode.OK
+
+        withKlageApi(mediator) {
+            client.get("oppgave/klage/$klageBehandlingId") { autentisert() }.let { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                json shouldContain klageBehandlingId.toString()
             }
-            // todo mer testing
         }
     }
 
     @Test
     fun `Skal kunne trekke en klage`() {
-        val klageId = UUIDv7.ny()
-
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.avbrytKlage(klageId = klageId, saksbehandler = saksbehandler) } just Runs
+                every { it.avbrytKlage(klageId = klageBehandlingId, saksbehandler = saksbehandler) } just Runs
             }
 
-        withKlageRoute(mediator) {
-            client.put("oppgave/klage/$klageId/trekk") { autentisert() }.status shouldBe HttpStatusCode.NoContent
+        withKlageApi(mediator) {
+            client.put("oppgave/klage/$klageBehandlingId/trekk") { autentisert() }.status shouldBe HttpStatusCode.NoContent
         }
 
         verify(exactly = 1) {
             mediator.avbrytKlage(
-                klageId = klageId,
+                klageId = klageBehandlingId,
                 saksbehandler = saksbehandler,
             )
         }
@@ -100,32 +100,31 @@ class KlageRouteTest {
 
     @Test
     fun `Skal kunne ferdigstille en klage`() {
-        val klageId = UUIDv7.ny()
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.ferdigstill(klageId = klageId, saksbehandler = saksbehandler) } just Runs
+                every { it.ferdigstill(klageId = klageBehandlingId, saksbehandler = saksbehandler) } just Runs
             }
 
-        withKlageRoute(mediator) {
-            client.put("oppgave/klage/$klageId/ferdigstill") { autentisert() }.status shouldBe HttpStatusCode.NoContent
+        withKlageApi(mediator) {
+            client.put("oppgave/klage/$klageBehandlingId/ferdigstill") { autentisert() }.status shouldBe HttpStatusCode.NoContent
         }
 
         verify(exactly = 1) {
-            mediator.ferdigstill(klageId = klageId, saksbehandler = saksbehandler)
+            mediator.ferdigstill(klageId = klageBehandlingId, saksbehandler = saksbehandler)
         }
     }
 
     @Test
-    fun `Skal kunne oppdatere en  opplysning av type flervalg `() {
+    fun `Skal kunne oppdatere en  opplysning av type flervalg`() {
         val tekstListe = OpplysningerVerdi.TekstListe("tekst1", "tekst2")
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageId, opplysningId, tekstListe, saksbehandler)
+                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, tekstListe, saksbehandler)
                 } returns Unit
             }
-        withKlageRoute(mediator) {
-            client.put("oppgave/klage/$klageId/opplysning/$opplysningId") {
+        withKlageApi(mediator) {
+            client.put("oppgave/klage/$klageBehandlingId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -134,7 +133,7 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
                     mediator.oppdaterKlageOpplysning(
-                        behandlingId = klageId,
+                        behandlingId = klageBehandlingId,
                         opplysningId = opplysningId,
                         verdi = tekstListe,
                         saksbehandler = saksbehandler,
@@ -145,16 +144,16 @@ class KlageRouteTest {
     }
 
     @Test
-    fun `Skal kunne oppdatere en opplysning av type tekst `() {
+    fun `Skal kunne oppdatere en opplysning av type tekst`() {
         val tekst = OpplysningerVerdi.Tekst("tekst")
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageId, opplysningId, tekst, saksbehandler)
+                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, tekst, saksbehandler)
                 } returns Unit
             }
-        withKlageRoute(mediator) {
-            client.put("oppgave/klage/$klageId/opplysning/$opplysningId") {
+        withKlageApi(mediator) {
+            client.put("oppgave/klage/$klageBehandlingId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -163,7 +162,7 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
                     mediator.oppdaterKlageOpplysning(
-                        behandlingId = klageId,
+                        behandlingId = klageBehandlingId,
                         opplysningId = opplysningId,
                         verdi = tekst,
                         saksbehandler = saksbehandler,
@@ -174,16 +173,16 @@ class KlageRouteTest {
     }
 
     @Test
-    fun `Skal kunne oppdatere en opplysning av type boolean `() {
+    fun `Skal kunne oppdatere en opplysning av type boolean`() {
         val boolsk = OpplysningerVerdi.Boolsk(false)
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageId, opplysningId, boolsk, saksbehandler)
+                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, boolsk, saksbehandler)
                 } returns Unit
             }
-        withKlageRoute(mediator) {
-            client.put("oppgave/klage/$klageId/opplysning/$opplysningId") {
+        withKlageApi(mediator) {
+            client.put("oppgave/klage/$klageBehandlingId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -192,7 +191,7 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
                     mediator.oppdaterKlageOpplysning(
-                        behandlingId = klageId,
+                        behandlingId = klageBehandlingId,
                         opplysningId = opplysningId,
                         verdi = boolsk,
                         saksbehandler = saksbehandler,
@@ -203,16 +202,16 @@ class KlageRouteTest {
     }
 
     @Test
-    fun `Skal kunne oppdatere en opplysning av type dato `() {
+    fun `Skal kunne oppdatere en opplysning av type dato`() {
         val dato = OpplysningerVerdi.Dato(LocalDate.of(2021, 1, 1))
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageId, opplysningId, dato, saksbehandler)
+                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, dato, saksbehandler)
                 } returns Unit
             }
-        withKlageRoute(mediator) {
-            client.put("oppgave/klage/$klageId/opplysning/$opplysningId") {
+        withKlageApi(mediator) {
+            client.put("oppgave/klage/$klageBehandlingId/opplysning/$opplysningId") {
                 autentisert()
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -221,7 +220,7 @@ class KlageRouteTest {
                 response.status shouldBe HttpStatusCode.NoContent
                 verify(exactly = 1) {
                     mediator.oppdaterKlageOpplysning(
-                        behandlingId = klageId,
+                        behandlingId = klageBehandlingId,
                         opplysningId = opplysningId,
                         verdi = dato,
                         saksbehandler = saksbehandler,
@@ -242,19 +241,25 @@ class KlageRouteTest {
                         BehandlerDTOEnhetDTO(
                             navn = "navn",
                             enhetNr = "enhetNr",
-                            postadresse = "postAdresse",
+                            postadresse = "postadresse",
                         ),
                 )
         }
 
-    private fun withKlageRoute(
+    private fun withKlageApi(
         klageMediator: KlageMediator,
         oppslag: Oppslag = oppslagMock,
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
             this.application {
-                installerApis(mockk(), mockk(), mockk(), klageMediator, KlageDtoMapper(oppslag))
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = klageMediator,
+                    klageDTOMapper = KlageDTOMapper(oppslag = oppslag),
+                )
             }
             test()
         }

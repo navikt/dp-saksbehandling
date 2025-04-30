@@ -55,7 +55,7 @@ data class KlageBehandling(
     }
 
     fun hentOpplysning(opplysningId: UUID): Opplysning {
-        return opplysninger.singleOrNull { it.id == opplysningId }
+        return opplysninger.singleOrNull { it.opplysningId == opplysningId }
             ?: throw IllegalArgumentException("Fant ikke opplysning med id $opplysningId")
     }
 

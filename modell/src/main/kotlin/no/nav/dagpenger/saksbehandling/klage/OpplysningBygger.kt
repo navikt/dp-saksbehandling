@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.klage
 
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_SKRIFTLIG
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.ER_KLAGEN_UNDERSKREVET
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_1
@@ -80,7 +79,6 @@ object OpplysningBygger {
     fun lagOpplysninger(opplysninger: Set<OpplysningType> = emptySet()): Set<Opplysning> {
         return opplysninger.map {
             Opplysning(
-                id = UUIDv7.ny(),
                 type = it,
                 verdi = Verdi.TomVerdi,
             )

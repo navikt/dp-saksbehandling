@@ -92,7 +92,7 @@ object KlageOpplysningerMapper {
     fun String.tilKlageOpplysninger(): Set<Opplysning> {
         return objectMapper.readTree(this).map { jsonNode ->
             Opplysning(
-                id = jsonNode.get("id").asText().let { UUID.fromString(it) },
+                opplysningId = jsonNode.get("opplysningId").asText().let { UUID.fromString(it) },
                 type = OpplysningType.valueOf(jsonNode.get("type").asText()),
                 verdi = objectMapper.convertValue(jsonNode["verdi"], Verdi::class.java),
             )
