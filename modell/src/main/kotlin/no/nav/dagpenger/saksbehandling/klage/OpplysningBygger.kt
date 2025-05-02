@@ -81,12 +81,7 @@ object OpplysningBygger {
             Opplysning(
                 type = it,
                 verdi = Verdi.TomVerdi,
-                valgmuligheter =
-                    when (it) {
-                        KLAGEN_GJELDER -> listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet")
-                        HJEMLER -> listOf("§ 4-1", "§ 4-2", "§ 4-3", "§ 4-4", "§ 4-5")
-                        else -> emptyList()
-                    },
+                valgmuligheter = it.valgmuligheter,
             )
         }.toSet()
     }

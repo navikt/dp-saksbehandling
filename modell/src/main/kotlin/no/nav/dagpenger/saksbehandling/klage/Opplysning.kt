@@ -34,15 +34,28 @@ class Opplysning(
                 require(
                     type.datatype == Datatype.FLERVALG,
                 ) { "Opplysning av type ${type.datatype} kan ikke ha verdi av type ${verdi::class.simpleName}" }
+                if (valgmuligheter.isNotEmpty()) {
+                    require(
+                        verdi.value.all {
+                            it in valgmuligheter
+                        },
+                    ) { "Opplysningene må være av lovlige valgmuligheter $valgmuligheter. Verdi er ${verdi.value}" }
+                }
             }
 
             is Verdi.TekstVerdi -> {
                 require(
                     type.datatype == Datatype.TEKST,
                 ) { "Opplysning av type ${type.datatype} kan ikke ha verdi av type ${verdi::class.simpleName}" }
+
+                if (valgmuligheter.isNotEmpty()) {
+                    require(
+                        verdi.value in valgmuligheter,
+                    ) { "Opplysningene må være av lovlige valgmuligheter $valgmuligheter. Verdi er ${verdi.value}" }
+                }
             }
 
-            Verdi.TomVerdi -> { }
+            Verdi.TomVerdi -> {}
         }
         return verdi
     }

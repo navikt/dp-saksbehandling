@@ -53,10 +53,11 @@ class KlageBehandlingTest {
             it.value shouldBe LocalDate.MIN
         }
 
-        klageBehandling.svar(listeOpplysningId, listOf("String1", "String2"))
+        val valg = klageBehandling.hentOpplysning(listeOpplysningId).type.valgmuligheter
+        klageBehandling.svar(listeOpplysningId, valg)
         klageBehandling.hentOpplysning(listeOpplysningId).verdi().let {
             require(it is Verdi.Flervalg)
-            it.value shouldBe listOf("String1", "String2")
+            it.value shouldBe valg
         }
     }
 
@@ -81,7 +82,7 @@ class KlageBehandlingTest {
                 Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, true)
                 Datatype.TEKST -> klageBehandling.svar(it.opplysningId, "String")
                 Datatype.DATO -> klageBehandling.svar(it.opplysningId, LocalDate.MIN)
-                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, listOf("String1", "String2"))
+                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, it.valgmuligheter)
             }
         }
 
@@ -161,9 +162,9 @@ class KlageBehandlingTest {
         klageBehandling.alleOpplysninger().forEach {
             when (it.type.datatype) {
                 Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, true)
-                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, "String")
+                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, it.valgmuligheter.firstOrNull() ?: "String")
                 Datatype.DATO -> klageBehandling.svar(it.opplysningId, LocalDate.MIN)
-                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, listOf("String1", "String2"))
+                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, it.valgmuligheter)
             }
         }
     }

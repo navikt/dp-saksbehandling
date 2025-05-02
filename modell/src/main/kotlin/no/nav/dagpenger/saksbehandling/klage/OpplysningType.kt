@@ -4,12 +4,14 @@ enum class OpplysningType(
     val navn: String,
     val datatype: Datatype,
     val påkrevd: Boolean = true,
+    val valgmuligheter: List<String> = emptyList(),
 ) {
     // Klagen gjelder
     KLAGEN_GJELDER(
         navn = "Hva klagen gjelder",
         datatype = Datatype.FLERVALG,
         påkrevd = false,
+        valgmuligheter = listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet"),
     ),
     KLAGEN_GJELDER_VEDTAK(
         navn = "Vedtak klagen gjelder",
@@ -63,6 +65,7 @@ enum class OpplysningType(
     UTFALL(
         navn = "Utfall",
         datatype = Datatype.TEKST,
+        valgmuligheter = UtfallType.entries.map { it.name },
     ),
 
     VURDERIG_AV_KLAGEN(
@@ -80,6 +83,7 @@ enum class OpplysningType(
     HJEMLER(
         navn = "Hvilke hjemler gjelder klagen?",
         datatype = Datatype.FLERVALG,
+        valgmuligheter = listOf("§ 4-1", "§ 4-2", "§ 4-3", "§ 4-4", "§ 4-5"),
     ),
     INTERN_MELDING(
         navn = "Intern melding",

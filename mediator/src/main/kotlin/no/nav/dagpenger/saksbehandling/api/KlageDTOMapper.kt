@@ -75,9 +75,9 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                     KlageOpplysningTekstDTO(
                         opplysningId = opplysning.opplysningId,
                         navn = opplysning.type.navn,
-                        paakrevd = true,
+                        paakrevd = opplysning.type.påkrevd,
                         gruppe = finnGruppe(opplysning.type),
-                        valgmuligheter = emptyList(),
+                        valgmuligheter = opplysning.valgmuligheter,
                         redigerbar = true,
                         verdi =
                             if (opplysning.verdi() is Verdi.TomVerdi) {
@@ -91,9 +91,9 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                     KlageOpplysningDatoDTO(
                         opplysningId = opplysning.opplysningId,
                         navn = opplysning.type.navn,
-                        paakrevd = true,
+                        paakrevd = opplysning.type.påkrevd,
                         gruppe = finnGruppe(opplysning.type),
-                        valgmuligheter = emptyList(),
+                        valgmuligheter = opplysning.valgmuligheter,
                         redigerbar = true,
                         verdi =
                             if (opplysning.verdi() is Verdi.TomVerdi) {
@@ -108,9 +108,9 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                     KlageOpplysningBoolskDTO(
                         opplysningId = opplysning.opplysningId,
                         navn = opplysning.type.navn,
-                        paakrevd = true,
+                        paakrevd = opplysning.type.påkrevd,
                         gruppe = finnGruppe(opplysning.type),
-                        valgmuligheter = emptyList(),
+                        valgmuligheter = opplysning.valgmuligheter,
                         redigerbar = true,
                         verdi =
                             if (opplysning.verdi() is Verdi.TomVerdi) {
@@ -125,7 +125,7 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
                     KlageOpplysningFlerListeValgDTO(
                         opplysningId = opplysning.opplysningId,
                         navn = opplysning.type.navn,
-                        paakrevd = true,
+                        paakrevd = opplysning.type.påkrevd,
                         gruppe = finnGruppe(opplysning.type),
                         valgmuligheter = opplysning.valgmuligheter,
                         redigerbar = true,
