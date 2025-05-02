@@ -77,6 +77,7 @@ enum class OpplysningType(
     HVEM_KLAGER(
         navn = "Hvem er klager i saken?",
         datatype = Datatype.TEKST,
+        valgmuligheter = HvemKlagerType.entries.map { it.name },
     ),
 
     // Info til klageinstans del 2
