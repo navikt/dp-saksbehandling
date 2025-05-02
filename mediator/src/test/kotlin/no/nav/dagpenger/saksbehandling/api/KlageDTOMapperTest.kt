@@ -116,24 +116,6 @@ class KlageDTOMapperTest {
       "type": "BOOLSK"
     },
     {
-      "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST }.opplysningId}",
-      "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST }.type.navn}",
-      "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST }.type.påkrevd},
-      "gruppe": "FRIST",
-      "valgmuligheter": [],
-      "redigerbar": true,
-      "type": "BOOLSK"
-    },
-    {
-      "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE }.opplysningId}",
-      "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE }.type.navn}",
-      "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE }.type.påkrevd},
-      "gruppe": "FRIST",
-      "valgmuligheter": [],
-      "redigerbar": true,
-      "type": "TEKST"
-    },
-    {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG }.opplysningId}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG }.type.påkrevd},

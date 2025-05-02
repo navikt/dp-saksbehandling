@@ -36,6 +36,10 @@ class StegTest {
         val klagefristOppfylt = opplysninger.single { it.type == KLAGEFRIST_OPPFYLT }
 
         steg.evaluerSynlighet(opplysninger.toList())
+        opplysninger.filter { opplysning ->
+            opplysning.type in oversittetFristOpplysningTyper
+        }.forEach { it.synlighet() shouldBe false }
+
         klagefristOppfylt.svar(verdi = true)
         steg.evaluerSynlighet(opplysninger.toList())
 

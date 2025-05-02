@@ -34,7 +34,8 @@ object FristvurderingSteg : Steg {
     private fun klagefristOppfylt(opplysinger: Collection<Opplysning>): Boolean {
         val klagefristOpplysning =
             opplysinger.single { opplysning -> opplysning.type == OpplysningType.KLAGEFRIST_OPPFYLT }
-        return klagefristOpplysning.verdi() is Verdi.Boolsk && (klagefristOpplysning.verdi() as Verdi.Boolsk).value
+        return (klagefristOpplysning.verdi() is Verdi.Boolsk && (klagefristOpplysning.verdi() as Verdi.Boolsk).value) ||
+            klagefristOpplysning.verdi() is Verdi.TomVerdi
     }
 }
 
