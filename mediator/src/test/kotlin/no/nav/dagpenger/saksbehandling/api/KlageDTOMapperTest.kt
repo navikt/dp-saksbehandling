@@ -12,7 +12,6 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class KlageDTOMapperTest {
@@ -23,7 +22,6 @@ class KlageDTOMapperTest {
             tilganger = setOf(TilgangType.SAKSBEHANDLER),
         )
 
-    @Disabled
     @Test
     fun `Skal mappe KlageBehandling til KlageDTO`() {
         runBlocking {
