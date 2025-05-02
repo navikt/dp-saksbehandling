@@ -131,3 +131,54 @@ enum class Datatype {
     BOOLSK,
     FLERVALG,
 }
+
+enum class UtfallType {
+    OPPRETTHOLDELSE,
+    MEDHOLD,
+    DELVIS_MEDHOLD,
+    AVVIST,
+}
+
+enum class HvemKlagerType {
+    BRUKER,
+    FULLMEKTIG,
+}
+
+enum class KlagenGjelderType {
+    AVSLAG_PÅ_SØKNAD,
+    DAGPENGENES_STØRRELSE,
+    ANNET,
+}
+
+enum class Hjemler {
+    FTRL_4_2,
+    FTRL_4_3_1,
+    FTRL_4_3_1_PERMLL,
+    FTRL_4_3_2,
+    FTRL_4_4,
+    FTRL_4_5_REGISTRERING,
+    FTRL_4_5_REELL_ARBEIDSSOEKER,
+    FTRL_4_6_UTDANNING,
+    FTRL_4_6_ETABLERING,
+    FTRL_4_7_PERMITTERINGSAARSAK,
+    FTRL_4_7_PERMITTERINGENS_LENGDE,
+    FTRL_4_8,
+    FTRL_4_9,
+    FTRL_4_10,
+    FTRL_4_11,
+    FTRL_4_12,
+    FTRL_4_13,
+    FTRL_4_14,
+    FTRL_4_15,
+    FTRL_4_16,
+    FTRL_4_18,
+    FTRL_4_19,
+    FTRL_4_20,
+    FTRL_4_22,
+    FTRL_4_23,
+    FTRL_4_24,
+    FTRL_4_25,
+    FTRL_4_26,
+    FTRL_4_27,
+    FTRL_4_28,
+}
