@@ -13,8 +13,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import java.time.LocalDate
 import java.util.UUID
@@ -97,12 +95,7 @@ object KlageOpplysningerMapper {
                 opplysningId = jsonNode.get("opplysningId").asText().let { UUID.fromString(it) },
                 type = OpplysningType.valueOf(jsonNode.get("type").asText()),
                 verdi = objectMapper.convertValue(jsonNode["verdi"], Verdi::class.java),
-                valgmuligheter =
-                    when (OpplysningType.valueOf(jsonNode.get("type").asText())) {
-                        KLAGEN_GJELDER -> listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet")
-                        HJEMLER -> listOf("§ 4-1", "§ 4-2", "§ 4-3", "§ 4-4", "§ 4-5")
-                        else -> emptyList()
-                    },
+                valgmuligheter = jsonNode.get("valgmuligheter").map { it.asText() },
             )
         }.toSet()
     }

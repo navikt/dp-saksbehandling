@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningBoolskDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningDatoDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningFlerListeValgDTO
+import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningListeValgDTO
 import no.nav.dagpenger.saksbehandling.api.models.KlageOpplysningTekstDTO
 import no.nav.dagpenger.saksbehandling.api.models.ListeVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakResponseDTO
@@ -72,20 +73,40 @@ class KlageDTOMapper(private val oppslag: Oppslag) {
         map { opplysning ->
             when (opplysning.type.datatype) {
                 Datatype.TEKST ->
-                    KlageOpplysningTekstDTO(
-                        opplysningId = opplysning.opplysningId,
-                        navn = opplysning.type.navn,
-                        paakrevd = opplysning.type.påkrevd,
-                        gruppe = finnGruppe(opplysning.type),
-                        valgmuligheter = opplysning.valgmuligheter,
-                        redigerbar = true,
-                        verdi =
-                            if (opplysning.verdi() is Verdi.TomVerdi) {
-                                null
-                            } else {
-                                (opplysning.verdi() as Verdi.TekstVerdi).value
-                            },
-                    )
+                    when (opplysning.valgmuligheter.isEmpty()) {
+                        true -> {
+                            KlageOpplysningTekstDTO(
+                                opplysningId = opplysning.opplysningId,
+                                navn = opplysning.type.navn,
+                                paakrevd = opplysning.type.påkrevd,
+                                gruppe = finnGruppe(opplysning.type),
+                                valgmuligheter = opplysning.valgmuligheter,
+                                redigerbar = true,
+                                verdi =
+                                    if (opplysning.verdi() is Verdi.TomVerdi) {
+                                        null
+                                    } else {
+                                        (opplysning.verdi() as Verdi.TekstVerdi).value
+                                    },
+                            )
+                        }
+                        false -> {
+                            KlageOpplysningListeValgDTO(
+                                opplysningId = opplysning.opplysningId,
+                                navn = opplysning.type.navn,
+                                paakrevd = opplysning.type.påkrevd,
+                                gruppe = finnGruppe(opplysning.type),
+                                valgmuligheter = opplysning.valgmuligheter,
+                                redigerbar = true,
+                                verdi =
+                                    if (opplysning.verdi() is Verdi.TomVerdi) {
+                                        null
+                                    } else {
+                                        (opplysning.verdi() as Verdi.TekstVerdi).value
+                                    },
+                            )
+                        }
+                    }
 
                 Datatype.DATO -> {
                     KlageOpplysningDatoDTO(
