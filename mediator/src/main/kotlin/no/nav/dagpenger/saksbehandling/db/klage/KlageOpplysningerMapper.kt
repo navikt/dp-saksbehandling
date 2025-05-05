@@ -86,7 +86,16 @@ object KlageOpplysningerMapper {
     }
 
     fun Set<Opplysning>.tilJson(): String {
-        return objectMapper.writeValueAsString(this)
+        return objectMapper.writeValueAsString(
+            this.map { opplysning ->
+                mapOf(
+                    "opplysningId" to opplysning.opplysningId.toString(),
+                    "type" to opplysning.type.name,
+                    "verdi" to opplysning.verdi(),
+                    "valgmuligheter" to opplysning.valgmuligheter,
+                )
+            },
+        )
     }
 
     fun String.tilKlageOpplysninger(): Set<Opplysning> {

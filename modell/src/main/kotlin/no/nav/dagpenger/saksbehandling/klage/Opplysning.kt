@@ -8,7 +8,7 @@ class Opplysning(
     val opplysningId: UUID = UUIDv7.ny(),
     val type: OpplysningType,
     // todo fikse ved neste commit
-    var verdi: Verdi,
+    private var verdi: Verdi,
     private var synlig: Boolean = true,
     val valgmuligheter: List<String> = emptyList(),
 ) {
