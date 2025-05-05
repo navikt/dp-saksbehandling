@@ -18,7 +18,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
-import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -28,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.defaultSaksbehan
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.Verdi
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -114,7 +114,7 @@ class KlageApiTest {
 
     @Test
     fun `Skal kunne oppdatere en  opplysning av type flervalg`() {
-        val tekstListe = OpplysningerVerdi.TekstListe("tekst1", "tekst2")
+        val tekstListe = Verdi.Flervalg("tekst1", "tekst2")
         val mediator =
             mockk<KlageMediator>().also {
                 every {
@@ -143,7 +143,7 @@ class KlageApiTest {
 
     @Test
     fun `Skal kunne oppdatere en opplysning av type tekst`() {
-        val tekst = OpplysningerVerdi.Tekst("tekst")
+        val tekst = Verdi.TekstVerdi("tekst")
         val mediator =
             mockk<KlageMediator>().also {
                 every {
@@ -172,7 +172,7 @@ class KlageApiTest {
 
     @Test
     fun `Skal kunne oppdatere en opplysning av type boolean`() {
-        val boolsk = OpplysningerVerdi.Boolsk(false)
+        val boolsk = Verdi.Boolsk(false)
         val mediator =
             mockk<KlageMediator>().also {
                 every {
@@ -201,7 +201,7 @@ class KlageApiTest {
 
     @Test
     fun `Skal kunne oppdatere en opplysning av type dato`() {
-        val dato = OpplysningerVerdi.Dato(LocalDate.of(2021, 1, 1))
+        val dato = Verdi.Dato(LocalDate.of(2021, 1, 1))
         val mediator =
             mockk<KlageMediator>().also {
                 every {

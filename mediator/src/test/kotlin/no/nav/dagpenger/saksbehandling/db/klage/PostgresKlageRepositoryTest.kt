@@ -27,22 +27,22 @@ class PostgresKlageRepositoryTest {
 
             val boolskOpplysningId =
                 klageBehandling.finnEnBoolskOpplysning().also {
-                    klageBehandling.svar(it, true)
+                    klageBehandling.svar(it, Verdi.Boolsk(true))
                 }
 
             val datoOpplysningerId =
                 klageBehandling.finnEnDatoOpplysningerId().also {
-                    klageBehandling.svar(it, LocalDate.MIN)
+                    klageBehandling.svar(it, Verdi.Dato(LocalDate.MIN))
                 }
 
             val listeOpplysning =
                 klageBehandling.finnEnListeOpplysning().also {
-                    klageBehandling.svar(it.opplysningId, it.valgmuligheter)
+                    klageBehandling.svar(it.opplysningId, Verdi.Flervalg(it.valgmuligheter))
                 }
 
             val tekstOpplysningUtenValg =
                 klageBehandling.finnEnStringOpplysningUtenValg().also {
-                    klageBehandling.svar(it.opplysningId, "String")
+                    klageBehandling.svar(it.opplysningId, Verdi.TekstVerdi("String"))
                 }
 
             val boolskOpplysningMedTomVerdi =

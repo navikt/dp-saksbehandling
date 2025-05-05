@@ -13,6 +13,10 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOppl
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.oversittetFristOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.utfallOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.Verdi.Boolsk
+import no.nav.dagpenger.saksbehandling.klage.Verdi.Dato
+import no.nav.dagpenger.saksbehandling.klage.Verdi.Flervalg
+import no.nav.dagpenger.saksbehandling.klage.Verdi.TekstVerdi
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.util.UUID
@@ -30,33 +34,33 @@ class KlageBehandlingTest {
         val datoOpplysningId = klageBehandling.finnEnDatoOpplysningId()
         val listeOpplysningId = klageBehandling.finnEnListeOpplysningId()
 
-        klageBehandling.svar(boolskOpplysningId, false)
+        klageBehandling.svar(boolskOpplysningId, Boolsk(false))
         klageBehandling.hentOpplysning(boolskOpplysningId).verdi().let {
-            require(it is Verdi.Boolsk)
+            require(it is Boolsk)
             it.value shouldBe false
         }
-        klageBehandling.svar(boolskOpplysningId, true)
+        klageBehandling.svar(boolskOpplysningId, Boolsk(true))
         klageBehandling.hentOpplysning(boolskOpplysningId).verdi().let {
-            require(it is Verdi.Boolsk)
+            require(it is Boolsk)
             it.value shouldBe true
         }
 
-        klageBehandling.svar(stringOpplysningId, "String")
+        klageBehandling.svar(stringOpplysningId, TekstVerdi("String"))
         klageBehandling.hentOpplysning(stringOpplysningId).verdi().let {
-            require(it is Verdi.TekstVerdi)
+            require(it is TekstVerdi)
             it.value shouldBe "String"
         }
 
-        klageBehandling.svar(datoOpplysningId, LocalDate.MIN)
+        klageBehandling.svar(datoOpplysningId, Dato(LocalDate.MIN))
         klageBehandling.hentOpplysning(datoOpplysningId).verdi().let {
-            require(it is Verdi.Dato)
+            require(it is Dato)
             it.value shouldBe LocalDate.MIN
         }
 
         val valg = klageBehandling.hentOpplysning(listeOpplysningId).type.valgmuligheter
-        klageBehandling.svar(listeOpplysningId, valg)
+        klageBehandling.svar(listeOpplysningId, Flervalg(valg))
         klageBehandling.hentOpplysning(listeOpplysningId).verdi().let {
-            require(it is Verdi.Flervalg)
+            require(it is Flervalg)
             it.value shouldBe valg
         }
     }
@@ -79,10 +83,10 @@ class KlageBehandlingTest {
                 oversittetFristOpplysningTyper
         }.forEach {
             when (it.type.datatype) {
-                Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, true)
-                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, "String")
-                Datatype.DATO -> klageBehandling.svar(it.opplysningId, LocalDate.MIN)
-                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, it.valgmuligheter)
+                Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
+                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, TekstVerdi("String"))
+                Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
+                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
             }
         }
 
@@ -95,7 +99,7 @@ class KlageBehandlingTest {
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in formkravOpplysningTyper
         }.forEach {
-            klageBehandling.svar(it.opplysningId, true)
+            klageBehandling.svar(it.opplysningId, Verdi.Boolsk(true))
         }
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
@@ -134,7 +138,7 @@ class KlageBehandlingTest {
 
         shouldThrow<IllegalStateException> { klageBehandling.ferdigstill() }
 
-        klageBehandling.svar(synligOgPåkrevdOpplysning.opplysningId, false)
+        klageBehandling.svar(synligOgPåkrevdOpplysning.opplysningId, Boolsk(false))
 
         shouldNotThrow<IllegalStateException> { klageBehandling.ferdigstill() }
         klageBehandling.tilstand() shouldBe FERDIGSTILT
@@ -161,10 +165,10 @@ class KlageBehandlingTest {
     private fun svarPåAlleOpplysninger(klageBehandling: KlageBehandling) {
         klageBehandling.alleOpplysninger().forEach {
             when (it.type.datatype) {
-                Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, true)
-                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, it.valgmuligheter.firstOrNull() ?: "String")
-                Datatype.DATO -> klageBehandling.svar(it.opplysningId, LocalDate.MIN)
-                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, it.valgmuligheter)
+                Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
+                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, TekstVerdi(it.valgmuligheter.firstOrNull() ?: "String"))
+                Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
+                Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
             }
         }
     }

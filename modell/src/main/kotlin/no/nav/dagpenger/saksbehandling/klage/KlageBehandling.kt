@@ -2,7 +2,6 @@ package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
-import java.time.LocalDate
 import java.util.UUID
 
 data class KlageBehandling(
@@ -72,40 +71,10 @@ data class KlageBehandling(
 
     fun svar(
         opplysningId: UUID,
-        svar: Boolean,
+        verdi: Verdi,
     ) {
         hentOpplysning(opplysningId).also { opplysning ->
-            opplysning.svar(svar)
-            evaluerSynlighetOgUtfall()
-        }
-    }
-
-    fun svar(
-        opplysningId: UUID,
-        svar: String,
-    ) {
-        hentOpplysning(opplysningId).also { opplysning ->
-            opplysning.svar(svar)
-            evaluerSynlighetOgUtfall()
-        }
-    }
-
-    fun svar(
-        opplysningId: UUID,
-        svar: LocalDate,
-    ) {
-        hentOpplysning(opplysningId).also { opplysning ->
-            opplysning.svar(svar)
-            evaluerSynlighetOgUtfall()
-        }
-    }
-
-    fun svar(
-        opplysningId: UUID,
-        svar: List<String>,
-    ) {
-        hentOpplysning(opplysningId).also { opplysning ->
-            opplysning.svar(svar)
+            opplysning.svar(verdi)
             evaluerSynlighetOgUtfall()
         }
     }

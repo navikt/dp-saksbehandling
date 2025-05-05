@@ -6,9 +6,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
-import java.time.LocalDate
 import java.util.UUID
 
 class KlageMediator(
@@ -50,17 +50,12 @@ class KlageMediator(
     fun oppdaterKlageOpplysning(
         behandlingId: UUID,
         opplysningId: UUID,
-        verdi: OpplysningerVerdi,
+        verdi: Verdi,
         saksbehandler: Saksbehandler,
     ) {
         sjekkTilgangOgEierAvOppgave(behandlingId, saksbehandler)
         klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
-            when (verdi) {
-                is OpplysningerVerdi.Tekst -> klageBehandling.svar(opplysningId, verdi.value)
-                is OpplysningerVerdi.TekstListe -> klageBehandling.svar(opplysningId, verdi.value)
-                is OpplysningerVerdi.Dato -> klageBehandling.svar(opplysningId, verdi.value)
-                is OpplysningerVerdi.Boolsk -> klageBehandling.svar(opplysningId, verdi.value)
-            }
+            klageBehandling.svar(opplysningId, verdi)
             klageRepository.lagre(klageBehandling = klageBehandling)
         }
     }
@@ -166,18 +161,4 @@ class KlageMediator(
             requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
         }
     }
-}
-
-sealed class OpplysningerVerdi {
-    data class Tekst(val value: String) : OpplysningerVerdi()
-
-    data class TekstListe(val value: List<String> = emptyList()) : OpplysningerVerdi(), List<String> by value {
-        constructor(vararg values: String) : this(values.toList())
-    }
-
-    data class Dato(val value: LocalDate) : OpplysningerVerdi()
-
-    data class Boolsk(val value: Boolean) : OpplysningerVerdi()
-
-    companion object
 }

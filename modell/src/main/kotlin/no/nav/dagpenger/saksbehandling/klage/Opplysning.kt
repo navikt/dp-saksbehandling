@@ -78,20 +78,8 @@ class Opplysning(
         return this.synlig
     }
 
-    fun svar(verdi: Boolean) {
-        requireRiktigDatatype(Verdi.Boolsk(verdi)).also { this.verdi = it }
-    }
-
-    fun svar(verdi: String) {
-        requireRiktigDatatype(Verdi.TekstVerdi(verdi)).also { this.verdi = it }
-    }
-
-    fun svar(verdi: List<String>) {
-        requireRiktigDatatype(Verdi.Flervalg(verdi)).also { this.verdi = it }
-    }
-
-    fun svar(verdi: LocalDate) {
-        requireRiktigDatatype(Verdi.Dato(verdi)).also { this.verdi = it }
+    fun svar(verdi: Verdi) {
+        requireRiktigDatatype(verdi).also { this.verdi = it }
     }
 
     override fun equals(other: Any?): Boolean {

@@ -9,16 +9,16 @@ class OpplysningTest {
     @Test
     fun `skal kun kunne sette valgmuligheter der de eksisterer`() {
         lagOpplysninger(opplysninger = setOf(OpplysningType.UTFALL)).single().let {
-            shouldThrow<IllegalArgumentException> { it.svar("feil") }
-            shouldThrow<IllegalArgumentException> { it.svar("opprettholdelse") }
-            shouldNotThrowAny { it.svar("OPPRETTHOLDELSE") }
+            shouldThrow<IllegalArgumentException> { it.svar(Verdi.TekstVerdi("feil")) }
+            shouldThrow<IllegalArgumentException> { it.svar(Verdi.TekstVerdi("opprettholdelse")) }
+            shouldNotThrowAny { it.svar(Verdi.TekstVerdi("OPPRETTHOLDELSE")) }
         }
     }
 
     @Test
     fun `sjekk at flervalg godtar flervalg`() {
         lagOpplysninger(opplysninger = setOf(OpplysningType.HJEMLER)).single().let {
-            shouldNotThrowAny { it.svar(listOf("§ 4-1", "§ 4-2")) }
+            shouldNotThrowAny { it.svar(Verdi.Flervalg(listOf("§ 4-1", "§ 4-2"))) }
         }
     }
 }

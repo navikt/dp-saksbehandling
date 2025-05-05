@@ -40,7 +40,7 @@ class StegTest {
             opplysning.type in oversittetFristOpplysningTyper
         }.forEach { it.synlighet() shouldBe false }
 
-        klagefristOppfylt.svar(verdi = true)
+        klagefristOppfylt.svar(verdi = Verdi.Boolsk(true))
         steg.evaluerSynlighet(opplysninger.toList())
 
         (klagefristOppfylt.verdi() as Verdi.Boolsk).value shouldBe true
@@ -48,7 +48,7 @@ class StegTest {
             opplysning.type in oversittetFristOpplysningTyper
         }.forEach { it.synlighet() shouldBe false }
 
-        klagefristOppfylt.svar(verdi = false)
+        klagefristOppfylt.svar(verdi = Verdi.Boolsk(false))
         steg.evaluerSynlighet(opplysninger.toList())
 
         (klagefristOppfylt.verdi() as Verdi.Boolsk).value shouldBe false
@@ -89,7 +89,7 @@ class StegTest {
 
         opplysninger.filter { opplysning ->
             opplysning.type in formkravOpplysningTyper
-        }.forEach { it.svar(verdi = true) }
+        }.forEach { it.svar(verdi = Verdi.Boolsk(true)) }
         steg.evaluerSynlighet(opplysninger.toList())
 
         opplysninger.filter { opplysning ->
@@ -116,19 +116,19 @@ class StegTest {
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        utfallOpplysning.svar(verdi = UtfallType.MEDHOLD.name)
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.MEDHOLD.name))
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        utfallOpplysning.svar(verdi = UtfallType.DELVIS_MEDHOLD.name)
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.DELVIS_MEDHOLD.name))
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        utfallOpplysning.svar(verdi = UtfallType.AVVIST.name)
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.AVVIST.name))
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        utfallOpplysning.svar(verdi = UtfallType.OPPRETTHOLDELSE.name)
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.name))
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe true }
     }
@@ -149,17 +149,17 @@ class StegTest {
         val fullmektigTilKlageinstansOpplysninger = opplysninger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
         fullmektigTilKlageinstansOpplysninger.size shouldBe fullmektigTilKlageinstansOpplysningTyper.size
 
-        utfallOpplysning.svar(verdi = UtfallType.OPPRETTHOLDELSE.name)
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.name))
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())
         fullmektigTilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        hvemKlager.svar(HvemKlagerType.FULLMEKTIG.name)
+        hvemKlager.svar(Verdi.TekstVerdi(HvemKlagerType.FULLMEKTIG.name))
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())
         fullmektigTilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe true }
 
-        fullmektigTilKlageinstansOpplysninger.forEach { it.svar("en tekst verdi") }
+        fullmektigTilKlageinstansOpplysninger.forEach { it.svar(Verdi.TekstVerdi("en tekst verdi")) }
 
-        hvemKlager.svar(HvemKlagerType.BRUKER.name)
+        hvemKlager.svar(Verdi.TekstVerdi(HvemKlagerType.BRUKER.name))
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())
         fullmektigTilKlageinstansOpplysninger.forEach {
             it.synlighet() shouldBe false

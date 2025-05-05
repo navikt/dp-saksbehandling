@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.api
 
-import no.nav.dagpenger.saksbehandling.OpplysningerVerdi
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.KlageView.behandlingOpplysninger
 import no.nav.dagpenger.saksbehandling.api.KlageView.finnGruppe
@@ -27,12 +26,12 @@ import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 
 class KlageDTOMapper(private val oppslag: Oppslag) {
-    fun tilVerdi(oppdaterKlageOpplysningDTO: OppdaterKlageOpplysningDTO): OpplysningerVerdi {
+    fun tilVerdi(oppdaterKlageOpplysningDTO: OppdaterKlageOpplysningDTO): Verdi {
         return when (oppdaterKlageOpplysningDTO) {
-            is BoolskVerdiDTO -> OpplysningerVerdi.Boolsk(oppdaterKlageOpplysningDTO.verdi)
-            is DatoVerdiDTO -> OpplysningerVerdi.Dato(oppdaterKlageOpplysningDTO.verdi)
-            is ListeVerdiDTO -> OpplysningerVerdi.TekstListe(oppdaterKlageOpplysningDTO.verdi)
-            is TekstVerdiDTO -> OpplysningerVerdi.Tekst(oppdaterKlageOpplysningDTO.verdi)
+            is BoolskVerdiDTO -> Verdi.Boolsk(oppdaterKlageOpplysningDTO.verdi)
+            is DatoVerdiDTO -> Verdi.Dato(oppdaterKlageOpplysningDTO.verdi)
+            is ListeVerdiDTO -> Verdi.Flervalg(oppdaterKlageOpplysningDTO.verdi)
+            is TekstVerdiDTO -> Verdi.TekstVerdi(oppdaterKlageOpplysningDTO.verdi)
         }
     }
 

@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERIG_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
+import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -203,7 +204,7 @@ class KlageMediatorTest {
     ) {
         fun oppdaterOpplysning(
             opplysningId: UUID,
-            svar: OpplysningerVerdi,
+            svar: Verdi,
         ) {
             return oppdaterKlageOpplysning(
                 behandlingId = behandlingId,
@@ -220,7 +221,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }.opplysningId,
-            svar = OpplysningerVerdi.Tekst("Vedtak 1"),
+            svar = Verdi.TekstVerdi("Vedtak 1"),
         )
 
         oppdaterOpplysning(
@@ -230,7 +231,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == KLAGEFRIST }.opplysningId,
-            svar = OpplysningerVerdi.Dato(LocalDate.MIN),
+            svar = Verdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -239,7 +240,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == KLAGE_MOTTATT }.opplysningId,
-            svar = OpplysningerVerdi.Dato(LocalDate.MIN),
+            svar = Verdi.Dato(LocalDate.MIN),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -248,14 +249,14 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == KLAGEFRIST_OPPFYLT }.opplysningId,
-            svar = OpplysningerVerdi.Boolsk(true),
+            svar = Verdi.Boolsk(true),
         )
         this.hentKlageBehandling(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         ).synligeOpplysninger().filter { it.type in formkravOpplysningTyper }
             .forEach {
-                oppdaterOpplysning(opplysningId = it.opplysningId, svar = OpplysningerVerdi.Boolsk(true))
+                oppdaterOpplysning(opplysningId = it.opplysningId, svar = Verdi.Boolsk(true))
             }
     }
 
@@ -265,7 +266,7 @@ class KlageMediatorTest {
     ) {
         fun oppdaterOpplysning(
             opplysningId: UUID,
-            svar: OpplysningerVerdi,
+            svar: Verdi,
         ) {
             return oppdaterKlageOpplysning(
                 behandlingId = behandlingId,
@@ -280,7 +281,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
-            svar = OpplysningerVerdi.Tekst(UtfallType.OPPRETTHOLDELSE.name),
+            svar = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.name),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -289,7 +290,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == VURDERIG_AV_KLAGEN }.opplysningId,
-            svar = OpplysningerVerdi.Tekst("Vi opprettholder vedtaket."),
+            svar = Verdi.TekstVerdi("Vi opprettholder vedtaket."),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -298,7 +299,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == HVEM_KLAGER }.opplysningId,
-            svar = OpplysningerVerdi.Tekst(HvemKlagerType.BRUKER.name),
+            svar = Verdi.TekstVerdi(HvemKlagerType.BRUKER.name),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -307,7 +308,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == HJEMLER }.opplysningId,
-            svar = OpplysningerVerdi.TekstListe("§ 4-5", "§ 4-2"),
+            svar = Verdi.Flervalg("§ 4-5", "§ 4-2"),
         )
     }
 }
