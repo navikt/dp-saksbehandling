@@ -811,6 +811,7 @@ components:
       properties:
         ident:
           type: string
+          pattern: '^[0-9]{11}$'
       required:
         - ident
 
@@ -819,6 +820,7 @@ components:
       properties:
         ident:
           type: string
+          pattern: '^[0-9]{11}$'
         soknadId:
           type: string
           format: uuid
