@@ -1104,6 +1104,7 @@ components:
       required:
         - verdi
         - type
+
     BoolskVerdi:
       type: object
       properties:
@@ -1114,6 +1115,7 @@ components:
       required:
         - verdi
         - type
+
     DatoVerdi:
       type: object
       properties:
@@ -1125,6 +1127,7 @@ components:
       required:
         - verdi
         - type
+
     ListeVerdi:
       type: object
       properties:
@@ -1137,6 +1140,7 @@ components:
       required:
         - verdi
         - type
+
     OppdaterKlageOpplysning:
       oneOf:
         - $ref: '#/components/schemas/TekstVerdi'
@@ -1159,6 +1163,7 @@ components:
         - KLAGESAK
         - FRIST
         - KLAGE_ANKE
+
     KlageOpplysningTekst:
       type: object
       properties:
@@ -1188,6 +1193,8 @@ components:
         - paakrevd
         - gruppe
         - redigerbar
+        - valgmuligheter
+
     KlageOpplysningBoolsk:
       type: object
       properties:
@@ -1217,6 +1224,7 @@ components:
         - paakrevd
         - gruppe
         - redigerbar
+        - valgmuligheter
 
     KlageOpplysningDato:
       type: object
@@ -1248,7 +1256,8 @@ components:
         - paakrevd
         - gruppe
         - redigerbar
-        -
+        - valgmuligheter
+
     KlageOpplysningFlerListeValg:
       type: object
       properties:
@@ -1281,6 +1290,7 @@ components:
         - gruppe
         - redigerbar
         - valgmuligheter
+
     KlageOpplysningListeValg:
       type: object
       properties:
@@ -1310,6 +1320,7 @@ components:
         - paakrevd
         - gruppe
         - redigerbar
+        - valgmuligheter
 
     KlageOpplysningType:
       type: string
