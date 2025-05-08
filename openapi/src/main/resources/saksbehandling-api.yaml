@@ -430,7 +430,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-
+  /klage/opprett:
+    post:
+      summary: Oppretter en klage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpprettKlage'
   /klage/{behandlingId}/opplysning/{opplysningId}:
     put:
       summary: Oppdaterer opplysning i klage
@@ -1142,6 +1150,19 @@ components:
       required:
         - verdi
         - type
+
+    OpprettKlage:
+      type: object
+      properties:
+        opprettet: 
+          type: string
+          format: date-time
+        journalPostId:
+          type: string
+        ident:
+          type: 
+            $ref: '#/components/schemas/PersonIdent'
+
 
     OppdaterKlageOpplysning:
       oneOf:

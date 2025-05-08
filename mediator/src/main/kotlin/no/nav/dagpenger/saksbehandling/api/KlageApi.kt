@@ -12,11 +12,8 @@ import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.KlageMediator
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
-import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
-import java.time.LocalDateTime
 
 fun Route.klageApi(
     mediator: KlageMediator,
@@ -26,13 +23,14 @@ fun Route.klageApi(
 
     route("klage/opprett") {
         post {
+            val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
             mediator.opprettKlage(
                 klageMottattHendelse =
                     KlageMottattHendelse(
-                        opprettet = LocalDateTime.now(),
-                        journalpostId = UUIDv7.ny().toString(),
+                        opprettet = klage.opprettet,
+                        journalpostId = klage.journalpostId,
                         utførtAv = Applikasjon("dp-mottak"),
-                        ident = call.receive<PersonIdentDTO>().ident,
+                        ident = klage.personIdent.ident,
                     ),
             ).let {
                 call.respond(HttpStatusCode.Created, it)
