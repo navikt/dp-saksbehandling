@@ -55,7 +55,7 @@ class KlageApiTest {
             grupper = defaultSaksbehandlerADGruppe.toSet(),
             tilganger = setOf(TilgangType.SAKSBEHANDLER),
         )
-    private val dato = LocalDateTime.MIN
+    private val dato = LocalDateTime.of(2025, 1, 1, 1, 1)
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
@@ -135,12 +135,11 @@ class KlageApiTest {
                 json shouldEqualSpecifiedJsonIgnoringOrder //language=json
                     """
                     {
-                      "opprettet": "-999999999-01-01T00:00:00",
-                      "behandling": {
-                        "type": "KLAGE",
-                        "person": {
-                          "ident": "$ident"}
-                          }
+                       "oppgaveId": "${oppgave.oppgaveId}",
+                       "behandlingId": "${oppgave.behandling.behandlingId}",
+                       "personIdent": "$ident",
+                       "tidspunktOpprettet": "2025-01-01T01:01:00",
+                       "behandlingType": "KLAGE"
                     }
                     """.trimIndent()
             }

@@ -33,8 +33,9 @@ fun Route.klageApi(
                             utførtAv = Applikasjon("dp-mottak"),
                             ident = klage.personIdent.ident,
                         ),
-                ).let {
-                    call.respond(HttpStatusCode.Created, it)
+                ).let { oppgave ->
+
+                    call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
                 }
             }
         }

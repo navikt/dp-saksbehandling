@@ -446,7 +446,7 @@ paths:
           content:
             application/json:
                 schema:
-                    $ref: '#/components/schemas/Oppgave'
+                    $ref: '#/components/schemas/OppgaveOversikt'
         default:
           description: Feil
           content:
