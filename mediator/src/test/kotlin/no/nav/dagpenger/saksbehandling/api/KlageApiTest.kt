@@ -4,14 +4,15 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.client.utils.EmptyContent.headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.headers
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.Runs
@@ -28,6 +29,8 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.defaultSaksbehandlerADGruppe
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToken
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -93,9 +96,9 @@ class KlageApiTest {
         }
     }
 
-    @Test
-    fun `Skal kunne opprette en klage`() {
+    private fun doKlageOpprettelseTest(token: String) {
         val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
+        val ident = oppgave.behandling.person.ident
         val mediator =
             mockk<KlageMediator>().also {
                 every {
@@ -112,8 +115,8 @@ class KlageApiTest {
 
         withKlageApi(mediator) {
             client.post("klage/opprett") {
-                autentisert()
-                headers[HttpHeaders.ContentType] = "application/json"
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, "application/json")
                 //language=json
                 setBody(
                     """
@@ -121,7 +124,7 @@ class KlageApiTest {
                         "journalpostId": "journalpostId",
                         "opprettet": "$dato",
                         "sakId": "sakId",
-                        "personIdent": {"ident":  "${oppgave.behandling.person.ident}"}
+                        "personIdent": {"ident":  "$ident"}
                     }
                     """.trimIndent(),
                 )
@@ -134,18 +137,31 @@ class KlageApiTest {
                     {
                       "opprettet": "-999999999-01-01T00:00:00",
                       "behandling": {
+                        "type": "KLAGE",
                         "person": {
-                          "ident": "${oppgave.behandling.person.ident}"}
-                          },
-                        "type": "KLAGE"
+                          "ident": "$ident"}
+                          }
                     }
                     """.trimIndent()
             }
         }
 
         verify(exactly = 1) {
-            mediator.ferdigstill(behandlingId = klageBehandlingId, saksbehandler = saksbehandler)
+            mediator.opprettKlage(
+                klageMottattHendelse =
+                    KlageMottattHendelse(
+                        ident = ident,
+                        opprettet = dato,
+                        journalpostId = "journalpostId",
+                    ),
+            )
         }
+    }
+
+    @Test
+    fun `Skal kunne opprette en klage med saksbehandler token eller maskintoken`() {
+        doKlageOpprettelseTest(gyldigSaksbehandlerToken())
+        doKlageOpprettelseTest(gyldigMaskinToken())
     }
 
     @Test
