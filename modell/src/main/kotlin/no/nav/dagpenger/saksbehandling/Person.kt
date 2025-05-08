@@ -9,7 +9,7 @@ data class Person(
     val adressebeskyttelseGradering: AdressebeskyttelseGradering,
 ) {
     init {
-        require(ident.matches(Regex("\\d{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
+        require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
     }
 }
 

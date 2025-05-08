@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS klage_v1
 
 );
 
-CREATE TRIGGER oppdater_endret_tidspunkt
+CREATE OR REPLACE TRIGGER oppdater_endret_tidspunkt
 BEFORE UPDATE ON klage_v1
 FOR EACH ROW EXECUTE FUNCTION oppdater_endret_tidspunkt();

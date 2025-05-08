@@ -1,3 +1,0 @@
-ALTER TABLE behandling_v1
-ADD COLUMN behandling_type TEXT NOT NULL DEFAULT 'RETT_TIL_DAGPENGER';
-
