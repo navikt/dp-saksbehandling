@@ -1,11 +1,14 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.get
+import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.utils.EmptyContent.headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -17,6 +20,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
@@ -26,10 +30,14 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.defaultSaksbehandlerADGruppe
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.lagBehandling
+import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class KlageApiTest {
     init {
@@ -44,12 +52,20 @@ class KlageApiTest {
             grupper = defaultSaksbehandlerADGruppe.toSet(),
             tilganger = setOf(TilgangType.SAKSBEHANDLER),
         )
+    private val dato = LocalDateTime.MIN
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<KlageMediator>()
         withKlageApi(mediator) {
             client.get("klage/$klageBehandlingId").let { response ->
+                response.status shouldBe HttpStatusCode.Unauthorized
+            }
+            client.post("klage/opprett") {
+                headers[HttpHeaders.ContentType] = "application/json"
+                //language=json
+                setBody("""{ "tullebody": "tull" }""".trimIndent())
+            }.let { response ->
                 response.status shouldBe HttpStatusCode.Unauthorized
             }
         }
@@ -74,6 +90,61 @@ class KlageApiTest {
                 val json = response.bodyAsText()
                 json shouldContain klageBehandlingId.toString()
             }
+        }
+    }
+
+    @Test
+    fun `Skal kunne opprette en klage`() {
+        val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
+        val mediator =
+            mockk<KlageMediator>().also {
+                every {
+                    it.opprettKlage(
+                        klageMottattHendelse =
+                            KlageMottattHendelse(
+                                ident = oppgave.behandling.person.ident,
+                                opprettet = dato,
+                                journalpostId = "journalpostId",
+                            ),
+                    )
+                } returns oppgave
+            }
+
+        withKlageApi(mediator) {
+            client.post("klage/opprett") {
+                autentisert()
+                headers[HttpHeaders.ContentType] = "application/json"
+                //language=json
+                setBody(
+                    """
+                    {
+                        "journalpostId": "journalpostId",
+                        "opprettet": "$dato",
+                        "sakId": "sakId",
+                        "personIdent": {"ident":  "${oppgave.behandling.person.ident}"}
+                    }
+                    """.trimIndent(),
+                )
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.Created
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                json shouldEqualSpecifiedJsonIgnoringOrder //language=json
+                    """
+                    {
+                      "opprettet": "-999999999-01-01T00:00:00",
+                      "behandling": {
+                        "person": {
+                          "ident": "${oppgave.behandling.person.ident}"}
+                          },
+                        "type": "KLAGE"
+                    }
+                    """.trimIndent()
+            }
+        }
+
+        verify(exactly = 1) {
+            mediator.ferdigstill(behandlingId = klageBehandlingId, saksbehandler = saksbehandler)
         }
     }
 

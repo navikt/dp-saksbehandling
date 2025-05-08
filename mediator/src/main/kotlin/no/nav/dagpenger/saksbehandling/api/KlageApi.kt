@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
+import no.nav.dagpenger.saksbehandling.api.models.OpprettKlageDTO
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 
 fun Route.klageApi(
@@ -20,20 +21,21 @@ fun Route.klageApi(
     klageDtoMapper: KlageDTOMapper,
 ) {
     val applicationCallParser = Configuration.applicationCallParser
-
-    route("klage/opprett") {
-        post {
-            val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
-            mediator.opprettKlage(
-                klageMottattHendelse =
-                    KlageMottattHendelse(
-                        opprettet = klage.opprettet,
-                        journalpostId = klage.journalpostId,
-                        utførtAv = Applikasjon("dp-mottak"),
-                        ident = klage.personIdent.ident,
-                    ),
-            ).let {
-                call.respond(HttpStatusCode.Created, it)
+    authenticate("azureAd", "azureAd-maskin") {
+        route("klage/opprett") {
+            post {
+                val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
+                mediator.opprettKlage(
+                    klageMottattHendelse =
+                        KlageMottattHendelse(
+                            opprettet = klage.opprettet,
+                            journalpostId = klage.journalpostId,
+                            utførtAv = Applikasjon("dp-mottak"),
+                            ident = klage.personIdent.ident,
+                        ),
+                ).let {
+                    call.respond(HttpStatusCode.Created, it)
+                }
             }
         }
     }

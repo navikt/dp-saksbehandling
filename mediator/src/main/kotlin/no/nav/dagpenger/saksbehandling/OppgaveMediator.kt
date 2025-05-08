@@ -99,7 +99,7 @@ class OppgaveMediator(
         oppgaveRepository.lagre(oppgave)
     }
 
-    fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
+    fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
         val person =
             personRepository.finnPerson(behandlingOpprettetHendelse.ident)
                 ?: runBlocking {
@@ -107,8 +107,12 @@ class OppgaveMediator(
                 }
 
         if (oppgaveRepository.finnBehandling(behandlingOpprettetHendelse.behandlingId) != null) {
-            logger.warn { "Mottatt hendelse behandling_opprettet, men behandling finnes allerede." }
-            return
+            val feilmelding =
+                "Mottatt hendelse behandling_opprettet, men behandling finnes allerede " +
+                    "${behandlingOpprettetHendelse.behandlingId}."
+            logger.warn { feilmelding }
+            throw RuntimeException(feilmelding)
+            // Todo: fiks til rett feil
         }
 
         val behandling =
@@ -130,6 +134,7 @@ class OppgaveMediator(
             )
 
         oppgaveRepository.lagre(oppgave)
+        return oppgave
     }
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {

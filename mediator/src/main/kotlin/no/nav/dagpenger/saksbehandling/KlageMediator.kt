@@ -27,14 +27,14 @@ class KlageMediator(
         return klageRepository.hentKlageBehandling(behandlingId)
     }
 
-    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): UUID {
+    fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
         val klageBehandling =
             KlageBehandling(
                 behandlingId = UUIDv7.ny(),
             )
 
         klageRepository.lagre(klageBehandling)
-        oppgaveMediator.opprettOppgaveForBehandling(
+        return oppgaveMediator.opprettOppgaveForBehandling(
             behandlingOpprettetHendelse =
                 BehandlingOpprettetHendelse(
                     behandlingId = klageBehandling.behandlingId,
@@ -44,7 +44,6 @@ class KlageMediator(
                     utførtAv = klageMottattHendelse.utførtAv,
                 ),
         )
-        return klageBehandling.behandlingId
     }
 
     fun oppdaterKlageOpplysning(

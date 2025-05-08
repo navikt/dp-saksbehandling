@@ -430,6 +430,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+
   /klage/opprett:
     post:
       summary: Oppretter en klage
@@ -439,6 +440,21 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/OpprettKlage'
+      responses:
+        '200':
+          description: Vellykket oppretting av klageOppgave
+          content:
+            application/json:
+                schema:
+                    $ref: '#/components/schemas/Oppgave'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+
   /klage/{behandlingId}/opplysning/{opplysningId}:
     put:
       summary: Oppdaterer opplysning i klage
@@ -1157,11 +1173,17 @@ components:
         opprettet: 
           type: string
           format: date-time
-        journalPostId:
+        journalpostId:
           type: string
-        ident:
-          type: 
-            $ref: '#/components/schemas/PersonIdent'
+        sakId:
+          type: string
+        personIdent:
+          $ref: '#/components/schemas/PersonIdent'
+      required:
+        - opprettet
+        - journalpostId
+        - sakId
+        - personIdent
 
 
     OppdaterKlageOpplysning:

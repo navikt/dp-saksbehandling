@@ -77,7 +77,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                )
+                ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand() shouldBe
                 KlageBehandling.BehandlingTilstand.BEHANDLES
@@ -161,7 +161,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                )
+                ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,
