@@ -1,0 +1,93 @@
+package no.nav.dagpenger.saksbehandling.db.klage
+
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.klage.Datatype
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.Opplysning
+import no.nav.dagpenger.saksbehandling.klage.Verdi
+import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.util.UUID
+
+class PostgresKlageRepositoryTest {
+    @Test
+    fun `Skal kunne lagre og hente klagebehandlinger`() {
+        val behandlingId = UUIDv7.ny()
+
+        withMigratedDb { ds ->
+            val klageRepository = PostgresKlageRepository(ds)
+            val klageBehandling =
+                KlageBehandling(
+                    behandlingId = behandlingId,
+                )
+
+            val boolskOpplysningId =
+                klageBehandling.finnEnBoolskOpplysning().also {
+                    klageBehandling.svar(it, Verdi.Boolsk(true))
+                }
+
+            val datoOpplysningerId =
+                klageBehandling.finnEnDatoOpplysningerId().also {
+                    klageBehandling.svar(it, Verdi.Dato(LocalDate.MIN))
+                }
+
+            val listeOpplysning =
+                klageBehandling.finnEnListeOpplysning().also {
+                    klageBehandling.svar(it.opplysningId, Verdi.Flervalg(it.valgmuligheter))
+                }
+
+            val tekstOpplysningUtenValg =
+                klageBehandling.finnEnStringOpplysningUtenValg().also {
+                    klageBehandling.svar(it.opplysningId, Verdi.TekstVerdi("String"))
+                }
+
+            val boolskOpplysningMedTomVerdi =
+                klageBehandling.synligeOpplysninger().first {
+                    it.type.datatype == Datatype.BOOLSK && it.verdi() is Verdi.TomVerdi
+                }.opplysningId
+
+            klageRepository.lagre(klageBehandling)
+
+            val hentetKlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
+
+            hentetKlageBehandling.behandlingId shouldBe klageBehandling.behandlingId
+            hentetKlageBehandling.tilstand() shouldBe BEHANDLES
+            hentetKlageBehandling.alleOpplysninger() shouldContainExactly klageBehandling.alleOpplysninger()
+
+            hentetKlageBehandling.finnEnOpplysning(boolskOpplysningId).verdi() shouldBe Verdi.Boolsk(true)
+            hentetKlageBehandling.finnEnOpplysning(datoOpplysningerId).verdi() shouldBe Verdi.Dato(LocalDate.MIN)
+            hentetKlageBehandling.finnEnOpplysning(listeOpplysning.opplysningId).verdi() shouldBe
+                Verdi.Flervalg(listeOpplysning.valgmuligheter)
+            hentetKlageBehandling.finnEnOpplysning(tekstOpplysningUtenValg.opplysningId).verdi() shouldBe
+                Verdi.TekstVerdi("String")
+            hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi() shouldBe Verdi.TomVerdi
+        }
+    }
+
+    private fun KlageBehandling.finnEnOpplysning(id: UUID): Opplysning {
+        return this.alleOpplysninger().single { opplysning -> opplysning.opplysningId == id }
+    }
+
+    private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
+    }
+
+    private fun KlageBehandling.finnEnStringOpplysningUtenValg(): Opplysning {
+        return this.synligeOpplysninger().first {
+                opplysning ->
+            opplysning.type.datatype == Datatype.TEKST && opplysning.valgmuligheter.isEmpty()
+        }
+    }
+
+    private fun KlageBehandling.finnEnDatoOpplysningerId(): UUID {
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.DATO }.opplysningId
+    }
+
+    private fun KlageBehandling.finnEnListeOpplysning(): Opplysning {
+        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }
+    }
+}

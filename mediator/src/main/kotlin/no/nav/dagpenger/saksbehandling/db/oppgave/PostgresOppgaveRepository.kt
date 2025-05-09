@@ -8,6 +8,7 @@ import kotliquery.sessionOf
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
@@ -36,9 +37,11 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingLåstHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpplåstHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -83,6 +86,13 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             session.transaction { tx ->
                 val emneknagger = filter.emneknagg.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
+                val behandlingTyperAsText = filter.behandlingTyper.joinToString { "'$it'" }
+                val behandlingTypeClause =
+                    if (filter.behandlingTyper.isNotEmpty()) {
+                        " AND beha.behandling_type IN ($behandlingTyperAsText) "
+                    } else {
+                        ""
+                    }
 
                 // language=SQL
                 val emneknaggClause =
@@ -123,7 +133,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     AND    ( NOT pers.skjermes_som_egne_ansatte
                           OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
-                    """ + emneknaggClause
+                    """ + behandlingTypeClause + emneknaggClause
 
                 // language=SQL
                 val unionAll = """UNION ALL"""
@@ -158,7 +168,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                          OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                     AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
-                """ + emneknaggClause +
+                """ + behandlingTypeClause + emneknaggClause +
                         """
                         )
                         """.trimIndent()
@@ -267,7 +277,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT beha.id behandling_id, beha.opprettet, pers.id person_id, pers.ident,
+                        SELECT beha.id behandling_id, beha.opprettet, beha.behandling_type, pers.id person_id, pers.ident,
                                pers.skjermes_som_egne_ansatte, pers.adressebeskyttelse_gradering
                         FROM   behandling_v1 beha
                         JOIN   person_v1     pers ON pers.id = beha.person_id
@@ -290,6 +300,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         person = person,
                         opprettet = row.localDateTime("opprettet"),
                         hendelse = finnHendelseForBehandling(behandlingId, datasource),
+                        type = BehandlingType.valueOf(row.string("behandling_type")),
                     )
                 }.asSingle,
             )
@@ -515,11 +526,20 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat {
         return sessionOf(datasource).use { session ->
             val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
+            // TODO: sjekk på tilstand != OPPRETTET bør erstattes med noe logikk for ikke-søkbare tilstander
             val tilstandClause =
                 if (søkeFilter.tilstander.isEmpty()) {
                     " AND oppg.tilstand != 'OPPRETTET' "
                 } else {
                     " AND oppg.tilstand IN ($tilstander) "
+                }
+
+            val behandlingTyperAsText: String = søkeFilter.behandlingTyper.joinToString { "'$it'" }
+            val behandlingTypeClause =
+                if (behandlingTyperAsText.isNotEmpty()) {
+                    " AND beha.behandling_type IN ($behandlingTyperAsText) "
+                } else {
+                    ""
                 }
 
             val saksbehandlerClause =
@@ -553,8 +573,6 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     """ LIMIT ${it.antallOppgaver} OFFSET ${it.side * it.antallOppgaver} """
                 } ?: ""
 
-            // TODO: sjekk på tilstand OPPRETTET bør erstattes med noe logikk for ikke-søkbare-tilstander
-
             // OBS: På grunn av at vi sammenligner "opprettet" (som er en timestamp) med fom- og tom-datoer (uten tidsdel),
             //     sjekker vi at "opprettet" er MINDRE enn tom-dato-pluss-1-dag.
 
@@ -562,16 +580,17 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             val oppgaveSelect =
                 """
                 SELECT  pers.id AS person_id, 
-                            pers.ident AS person_ident,
-                            pers.skjermes_som_egne_ansatte,
-                            pers.adressebeskyttelse_gradering,
-                            oppg.id AS oppgave_id, 
-                            oppg.tilstand, 
-                            oppg.opprettet AS oppgave_opprettet, 
-                            oppg.behandling_id, 
-                            oppg.saksbehandler_ident,
-                            oppg.utsatt_til,
-                            beha.opprettet AS behandling_opprettet
+                        pers.ident AS person_ident,
+                        pers.skjermes_som_egne_ansatte,
+                        pers.adressebeskyttelse_gradering,
+                        oppg.id AS oppgave_id, 
+                        oppg.tilstand, 
+                        oppg.opprettet AS oppgave_opprettet, 
+                        oppg.behandling_id, 
+                        oppg.saksbehandler_ident,
+                        oppg.utsatt_til,
+                        beha.opprettet AS behandling_opprettet,
+                        beha.behandling_type
                 """.trimIndent()
 
             val antallSelect =
@@ -590,6 +609,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 )
                     .append(
                         tilstandClause,
+                        behandlingTypeClause,
                         saksbehandlerClause,
                         personIdentClause,
                         oppgaveIdClause,
@@ -718,6 +738,7 @@ private fun rehydrerTilstandsendringHendelse(
         "NesteOppgaveHendelse" -> hendelseJson.tilHendelse<NesteOppgaveHendelse>()
         "PåVentFristUtgåttHendelse" -> hendelseJson.tilHendelse<PåVentFristUtgåttHendelse>()
         "SkriptHendelse" -> hendelseJson.tilHendelse<SkriptHendelse>()
+        "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()
         else -> {
             logger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
@@ -730,6 +751,10 @@ private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
         "TomHendelse" -> return TomHendelse
         "SøknadsbehandlingOpprettetHendelse" -> SøknadsbehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
+        "BehandlingOpprettetHendelse" -> {
+            val json = this.string("hendelse_data")
+            BehandlingOpprettetHendelse.fromJson(json)
+        }
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
@@ -877,9 +902,9 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
             statement =
                 """
                 INSERT INTO behandling_v1
-                    (id, person_id, opprettet)
+                    (id, person_id, opprettet, behandling_type)
                 VALUES
-                    (:id, :person_id, :opprettet) 
+                    (:id, :person_id, :opprettet, :behandling_type) 
                 ON CONFLICT DO NOTHING
                 """.trimIndent(),
             paramMap =
@@ -887,6 +912,7 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
                     "id" to behandling.behandlingId,
                     "person_id" to behandling.person.id,
                     "opprettet" to behandling.opprettet,
+                    "behandling_type" to behandling.type.name,
                 ),
         ).asUpdate,
     )
@@ -1054,6 +1080,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
                 ),
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId, dataSource),
+            type = BehandlingType.valueOf(this.string("behandling_type")),
         )
 
     val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId, dataSource)

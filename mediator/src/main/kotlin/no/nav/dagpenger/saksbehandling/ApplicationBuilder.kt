@@ -7,6 +7,7 @@ import io.ktor.server.cio.CIOApplicationEngine
 import io.ktor.server.engine.EmbeddedServer
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
+import no.nav.dagpenger.saksbehandling.api.KlageDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
 import no.nav.dagpenger.saksbehandling.api.Oppslag
@@ -15,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.api.installerApis
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
+import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
@@ -117,7 +119,13 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         oppgaveMediator = oppgaveMediator,
                         oppgaveDTOMapper = oppgaveDTOMapper,
                         statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
-                        klageMediator = KlageMediator(),
+                        klageMediator =
+                            KlageMediator(
+                                klageRepository = PostgresKlageRepository(dataSource),
+                                oppgaveMediator = oppgaveMediator,
+                                utsendingMediator = utsendingMediator,
+                            ),
+                        klageDTOMapper = KlageDTOMapper(oppslag),
                     )
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =

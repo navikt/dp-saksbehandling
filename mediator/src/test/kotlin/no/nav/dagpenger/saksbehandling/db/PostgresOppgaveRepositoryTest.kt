@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -48,6 +49,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Paginering
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -104,6 +106,59 @@ class PostgresOppgaveRepositoryTest {
                         navIdent = saksbehandler.navIdent,
                     ),
             ) shouldBe null
+        }
+    }
+
+    @Test
+    fun `Tildel neste ledige klage-oppgave`() {
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+
+            val søknadOppgave =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå.minusDays(1),
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                        ),
+                )
+            val klageOppgave =
+                lagOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå,
+                    person =
+                        Person(
+                            ident = "12345123451",
+                            skjermesSomEgneAnsatte = false,
+                            adressebeskyttelseGradering = UGRADERT,
+                        ),
+                    behandling = lagBehandling(type = BehandlingType.KLAGE),
+                )
+            repo.lagre(søknadOppgave)
+            repo.lagre(klageOppgave)
+            val nesteOppgave =
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = saksbehandler.navIdent,
+                            utførtAv = saksbehandler,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagg = emptySet(),
+                            behandlingTyper = setOf(BehandlingType.KLAGE),
+                            egneAnsatteTilgang = false,
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = saksbehandler.navIdent,
+                        ),
+                )!!
+            nesteOppgave.oppgaveId shouldBe klageOppgave.oppgaveId
+            nesteOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            nesteOppgave.tilstand().type shouldBe UNDER_BEHANDLING
         }
     }
 
@@ -897,9 +952,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre en behandling`() {
-        val testBehandling = lagBehandling()
-        val behandlingMedSøknadsbehandlingOpprettetHendelse =
+        val søknadBehandling =
             lagBehandling(
+                type = BehandlingType.RETT_TIL_DAGPENGER,
                 hendelse =
                     SøknadsbehandlingOpprettetHendelse(
                         søknadId = UUIDv7.ny(),
@@ -909,16 +964,26 @@ class PostgresOppgaveRepositoryTest {
                     ),
             )
 
+        val klageBehandling =
+            lagBehandling(
+                type = BehandlingType.KLAGE,
+                hendelse =
+                    BehandlingOpprettetHendelse(
+                        behandlingId = UUIDv7.ny(),
+                        ident = testPerson.ident,
+                        opprettet = LocalDateTime.MIN,
+                        type = BehandlingType.KLAGE,
+                    ),
+            )
+
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testBehandling)
-            val behandlingFraDatabase = repo.hentBehandling(testBehandling.behandlingId)
-            behandlingFraDatabase shouldBe testBehandling
 
-            repo.lagre(behandlingMedSøknadsbehandlingOpprettetHendelse)
-            repo.hentBehandling(
-                behandlingMedSøknadsbehandlingOpprettetHendelse.behandlingId,
-            ) shouldBe behandlingMedSøknadsbehandlingOpprettetHendelse
+            repo.lagre(søknadBehandling)
+            repo.lagre(klageBehandling)
+
+            repo.hentBehandling(søknadBehandling.behandlingId) shouldBe søknadBehandling
+            repo.hentBehandling(klageBehandling.behandlingId) shouldBe klageBehandling
         }
     }
 
@@ -1171,6 +1236,31 @@ class PostgresOppgaveRepositoryTest {
                 oppgaver.size shouldBe 1
                 oppgaver.single().oppgaveId shouldBe oppgaveKlarTilBehandling.oppgaveId
             }
+        }
+    }
+
+    @Test
+    fun `Skal kunne søke etter oppgaver filtrert på behandlingstype`() {
+        val søknadOppgave = lagOppgave(tilstand = KlarTilBehandling)
+
+        val klageOppgave =
+            lagOppgave(
+                tilstand = KlarTilBehandling,
+                behandling = lagBehandling(type = BehandlingType.KLAGE),
+            )
+        withMigratedDb { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(søknadOppgave)
+            repo.lagre(klageOppgave)
+            repo.søk(
+                søkeFilter =
+                    Søkefilter(
+                        tilstander = Oppgave.Tilstand.Type.entries.toSet(),
+                        periode = UBEGRENSET_PERIODE,
+                        emneknagger = emptySet(),
+                        behandlingTyper = setOf(BehandlingType.KLAGE),
+                    ),
+            ).oppgaver shouldBe listOf(klageOppgave)
         }
     }
 

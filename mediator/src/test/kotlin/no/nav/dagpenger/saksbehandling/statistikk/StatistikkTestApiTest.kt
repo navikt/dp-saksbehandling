@@ -30,7 +30,7 @@ class StatistikkTestApiTest {
             }
         testApplication {
             application {
-                installerApis(mockk(), mockk(), mockStatistikkTjeneste, mockk())
+                installerApis(mockk(), mockk(), mockStatistikkTjeneste, mockk(), mockk())
             }
 
             client.get("public/statistikk").let { httpResponse ->
@@ -51,7 +51,7 @@ class StatistikkTestApiTest {
 
         testApplication {
             application {
-                installerApis(mockk(), mockk(), mockStatistikkTjeneste, mockk())
+                installerApis(mockk(), mockk(), mockStatistikkTjeneste, mockk(), mockk())
             }
 
             client.get("statistikk") {

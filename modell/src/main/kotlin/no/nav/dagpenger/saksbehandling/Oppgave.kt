@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -108,7 +109,7 @@ data class Oppgave private constructor(
             saksbehandler: Saksbehandler,
             hendelseNavn: String,
         ) {
-            require(oppgave.behandlerIdent == saksbehandler.navIdent) {
+            require(oppgave.erEierAvOppgave(saksbehandler)) {
                 throw Tilstand.SaksbehandlerEierIkkeOppgaven(
                     "Ulovlig hendelse $hendelseNavn på oppgave i tilstand ${oppgave.tilstand.type} uten å eie oppgaven. " +
                         "Oppgave eies av ${oppgave.behandlerIdent} og ikke ${saksbehandler.navIdent}",
@@ -196,6 +197,12 @@ data class Oppgave private constructor(
         return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
+    fun ferdigstill(avbruttHendelse: AvbruttHendelse) {
+        adressebeskyttelseTilgangskontroll(avbruttHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(avbruttHendelse.utførtAv)
+        tilstand.ferdigstill(this, avbruttHendelse)
+    }
+
     fun ferdigstill(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
         adressebeskyttelseTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
         egneAnsatteTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
@@ -247,6 +254,8 @@ data class Oppgave private constructor(
     fun oppgaverPåVentMedUtgåttFrist(hendelse: PåVentFristUtgåttHendelse) {
         tilstand.oppgavePåVentMedUtgåttFrist(this, hendelse)
     }
+
+    fun erEierAvOppgave(saksbehandler: Saksbehandler): Boolean = this.behandlerIdent == saksbehandler.navIdent
 
     private fun endreTilstand(
         nyTilstand: Tilstand,
@@ -470,6 +479,18 @@ data class Oppgave private constructor(
                 godkjennBehandlingMedBrevIArena.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            avbruttHendelse: AvbruttHendelse,
+        ) {
+            requireEierskapTilOppgave(
+                oppgave,
+                avbruttHendelse.utførtAv,
+                avbruttHendelse.javaClass.simpleName,
+            )
+            oppgave.endreTilstand(FerdigBehandlet, avbruttHendelse)
         }
     }
 
@@ -833,6 +854,18 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
+            )
+        }
+
+        fun ferdigstill(
+            oppgave: Oppgave,
+            avbruttHendelse: AvbruttHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${avbruttHendelse.javaClass.simpleName}",
             )
         }
 

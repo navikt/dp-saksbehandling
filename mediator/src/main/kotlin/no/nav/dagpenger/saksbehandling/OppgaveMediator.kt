@@ -22,7 +22,9 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.Oppg
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -97,6 +99,44 @@ class OppgaveMediator(
         oppgaveRepository.lagre(oppgave)
     }
 
+    fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
+        val person =
+            personRepository.finnPerson(behandlingOpprettetHendelse.ident)
+                ?: runBlocking {
+                    oppslag.hentPersonMedSkjermingOgGradering(behandlingOpprettetHendelse.ident)
+                }
+
+        if (oppgaveRepository.finnBehandling(behandlingOpprettetHendelse.behandlingId) != null) {
+            val feilmelding =
+                "Mottatt hendelse behandling_opprettet, men behandling finnes allerede " +
+                    "${behandlingOpprettetHendelse.behandlingId}."
+            logger.warn { feilmelding }
+            throw RuntimeException(feilmelding)
+            // Todo: fiks til rett feil
+        }
+
+        val behandling =
+            Behandling(
+                behandlingId = behandlingOpprettetHendelse.behandlingId,
+                person = person,
+                opprettet = behandlingOpprettetHendelse.opprettet,
+                hendelse = behandlingOpprettetHendelse,
+                type = behandlingOpprettetHendelse.type,
+            )
+
+        val oppgave =
+            Oppgave(
+                oppgaveId = UUIDv7.ny(),
+                emneknagger = emptySet(),
+                opprettet = behandlingOpprettetHendelse.opprettet,
+                behandling = behandling,
+                tilstand = Oppgave.KlarTilBehandling,
+            )
+
+        oppgaveRepository.lagre(oppgave)
+        return oppgave
+    }
+
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
         return oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
     }
@@ -106,6 +146,26 @@ class OppgaveMediator(
         saksbehandler: Saksbehandler,
     ): Oppgave {
         return oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
+            oppgave.egneAnsatteTilgangskontroll(saksbehandler)
+            oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
+        }
+    }
+
+    fun hentOppgaveFor(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Oppgave {
+        return oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
+            oppgave.egneAnsatteTilgangskontroll(saksbehandler)
+            oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
+        }
+    }
+
+    fun hentOppgaveHvisTilgang(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ): Oppgave {
+        return oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
         }
@@ -162,11 +222,11 @@ class OppgaveMediator(
             }
     }
 
-    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave.Tilstand {
+    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave {
         return oppgaveRepository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
             oppgave.tildel(settOppgaveAnsvarHendelse)
             oppgaveRepository.lagre(oppgave)
-        }.tilstand()
+        }
     }
 
     fun sendTilKontroll(
@@ -263,6 +323,42 @@ class OppgaveMediator(
             oppgaveRepository.slettNotatFor(oppgave)
         }
         return LocalDateTime.now()
+    }
+
+    fun ferdigstillOppgave(avbruttHendelse: AvbruttHendelse) {
+        oppgaveRepository.hentOppgaveFor(avbruttHendelse.behandlingId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt AvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                oppgave.ferdigstill(avbruttHendelse)
+                oppgaveRepository.lagre(oppgave)
+                logger.info {
+                    "Behandlet AvbruttHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                }
+            }
+        }
+    }
+
+    fun ferdigstillOppgave(godkjentBehandlingHendelse: GodkjentBehandlingHendelse) {
+        oppgaveRepository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt GodkjentBehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                oppgave.ferdigstill(godkjentBehandlingHendelse)
+                oppgaveRepository.lagre(oppgave)
+                logger.info {
+                    "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                }
+            }
+        }
     }
 
     fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {

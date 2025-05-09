@@ -32,6 +32,15 @@ paths:
             items:
               $ref: '#/components/schemas/OppgaveTilstand'
         - in: query
+          name: behandlingType
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/BehandlingType'
+        - in: query
           name: fom
           required: false
           schema:
@@ -370,7 +379,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OppdatertTilstand'
+                $ref: '#/components/schemas/TildeltOppgave'
         '404':
           description: Oppgaven ble ikke funnet
           content:
@@ -422,12 +431,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-  /oppgave/klage/{klageId}/opplysning/{opplysningId}:
+  /klage/opprett:
+    post:
+      summary: Oppretter en klage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpprettKlage'
+      responses:
+        '200':
+          description: Vellykket oppretting av klageOppgave
+          content:
+            application/json:
+                schema:
+                    $ref: '#/components/schemas/OppgaveOversikt'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+
+  /klage/{behandlingId}/opplysning/{opplysningId}:
     put:
       summary: Oppdaterer opplysning i klage
       parameters:
         - in: path
-          name: klageId
+          name: behandlingId
           required: true
           schema:
             type: string
@@ -454,12 +487,62 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-  /oppgave/klage/{klageId}:
-    get:
-      summary: Hent klage basert på klageId
+  /klage/{behandlingId}/ferdigstill:
+    put:
+      summary: Ferdigstill klage
       parameters:
         - in: path
-          name: klageId
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Klagen er ferdigbehandlet
+        '404':
+          description: Klagen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+  /klage/{behandlingId}/trekk:
+    put:
+      summary: Trekk klage
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Klagen er trukket
+        '404':
+          description: Klagen ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+  /klage/{behandlingId}:
+    get:
+      summary: Hent klage basert på behandlingId til klagen
+      parameters:
+        - in: path
+          name: behandlingId
           required: true
           schema:
             type: string
@@ -679,6 +762,8 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
         emneknagger:
           type: array
           items:
@@ -697,6 +782,7 @@ components:
         - behandlingId
         - personIdent
         - tidspunktOpprettet
+        - behandlingType
         - tilstand
         - emneknagger
         - adressebeskyttelseGradering
@@ -720,6 +806,8 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
         utsattTilDato:
           type: string
           format: date
@@ -749,6 +837,7 @@ components:
         - behandlingId
         - person
         - tidspunktOpprettet
+        - behandlingType
         - tilstand
         - emneknagger
         - lovligeEndringer
@@ -774,6 +863,12 @@ components:
         - AVVENTER_LÅS_AV_BEHANDLING
         - AVVENTER_OPPLÅSING_AV_BEHANDLING
         - BEHANDLES_I_ARENA
+
+    BehandlingType:
+      type: string
+      enum:
+        - RETT_TIL_DAGPENGER
+        - KLAGE
 
     LovligeEndringer:
       type: object
@@ -986,19 +1081,22 @@ components:
         - antallOppgaverKlarTilBehandling
         - antallOppgaverKlarTilKontroll
 
-    OppdatertTilstand:
+    TildeltOppgave:
       type: object
       properties:
         nyTilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
+        behandlingType:
+            $ref: '#/components/schemas/BehandlingType'
+
       required:
         - nyTilstand
-
+        - behandlingType
 
     Klage:
       type: object
       properties:
-        id:
+        behandlingId:
           type: string
           format: uuid
         saksbehandler:
@@ -1016,11 +1114,11 @@ components:
         meldingOmVedtak:
           $ref: '#/components/schemas/MeldingOmVedtakResponse'
       required:
-        - id
+        - behandlingId
         - utfall
         - behandlingOpplysninger
         - utfallOpplysninger
-
+        - meldingOmVedtak
 
     TekstVerdi:
       type: object
@@ -1032,6 +1130,7 @@ components:
       required:
         - verdi
         - type
+
     BoolskVerdi:
       type: object
       properties:
@@ -1042,6 +1141,7 @@ components:
       required:
         - verdi
         - type
+
     DatoVerdi:
       type: object
       properties:
@@ -1053,6 +1153,7 @@ components:
       required:
         - verdi
         - type
+
     ListeVerdi:
       type: object
       properties:
@@ -1065,6 +1166,26 @@ components:
       required:
         - verdi
         - type
+
+    OpprettKlage:
+      type: object
+      properties:
+        opprettet: 
+          type: string
+          format: date-time
+        journalpostId:
+          type: string
+        sakId:
+          type: string
+        personIdent:
+          $ref: '#/components/schemas/PersonIdent'
+      required:
+        - opprettet
+        - journalpostId
+        - sakId
+        - personIdent
+
+
     OppdaterKlageOpplysning:
       oneOf:
         - $ref: '#/components/schemas/TekstVerdi'
@@ -1087,10 +1208,11 @@ components:
         - KLAGESAK
         - FRIST
         - KLAGE_ANKE
+
     KlageOpplysningTekst:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1111,15 +1233,17 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
         - redigerbar
+        - valgmuligheter
+
     KlageOpplysningBoolsk:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1140,16 +1264,17 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
         - redigerbar
+        - valgmuligheter
 
     KlageOpplysningDato:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1171,16 +1296,17 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
         - redigerbar
-        -
+        - valgmuligheter
+
     KlageOpplysningFlerListeValg:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1203,15 +1329,17 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
         - redigerbar
+        - valgmuligheter
+
     KlageOpplysningListeValg:
       type: object
       properties:
-        id:
+        opplysningId:
           type: string
           format: uuid
         navn:
@@ -1232,11 +1360,12 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
-        - id
+        - opplysningId
         - navn
         - paakrevd
         - gruppe
         - redigerbar
+        - valgmuligheter
 
     KlageOpplysningType:
       type: string
@@ -1273,19 +1402,17 @@ components:
           enum:
             - AVVIST
             - OPPRETTHOLDELSE
-            - DELVIS-MEDHOLD
+            - DELVIS_MEDHOLD
             - MEDHOLD
             - IKKE_SATT
-        tilgjeneligeUtfall:
+        tilgjengeligeUtfall:
           type: array
           items:
             type: string
           description: Tilgjengelige utfall for klagebehandling
       required:
         - verdi
-        - tilgjeneligeUtfall
-
-
+        - tilgjengeligeUtfall
 
     MeldingOmVedtakResponse:
       type: object
@@ -1300,8 +1427,6 @@ components:
       required:
         - html
         - utvidedeBeskrivelser
-
-
 
     UtvidetBeskrivelse:
       type: object

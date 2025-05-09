@@ -4,11 +4,14 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
@@ -19,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
+import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
@@ -97,6 +101,7 @@ internal class OppgaveDTOMapper(
                         },
                 ),
             tidspunktOpprettet = oppgave.opprettet,
+            behandlingType = oppgave.behandling.tilBehandlingTypeDTO(),
             emneknagger = oppgave.emneknagger.toList(),
             tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
@@ -142,6 +147,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         behandlingId = this.behandling.behandlingId,
         personIdent = this.behandling.person.ident,
         tidspunktOpprettet = this.opprettet,
+        behandlingType = this.behandling.tilBehandlingTypeDTO(),
         emneknagger = this.emneknagger.toList(),
         skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
         adressebeskyttelseGradering =
@@ -180,5 +186,19 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
         is Oppgave.BehandlesIArena -> OppgaveTilstandDTO.BEHANDLES_I_ARENA
         else -> throw InternDataException("Ukjent tilstand: $this")
+    }
+}
+
+internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
+    return TildeltOppgaveDTO(
+        nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        behandlingType = this.behandling.tilBehandlingTypeDTO(),
+    )
+}
+
+internal fun Behandling.tilBehandlingTypeDTO(): BehandlingTypeDTO {
+    return when (this.type) {
+        BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
     }
 }

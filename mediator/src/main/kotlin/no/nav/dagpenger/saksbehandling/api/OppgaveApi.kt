@@ -23,9 +23,9 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
-import no.nav.dagpenger.saksbehandling.api.models.OppdatertTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.SoknadDTO
+import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
@@ -175,13 +175,13 @@ internal fun Route.oppgaveApi(
                         val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val nyTilstand: OppdatertTilstandDTO =
-                                OppdatertTilstandDTO(
-                                    oppgaveMediator.tildelOppgave(oppgaveAnsvarHendelse).tilOppgaveTilstandDTO(),
-                                )
+                            val tildeltOppgave: TildeltOppgaveDTO =
+                                oppgaveMediator.tildelOppgave(
+                                    oppgaveAnsvarHendelse,
+                                ).tilTildeltOppgaveDTO()
                             call.respond(
                                 status = HttpStatusCode.OK,
-                                message = nyTilstand,
+                                message = tildeltOppgave,
                             )
                         }
                     }
