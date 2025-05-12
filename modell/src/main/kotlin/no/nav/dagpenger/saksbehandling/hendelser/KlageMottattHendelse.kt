@@ -7,6 +7,6 @@ import java.time.LocalDateTime
 data class KlageMottattHendelse(
     val ident: String,
     val opprettet: LocalDateTime,
-    val journalpostId: String,
+    val journalpostId: String?,
     override val utførtAv: Behandler = Applikasjon("dp-mottak"),
 ) : Hendelse(utførtAv)

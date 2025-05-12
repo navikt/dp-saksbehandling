@@ -48,6 +48,7 @@ class KlageApiTest {
     }
 
     private val klageBehandlingId = UUIDv7.ny()
+    private val journalpostId = "journalpostId"
     private val opplysningId = UUIDv7.ny()
     private val saksbehandler =
         Saksbehandler(
@@ -83,7 +84,11 @@ class KlageApiTest {
                         behandlingId = klageBehandlingId,
                         saksbehandler = saksbehandler,
                     )
-                } returns KlageBehandling(behandlingId = klageBehandlingId)
+                } returns
+                    KlageBehandling(
+                        behandlingId = klageBehandlingId,
+                        journalpostId = journalpostId,
+                    )
             }
 
         withKlageApi(mediator) {

@@ -512,6 +512,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+
   /klage/{behandlingId}/trekk:
     put:
       summary: Trekk klage
@@ -593,7 +594,7 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
   /person/skal-varsle-om-ettersending:
     post:
-      summary: Sjeker om det søknaden er sett på av saksbehandler og ikke sendt til Arena
+      summary: Sjekker om søknaden er sett på av saksbehandler og ikke sendt til Arena
       requestBody:
         required: true
         content:
@@ -1088,7 +1089,6 @@ components:
           $ref: '#/components/schemas/OppgaveTilstand'
         behandlingType:
             $ref: '#/components/schemas/BehandlingType'
-
       required:
         - nyTilstand
         - behandlingType

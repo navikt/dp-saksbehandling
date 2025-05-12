@@ -31,6 +31,7 @@ class KlageMediator(
         val klageBehandling =
             KlageBehandling(
                 behandlingId = UUIDv7.ny(),
+                journalpostId = klageMottattHendelse.journalpostId,
             )
 
         klageRepository.lagre(klageBehandling)

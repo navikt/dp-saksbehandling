@@ -16,13 +16,12 @@ import java.util.UUID
 class PostgresKlageRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente klagebehandlinger`() {
-        val behandlingId = UUIDv7.ny()
-
         withMigratedDb { ds ->
             val klageRepository = PostgresKlageRepository(ds)
             val klageBehandling =
                 KlageBehandling(
-                    behandlingId = behandlingId,
+                    behandlingId = UUIDv7.ny(),
+                    journalpostId = "journalpostId",
                 )
 
             val boolskOpplysningId =
@@ -52,9 +51,10 @@ class PostgresKlageRepositoryTest {
 
             klageRepository.lagre(klageBehandling)
 
-            val hentetKlageBehandling = klageRepository.hentKlageBehandling(behandlingId)
+            val hentetKlageBehandling = klageRepository.hentKlageBehandling(klageBehandling.behandlingId)
 
             hentetKlageBehandling.behandlingId shouldBe klageBehandling.behandlingId
+            hentetKlageBehandling.journalpostId() shouldBe klageBehandling.journalpostId()
             hentetKlageBehandling.tilstand() shouldBe BEHANDLES
             hentetKlageBehandling.alleOpplysninger() shouldContainExactly klageBehandling.alleOpplysninger()
 

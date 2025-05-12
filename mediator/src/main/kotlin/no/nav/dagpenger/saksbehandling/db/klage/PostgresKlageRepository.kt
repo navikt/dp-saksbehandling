@@ -32,7 +32,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         //language=PostgreSQL
                         statement =
                             """
-                            SELECT id, tilstand, opplysninger
+                            SELECT id, tilstand, journalpost_id, opplysninger
                             FROM   klage_v1 
                             WHERE  id = :id
                             """.trimIndent(),
@@ -41,6 +41,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         KlageBehandling(
                             behandlingId = row.uuid("id"),
                             tilstand = KlageBehandling.BehandlingTilstand.valueOf(row.string("tilstand")),
+                            journalpostId = row.stringOrNull("journalpost_id"),
                             opplysninger = row.string("opplysninger").tilKlageOpplysninger(),
                         )
                     }.asSingle,
@@ -56,9 +57,9 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 statement =
                     """
                     INSERT INTO klage_v1
-                        (id, tilstand, opplysninger)
+                        (id, tilstand, journalpost_id, opplysninger)
                     VALUES
-                        (:id, :tilstand, :opplysninger) 
+                        (:id, :tilstand, :journalpost_id, :opplysninger) 
                     ON CONFLICT(id) DO UPDATE SET
                      tilstand = :tilstand,
                      opplysninger = :opplysninger
@@ -67,6 +68,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                     mapOf(
                         "id" to klageBehandling.behandlingId,
                         "tilstand" to klageBehandling.tilstand().toString(),
+                        "journalpost_id" to klageBehandling.journalpostId(),
                         "opplysninger" to
                             PGobject().also {
                                 it.type = "JSONB"

@@ -8,6 +8,7 @@ data class KlageBehandling(
     val behandlingId: UUID = UUIDv7.ny(),
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private var tilstand: BehandlingTilstand = BehandlingTilstand.BEHANDLES,
+    private val journalpostId: String? = null,
     private val steg: List<Steg> =
         listOf(
             KlagenGjelderSteg,
@@ -60,6 +61,10 @@ data class KlageBehandling(
 
     fun tilstand(): BehandlingTilstand {
         return tilstand
+    }
+
+    fun journalpostId(): String? {
+        return journalpostId
     }
 
     fun avbryt() {
