@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
@@ -15,6 +16,7 @@ class KlageMediator(
     private val klageRepository: KlageRepository,
     private val oppgaveMediator: OppgaveMediator,
     private val utsendingMediator: UtsendingMediator,
+    private val klageKlient: KlageHttpKlient, // TODO: bruk denne et sted!
 ) {
     fun hentKlageBehandling(
         behandlingId: UUID,

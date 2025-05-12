@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
+import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -75,6 +76,11 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         BehandlingHttpKlient(
             dpBehandlingApiUrl = Configuration.dbBehandlingApiUrl,
             tokenProvider = Configuration.dpBehandlingOboExchanger,
+        )
+    private val klageKlient =
+        KlageHttpKlient(
+            kabalApiUrl = Configuration.kabalApiUrl,
+            tokenProvider = Configuration.klageTokenProvider
         )
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(personRepository)
@@ -130,6 +136,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                                 klageRepository = klageRepository,
                                 oppgaveMediator = oppgaveMediator,
                                 utsendingMediator = utsendingMediator,
+                                klageKlient = klageKlient
                             ),
                         klageDTOMapper = KlageDTOMapper(oppslag),
                     )
