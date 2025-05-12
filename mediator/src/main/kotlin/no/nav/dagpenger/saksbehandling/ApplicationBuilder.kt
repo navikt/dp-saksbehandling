@@ -54,6 +54,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val personRepository = PostgresPersonRepository(dataSource)
     private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
     private val utsendingRepository = PostgresUtsendingRepository(dataSource)
+    private val klageRepository = PostgresKlageRepository(dataSource)
     private val skjermingKlient =
         SkjermingHttpKlient(
             skjermingApiUrl = Configuration.skjermingApiUrl,
@@ -83,7 +84,12 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val oppslag: Oppslag =
         Oppslag(
             pdlKlient = pdlKlient,
-            relevanteJournalpostIdOppslag = RelevanteJournalpostIdOppslag(journalpostIdClient, utsendingRepository),
+            relevanteJournalpostIdOppslag =
+                RelevanteJournalpostIdOppslag(
+                    journalpostIdClient = journalpostIdClient,
+                    utsendingRepository = utsendingRepository,
+                    klageRepository = klageRepository,
+                ),
             saksbehandlerOppslag = saksbehandlerOppslag,
             skjermingKlient = skjermingKlient,
         )
@@ -121,7 +127,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
                         klageMediator =
                             KlageMediator(
-                                klageRepository = PostgresKlageRepository(dataSource),
+                                klageRepository = klageRepository,
                                 oppgaveMediator = oppgaveMediator,
                                 utsendingMediator = utsendingMediator,
                             ),
