@@ -18,6 +18,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import mu.KotlinLogging
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_NAVN
 
 private val logger = KotlinLogging.logger {}
 
@@ -33,7 +34,7 @@ class KlageHttpKlient(
         forrigeBehandlendeEnhet: String,
         tilknyttedeJournalposter: List<Journalposter>,
     ): Result<HttpStatusCode> {
-        return kotlin.runCatching {
+        return runCatching {
             httpClient.post(urlString = "$kabalApiUrl/api/oversendelse/v4/sak") {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
@@ -49,13 +50,13 @@ class KlageHttpKlient(
                         fagsak =
                             Fagsak(
                                 fagsakId = fagsakId,
-                                // TODO: https://github.com/navikt/klage-kodeverk/blob/main/src/main/kotlin/no/nav/klage/kodeverk/Fagsystem.kt
-                                fagsystem = "DAGPENGER?",
+                                fagsystem = "DAGPENGER",
                             ),
                         kildeReferanse = klageBehandling.behandlingId.toString(),
                         forrigeBehandlendeEnhet = forrigeBehandlendeEnhet,
-                        tilknyttedeJournalposter = listOf(),
+                        tilknyttedeJournalposter = tilknyttedeJournalposter,
                         hjemler = klageBehandling.hjemler(),
+                        prosessFullmektig = klageBehandling.prosessFullmektig(),
                     ),
                 )
             }.status
@@ -70,6 +71,48 @@ internal fun KlageBehandling.hjemler(): List<Hjemler> {
         this.synligeOpplysninger()
             .singleOrNull { it.type == OpplysningType.HJEMLER }?.verdi() as Verdi.Flervalg?
     return verdi?.value?.map { Hjemler.valueOf(it) }.orEmpty()
+}
+
+internal fun KlageBehandling.prosessFullmektig(): ProsessFullmektig? {
+    val fullmektigKlager =
+        this.synligeOpplysninger().any { opplysning ->
+            opplysning.type == OpplysningType.HVEM_KLAGER &&
+                opplysning.verdi() is Verdi.TekstVerdi &&
+                (opplysning.verdi() as Verdi.TekstVerdi).value == HvemKlagerType.FULLMEKTIG.name
+        }
+    if (fullmektigKlager) {
+        return ProsessFullmektig(
+            id = null,
+            navn =
+                this.synligeOpplysninger().singleOrNull { opplysning -> opplysning.type == FULLMEKTIG_NAVN }
+                    ?.let { (it.verdi() as Verdi.TekstVerdi).value },
+            adresse =
+                Adresse(
+                    addresselinje1 =
+                        this.synligeOpplysninger().singleOrNull { opplysning ->
+                            opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_1
+                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                    addresselinje2 =
+                        this.synligeOpplysninger().singleOrNull { opplysning ->
+                            opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_2
+                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                    addresselinje3 =
+                        this.synligeOpplysninger().singleOrNull { opplysning ->
+                            opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_3
+                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                    postnummer =
+                        this.synligeOpplysninger().singleOrNull { opplysning ->
+                            opplysning.type == OpplysningType.FULLMEKTIG_POSTNR
+                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                    poststed =
+                        this.synligeOpplysninger().singleOrNull { opplysning ->
+                            opplysning.type == OpplysningType.FULLMEKTIG_POSTSTED
+                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                ),
+        )
+    } else {
+        return null
+    }
 }
 
 private data class KlageinstansOversendelse(
@@ -102,17 +145,17 @@ private data class Fagsak(
     val fagsystem: String,
 )
 
-private data class PersonIdent(
+internal data class PersonIdent(
     val id: PersonIdentId,
 )
 
-private data class ProsessFullmektig(
+internal data class ProsessFullmektig(
     val id: PersonIdentId?,
     val navn: String?,
-    val adresse: Adresse?,
+    val adresse: Adresse,
 )
 
-private data class PersonIdentId(
+internal data class PersonIdentId(
     val type: String = "PERSON",
     val verdi: String,
 )
@@ -121,7 +164,7 @@ private data class JournalpostIder(
     val journalpostIder: List<String>,
 )
 
-private data class Adresse(
+internal data class Adresse(
     val addresselinje1: String?,
     val addresselinje2: String?,
     val addresselinje3: String?,

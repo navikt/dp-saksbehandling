@@ -70,9 +70,10 @@ class KlageHttpKlientTest {
                 kabalKlient.registrerKlage(
                     klageBehandling = klageBehandling,
                     personIdentId = oppgave.behandling.person.ident,
+                    // TODO: Hvor skal vi hente sak fra?
                     fagsakId = UUIDv7.ny().toString(),
+                    // TODO: Er det ok med 4450?
                     forrigeBehandlendeEnhet = "4450",
-                    tilknyttedeJournalposter = listOf(),
                 )
             }
         resultat shouldBe Result.success(HttpStatusCode.OK)

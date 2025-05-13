@@ -8,6 +8,6 @@ interface KlageKlient {
         personIdentId: String,
         fagsakId: String,
         forrigeBehandlendeEnhet: String,
-        tilknyttedeJournalposter: List<Journalposter> = listOf(),
+        tilknyttedeJournalposter: List<Journalposter> = emptyList(),
     ): Result<HttpStatusCode>
 }
