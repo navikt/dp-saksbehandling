@@ -18,7 +18,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import mu.KotlinLogging
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -28,12 +27,11 @@ class KlageHttpKlient(
     private val httpClient: HttpClient = httpClient(),
 ) : KlageKlient {
     override suspend fun registrerKlage(
+        klageBehandling: KlageBehandling,
         personIdentId: String,
         fagsakId: String,
-        behandlingId: UUID,
         forrigeBehandlendeEnhet: String,
         tilknyttedeJournalposter: List<Journalposter>,
-        hjemler: List<Hjemler>,
     ): Result<HttpStatusCode> {
         return kotlin.runCatching {
             httpClient.post(urlString = "$kabalApiUrl/api/oversendelse/v4/sak") {
@@ -52,19 +50,26 @@ class KlageHttpKlient(
                             Fagsak(
                                 fagsakId = fagsakId,
                                 // TODO: https://github.com/navikt/klage-kodeverk/blob/main/src/main/kotlin/no/nav/klage/kodeverk/Fagsystem.kt
-                                fagsystem = "",
+                                fagsystem = "DAGPENGER?",
                             ),
-                        kildeReferanse = behandlingId.toString(),
+                        kildeReferanse = klageBehandling.behandlingId.toString(),
                         forrigeBehandlendeEnhet = forrigeBehandlendeEnhet,
                         tilknyttedeJournalposter = listOf(),
-                        hjemler = hjemler,
+                        hjemler = klageBehandling.hjemler(),
                     ),
                 )
             }.status
         }.onFailure { throwable ->
-            logger.error(throwable) { "Kall til kabal api feilet for klagebehandling med id: $behandlingId" }
+            logger.error(throwable) { "Kall til kabal api feilet for klagebehandling med id: ${klageBehandling.behandlingId}" }
         }
     }
+}
+
+internal fun KlageBehandling.hjemler(): List<Hjemler> {
+    val verdi =
+        this.synligeOpplysninger()
+            .singleOrNull { it.type == OpplysningType.HJEMLER }?.verdi() as Verdi.Flervalg?
+    return verdi?.value?.map { Hjemler.valueOf(it) }.orEmpty()
 }
 
 private data class KlageinstansOversendelse(
