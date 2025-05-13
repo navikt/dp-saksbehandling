@@ -92,7 +92,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             pdlKlient = pdlKlient,
             relevanteJournalpostIdOppslag =
                 RelevanteJournalpostIdOppslag(
-                    journalpostIdClient = journalpostIdClient,
+                    journalpostIdKlient = journalpostIdClient,
                     utsendingRepository = utsendingRepository,
                     klageRepository = klageRepository,
                 ),

@@ -24,7 +24,7 @@ class MottakHttpKlient(
     private val dpMottakApiUrl: String,
     private val tokenProvider: () -> String,
     private val httpClient: HttpClient = httpClient(),
-) : JournalpostIdClient {
+) : JournalpostIdKlient {
     override suspend fun hentJournalpostIder(
         søknadId: UUID,
         ident: String,

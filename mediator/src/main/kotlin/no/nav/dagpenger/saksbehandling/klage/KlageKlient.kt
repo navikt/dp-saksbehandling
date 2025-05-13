@@ -1,5 +1,5 @@
 package no.nav.dagpenger.saksbehandling.klage
 
-interface KlageClient {
+interface KlageKlient {
     suspend fun registrerKlage() {}
 }

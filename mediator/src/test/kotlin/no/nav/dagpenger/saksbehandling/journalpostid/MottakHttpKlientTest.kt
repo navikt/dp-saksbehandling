@@ -16,7 +16,7 @@ import no.nav.dagpenger.saksbehandling.getSnapShot
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class MottakHttpClientTest {
+class MottakHttpKlientTest {
     private val søknadId = UUID.randomUUID()
     private val testIdent: String = "123123"
 

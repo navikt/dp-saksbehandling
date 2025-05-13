@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.journalpostid
 
 import java.util.UUID
 
-interface JournalpostIdClient {
+interface JournalpostIdKlient {
     suspend fun hentJournalpostIder(
         søknadId: UUID,
         ident: String,

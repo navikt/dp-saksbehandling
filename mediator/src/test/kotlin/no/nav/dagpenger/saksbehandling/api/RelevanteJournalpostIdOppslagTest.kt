@@ -8,7 +8,7 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdClient
+import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdKlient
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
@@ -36,8 +36,8 @@ class RelevanteJournalpostIdOppslagTest {
 
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
-                journalpostIdClient =
-                    mockk<JournalpostIdClient>().also {
+                journalpostIdKlient =
+                    mockk<JournalpostIdKlient>().also {
                         coEvery { it.hentJournalpostIder(any(), any()) } returns Result.success(listOf("3", "4", "2"))
                     },
                 klageRepository = mockk(),
@@ -64,7 +64,7 @@ class RelevanteJournalpostIdOppslagTest {
 
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
-                journalpostIdClient = mockk(),
+                journalpostIdKlient = mockk(),
                 klageRepository =
                     mockk<KlageRepository>().also {
                         coEvery { it.hentKlageBehandling(any()) } returns
