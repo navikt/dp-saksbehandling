@@ -63,7 +63,6 @@ object Configuration {
     val leesahTopic: String = properties[Key("LEESAH_TOPIC", stringType)]
     val skjermingTokenProvider = { clientCredentialsTokenProvider(skjermingApiScope) }
 
-
     val kabalApiUrl: String = properties[Key("KABAL_API_URL", stringType)]
     val klageApiScope: String = properties[Key("KLAGE_API_SCOPE", stringType)]
     val klageTokenProvider = { clientCredentialsTokenProvider(klageApiScope) }

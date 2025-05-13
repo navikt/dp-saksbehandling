@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HVEM_KLAGER
@@ -25,7 +26,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAK
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERIG_AV_KLAGEN
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -36,6 +37,7 @@ import java.util.UUID
 
 class KlageMediatorTest {
     private val testPersonIdent = "12345678901"
+    private val klageKlient = mockk<KlageHttpKlient>()
 
     private val oppslagMock =
         mockk<Oppslag>().also {
@@ -68,6 +70,7 @@ class KlageMediatorTest {
                     klageRepository = PostgresKlageRepository(datasource),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
+                    klageKlient = klageKlient,
                 )
 
             val behandlingId =
@@ -152,6 +155,7 @@ class KlageMediatorTest {
                     klageRepository = PostgresKlageRepository(datasource),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
+                    klageKlient = klageKlient,
                 )
 
             val behandlingId =
@@ -289,7 +293,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
-                    .single { it.type == VURDERIG_AV_KLAGEN }.opplysningId,
+                    .single { it.type == VURDERING_AV_KLAGEN }.opplysningId,
             svar = Verdi.TekstVerdi("Vi opprettholder vedtaket."),
         )
         oppdaterOpplysning(

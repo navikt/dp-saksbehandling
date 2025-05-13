@@ -80,7 +80,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val klageKlient =
         KlageHttpKlient(
             kabalApiUrl = Configuration.kabalApiUrl,
-            tokenProvider = Configuration.klageTokenProvider
+            tokenProvider = Configuration.klageTokenProvider,
         )
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(personRepository)
@@ -136,7 +136,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                                 klageRepository = klageRepository,
                                 oppgaveMediator = oppgaveMediator,
                                 utsendingMediator = utsendingMediator,
-                                klageKlient = klageKlient
+                                klageKlient = klageKlient,
                             ),
                         klageDTOMapper = KlageDTOMapper(oppslag),
                     )

@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.klage
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -12,6 +11,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotlinx.datetime.LocalDate
@@ -26,39 +26,43 @@ class KlageHttpKlient(
     private val kabalApiUrl: String,
     private val tokenProvider: () -> String,
     private val httpClient: HttpClient = httpClient(),
-) {
+) : KlageKlient {
     override suspend fun registrerKlage(
         personIdentId: String,
         fagsakId: String,
-        kildeReferanse: String,
+        behandlingId: UUID,
         forrigeBehandlendeEnhet: String,
         tilknyttedeJournalposter: List<Journalposter>,
-        hjemler: List<Hjemler>
-    ): Result<List<String>> {
-        kotlin.runCatching {
+        hjemler: List<Hjemler>,
+    ): Result<HttpStatusCode> {
+        return kotlin.runCatching {
             httpClient.post(urlString = "$kabalApiUrl/api/oversendelse/v4/sak") {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(
                     KlageinstansOversendelse(
-                        sakenGjelder = PersonIdent(
-                            id = PersonIdentId(
-                                verdi = personIdentId,
-                            )
-                        ),
-                        fagsak = Fagsak(
-                            fagsakId = fagsakId,
-                            fagsystem = "" // TODO: https://github.com/navikt/klage-kodeverk/blob/main/src/main/kotlin/no/nav/klage/kodeverk/Fagsystem.kt
-                        ),
-                        kildeReferanse = kildeReferanse,
+                        sakenGjelder =
+                            PersonIdent(
+                                id =
+                                    PersonIdentId(
+                                        verdi = personIdentId,
+                                    ),
+                            ),
+                        fagsak =
+                            Fagsak(
+                                fagsakId = fagsakId,
+                                // TODO: https://github.com/navikt/klage-kodeverk/blob/main/src/main/kotlin/no/nav/klage/kodeverk/Fagsystem.kt
+                                fagsystem = "",
+                            ),
+                        kildeReferanse = behandlingId.toString(),
                         forrigeBehandlendeEnhet = forrigeBehandlendeEnhet,
-                        tilknyttedeJournalposter = tilknyttedeJournalposter,
+                        tilknyttedeJournalposter = listOf(),
                         hjemler = hjemler,
                     ),
                 )
-            }.body<JournalpostIder>()
+            }.status
         }.onFailure { throwable ->
-            logger.error(throwable) { "Kall til kabal api feilet for søknad med id: $søknadId" }
+            logger.error(throwable) { "Kall til kabal api feilet for klagebehandling med id: $behandlingId" }
         }
     }
 }
@@ -90,22 +94,22 @@ data class Journalposter(
 
 private data class Fagsak(
     val fagsakId: String,
-    val fagsystem: String
+    val fagsystem: String,
 )
 
 private data class PersonIdent(
-    val id: PersonIdentId
+    val id: PersonIdentId,
 )
 
 private data class ProsessFullmektig(
     val id: PersonIdentId?,
     val navn: String?,
-    val adresse: Adresse?
+    val adresse: Adresse?,
 )
 
 private data class PersonIdentId(
     val type: String = "PERSON",
-    val verdi: String
+    val verdi: String,
 )
 
 private data class JournalpostIder(
@@ -118,7 +122,7 @@ private data class Adresse(
     val addresselinje3: String?,
     val postnummer: String?,
     val poststed: String?,
-    val land: String = "NO"
+    val land: String = "NO",
 )
 
 fun httpClient(

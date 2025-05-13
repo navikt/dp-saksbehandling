@@ -22,7 +22,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.RETTSLIG_KLAGEINTERESSE
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERIG_AV_KLAGEN
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
 
 object OpplysningBygger {
     val klagenGjelderOpplysningTyper =
@@ -55,7 +55,7 @@ object OpplysningBygger {
     val utfallOpplysningTyper =
         setOf(
             UTFALL,
-            VURDERIG_AV_KLAGEN,
+            VURDERING_AV_KLAGEN,
         )
 
     val tilKlageinstansOpplysningTyper =

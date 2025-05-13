@@ -16,7 +16,8 @@ class KlageMediator(
     private val klageRepository: KlageRepository,
     private val oppgaveMediator: OppgaveMediator,
     private val utsendingMediator: UtsendingMediator,
-    private val klageKlient: KlageHttpKlient, // TODO: bruk denne et sted!
+    // TODO: bruk denne et sted!
+    private val klageKlient: KlageHttpKlient,
 ) {
     fun hentKlageBehandling(
         behandlingId: UUID,
