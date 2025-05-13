@@ -98,28 +98,6 @@ object KlageOpplysningerMapper {
         )
     }
 
-    fun Verdi.tilJson(): String {
-        return when (this) {
-            is Verdi.Flervalg ->
-                objectMapper.writeValueAsString(
-                    this,
-                )
-            is Verdi.Dato ->
-                objectMapper.writeValueAsString(
-                    this.toString(),
-                )
-            is Verdi.Boolsk ->
-                objectMapper.writeValueAsString(
-                    this.toString(),
-                )
-            is Verdi.TekstVerdi ->
-                objectMapper.writeValueAsString(
-                    this.toString(),
-                )
-            is Verdi.TomVerdi -> ""
-        }
-    }
-
     fun String.tilKlageOpplysninger(): Set<Opplysning> {
         return objectMapper.readTree(this).map { jsonNode ->
             Opplysning(

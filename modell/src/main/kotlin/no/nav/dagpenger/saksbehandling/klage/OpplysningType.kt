@@ -184,6 +184,8 @@ enum class Hjemler {
     FTRL_4_28,
 }
 
+// TODO: Vurder om vi burde importere et bibliotek/kodeverk som dekker behovet vårt her.
+// det blir for mye styr å opprettholde dette når det er mange nye land :)
 enum class Land(land: String) {
     AD("Andorra"),
     AE("De forente arabiske emirater"),
