@@ -36,6 +36,9 @@ object Configuration {
                 "SKJERMING_API_URL" to "http://skjermede-personer-pip.nom/skjermet",
                 "SKJERMING_API_SCOPE" to "api://dev-gcp.nom.skjermede-personer-pip/.default",
                 "SKJERMING_TOPIC" to "nom.skjermede-personer-status-v1",
+                "KABAL_API_URL" to "http://kabal-api",
+                // TODO: fiks scope
+                "KLAGE_API_SCOPE" to "api://dev-gcp.todo.todo/.default",
                 "LEESAH_TOPIC" to "pdl.leesah-v1",
                 "PDL_API_SCOPE" to "api://dev-fss.pdl.pdl-api/.default",
                 "PDL_API_URL" to "https://pdl-api.dev-fss-pub.nais.io:",

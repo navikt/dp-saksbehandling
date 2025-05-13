@@ -157,7 +157,7 @@ class StegTest {
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())
         fullmektigTilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe true }
 
-        fullmektigTilKlageinstansOpplysninger.forEach { it.svar(Verdi.TekstVerdi("en tekst verdi")) }
+        fullmektigTilKlageinstansOpplysninger.forEach { it.svar(Verdi.TekstVerdi("NO")) }
 
         hvemKlager.svar(Verdi.TekstVerdi(HvemKlagerType.BRUKER.name))
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())

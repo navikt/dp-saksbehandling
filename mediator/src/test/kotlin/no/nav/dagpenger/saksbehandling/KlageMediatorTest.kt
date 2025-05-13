@@ -312,7 +312,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == HJEMLER }.opplysningId,
-            svar = Verdi.Flervalg("§ 4-5", "§ 4-2"),
+            svar = Verdi.Flervalg("FTRL_4_5_REGISTRERING", "FTRL_4_2"),
         )
     }
 }

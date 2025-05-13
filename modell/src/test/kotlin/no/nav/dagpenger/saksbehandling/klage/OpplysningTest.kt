@@ -18,7 +18,7 @@ class OpplysningTest {
     @Test
     fun `sjekk at flervalg godtar flervalg`() {
         lagOpplysninger(opplysninger = setOf(OpplysningType.HJEMLER)).single().let {
-            shouldNotThrowAny { it.svar(Verdi.Flervalg(listOf("§ 4-1", "§ 4-2"))) }
+            shouldNotThrowAny { it.svar(Verdi.Flervalg(listOf("FTRL_4_4", "FTRL_4_2"))) }
         }
     }
 }
