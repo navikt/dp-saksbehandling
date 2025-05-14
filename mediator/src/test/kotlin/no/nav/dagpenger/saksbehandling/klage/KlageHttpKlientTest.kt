@@ -60,8 +60,8 @@ class KlageHttpKlientTest {
                     personIdentId = oppgave.behandling.person.ident,
                     // TODO: Hvor skal vi hente sak fra?
                     fagsakId = fagsakId,
-                    // TODO: Er det ok med 4450?
-                    forrigeBehandlendeEnhet = "4450",
+                    // TODO: Skal være klagebehandlers enhet. Bør kunne hentes fra klageBehandling?
+                    forrigeBehandlendeEnhet = "4408",
                 )
             }
         resultat shouldBe Result.success(HttpStatusCode.OK)
@@ -97,7 +97,7 @@ class KlageHttpKlientTest {
                     "FTRL_4_9",
                     "FTRL_4_18"
                   ],
-                  "forrigeBehandlendeEnhet": "4450",
+                  "forrigeBehandlendeEnhet": "4408",
                   "tilknyttedeJournalposter": [],
                   "ytelse": "DAG_DAG"
                 }

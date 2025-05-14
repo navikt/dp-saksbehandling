@@ -44,6 +44,7 @@ data class KlageBehandling(
         return opplysninger.filter { it.synlighet() }.toSet()
     }
 
+    // TODO saksbehandler eller enhetsnummer som parameter?
     fun ferdigstill() {
         if (this.tilstand == BehandlingTilstand.AVBRUTT) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling når den er avbrutt")
@@ -51,6 +52,8 @@ data class KlageBehandling(
         if (!kanFerdigstilles()) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling når påkrevde opplysninger ikke er utfylt")
         }
+        // TODO
+        //  this.behandlendeEnhet = saksbehandlers enhetsnummer
         this.tilstand = BehandlingTilstand.FERDIGSTILT
     }
 
