@@ -35,6 +35,18 @@ class KlageHttpKlientTest {
     }
 
     @Test
+    fun `ukjent land blir ??? i prosessfullmektig`() {
+        val klageBehandling = lagKlagebehandling(land = Land.UKJENT)
+        klageBehandling.prosessFullmektig()?.adresse?.land shouldBe "???"
+    }
+
+    @Test
+    fun `kjent land blir landkode i prosessfullmektig`() {
+        val klageBehandling = lagKlagebehandling(land = Land.FR)
+        klageBehandling.prosessFullmektig()?.adresse?.land shouldBe "FR"
+    }
+
+    @Test
     fun `Oversend klage til klageinstans`() {
         val klageBehandling = lagKlagebehandling()
 
@@ -81,6 +93,7 @@ class KlageHttpKlientTest {
 
     private fun lagKlagebehandling(
         hjemler: List<Hjemler> = listOf(Hjemler.FTRL_4_2, Hjemler.FTRL_4_9, Hjemler.FTRL_4_18),
+        land: Land? = Land.NO,
     ): KlageBehandling {
         val opplysninger =
             mutableSetOf(
@@ -136,30 +149,42 @@ class KlageHttpKlientTest {
                     type = OpplysningType.INTERN_MELDING,
                     verdi = Verdi.TekstVerdi("Kuleste klagen jeg noensinne har sett"),
                 ),
-                Opplysning(
-                    type = OpplysningType.FULLMEKTIG_NAVN,
-                    verdi = Verdi.TekstVerdi("Djevelens Advokat"),
-                ),
-                Opplysning(
-                    type = OpplysningType.FULLMEKTIG_ADRESSE_1,
-                    verdi = Verdi.TekstVerdi("Sydenveien 1"),
-                ),
-                Opplysning(
-                    type = OpplysningType.FULLMEKTIG_POSTNR,
-                    verdi = Verdi.TekstVerdi("0666"),
-                ),
-                Opplysning(
-                    type = OpplysningType.FULLMEKTIG_POSTSTED,
-                    verdi = Verdi.TekstVerdi("Oslo"),
-                ),
-                Opplysning(
-                    type = OpplysningType.FULLMEKTIG_LAND,
-                    verdi = Verdi.TekstVerdi("NO"),
-                ),
             )
         if (hjemler.isNotEmpty()) {
             opplysninger.add(
                 Opplysning(type = OpplysningType.HJEMLER, verdi = Verdi.Flervalg(hjemler.map { it.toString() })),
+            )
+        }
+        if (land != null) {
+            opplysninger.add(
+                Opplysning(
+                    type = OpplysningType.FULLMEKTIG_NAVN,
+                    verdi = Verdi.TekstVerdi("Djevelens Advokat"),
+                ),
+            )
+            opplysninger.add(
+                Opplysning(
+                    type = OpplysningType.FULLMEKTIG_ADRESSE_1,
+                    verdi = Verdi.TekstVerdi("Sydenveien 1"),
+                ),
+            )
+            opplysninger.add(
+                Opplysning(
+                    type = OpplysningType.FULLMEKTIG_POSTNR,
+                    verdi = Verdi.TekstVerdi("0666"),
+                ),
+            )
+            opplysninger.add(
+                Opplysning(
+                    type = OpplysningType.FULLMEKTIG_POSTSTED,
+                    verdi = Verdi.TekstVerdi("Oslo"),
+                ),
+            )
+            opplysninger.add(
+                Opplysning(
+                    type = OpplysningType.FULLMEKTIG_LAND,
+                    verdi = Verdi.TekstVerdi(land.name),
+                ),
             )
         }
 
