@@ -81,6 +81,12 @@ internal fun KlageBehandling.prosessFullmektig(): ProsessFullmektig? {
                 (opplysning.verdi() as Verdi.TekstVerdi).value == HvemKlagerType.FULLMEKTIG.name
         }
     if (fullmektigKlager) {
+        val registrertLand =
+            this.synligeOpplysninger().singleOrNull { opplysning ->
+                opplysning.type == OpplysningType.FULLMEKTIG_LAND
+            }?.let { (it.verdi() as Verdi.TekstVerdi).value }
+        val land = if (registrertLand == "UKJENT" || registrertLand.isNullOrEmpty()) "???" else registrertLand
+
         return ProsessFullmektig(
             id = null,
             navn =
@@ -108,6 +114,7 @@ internal fun KlageBehandling.prosessFullmektig(): ProsessFullmektig? {
                         this.synligeOpplysninger().singleOrNull { opplysning ->
                             opplysning.type == OpplysningType.FULLMEKTIG_POSTSTED
                         }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                    land = land,
                 ),
         )
     } else {

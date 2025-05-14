@@ -187,6 +187,7 @@ enum class Hjemler {
 // TODO: Vurder om vi burde importere et bibliotek/kodeverk som dekker behovet vårt her.
 // det blir for mye styr å opprettholde dette når det er mange nye land :)
 enum class Land(land: String) {
+    UKJENT("Uoppgitt/Ukjent"),
     AD("Andorra"),
     AE("De forente arabiske emirater"),
     AF("Afghanistan"),
@@ -237,6 +238,12 @@ enum class Land(land: String) {
     CN("Kina"),
     CO("Colombia"),
     CR("Costa Rica"),
+
+    // CS Serbia og Montenegro er ikke i bruk lengre
+    // men Folkeregisteret har personer med gjeldende statsborkerskap eller fødeland her.
+    // Dermed er koden i felles kodeverk.
+    CS("Serbia og Montenegro"),
+
     CU("Cuba"),
     CV("Kapp Verde"),
     CW("Curaçao"),
@@ -402,7 +409,9 @@ enum class Land(land: String) {
     SZ("Swaziland"),
     TC("Turks- og Caicosøyene"),
     TD("Tsjad"),
-    TF("De franske sørterritorier"),
+
+    // Ikke inkludert i felles kodeverk
+    // TF("De franske sørterritorier"),
     TG("Togo"),
     TH("Thailand"),
     TJ("Tadsjikistan"),
@@ -431,6 +440,12 @@ enum class Land(land: String) {
     VU("Vanuatu"),
     WF("Wallis og Futuna"),
     WS("Samoa"),
+
+    // X* koder er "brukerkoder".
+    // SSB og felles kodeverk definerer XB Kanariøyene og XK Kosovo.
+    XB("Kanariøyene"),
+    XK("Kosovo"),
+
     YE("Jemen"),
     YT("Mayotte"),
     ZA("Sør-Afrika"),
