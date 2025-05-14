@@ -5,6 +5,8 @@ import mu.KLogger
 import no.nav.dagpenger.saksbehandling.leaderelection.LeaderElector
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.util.Date
 import java.util.Timer
@@ -19,6 +21,24 @@ abstract class Job(
             Date.from(Instant.now().atZone(ZoneId.of("Europe/Oslo")).toInstant().plus(Duration.ofMinutes(10)))
         val Int.Dag get() = this * 1000L * 60L * 60L * 24L
         val Int.Minutt get() = this * 1000L * 60L
+
+        fun getNextOccurrence(
+            hour: Int,
+            minute: Int,
+            currentTime: LocalDateTime = LocalDateTime.now(),
+            zoneId: ZoneId = ZoneId.systemDefault(),
+        ): Date {
+            val specifiedTimeToday = currentTime.toLocalDate().atTime(LocalTime.of(hour, minute))
+
+            val nextOccurrence =
+                if (currentTime.isBefore(specifiedTimeToday)) {
+                    specifiedTimeToday
+                } else {
+                    specifiedTimeToday.plusDays(1)
+                }
+
+            return Date.from(nextOccurrence.atZone(zoneId).toInstant())
+        }
     }
 
     abstract val jobName: String
@@ -32,6 +52,7 @@ abstract class Job(
         startAt: Date = omFemMinutter,
         period: Long = 1.Dag,
     ): Timer {
+        logger.info("Jobb $jobName vil kjøre med intervall $period millisekunder med første kjøring $startAt")
         return fixedRateTimer(
             name = jobName,
             daemon = daemon,
