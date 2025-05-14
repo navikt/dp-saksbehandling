@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -8,6 +9,8 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -17,7 +20,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.FERDIGSTILT
-import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HVEM_KLAGER
@@ -29,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -37,8 +40,20 @@ import java.util.UUID
 
 class KlageMediatorTest {
     private val testPersonIdent = "12345678901"
-    private val klageKlient = mockk<KlageHttpKlient>()
-
+    private val testRapid = TestRapid()
+    private val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
+    private val behandlerDTO =
+        BehandlerDTO(
+            ident = saksbehandler.navIdent,
+            fornavn = "Mikke",
+            etternavn = "Mus",
+            enhet =
+                BehandlerDTOEnhetDTO(
+                    navn = "NAV Arbeid og ytelser Disneyworld",
+                    enhetNr = "440Gakk",
+                    postadresse = "Disneyland",
+                ),
+        )
     private val oppslagMock =
         mockk<Oppslag>().also {
             coEvery { it.hentPersonMedSkjermingOgGradering(testPersonIdent) } returns
@@ -50,9 +65,13 @@ class KlageMediatorTest {
                 )
         }
 
+    private val saksbehandlerOppslagMock =
+        mockk<SaksbehandlerOppslag>().also {
+            coEvery { it.hentSaksbehandler(navIdent = any()) } returns behandlerDTO
+        }
+
     @Test
     fun `Livssyklus til en klage som ferdigstilles`() {
-        val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
         withMigratedDb { datasource ->
             val oppgaveMediator =
@@ -64,15 +83,15 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = mockk(),
                 )
-
             val klageMediator =
                 KlageMediator(
                     klageRepository = PostgresKlageRepository(datasource),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
-                    klageKlient = klageKlient,
-                )
-
+                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
@@ -137,7 +156,6 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som avbrytes`() {
-        val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
         withMigratedDb { datasource ->
             val oppgaveMediator =
@@ -149,15 +167,13 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = mockk(),
                 )
-
             val klageMediator =
                 KlageMediator(
                     klageRepository = PostgresKlageRepository(datasource),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
-                    klageKlient = klageKlient,
+                    saksbehandlerOppslag = saksbehandlerOppslagMock,
                 )
-
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(

@@ -20,7 +20,7 @@ import java.time.LocalDateTime
 class KlageHttpKlientTest {
     @Test
     fun `Oversend klage til klageinstans`() {
-        val klageBehandling = lagKlagebehandling()
+        val klageBehandling = lagKlagebehandling(behandlendeEnhet = "4408")
         val fagsakId = UUIDv7.ny().toString()
 
         val oppgave =
@@ -57,11 +57,8 @@ class KlageHttpKlientTest {
             runBlocking {
                 kabalKlient.registrerKlage(
                     klageBehandling = klageBehandling,
-                    personIdentId = oppgave.behandling.person.ident,
-                    // TODO: Hvor skal vi hente sak fra?
+                    ident = oppgave.behandling.person.ident,
                     fagsakId = fagsakId,
-                    // TODO: Skal være klagebehandlers enhet. Bør kunne hentes fra klageBehandling?
-                    forrigeBehandlendeEnhet = "4408",
                 )
             }
         resultat shouldBe Result.success(HttpStatusCode.OK)

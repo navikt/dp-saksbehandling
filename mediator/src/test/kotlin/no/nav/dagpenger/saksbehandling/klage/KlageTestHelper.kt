@@ -5,6 +5,7 @@ import java.time.LocalDate
 fun lagKlagebehandling(
     hjemler: List<Hjemler> = listOf(Hjemler.FTRL_4_2, Hjemler.FTRL_4_9, Hjemler.FTRL_4_18),
     land: Land? = Land.NO,
+    behandlendeEnhet: String? = null,
 ): KlageBehandling {
     val opplysninger =
         mutableSetOf(
@@ -109,5 +110,8 @@ fun lagKlagebehandling(
         )
     }
 
-    return KlageBehandling(opplysninger = opplysninger)
+    return KlageBehandling(
+        opplysninger = opplysninger,
+        behandlendeEnhet = behandlendeEnhet,
+    )
 }

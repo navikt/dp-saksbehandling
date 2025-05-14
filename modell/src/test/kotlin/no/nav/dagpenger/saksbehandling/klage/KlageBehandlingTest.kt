@@ -136,11 +136,11 @@ class KlageBehandlingTest {
             )
         klageBehandling.tilstand() shouldBe BEHANDLES
 
-        shouldThrow<IllegalStateException> { klageBehandling.ferdigstill() }
+        shouldThrow<IllegalStateException> { klageBehandling.ferdigstill("4408") }
 
         klageBehandling.svar(synligOgPåkrevdOpplysning.opplysningId, Boolsk(false))
 
-        shouldNotThrow<IllegalStateException> { klageBehandling.ferdigstill() }
+        shouldNotThrow<IllegalStateException> { klageBehandling.ferdigstill("4408") }
         klageBehandling.tilstand() shouldBe FERDIGSTILT
     }
 
@@ -157,7 +157,7 @@ class KlageBehandlingTest {
     fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT`() {
         val klageBehandling = KlageBehandling()
         svarPåAlleOpplysninger(klageBehandling)
-        klageBehandling.ferdigstill()
+        klageBehandling.ferdigstill("4408")
 
         shouldThrow<IllegalStateException> { klageBehandling.avbryt() }
     }

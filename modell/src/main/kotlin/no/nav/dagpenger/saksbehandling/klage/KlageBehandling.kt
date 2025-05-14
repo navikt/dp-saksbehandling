@@ -9,6 +9,7 @@ data class KlageBehandling(
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private var tilstand: BehandlingTilstand = BehandlingTilstand.BEHANDLES,
     private val journalpostId: String? = null,
+    private var behandlendeEnhet: String? = null,
     private val steg: List<Steg> =
         listOf(
             KlagenGjelderSteg,
@@ -21,6 +22,10 @@ data class KlageBehandling(
 ) {
     init {
         steg.forEach { it.evaluerSynlighet(opplysninger) }
+    }
+
+    fun behandlendeEnhet(): String? {
+        return behandlendeEnhet
     }
 
     fun utfall(): UtfallType? {
@@ -45,15 +50,14 @@ data class KlageBehandling(
     }
 
     // TODO saksbehandler eller enhetsnummer som parameter?
-    fun ferdigstill() {
+    fun ferdigstill(enhetsnummer: String) {
         if (this.tilstand == BehandlingTilstand.AVBRUTT) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling når den er avbrutt")
         }
         if (!kanFerdigstilles()) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling når påkrevde opplysninger ikke er utfylt")
         }
-        // TODO
-        //  this.behandlendeEnhet = saksbehandlers enhetsnummer
+        this.behandlendeEnhet = enhetsnummer
         this.tilstand = BehandlingTilstand.FERDIGSTILT
     }
 

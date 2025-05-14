@@ -5,9 +5,8 @@ import io.ktor.http.HttpStatusCode
 interface KlageKlient {
     suspend fun registrerKlage(
         klageBehandling: KlageBehandling,
-        personIdentId: String,
+        ident: String,
         fagsakId: String,
-        forrigeBehandlendeEnhet: String,
         tilknyttedeJournalposter: List<Journalposter> = emptyList(),
     ): Result<HttpStatusCode>
 }

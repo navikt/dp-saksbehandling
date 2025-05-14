@@ -112,6 +112,13 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
                 ),
         )
+    private val klageMediator =
+        KlageMediator(
+            klageRepository = klageRepository,
+            oppgaveMediator = oppgaveMediator,
+            utsendingMediator = utsendingMediator,
+            saksbehandlerOppslag = saksbehandlerOppslag,
+        )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
             oppslag = oppslag,
@@ -131,13 +138,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         oppgaveMediator = oppgaveMediator,
                         oppgaveDTOMapper = oppgaveDTOMapper,
                         statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
-                        klageMediator =
-                            KlageMediator(
-                                klageRepository = klageRepository,
-                                oppgaveMediator = oppgaveMediator,
-                                utsendingMediator = utsendingMediator,
-                                klageKlient = klageKlient,
-                            ),
+                        klageMediator = klageMediator,
                         klageDTOMapper = KlageDTOMapper(oppslag),
                     )
                     this.install(KafkaStreamsPlugin) {
@@ -159,6 +160,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         }.also { rapidsConnection ->
             utsendingMediator.setRapidsConnection(rapidsConnection)
             oppgaveMediator.setRapidsConnection(rapidsConnection)
+            klageMediator.setRapidsConnection(rapidsConnection)
             VedtakFattetMottak(rapidsConnection, oppgaveMediator)
             BehandlingOpprettetMottak(rapidsConnection, oppgaveMediator, pdlKlient, skjermingKlient)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)

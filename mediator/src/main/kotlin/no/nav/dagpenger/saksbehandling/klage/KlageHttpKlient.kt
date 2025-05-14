@@ -29,11 +29,11 @@ class KlageHttpKlient(
 ) : KlageKlient {
     override suspend fun registrerKlage(
         klageBehandling: KlageBehandling,
-        personIdentId: String,
+        ident: String,
         fagsakId: String,
-        forrigeBehandlendeEnhet: String,
         tilknyttedeJournalposter: List<Journalposter>,
     ): Result<HttpStatusCode> {
+        val behandlendeEnhet: String = requireNotNull(klageBehandling.behandlendeEnhet())
         return runCatching {
             httpClient.post(urlString = "$kabalApiUrl/api/oversendelse/v4/sak") {
                 header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
@@ -44,7 +44,7 @@ class KlageHttpKlient(
                             PersonIdent(
                                 id =
                                     PersonIdentId(
-                                        verdi = personIdentId,
+                                        verdi = ident,
                                     ),
                             ),
                         fagsak =
@@ -53,7 +53,7 @@ class KlageHttpKlient(
                                 fagsystem = "DAGPENGER",
                             ),
                         kildeReferanse = klageBehandling.behandlingId.toString(),
-                        forrigeBehandlendeEnhet = forrigeBehandlendeEnhet,
+                        forrigeBehandlendeEnhet = behandlendeEnhet,
                         tilknyttedeJournalposter = tilknyttedeJournalposter,
                         hjemler = klageBehandling.hjemler(),
                         prosessFullmektig = klageBehandling.prosessFullmektig(),

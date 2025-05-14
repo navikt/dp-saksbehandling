@@ -1,24 +1,37 @@
 package no.nav.dagpenger.saksbehandling
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
+import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class KlageMediator(
     private val klageRepository: KlageRepository,
     private val oppgaveMediator: OppgaveMediator,
     private val utsendingMediator: UtsendingMediator,
-    // TODO: bruk denne et sted!
-    private val klageKlient: KlageHttpKlient,
+    private val saksbehandlerOppslag: SaksbehandlerOppslag,
 ) {
+    private lateinit var rapidsConnection: RapidsConnection
+
+    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
+        this.rapidsConnection = rapidsConnection
+    }
+
     fun hentKlageBehandling(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
@@ -80,19 +93,27 @@ class KlageMediator(
 
         val oppgave = sjekkTilgangOgEierAvOppgave(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
+        val behandlendeEnhet =
+            runBlocking {
+                saksbehandlerOppslag.hentSaksbehandler(
+                    navIdent = saksbehandler.navIdent,
+                ).enhet.enhetNr
+            }
         val klageBehandling =
             klageRepository.hentKlageBehandling(behandlingId).also { klageBehandling ->
-                klageBehandling.ferdigstill()
+                klageBehandling.ferdigstill(enhetsnummer = behandlendeEnhet)
             }
+
+        val sak =
+            Sak(
+                id = UUIDv7.ny().toString(),
+                kontekst = "Dagpenger",
+            )
 
         val startUtsendingHendelse =
             StartUtsendingHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                sak =
-                    Sak(
-                        id = UUIDv7.ny().toString(),
-                        kontekst = "Dagpenger",
-                    ),
+                sak = sak,
                 behandlingId = klageBehandling.behandlingId,
                 ident = oppgave.behandling.person.ident,
             )
@@ -115,6 +136,22 @@ class KlageMediator(
         utsendingMediator.mottaStartUtsending(
             startUtsendingHendelse,
         )
+        if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+            val message =
+                JsonMessage.newNeed(
+                    behov = setOf("OversendelseKlageinstans"),
+                    map =
+                        mapOf(
+                            "behandlingId" to klageBehandling.behandlingId.toString(),
+                            "ident" to oppgave.behandling.person.ident,
+                            "fagsakId" to sak.id,
+                        ),
+                ).toJson().also {
+                    sikkerlogg.info { "Publiserer behov: $it for oversendelse til klageinstans" }
+                }
+            logger.info { "Publiserer behov OversendelseKlageinstans for klagebehandling ${klageBehandling.behandlingId}" }
+            rapidsConnection.publish(key = oppgave.behandling.person.ident, message = message)
+        }
     }
 
     fun avbrytKlage(
