@@ -68,6 +68,7 @@ class KlageDTOMapperTest {
                       
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.type.påkrevd},
       "gruppe": "KLAGESAK",
@@ -81,6 +82,7 @@ class KlageDTOMapperTest {
     },
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAK }.type.påkrevd},
       "gruppe": "KLAGESAK",
@@ -90,6 +92,7 @@ class KlageDTOMapperTest {
     },
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST }.type.påkrevd},
       "gruppe": "FRIST",
@@ -99,6 +102,7 @@ class KlageDTOMapperTest {
     },
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGE_MOTTATT }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGE_MOTTATT }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGE_MOTTATT }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGE_MOTTATT }.type.påkrevd},
       "gruppe": "FRIST",
@@ -108,6 +112,7 @@ class KlageDTOMapperTest {
     },
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST_OPPFYLT }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST_OPPFYLT }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST_OPPFYLT }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEFRIST_OPPFYLT }.type.påkrevd},
       "gruppe": "FRIST",
@@ -117,6 +122,7 @@ class KlageDTOMapperTest {
     },
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_SKRIFTLIG }.type.påkrevd},
       "gruppe": "FORMKRAV",
@@ -126,6 +132,7 @@ class KlageDTOMapperTest {
     },
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.ER_KLAGEN_UNDERSKREVET }.type.påkrevd},
       "gruppe": "FORMKRAV",
@@ -135,6 +142,7 @@ class KlageDTOMapperTest {
     },
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_NEVNER_ENDRING }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_NEVNER_ENDRING }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_NEVNER_ENDRING }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_NEVNER_ENDRING }.type.påkrevd},
       "gruppe": "FORMKRAV",
@@ -144,6 +152,7 @@ class KlageDTOMapperTest {
     },
     {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.RETTSLIG_KLAGEINTERESSE }.type.påkrevd},
       "gruppe": "FORMKRAV",

@@ -1215,6 +1215,8 @@ components:
         opplysningId:
           type: string
           format: uuid
+        opplysningNavnId:
+          type: string
         navn:
           type: string
         paakrevd:
@@ -1234,6 +1236,7 @@ components:
       required:
         - type
         - opplysningId
+        - opplysningNavnId
         - navn
         - paakrevd
         - gruppe
@@ -1246,6 +1249,8 @@ components:
         opplysningId:
           type: string
           format: uuid
+        opplysningNavnId:
+          type: string
         navn:
           type: string
         paakrevd:
@@ -1265,6 +1270,7 @@ components:
       required:
         - type
         - opplysningId
+        - opplysningNavnId
         - navn
         - paakrevd
         - gruppe
@@ -1277,6 +1283,8 @@ components:
         opplysningId:
           type: string
           format: uuid
+        opplysningNavnId:
+          type: string
         navn:
           type: string
         paakrevd:
@@ -1297,6 +1305,7 @@ components:
       required:
         - type
         - opplysningId
+        - opplysningNavnId
         - navn
         - paakrevd
         - gruppe
@@ -1309,6 +1318,8 @@ components:
         opplysningId:
           type: string
           format: uuid
+        opplysningNavnId:
+          type: string
         navn:
           type: string
         paakrevd:
@@ -1329,6 +1340,7 @@ components:
           $ref: '#/components/schemas/KlageOpplysningType'
       required:
         - type
+        - opplysningNavnId
         - opplysningId
         - navn
         - paakrevd
@@ -1342,6 +1354,8 @@ components:
         opplysningId:
           type: string
           format: uuid
+        opplysningNavnId:
+          type: string
         navn:
           type: string
         paakrevd:
@@ -1361,6 +1375,7 @@ components:
       required:
         - type
         - opplysningId
+        - opplysningNavnId
         - navn
         - paakrevd
         - gruppe
