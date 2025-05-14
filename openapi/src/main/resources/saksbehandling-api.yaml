@@ -1111,14 +1111,11 @@ components:
             $ref: '#/components/schemas/KlageOpplysning'
         utfall:
           $ref: '#/components/schemas/Utfall'
-        meldingOmVedtak:
-          $ref: '#/components/schemas/MeldingOmVedtakResponse'
       required:
         - behandlingId
         - utfall
         - behandlingOpplysninger
         - utfallOpplysninger
-        - meldingOmVedtak
 
     TekstVerdi:
       type: object
@@ -1428,37 +1425,6 @@ components:
       required:
         - verdi
         - tilgjengeligeUtfall
-
-    MeldingOmVedtakResponse:
-      type: object
-      properties:
-        html:
-          type: string
-          description: HTML for melding om vedtak
-        utvidedeBeskrivelser:
-          type: array
-          items:
-            $ref: '#/components/schemas/UtvidetBeskrivelse'
-      required:
-        - html
-        - utvidedeBeskrivelser
-
-    UtvidetBeskrivelse:
-      type: object
-      properties:
-        brevblokkId:
-          type: string
-        tekst:
-          type: string
-        sistEndretTidspunkt:
-          type: string
-          format: date-time
-        tittel:
-          type: string
-      required:
-        - brevblokkId
-        - tekst
-        - tittel
 
     HttpProblem:
       type: object

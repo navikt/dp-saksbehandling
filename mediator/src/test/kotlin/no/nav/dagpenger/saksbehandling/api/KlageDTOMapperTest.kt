@@ -170,10 +170,6 @@ class KlageDTOMapperTest {
                           "DELVIS_MEDHOLD",
                           "MEDHOLD"
                         ]
-                      },
-                      "meldingOmVedtak": {
-                          "html": "<html><h1>Hei</H1></html>",
-                          "utvidedeBeskrivelser": []
                       }
                     }
                     """
