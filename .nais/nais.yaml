@@ -78,6 +78,7 @@ spec:
     inbound:
       rules:
         - application: dp-mottak
+        - application: dp-melding-om-vedtak
         - application: dp-saksbehandling-frontend
         {{#if wonderwalled}}
         - application: wonderwalled-azure
