@@ -85,7 +85,7 @@ internal fun KlageBehandling.prosessFullmektig(): ProsessFullmektig? {
             this.synligeOpplysninger().singleOrNull { opplysning ->
                 opplysning.type == OpplysningType.FULLMEKTIG_LAND
             }?.let { (it.verdi() as Verdi.TekstVerdi).value }
-        val land = if (registrertLand == "UKJENT" || registrertLand.isNullOrEmpty()) "???" else registrertLand
+        val land = if (registrertLand == "UKJENT") "???" else registrertLand
 
         return ProsessFullmektig(
             id = null,
@@ -93,29 +93,33 @@ internal fun KlageBehandling.prosessFullmektig(): ProsessFullmektig? {
                 this.synligeOpplysninger().singleOrNull { opplysning -> opplysning.type == FULLMEKTIG_NAVN }
                     ?.let { (it.verdi() as Verdi.TekstVerdi).value },
             adresse =
-                Adresse(
-                    addresselinje1 =
-                        this.synligeOpplysninger().singleOrNull { opplysning ->
-                            opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_1
-                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
-                    addresselinje2 =
-                        this.synligeOpplysninger().singleOrNull { opplysning ->
-                            opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_2
-                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
-                    addresselinje3 =
-                        this.synligeOpplysninger().singleOrNull { opplysning ->
-                            opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_3
-                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
-                    postnummer =
-                        this.synligeOpplysninger().singleOrNull { opplysning ->
-                            opplysning.type == OpplysningType.FULLMEKTIG_POSTNR
-                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
-                    poststed =
-                        this.synligeOpplysninger().singleOrNull { opplysning ->
-                            opplysning.type == OpplysningType.FULLMEKTIG_POSTSTED
-                        }?.let { (it.verdi() as Verdi.TekstVerdi).value },
-                    land = land,
-                ),
+                if (land != null) {
+                    Adresse(
+                        addresselinje1 =
+                            this.synligeOpplysninger().singleOrNull { opplysning ->
+                                opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_1
+                            }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                        addresselinje2 =
+                            this.synligeOpplysninger().singleOrNull { opplysning ->
+                                opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_2
+                            }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                        addresselinje3 =
+                            this.synligeOpplysninger().singleOrNull { opplysning ->
+                                opplysning.type == OpplysningType.FULLMEKTIG_ADRESSE_3
+                            }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                        postnummer =
+                            this.synligeOpplysninger().singleOrNull { opplysning ->
+                                opplysning.type == OpplysningType.FULLMEKTIG_POSTNR
+                            }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                        poststed =
+                            this.synligeOpplysninger().singleOrNull { opplysning ->
+                                opplysning.type == OpplysningType.FULLMEKTIG_POSTSTED
+                            }?.let { (it.verdi() as Verdi.TekstVerdi).value },
+                        land = land,
+                    )
+                } else {
+                    null
+                },
         )
     } else {
         return null
@@ -159,7 +163,7 @@ internal data class PersonIdent(
 internal data class ProsessFullmektig(
     val id: PersonIdentId?,
     val navn: String?,
-    val adresse: Adresse,
+    val adresse: Adresse?,
 )
 
 internal data class PersonIdentId(
