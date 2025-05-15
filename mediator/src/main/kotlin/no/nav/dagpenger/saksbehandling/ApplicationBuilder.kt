@@ -23,8 +23,7 @@ import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
-import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
-import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansBehovløser
+import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -77,11 +76,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         BehandlingHttpKlient(
             dpBehandlingApiUrl = Configuration.dbBehandlingApiUrl,
             tokenProvider = Configuration.dpBehandlingOboExchanger,
-        )
-    private val klageKlient =
-        KlageHttpKlient(
-            kabalApiUrl = Configuration.kabalApiUrl,
-            tokenProvider = Configuration.klageTokenProvider,
         )
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(personRepository)
@@ -169,15 +163,19 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             UtsendingMottak(rapidsConnection, utsendingMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
             ArenaSinkVedtakOpprettetMottak(
-                rapidsConnection,
-                oppgaveRepository,
-                utsendingMediator,
+                rapidsConnection = rapidsConnection,
+                oppgaveRepository = oppgaveRepository,
+                utsendingMediator = utsendingMediator,
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
-            OversendKlageinstansBehovløser(
+//            OversendKlageinstansBehovløser(
+//                rapidsConnection = rapidsConnection,
+//                klageRepository = klageRepository,
+//                klageKlient = klageKlient,
+//            )
+            OversendtKlageinstansMottak(
                 rapidsConnection = rapidsConnection,
-                klageRepository = klageRepository,
-                klageKlient = klageKlient,
+                klageMediator = klageMediator,
             )
             utsendingAlarmJob =
                 UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob(

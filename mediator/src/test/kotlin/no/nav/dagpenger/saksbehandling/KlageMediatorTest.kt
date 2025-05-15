@@ -7,7 +7,6 @@ import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
-import net.bytebuddy.matcher.ElementMatchers.returns
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.api.Oppslag
@@ -17,11 +16,13 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
@@ -32,7 +33,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTA
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
-import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansBehovløser
+import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -107,11 +108,10 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            val klageKlient =
-                mockk<KlageHttpKlient>().also {
-                    coEvery { it.registrerKlage(any(), any(), any()) } returns
-                        Result.success(HttpStatusCode.OK)
-                }
+            mockk<KlageHttpKlient>().also {
+                coEvery { it.registrerKlage(any(), any(), any()) } returns
+                    Result.success(HttpStatusCode.OK)
+            }
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand() shouldBe
                 KlageBehandling.BehandlingTilstand.BEHANDLES
 
@@ -132,23 +132,28 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
-                    behandlingId = behandlingId,
-                    saksbehandler = saksbehandler,
+                    KlageFerdigbehandletHendelse(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
                 )
             }
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
-
-            OversendKlageinstansBehovløser(
-                rapidsConnection = testRapid,
-                klageRepository = klageRepository,
-                klageKlient = klageKlient,
-            )
             klageMediator.ferdigstill(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
+                KlageFerdigbehandletHendelse(
+                    behandlingId = behandlingId,
+                    utførtAv = saksbehandler,
+                ),
             )
+            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                .tilstand() shouldBe OVERSEND_KLAGEINSTANS
             testRapid.inspektør.size shouldBe 1
+
+            OversendtKlageinstansMottak(
+                rapidsConnection = testRapid,
+                klageMediator = klageMediator,
+            )
             testRapid.sendTestMessage(
                 key = oppgave.behandling.person.ident,
                 message =
@@ -158,12 +163,14 @@ class KlageMediatorTest {
                       "@behov" : [ "OversendelseKlageinstans" ],
                       "behandlingId" : "$behandlingId",
                       "ident" : "${oppgave.behandling.person.ident}",
-                      "fagsakId" : "$fagsakId"
+                      "fagsakId" : "$fagsakId",
+                      "@løsning": {
+                        "OversendelseKlageinstans": "OK"
+                      }
                     }
                     """.trimIndent(),
             )
 
-            testRapid.inspektør.size shouldBe 2
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand() shouldBe FERDIGSTILT
 

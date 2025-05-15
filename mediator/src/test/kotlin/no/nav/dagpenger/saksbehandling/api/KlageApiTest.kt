@@ -12,7 +12,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.headers
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.Runs
@@ -33,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToke
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Verdi
@@ -191,7 +191,14 @@ class KlageApiTest {
     fun `Skal kunne ferdigstille en klage`() {
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.ferdigstill(behandlingId = klageBehandlingId, saksbehandler = saksbehandler) } just Runs
+                every {
+                    it.ferdigstill(
+                        KlageFerdigbehandletHendelse(
+                            behandlingId = klageBehandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    )
+                } just Runs
             }
 
         withKlageApi(mediator) {
@@ -199,7 +206,12 @@ class KlageApiTest {
         }
 
         verify(exactly = 1) {
-            mediator.ferdigstill(behandlingId = klageBehandlingId, saksbehandler = saksbehandler)
+            mediator.ferdigstill(
+                KlageFerdigbehandletHendelse(
+                    behandlingId = klageBehandlingId,
+                    utførtAv = saksbehandler,
+                ),
+            )
         }
     }
 

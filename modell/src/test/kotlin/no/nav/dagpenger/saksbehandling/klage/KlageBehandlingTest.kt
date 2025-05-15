@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
@@ -99,7 +100,7 @@ class KlageBehandlingTest {
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in formkravOpplysningTyper
         }.forEach {
-            klageBehandling.svar(it.opplysningId, Verdi.Boolsk(true))
+            klageBehandling.svar(it.opplysningId, Boolsk(true))
         }
 
         klageBehandling.synligeOpplysninger().filter { opplysning ->
@@ -109,7 +110,7 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Klagebehandling kan ferdigstilles når alle synlige og påkrevde opplysninger er utfylt`() {
+    fun `Avvist klagebehandling får tilstand ferdigstilt når alle synlige og påkrevde opplysninger er utfylt`() {
         val synligOgPåkrevdOpplysning =
             Opplysning(
                 type = OpplysningType.KLAGEFRIST_OPPFYLT,
@@ -129,19 +130,69 @@ class KlageBehandlingTest {
                 verdi = Verdi.TomVerdi,
                 synlig = true,
             )
+        val utfallOpplysning =
+            Opplysning(
+                type = OpplysningType.UTFALL,
+                verdi = Verdi.TomVerdi,
+                synlig = true,
+            )
         val klageBehandling =
             KlageBehandling(
                 steg = emptyList(),
-                opplysninger = setOf(synligOgPåkrevdOpplysning, ikkePåkrevdOpplysning, ikkeSynligOpplysning),
+                opplysninger = setOf(synligOgPåkrevdOpplysning, ikkePåkrevdOpplysning, ikkeSynligOpplysning, utfallOpplysning),
             )
         klageBehandling.tilstand() shouldBe BEHANDLES
 
-        shouldThrow<IllegalStateException> { klageBehandling.ferdigstill("4408") }
+        shouldThrow<IllegalStateException> { klageBehandling.saksbehandlingFerdig("4408") }
 
         klageBehandling.svar(synligOgPåkrevdOpplysning.opplysningId, Boolsk(false))
+        klageBehandling.svar(utfallOpplysning.opplysningId, TekstVerdi("AVVIST"))
 
-        shouldNotThrow<IllegalStateException> { klageBehandling.ferdigstill("4408") }
+        shouldNotThrow<IllegalStateException> { klageBehandling.saksbehandlingFerdig("4408") }
         klageBehandling.tilstand() shouldBe FERDIGSTILT
+    }
+
+    @Test
+    fun `Opprettholdt klagebehandling får tilstand oversend KA når alle synlige og påkrevde opplysninger er utfylt`() {
+        val synligOgPåkrevdOpplysning =
+            Opplysning(
+                type = OpplysningType.KLAGEFRIST_OPPFYLT,
+                verdi = Verdi.TomVerdi,
+                synlig = true,
+            )
+        val ikkeSynligOpplysning =
+            Opplysning(
+                type = OpplysningType.FULLMEKTIG_LAND,
+                verdi = Verdi.TomVerdi,
+                synlig = false,
+            )
+
+        val ikkePåkrevdOpplysning =
+            Opplysning(
+                type = OpplysningType.FULLMEKTIG_ADRESSE_3,
+                verdi = Verdi.TomVerdi,
+                synlig = true,
+            )
+        val utfallOpplysning =
+            Opplysning(
+                type = OpplysningType.UTFALL,
+                verdi = Verdi.TomVerdi,
+                synlig = true,
+            )
+        val klageBehandling =
+            KlageBehandling(
+                steg = emptyList(),
+                opplysninger = setOf(synligOgPåkrevdOpplysning, ikkePåkrevdOpplysning, ikkeSynligOpplysning, utfallOpplysning),
+            )
+        klageBehandling.tilstand() shouldBe BEHANDLES
+
+        shouldThrow<IllegalStateException> { klageBehandling.saksbehandlingFerdig("4408") }
+
+        klageBehandling.svar(synligOgPåkrevdOpplysning.opplysningId, Boolsk(false))
+        klageBehandling.svar(utfallOpplysning.opplysningId, TekstVerdi("OPPRETTHOLDELSE"))
+
+        shouldNotThrow<IllegalStateException> { klageBehandling.saksbehandlingFerdig("4408") }
+        klageBehandling.tilstand() shouldBe OVERSEND_KLAGEINSTANS
     }
 
     @Test
@@ -154,10 +205,10 @@ class KlageBehandlingTest {
     }
 
     @Test
-    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT`() {
+    fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT eller OVERSEND_KLAGEINSTANS`() {
         val klageBehandling = KlageBehandling()
         svarPåAlleOpplysninger(klageBehandling)
-        klageBehandling.ferdigstill("4408")
+        klageBehandling.saksbehandlingFerdig("4408")
 
         shouldThrow<IllegalStateException> { klageBehandling.avbryt() }
     }

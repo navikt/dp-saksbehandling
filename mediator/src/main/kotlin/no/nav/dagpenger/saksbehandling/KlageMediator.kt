@@ -8,7 +8,9 @@ import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
@@ -85,23 +87,20 @@ class KlageMediator(
         }
     }
 
-    fun ferdigstill(
-        behandlingId: UUID,
-        saksbehandler: Saksbehandler,
-    ) {
+    fun ferdigstill(hendelse: KlageFerdigbehandletHendelse) {
         val html = "<html><h1>Dette må vi gjøre noe med</h1></html>"
 
-        val oppgave = sjekkTilgangOgEierAvOppgave(behandlingId = behandlingId, saksbehandler = saksbehandler)
+        val oppgave = sjekkTilgangOgEierAvOppgave(behandlingId = hendelse.behandlingId, saksbehandler = hendelse.utførtAv)
 
         val behandlendeEnhet =
             runBlocking {
                 saksbehandlerOppslag.hentSaksbehandler(
-                    navIdent = saksbehandler.navIdent,
+                    navIdent = hendelse.utførtAv.navIdent,
                 ).enhet.enhetNr
             }
         val klageBehandling =
-            klageRepository.hentKlageBehandling(behandlingId).also { klageBehandling ->
-                klageBehandling.ferdigstill(enhetsnummer = behandlendeEnhet)
+            klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
+                klageBehandling.saksbehandlingFerdig(enhetsnummer = behandlendeEnhet)
             }
 
         // TODO: Fiks sak.... Den skal ikke lages her
@@ -131,7 +130,7 @@ class KlageMediator(
                 GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     meldingOmVedtak = html,
-                    utførtAv = saksbehandler,
+                    utførtAv = hendelse.utførtAv,
                 ),
         )
         utsendingMediator.mottaStartUtsending(
@@ -179,6 +178,13 @@ class KlageMediator(
                     utførtAv = saksbehandler,
                 ),
         )
+    }
+
+    fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {
+        klageRepository.hentKlageBehandling(behandlingId = hendelse.behandlingId).let { klageBehandling ->
+            klageBehandling.oversendtTilKlageinstans()
+            klageRepository.lagre(klageBehandling)
+        }
     }
 
     private fun sjekkTilgangTilOppgave(

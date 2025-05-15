@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettKlageDTO
+import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 
 fun Route.klageApi(
@@ -75,8 +76,10 @@ fun Route.klageApi(
                         val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.sakbehandler(call)
                         mediator.ferdigstill(
-                            behandlingId = behandlingId,
-                            saksbehandler = saksbehandler,
+                            KlageFerdigbehandletHendelse(
+                                behandlingId = behandlingId,
+                                utførtAv = saksbehandler,
+                            ),
                         )
                         call.respond(HttpStatusCode.NoContent)
                     }
