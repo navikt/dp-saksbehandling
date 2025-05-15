@@ -589,6 +589,14 @@ class OppgaveMediator(
         }
     }
 
+    fun hentPerson(ident: String): Person {
+        TODO()
+    }
+
+    fun hentPerson(personId: UUID): Person {
+        TODO()
+    }
+
     private fun sendAlertTilRapid(
         feilType: AlertManager.AlertType,
         utvidetFeilmelding: String,

@@ -71,6 +71,17 @@ internal fun Route.oppgaveApi(
             post {
                 val ident: PersonIdentDTO = call.receive<PersonIdentDTO>()
                 val person = oppgaveMediator.hentPerson(ident.ident)
+                oppgaveDTOMapper.lagPersonDTO(person)
+                call.respond(status = HttpStatusCode.OK, person)
+            }
+        }
+
+        route("person/{personId}") {
+            get {
+                val personId = call.finnUUID("personId")
+                val person = oppgaveMediator.hentPerson(personId)
+                oppgaveDTOMapper.lagPersonDTO(person)
+                call.respond(status = HttpStatusCode.OK, person)
             }
         }
 
@@ -117,7 +128,9 @@ internal fun Route.oppgaveApi(
                                     status = 404,
                                     instance = call.request.path(),
                                     detail = "Ingen oppgave funnet for søket",
-                                    type = URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet").toString(),
+                                    type =
+                                        URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet")
+                                            .toString(),
                                 ),
                             )
 

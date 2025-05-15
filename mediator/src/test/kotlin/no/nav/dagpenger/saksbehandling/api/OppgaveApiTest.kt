@@ -136,6 +136,8 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
+                Arguments.of("/person", HttpMethod.Post),
+                Arguments.of("/person/${UUIDv7.ny()}", HttpMethod.Get),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
@@ -819,7 +821,7 @@ class OppgaveApiTest {
                         person =
                             PersonDTO(
                                 ident = testPerson.ident,
-                                uuid = testOppgave.behandling.person.id,
+                                id = testOppgave.behandling.person.id,
                                 fornavn = testPerson.fornavn,
                                 etternavn = testPerson.etternavn,
                                 fodselsdato = testPerson.fødselsdato,
@@ -986,7 +988,7 @@ class OppgaveApiTest {
                         person =
                             PersonDTO(
                                 ident = testPerson.ident,
-                                uuid = UUIDv7.ny(),
+                                id = UUIDv7.ny(),
                                 fornavn = testPerson.fornavn,
                                 etternavn = testPerson.etternavn,
                                 fodselsdato = testPerson.fødselsdato,
@@ -1225,4 +1227,9 @@ class OppgaveApiTest {
             }
         }
     }
+
+    fun `Skal kunen hente ut person via fnr`(){
+
+    }
+
 }
