@@ -24,6 +24,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
@@ -653,7 +654,11 @@ class OppgaveApiTest {
                     utførtAv = saksbehandler,
                 ),
             )
-        } returns lagOppgave(tilstand = Oppgave.UnderBehandling, behandling = lagBehandling(type = BehandlingType.RETT_TIL_DAGPENGER))
+        } returns
+            lagOppgave(
+                tilstand = Oppgave.UnderBehandling,
+                behandling = lagBehandling(type = BehandlingType.RETT_TIL_DAGPENGER),
+            )
 
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
@@ -1228,8 +1233,50 @@ class OppgaveApiTest {
         }
     }
 
-    fun `Skal kunen hente ut person via fnr`(){
-
+    @Test
+    fun `Skal kunen hente ut person via fnr`() {
+        val personId = UUIDv7.ny()
+        val person =
+            Person(
+                id = personId,
+                ident = testPerson.ident,
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            )
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.hentPerson(personId) } returns person
+            }
+        mockk<OppgaveDTOMapper>().also {
+            coEvery { it.lagPersonDTO(person) } returns
+                PersonDTO(
+                    ident = person.ident,
+                    id = personId,
+                    fornavn = "fornavn",
+                    etternavn = "etternavn",
+                    mellomnavn = null,
+                    fodselsdato = LocalDate.MIN,
+                    alder = 0,
+                    statsborgerskap = null,
+                    kjonn = KjonnDTO.KVINNE,
+                    skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
+                    adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                    sikkerhetstiltak = listOf(),
+                )
+        }
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.get("/person/$personId") { autentisert() }
+                .let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    val personDTO =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<PersonDTO>() {},
+                        )
+                    personDTO.ident shouldBe person.ident
+                    personDTO.id shouldBe personId
+                }
+        }
     }
-
 }

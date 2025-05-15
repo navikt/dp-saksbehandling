@@ -34,7 +34,7 @@ internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
-    suspend fun lagPersonDTO(person: Person): PersonDTO  {
+    suspend fun lagPersonDTO(person: Person): PersonDTO {
         val pdlPerson = oppslag.hentPerson(person.ident)
         return lagPersonDTO(person, pdlPerson)
     }
@@ -125,7 +125,7 @@ internal class OppgaveDTOMapper(
     private fun lagPersonDTO(
         person: Person,
         pdlPersonIntern: PDLPersonIntern,
-    ): PersonDTO  {
+    ): PersonDTO {
         return PersonDTO(
             ident = person.ident,
             id = person.id,
