@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import java.time.LocalDate
+import java.util.UUID
 
 fun lagKlagebehandling(
     hjemler: List<Hjemler> = listOf(Hjemler.FTRL_4_2, Hjemler.FTRL_4_9, Hjemler.FTRL_4_18),
@@ -114,4 +115,24 @@ fun lagKlagebehandling(
         opplysninger = opplysninger,
         behandlendeEnhet = behandlendeEnhet,
     )
+}
+
+internal fun oversendtKlageinstansOk(
+    behandlingId: UUID,
+    fagsakId: UUID,
+    ident: String,
+): String {
+    //language=JSON
+    return """
+         {
+            "@event_name" : "behov",
+            "@behov" : [ "OversendelseKlageinstans" ],
+            "behandlingId" : "$behandlingId",
+            "ident" : "$ident",
+            "fagsakId" : "$fagsakId",
+            "@løsning": {
+              "OversendelseKlageinstans": "OK"
+            }
+        }
+        """.trimIndent()
 }

@@ -104,6 +104,7 @@ class KlageMediator(
                 klageBehandling.ferdigstill(enhetsnummer = behandlendeEnhet)
             }
 
+        // TODO: Fiks sak.... Den skal ikke lages her
         val sak =
             Sak(
                 id = UUIDv7.ny().toString(),

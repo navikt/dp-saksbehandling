@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
+import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansBehovløser
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
@@ -173,6 +174,11 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 utsendingMediator,
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
+            OversendKlageinstansBehovløser(
+                rapidsConnection = rapidsConnection,
+                klageRepository = klageRepository,
+                klageKlient = klageKlient,
+            )
             utsendingAlarmJob =
                 UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob(
                     period = 60.Minutt,

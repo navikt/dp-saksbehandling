@@ -58,6 +58,7 @@ internal class OversendKlageinstansBehovløser(
                         true -> {
                             logger.info { "Klage er oversendt til klageinstans $behandlingId" }
                             packet["@løsning"] = mapOf("OversendelseKlageinstans" to "OK")
+                            context.publish(key = ident, message = packet.toJson())
                         }
                         false -> {
                             logger.info { "Feil ved oversendelse til klageinstans for behandling $behandlingId" }
@@ -66,19 +67,6 @@ internal class OversendKlageinstansBehovløser(
                     }
                 }
             }
-//            utsendingMediator.utsendingFinnesForBehandling(behandlingId).let {
-//                when (it) {
-//                    true -> {
-//                        packet["@løsning"] = mapOf("MeldingOmVedtakProdusent" to "Dagpenger")
-//                        logger.info { "MeldingOmVedtakProdusent er Dagpenger" }
-//                    }
-//                    false -> {
-//                        packet["@løsning"] = mapOf("MeldingOmVedtakProdusent" to "Arena")
-//                        logger.info { "MeldingOmVedtakProdusent er Arena" }
-//                    }
-//                }
-//            }
-//            context.publish(key = ident, message = packet.toJson())
         }
     }
 }
