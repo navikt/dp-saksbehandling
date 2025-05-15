@@ -78,6 +78,8 @@ internal class OppgaveDTOMapper(
             person =
                 PersonDTO(
                     ident = person.ident,
+                    // TOdo: Er dette innafo?
+                    uuid = oppgave.behandling.person.id,
                     fornavn = person.fornavn,
                     etternavn = person.etternavn,
                     mellomnavn = person.mellomnavn,

@@ -819,6 +819,7 @@ class OppgaveApiTest {
                         person =
                             PersonDTO(
                                 ident = testPerson.ident,
+                                uuid = testOppgave.behandling.person.id,
                                 fornavn = testPerson.fornavn,
                                 etternavn = testPerson.etternavn,
                                 fodselsdato = testPerson.fødselsdato,
@@ -985,6 +986,7 @@ class OppgaveApiTest {
                         person =
                             PersonDTO(
                                 ident = testPerson.ident,
+                                uuid = UUIDv7.ny(),
                                 fornavn = testPerson.fornavn,
                                 etternavn = testPerson.etternavn,
                                 fodselsdato = testPerson.fødselsdato,

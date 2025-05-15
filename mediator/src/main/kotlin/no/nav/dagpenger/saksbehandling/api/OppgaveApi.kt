@@ -67,6 +67,13 @@ internal fun Route.oppgaveApi(
     }
 
     authenticate("azureAd") {
+        route("person") {
+            post {
+                val ident: PersonIdentDTO = call.receive<PersonIdentDTO>()
+                val person = oppgaveMediator.hentPerson(ident.ident)
+            }
+        }
+
         route("person/oppgaver") {
             post {
                 val oppgaver =

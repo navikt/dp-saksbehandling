@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_UUID
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
@@ -103,6 +104,7 @@ class OppgaveDTOMapperTest {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
+                        "uuid": "$TEST_UUID",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -241,6 +243,7 @@ class OppgaveDTOMapperTest {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
+                        "uuid": "$TEST_UUID",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
