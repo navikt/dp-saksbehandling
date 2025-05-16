@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -10,6 +11,8 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 class KlageMediator(
     private val klageRepository: KlageRepository,
@@ -35,16 +38,23 @@ class KlageMediator(
             )
 
         klageRepository.lagre(klageBehandling)
-        return oppgaveMediator.opprettOppgaveForBehandling(
-            behandlingOpprettetHendelse =
-                BehandlingOpprettetHendelse(
-                    behandlingId = klageBehandling.behandlingId,
-                    ident = klageMottattHendelse.ident,
-                    opprettet = klageMottattHendelse.opprettet,
-                    type = BehandlingType.KLAGE,
-                    utførtAv = klageMottattHendelse.utførtAv,
-                ),
-        )
+        return kotlin.runCatching {
+            oppgaveMediator.opprettOppgaveForBehandling(
+                behandlingOpprettetHendelse =
+                    BehandlingOpprettetHendelse(
+                        behandlingId = klageBehandling.behandlingId,
+                        ident = klageMottattHendelse.ident,
+                        opprettet = klageMottattHendelse.opprettet,
+                        type = BehandlingType.KLAGE,
+                        utførtAv = klageMottattHendelse.utførtAv,
+                    ),
+            )
+        }
+            .onFailure { e ->
+                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                throw e
+            }
+            .getOrThrow()
     }
 
     fun oppdaterKlageOpplysning(
