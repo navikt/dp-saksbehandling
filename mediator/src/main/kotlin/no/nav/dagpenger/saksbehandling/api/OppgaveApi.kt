@@ -71,8 +71,8 @@ internal fun Route.oppgaveApi(
             post {
                 val ident: PersonIdentDTO = call.receive<PersonIdentDTO>()
                 val person = oppgaveMediator.hentPerson(ident.ident)
-                oppgaveDTOMapper.lagPersonDTO(person)
-                call.respond(status = HttpStatusCode.OK, person)
+                val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
+                call.respond(status = HttpStatusCode.OK, personDTO)
             }
         }
 
@@ -80,8 +80,8 @@ internal fun Route.oppgaveApi(
             get {
                 val personId = call.finnUUID("personId")
                 val person = oppgaveMediator.hentPerson(personId)
-                oppgaveDTOMapper.lagPersonDTO(person)
-                call.respond(status = HttpStatusCode.OK, person)
+                val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
+                call.respond(status = HttpStatusCode.OK, personDTO)
             }
         }
 

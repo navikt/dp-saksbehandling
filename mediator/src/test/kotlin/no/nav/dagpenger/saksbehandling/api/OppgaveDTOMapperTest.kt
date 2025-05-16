@@ -104,7 +104,7 @@ class OppgaveDTOMapperTest {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
-                        "uuid": "$TEST_UUID",
+                        "id": "$TEST_UUID",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -243,7 +243,7 @@ class OppgaveDTOMapperTest {
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
                         "ident": "12345612345",
-                        "uuid": "$TEST_UUID",
+                        "id": "$TEST_UUID",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
