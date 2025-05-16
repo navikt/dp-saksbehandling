@@ -106,15 +106,6 @@ class OppgaveMediator(
                     oppslag.hentPersonMedSkjermingOgGradering(behandlingOpprettetHendelse.ident)
                 }
 
-        if (oppgaveRepository.finnBehandling(behandlingOpprettetHendelse.behandlingId) != null) {
-            val feilmelding =
-                "Mottatt hendelse behandling_opprettet, men behandling finnes allerede " +
-                    "${behandlingOpprettetHendelse.behandlingId}."
-            logger.warn { feilmelding }
-            throw RuntimeException(feilmelding)
-            // Todo: fiks til rett feil
-        }
-
         val behandling =
             Behandling(
                 behandlingId = behandlingOpprettetHendelse.behandlingId,
