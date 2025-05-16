@@ -590,11 +590,11 @@ class OppgaveMediator(
     }
 
     fun hentPerson(ident: String): Person {
-        TODO()
+        return personRepository.hentPerson(ident)
     }
 
     fun hentPerson(personId: UUID): Person {
-        TODO()
+        return personRepository.hentPerson(personId)
     }
 
     private fun sendAlertTilRapid(

@@ -1340,4 +1340,44 @@ class OppgaveApiTest {
             }
         }
     }
+
+    @Test
+    fun `Skal kaste feil når person ikke finnes`() {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.hentPerson(any<String>()) } throws DataNotFoundException("Fant ikke person")
+                every { it.hentPerson(any<UUID>()) } throws DataNotFoundException("Fant ikke person")
+            }
+        withOppgaveApi(
+            oppgaveMediator = oppgaveMediatorMock,
+        ) {
+            client.post("/person") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"ident": "${testPerson.ident}"}""",
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
+                    "type" : "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
+                    "title" : "Ressurs ikke funnet",
+                    "status" : 404,
+                    "detail" : "Fant ikke person"
+                }"""
+            }
+
+            client.get("/person/${UUIDv7.ny()}") { autentisert() }
+                .let { response ->
+                    response.status shouldBe HttpStatusCode.NotFound
+                    response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
+                    "type" : "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
+                    "title" : "Ressurs ikke funnet",
+                    "status" : 404,
+                    "detail" : "Fant ikke person"
+                }"""
+                }
+        }
+    }
 }
