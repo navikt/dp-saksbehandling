@@ -9,9 +9,13 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
+import java.util.UUID
 import javax.sql.DataSource
 
-class PostgresPersonRepository(private val datasource: DataSource) : PersonRepository, SkjermingRepository, AdressebeskyttelseRepository {
+class PostgresPersonRepository(private val datasource: DataSource) :
+    PersonRepository,
+    SkjermingRepository,
+    AdressebeskyttelseRepository {
     override fun finnPerson(ident: String): Person? {
         sessionOf(datasource).use { session ->
             return session.run(
@@ -28,18 +32,46 @@ class PostgresPersonRepository(private val datasource: DataSource) : PersonRepos
                             "ident" to ident,
                         ),
                 ).map { row ->
-                    Person(
-                        id = row.uuid("id"),
-                        ident = row.string("ident"),
-                        skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
-                        adressebeskyttelseGradering = row.adresseBeskyttelseGradering(),
-                    )
+                    row.tilPerson()
                 }.asSingle,
             )
         }
     }
 
+    override fun finnPerson(id: UUID): Person? {
+        sessionOf(datasource).use { session ->
+            return session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT * 
+                        FROM   person_v1
+                        WHERE  id = :id
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "id" to id,
+                        ),
+                ).map { row ->
+                    row.tilPerson()
+                }.asSingle,
+            )
+        }
+    }
+
+    private fun Row.tilPerson(): Person {
+        return Person(
+            id = this.uuid("id"),
+            ident = this.string("ident"),
+            skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
+            adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
+        )
+    }
+
     override fun hentPerson(ident: String) = finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
+
+    override fun hentPerson(id: UUID) = finnPerson(id) ?: throw DataNotFoundException("Kan ikke finne person med id $id")
 
     override fun lagre(person: Person) {
         sessionOf(datasource).use { session ->

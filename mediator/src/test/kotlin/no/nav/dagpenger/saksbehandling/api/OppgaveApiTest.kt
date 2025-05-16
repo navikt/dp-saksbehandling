@@ -24,6 +24,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
@@ -136,6 +137,8 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
+                Arguments.of("/person", HttpMethod.Post),
+                Arguments.of("/person/${UUIDv7.ny()}", HttpMethod.Get),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
@@ -651,7 +654,11 @@ class OppgaveApiTest {
                     utførtAv = saksbehandler,
                 ),
             )
-        } returns lagOppgave(tilstand = Oppgave.UnderBehandling, behandling = lagBehandling(type = BehandlingType.RETT_TIL_DAGPENGER))
+        } returns
+            lagOppgave(
+                tilstand = Oppgave.UnderBehandling,
+                behandling = lagBehandling(type = BehandlingType.RETT_TIL_DAGPENGER),
+            )
 
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
@@ -819,6 +826,7 @@ class OppgaveApiTest {
                         person =
                             PersonDTO(
                                 ident = testPerson.ident,
+                                id = testOppgave.behandling.person.id,
                                 fornavn = testPerson.fornavn,
                                 etternavn = testPerson.etternavn,
                                 fodselsdato = testPerson.fødselsdato,
@@ -985,6 +993,7 @@ class OppgaveApiTest {
                         person =
                             PersonDTO(
                                 ident = testPerson.ident,
+                                id = UUIDv7.ny(),
                                 fornavn = testPerson.fornavn,
                                 etternavn = testPerson.etternavn,
                                 fodselsdato = testPerson.fødselsdato,
@@ -1221,6 +1230,154 @@ class OppgaveApiTest {
                 response.status shouldBe HttpStatusCode.OK
                 response.bodyAsText() shouldBe "false"
             }
+        }
+    }
+
+    @Test
+    fun `Skal kunen hente ut person via personId`() {
+        val personId = UUIDv7.ny()
+        val person =
+            Person(
+                id = personId,
+                ident = testPerson.ident,
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            )
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.hentPerson(personId) } returns person
+            }
+        val oppgaveDTOMapperMock =
+            mockk<OppgaveDTOMapper>().also {
+                coEvery { it.lagPersonDTO(person) } returns
+                    PersonDTO(
+                        ident = person.ident,
+                        id = personId,
+                        fornavn = "fornavn",
+                        etternavn = "etternavn",
+                        mellomnavn = null,
+                        fodselsdato = LocalDate.MIN,
+                        alder = 0,
+                        statsborgerskap = null,
+                        kjonn = KjonnDTO.KVINNE,
+                        skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
+                        adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                        sikkerhetstiltak = listOf(),
+                    )
+            }
+        withOppgaveApi(
+            oppgaveMediator = oppgaveMediatorMock,
+            oppgaveDTOMapper = oppgaveDTOMapperMock,
+        ) {
+            client.get("/person/$personId") { autentisert() }
+                .let { response ->
+                    response.status shouldBe HttpStatusCode.OK
+                    "${response.contentType()}" shouldContain "application/json"
+                    val personDTO =
+                        objectMapper.readValue(
+                            response.bodyAsText(),
+                            object : TypeReference<PersonDTO>() {},
+                        )
+                    personDTO.ident shouldBe person.ident
+                    personDTO.id shouldBe personId
+                }
+        }
+    }
+
+    @Test
+    fun `Skal kunen hente ut person via fnr`() {
+        val personId = UUIDv7.ny()
+        val person =
+            Person(
+                id = personId,
+                ident = testPerson.ident,
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            )
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.hentPerson(testPerson.ident) } returns person
+            }
+        val oppgaveDTOMapperMock =
+            mockk<OppgaveDTOMapper>().also {
+                coEvery { it.lagPersonDTO(person) } returns
+                    PersonDTO(
+                        ident = person.ident,
+                        id = personId,
+                        fornavn = "fornavn",
+                        etternavn = "etternavn",
+                        mellomnavn = null,
+                        fodselsdato = LocalDate.MIN,
+                        alder = 0,
+                        statsborgerskap = null,
+                        kjonn = KjonnDTO.KVINNE,
+                        skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
+                        adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
+                        sikkerhetstiltak = listOf(),
+                    )
+            }
+        withOppgaveApi(
+            oppgaveMediator = oppgaveMediatorMock,
+            oppgaveDTOMapper = oppgaveDTOMapperMock,
+        ) {
+            client.post("/person") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"ident": "${testPerson.ident}"}""",
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                val personDTO =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        object : TypeReference<PersonDTO>() {},
+                    )
+                personDTO.ident shouldBe person.ident
+                personDTO.id shouldBe personId
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kaste feil når person ikke finnes`() {
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.hentPerson(any<String>()) } throws DataNotFoundException("Fant ikke person")
+                every { it.hentPerson(any<UUID>()) } throws DataNotFoundException("Fant ikke person")
+            }
+        withOppgaveApi(
+            oppgaveMediator = oppgaveMediatorMock,
+        ) {
+            client.post("/person") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"ident": "${testPerson.ident}"}""",
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
+                    "type" : "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
+                    "title" : "Ressurs ikke funnet",
+                    "status" : 404,
+                    "detail" : "Fant ikke person"
+                }"""
+            }
+
+            client.get("/person/${UUIDv7.ny()}") { autentisert() }
+                .let { response ->
+                    response.status shouldBe HttpStatusCode.NotFound
+                    response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
+                    "type" : "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
+                    "title" : "Ressurs ikke funnet",
+                    "status" : 404,
+                    "detail" : "Fant ikke person"
+                }"""
+                }
         }
     }
 }

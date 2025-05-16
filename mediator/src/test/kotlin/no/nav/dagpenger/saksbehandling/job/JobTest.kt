@@ -9,6 +9,9 @@ import mu.KLogger
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 
 class JobTest {
@@ -46,6 +49,21 @@ class JobTest {
                 testJob.antallGangerKjørt shouldBe 0
             }
         }
+    }
+
+    @Test
+    fun `Skal finne riktig neste tidspunkt`() {
+        val now = LocalDateTime.of(2023, 10, 10, 13, 0)
+
+        Job.getNextOccurrence(14, 0, now) shouldBe
+            Date.from(
+                now.toLocalDate().atTime(14, 0).atZone(ZoneId.systemDefault()).toInstant(),
+            )
+
+        Job.getNextOccurrence(12, 0, now) shouldBe
+            Date.from(
+                now.toLocalDate().plusDays(1).atTime(12, 0).atZone(ZoneId.systemDefault()).toInstant(),
+            )
     }
 
     private class TestJob(

@@ -37,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -423,6 +424,38 @@ OppgaveMediatorTest {
                 hendelse.søknadId,
                 hendelse.ident,
             ) shouldBe skalLageGosysOppgave
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente en person basert op ident og fnr`() {
+        val personId = UUIDv7.ny()
+        val person =
+            Person(
+                id = personId,
+                ident = OppgaveApiTestHelper.testPerson.ident,
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+            )
+        val oppgave = lagOppgave(person = person)
+
+        withMigratedDb { ds ->
+            val personRepository = PostgresPersonRepository(ds)
+            val oppgaveRepository = PostgresOppgaveRepository(ds)
+
+            oppgaveRepository.lagre(oppgave)
+
+            val oppgaveMediator =
+                OppgaveMediator(
+                    personRepository = personRepository,
+                    oppgaveRepository = oppgaveRepository,
+                    oppslag = oppslagMock,
+                    behandlingKlient = behandlingKlientMock,
+                    meldingOmVedtakKlient = mockk(),
+                    utsendingMediator = mockk(),
+                )
+            oppgaveMediator.hentPerson(person.ident).shouldBe(person)
+            oppgaveMediator.hentPerson(personId).shouldBe(person)
         }
     }
 

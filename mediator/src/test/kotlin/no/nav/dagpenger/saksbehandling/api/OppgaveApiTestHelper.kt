@@ -49,6 +49,7 @@ import java.time.LocalDateTime
 
 internal object OppgaveApiTestHelper {
     const val TEST_IDENT = "12345612345"
+    val TEST_UUID = UUIDv7.ny()
     const val SAKSBEHANDLER_IDENT = "SaksbehandlerIdent"
     val defaultSaksbehandlerADGruppe = listOf("SaksbehandlerADGruppe")
     const val BESLUTTER_IDENT = "BeslutterIdent"
@@ -201,7 +202,7 @@ internal object OppgaveApiTestHelper {
                 behandlingId = UUIDv7.ny(),
                 person =
                     Person(
-                        id = UUIDv7.ny(),
+                        id = TEST_UUID,
                         ident = TEST_IDENT,
                         skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
                         adressebeskyttelseGradering = UGRADERT,

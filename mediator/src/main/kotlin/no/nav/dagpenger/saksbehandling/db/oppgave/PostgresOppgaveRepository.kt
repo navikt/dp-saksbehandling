@@ -515,6 +515,11 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                     tilstander = Type.søkbareTilstander,
                     saksbehandlerIdent = null,
                     personIdent = ident,
+                    paginering =
+                        Søkefilter.Paginering(
+                            antallOppgaver = 50,
+                            side = 0,
+                        ),
                 ),
         ).oppgaver
 

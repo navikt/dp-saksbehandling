@@ -67,6 +67,24 @@ internal fun Route.oppgaveApi(
     }
 
     authenticate("azureAd") {
+        route("person") {
+            post {
+                val ident: PersonIdentDTO = call.receive<PersonIdentDTO>()
+                val person = oppgaveMediator.hentPerson(ident.ident)
+                val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
+                call.respond(status = HttpStatusCode.OK, personDTO)
+            }
+        }
+
+        route("person/{personId}") {
+            get {
+                val personId = call.finnUUID("personId")
+                val person = oppgaveMediator.hentPerson(personId)
+                val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
+                call.respond(status = HttpStatusCode.OK, personDTO)
+            }
+        }
+
         route("person/oppgaver") {
             post {
                 val oppgaver =
@@ -110,7 +128,9 @@ internal fun Route.oppgaveApi(
                                     status = 404,
                                     instance = call.request.path(),
                                     detail = "Ingen oppgave funnet for søket",
-                                    type = URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet").toString(),
+                                    type =
+                                        URI.create("dagpenger.nav.no/saksbehandling:problem:ingen-oppgave-funnet")
+                                            .toString(),
                                 ),
                             )
 

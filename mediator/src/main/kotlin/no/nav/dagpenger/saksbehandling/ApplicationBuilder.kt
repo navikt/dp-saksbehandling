@@ -20,7 +20,9 @@ import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
+import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
+import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
@@ -185,9 +187,15 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 SletteGamleOppgaverJob(
                     rapidsConnection,
                     GamleOppgaverRepository(dataSource),
-                ).startJob()
+                ).startJob(
+                    startAt = getNextOccurrence(3, 0),
+                    period = 1.Dag,
+                )
             oppgaveFristUtgåttJob =
-                OppgaveFristUtgåttJob(oppgaveMediator).startJob()
+                OppgaveFristUtgåttJob(oppgaveMediator).startJob(
+                    startAt = getNextOccurrence(3, 0),
+                    period = 1.Dag,
+                )
             metrikkJob =
                 MetrikkJob().startJob(
                     startAt = now,

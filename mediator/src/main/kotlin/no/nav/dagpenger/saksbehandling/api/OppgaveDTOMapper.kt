@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
@@ -33,6 +34,11 @@ internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
+    suspend fun lagPersonDTO(person: Person): PersonDTO {
+        val pdlPerson = oppslag.hentPerson(person.ident)
+        return lagPersonDTO(person, pdlPerson)
+    }
+
     suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
         return coroutineScope {
             val person = async { oppslag.hentPerson(oppgave.behandling.person.ident) }
@@ -75,31 +81,7 @@ internal class OppgaveDTOMapper(
         OppgaveDTO(
             oppgaveId = oppgave.oppgaveId,
             behandlingId = oppgave.behandling.behandlingId,
-            person =
-                PersonDTO(
-                    ident = person.ident,
-                    fornavn = person.fornavn,
-                    etternavn = person.etternavn,
-                    mellomnavn = person.mellomnavn,
-                    fodselsdato = person.fødselsdato,
-                    alder = person.alder,
-                    kjonn =
-                        when (person.kjønn) {
-                            PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
-                            PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
-                            PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
-                        },
-                    statsborgerskap = person.statsborgerskap,
-                    skjermesSomEgneAnsatte = oppgave.behandling.person.skjermesSomEgneAnsatte,
-                    sikkerhetstiltak = mapGyldigeSikkerhetstiltak(person),
-                    adressebeskyttelseGradering =
-                        when (oppgave.behandling.person.adressebeskyttelseGradering) {
-                            AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
-                            AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
-                            AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
-                            AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
-                        },
-                ),
+            person = lagPersonDTO(oppgave.behandling.person, person),
             tidspunktOpprettet = oppgave.opprettet,
             behandlingType = oppgave.behandling.tilBehandlingTypeDTO(),
             emneknagger = oppgave.emneknagger.toList(),
@@ -138,6 +120,37 @@ internal class OppgaveDTOMapper(
         }.filter { sikkerhetstiltakIntern -> sikkerhetstiltakIntern.erGyldig(LocalDate.now()) }.map {
             SikkerhetstiltakDTO(beskrivelse = it.beskrivelse, gyldigTom = it.gyldigTom)
         }
+    }
+
+    private fun lagPersonDTO(
+        person: Person,
+        pdlPersonIntern: PDLPersonIntern,
+    ): PersonDTO {
+        return PersonDTO(
+            ident = person.ident,
+            id = person.id,
+            fornavn = pdlPersonIntern.fornavn,
+            etternavn = pdlPersonIntern.etternavn,
+            mellomnavn = pdlPersonIntern.mellomnavn,
+            fodselsdato = pdlPersonIntern.fødselsdato,
+            alder = pdlPersonIntern.alder,
+            kjonn =
+                when (pdlPersonIntern.kjønn) {
+                    PDLPerson.Kjonn.MANN -> KjonnDTO.MANN
+                    PDLPerson.Kjonn.KVINNE -> KjonnDTO.KVINNE
+                    PDLPerson.Kjonn.UKJENT -> KjonnDTO.UKJENT
+                },
+            statsborgerskap = pdlPersonIntern.statsborgerskap,
+            skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
+            sikkerhetstiltak = mapGyldigeSikkerhetstiltak(pdlPersonIntern),
+            adressebeskyttelseGradering =
+                when (person.adressebeskyttelseGradering) {
+                    AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
+                    AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
+                    AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
+                    AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
+                },
+        )
     }
 }
 

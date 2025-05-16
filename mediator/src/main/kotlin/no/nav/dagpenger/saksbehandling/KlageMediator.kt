@@ -55,16 +55,23 @@ class KlageMediator(
             )
 
         klageRepository.lagre(klageBehandling)
-        return oppgaveMediator.opprettOppgaveForBehandling(
-            behandlingOpprettetHendelse =
-                BehandlingOpprettetHendelse(
-                    behandlingId = klageBehandling.behandlingId,
-                    ident = klageMottattHendelse.ident,
-                    opprettet = klageMottattHendelse.opprettet,
-                    type = BehandlingType.KLAGE,
-                    utførtAv = klageMottattHendelse.utførtAv,
-                ),
-        )
+        return kotlin.runCatching {
+            oppgaveMediator.opprettOppgaveForBehandling(
+                behandlingOpprettetHendelse =
+                    BehandlingOpprettetHendelse(
+                        behandlingId = klageBehandling.behandlingId,
+                        ident = klageMottattHendelse.ident,
+                        opprettet = klageMottattHendelse.opprettet,
+                        type = BehandlingType.KLAGE,
+                        utførtAv = klageMottattHendelse.utførtAv,
+                    ),
+            )
+        }
+            .onFailure { e ->
+                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                throw e
+            }
+            .getOrThrow()
     }
 
     fun oppdaterKlageOpplysning(
