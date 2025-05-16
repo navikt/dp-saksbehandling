@@ -12,6 +12,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
@@ -90,7 +92,8 @@ class KlageMediator(
     fun ferdigstill(hendelse: KlageFerdigbehandletHendelse) {
         val html = "<html><h1>Dette må vi gjøre noe med</h1></html>"
 
-        val oppgave = sjekkTilgangOgEierAvOppgave(behandlingId = hendelse.behandlingId, saksbehandler = hendelse.utførtAv)
+        val oppgave =
+            sjekkTilgangOgEierAvOppgave(behandlingId = hendelse.behandlingId, saksbehandler = hendelse.utførtAv)
 
         val behandlendeEnhet =
             runBlocking {
@@ -137,15 +140,35 @@ class KlageMediator(
             startUtsendingHendelse,
         )
         if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+            val body =
+                mutableMapOf(
+                    "behandlingId" to klageBehandling.behandlingId.toString(),
+                    "ident" to oppgave.behandling.person.ident,
+                    "fagsakId" to sak.id,
+                    "behandlendeEnhet" to behandlendeEnhet,
+                    "hjemler" to klageBehandling.hjemler(),
+                )
+
+            klageBehandling.synligeOpplysninger()
+                .filter { OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper.contains(it.type) && it.verdi() != Verdi.TomVerdi }
+                .forEach {
+                    val verdi = it.verdi() as Verdi.TekstVerdi
+                    when (it.type) {
+                        OpplysningType.FULLMEKTIG_NAVN -> body.put("prosessfullmektigNavn", verdi)
+                        OpplysningType.FULLMEKTIG_ADRESSE_1 -> body.put("prosessfullmektigAdresselinje1", verdi)
+                        OpplysningType.FULLMEKTIG_ADRESSE_2 -> body.put("prosessfullmektigAdresselinje2", verdi)
+                        OpplysningType.FULLMEKTIG_ADRESSE_3 -> body.put("prosessfullmektigAdresselinje3", verdi)
+                        OpplysningType.FULLMEKTIG_POSTNR -> body.put("prosessfullmektigPostnummer", verdi)
+                        OpplysningType.FULLMEKTIG_POSTSTED -> body.put("prosessfullmektigPoststed", verdi)
+                        OpplysningType.FULLMEKTIG_LAND -> body.put("prosessfullmektigLand", verdi)
+                        else -> {}
+                    }
+                }
+
             val message =
                 JsonMessage.newNeed(
                     behov = setOf("OversendelseKlageinstans"),
-                    map =
-                        mapOf(
-                            "behandlingId" to klageBehandling.behandlingId.toString(),
-                            "ident" to oppgave.behandling.person.ident,
-                            "fagsakId" to sak.id,
-                        ),
+                    map = body,
                 ).toJson().also {
                     sikkerlogg.info { "Publiserer behov: $it for oversendelse til klageinstans" }
                 }
@@ -208,4 +231,11 @@ class KlageMediator(
             requireEierAvOppgave(oppgave = it, saksbehandler = saksbehandler)
         }
     }
+}
+
+fun KlageBehandling.hjemler(): List<String> {
+    val verdi =
+        this.synligeOpplysninger()
+            .singleOrNull { it.type == OpplysningType.HJEMLER }?.verdi() as Verdi.Flervalg?
+    return verdi?.value?.map { it }.orEmpty()
 }

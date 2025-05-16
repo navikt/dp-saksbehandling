@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
@@ -23,7 +22,6 @@ import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.OVERSEND_KLAGEINSTANS
-import no.nav.dagpenger.saksbehandling.klage.KlageHttpKlient
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HVEM_KLAGER
@@ -108,10 +106,6 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            mockk<KlageHttpKlient>().also {
-                coEvery { it.registrerKlage(any(), any(), any()) } returns
-                    Result.success(HttpStatusCode.OK)
-            }
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand() shouldBe
                 KlageBehandling.BehandlingTilstand.BEHANDLES
 
@@ -146,29 +140,35 @@ class KlageMediatorTest {
                     utførtAv = saksbehandler,
                 ),
             )
-            klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand() shouldBe OVERSEND_KLAGEINSTANS
+            val klageBehandling = klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            klageBehandling.tilstand() shouldBe OVERSEND_KLAGEINSTANS
+            klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
             testRapid.inspektør.size shouldBe 1
 
             OversendtKlageinstansMottak(
                 rapidsConnection = testRapid,
                 klageMediator = klageMediator,
             )
+
+            val melding =
+                """
+                {
+                  "@event_name" : "behov",
+                  "@behov" : [ "OversendelseKlageinstans" ],
+                  "behandlingId" : "$behandlingId",
+                  "ident" : "${oppgave.behandling.person.ident}",
+                  "fagsakId" : "$fagsakId",
+                  "behandlendeEnhet": "${klageBehandling.behandlendeEnhet()}",
+                  "hjemler": ${klageBehandling.hjemler().map { "\"$it\"" }},
+                  "@løsning": {
+                    "OversendelseKlageinstans": "OK"
+                  }
+                }
+                """.trimIndent()
+
             testRapid.sendTestMessage(
                 key = oppgave.behandling.person.ident,
-                message =
-                    """
-                    {
-                      "@event_name" : "behov",
-                      "@behov" : [ "OversendelseKlageinstans" ],
-                      "behandlingId" : "$behandlingId",
-                      "ident" : "${oppgave.behandling.person.ident}",
-                      "fagsakId" : "$fagsakId",
-                      "@løsning": {
-                        "OversendelseKlageinstans": "OK"
-                      }
-                    }
-                    """.trimIndent(),
+                message = melding,
             )
 
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)

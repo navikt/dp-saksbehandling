@@ -32,7 +32,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         //language=PostgreSQL
                         statement =
                             """
-                            SELECT id, tilstand, journalpost_id, opplysninger
+                            SELECT id, tilstand, journalpost_id, behandlende_enhet, opplysninger
                             FROM   klage_v1 
                             WHERE  id = :id
                             """.trimIndent(),
@@ -42,6 +42,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                             behandlingId = row.uuid("id"),
                             tilstand = KlageBehandling.BehandlingTilstand.valueOf(row.string("tilstand")),
                             journalpostId = row.stringOrNull("journalpost_id"),
+                            behandlendeEnhet = row.stringOrNull("behandlende_enhet"),
                             opplysninger = row.string("opplysninger").tilKlageOpplysninger(),
                         )
                     }.asSingle,
@@ -57,11 +58,13 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 statement =
                     """
                     INSERT INTO klage_v1
-                        (id, tilstand, journalpost_id, opplysninger)
+                        (id, tilstand, journalpost_id, behandlende_enhet, opplysninger)
                     VALUES
-                        (:id, :tilstand, :journalpost_id, :opplysninger) 
+                        (:id, :tilstand, :journalpost_id, :behandlende_enhet, :opplysninger)
                     ON CONFLICT(id) DO UPDATE SET
                      tilstand = :tilstand,
+                     journalpost_id = :journalpost_id,
+                     behandlende_enhet = :behandlende_enhet,
                      opplysninger = :opplysninger
                     """.trimIndent(),
                 paramMap =
@@ -69,6 +72,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         "id" to klageBehandling.behandlingId,
                         "tilstand" to klageBehandling.tilstand().toString(),
                         "journalpost_id" to klageBehandling.journalpostId(),
+                        "behandlende_enhet" to klageBehandling.behandlendeEnhet(),
                         "opplysninger" to
                             PGobject().also {
                                 it.type = "JSONB"
