@@ -188,29 +188,21 @@ class KlageMediator(
     }
 
     fun avbrytKlage(
-        behandlingId: UUID,
-        saksbehandler: Saksbehandler,
+        hendelse: AvbruttHendelse,
     ) {
         sjekkTilgangOgEierAvOppgave(
-            behandlingId = behandlingId,
-            saksbehandler = saksbehandler,
+            behandlingId = hendelse.behandlingId,
+            saksbehandler = hendelse.utførtAv,
         )
         val klageBehandling =
             klageRepository.hentKlageBehandling(
-                behandlingId = behandlingId,
+                behandlingId = hendelse.behandlingId,
             ).also { klageBehandling ->
-                klageBehandling.avbryt()
+                klageBehandling.avbryt(hendelse = hendelse)
             }
 
         klageRepository.lagre(klageBehandling)
-
-        oppgaveMediator.ferdigstillOppgave(
-            avbruttHendelse =
-                AvbruttHendelse(
-                    behandlingId = behandlingId,
-                    utførtAv = saksbehandler,
-                ),
-        )
+        oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
     }
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {

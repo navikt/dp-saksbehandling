@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -31,6 +32,14 @@ data class KlageBehandling(
         steg.forEach { it.evaluerSynlighet(opplysninger) }
     }
 
+    fun tilstand(): KlageTilstand {
+        return tilstand
+    }
+
+    fun journalpostId(): String? {
+        return journalpostId
+    }
+
     fun behandlendeEnhet(): String? {
         return behandlendeEnhet
     }
@@ -48,51 +57,17 @@ data class KlageBehandling(
             }
     }
 
+    fun hentOpplysning(opplysningId: UUID): Opplysning {
+        return opplysninger.singleOrNull { it.opplysningId == opplysningId }
+            ?: throw IllegalArgumentException("Fant ikke opplysning med id $opplysningId")
+    }
+
     fun alleOpplysninger(): Set<Opplysning> {
         return opplysninger
     }
 
     fun synligeOpplysninger(): Set<Opplysning> {
         return opplysninger.filter { it.synlighet() }.toSet()
-    }
-
-    fun saksbehandlingFerdig(
-        behandlendeEnhet: String,
-        hendelse: KlageFerdigbehandletHendelse
-    ) {
-        if (!this.kanFerdigstilles()) {
-            throw IllegalStateException("Kan ikke ferdigstille klagebehandling når påkrevde opplysninger ikke er utfylt")
-        }
-        this.behandlendeEnhet = behandlendeEnhet
-        tilstand.saksbehandlingFerdig(
-            klageBehandling = this,
-            hendelse = hendelse,
-        )
-    }
-
-    fun oversendtTilKlageinstans() {
-        this.tilstand = Ferdigstilt
-    }
-
-    fun hentOpplysning(opplysningId: UUID): Opplysning {
-        return opplysninger.singleOrNull { it.opplysningId == opplysningId }
-            ?: throw IllegalArgumentException("Fant ikke opplysning med id $opplysningId")
-    }
-
-    fun tilstand(): KlageTilstand {
-        return tilstand
-    }
-
-    fun journalpostId(): String? {
-        return journalpostId
-    }
-
-    fun avbryt() {
-        // TODO
-//        if (tilstand in setOf(Type.FERDIGSTILT, Type.OVERSEND_KLAGEINSTANS)) {
-//            throw IllegalStateException("Kan ikke avbryte klagebehandling i tilstand $tilstand")
-//        }
-//        tilstand = Type.AVBRUTT
     }
 
     fun svar(
@@ -119,6 +94,31 @@ data class KlageBehandling(
         return tommeOpplysninger.isEmpty()
     }
 
+    fun saksbehandlingFerdig(
+        behandlendeEnhet: String,
+        hendelse: KlageFerdigbehandletHendelse
+    ) {
+        if (!this.kanFerdigstilles()) {
+            throw IllegalStateException("Kan ikke ferdigstille klagebehandling når påkrevde opplysninger ikke er utfylt")
+        }
+        this.behandlendeEnhet = behandlendeEnhet
+        tilstand.saksbehandlingFerdig(
+            klageBehandling = this,
+            hendelse = hendelse,
+        )
+    }
+
+    fun oversendtTilKlageinstans() {
+        this.tilstand = Ferdigstilt
+    }
+
+    fun avbryt(hendelse: AvbruttHendelse) {
+        tilstand.avbryt(
+            klageBehandling = this,
+            hendelse = hendelse,
+        )
+    }
+
     object Behandles: KlageTilstand {
         override val type: Type = BEHANDLES
 
@@ -132,9 +132,18 @@ data class KlageBehandling(
                 klageBehandling.tilstand = Ferdigstilt
             }
         }
+
+        override fun avbryt(
+            klageBehandling: KlageBehandling,
+            hendelse: AvbruttHendelse
+        ) {
+            klageBehandling.tilstand = Avbrutt
+        }
     }
     object OversendKlageinstans: KlageTilstand {
         override val type: Type = OVERSEND_KLAGEINSTANS
+
+
     }
     object Ferdigstilt: KlageTilstand {
         override val type: Type = FERDIGSTILT
@@ -158,6 +167,12 @@ data class KlageBehandling(
             hendelse: KlageFerdigbehandletHendelse
         ) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling i tilstand $type")
+        }
+        fun avbryt(
+            klageBehandling: KlageBehandling,
+            hendelse: AvbruttHendelse,
+            ) {
+            throw IllegalStateException("Kan ikke avbryte klagebehandling i tilstand $type")
         }
     }
 }
