@@ -1106,7 +1106,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
                     BEHANDLES_I_ARENA -> BehandlesIArena
                 }
             }.getOrElse { t ->
-                throw UgyldigTilstandException("Kunne ikke rehydrere til tilstand: ${string("tilstand")} ${t.message}")
+                throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
             }
 
     return Oppgave.rehydrer(

@@ -1,12 +1,19 @@
 package no.nav.dagpenger.saksbehandling.db.klage
 
+import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
@@ -38,13 +45,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                             """.trimIndent(),
                         paramMap = mapOf("id" to behandlingId),
                     ).map { row ->
-                        KlageBehandling(
-                            behandlingId = row.uuid("id"),
-                            tilstand = KlageBehandling.Type.valueOf(row.string("tilstand")),
-                            journalpostId = row.stringOrNull("journalpost_id"),
-                            behandlendeEnhet = row.stringOrNull("behandlende_enhet"),
-                            opplysninger = row.string("opplysninger").tilKlageOpplysninger(),
-                        )
+                        row.rehydrerKlageBehandling()
                     }.asSingle,
                 )
             }
@@ -70,7 +71,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 paramMap =
                     mapOf(
                         "id" to klageBehandling.behandlingId,
-                        "tilstand" to klageBehandling.tilstand().toString(),
+                        "tilstand" to klageBehandling.tilstand().type.name,
                         "journalpost_id" to klageBehandling.journalpostId(),
                         "behandlende_enhet" to klageBehandling.behandlendeEnhet(),
                         "opplysninger" to
@@ -80,6 +81,34 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                             },
                     ),
             ).asUpdate,
+        )
+    }
+
+    private fun Row.rehydrerKlageBehandling(): KlageBehandling {
+        val behandlingId = this.uuid("id")
+        val tilstandAsText = this.string("tilstand")
+        val tilstand =
+            kotlin
+                .runCatching {
+                    when (KlageTilstand.Type.valueOf(tilstandAsText)) {
+                        BEHANDLES -> KlageBehandling.Behandles
+                        OVERSEND_KLAGEINSTANS -> KlageBehandling.OversendKlageinstans
+                        FERDIGSTILT -> KlageBehandling.Ferdigstilt
+                        AVBRUTT -> KlageBehandling.Avbrutt
+                    }
+                }.getOrElse { t ->
+                    throw UgyldigTilstandException("Kunne ikke rehydrere klagebehandling til tilstand: ${string("tilstand")} ${t.message}")
+                }
+        val journalpostId = this.stringOrNull("journalpost_id")
+        val behandlendeEnhet = this.stringOrNull("behandlende_enhet")
+        val opplysninger = this.string("opplysninger").tilKlageOpplysninger()
+
+        return KlageBehandling(
+            behandlingId = behandlingId,
+            tilstand = tilstand,
+            journalpostId = journalpostId,
+            behandlendeEnhet = behandlendeEnhet,
+            opplysninger = opplysninger,
         )
     }
 }

@@ -8,6 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -15,13 +16,15 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.FERDIGSTILT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HVEM_KLAGER
@@ -106,12 +109,11 @@ class KlageMediatorTest {
                     ),
                 ).behandling.behandlingId
 
-            klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand() shouldBe
-                KlageBehandling.Type.BEHANDLES
+            klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
-            oppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
@@ -140,8 +142,9 @@ class KlageMediatorTest {
                     utførtAv = saksbehandler,
                 ),
             )
-            val klageBehandling = klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-            klageBehandling.tilstand() shouldBe OVERSEND_KLAGEINSTANS
+            val klageBehandling =
+                klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
             testRapid.inspektør.size shouldBe 1
 
@@ -172,7 +175,7 @@ class KlageMediatorTest {
             )
 
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
-                .tilstand() shouldBe FERDIGSTILT
+                .tilstand().type shouldBe FERDIGSTILT
 
             oppgaveMediator.hentOppgaveFor(
                 behandlingId = behandlingId,
@@ -224,12 +227,11 @@ class KlageMediatorTest {
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
-            ).tilstand() shouldBe
-                KlageBehandling.Type.BEHANDLES
+            ).tilstand().type shouldBe BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
-            oppgave.tilstand().type shouldBe Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+            oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
@@ -241,15 +243,17 @@ class KlageMediatorTest {
             )
 
             klageMediator.avbrytKlage(
-                behandlingId = behandlingId,
-                saksbehandler = saksbehandler,
+                hendelse =
+                    AvbruttHendelse(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
             )
 
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
-            ).tilstand() shouldBe
-                KlageBehandling.Type.AVBRUTT
+            ).tilstand().type shouldBe AVBRUTT
 
             oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand().type shouldBe FERDIG_BEHANDLET

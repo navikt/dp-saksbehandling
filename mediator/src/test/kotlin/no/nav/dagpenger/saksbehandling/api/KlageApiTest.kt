@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToke
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
@@ -170,9 +171,18 @@ class KlageApiTest {
 
     @Test
     fun `Skal kunne trekke en klage`() {
+        val avbruttHendelse =
+            AvbruttHendelse(
+                behandlingId = klageBehandlingId,
+                utførtAv = saksbehandler,
+            )
         val mediator =
             mockk<KlageMediator>().also {
-                every { it.avbrytKlage(behandlingId = klageBehandlingId, saksbehandler = saksbehandler) } just Runs
+                every {
+                    it.avbrytKlage(
+                        hendelse = avbruttHendelse,
+                    )
+                } just Runs
             }
 
         withKlageApi(mediator) {
@@ -180,10 +190,7 @@ class KlageApiTest {
         }
 
         verify(exactly = 1) {
-            mediator.avbrytKlage(
-                behandlingId = klageBehandlingId,
-                saksbehandler = saksbehandler,
-            )
+            mediator.avbrytKlage(hendelse = avbruttHendelse)
         }
     }
 

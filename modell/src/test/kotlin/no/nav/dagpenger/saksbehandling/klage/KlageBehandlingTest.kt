@@ -4,11 +4,15 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.AVBRUTT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.FERDIGSTILT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper
@@ -23,6 +27,13 @@ import java.time.LocalDate
 import java.util.UUID
 
 class KlageBehandlingTest {
+    private val saksbehandler =
+        Saksbehandler(
+            navIdent = "saksbehandler",
+            grupper = setOf("SaksbehandlerADGruppe"),
+            tilganger = setOf(SAKSBEHANDLER),
+        )
+
     @Test
     fun `Skal kunne svare og endre på opplysninger med ulike datatyper`() {
         val klageBehandling =
@@ -139,17 +150,38 @@ class KlageBehandlingTest {
         val klageBehandling =
             KlageBehandling(
                 steg = emptyList(),
-                opplysninger = setOf(synligOgPåkrevdOpplysning, ikkePåkrevdOpplysning, ikkeSynligOpplysning, utfallOpplysning),
+                opplysninger =
+                    setOf(
+                        synligOgPåkrevdOpplysning,
+                        ikkePåkrevdOpplysning,
+                        ikkeSynligOpplysning,
+                        utfallOpplysning,
+                    ),
             )
-        klageBehandling.tilstand() shouldBe BEHANDLES
+        klageBehandling.tilstand().type shouldBe BEHANDLES
 
-        shouldThrow<IllegalStateException> { klageBehandling.saksbehandlingFerdig("4408") }
+        val klageFerdigbehandletHendelse =
+            KlageFerdigbehandletHendelse(
+                behandlingId = klageBehandling.behandlingId,
+                utførtAv = saksbehandler,
+            )
+        shouldThrow<IllegalStateException> {
+            klageBehandling.saksbehandlingFerdig(
+                behandlendeEnhet = "4408",
+                hendelse = klageFerdigbehandletHendelse,
+            )
+        }
 
         klageBehandling.svar(synligOgPåkrevdOpplysning.opplysningId, Boolsk(false))
         klageBehandling.svar(utfallOpplysning.opplysningId, TekstVerdi("AVVIST"))
 
-        shouldNotThrow<IllegalStateException> { klageBehandling.saksbehandlingFerdig("4408") }
-        klageBehandling.tilstand() shouldBe FERDIGSTILT
+        shouldNotThrow<IllegalStateException> {
+            klageBehandling.saksbehandlingFerdig(
+                behandlendeEnhet = "4408",
+                hendelse = klageFerdigbehandletHendelse,
+            )
+        }
+        klageBehandling.tilstand().type shouldBe FERDIGSTILT
     }
 
     @Test
@@ -182,42 +214,100 @@ class KlageBehandlingTest {
         val klageBehandling =
             KlageBehandling(
                 steg = emptyList(),
-                opplysninger = setOf(synligOgPåkrevdOpplysning, ikkePåkrevdOpplysning, ikkeSynligOpplysning, utfallOpplysning),
+                opplysninger =
+                    setOf(
+                        synligOgPåkrevdOpplysning,
+                        ikkePåkrevdOpplysning,
+                        ikkeSynligOpplysning,
+                        utfallOpplysning,
+                    ),
             )
-        klageBehandling.tilstand() shouldBe BEHANDLES
+        klageBehandling.tilstand().type shouldBe BEHANDLES
 
-        shouldThrow<IllegalStateException> { klageBehandling.saksbehandlingFerdig("4408") }
+        val klageFerdigbehandletHendelse =
+            KlageFerdigbehandletHendelse(
+                behandlingId = klageBehandling.behandlingId,
+                utførtAv = saksbehandler,
+            )
+        shouldThrow<IllegalStateException> {
+            klageBehandling.saksbehandlingFerdig(
+                behandlendeEnhet = "4408",
+                hendelse = klageFerdigbehandletHendelse,
+            )
+        }
 
         klageBehandling.svar(synligOgPåkrevdOpplysning.opplysningId, Boolsk(false))
         klageBehandling.svar(utfallOpplysning.opplysningId, TekstVerdi("OPPRETTHOLDELSE"))
 
-        shouldNotThrow<IllegalStateException> { klageBehandling.saksbehandlingFerdig("4408") }
-        klageBehandling.tilstand() shouldBe OVERSEND_KLAGEINSTANS
+        shouldNotThrow<IllegalStateException> {
+            klageBehandling.saksbehandlingFerdig(
+                behandlendeEnhet = "4408",
+                hendelse = klageFerdigbehandletHendelse,
+            )
+        }
+        klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
     }
 
     @Test
     fun `Klagebehandling skal kunne avbrytes fra tilstand BEHANDLES`() {
         val klageBehandling = KlageBehandling()
-        klageBehandling.tilstand() shouldBe BEHANDLES
+        klageBehandling.tilstand().type shouldBe BEHANDLES
 
-        klageBehandling.avbryt()
-        klageBehandling.tilstand() shouldBe AVBRUTT
+        klageBehandling.avbryt(
+            hendelse =
+                AvbruttHendelse(
+                    behandlingId = klageBehandling.behandlingId,
+                    utførtAv = saksbehandler,
+                ),
+        )
+
+        klageBehandling.tilstand().type shouldBe AVBRUTT
     }
 
     @Test
     fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT eller OVERSEND_KLAGEINSTANS`() {
         val klageBehandling = KlageBehandling()
         svarPåAlleOpplysninger(klageBehandling)
-        klageBehandling.saksbehandlingFerdig("4408")
+        val klageFerdigbehandletHendelse =
+            KlageFerdigbehandletHendelse(
+                behandlingId = klageBehandling.behandlingId,
+                utførtAv = saksbehandler,
+            )
+        klageBehandling.saksbehandlingFerdig(
+            behandlendeEnhet = "4408",
+            hendelse = klageFerdigbehandletHendelse,
+        )
 
-        shouldThrow<IllegalStateException> { klageBehandling.avbryt() }
+        klageBehandling.tilstand().type shouldBe FERDIGSTILT
+
+        shouldThrow<IllegalStateException> {
+            klageBehandling.avbryt(
+                hendelse =
+                    AvbruttHendelse(
+                        behandlingId = klageBehandling.behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+        }
     }
 
     private fun svarPåAlleOpplysninger(klageBehandling: KlageBehandling) {
         klageBehandling.alleOpplysninger().forEach {
             when (it.type.datatype) {
                 Datatype.BOOLSK -> klageBehandling.svar(it.opplysningId, Boolsk(true))
-                Datatype.TEKST -> klageBehandling.svar(it.opplysningId, TekstVerdi(it.valgmuligheter.firstOrNull() ?: "String"))
+                Datatype.TEKST ->
+                    klageBehandling.svar(
+                        opplysningId = it.opplysningId,
+                        verdi =
+                            TekstVerdi(
+                                value =
+                                    when (it.type) {
+                                        OpplysningType.UTFALL -> "AVVIST"
+                                        else -> it.valgmuligheter.firstOrNull() ?: "String"
+                                    },
+                            ),
+                    )
+
                 Datatype.DATO -> klageBehandling.svar(it.opplysningId, Dato(LocalDate.MIN))
                 Datatype.FLERVALG -> klageBehandling.svar(it.opplysningId, Flervalg(it.valgmuligheter))
             }
@@ -225,11 +315,13 @@ class KlageBehandlingTest {
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
+        return this.synligeOpplysninger()
+            .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
     }
 
     private fun KlageBehandling.finnEnTekstOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.opplysningId
+        return this.synligeOpplysninger()
+            .first { opplysning -> opplysning.type.datatype == Datatype.TEKST }.opplysningId
     }
 
     private fun KlageBehandling.finnEnDatoOpplysningId(): UUID {
@@ -237,6 +329,7 @@ class KlageBehandlingTest {
     }
 
     private fun KlageBehandling.finnEnListeOpplysningId(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }.opplysningId
+        return this.synligeOpplysninger()
+            .first { opplysning -> opplysning.type.datatype == Datatype.FLERVALG }.opplysningId
     }
 }

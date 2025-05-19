@@ -66,10 +66,11 @@ fun Route.klageApi(
                         val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.sakbehandler(call)
                         mediator.avbrytKlage(
-                            hendelse = AvbruttHendelse(
-                                behandlingId = behandlingId,
-                                utførtAv = saksbehandler,
-                            ),
+                            hendelse =
+                                AvbruttHendelse(
+                                    behandlingId = behandlingId,
+                                    utførtAv = saksbehandler,
+                                ),
                         )
                         call.respond(HttpStatusCode.NoContent)
                     }

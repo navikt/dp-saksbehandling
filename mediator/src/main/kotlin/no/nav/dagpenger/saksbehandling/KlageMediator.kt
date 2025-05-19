@@ -187,9 +187,7 @@ class KlageMediator(
         }
     }
 
-    fun avbrytKlage(
-        hendelse: AvbruttHendelse,
-    ) {
+    fun avbrytKlage(hendelse: AvbruttHendelse) {
         sjekkTilgangOgEierAvOppgave(
             behandlingId = hendelse.behandlingId,
             saksbehandler = hendelse.utførtAv,
@@ -207,7 +205,7 @@ class KlageMediator(
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {
         klageRepository.hentKlageBehandling(behandlingId = hendelse.behandlingId).let { klageBehandling ->
-            klageBehandling.oversendtTilKlageinstans()
+            klageBehandling.oversendtTilKlageinstans(hendelse)
             klageRepository.lagre(klageBehandling)
         }
     }

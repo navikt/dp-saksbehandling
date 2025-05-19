@@ -6,7 +6,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import org.junit.jupiter.api.Test
@@ -55,7 +55,7 @@ class PostgresKlageRepositoryTest {
 
             hentetKlageBehandling.behandlingId shouldBe klageBehandling.behandlingId
             hentetKlageBehandling.journalpostId() shouldBe klageBehandling.journalpostId()
-            hentetKlageBehandling.tilstand() shouldBe BEHANDLES
+            hentetKlageBehandling.tilstand().type shouldBe BEHANDLES
             hentetKlageBehandling.alleOpplysninger() shouldContainExactly klageBehandling.alleOpplysninger()
 
             hentetKlageBehandling.finnEnOpplysning(boolskOpplysningId).verdi() shouldBe Verdi.Boolsk(true)
