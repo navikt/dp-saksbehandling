@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling.klage
 
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.BEHANDLES
 import java.time.LocalDate
 import java.util.UUID
 
@@ -8,7 +8,7 @@ fun lagKlagebehandling(
     hjemler: List<Hjemler> = listOf(Hjemler.FTRL_4_2, Hjemler.FTRL_4_9, Hjemler.FTRL_4_18),
     land: Land? = Land.NO,
     behandlendeEnhet: String? = null,
-    tilstand: KlageBehandling.BehandlingTilstand = BEHANDLES,
+    tilstand: KlageBehandling.Type = BEHANDLES,
 ): KlageBehandling {
     val opplysninger =
         mutableSetOf(

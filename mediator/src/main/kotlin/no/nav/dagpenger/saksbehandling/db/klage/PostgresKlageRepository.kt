@@ -40,7 +40,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                     ).map { row ->
                         KlageBehandling(
                             behandlingId = row.uuid("id"),
-                            tilstand = KlageBehandling.BehandlingTilstand.valueOf(row.string("tilstand")),
+                            tilstand = KlageBehandling.Type.valueOf(row.string("tilstand")),
                             journalpostId = row.stringOrNull("journalpost_id"),
                             behandlendeEnhet = row.stringOrNull("behandlende_enhet"),
                             opplysninger = row.string("opplysninger").tilKlageOpplysninger(),

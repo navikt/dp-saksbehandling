@@ -5,10 +5,10 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.AVBRUTT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.BEHANDLES
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.FERDIGSTILT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.AVBRUTT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpplysningTyper

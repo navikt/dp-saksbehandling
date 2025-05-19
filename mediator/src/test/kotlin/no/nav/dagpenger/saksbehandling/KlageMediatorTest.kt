@@ -20,8 +20,8 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.FERDIGSTILT
-import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.BehandlingTilstand.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HVEM_KLAGER
@@ -107,7 +107,7 @@ class KlageMediatorTest {
                 ).behandling.behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand() shouldBe
-                KlageBehandling.BehandlingTilstand.BEHANDLES
+                KlageBehandling.Type.BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -225,7 +225,7 @@ class KlageMediatorTest {
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
             ).tilstand() shouldBe
-                KlageBehandling.BehandlingTilstand.BEHANDLES
+                KlageBehandling.Type.BEHANDLES
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -249,7 +249,7 @@ class KlageMediatorTest {
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
             ).tilstand() shouldBe
-                KlageBehandling.BehandlingTilstand.AVBRUTT
+                KlageBehandling.Type.AVBRUTT
 
             oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand().type shouldBe FERDIG_BEHANDLET

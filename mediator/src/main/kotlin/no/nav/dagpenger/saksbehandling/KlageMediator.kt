@@ -110,7 +110,10 @@ class KlageMediator(
             }
         val klageBehandling =
             klageRepository.hentKlageBehandling(hendelse.behandlingId).also { klageBehandling ->
-                klageBehandling.saksbehandlingFerdig(enhetsnummer = behandlendeEnhet)
+                klageBehandling.saksbehandlingFerdig(
+                    behandlendeEnhet = behandlendeEnhet,
+                    hendelse = hendelse,
+                )
             }
 
         // TODO: Fiks sak.... Den skal ikke lages her

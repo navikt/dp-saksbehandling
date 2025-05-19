@@ -1,13 +1,20 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
+
 import java.util.UUID
 
 data class KlageBehandling(
     val behandlingId: UUID = UUIDv7.ny(),
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
-    private var tilstand: BehandlingTilstand = BehandlingTilstand.BEHANDLES,
+    private var tilstand: KlageTilstand = Behandles,
     private val journalpostId: String? = null,
     private var behandlendeEnhet: String? = null,
     private val steg: List<Steg> =
@@ -49,23 +56,22 @@ data class KlageBehandling(
         return opplysninger.filter { it.synlighet() }.toSet()
     }
 
-    fun saksbehandlingFerdig(enhetsnummer: String) {
-        if (this.tilstand == BehandlingTilstand.AVBRUTT) {
-            throw IllegalStateException("Kan ikke ferdigstille klagebehandling når den er avbrutt")
-        }
-        if (!kanFerdigstilles()) {
+    fun saksbehandlingFerdig(
+        behandlendeEnhet: String,
+        hendelse: KlageFerdigbehandletHendelse
+    ) {
+        if (!this.kanFerdigstilles()) {
             throw IllegalStateException("Kan ikke ferdigstille klagebehandling når påkrevde opplysninger ikke er utfylt")
         }
-        this.behandlendeEnhet = enhetsnummer
-        if (this.utfall() == UtfallType.OPPRETTHOLDELSE) {
-            this.tilstand = BehandlingTilstand.OVERSEND_KLAGEINSTANS
-        } else {
-            this.tilstand = BehandlingTilstand.FERDIGSTILT
-        }
+        this.behandlendeEnhet = behandlendeEnhet
+        tilstand.saksbehandlingFerdig(
+            klageBehandling = this,
+            hendelse = hendelse,
+        )
     }
 
     fun oversendtTilKlageinstans() {
-        this.tilstand = BehandlingTilstand.FERDIGSTILT
+        this.tilstand = Ferdigstilt
     }
 
     fun hentOpplysning(opplysningId: UUID): Opplysning {
@@ -73,7 +79,7 @@ data class KlageBehandling(
             ?: throw IllegalArgumentException("Fant ikke opplysning med id $opplysningId")
     }
 
-    fun tilstand(): BehandlingTilstand {
+    fun tilstand(): KlageTilstand {
         return tilstand
     }
 
@@ -82,10 +88,11 @@ data class KlageBehandling(
     }
 
     fun avbryt() {
-        if (tilstand in setOf(BehandlingTilstand.FERDIGSTILT, BehandlingTilstand.OVERSEND_KLAGEINSTANS)) {
-            throw IllegalStateException("Kan ikke avbryte klagebehandling i tilstand $tilstand")
-        }
-        tilstand = BehandlingTilstand.AVBRUTT
+        // TODO
+//        if (tilstand in setOf(Type.FERDIGSTILT, Type.OVERSEND_KLAGEINSTANS)) {
+//            throw IllegalStateException("Kan ikke avbryte klagebehandling i tilstand $tilstand")
+//        }
+//        tilstand = Type.AVBRUTT
     }
 
     fun svar(
@@ -112,10 +119,45 @@ data class KlageBehandling(
         return tommeOpplysninger.isEmpty()
     }
 
-    enum class BehandlingTilstand {
-        BEHANDLES,
-        OVERSEND_KLAGEINSTANS,
-        FERDIGSTILT,
-        AVBRUTT,
+    object Behandles: KlageTilstand {
+        override val type: Type = BEHANDLES
+
+        override fun saksbehandlingFerdig(
+            klageBehandling: KlageBehandling,
+            hendelse: KlageFerdigbehandletHendelse
+        ) {
+            if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+                klageBehandling.tilstand = OversendKlageinstans
+            } else {
+                klageBehandling.tilstand = Ferdigstilt
+            }
+        }
+    }
+    object OversendKlageinstans: KlageTilstand {
+        override val type: Type = OVERSEND_KLAGEINSTANS
+    }
+    object Ferdigstilt: KlageTilstand {
+        override val type: Type = FERDIGSTILT
+    }
+    object Avbrutt: KlageTilstand {
+        override val type: Type = AVBRUTT
+    }
+
+    sealed interface KlageTilstand {
+        val type: Type
+
+        enum class Type {
+            BEHANDLES,
+            OVERSEND_KLAGEINSTANS,
+            FERDIGSTILT,
+            AVBRUTT,
+        }
+
+        fun saksbehandlingFerdig(
+            klageBehandling: KlageBehandling,
+            hendelse: KlageFerdigbehandletHendelse
+        ) {
+            throw IllegalStateException("Kan ikke ferdigstille klagebehandling i tilstand $type")
+        }
     }
 }
