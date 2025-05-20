@@ -12,6 +12,9 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
+import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
@@ -48,7 +51,17 @@ class KlageMediator(
     }
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
-        val klageBehandling = KlageBehandling(journalpostId = klageMottattHendelse.journalpostId)
+        val klageBehandling =
+            KlageBehandling(
+                journalpostId = klageMottattHendelse.journalpostId,
+                tilstandslogg =
+                    KlageTilstandslogg(
+                        KlageTilstandsendring(
+                            tilstand = BEHANDLES,
+                            hendelse = klageMottattHendelse,
+                        ),
+                    ),
+            )
 
         klageRepository.lagre(klageBehandling)
         return kotlin.runCatching {

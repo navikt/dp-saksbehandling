@@ -90,7 +90,7 @@ class OppgaveMediator(
                 tilstandslogg =
                     Tilstandslogg(
                         Tilstandsendring(
-                            tilstand = Oppgave.Tilstand.Type.OPPRETTET,
+                            tilstand = OPPRETTET,
                             hendelse = søknadsbehandlingOpprettetHendelse,
                         ),
                     ),

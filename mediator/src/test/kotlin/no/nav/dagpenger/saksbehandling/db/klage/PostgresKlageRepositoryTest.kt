@@ -4,13 +4,17 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.Datatype
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
+import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
+import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class PostgresKlageRepositoryTest {
@@ -19,12 +23,27 @@ class PostgresKlageRepositoryTest {
         withMigratedDb { ds ->
             val klageRepository = PostgresKlageRepository(ds)
             val klageBehandling =
-                KlageBehandling.rehydrer(
-                    behandlingId = UUIDv7.ny(),
+                KlageBehandling(
                     journalpostId = "journalpostId",
-                    tilstand = KlageBehandling.Behandles,
-                    behandlendeEnhet = null,
+                    tilstandslogg =
+                        KlageTilstandslogg(
+                            KlageTilstandsendring(
+                                tilstand = BEHANDLES,
+                                hendelse =
+                                    KlageMottattHendelse(
+                                        ident = "111111888888",
+                                        opprettet = LocalDateTime.now(),
+                                        journalpostId = "journalpostId",
+                                    ),
+                            ),
+                        ),
                 )
+            KlageBehandling.rehydrer(
+                behandlingId = UUIDv7.ny(),
+                journalpostId = "journalpostId",
+                tilstand = KlageBehandling.Behandles,
+                behandlendeEnhet = null,
+            )
 
             val boolskOpplysningId =
                 klageBehandling.finnEnBoolskOpplysning().also {
@@ -67,6 +86,8 @@ class PostgresKlageRepositoryTest {
             hentetKlageBehandling.finnEnOpplysning(tekstOpplysningUtenValg.opplysningId).verdi() shouldBe
                 Verdi.TekstVerdi("String")
             hentetKlageBehandling.finnEnOpplysning(boolskOpplysningMedTomVerdi).verdi() shouldBe Verdi.TomVerdi
+
+            hentetKlageBehandling.tilstandslogg.size shouldBe klageBehandling.tilstandslogg.size
         }
     }
 
@@ -75,12 +96,12 @@ class PostgresKlageRepositoryTest {
     }
 
     private fun KlageBehandling.finnEnBoolskOpplysning(): UUID {
-        return this.synligeOpplysninger().first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
+        return this.synligeOpplysninger()
+            .first { opplysning -> opplysning.type.datatype == Datatype.BOOLSK }.opplysningId
     }
 
     private fun KlageBehandling.finnEnStringOpplysningUtenValg(): Opplysning {
-        return this.synligeOpplysninger().first {
-                opplysning ->
+        return this.synligeOpplysninger().first { opplysning ->
             opplysning.type.datatype == Datatype.TEKST && opplysning.valgmuligheter.isEmpty()
         }
     }

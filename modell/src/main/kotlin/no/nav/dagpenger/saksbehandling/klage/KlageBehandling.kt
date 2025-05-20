@@ -1,7 +1,9 @@
 package no.nav.dagpenger.saksbehandling.klage
 
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type
@@ -11,6 +13,8 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 data class KlageBehandling private constructor(
     val behandlingId: UUID = UUIDv7.ny(),
@@ -69,8 +73,9 @@ data class KlageBehandling private constructor(
                 steg = steg,
             )
     }
-//    val tilstandslogg: KlageTilstandslogg
-//        get() = _tilstandslogg
+
+    val tilstandslogg: KlageTilstandslogg
+        get() = _tilstandslogg
 
     fun tilstand(): KlageTilstand {
         return tilstand
@@ -118,6 +123,18 @@ data class KlageBehandling private constructor(
             opplysning.svar(verdi)
             evaluerSynlighetOgUtfall()
         }
+    }
+
+    private fun endreTilstand(
+        nyTilstand: KlageTilstand,
+        hendelse: Hendelse,
+    ) {
+        logger.info {
+            "Endrer klagetilstand fra ${this.tilstand.type} til ${nyTilstand.type} for klage ${this.behandlingId} " +
+                "basert på hendelse: ${hendelse.javaClass.simpleName} "
+        }
+        this.tilstand = nyTilstand
+        this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
     }
 
     private fun evaluerSynlighetOgUtfall() {
@@ -170,9 +187,15 @@ data class KlageBehandling private constructor(
             hendelse: KlageFerdigbehandletHendelse,
         ) {
             if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
-                klageBehandling.tilstand = OversendKlageinstans
+                klageBehandling.endreTilstand(
+                    nyTilstand = OversendKlageinstans,
+                    hendelse = hendelse,
+                )
             } else {
-                klageBehandling.tilstand = Ferdigstilt
+                klageBehandling.endreTilstand(
+                    nyTilstand = Ferdigstilt,
+                    hendelse = hendelse,
+                )
             }
         }
 
@@ -180,7 +203,10 @@ data class KlageBehandling private constructor(
             klageBehandling: KlageBehandling,
             hendelse: AvbruttHendelse,
         ) {
-            klageBehandling.tilstand = Avbrutt
+            klageBehandling.endreTilstand(
+                nyTilstand = Avbrutt,
+                hendelse = hendelse,
+            )
         }
     }
 
@@ -191,7 +217,10 @@ data class KlageBehandling private constructor(
             klageBehandling: KlageBehandling,
             hendelse: OversendtKlageinstansHendelse,
         ) {
-            klageBehandling.tilstand = Ferdigstilt
+            klageBehandling.endreTilstand(
+                nyTilstand = Ferdigstilt,
+                hendelse = hendelse,
+            )
         }
     }
 
