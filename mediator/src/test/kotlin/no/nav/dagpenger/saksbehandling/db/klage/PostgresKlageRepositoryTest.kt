@@ -19,9 +19,11 @@ class PostgresKlageRepositoryTest {
         withMigratedDb { ds ->
             val klageRepository = PostgresKlageRepository(ds)
             val klageBehandling =
-                KlageBehandling(
+                KlageBehandling.rehydrer(
                     behandlingId = UUIDv7.ny(),
                     journalpostId = "journalpostId",
+                    tilstand = KlageBehandling.Behandles,
+                    behandlendeEnhet = null,
                 )
 
             val boolskOpplysningId =

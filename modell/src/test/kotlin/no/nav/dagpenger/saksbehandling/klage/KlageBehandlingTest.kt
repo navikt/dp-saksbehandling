@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.Behandles
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
@@ -36,10 +37,7 @@ class KlageBehandlingTest {
 
     @Test
     fun `Skal kunne svare og endre på opplysninger med ulike datatyper`() {
-        val klageBehandling =
-            KlageBehandling(
-                behandlingId = UUIDv7.ny(),
-            )
+        val klageBehandling = KlageBehandling()
 
         val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysningId()
         val stringOpplysningId = klageBehandling.finnEnTekstOpplysningId()
@@ -79,10 +77,7 @@ class KlageBehandlingTest {
 
     @Test
     fun `Utfall skal kunne velges når alle behandlingsopplysninger er utfylt`() {
-        val klageBehandling =
-            KlageBehandling(
-                behandlingId = UUID.randomUUID(),
-            )
+        val klageBehandling = KlageBehandling()
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
                 opplysning.synlighet()
@@ -148,8 +143,8 @@ class KlageBehandlingTest {
                 synlig = true,
             )
         val klageBehandling =
-            KlageBehandling(
-                steg = emptyList(),
+            KlageBehandling.rehydrer(
+                behandlingId = UUIDv7.ny(),
                 opplysninger =
                     setOf(
                         synligOgPåkrevdOpplysning,
@@ -157,7 +152,11 @@ class KlageBehandlingTest {
                         ikkeSynligOpplysning,
                         utfallOpplysning,
                     ),
+                tilstand = Behandles,
+                journalpostId = null,
+                behandlendeEnhet = null,
             )
+
         klageBehandling.tilstand().type shouldBe BEHANDLES
 
         val klageFerdigbehandletHendelse =
@@ -212,8 +211,8 @@ class KlageBehandlingTest {
                 synlig = true,
             )
         val klageBehandling =
-            KlageBehandling(
-                steg = emptyList(),
+            KlageBehandling.rehydrer(
+                behandlingId = UUIDv7.ny(),
                 opplysninger =
                     setOf(
                         synligOgPåkrevdOpplysning,
@@ -221,6 +220,9 @@ class KlageBehandlingTest {
                         ikkeSynligOpplysning,
                         utfallOpplysning,
                     ),
+                tilstand = Behandles,
+                journalpostId = null,
+                behandlendeEnhet = null,
             )
         klageBehandling.tilstand().type shouldBe BEHANDLES
 

@@ -48,11 +48,7 @@ class KlageMediator(
     }
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
-        val klageBehandling =
-            KlageBehandling(
-                behandlingId = UUIDv7.ny(),
-                journalpostId = klageMottattHendelse.journalpostId,
-            )
+        val klageBehandling = KlageBehandling(journalpostId = klageMottattHendelse.journalpostId)
 
         klageRepository.lagre(klageBehandling)
         return kotlin.runCatching {

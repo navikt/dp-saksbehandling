@@ -86,9 +86,11 @@ class KlageApiTest {
                         saksbehandler = saksbehandler,
                     )
                 } returns
-                    KlageBehandling(
+                    KlageBehandling.rehydrer(
                         behandlingId = klageBehandlingId,
                         journalpostId = journalpostId,
+                        tilstand = KlageBehandling.Behandles,
+                        behandlendeEnhet = null,
                     )
             }
 

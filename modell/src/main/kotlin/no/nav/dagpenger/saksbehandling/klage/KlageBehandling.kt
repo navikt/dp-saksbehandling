@@ -12,12 +12,13 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import java.util.UUID
 
-data class KlageBehandling(
+data class KlageBehandling private constructor(
     val behandlingId: UUID = UUIDv7.ny(),
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private var tilstand: KlageTilstand = Behandles,
     private val journalpostId: String? = null,
     private var behandlendeEnhet: String? = null,
+    private val _tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
     private val steg: List<Steg> =
         listOf(
             KlagenGjelderSteg,
@@ -28,9 +29,48 @@ data class KlageBehandling(
             FullmektigSteg,
         ),
 ) {
+    constructor(
+        journalpostId: String? = null,
+        tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
+    ) : this (
+        journalpostId = journalpostId,
+        _tilstandslogg = tilstandslogg,
+    )
+
     init {
         steg.forEach { it.evaluerSynlighet(opplysninger) }
     }
+
+    companion object {
+        fun rehydrer(
+            behandlingId: UUID,
+            opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
+            tilstand: KlageTilstand,
+            journalpostId: String?,
+            behandlendeEnhet: String?,
+            tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
+            steg: List<Steg> =
+                listOf(
+                    KlagenGjelderSteg,
+                    FristvurderingSteg,
+                    FormkravSteg,
+                    VurderUtfallSteg,
+                    OversendKlageinstansSteg,
+                    FullmektigSteg,
+                ),
+        ): KlageBehandling =
+            KlageBehandling(
+                behandlingId = behandlingId,
+                opplysninger = opplysninger,
+                tilstand = tilstand,
+                journalpostId = journalpostId,
+                behandlendeEnhet = behandlendeEnhet,
+                _tilstandslogg = tilstandslogg,
+                steg = steg,
+            )
+    }
+//    val tilstandslogg: KlageTilstandslogg
+//        get() = _tilstandslogg
 
     fun tilstand(): KlageTilstand {
         return tilstand

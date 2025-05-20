@@ -68,9 +68,11 @@ class RelevanteJournalpostIdOppslagTest {
                 klageRepository =
                     mockk<KlageRepository>().also {
                         coEvery { it.hentKlageBehandling(any()) } returns
-                            KlageBehandling(
+                            KlageBehandling.rehydrer(
                                 behandlingId = klageBehandling.behandlingId,
                                 journalpostId = "1",
+                                tilstand = KlageBehandling.Behandles,
+                                behandlendeEnhet = null,
                             )
                     },
                 utsendingRepository =

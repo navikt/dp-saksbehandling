@@ -103,7 +103,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
         val behandlendeEnhet = this.stringOrNull("behandlende_enhet")
         val opplysninger = this.string("opplysninger").tilKlageOpplysninger()
 
-        return KlageBehandling(
+        return KlageBehandling.rehydrer(
             behandlingId = behandlingId,
             tilstand = tilstand,
             journalpostId = journalpostId,
