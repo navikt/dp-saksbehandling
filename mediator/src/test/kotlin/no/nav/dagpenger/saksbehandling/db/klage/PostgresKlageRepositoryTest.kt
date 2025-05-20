@@ -22,6 +22,12 @@ class PostgresKlageRepositoryTest {
     fun `Skal kunne lagre og hente klagebehandlinger`() {
         withMigratedDb { ds ->
             val klageRepository = PostgresKlageRepository(ds)
+            val klageMottattHendelse =
+                KlageMottattHendelse(
+                    ident = "111111888888",
+                    opprettet = LocalDateTime.now(),
+                    journalpostId = "journalpostId",
+                )
             val klageBehandling =
                 KlageBehandling(
                     journalpostId = "journalpostId",
@@ -29,12 +35,7 @@ class PostgresKlageRepositoryTest {
                         KlageTilstandslogg(
                             KlageTilstandsendring(
                                 tilstand = BEHANDLES,
-                                hendelse =
-                                    KlageMottattHendelse(
-                                        ident = "111111888888",
-                                        opprettet = LocalDateTime.now(),
-                                        journalpostId = "journalpostId",
-                                    ),
+                                hendelse = klageMottattHendelse,
                             ),
                         ),
                 )
@@ -43,6 +44,13 @@ class PostgresKlageRepositoryTest {
                 journalpostId = "journalpostId",
                 tilstand = KlageBehandling.Behandles,
                 behandlendeEnhet = null,
+                tilstandslogg =
+                    KlageTilstandslogg(
+                        KlageTilstandsendring(
+                            tilstand = BEHANDLES,
+                            hendelse = klageMottattHendelse,
+                        ),
+                    ),
             )
 
             val boolskOpplysningId =
