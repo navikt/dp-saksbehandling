@@ -196,6 +196,81 @@ class KlageMediatorTest {
     }
 
     @Test
+    fun `Livssyklus til en klage som ferdigstilles med avvisning`() {
+        val fagsakId = UUIDv7.ny()
+        val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
+        withMigratedDb { datasource ->
+            val klageRepository = PostgresKlageRepository(datasource)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    personRepository = PostgresPersonRepository(datasource),
+                    oppgaveRepository = PostgresOppgaveRepository(datasource),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = utsendingMediator,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = mockk(),
+                )
+            val klageMediator =
+                KlageMediator(
+                    klageRepository = klageRepository,
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = utsendingMediator,
+                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+            val behandlingId =
+                klageMediator.opprettKlage(
+                    KlageMottattHendelse(
+                        ident = testPersonIdent,
+                        opprettet = LocalDateTime.now(),
+                        journalpostId = "journalpostId",
+                    ),
+                ).behandling.behandlingId
+
+            klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
+
+            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+
+            oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+
+            oppgaveMediator.tildelOppgave(
+                settOppgaveAnsvarHendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+
+            shouldThrow<IllegalStateException> {
+                klageMediator.ferdigstill(
+                    KlageFerdigbehandletHendelse(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+
+            klageMediator.registrerUtfallAvvistOpplysninger(behandlingId, saksbehandler)
+            klageMediator.ferdigstill(
+                KlageFerdigbehandletHendelse(
+                    behandlingId = behandlingId,
+                    utførtAv = saksbehandler,
+                ),
+            )
+            val klageBehandling =
+                klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+            klageBehandling.tilstand().type shouldBe FERDIGSTILT
+            klageBehandling.utfall() shouldBe UtfallType.AVVIST
+            klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
+            testRapid.inspektør.size shouldBe 0
+        }
+    }
+
+    @Test
     fun `Livssyklus til en klage som avbrytes`() {
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
         withMigratedDb { datasource ->
@@ -371,6 +446,40 @@ class KlageMediatorTest {
                 ).synligeOpplysninger()
                     .single { it.type == HJEMLER }.opplysningId,
             svar = Verdi.Flervalg("FTRL_4_5_REGISTRERING", "FTRL_4_2"),
+        )
+    }
+
+    private fun KlageMediator.registrerUtfallAvvistOpplysninger(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ) {
+        fun oppdaterOpplysning(
+            opplysningId: UUID,
+            svar: Verdi,
+        ) {
+            return oppdaterKlageOpplysning(
+                behandlingId = behandlingId,
+                opplysningId = opplysningId,
+                verdi = svar,
+                saksbehandler = saksbehandler,
+            )
+        }
+
+        val klageBehandling =
+            this.hentKlageBehandling(
+                behandlingId = behandlingId,
+                saksbehandler = saksbehandler,
+            )
+
+        oppdaterOpplysning(
+            opplysningId = klageBehandling.synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
+            svar = Verdi.TekstVerdi(UtfallType.AVVIST.name),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                klageBehandling.synligeOpplysninger()
+                    .single { it.type == VURDERING_AV_KLAGEN }.opplysningId,
+            svar = Verdi.TekstVerdi("Klagen er avvist."),
         )
     }
 }
