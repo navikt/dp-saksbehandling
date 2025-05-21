@@ -9,6 +9,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -335,6 +336,71 @@ class KlageMediatorTest {
         }
     }
 
+    @Test
+    fun `Kan ikke ferdigstille en klage med delvis medhold`() {
+        val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
+        withMigratedDb { datasource ->
+            val oppgaveMediator =
+                OppgaveMediator(
+                    personRepository = PostgresPersonRepository(datasource),
+                    oppgaveRepository = PostgresOppgaveRepository(datasource),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = utsendingMediator,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = mockk(),
+                )
+            val klageMediator =
+                KlageMediator(
+                    klageRepository = PostgresKlageRepository(datasource),
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = utsendingMediator,
+                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                )
+            val behandlingId =
+                klageMediator.opprettKlage(
+                    KlageMottattHendelse(
+                        ident = testPersonIdent,
+                        opprettet = LocalDateTime.now(),
+                        journalpostId = "journalpostId",
+                    ),
+                ).behandling.behandlingId
+
+            klageMediator.hentKlageBehandling(
+                behandlingId = behandlingId,
+                saksbehandler = saksbehandler,
+            ).tilstand().type shouldBe BEHANDLES
+
+            val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
+
+            oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+
+            oppgaveMediator.tildelOppgave(
+                settOppgaveAnsvarHendelse =
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+            )
+            klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+
+            klageMediator.registrerUtfallDelvisMedholdOpplysninger(behandlingId, saksbehandler)
+            shouldThrow<IllegalStateException> {
+                klageMediator.ferdigstill(
+                    KlageFerdigbehandletHendelse(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+
+            oppgaveMediator.hentOppgaveFor(
+                behandlingId = behandlingId,
+                saksbehandler = saksbehandler,
+            ).tilstand().type shouldBe UNDER_BEHANDLING
+        }
+    }
+
     private fun KlageMediator.registrerKlageBehandlingOpplysninger(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
@@ -395,6 +461,40 @@ class KlageMediatorTest {
             .forEach {
                 oppdaterOpplysning(opplysningId = it.opplysningId, svar = Verdi.Boolsk(true))
             }
+    }
+
+    private fun KlageMediator.registrerUtfallDelvisMedholdOpplysninger(
+        behandlingId: UUID,
+        saksbehandler: Saksbehandler,
+    ) {
+        fun oppdaterOpplysning(
+            opplysningId: UUID,
+            svar: Verdi,
+        ) {
+            return oppdaterKlageOpplysning(
+                behandlingId = behandlingId,
+                opplysningId = opplysningId,
+                verdi = svar,
+                saksbehandler = saksbehandler,
+            )
+        }
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
+            svar = Verdi.TekstVerdi(UtfallType.DELVIS_MEDHOLD.name),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == VURDERING_AV_KLAGEN }.opplysningId,
+            svar = Verdi.TekstVerdi("Du får delvis medhold."),
+        )
     }
 
     private fun KlageMediator.registrerUtfallOpprettholdelseOpplysninger(

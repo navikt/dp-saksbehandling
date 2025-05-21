@@ -191,6 +191,9 @@ data class KlageBehandling private constructor(
                     nyTilstand = OversendKlageinstans,
                     hendelse = hendelse,
                 )
+            } else if (klageBehandling.utfall() in setOf(UtfallType.DELVIS_MEDHOLD, UtfallType.MEDHOLD)) {
+                // TODO: implementer ferdigstilling av disse utfallene
+                throw IllegalStateException("Kan ikke ferdigstille klager med medhold eller delvis medhold (enda).")
             } else {
                 klageBehandling.endreTilstand(
                     nyTilstand = Ferdigstilt,
