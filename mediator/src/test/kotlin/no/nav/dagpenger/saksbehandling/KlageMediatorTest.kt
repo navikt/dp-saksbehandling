@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HVEM_KLAGER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAK
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERIG_AV_KLAGEN
@@ -222,6 +223,16 @@ class KlageMediatorTest {
                 ).synligeOpplysninger()
                     .single { it.type == KLAGEN_GJELDER_VEDTAK }.opplysningId,
             svar = Verdi.TekstVerdi("Vedtak 1"),
+        )
+
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == KLAGEN_GJELDER_VEDTAKSDATO }.opplysningId,
+            svar = Verdi.Dato(LocalDate.MIN),
         )
 
         oppdaterOpplysning(
