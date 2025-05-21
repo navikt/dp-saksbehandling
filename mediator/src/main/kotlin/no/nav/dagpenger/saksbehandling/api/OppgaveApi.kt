@@ -78,7 +78,7 @@ internal fun Route.oppgaveApi(
 
         route("person/{personId}") {
             get {
-                val personId = call.finnUUID("personId")
+                val personId: UUID = call.finnUUID("personId")
                 val person = oppgaveMediator.hentPerson(personId)
                 val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
                 call.respond(status = HttpStatusCode.OK, personDTO)
