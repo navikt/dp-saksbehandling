@@ -4,6 +4,7 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseRepository
@@ -12,11 +13,14 @@ import no.nav.dagpenger.saksbehandling.skjerming.SkjermingRepository
 import java.util.UUID
 import javax.sql.DataSource
 
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+
 class PostgresPersonRepository(private val datasource: DataSource) :
     PersonRepository,
     SkjermingRepository,
     AdressebeskyttelseRepository {
     override fun finnPerson(ident: String): Person? {
+        sikkerlogg.info { "Søker etter person med ident $ident" }
         sessionOf(datasource).use { session ->
             return session.run(
                 queryOf(
@@ -39,6 +43,7 @@ class PostgresPersonRepository(private val datasource: DataSource) :
     }
 
     override fun finnPerson(id: UUID): Person? {
+        sikkerlogg.info { "Søker etter person med id $id" }
         sessionOf(datasource).use { session ->
             return session.run(
                 queryOf(
