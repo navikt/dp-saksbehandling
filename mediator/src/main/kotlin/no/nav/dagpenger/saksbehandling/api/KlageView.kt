@@ -41,6 +41,7 @@ object KlageView {
                     listOf(
                         OpplysningType.KLAGEN_GJELDER,
                         OpplysningType.KLAGEN_GJELDER_VEDTAK,
+                        OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO,
                         OpplysningType.KLAGEFRIST,
                         OpplysningType.KLAGE_MOTTATT,
                         OpplysningType.KLAGEFRIST_OPPFYLT,

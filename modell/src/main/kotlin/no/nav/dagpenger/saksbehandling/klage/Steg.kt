@@ -21,9 +21,8 @@ object FristvurderingSteg : Steg {
     override fun evaluerSynlighet(opplysninger: Collection<Opplysning>) {
         when (klagefristOppfylt(opplysninger)) {
             true ->
-                opplysninger.filter { it.type in oversittetFristOpplysningTyper }.forEach {
-                    it.settSynlighet(false)
-                }
+                opplysninger.filter { it.type in oversittetFristOpplysningTyper }
+                    .forEach { it.settSynlighet(false) }
 
             false ->
                 opplysninger.filter { it.type in oversittetFristOpplysningTyper }
@@ -59,11 +58,12 @@ object VurderUtfallSteg : Steg {
             }
         when (skjulUtfallOpplysninger) {
             true ->
-                opplysninger.filter { it.type in utfallOpplysningTyper }.forEach {
-                    it.settSynlighet(false)
-                }
+                opplysninger.filter { it.type in utfallOpplysningTyper }
+                    .forEach { it.settSynlighet(false) }
 
-            false -> opplysninger.filter { it.type in utfallOpplysningTyper }.forEach { it.settSynlighet(true) }
+            false ->
+                opplysninger.filter { it.type in utfallOpplysningTyper }
+                    .forEach { it.settSynlighet(true) }
         }
     }
 }
@@ -77,11 +77,12 @@ object OversendKlageinstansSteg : Steg {
                     (opplysning.verdi() as Verdi.TekstVerdi).value == UtfallType.OPPRETTHOLDELSE.name
             }
         when (visOversendelseKlageinstans) {
-            true -> opplysninger.filter { it.type in tilKlageinstansOpplysningTyper }.forEach { it.settSynlighet(true) }
+            true ->
+                opplysninger.filter { it.type in tilKlageinstansOpplysningTyper }
+                    .forEach { it.settSynlighet(true) }
             false ->
-                opplysninger.filter { it.type in tilKlageinstansOpplysningTyper }.forEach {
-                    it.settSynlighet(false)
-                }
+                opplysninger.filter { it.type in tilKlageinstansOpplysningTyper }
+                    .forEach { it.settSynlighet(false) }
         }
     }
 }
@@ -101,9 +102,8 @@ object FullmektigSteg : Steg {
                     .forEach { it.settSynlighet(true) }
 
             false ->
-                opplysninger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }.forEach {
-                    it.settSynlighet(false)
-                }
+                opplysninger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
+                    .forEach { it.settSynlighet(false) }
         }
     }
 }
