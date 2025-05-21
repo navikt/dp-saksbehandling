@@ -11,11 +11,15 @@ enum class OpplysningType(
         navn = "Hva klagen gjelder",
         datatype = Datatype.FLERVALG,
         påkrevd = false,
-        valgmuligheter = listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet"),
+        valgmuligheter = listOf("Avslag på søknad", "For lite utbetalt", "Vedtak om tilbakebetaling", "Annet"),
     ),
     KLAGEN_GJELDER_VEDTAK(
         navn = "Vedtak klagen gjelder",
         datatype = Datatype.TEKST,
+    ),
+    KLAGEN_GJELDER_VEDTAKSDATO(
+        navn = "Vedtaksdato",
+        datatype = Datatype.DATO,
     ),
 
     // Formkrav

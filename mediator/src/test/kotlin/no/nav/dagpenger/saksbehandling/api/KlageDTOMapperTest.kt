@@ -67,16 +67,27 @@ class KlageDTOMapperTest {
                       "behandlingOpplysninger": [
                       
     {
+      "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO }.opplysningId}",
+      "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO }.type.name}",
+      "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO }.type.navn}",
+      "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO }.type.påkrevd},
+      "gruppe": "KLAGESAK",
+      "valgmuligheter": [],
+      "redigerbar": true,
+      "type": "DATO"
+    },
+    {
       "opplysningId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.opplysningId}",
       "opplysningNavnId": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.type.name}",
       "navn": "${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.type.navn}",
       "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.type.påkrevd},
       "gruppe": "KLAGESAK",
-      "valgmuligheter": [
-        "Avslag på søknad",
-        "Dagpengenes størrelse",
-        "Annet"
-      ],
+      "valgmuligheter":[
+                          "Avslag på søknad",
+                          "For lite utbetalt",
+                          "Vedtak om tilbakebetaling",
+                          "Annet"
+                        ],
       "redigerbar": true,
       "type": "FLER_LISTEVALG"
     },
