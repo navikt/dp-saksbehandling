@@ -18,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAK
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_NEVNER_ENDRING
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST
@@ -37,6 +38,7 @@ class KlageViewTest {
                 KLAGEFRIST_OPPFYLT,
                 KLAGEN_GJELDER,
                 KLAGEN_GJELDER_VEDTAK,
+                KLAGEN_GJELDER_VEDTAKSDATO,
                 KLAGEN_NEVNER_ENDRING,
                 KLAGE_MOTTATT,
                 OPPREISNING_OVERSITTET_FRIST,
@@ -64,6 +66,7 @@ class KlageViewTest {
             listOf(
                 KLAGEN_GJELDER,
                 KLAGEN_GJELDER_VEDTAK,
+                KLAGEN_GJELDER_VEDTAKSDATO,
                 KLAGEFRIST,
                 KLAGE_MOTTATT,
                 KLAGEFRIST_OPPFYLT,
