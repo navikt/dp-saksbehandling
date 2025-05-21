@@ -70,6 +70,7 @@ internal fun Route.oppgaveApi(
         route("person") {
             post {
                 val ident: PersonIdentDTO = call.receive<PersonIdentDTO>()
+                sikkerlogger.info { "Søker etter person med ident i request body: $ident" }
                 val person = oppgaveMediator.hentPerson(ident.ident)
                 val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
                 call.respond(status = HttpStatusCode.OK, personDTO)
@@ -79,6 +80,7 @@ internal fun Route.oppgaveApi(
         route("person/{personId}") {
             get {
                 val personId: UUID = call.finnUUID("personId")
+                sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
                 val person = oppgaveMediator.hentPerson(personId)
                 val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
                 call.respond(status = HttpStatusCode.OK, personDTO)
