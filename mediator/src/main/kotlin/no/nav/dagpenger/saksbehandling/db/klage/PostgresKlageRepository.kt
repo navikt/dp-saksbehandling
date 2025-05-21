@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -211,6 +212,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
             "KlageMottattHendelse" -> hendelseJson.tilHendelse<KlageMottattHendelse>()
             "OversendtKlageinstansHendelse" -> hendelseJson.tilHendelse<OversendtKlageinstansHendelse>()
             "KlageFerdigbehandletHendelse" -> hendelseJson.tilHendelse<KlageFerdigbehandletHendelse>()
+            "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()
             else -> {
                 logger.error { "rehydrerKlageTilstandsendringHendelse: Ukjent hendelse med type $hendelseType" }
                 sikkerlogger.error { "rehydrerKlageTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
