@@ -433,7 +433,7 @@ paths:
 
   /klage/opprett:
     post:
-      summary: Oppretter en klage
+      summary: Oppretter en klage fra en applikasjon (p.t. dp-mottak)
       requestBody:
         required: true
         content:
@@ -442,7 +442,7 @@ paths:
               $ref: '#/components/schemas/OpprettKlage'
       responses:
         '200':
-          description: Vellykket oppretting av klageOppgave
+          description: Vellykket oppretting av klage og tilhørende oppgave
           content:
             application/json:
                 schema:
@@ -454,6 +454,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /klage/opprett-manuelt:
+    post:
+      summary: Oppretter en klage fra saksbehandler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpprettKlage'
+      responses:
+        '200':
+          description: Vellykket oppretting av klage og tilhørende oppgave
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OppgaveOversikt'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /klage/{behandlingId}/opplysning/{opplysningId}:
     put:
