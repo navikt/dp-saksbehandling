@@ -100,6 +100,7 @@ class OppgaveMediator(
     }
 
     fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
+        val opprettetAvSaksbehandler = behandlingOpprettetHendelse.utførtAv is Saksbehandler
         val person =
             personRepository.finnPerson(behandlingOpprettetHendelse.ident)
                 ?: runBlocking {
@@ -120,8 +121,9 @@ class OppgaveMediator(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = emptySet(),
                 opprettet = behandlingOpprettetHendelse.opprettet,
+                behandlerIdent = if (opprettetAvSaksbehandler) (behandlingOpprettetHendelse.utførtAv as Saksbehandler).navIdent else null,
                 behandling = behandling,
-                tilstand = Oppgave.KlarTilBehandling,
+                tilstand = if (opprettetAvSaksbehandler) Oppgave.UnderBehandling else Oppgave.KlarTilBehandling,
             )
 
         oppgaveRepository.lagre(oppgave)

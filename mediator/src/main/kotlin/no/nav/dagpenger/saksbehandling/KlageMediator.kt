@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -78,6 +79,39 @@ class KlageMediator(
         }
             .onFailure { e ->
                 logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
+                throw e
+            }
+            .getOrThrow()
+    }
+
+    fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): Oppgave {
+        val klageBehandling =
+            KlageBehandling(
+                journalpostId = manuellKlageMottattHendelse.journalpostId,
+                tilstandslogg =
+                    KlageTilstandslogg(
+                        KlageTilstandsendring(
+                            tilstand = BEHANDLES,
+                            hendelse = manuellKlageMottattHendelse,
+                        ),
+                    ),
+            )
+
+        klageRepository.lagre(klageBehandling)
+        return kotlin.runCatching {
+            oppgaveMediator.opprettOppgaveForBehandling(
+                behandlingOpprettetHendelse =
+                    BehandlingOpprettetHendelse(
+                        behandlingId = klageBehandling.behandlingId,
+                        ident = manuellKlageMottattHendelse.ident,
+                        opprettet = manuellKlageMottattHendelse.opprettet,
+                        type = BehandlingType.KLAGE,
+                        utførtAv = manuellKlageMottattHendelse.utførtAv,
+                    ),
+            )
+        }
+            .onFailure { e ->
+                logger.error { "Kunne ikke opprette oppgave for manuell klagebehandling: ${klageBehandling.behandlingId}" }
                 throw e
             }
             .getOrThrow()

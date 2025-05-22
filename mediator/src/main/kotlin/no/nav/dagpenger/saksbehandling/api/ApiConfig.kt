@@ -63,11 +63,15 @@ internal fun Application.installerApis(
     routing {
         swaggerUI(path = "openapi", swaggerFile = "saksbehandling-api.yaml")
         this.oppgaveApi(
-            oppgaveMediator,
-            oppgaveDTOMapper,
-            applicationCallParser,
+            oppgaveMediator = oppgaveMediator,
+            oppgaveDTOMapper = oppgaveDTOMapper,
+            applicationCallParser = applicationCallParser,
         )
         statistikkApi(statistikkTjeneste)
-        klageApi(klageMediator, klageDTOMapper)
+        klageApi(
+            mediator = klageMediator,
+            klageDtoMapper = klageDTOMapper,
+            applicationCallParser = applicationCallParser,
+        )
     }
 }

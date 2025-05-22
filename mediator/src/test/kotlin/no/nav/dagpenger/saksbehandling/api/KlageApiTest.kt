@@ -35,6 +35,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.lagBehandling
@@ -104,7 +105,9 @@ class KlageApiTest {
         }
     }
 
-    private fun doKlageOpprettelseTest(token: String) {
+    @Test
+    fun `Skal kunne opprette en klage med maskintoken`() {
+        val token = gyldigMaskinToken()
         val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
         val ident = oppgave.behandling.person.ident
         val mediator =
@@ -166,9 +169,107 @@ class KlageApiTest {
     }
 
     @Test
-    fun `Skal kunne opprette en klage med saksbehandler token eller maskintoken`() {
-        doKlageOpprettelseTest(gyldigSaksbehandlerToken())
-        doKlageOpprettelseTest(gyldigMaskinToken())
+    fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
+        val token = gyldigSaksbehandlerToken()
+        val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
+        val ident = oppgave.behandling.person.ident
+        val mediator =
+            mockk<KlageMediator>().also {
+                every {
+                    it.opprettManuellKlage(
+                        manuellKlageMottattHendelse =
+                            ManuellKlageMottattHendelse(
+                                ident = oppgave.behandling.person.ident,
+                                opprettet = dato,
+                                journalpostId = "journalpostId",
+                                utførtAv = saksbehandler,
+                            ),
+                    )
+                } returns oppgave
+            }
+
+        withKlageApi(mediator) {
+            client.post("klage/opprett-manuelt") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+                header(HttpHeaders.ContentType, "application/json")
+                //language=json
+                setBody(
+                    """
+                    {
+                        "journalpostId": "journalpostId",
+                        "opprettet": "$dato",
+                        "sakId": "sakId",
+                        "personIdent": {"ident":  "$ident"}
+                    }
+                    """.trimIndent(),
+                )
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.Created
+                "${response.contentType()}" shouldContain "application/json"
+                val json = response.bodyAsText()
+                json shouldEqualSpecifiedJsonIgnoringOrder //language=json
+                    """
+                    {
+                       "oppgaveId": "${oppgave.oppgaveId}",
+                       "behandlingId": "${oppgave.behandling.behandlingId}",
+                       "personIdent": "$ident",
+                       "tidspunktOpprettet": "2025-01-01T01:01:00",
+                       "behandlingType": "KLAGE"
+                    }
+                    """.trimIndent()
+            }
+        }
+
+        verify(exactly = 1) {
+            mediator.opprettManuellKlage(
+                manuellKlageMottattHendelse =
+                    ManuellKlageMottattHendelse(
+                        ident = ident,
+                        opprettet = dato,
+                        journalpostId = "journalpostId",
+                        utførtAv = saksbehandler,
+                    ),
+            )
+        }
+    }
+
+    @Test
+    fun `Skal ikke kunne opprette klager med feil type token`() {
+        val saksbehandlerToken = gyldigSaksbehandlerToken()
+        val maskinToken = gyldigMaskinToken()
+
+        val mediatorMock = mockk<KlageMediator>()
+
+        withKlageApi(mediatorMock) {
+            client.post("klage/opprett") {
+                header(HttpHeaders.Authorization, "Bearer $saksbehandlerToken")
+                header(HttpHeaders.ContentType, "application/json")
+                //language=json
+                setBody(
+                    """
+                    {
+                        "ikke": "så viktig"
+                    }
+                    """.trimIndent(),
+                )
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.Unauthorized
+            }
+            client.post("klage/opprett-manuelt") {
+                header(HttpHeaders.Authorization, "Bearer $maskinToken")
+                header(HttpHeaders.ContentType, "application/json")
+                //language=json
+                setBody(
+                    """
+                    {
+                        "ikke": "så viktig"
+                    }
+                    """.trimIndent(),
+                )
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.Unauthorized
+            }
+        }
     }
 
     @Test

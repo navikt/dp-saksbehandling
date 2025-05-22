@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.TilgangMapper
 class ApplicationCallParser(
     private val tilgangMapper: TilgangMapper,
 ) {
-    fun sakbehandler(call: ApplicationCall): Saksbehandler {
+    fun saksbehandler(call: ApplicationCall): Saksbehandler {
         return requireNotNull(call.authentication.principal<JWTPrincipal>()) {
             "Ikke autentisert"
         }.let {

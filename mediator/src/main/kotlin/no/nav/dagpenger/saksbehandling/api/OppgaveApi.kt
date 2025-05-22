@@ -107,7 +107,7 @@ internal fun Route.oppgaveApi(
             route("neste") {
                 put {
                     val dto = call.receive<NesteOppgaveDTO>()
-                    val saksbehandler = applicationCallParser.sakbehandler(call = call)
+                    val saksbehandler = applicationCallParser.saksbehandler(call = call)
                     sikkerlogger.info {
                         "Henter neste oppgave for saksbehandler ${saksbehandler.navIdent} med " +
                             "queryparams: ${dto.queryParams}"
@@ -143,7 +143,7 @@ internal fun Route.oppgaveApi(
 
             route("{oppgaveId}") {
                 get {
-                    val saksbehandler = applicationCallParser.sakbehandler(call)
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
                     val oppgaveId = call.finnUUID("oppgaveId")
                     withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                         val oppgave = oppgaveMediator.hentOppgave(oppgaveId, saksbehandler)
@@ -155,7 +155,7 @@ internal fun Route.oppgaveApi(
                     put {
                         val notat = call.receiveText()
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val sistEndretTidspunkt =
                                 oppgaveMediator.lagreNotat(
@@ -173,7 +173,7 @@ internal fun Route.oppgaveApi(
                     }
                     delete {
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
 
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val sistEndretTidspunkt =
@@ -193,7 +193,7 @@ internal fun Route.oppgaveApi(
                 }
                 route("tildel") {
                     put {
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         val oppgaveAnsvarHendelse = call.settOppgaveAnsvarHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
@@ -210,7 +210,7 @@ internal fun Route.oppgaveApi(
                 }
                 route("utsett") {
                     put {
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         val utsettOppgaveHendelse = call.utsettOppgaveHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
@@ -222,7 +222,7 @@ internal fun Route.oppgaveApi(
                 }
                 route("legg-tilbake") {
                     put {
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         val oppgaveAnsvarHendelse = call.fjernOppgaveAnsvarHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
@@ -233,7 +233,7 @@ internal fun Route.oppgaveApi(
                 }
                 route("send-til-kontroll") {
                     put {
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         val saksbehandlerToken = call.request.jwt()
                         val sendTilKontrollHendelse = call.sendTilKontrollHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
@@ -246,7 +246,7 @@ internal fun Route.oppgaveApi(
                 }
                 route("returner-til-saksbehandler") {
                     put {
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         val saksbehandlerToken = call.request.jwt()
                         val returnerTilSaksbehandlingHendelse =
                             call.returnerTilSaksbehandlingHendelse(saksbehandler)
@@ -266,7 +266,7 @@ internal fun Route.oppgaveApi(
                     put {
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val saksbehandler = applicationCallParser.saksbehandler(call)
                             val saksbehandlerToken = call.request.jwt()
                             oppgaveMediator.ferdigstillOppgave(
                                 oppgaveId = oppgaveId,
@@ -280,7 +280,7 @@ internal fun Route.oppgaveApi(
 
                 route("ferdigstill/melding-om-vedtak-arena") {
                     put {
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val saksbehandlerToken = call.request.jwt()

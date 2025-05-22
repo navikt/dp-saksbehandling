@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
@@ -210,6 +211,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
     ): Hendelse {
         return when (hendelseType) {
             "KlageMottattHendelse" -> hendelseJson.tilHendelse<KlageMottattHendelse>()
+            "ManuellKlageMottattHendelse" -> hendelseJson.tilHendelse<ManuellKlageMottattHendelse>()
             "OversendtKlageinstansHendelse" -> hendelseJson.tilHendelse<OversendtKlageinstansHendelse>()
             "KlageFerdigbehandletHendelse" -> hendelseJson.tilHendelse<KlageFerdigbehandletHendelse>()
             "AvbruttHendelse" -> hendelseJson.tilHendelse<AvbruttHendelse>()

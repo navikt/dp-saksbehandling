@@ -60,11 +60,12 @@ data class Oppgave private constructor(
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
         tilstand: Tilstand = Opprettet,
+        behandlerIdent: String? = null,
         behandling: Behandling,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
     ) : this(
         oppgaveId = oppgaveId,
-        behandlerIdent = null,
+        behandlerIdent = behandlerIdent,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         tilstand = tilstand,

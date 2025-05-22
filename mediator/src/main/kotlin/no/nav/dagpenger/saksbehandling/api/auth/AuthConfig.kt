@@ -21,6 +21,7 @@ fun Application.authConfig() {
         }
 
         jwt("azureAd-maskin") { jwtClaims ->
+            jwtClaims.måVæreApp()
             JWTPrincipal(jwtClaims.payload)
         }
     }
@@ -56,6 +57,15 @@ private fun JWTCredential.måInneholde(autorisertADGruppe: String) {
 
     if (!groups.contains(autorisertADGruppe)) {
         val errorMessage = "Credential inneholder ikke riktig gruppe. Forventet $autorisertADGruppe men var $groups"
+        logger.warn { errorMessage }
+        throw IllegalAccessException(errorMessage)
+    }
+}
+
+private fun JWTCredential.måVæreApp() {
+    val erApp = this.payload.claims["idtyp"]?.asString() == "app"
+    if (!erApp) {
+        val errorMessage = "Credential inneholder ikke idtyp med verdi app"
         logger.warn { errorMessage }
         throw IllegalAccessException(errorMessage)
     }

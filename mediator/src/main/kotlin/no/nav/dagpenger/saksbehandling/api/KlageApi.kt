@@ -10,20 +10,21 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Applikasjon
-import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.api.models.OppdaterKlageOpplysningDTO
 import no.nav.dagpenger.saksbehandling.api.models.OpprettKlageDTO
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
 
 fun Route.klageApi(
     mediator: KlageMediator,
     klageDtoMapper: KlageDTOMapper,
+    applicationCallParser: ApplicationCallParser,
 ) {
-    val applicationCallParser = Configuration.applicationCallParser
-    authenticate("azureAd", "azureAd-maskin") {
+    authenticate("azureAd-maskin") {
         route("klage/opprett") {
             post {
                 val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
@@ -44,11 +45,32 @@ fun Route.klageApi(
     }
 
     authenticate("azureAd") {
+        route("klage/opprett-manuelt") {
+            post {
+                val klage: OpprettKlageDTO = call.receive<OpprettKlageDTO>()
+                val saksbehandler = applicationCallParser.saksbehandler(this.call)
+                mediator.opprettManuellKlage(
+                    manuellKlageMottattHendelse =
+                        ManuellKlageMottattHendelse(
+                            opprettet = klage.opprettet,
+                            journalpostId = klage.journalpostId,
+                            utførtAv = saksbehandler,
+                            ident = klage.personIdent.ident,
+                        ),
+                ).let { oppgave ->
+
+                    call.respond(HttpStatusCode.Created, oppgave.tilOppgaveOversiktDTO())
+                }
+            }
+        }
+    }
+
+    authenticate("azureAd") {
         route("klage") {
             route("{behandlingId}") {
                 get {
                     val behandlingId = call.finnUUID("behandlingId")
-                    val saksbehandler = applicationCallParser.sakbehandler(call)
+                    val saksbehandler = applicationCallParser.saksbehandler(call)
                     val klageBehandling =
                         mediator.hentKlageBehandling(
                             behandlingId = behandlingId,
@@ -64,7 +86,7 @@ fun Route.klageApi(
                 route("trekk") {
                     put {
                         val behandlingId = call.finnUUID("behandlingId")
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         mediator.avbrytKlage(
                             hendelse =
                                 AvbruttHendelse(
@@ -78,7 +100,7 @@ fun Route.klageApi(
                 route("ferdigstill") {
                     put {
                         val behandlingId = call.finnUUID("behandlingId")
-                        val saksbehandler = applicationCallParser.sakbehandler(call)
+                        val saksbehandler = applicationCallParser.saksbehandler(call)
                         mediator.ferdigstill(
                             KlageFerdigbehandletHendelse(
                                 behandlingId = behandlingId,
@@ -94,7 +116,7 @@ fun Route.klageApi(
                             val behandlingId = call.finnUUID("behandlingId")
                             val opplysningId = call.finnUUID("opplysningId")
                             val oppdaterKlageOpplysningDTO = call.receive<OppdaterKlageOpplysningDTO>()
-                            val saksbehandler = applicationCallParser.sakbehandler(call)
+                            val saksbehandler = applicationCallParser.saksbehandler(call)
                             mediator.oppdaterKlageOpplysning(
                                 behandlingId = behandlingId,
                                 opplysningId = opplysningId,
