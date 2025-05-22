@@ -11,7 +11,7 @@ enum class OpplysningType(
         navn = "Hva klagen gjelder",
         datatype = Datatype.FLERVALG,
         påkrevd = false,
-        valgmuligheter = listOf("Avslag på søknad", "For lite utbetalt", "Vedtak om tilbakebetaling", "Annet"),
+        valgmuligheter = KlagenGjelderType.entries.map { it.name },
     ),
     KLAGEN_GJELDER_VEDTAK(
         navn = "Vedtak klagen gjelder",
@@ -151,7 +151,8 @@ enum class HvemKlagerType {
 
 enum class KlagenGjelderType {
     AVSLAG_PÅ_SØKNAD,
-    DAGPENGENES_STØRRELSE,
+    FOR_LITE_UTBETALT,
+    VEDTAK_OM_TILBAKEBETALING,
     ANNET,
 }
 

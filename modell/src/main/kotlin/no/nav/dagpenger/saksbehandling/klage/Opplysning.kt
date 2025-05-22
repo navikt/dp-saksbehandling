@@ -7,7 +7,6 @@ import java.util.UUID
 class Opplysning(
     val opplysningId: UUID = UUIDv7.ny(),
     val type: OpplysningType,
-    // todo fikse ved neste commit
     private var verdi: Verdi,
     private var synlig: Boolean = true,
     val valgmuligheter: List<String> = emptyList(),

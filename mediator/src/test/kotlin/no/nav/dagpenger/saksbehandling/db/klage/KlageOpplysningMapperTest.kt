@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
+import no.nav.dagpenger.saksbehandling.klage.KlagenGjelderType
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_NEVNER_ENDRING
@@ -34,8 +35,8 @@ class KlageOpplysningMapperTest {
                 ),
                 Opplysning(
                     type = KLAGEN_GJELDER,
-                    verdi = Verdi.Flervalg("Avslag på søknad", "Annet"),
-                    valgmuligheter = listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet"),
+                    verdi = Verdi.Flervalg(listOf(KlagenGjelderType.AVSLAG_PÅ_SØKNAD.name, KlagenGjelderType.ANNET.name)),
+                    valgmuligheter = KlagenGjelderType.entries.map { it.name },
                 ),
                 Opplysning(
                     type = KLAGEN_NEVNER_ENDRING,
@@ -61,8 +62,12 @@ class KlageOpplysningMapperTest {
                 .verdi() shouldBe Verdi.Dato(LocalDate.MIN)
 
             val klagenGjelder = deserialiserteOpplysninger.single { it.type == KLAGEN_GJELDER }
-            klagenGjelder.verdi() shouldBe Verdi.Flervalg("Avslag på søknad", "Annet")
-            klagenGjelder.valgmuligheter shouldBe listOf("Avslag på søknad", "Dagpengenes størrelse", "Annet")
+            klagenGjelder.verdi() shouldBe
+                Verdi.Flervalg(
+                    KlagenGjelderType.AVSLAG_PÅ_SØKNAD.name,
+                    KlagenGjelderType.ANNET.name,
+                )
+            klagenGjelder.valgmuligheter shouldBe KlagenGjelderType.entries.map { it.name }
 
             deserialiserteOpplysninger.single { it.type == KLAGEN_NEVNER_ENDRING }
                 .verdi() shouldBe Verdi.TomVerdi

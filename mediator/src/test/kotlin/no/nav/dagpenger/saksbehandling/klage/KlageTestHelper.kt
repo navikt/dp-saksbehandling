@@ -19,7 +19,7 @@ fun lagKlagebehandling(
         mutableSetOf(
             Opplysning(
                 type = OpplysningType.KLAGEN_GJELDER,
-                verdi = Verdi.Flervalg(listOf("Avslag på søknad")),
+                verdi = Verdi.Flervalg(listOf(KlagenGjelderType.AVSLAG_PÅ_SØKNAD.name)),
             ),
             Opplysning(
                 type = OpplysningType.KLAGEN_GJELDER_VEDTAK,
