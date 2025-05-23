@@ -27,30 +27,5 @@ data class BehandlingOpprettetHendelse(
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .enable(SerializationFeature.INDENT_OUTPUT)
-
-        fun fromJson(json: String): BehandlingOpprettetHendelse {
-            val jsonTree = objectMapper.readTree(json)
-
-            val erSaksbehandler = jsonTree.get("utførtAv")?.get("navIdent")?.isNull == false
-
-            val utførtAv =
-                if (erSaksbehandler) {
-                    Saksbehandler(
-                        navIdent = jsonTree["utførtAv"]["navIdent"].asText(),
-                        grupper = jsonTree["utførtAv"]["grupper"].map { it.asText() }.toSet(),
-                        tilganger = jsonTree["utførtAv"]["tilganger"].map { TilgangType.valueOf(it.asText()) }.toSet(),
-                    )
-                } else {
-                    Applikasjon(jsonTree["utførtAv"]["navn"].asText())
-                }
-
-            return BehandlingOpprettetHendelse(
-                behandlingId = jsonTree["behandlingId"].asText().let(UUID::fromString),
-                ident = jsonTree["ident"].asText(),
-                opprettet = LocalDateTime.parse(jsonTree["opprettet"].asText()),
-                type = jsonTree["type"].asText().let(BehandlingType::valueOf),
-                utførtAv = utførtAv,
-            )
-        }
     }
 }

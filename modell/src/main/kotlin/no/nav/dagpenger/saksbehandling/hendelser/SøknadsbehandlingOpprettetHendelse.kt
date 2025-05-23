@@ -23,16 +23,5 @@ data class SøknadsbehandlingOpprettetHendelse(
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL)
                 .enable(SerializationFeature.INDENT_OUTPUT)
-
-        fun fromJson(json: String): SøknadsbehandlingOpprettetHendelse {
-            val jsonTree = objectMapper.readTree(json)
-
-            return SøknadsbehandlingOpprettetHendelse(
-                søknadId = jsonTree["søknadId"].asText().let(UUID::fromString),
-                behandlingId = jsonTree["behandlingId"].asText().let(UUID::fromString),
-                ident = jsonTree["ident"].asText(),
-                opprettet = LocalDateTime.parse(jsonTree["opprettet"].asText()),
-            )
-        }
     }
 }

@@ -737,7 +737,7 @@ private fun rehydrerTilstandsendringHendelse(
         "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()
         "BehandlingLåstHendelse" -> hendelseJson.tilHendelse<BehandlingLåstHendelse>()
         "BehandlingOpplåstHendelse" -> hendelseJson.tilHendelse<BehandlingOpplåstHendelse>()
-        "BehandlingOpprettetHendelse" -> BehandlingOpprettetHendelse.fromJson(hendelseJson)
+        "BehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<BehandlingOpprettetHendelse>()
         "SøknadsbehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>()
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
@@ -756,8 +756,8 @@ private fun rehydrerTilstandsendringHendelse(
 private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
         "TomHendelse" -> return TomHendelse
-        "SøknadsbehandlingOpprettetHendelse" -> SøknadsbehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
-        "BehandlingOpprettetHendelse" -> BehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
+        "SøknadsbehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<SøknadsbehandlingOpprettetHendelse>()
+        "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
