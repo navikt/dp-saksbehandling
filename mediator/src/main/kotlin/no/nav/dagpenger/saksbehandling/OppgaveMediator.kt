@@ -115,6 +115,7 @@ class OppgaveMediator(
                 hendelse = behandlingOpprettetHendelse,
                 type = behandlingOpprettetHendelse.type,
             )
+        val tilstand = if (opprettetAvSaksbehandler) Oppgave.UnderBehandling else Oppgave.KlarTilBehandling
 
         val oppgave =
             Oppgave(
@@ -123,7 +124,14 @@ class OppgaveMediator(
                 opprettet = behandlingOpprettetHendelse.opprettet,
                 behandlerIdent = if (opprettetAvSaksbehandler) (behandlingOpprettetHendelse.utførtAv as Saksbehandler).navIdent else null,
                 behandling = behandling,
-                tilstand = if (opprettetAvSaksbehandler) Oppgave.UnderBehandling else Oppgave.KlarTilBehandling,
+                tilstand = tilstand,
+                tilstandslogg =
+                    Tilstandslogg(
+                        Tilstandsendring(
+                            tilstand = tilstand.type,
+                            hendelse = behandlingOpprettetHendelse,
+                        ),
+                    ),
             )
 
         oppgaveRepository.lagre(oppgave)

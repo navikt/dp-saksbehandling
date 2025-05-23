@@ -737,6 +737,7 @@ private fun rehydrerTilstandsendringHendelse(
         "ReturnerTilSaksbehandlingHendelse" -> hendelseJson.tilHendelse<ReturnerTilSaksbehandlingHendelse>()
         "BehandlingLåstHendelse" -> hendelseJson.tilHendelse<BehandlingLåstHendelse>()
         "BehandlingOpplåstHendelse" -> hendelseJson.tilHendelse<BehandlingOpplåstHendelse>()
+        "BehandlingOpprettetHendelse" -> BehandlingOpprettetHendelse.fromJson(hendelseJson)
         "SøknadsbehandlingOpprettetHendelse" -> hendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>()
         "UtsettOppgaveHendelse" -> hendelseJson.tilHendelse<UtsettOppgaveHendelse>()
         "VedtakFattetHendelse" -> hendelseJson.tilHendelse<VedtakFattetHendelse>()
@@ -756,10 +757,7 @@ private fun Row.rehydrerHendelse(): Hendelse {
     return when (val hendelseType = this.string("hendelse_type")) {
         "TomHendelse" -> return TomHendelse
         "SøknadsbehandlingOpprettetHendelse" -> SøknadsbehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
-        "BehandlingOpprettetHendelse" -> {
-            val json = this.string("hendelse_data")
-            BehandlingOpprettetHendelse.fromJson(json)
-        }
+        "BehandlingOpprettetHendelse" -> BehandlingOpprettetHendelse.fromJson(this.string("hendelse_data"))
         else -> {
             logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
             sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }

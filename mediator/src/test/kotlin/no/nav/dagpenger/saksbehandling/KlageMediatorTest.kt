@@ -117,6 +117,9 @@ class KlageMediatorTest {
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
             oppgave.tilstand().type shouldBe KLAR_TIL_BEHANDLING
+            oppgave.tilstandslogg.size shouldBe 1
+//            oppgave.tilstandslogg.first().tilstand shouldBe KLAR_TIL_BEHANDLING
+//            oppgave.tilstandslogg.first().hendelse.utførtAv is Applikasjon
 
             oppgaveMediator.tildelOppgave(
                 settOppgaveAnsvarHendelse =
@@ -238,6 +241,8 @@ class KlageMediatorTest {
 
             oppgave.tilstand().type shouldBe UNDER_BEHANDLING
             oppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            oppgave.tilstandslogg.size shouldBe 1
+            oppgave.sisteSaksbehandler() shouldBe saksbehandler
 
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
 
