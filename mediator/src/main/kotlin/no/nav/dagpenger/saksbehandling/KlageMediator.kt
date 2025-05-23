@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
@@ -99,15 +100,24 @@ class KlageMediator(
 
         klageRepository.lagre(klageBehandling)
         return kotlin.runCatching {
-            oppgaveMediator.opprettOppgaveForBehandling(
-                behandlingOpprettetHendelse =
-                    BehandlingOpprettetHendelse(
-                        behandlingId = klageBehandling.behandlingId,
-                        ident = manuellKlageMottattHendelse.ident,
-                        opprettet = manuellKlageMottattHendelse.opprettet,
-                        type = BehandlingType.KLAGE,
-                        utførtAv = manuellKlageMottattHendelse.utførtAv,
-                    ),
+            val utførtAv = manuellKlageMottattHendelse.utførtAv
+            val oppgave =
+                oppgaveMediator.opprettOppgaveForBehandling(
+                    behandlingOpprettetHendelse =
+                        BehandlingOpprettetHendelse(
+                            behandlingId = klageBehandling.behandlingId,
+                            ident = manuellKlageMottattHendelse.ident,
+                            opprettet = manuellKlageMottattHendelse.opprettet,
+                            type = BehandlingType.KLAGE,
+                            utførtAv = utførtAv,
+                        ),
+                )
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = utførtAv.navIdent,
+                    utførtAv = utførtAv,
+                ),
             )
         }
             .onFailure { e ->
