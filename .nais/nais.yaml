@@ -106,7 +106,7 @@ spec:
             name: saksbehandling
         diskAutoresize: true
         diskType: SSD
-        highAvailability: "{{ db.highAvailability }}"
+        highAvailability: {{ db.highAvailability }}
         insights:
           enabled: true
           queryStringLength: 4500
@@ -115,7 +115,7 @@ spec:
         maintenance:
           day: 1
           hour: 4
-        pointInTimeRecovery: "{{ db.pointInTimeRecovery }}"
+        pointInTimeRecovery: {{ db.pointInTimeRecovery }}
         tier: "{{ db.tier }}"
         type: POSTGRES_15
         flags:
