@@ -157,7 +157,6 @@ class KlageMediator(
         hendelse: KlageFerdigbehandletHendelse,
         saksbehandlerToken: String,
     ) {
-        val html = "<html><h1>Dette må vi gjøre noe med</h1></html>"
         val oppgave =
             sjekkTilgangOgEierAvOppgave(behandlingId = hendelse.behandlingId, saksbehandler = hendelse.utførtAv)
 

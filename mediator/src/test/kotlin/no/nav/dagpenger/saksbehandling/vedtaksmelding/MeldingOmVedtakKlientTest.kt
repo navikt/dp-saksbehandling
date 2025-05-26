@@ -129,7 +129,7 @@ class MeldingOmVedtakKlientTest {
                       "fornavn": "Test",
                       "etternavn": "Person",
                       "fodselsnummer": "testIdent",
-                       "behandlingType": "RETT_TIL_DAGPENGER",
+                       "behandlingType": {"value": "RETT_TIL_DAGPENGER"},
                       "saksbehandler": {
                         "ident": "saksbehandlerIdent",
                         "fornavn": "Saks",
