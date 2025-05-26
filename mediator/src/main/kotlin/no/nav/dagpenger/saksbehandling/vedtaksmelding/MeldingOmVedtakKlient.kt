@@ -11,6 +11,7 @@ import io.ktor.http.HttpHeaders
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -45,6 +46,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         saksbehandlerToken: String,
+        behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
             MeldingOmVedtakDataDTO(
@@ -53,6 +55,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
+                behandlingType = behandlingType.name,
             )
         return kotlin.runCatching {
             httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
@@ -76,4 +79,5 @@ private data class MeldingOmVedtakDataDTO(
     val saksbehandler: BehandlerDTO,
     val mellomnavn: String? = null,
     val beslutter: BehandlerDTO? = null,
+    val behandlingType: String,
 )

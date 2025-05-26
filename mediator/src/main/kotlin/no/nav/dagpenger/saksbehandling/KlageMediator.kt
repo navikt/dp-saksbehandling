@@ -182,6 +182,7 @@ class KlageMediator(
                         beslutter = null,
                         behandlingId = oppgave.behandling.behandlingId,
                         saksbehandlerToken = saksbehandlerToken,
+                        behandlingType = BehandlingType.KLAGE,
                     )
                 }
             val klageBehandling =
