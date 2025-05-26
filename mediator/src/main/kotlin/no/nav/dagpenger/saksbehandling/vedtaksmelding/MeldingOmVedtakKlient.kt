@@ -55,7 +55,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingType = MeldingOmVedtakDataDTO.BehandlingsTypeDTO(behandlingType.name),
+                behandlingstype = behandlingType.name,
             )
         return kotlin.runCatching {
             httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
@@ -79,7 +79,5 @@ private data class MeldingOmVedtakDataDTO(
     val saksbehandler: BehandlerDTO,
     val mellomnavn: String? = null,
     val beslutter: BehandlerDTO? = null,
-    val behandlingType: BehandlingsTypeDTO,
-) {
-    class BehandlingsTypeDTO(val value: String)
-}
+    val behandlingstype: String,
+)
