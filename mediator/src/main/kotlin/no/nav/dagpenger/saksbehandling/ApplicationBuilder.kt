@@ -96,6 +96,11 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             saksbehandlerOppslag = saksbehandlerOppslag,
             skjermingKlient = skjermingKlient,
         )
+    val meldingOmVedtakKlient =
+        MeldingOmVedtakKlient(
+            dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
+            tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
+        )
     private val oppgaveMediator =
         OppgaveMediator(
             personRepository = personRepository,
@@ -103,18 +108,15 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             oppslag = oppslag,
             behandlingKlient = behandlingKlient,
             utsendingMediator = utsendingMediator,
-            meldingOmVedtakKlient =
-                MeldingOmVedtakKlient(
-                    dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
-                    tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
-                ),
+            meldingOmVedtakKlient = meldingOmVedtakKlient,
         )
     private val klageMediator =
         KlageMediator(
             klageRepository = klageRepository,
             oppgaveMediator = oppgaveMediator,
             utsendingMediator = utsendingMediator,
-            saksbehandlerOppslag = saksbehandlerOppslag,
+            oppslag = oppslag,
+            meldingOmVedtakKlient = meldingOmVedtakKlient,
         )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(

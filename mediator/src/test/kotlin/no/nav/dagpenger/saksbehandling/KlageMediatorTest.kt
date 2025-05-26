@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -40,8 +41,9 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
+import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -51,6 +53,19 @@ class KlageMediatorTest {
     private val testPersonIdent = "12345678901"
     private val testRapid = TestRapid()
     private val saksbehandler = Saksbehandler("saksbehandler", grupper = emptySet())
+    private val pdlPersonIntern =
+        PDLPersonIntern(
+            ident = testPersonIdent,
+            fornavn = "eruditi",
+            etternavn = "persius",
+            mellomnavn = null,
+            fødselsdato = LocalDate.MIN,
+            alder = 4463,
+            statsborgerskap = null,
+            kjønn = PDLPerson.Kjonn.UKJENT,
+            adresseBeskyttelseGradering = UGRADERT,
+            sikkerhetstiltak = listOf(),
+        )
     private val behandlerDTO =
         BehandlerDTO(
             ident = saksbehandler.navIdent,
@@ -65,18 +80,30 @@ class KlageMediatorTest {
         )
     private val oppslagMock =
         mockk<Oppslag>().also {
-            coEvery { it.hentPersonMedSkjermingOgGradering(testPersonIdent) } returns
+            val person =
                 Person(
                     id = UUIDv7.ny(),
                     ident = testPersonIdent,
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
                 )
+            coEvery { it.hentPersonMedSkjermingOgGradering(testPersonIdent) } returns person
+            coEvery { it.hentPerson(testPersonIdent) } returns
+                pdlPersonIntern
+            coEvery { it.hentBehandler(ident = any()) } returns behandlerDTO
         }
-
-    private val saksbehandlerOppslagMock =
-        mockk<SaksbehandlerOppslag>().also {
-            coEvery { it.hentSaksbehandler(navIdent = any()) } returns behandlerDTO
+    private val html = "<html>hei</html>"
+    private val meldingOmVedtakKlientMock =
+        mockk<MeldingOmVedtakKlient>().also {
+            coEvery {
+                it.lagOgHentMeldingOmVedtak(
+                    person = pdlPersonIntern,
+                    saksbehandler = behandlerDTO,
+                    beslutter = null,
+                    behandlingId = any(),
+                    saksbehandlerToken = any(),
+                )
+            } returns Result.success(html)
         }
 
     @Test
@@ -92,14 +119,15 @@ class KlageMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
-                    meldingOmVedtakKlient = mockk(),
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val klageMediator =
                 KlageMediator(
                     klageRepository = klageRepository,
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
-                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -134,20 +162,25 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
-                    KlageFerdigbehandletHendelse(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
+                    hendelse =
+                        KlageFerdigbehandletHendelse(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
                 )
             }
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
             klageMediator.ferdigstill(
-                KlageFerdigbehandletHendelse(
-                    behandlingId = behandlingId,
-                    utførtAv = saksbehandler,
-                ),
+                hendelse =
+                    KlageFerdigbehandletHendelse(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "token",
             )
+
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
@@ -191,7 +224,7 @@ class KlageMediatorTest {
             verify(exactly = 1) {
                 utsendingMediator.opprettUtsending(
                     oppgaveId = oppgave.oppgaveId,
-                    brev = "<html><h1>Dette må vi gjøre noe med</h1></html>",
+                    brev = html,
                     ident = oppgave.behandling.person.ident,
                 )
             }
@@ -214,14 +247,15 @@ class KlageMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
-                    meldingOmVedtakKlient = mockk(),
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val klageMediator =
                 KlageMediator(
                     klageRepository = klageRepository,
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
-                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -248,19 +282,23 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
-                    KlageFerdigbehandletHendelse(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
+                    hendelse =
+                        KlageFerdigbehandletHendelse(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
                 )
             }
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
             klageMediator.ferdigstill(
-                KlageFerdigbehandletHendelse(
-                    behandlingId = behandlingId,
-                    utførtAv = saksbehandler,
-                ),
+                hendelse =
+                    KlageFerdigbehandletHendelse(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "token",
             )
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -305,7 +343,7 @@ class KlageMediatorTest {
             verify(exactly = 1) {
                 utsendingMediator.opprettUtsending(
                     oppgaveId = oppgave.oppgaveId,
-                    brev = "<html><h1>Dette må vi gjøre noe med</h1></html>",
+                    brev = html,
                     ident = oppgave.behandling.person.ident,
                 )
             }
@@ -317,7 +355,6 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som ferdigstilles med avvisning`() {
-        val fagsakId = UUIDv7.ny()
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
         withMigratedDb { datasource ->
             val klageRepository = PostgresKlageRepository(datasource)
@@ -328,14 +365,15 @@ class KlageMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
-                    meldingOmVedtakKlient = mockk(),
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val klageMediator =
                 KlageMediator(
                     klageRepository = klageRepository,
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
-                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -367,19 +405,23 @@ class KlageMediatorTest {
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
-                    KlageFerdigbehandletHendelse(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
+                    hendelse =
+                        KlageFerdigbehandletHendelse(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
                 )
             }
 
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.AVVIST)
             klageMediator.ferdigstill(
-                KlageFerdigbehandletHendelse(
-                    behandlingId = behandlingId,
-                    utførtAv = saksbehandler,
-                ),
+                hendelse =
+                    KlageFerdigbehandletHendelse(
+                        behandlingId = behandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "token",
             )
             val klageBehandling =
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -401,14 +443,15 @@ class KlageMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
-                    meldingOmVedtakKlient = mockk(),
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val klageMediator =
                 KlageMediator(
                     klageRepository = PostgresKlageRepository(datasource),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
-                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val behandlingId =
                 klageMediator.opprettKlage(
@@ -466,14 +509,15 @@ class KlageMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
-                    meldingOmVedtakKlient = mockk(),
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val klageMediator =
                 KlageMediator(
                     klageRepository = PostgresKlageRepository(datasource),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
-                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val behandlingId =
                 klageMediator.opprettKlage(
@@ -506,10 +550,12 @@ class KlageMediatorTest {
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.MEDHOLD)
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
-                    KlageFerdigbehandletHendelse(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
+                    hendelse =
+                        KlageFerdigbehandletHendelse(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
                 )
             }
 
@@ -531,14 +577,15 @@ class KlageMediatorTest {
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
-                    meldingOmVedtakKlient = mockk(),
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val klageMediator =
                 KlageMediator(
                     klageRepository = PostgresKlageRepository(datasource),
                     oppgaveMediator = oppgaveMediator,
                     utsendingMediator = utsendingMediator,
-                    saksbehandlerOppslag = saksbehandlerOppslagMock,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                 )
             val behandlingId =
                 klageMediator.opprettKlage(
@@ -571,10 +618,12 @@ class KlageMediatorTest {
             klageMediator.registrerOpplysningerMedUtfall(behandlingId, saksbehandler, UtfallType.DELVIS_MEDHOLD)
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
-                    KlageFerdigbehandletHendelse(
-                        behandlingId = behandlingId,
-                        utførtAv = saksbehandler,
-                    ),
+                    hendelse =
+                        KlageFerdigbehandletHendelse(
+                            behandlingId = behandlingId,
+                            utførtAv = saksbehandler,
+                        ),
+                    saksbehandlerToken = "token",
                 )
             }
 

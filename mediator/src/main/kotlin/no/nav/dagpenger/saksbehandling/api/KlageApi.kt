@@ -18,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.jwt.ApplicationCallParser
+import no.nav.dagpenger.saksbehandling.jwt.jwt
 
 fun Route.klageApi(
     mediator: KlageMediator,
@@ -102,10 +103,12 @@ fun Route.klageApi(
                         val behandlingId = call.finnUUID("behandlingId")
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         mediator.ferdigstill(
-                            KlageFerdigbehandletHendelse(
-                                behandlingId = behandlingId,
-                                utførtAv = saksbehandler,
-                            ),
+                            hendelse =
+                                KlageFerdigbehandletHendelse(
+                                    behandlingId = behandlingId,
+                                    utførtAv = saksbehandler,
+                                ),
+                            saksbehandlerToken = call.request.jwt(),
                         )
                         call.respond(HttpStatusCode.NoContent)
                     }

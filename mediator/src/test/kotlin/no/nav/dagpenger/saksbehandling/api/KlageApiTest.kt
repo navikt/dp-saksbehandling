@@ -299,28 +299,34 @@ class KlageApiTest {
 
     @Test
     fun `Skal kunne ferdigstille en klage`() {
+        val saksbehandlerToken = gyldigSaksbehandlerToken()
         val mediator =
             mockk<KlageMediator>().also {
                 every {
                     it.ferdigstill(
-                        KlageFerdigbehandletHendelse(
-                            behandlingId = klageBehandlingId,
-                            utførtAv = saksbehandler,
-                        ),
+                        hendelse =
+                            KlageFerdigbehandletHendelse(
+                                behandlingId = klageBehandlingId,
+                                utførtAv = saksbehandler,
+                            ),
+                        saksbehandlerToken = saksbehandlerToken,
                     )
                 } just Runs
             }
 
         withKlageApi(mediator) {
-            client.put("klage/$klageBehandlingId/ferdigstill") { autentisert() }.status shouldBe HttpStatusCode.NoContent
+            client.put("klage/$klageBehandlingId/ferdigstill") { autentisert(token = saksbehandlerToken) }
+                .status shouldBe HttpStatusCode.NoContent
         }
 
         verify(exactly = 1) {
             mediator.ferdigstill(
-                KlageFerdigbehandletHendelse(
-                    behandlingId = klageBehandlingId,
-                    utførtAv = saksbehandler,
-                ),
+                hendelse =
+                    KlageFerdigbehandletHendelse(
+                        behandlingId = klageBehandlingId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = saksbehandlerToken,
             )
         }
     }
