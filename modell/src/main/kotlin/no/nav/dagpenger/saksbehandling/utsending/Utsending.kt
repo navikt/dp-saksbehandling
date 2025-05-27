@@ -155,6 +155,7 @@ data class Utsending(
                 pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
                 ident = utsending.ident,
                 sak = utsending.sak ?: throw IllegalStateException("Sak mangler"),
+                brevTittel = utsending.type.brevTittel,
             )
         }
 

@@ -47,7 +47,12 @@ class UtsendingMediatorTest {
             )
 
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
-            utsendingMediator.opprettUtsending(oppgaveId, htmlBrev, oppgave.behandling.person.ident)
+            utsendingMediator.opprettUtsending(
+                oppgaveId = oppgaveId,
+                brev = htmlBrev,
+                ident = oppgave.behandling.person.ident,
+                type = UtsendingType.KLAGEMELDING,
+            )
 
             var utsending = utsendingRepository.hent(oppgaveId)
             utsending.oppgaveId shouldBe oppgaveId
@@ -112,7 +117,7 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${JournalføringBehov.BEHOV_NAVN}"
                   ],
-                  "tittel" : "Vedtak om dagpenger",
+                  "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
                   "ident": "${oppgave.behandling.person.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "oppgaveId": "$oppgaveId",
