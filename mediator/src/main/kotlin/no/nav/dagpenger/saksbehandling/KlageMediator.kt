@@ -238,6 +238,7 @@ class KlageMediator(
                         "fagsakId" to sak.id,
                         "behandlendeEnhet" to saksbehandler.enhet.enhetNr,
                         "hjemler" to klageBehandling.hjemler(),
+                        "opprettet" to oppgave.behandling.opprettet.toLocalDate().toString(),
                     )
 
                 klageBehandling.synligeOpplysninger()
