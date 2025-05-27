@@ -31,8 +31,16 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_1
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_2
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_ADRESSE_3
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_LAND
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_NAVN
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_POSTNR
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_POSTSTED
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HVEM_KLAGER
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.INTERN_MELDING
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEFRIST_OPPFYLT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAK
@@ -318,6 +326,14 @@ class KlageMediatorTest {
             shouldNotBeNull { sendtMelding["fagsakId"].asUUID() }
             sendtMelding["behandlendeEnhet"].asText() shouldBe behandlerDTO.enhet.enhetNr
             sendtMelding["opprettet"].asLocalDate() shouldBe nå.toLocalDate()
+            sendtMelding["kommentar"].asText() shouldBe "nice"
+            sendtMelding["prosessfullmektigNavn"].asText() shouldBe "Djevelens Advokat"
+            sendtMelding["prosessfullmektigAdresselinje1"].asText() shouldBe "Sydenveien 1"
+            sendtMelding["prosessfullmektigAdresselinje2"].asText() shouldBe "Poste restante"
+            sendtMelding["prosessfullmektigAdresselinje3"].asText() shouldBe "Teisen postkontor"
+            sendtMelding["prosessfullmektigPostnummer"].asText() shouldBe "0666"
+            sendtMelding["prosessfullmektigPoststed"].asText() shouldBe "Oslo"
+            sendtMelding["prosessfullmektigLand"].asText() shouldBe "NO"
 
             OversendtKlageinstansMottak(
                 rapidsConnection = testRapid,
@@ -737,6 +753,7 @@ class KlageMediatorTest {
                 saksbehandler = saksbehandler,
             )
         }
+
         oppdaterOpplysning(
             opplysningId =
                 this.hentKlageBehandling(
@@ -795,7 +812,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == HVEM_KLAGER }.opplysningId,
-            svar = Verdi.TekstVerdi(HvemKlagerType.BRUKER.name),
+            svar = Verdi.TekstVerdi(HvemKlagerType.FULLMEKTIG.name),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -805,6 +822,78 @@ class KlageMediatorTest {
                 ).synligeOpplysninger()
                     .single { it.type == HJEMLER }.opplysningId,
             svar = Verdi.Flervalg("FTRL_4_5_REGISTRERING", "FTRL_4_2"),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == INTERN_MELDING }.opplysningId,
+            svar = Verdi.TekstVerdi("nice"),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_NAVN }.opplysningId,
+            svar = Verdi.TekstVerdi("Djevelens Advokat"),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_ADRESSE_1 }.opplysningId,
+            svar = Verdi.TekstVerdi("Sydenveien 1"),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_ADRESSE_2 }.opplysningId,
+            svar = Verdi.TekstVerdi("Poste restante"),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_ADRESSE_3 }.opplysningId,
+            svar = Verdi.TekstVerdi("Teisen postkontor"),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_POSTNR }.opplysningId,
+            svar = Verdi.TekstVerdi("0666"),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_POSTSTED }.opplysningId,
+            svar = Verdi.TekstVerdi("Oslo"),
+        )
+        oppdaterOpplysning(
+            opplysningId =
+                this.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                ).synligeOpplysninger()
+                    .single { it.type == FULLMEKTIG_LAND }.opplysningId,
+            svar = Verdi.TekstVerdi("NO"),
         )
     }
 }

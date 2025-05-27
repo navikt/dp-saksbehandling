@@ -22,6 +22,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.INTERN_MELDING
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -244,7 +245,7 @@ class KlageMediator(
                 klageBehandling.synligeOpplysninger()
                     .filter { OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper.contains(it.type) && it.verdi() != Verdi.TomVerdi }
                     .forEach {
-                        val verdi = it.verdi() as Verdi.TekstVerdi
+                        val verdi = (it.verdi() as Verdi.TekstVerdi).value
                         when (it.type) {
                             OpplysningType.FULLMEKTIG_NAVN -> body.put("prosessfullmektigNavn", verdi)
                             OpplysningType.FULLMEKTIG_ADRESSE_1 -> body.put("prosessfullmektigAdresselinje1", verdi)
@@ -255,6 +256,13 @@ class KlageMediator(
                             OpplysningType.FULLMEKTIG_LAND -> body.put("prosessfullmektigLand", verdi)
                             else -> {}
                         }
+                    }
+
+                klageBehandling.synligeOpplysninger()
+                    .singleOrNull { it.type == INTERN_MELDING && it.verdi() != Verdi.TomVerdi }
+                    ?.let {
+                        val verdi = (it.verdi() as Verdi.TekstVerdi).value
+                        body.put("kommentar", verdi)
                     }
 
                 val message =
