@@ -51,7 +51,7 @@ data class JournalføringBehov(
     private val pdfUrn: URN,
     private val ident: String,
     private val sak: Sak,
-    private val brevTittel: String,
+    private val utsendingType: UtsendingType,
 ) : Behov() {
     companion object {
         const val BEHOV_NAVN = "JournalføringBehov"
@@ -62,7 +62,8 @@ data class JournalføringBehov(
         mapOf(
             "pdfUrn" to pdfUrn.toString(),
             "ident" to ident,
-            "tittel" to brevTittel,
+            "tittel" to utsendingType.brevTittel,
+            "skjemaKode" to utsendingType.skjemaKode,
             "sak" to
                 mapOf(
                     "id" to sak.id,

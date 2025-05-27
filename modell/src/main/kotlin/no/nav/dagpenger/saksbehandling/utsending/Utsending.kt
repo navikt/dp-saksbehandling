@@ -17,9 +17,9 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-enum class UtsendingType(val brevTittel: String) {
-    VEDTAK_DAGPENGER("Vedtak om dagpenger"),
-    KLAGEMELDING("Klagebrev"),
+enum class UtsendingType(val brevTittel: String, val skjemaKode: String) {
+    VEDTAK_DAGPENGER("Vedtak om dagpenger", "NAV-DAGPENGER-VEDTAK"),
+    KLAGEMELDING("Klagebrev", "NAV-DAGPENGER-KLAGE"),
 }
 
 data class Utsending(
@@ -155,7 +155,7 @@ data class Utsending(
                 pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
                 ident = utsending.ident,
                 sak = utsending.sak ?: throw IllegalStateException("Sak mangler"),
-                brevTittel = utsending.type.brevTittel,
+                utsendingType = utsending.type,
             )
         }
 

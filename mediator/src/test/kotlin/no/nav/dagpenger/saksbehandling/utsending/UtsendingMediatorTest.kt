@@ -118,6 +118,7 @@ class UtsendingMediatorTest {
                     "${JournalføringBehov.BEHOV_NAVN}"
                   ],
                   "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
+                  "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
                   "ident": "${oppgave.behandling.person.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "oppgaveId": "$oppgaveId",
