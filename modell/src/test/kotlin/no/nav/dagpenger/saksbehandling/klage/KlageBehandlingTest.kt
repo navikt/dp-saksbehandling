@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi.Flervalg
 import no.nav.dagpenger.saksbehandling.klage.Verdi.TekstVerdi
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class KlageBehandlingTest {
@@ -36,8 +37,20 @@ class KlageBehandlingTest {
         )
 
     @Test
+    fun `Klagebehandling skal ikke kunne opprettes frem i tid`() {
+        shouldThrow<IllegalArgumentException> {
+            KlageBehandling(
+                mottattTidspunkt = LocalDateTime.now().plusDays(1),
+            )
+        }
+    }
+
+    @Test
     fun `Skal kunne svare og endre på opplysninger med ulike datatyper`() {
-        val klageBehandling = KlageBehandling()
+        val klageBehandling =
+            KlageBehandling(
+                mottattTidspunkt = LocalDateTime.now().minusDays(1),
+            )
 
         val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysningId()
         val stringOpplysningId = klageBehandling.finnEnTekstOpplysningId()
@@ -77,7 +90,10 @@ class KlageBehandlingTest {
 
     @Test
     fun `Utfall skal kunne velges når alle behandlingsopplysninger er utfylt`() {
-        val klageBehandling = KlageBehandling()
+        val klageBehandling =
+            KlageBehandling(
+                mottattTidspunkt = LocalDateTime.now().minusDays(1),
+            )
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
                 opplysning.synlighet()
@@ -252,7 +268,10 @@ class KlageBehandlingTest {
 
     @Test
     fun `Klagebehandling skal kunne avbrytes fra tilstand BEHANDLES`() {
-        val klageBehandling = KlageBehandling()
+        val klageBehandling =
+            KlageBehandling(
+                mottattTidspunkt = LocalDateTime.now().minusDays(1),
+            )
         klageBehandling.tilstand().type shouldBe BEHANDLES
 
         klageBehandling.avbryt(
@@ -268,7 +287,10 @@ class KlageBehandlingTest {
 
     @Test
     fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT eller OVERSEND_KLAGEINSTANS`() {
-        val klageBehandling = KlageBehandling()
+        val klageBehandling =
+            KlageBehandling(
+                mottattTidspunkt = LocalDateTime.now().minusDays(1),
+            )
         svarPåAlleOpplysninger(klageBehandling)
         val klageFerdigbehandletHendelse =
             KlageFerdigbehandletHendelse(

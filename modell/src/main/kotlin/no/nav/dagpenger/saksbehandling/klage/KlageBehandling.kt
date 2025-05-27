@@ -12,6 +12,8 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -36,10 +38,15 @@ data class KlageBehandling private constructor(
     constructor(
         journalpostId: String? = null,
         tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
-    ) : this (
+        mottattTidspunkt: LocalDateTime,
+    ) : this(
         journalpostId = journalpostId,
         _tilstandslogg = tilstandslogg,
-    )
+    ) {
+        require(mottattTidspunkt.toLocalDate().isBefore(LocalDate.now().plusDays(1))) {
+            "Mottatt dato kan ikke være i fremtiden: $mottattTidspunkt"
+        }
+    }
 
     init {
         steg.forEach { it.evaluerSynlighet(opplysninger) }
