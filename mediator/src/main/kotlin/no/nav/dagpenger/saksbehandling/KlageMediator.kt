@@ -69,7 +69,6 @@ class KlageMediator(
                             hendelse = klageMottattHendelse,
                         ),
                     ),
-                mottattTidspunkt = klageMottattHendelse.opprettet,
             )
 
         klageRepository.lagre(klageBehandling)
@@ -103,7 +102,6 @@ class KlageMediator(
                             hendelse = manuellKlageMottattHendelse,
                         ),
                     ),
-                mottattTidspunkt = manuellKlageMottattHendelse.opprettet,
             )
 
         klageRepository.lagre(klageBehandling)

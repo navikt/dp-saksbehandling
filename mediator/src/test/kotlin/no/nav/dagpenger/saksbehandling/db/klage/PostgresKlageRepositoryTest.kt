@@ -25,7 +25,7 @@ class PostgresKlageRepositoryTest {
             val klageMottattHendelse =
                 KlageMottattHendelse(
                     ident = "111111888888",
-                    opprettet = LocalDateTime.now().minusDays(1),
+                    opprettet = LocalDateTime.now(),
                     journalpostId = "journalpostId",
                 )
             val klageBehandling =
@@ -38,7 +38,6 @@ class PostgresKlageRepositoryTest {
                                 hendelse = klageMottattHendelse,
                             ),
                         ),
-                    mottattTidspunkt = klageMottattHendelse.opprettet,
                 )
             KlageBehandling.rehydrer(
                 behandlingId = UUIDv7.ny(),
