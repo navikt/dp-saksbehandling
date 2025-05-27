@@ -7,7 +7,7 @@ metadata:
     team: teamdagpenger
     domene: behandling
 spec:
-  image: {{ image }}
+  image: "{{ image }}"
   port: 8080
   prometheus:
     enabled: true
@@ -30,48 +30,48 @@ spec:
   secureLogs:
     enabled: true
   kafka:
-    pool: {{ kafka_pool }}
+    pool: "{{ kafka_pool }}"
   env:
     - name: JDK_JAVA_OPTIONS
       value: -XX:+UseParallelGC -XX:MaxRAMPercentage=50.0 -XX:ActiveProcessorCount=4 -XX:+PrintFlagsFinal
     - name: FLYWAY_CLEAN_DISABLED
       value: "false"
     - name: GRUPPE_SAKSBEHANDLER
-      value: {{azure.grupper.saksbehandler}}
+      value: "{{azure.grupper.saksbehandler}}"
     - name: GRUPPE_BESLUTTER
-      value: {{azure.grupper.beslutter}}
+      value: "{{azure.grupper.beslutter}}"
     - name: GRUPPE_EGNE_ANSATTE
-      value: {{azure.grupper.egne_ansatte}}
+      value: "{{azure.grupper.egne_ansatte}}"
     - name: GRUPPE_FORTROLIG
-      value: {{azure.grupper.adressebeskyttelse_fortrolig}}
+      value: "{{azure.grupper.adressebeskyttelse_fortrolig}}"
     - name: GRUPPE_STRENGT_FORTROLIG
-      value: {{azure.grupper.adressebeskyttelse_strengt_fortrolig}}
+      value: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig}}"
     - name: GRUPPE_STRENGT_FORTROLIG_UTLAND
-      value: {{azure.grupper.adressebeskyttelse_strengt_fortrolig_utland}}
+      value: "{{azure.grupper.adressebeskyttelse_strengt_fortrolig_utland}}"
     - name: PDL_API_URL
       value: https://{{pdl.host}}
     - name: PDL_API_SCOPE
-      value: {{pdl.scope}}
+      value: "{{pdl.scope}}"
     - name: SKJERMING_API_URL
-      value: {{skjerming.url}}
+      value: "{{skjerming.url}}"
     - name: SKJERMING_API_SCOPE
-      value: {{skjerming.scope}}
+      value: "{{skjerming.scope}}"
     - name: DP_MOTTAK_API_SCOPE
-      value: {{ dp-mottak.scope }}
+      value: "{{ dp-mottak.scope }}"
     - name: DP_BEHANDLING_API_SCOPE
-      value: {{ dp-behandling.scope }}
+      value: "{{ dp-behandling.scope }}"
     - name: DP_MELDING_OM_VEDTAK_API_SCOPE
-      value: {{ dp-melding-om-vedtak.scope }}
+      value: "{{ dp-melding-om-vedtak.scope }}"
 
   azure:
     application:
       enabled: true
-      tenant: {{ azure.tenant }}
+      tenant: "{{ azure.tenant }}"
       claims:
         groups:
-          - id: {{azure.grupper.saksbehandler}}
-          - id: {{azure.grupper.beslutter}}
-          - id: {{azure.grupper.egne_ansatte}}
+          - id: "{{azure.grupper.saksbehandler}}"
+          - id: "{{azure.grupper.beslutter}}"
+          - id: "{{azure.grupper.egne_ansatte}}"
         extra:
           - NAVident
   accessPolicy:
@@ -96,7 +96,7 @@ spec:
         - application: norg2
           namespace: org
       external:
-        - host: {{pdl.host}}
+        - host: "{{pdl.host}}"
         - host: graph.microsoft.com
   gcp:
     sqlInstances:
@@ -116,7 +116,7 @@ spec:
           day: 1
           hour: 4
         pointInTimeRecovery: {{ db.pointInTimeRecovery }}
-        tier: {{ db.tier }}
+        tier: "{{ db.tier }}"
         type: POSTGRES_15
         flags:
           - name: cloudsql.enable_pgaudit
