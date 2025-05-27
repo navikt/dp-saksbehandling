@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.util.UUID
@@ -212,6 +213,7 @@ class KlageMediator(
                 oppgaveId = oppgave.oppgaveId,
                 brev = html,
                 ident = oppgave.behandling.person.ident,
+                type = UtsendingType.KLAGEMELDING,
             )
 
             klageRepository.lagre(klageBehandling)

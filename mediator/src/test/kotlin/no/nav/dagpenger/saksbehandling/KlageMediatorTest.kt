@@ -43,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -227,6 +228,7 @@ class KlageMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     brev = html,
                     ident = oppgave.behandling.person.ident,
+                    type = UtsendingType.KLAGEMELDING,
                 )
             }
             verify(exactly = 1) {
@@ -346,6 +348,7 @@ class KlageMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     brev = html,
                     ident = oppgave.behandling.person.ident,
+                    type = UtsendingType.KLAGEMELDING,
                 )
             }
             verify(exactly = 1) {

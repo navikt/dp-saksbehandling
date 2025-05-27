@@ -26,12 +26,14 @@ class UtsendingMediator(
         oppgaveId: UUID,
         brev: String,
         ident: String,
+        type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
     ): UUID {
         val utsending =
             Utsending(
                 oppgaveId = oppgaveId,
                 ident = ident,
                 brev = brev,
+                type = type,
             )
         repository.lagre(utsending)
         return utsending.id
