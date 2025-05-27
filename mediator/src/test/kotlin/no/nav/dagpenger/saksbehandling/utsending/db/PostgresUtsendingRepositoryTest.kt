@@ -9,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.lagUtsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import java.util.UUID
@@ -31,6 +32,7 @@ class PostgresUtsendingRepositoryTest {
                     sak = sak,
                     ident = oppgave.behandling.person.ident,
                     distribusjonId = distribusjonId,
+                    type = UtsendingType.KLAGEMELDING,
                 )
             repository.lagre(utsending)
 

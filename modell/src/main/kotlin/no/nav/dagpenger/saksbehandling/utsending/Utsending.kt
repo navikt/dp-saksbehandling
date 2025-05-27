@@ -17,10 +17,16 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
+enum class UtsendingType(val brevTittel: String) {
+    VEDTAK_DAGPENGER("Vedtak om dagpenger"),
+    KLAGEMELDING("Klagebrev"),
+}
+
 data class Utsending(
     val id: UUID = UUIDv7.ny(),
     val oppgaveId: UUID,
     val ident: String,
+    val type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
     private var sak: Sak? = null,
     private val brev: String,
     private var pdfUrn: URN? = null,
@@ -43,7 +49,7 @@ data class Utsending(
     override fun toString(): String {
         return """
             Utsending(id=$id, oppgaveId=$oppgaveId, pdfUrn=$pdfUrn, journalpostId=$journalpostId, 
-            distribusjonId=$distribusjonId , tilstand=${tilstand.type})
+            distribusjonId=$distribusjonId , tilstand=${tilstand.type}, type = $type, sak=$sak)
             """.trimIndent()
     }
 
@@ -65,6 +71,7 @@ data class Utsending(
             journalpostId: String?,
             distribusjonId: String?,
             sak: Sak?,
+            type: UtsendingType,
         ): Utsending {
             return Utsending(
                 id = id,
@@ -76,6 +83,7 @@ data class Utsending(
                 journalpostId = journalpostId,
                 distribusjonId = distribusjonId,
                 sak = sak,
+                type = type,
             )
         }
     }

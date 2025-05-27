@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerJournalføring
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -27,16 +28,17 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         statement =
                             """
                             INSERT INTO utsending_v1
-                                (id, oppgave_id, tilstand, brev, pdf_urn, journalpost_id, distribusjon_id, sak_id) 
+                                (id, oppgave_id, tilstand, brev, pdf_urn, journalpost_id, distribusjon_id, sak_id, type) 
                             VALUES
-                                (:id, :oppgave_id, :tilstand, :brev, :pdf_urn, :journalpost_id, :distribusjon_id, :sak_id) 
+                                (:id, :oppgave_id, :tilstand, :brev, :pdf_urn, :journalpost_id, :distribusjon_id, :sak_id, :type) 
                             ON CONFLICT (id) DO UPDATE SET 
                                 tilstand = :tilstand,
                                 brev = :brev,
                                 pdf_urn = :pdf_urn,
                                 journalpost_id = :journalpost_id,
                                 distribusjon_id = :distribusjon_id,
-                                sak_id = :sak_id
+                                sak_id = :sak_id,
+                                type = :type
                             """.trimIndent(),
                         paramMap =
                             mapOf(
@@ -48,6 +50,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                                 "journalpost_id" to utsending.journalpostId(),
                                 "distribusjon_id" to utsending.distribusjonId(),
                                 "sak_id" to utsending.sak()?.id,
+                                "type" to utsending.type.name,
                             ),
                     ).asUpdate,
                 )
@@ -124,6 +127,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                                 uts.pdf_urn, 
                                 uts.journalpost_id,
                                 uts.distribusjon_id,
+                                uts.type,
                                 sak.id as sak_id, 
                                 sak.kontekst,
                                 per.ident
@@ -149,6 +153,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         pdfUrn = row.stringOrNull("pdf_urn"),
                         journalpostId = row.stringOrNull("journalpost_id"),
                         distribusjonId = row.stringOrNull("distribusjon_id"),
+                        type = UtsendingType.valueOf(row.string("type")),
                         sak = sak,
                     )
                 }.asSingle,
