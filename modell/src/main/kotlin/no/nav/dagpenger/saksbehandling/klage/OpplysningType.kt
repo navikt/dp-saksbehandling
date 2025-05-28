@@ -202,7 +202,7 @@ enum class Hjemler(val tittel: String) {
 
     /*FTRL_4_7_PERMITTERINGSAARSAK,
     FTRL_4_7_PERMITTERINGENS_LENGDE,
-    */
+     */
 }
 
 // TODO: Vurder om vi burde importere et bibliotek/kodeverk som dekker behovet vårt her.
