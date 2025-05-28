@@ -90,7 +90,7 @@ enum class OpplysningType(
     HJEMLER(
         navn = "Hvilke hjemler gjelder klagen?",
         datatype = Datatype.FLERVALG,
-        valgmuligheter = Hjemler.entries.map { it.name },
+        valgmuligheter = Hjemler.entries.map { it.tittel },
     ),
     INTERN_MELDING(
         navn = "Intern melding",
@@ -128,7 +128,7 @@ enum class OpplysningType(
     FULLMEKTIG_LAND(
         navn = "Land",
         datatype = Datatype.TEKST,
-        valgmuligheter = Land.entries.map { it.name },
+        valgmuligheter = Land.entries.map { it.land },
     ),
 }
 
@@ -158,17 +158,17 @@ enum class KlagenGjelderType {
     ANNET,
 }
 
-enum class Hjemler {
-    FTRL_4_2,
-    FTRL_4_3_1,
-    FTRL_4_3_1_PERMLL,
-    FTRL_4_3_2,
-    FTRL_4_4,
-    FTRL_4_5_REGISTRERING,
-    FTRL_4_5_REELL_ARBEIDSSOEKER,
-    FTRL_4_6_UTDANNING,
-    FTRL_4_6_ETABLERING,
-    FTRL_4_7_PERMITTERINGSAARSAK,
+enum class Hjemler(val tittel: String) {
+    FTRL_4_2("§ 4-2 Krav til opphold i Norge"),
+    FTRL_4_3_2("§ 4-3 Krav til tap av arbeidstid"),
+    FTRL_4_3_1("§ 4-3 Krav til tap av arbeidsinntekt"),
+    FTRL_4_4("§ 4-4 Krav til minsteinntekt"),
+    FTRL_4_5_REELL_ARBEIDSSOEKER("§ 4-5 Krav til å være reell arbeidssøker"),
+    FTRL_4_5_REGISTRERING("§ 4-5 Krav til å være registrert som arbeidssøker for å være reell arbeidssøker"),
+    FTRL_4_6_UTDANNING("§ 4-6 Dagpenger under utdanning/opplæring"),
+    FTRL_4_6_ETABLERING("§ 4-6 Dagpenger under etablering av egen virksomhet"),
+
+    /*FTRL_4_7_PERMITTERINGSAARSAK,
     FTRL_4_7_PERMITTERINGENS_LENGDE,
     FTRL_4_8,
     FTRL_4_9,
@@ -188,12 +188,12 @@ enum class Hjemler {
     FTRL_4_25,
     FTRL_4_26,
     FTRL_4_27,
-    FTRL_4_28,
+    FTRL_4_28,*/
 }
 
 // TODO: Vurder om vi burde importere et bibliotek/kodeverk som dekker behovet vårt her.
 // det blir for mye styr å opprettholde dette når det er mange nye land :)
-enum class Land(land: String) {
+enum class Land(val land: String) {
     UKJENT("Uoppgitt/Ukjent"),
     AD("Andorra"),
     AE("De forente arabiske emirater"),
