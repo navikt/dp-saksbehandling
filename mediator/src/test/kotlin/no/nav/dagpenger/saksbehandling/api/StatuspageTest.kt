@@ -15,6 +15,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeBeslutterTilgan
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligTilstandsendringException
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingException
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.klage.Opplysning
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType
+import no.nav.dagpenger.saksbehandling.klage.UgyldigOpplysningException
+import no.nav.dagpenger.saksbehandling.klage.Verdi
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
 import java.time.format.DateTimeParseException
@@ -162,6 +166,41 @@ class StatuspageTest {
                       "type": "dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi",
                       "title": "Ugyldig verdi",
                       "detail": "$message",
+                      "status": 400,
+                      "instance": "$path"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
+    fun `Error håndtering av UgyldigOpplysningException`() {
+        testApplication {
+            val path = "/UgyldigOpplysningException"
+            application {
+                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                routing {
+                    get(path) {
+                        throw UgyldigOpplysningException(
+                            Opplysning(
+                                type = OpplysningType.KLAGEN_GJELDER,
+                                verdi = Verdi.TomVerdi,
+                            ),
+                        )
+                    }
+                }
+            }
+
+            client.get(path).let { response ->
+                response.status shouldBe HttpStatusCode.BadRequest
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    //language=JSON
+                    """
+                    {
+                      "type": "dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi",
+                      "title": "Ugyldig verdi",
+                      "detail": "Ugyldig opplysning: Hva klagen gjelder med verdi TomVerdi",
                       "status": 400,
                       "instance": "$path"
                     }
