@@ -100,11 +100,13 @@ object KlageOpplysningerMapper {
 
     fun String.tilKlageOpplysninger(): Set<Opplysning> {
         return objectMapper.readTree(this).map { jsonNode ->
+            val type = OpplysningType.valueOf(jsonNode.get("type").asText())
             Opplysning(
                 opplysningId = jsonNode.get("opplysningId").asText().let { UUID.fromString(it) },
-                type = OpplysningType.valueOf(jsonNode.get("type").asText()),
+                type = type,
                 verdi = objectMapper.convertValue(jsonNode["verdi"], Verdi::class.java),
                 valgmuligheter = jsonNode.get("valgmuligheter").map { it.asText() },
+                regler = type.regler,
             )
         }.toSet()
     }

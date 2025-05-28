@@ -10,9 +10,46 @@ class Opplysning(
     private var verdi: Verdi,
     private var synlig: Boolean = true,
     val valgmuligheter: List<String> = emptyList(),
+    private val regler: Set<Regel> = emptySet(),
 ) {
     init {
         requireRiktigDatatype(verdi)
+        requireReglerOppfylt()
+    }
+
+    fun verdi(): Verdi {
+        return this.verdi
+    }
+
+    fun settSynlighet(synlig: Boolean) {
+        when (synlig) {
+            true -> this.synlig = true
+            false -> {
+                this.synlig = false
+                this.verdi = Verdi.TomVerdi
+            }
+        }
+    }
+
+    fun synlighet(): Boolean {
+        return this.synlig
+    }
+
+    fun svar(verdi: Verdi) {
+        requireRiktigDatatype(verdi).also { this.verdi = it }
+        requireReglerOppfylt()
+    }
+
+    private fun requireReglerOppfylt() {
+        val ikkeOppfylteRegler =
+            this.regler
+                .map { it.erOppfylt(this) }
+                .filterIsInstance<Regel.Resultat.IkkeOppfylt>()
+                .map { it.begrunnelse }
+
+        require(ikkeOppfylteRegler.isEmpty()) {
+            "Regler ikke oppfylt: ${ikkeOppfylteRegler.joinToString()}"
+        }
     }
 
     private fun requireRiktigDatatype(verdi: Verdi): Verdi {
@@ -59,28 +96,6 @@ class Opplysning(
         return verdi
     }
 
-    fun verdi(): Verdi {
-        return this.verdi
-    }
-
-    fun settSynlighet(synlig: Boolean) {
-        when (synlig) {
-            true -> this.synlig = true
-            false -> {
-                this.synlig = false
-                this.verdi = Verdi.TomVerdi
-            }
-        }
-    }
-
-    fun synlighet(): Boolean {
-        return this.synlig
-    }
-
-    fun svar(verdi: Verdi) {
-        requireRiktigDatatype(verdi).also { this.verdi = it }
-    }
-
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Opplysning) return false
@@ -92,6 +107,23 @@ class Opplysning(
         return 31 * opplysningId.hashCode() + type.hashCode()
     }
 }
+
+private inline fun Opplysning.require(
+    value: Boolean,
+    lazyMessage: () -> String,
+) {
+    if (!value) {
+        throw UgyldigOpplysningException(
+            opplysning = this,
+            melding = lazyMessage(),
+        )
+    }
+}
+
+class UgyldigOpplysningException(
+    opplysning: Opplysning,
+    melding: String = "Ugyldig opplysning",
+) : IllegalArgumentException("$melding: ${opplysning.type.navn} med verdi ${opplysning.verdi()}")
 
 sealed class Verdi {
     data object TomVerdi : Verdi()

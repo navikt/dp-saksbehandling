@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.db.klage
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
@@ -8,15 +9,43 @@ import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlage
 import no.nav.dagpenger.saksbehandling.klage.KlagenGjelderType
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_GJELDER_VEDTAKSDATO
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGEN_NEVNER_ENDRING
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.KLAGE_MOTTATT
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.OPPREISNING_OVERSITTET_FRIST_BEGRUNNELSE
+import no.nav.dagpenger.saksbehandling.klage.UgyldigOpplysningException
 import no.nav.dagpenger.saksbehandling.klage.Verdi
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class KlageOpplysningMapperTest {
+    @Test
+    fun `Ved  serialisere og deserialisere av opplysniger bevares også regler`() {
+        val opplysninger =
+            setOf(
+                Opplysning(
+                    type = KLAGEN_GJELDER_VEDTAKSDATO,
+                    verdi = Verdi.TomVerdi,
+                ),
+            )
+
+        val json =
+            shouldNotThrowAny {
+                opplysninger.tilJson()
+            }
+
+        json.tilKlageOpplysninger().let { deserialiserteOpplysninger ->
+            deserialiserteOpplysninger shouldContainExactly opplysninger
+
+            deserialiserteOpplysninger.single().let {
+                it.verdi() shouldBe Verdi.TomVerdi
+                shouldNotThrowAny { it.svar(Verdi.Dato(LocalDate.MIN)) }
+                shouldThrow<UgyldigOpplysningException> { it.svar(Verdi.Dato(LocalDate.MAX)) }
+            }
+        }
+    }
+
     @Test
     fun `Skal kunne serialisere og deserialisere opplysniger til json`() {
         val opplysninger =
