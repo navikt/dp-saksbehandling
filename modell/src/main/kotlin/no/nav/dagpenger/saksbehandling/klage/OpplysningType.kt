@@ -5,6 +5,7 @@ enum class OpplysningType(
     val datatype: Datatype,
     val påkrevd: Boolean = true,
     val valgmuligheter: List<String> = emptyList(),
+    val regler: Set<Regel> = emptySet(),
 ) {
     // Klagen gjelder
     KLAGEN_GJELDER(
@@ -20,6 +21,7 @@ enum class OpplysningType(
     KLAGEN_GJELDER_VEDTAKSDATO(
         navn = "Vedtaksdato",
         datatype = Datatype.DATO,
+        regler = setOf(IkkeIFremtiden),
     ),
 
     // Formkrav

@@ -84,6 +84,7 @@ object OpplysningBygger {
                 type = it,
                 verdi = Verdi.TomVerdi,
                 valgmuligheter = it.valgmuligheter,
+                regler = it.regler,
             )
         }.toSet()
     }
