@@ -122,15 +122,29 @@ data class KlageBehandling private constructor(
         verdi: Verdi,
     ) {
         hentOpplysning(opplysningId).also { opplysning ->
-            val databaseVerdi = when(opplysning.type){
-                HJEMLER -> Verdi.Flervalg( (verdi as Verdi.Flervalg).value.map { hjemmel ->
-                    Hjemler.entries.single { it.tittel == hjemmel }.name
-                }.toList() )
-                FULLMEKTIG_LAND -> Verdi.Flervalg( (verdi as Verdi.Flervalg).value.map { land ->
-                    Land.entries.single { it.land == land }.name
-                }.toList() )
-                else -> verdi
-            }
+            val databaseVerdi =
+                when (verdi is Verdi.Flervalg) {
+                    true ->
+                        when (opplysning.type) {
+                            HJEMLER ->
+                                Verdi.Flervalg(
+                                    (verdi as Verdi.Flervalg).value.map { hjemmel ->
+                                        Hjemler.entries.single { it.tittel == hjemmel }.name
+                                    }.toList(),
+                                )
+
+                            FULLMEKTIG_LAND ->
+                                Verdi.Flervalg(
+                                    (verdi as Verdi.Flervalg).value.map { land ->
+                                        Land.entries.single { it.land == land }.name
+                                    }.toList(),
+                                )
+
+                            else -> verdi
+                        }
+
+                    false -> verdi
+                }
             opplysning.svar(databaseVerdi)
             evaluerSynlighetOgUtfall()
         }
