@@ -22,6 +22,17 @@ object AlertManager {
         override val type: String = "UTSENDING_IKKE_FULLFØRT"
     }
 
+    data class OversendKlageinstansIkkeFullført(
+        val behandlingId: UUID,
+        val tilstand: String,
+        val sistEndret: LocalDateTime,
+    ) : AlertType {
+        override val feilMelding =
+            "Oversendelse til klageinstans ikke fullført for klagebehandling $behandlingId. " +
+                "Den har vært i tilstand $tilstand siden $sistEndret"
+        override val type: String = "OVERSEND_KLAGEINSTANS_IKKE_FULLFØRT"
+    }
+
     enum class OppgaveAlertType : AlertType {
         OPPGAVE_IKKE_FUNNET {
             override val feilMelding = "Oppgave ikke funnet"

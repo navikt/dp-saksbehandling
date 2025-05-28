@@ -25,6 +25,8 @@ import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.getNextOccurrence
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import no.nav.dagpenger.saksbehandling.journalpostid.MottakHttpKlient
+import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmJob
+import no.nav.dagpenger.saksbehandling.klage.OversendKlageinstansAlarmRepository
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
@@ -124,6 +126,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
         )
     private val utsendingAlarmJob: Timer
+    private val oversendKlageinstansAlarmJob: Timer
     private val slettGamleOppgaverJob: Timer
     private val oppgaveFristUtgåttJob: Timer
     private val metrikkJob: Timer
@@ -172,17 +175,22 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 utsendingMediator = utsendingMediator,
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
-//            OversendKlageinstansBehovløser(
-//                rapidsConnection = rapidsConnection,
-//                klageRepository = klageRepository,
-//                klageKlient = klageKlient,
-//            )
             OversendtKlageinstansMottak(
                 rapidsConnection = rapidsConnection,
                 klageMediator = klageMediator,
             )
             utsendingAlarmJob =
-                UtsendingAlarmJob(rapidsConnection, UtsendingAlarmRepository(dataSource)).startJob(
+                UtsendingAlarmJob(
+                    rapidsConnection = rapidsConnection,
+                    utsendingAlarmRepository = UtsendingAlarmRepository(dataSource),
+                ).startJob(
+                    period = 60.Minutt,
+                )
+            oversendKlageinstansAlarmJob =
+                OversendKlageinstansAlarmJob(
+                    rapidsConnection = rapidsConnection,
+                    repository = OversendKlageinstansAlarmRepository(dataSource),
+                ).startJob(
                     period = 60.Minutt,
                 )
             slettGamleOppgaverJob =
@@ -221,6 +229,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
 
     override fun onShutdown(rapidsConnection: RapidsConnection) {
         utsendingAlarmJob.cancel()
+        oversendKlageinstansAlarmJob.cancel()
         slettGamleOppgaverJob.cancel()
         oppgaveFristUtgåttJob.cancel()
         metrikkJob.cancel()
