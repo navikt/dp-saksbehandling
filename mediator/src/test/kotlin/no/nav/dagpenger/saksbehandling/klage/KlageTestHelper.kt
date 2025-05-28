@@ -10,7 +10,7 @@ import java.time.LocalDate
 import java.util.UUID
 
 fun lagKlagebehandling(
-    hjemler: List<Hjemler> = listOf(Hjemler.FTRL_4_2, Hjemler.FTRL_4_9, Hjemler.FTRL_4_18),
+    hjemler: List<Hjemler> = listOf(Hjemler.FTRL_4_2, Hjemler.FTRL_4_4, Hjemler.FTRL_4_3_2),
     land: Land? = Land.NO,
     behandlendeEnhet: String? = null,
     tilstand: KlageTilstand.Type = BEHANDLES,
@@ -76,7 +76,7 @@ fun lagKlagebehandling(
         )
     if (hjemler.isNotEmpty()) {
         opplysninger.add(
-            Opplysning(type = OpplysningType.HJEMLER, verdi = Verdi.Flervalg(hjemler.map { it.toString() })),
+            Opplysning(type = OpplysningType.HJEMLER, verdi = Verdi.Flervalg(hjemler.map { it.tittel })),
         )
     }
     if (land != null) {

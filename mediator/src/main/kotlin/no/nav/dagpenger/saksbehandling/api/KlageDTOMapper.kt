@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.api.models.TekstVerdiDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtfallDTOVerdiDTO
 import no.nav.dagpenger.saksbehandling.klage.Datatype
-import no.nav.dagpenger.saksbehandling.klage.Hjemler
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.UtfallType

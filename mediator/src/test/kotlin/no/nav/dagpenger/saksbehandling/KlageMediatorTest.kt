@@ -333,7 +333,7 @@ class KlageMediatorTest {
             sendtMelding["prosessfullmektigAdresselinje3"].asText() shouldBe "Teisen postkontor"
             sendtMelding["prosessfullmektigPostnummer"].asText() shouldBe "0666"
             sendtMelding["prosessfullmektigPoststed"].asText() shouldBe "Oslo"
-            sendtMelding["prosessfullmektigLand"].asText() shouldBe "NO"
+            sendtMelding["prosessfullmektigLand"].asText() shouldBe "Norge"
 
             OversendtKlageinstansMottak(
                 rapidsConnection = testRapid,
@@ -821,7 +821,11 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == HJEMLER }.opplysningId,
-            svar = Verdi.Flervalg("FTRL_4_5_REGISTRERING", "FTRL_4_2"),
+            svar =
+                Verdi.Flervalg(
+                    "§ 4-5 Krav til å være registrert som arbeidssøker for å være reell arbeidssøker",
+                    "§ 4-2 Krav til opphold i Norge",
+                ),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -893,7 +897,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == FULLMEKTIG_LAND }.opplysningId,
-            svar = Verdi.TekstVerdi("NO"),
+            svar = Verdi.TekstVerdi("Norge"),
         )
     }
 }
