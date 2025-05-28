@@ -11,6 +11,8 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_LAND
+import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import java.util.UUID
 
@@ -120,7 +122,16 @@ data class KlageBehandling private constructor(
         verdi: Verdi,
     ) {
         hentOpplysning(opplysningId).also { opplysning ->
-            opplysning.svar(verdi)
+            val databaseVerdi = when(opplysning.type){
+                HJEMLER -> Verdi.Flervalg( (verdi as Verdi.Flervalg).value.map { hjemmel ->
+                    Hjemler.entries.single { it.tittel == hjemmel }.name
+                }.toList() )
+                FULLMEKTIG_LAND -> Verdi.Flervalg( (verdi as Verdi.Flervalg).value.map { land ->
+                    Land.entries.single { it.land == land }.name
+                }.toList() )
+                else -> verdi
+            }
+            opplysning.svar(databaseVerdi)
             evaluerSynlighetOgUtfall()
         }
     }
