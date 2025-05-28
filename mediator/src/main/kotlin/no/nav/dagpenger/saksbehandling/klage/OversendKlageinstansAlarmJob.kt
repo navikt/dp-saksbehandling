@@ -45,7 +45,7 @@ internal class OversendKlageinstansAlarmRepository(private val ds: DataSource) {
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "oversend_klageinstans" to OVERSEND_KLAGEINSTANS,
+                            "oversend_klageinstans" to OVERSEND_KLAGEINSTANS.name,
                         ),
                 ).map { row ->
                     AlertManager.OversendKlageinstansIkkeFullført(

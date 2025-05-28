@@ -17,17 +17,53 @@ class OversendKlageinstansAlarmRepositoryTest {
     fun `Skal hente oversendelser til klageinstans som ikke er ferdigstilt innen 1 time`() {
         val nå = LocalDateTime.now()
         val enTimeSiden = nå.minusHours(1)
-        val littMerEnnEnTimeSiden = nå.minusHours(1)
+        val toTimerSiden = nå.minusHours(2)
+        val littMindreEnnEnTimeSiden = nå.minusMinutes(59)
+        val littMerEnnEnTimeSiden = nå.minusMinutes(61)
+
         withMigratedDb { ds ->
             val repository = OversendKlageinstansAlarmRepository(ds)
-            val klageBehandlingLittMerEnnEnTimeSiden = ds.opprettOgLagreKlageBehandling(KlageBehandling.OversendKlageinstans, littMerEnnEnTimeSiden)
+            val klageBehandlingOversendtLittMerEnnEnTimeSiden =
+                ds.opprettOgLagreKlageBehandling(
+                    KlageBehandling.OversendKlageinstans,
+                    littMerEnnEnTimeSiden,
+                )
+            val klageBehandlingOversendtEnTimeSiden =
+                ds.opprettOgLagreKlageBehandling(
+                    KlageBehandling.OversendKlageinstans,
+                    enTimeSiden,
+                )
+            val klageBehandlingOversendtLittMindreEnnEnTimeSiden =
+                ds.opprettOgLagreKlageBehandling(
+                    KlageBehandling.OversendKlageinstans,
+                    littMindreEnnEnTimeSiden,
+                )
+            val klageBehandlingOversendtNå =
+                ds.opprettOgLagreKlageBehandling(
+                    KlageBehandling.OversendKlageinstans,
+                    nå,
+                )
+            val klageBehandlingSomBehandles =
+                ds.opprettOgLagreKlageBehandling(
+                    KlageBehandling.Behandles,
+                    toTimerSiden,
+                )
+            val klageBehandlingSomErFerdigstilt =
+                ds.opprettOgLagreKlageBehandling(
+                    KlageBehandling.Ferdigstilt,
+                    toTimerSiden,
+                )
 
             val ventendeOversendelser = repository.hentVentendeOversendelser(intervallAntallTimer = 1)
-            ventendeOversendelser.size shouldBe 1
-            ventendeOversendelser.map { it.tilstand } shouldBe
-                    listOf(
-                        KlageBehandling.OversendKlageinstans,
-                    )
+            ventendeOversendelser.size shouldBe 2
+            ventendeOversendelser.forEach { it.tilstand shouldBe KlageBehandling.OversendKlageinstans.type.name }
+            ventendeOversendelser.map {
+                it.behandlingId
+            } shouldBe
+                listOf(
+                    klageBehandlingOversendtLittMerEnnEnTimeSiden.behandlingId,
+                    klageBehandlingOversendtEnTimeSiden.behandlingId,
+                )
         }
     }
 
@@ -35,12 +71,13 @@ class OversendKlageinstansAlarmRepositoryTest {
         tilstand: KlageBehandling.KlageTilstand,
         tidspunkt: LocalDateTime = LocalDateTime.now(),
     ): KlageBehandling {
-        val klageBehandling = KlageBehandling.rehydrer(
-            behandlingId = UUIDv7.ny(),
-            journalpostId = Random.nextInt(1,1000).toString(),
-            tilstand = tilstand,
-            behandlendeEnhet = "4408",
-        )
+        val klageBehandling =
+            KlageBehandling.rehydrer(
+                behandlingId = UUIDv7.ny(),
+                journalpostId = Random.nextInt(1, 1000).toString(),
+                tilstand = tilstand,
+                behandlendeEnhet = "4408",
+            )
 
         sessionOf(this).use { session ->
             session.run(
@@ -62,10 +99,10 @@ class OversendKlageinstansAlarmRepositoryTest {
                             "journalpost_id" to klageBehandling.journalpostId(),
                             "behandlende_enhet" to klageBehandling.behandlendeEnhet(),
                             "opplysninger" to
-                                    PGobject().also {
-                                        it.type = "JSONB"
-                                        it.value = klageBehandling.alleOpplysninger().tilJson()
-                                    },
+                                PGobject().also {
+                                    it.type = "JSONB"
+                                    it.value = klageBehandling.alleOpplysninger().tilJson()
+                                },
                         ),
                 ).asUpdate,
             )
