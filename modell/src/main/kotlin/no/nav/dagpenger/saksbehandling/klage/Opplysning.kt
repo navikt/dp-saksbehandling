@@ -1,8 +1,6 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_LAND
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import java.time.LocalDate
 import java.util.UUID
 
@@ -73,23 +71,11 @@ class Opplysning(
                     type.datatype == Datatype.FLERVALG,
                 ) { "Opplysning av type ${type.datatype} kan ikke ha verdi av type ${verdi::class.simpleName}" }
                 if (valgmuligheter.isNotEmpty()) {
-                    val databaseValgmuligheter =
-                        when (type) {
-                            HJEMLER ->
-                                valgmuligheter.map { hjemmel ->
-                                    Hjemler.entries.single { it.tittel == hjemmel }.name
-                                }.toList()
-                            FULLMEKTIG_LAND ->
-                                valgmuligheter.map { land ->
-                                    Land.entries.single { it.land == land }.name
-                                }.toList()
-                            else -> valgmuligheter
-                        }
                     require(
                         verdi.value.all {
-                            it in databaseValgmuligheter
+                            it in valgmuligheter
                         },
-                    ) { "Opplysningene må være av lovlige valgmuligheter $databaseValgmuligheter. Verdi er ${verdi.value}" }
+                    ) { "Opplysningene må være av lovlige valgmuligheter $valgmuligheter. Verdi er ${verdi.value}" }
                 }
             }
 

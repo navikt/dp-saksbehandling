@@ -12,7 +12,7 @@ enum class OpplysningType(
         navn = "Hva klagen gjelder",
         datatype = Datatype.FLERVALG,
         påkrevd = false,
-        valgmuligheter = KlagenGjelderType.entries.map { it.name },
+        valgmuligheter = KlagenGjelderType.entries.map { it.tekst },
     ),
     KLAGEN_GJELDER_VEDTAK(
         navn = "Vedtak klagen gjelder",
@@ -71,7 +71,7 @@ enum class OpplysningType(
     UTFALL(
         navn = "Utfall",
         datatype = Datatype.TEKST,
-        valgmuligheter = UtfallType.entries.map { it.name },
+        valgmuligheter = UtfallType.entries.map { it.tekst },
     ),
 
     VURDERING_AV_KLAGEN(
@@ -83,7 +83,7 @@ enum class OpplysningType(
     HVEM_KLAGER(
         navn = "Hvem er klager i saken?",
         datatype = Datatype.TEKST,
-        valgmuligheter = HvemKlagerType.entries.map { it.name },
+        valgmuligheter = HvemKlagerType.entries.map { it.tekst },
     ),
 
     // Info til klageinstans del 2
@@ -139,23 +139,49 @@ enum class Datatype {
     FLERVALG,
 }
 
-enum class UtfallType {
-    OPPRETTHOLDELSE,
-    MEDHOLD,
-    DELVIS_MEDHOLD,
-    AVVIST,
+enum class UtfallType(val tekst: String) {
+    OPPRETTHOLDELSE("Opprettholdelse"),
+    MEDHOLD("Medhold"),
+    DELVIS_MEDHOLD("Delvis medhold"),
+    AVVIST("Avvist"),
+    ;
+
+    companion object {
+        fun Verdi.toUtfallType(): UtfallType? {
+            return when (this) {
+                is Verdi.TekstVerdi -> {
+                    UtfallType.entries.singleOrNull { it.tekst == this.value } ?: UtfallType.valueOf(this.value)
+                }
+                is Verdi.TomVerdi -> null
+                else -> throw IllegalArgumentException("Kan ikke konvertere verdi av type ${this::class.simpleName} til UtfallType")
+            }
+        }
+    }
 }
 
-enum class HvemKlagerType {
-    BRUKER,
-    FULLMEKTIG,
+enum class HvemKlagerType(val tekst: String) {
+    BRUKER("Bruker"),
+    FULLMEKTIG("Fullmektig"),
+    ;
+
+    companion object {
+        fun Verdi.toHvemKlagerType(): HvemKlagerType? {
+            return when (this) {
+                is Verdi.TekstVerdi -> {
+                    HvemKlagerType.entries.singleOrNull { it.tekst == this.value } ?: HvemKlagerType.valueOf(this.value)
+                }
+                is Verdi.TomVerdi -> null
+                else -> throw IllegalArgumentException("Kan ikke konvertere verdi av type ${this::class.simpleName} til HvemKlagerType")
+            }
+        }
+    }
 }
 
-enum class KlagenGjelderType {
-    AVSLAG_PÅ_SØKNAD,
-    FOR_LITE_UTBETALT,
-    VEDTAK_OM_TILBAKEBETALING,
-    ANNET,
+enum class KlagenGjelderType(val tekst: String) {
+    AVSLAG_PÅ_SØKNAD("Avslag på søknad"),
+    FOR_LITE_UTBETALT("For lite utbetalt"),
+    VEDTAK_OM_TILBAKEBETALING("Vedtak om tilbakebetaling"),
+    ANNET("Annet"),
 }
 
 enum class Hjemler(val tittel: String) {

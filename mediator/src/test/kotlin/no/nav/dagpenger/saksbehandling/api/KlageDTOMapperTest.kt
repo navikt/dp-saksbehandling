@@ -72,10 +72,10 @@ class KlageDTOMapperTest {
                                 "paakrevd": ${klageBehandling.synligeOpplysninger().single { it.type == OpplysningType.KLAGEN_GJELDER }.type.påkrevd},
                                 "gruppe": "KLAGESAK",
                                 "valgmuligheter": [
-                                    "AVSLAG_PÅ_SØKNAD",
-                                    "FOR_LITE_UTBETALT",
-                                    "VEDTAK_OM_TILBAKEBETALING",
-                                    "ANNET"
+                                    "Avslag på søknad",
+                                    "For lite utbetalt",
+                                    "Vedtak om tilbakebetaling",
+                                    "Annet"
                                 ] ,
                                 "redigerbar": true,
                                 "type": "FLER_LISTEVALG"

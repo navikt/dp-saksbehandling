@@ -760,7 +760,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
-            svar = Verdi.TekstVerdi(utfall.name),
+            svar = Verdi.TekstVerdi(utfall.tekst),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -794,7 +794,7 @@ class KlageMediatorTest {
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger().single { it.type == UTFALL }.opplysningId,
-            svar = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.name),
+            svar = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.tekst),
         )
         oppdaterOpplysning(
             opplysningId =
@@ -812,7 +812,7 @@ class KlageMediatorTest {
                     saksbehandler = saksbehandler,
                 ).synligeOpplysninger()
                     .single { it.type == HVEM_KLAGER }.opplysningId,
-            svar = Verdi.TekstVerdi(HvemKlagerType.FULLMEKTIG.name),
+            svar = Verdi.TekstVerdi(HvemKlagerType.FULLMEKTIG.tekst),
         )
         oppdaterOpplysning(
             opplysningId =

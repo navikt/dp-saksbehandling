@@ -304,7 +304,7 @@ class KlageBehandlingTest {
                             TekstVerdi(
                                 value =
                                     when (it.type) {
-                                        OpplysningType.UTFALL -> "AVVIST"
+                                        OpplysningType.UTFALL -> "Avvist"
                                         else -> it.valgmuligheter.firstOrNull() ?: "String"
                                     },
                             ),

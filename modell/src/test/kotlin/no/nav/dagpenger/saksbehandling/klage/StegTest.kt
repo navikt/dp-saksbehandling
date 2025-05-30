@@ -116,19 +116,19 @@ class StegTest {
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.MEDHOLD.name))
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.MEDHOLD.tekst))
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.DELVIS_MEDHOLD.name))
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.DELVIS_MEDHOLD.tekst))
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.AVVIST.name))
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.AVVIST.tekst))
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.name))
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.tekst))
         steg.evaluerSynlighet(opplysninger.toList())
         tilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe true }
     }
@@ -149,17 +149,17 @@ class StegTest {
         val fullmektigTilKlageinstansOpplysninger = opplysninger.filter { it.type in fullmektigTilKlageinstansOpplysningTyper }
         fullmektigTilKlageinstansOpplysninger.size shouldBe fullmektigTilKlageinstansOpplysningTyper.size
 
-        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.name))
+        utfallOpplysning.svar(verdi = Verdi.TekstVerdi(UtfallType.OPPRETTHOLDELSE.tekst))
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())
         fullmektigTilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe false }
 
-        hvemKlager.svar(Verdi.TekstVerdi(HvemKlagerType.FULLMEKTIG.name))
+        hvemKlager.svar(Verdi.TekstVerdi(HvemKlagerType.FULLMEKTIG.tekst))
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())
         fullmektigTilKlageinstansOpplysninger.forEach { it.synlighet() shouldBe true }
 
         fullmektigTilKlageinstansOpplysninger.forEach { it.svar(Verdi.TekstVerdi("Norge")) }
 
-        hvemKlager.svar(Verdi.TekstVerdi(HvemKlagerType.BRUKER.name))
+        hvemKlager.svar(Verdi.TekstVerdi(HvemKlagerType.BRUKER.tekst))
         FullmektigSteg.evaluerSynlighet(opplysninger.toList())
         fullmektigTilKlageinstansOpplysninger.forEach {
             it.synlighet() shouldBe false

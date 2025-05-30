@@ -12,7 +12,7 @@ class OpplysningTest {
         lagOpplysninger(opplysninger = setOf(OpplysningType.UTFALL)).single().let {
             shouldThrow<UgyldigOpplysningException> { it.svar(Verdi.TekstVerdi("feil")) }
             shouldThrow<UgyldigOpplysningException> { it.svar(Verdi.TekstVerdi("opprettholdelse")) }
-            shouldNotThrowAny { it.svar(Verdi.TekstVerdi("OPPRETTHOLDELSE")) }
+            shouldNotThrowAny { it.svar(Verdi.TekstVerdi("Opprettholdelse")) }
         }
     }
 
@@ -27,7 +27,7 @@ class OpplysningTest {
     @Test
     fun `sjekk at flervalg godtar flervalg`() {
         lagOpplysninger(opplysninger = setOf(OpplysningType.HJEMLER)).single().let {
-            shouldNotThrowAny { it.svar(Verdi.Flervalg(listOf("FTRL_4_4", "FTRL_4_2"))) }
+            shouldNotThrowAny { it.svar(Verdi.Flervalg(listOf("§ 4-4 Krav til minsteinntekt", "§ 4-2 Krav til opphold i Norge"))) }
         }
     }
 }

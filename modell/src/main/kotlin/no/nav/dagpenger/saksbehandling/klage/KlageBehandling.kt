@@ -11,9 +11,8 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.FULLMEKTIG_LAND
-import no.nav.dagpenger.saksbehandling.klage.OpplysningType.HJEMLER
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
+import no.nav.dagpenger.saksbehandling.klage.UtfallType.Companion.toUtfallType
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -94,14 +93,7 @@ data class KlageBehandling private constructor(
     fun utfall(): UtfallType? {
         return opplysninger
             .single { it.type == UTFALL }
-            .verdi()
-            .let {
-                when (it) {
-                    is Verdi.TekstVerdi -> UtfallType.valueOf(it.value)
-                    is Verdi.TomVerdi -> null
-                    else -> throw IllegalStateException("Utfall er av feil type: $it")
-                }
-            }
+            .verdi().toUtfallType()
     }
 
     fun hentOpplysning(opplysningId: UUID): Opplysning {
@@ -122,30 +114,7 @@ data class KlageBehandling private constructor(
         verdi: Verdi,
     ) {
         hentOpplysning(opplysningId).also { opplysning ->
-            val databaseVerdi =
-                when (verdi is Verdi.Flervalg) {
-                    true ->
-                        when (opplysning.type) {
-                            HJEMLER ->
-                                Verdi.Flervalg(
-                                    (verdi as Verdi.Flervalg).value.map { hjemmel ->
-                                        Hjemler.entries.single { it.tittel == hjemmel }.name
-                                    }.toList(),
-                                )
-
-                            FULLMEKTIG_LAND ->
-                                Verdi.Flervalg(
-                                    (verdi as Verdi.Flervalg).value.map { land ->
-                                        Land.entries.single { it.land == land }.name
-                                    }.toList(),
-                                )
-
-                            else -> verdi
-                        }
-
-                    false -> verdi
-                }
-            opplysning.svar(databaseVerdi)
+            opplysning.svar(verdi)
             evaluerSynlighetOgUtfall()
         }
     }

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.klage
 
+import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType.Companion.toHvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.formkravOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fristvurderingOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.fullmektigTilKlageinstansOpplysningTyper
@@ -7,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.klagenGjelderOpply
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.oversittetFristOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.tilKlageinstansOpplysningTyper
 import no.nav.dagpenger.saksbehandling.klage.OpplysningBygger.utfallOpplysningTyper
+import no.nav.dagpenger.saksbehandling.klage.UtfallType.Companion.toUtfallType
 
 interface Steg {
     fun evaluerSynlighet(opplysninger: Collection<Opplysning>)
@@ -72,9 +74,7 @@ object OversendKlageinstansSteg : Steg {
     override fun evaluerSynlighet(opplysninger: Collection<Opplysning>) {
         val visOversendelseKlageinstans =
             opplysninger.any { opplysning ->
-                opplysning.type == OpplysningType.UTFALL &&
-                    opplysning.verdi() is Verdi.TekstVerdi &&
-                    (opplysning.verdi() as Verdi.TekstVerdi).value == UtfallType.OPPRETTHOLDELSE.name
+                opplysning.type == OpplysningType.UTFALL && opplysning.verdi().toUtfallType() == UtfallType.OPPRETTHOLDELSE
             }
         when (visOversendelseKlageinstans) {
             true ->
@@ -92,8 +92,7 @@ object FullmektigSteg : Steg {
         val fullmektigKlager =
             opplysninger.any { opplysning ->
                 opplysning.type == OpplysningType.HVEM_KLAGER &&
-                    opplysning.verdi() is Verdi.TekstVerdi &&
-                    (opplysning.verdi() as Verdi.TekstVerdi).value == HvemKlagerType.FULLMEKTIG.name
+                    opplysning.verdi().toHvemKlagerType() == HvemKlagerType.FULLMEKTIG
             }
 
         when (fullmektigKlager) {
