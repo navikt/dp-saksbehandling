@@ -231,9 +231,10 @@ OppgaveMediatorTest {
                     it.setRapidsConnection(testRapid)
                 }
             val behandlingId = UUIDv7.ny()
+            val søknadId = UUIDv7.ny()
             oppgaveMediator.opprettOppgaveForBehandling(
                 SøknadsbehandlingOpprettetHendelse(
-                    søknadId = UUIDv7.ny(),
+                    søknadId = søknadId,
                     behandlingId = behandlingId,
                     ident = "12345678910",
                     opprettet = LocalDateTime.now(),
@@ -241,6 +242,7 @@ OppgaveMediatorTest {
             )
             InMemorySakRepository.finnAlle().size shouldBe 1
             InMemorySakRepository.finnAlle().first().behandlinger.first().behandlingId shouldBe behandlingId
+            InMemorySakRepository.finnAlle().first().søknadId shouldBe søknadId
         }
     }
 

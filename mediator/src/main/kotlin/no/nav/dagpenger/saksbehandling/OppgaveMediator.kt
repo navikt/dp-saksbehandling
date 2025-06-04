@@ -84,7 +84,7 @@ class OppgaveMediator(
                 hendelse = søknadsbehandlingOpprettetHendelse,
             )
 
-        val sak = NySak(behandlinger = listOf(behandling))
+        val sak = NySak(søknadId = søknadsbehandlingOpprettetHendelse.søknadId, behandlinger = listOf(behandling))
 
         val oppgave =
             Oppgave(
