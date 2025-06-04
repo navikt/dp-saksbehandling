@@ -67,6 +67,7 @@ internal class BehandlingOpprettetMottak(
                 }
 
             if (!erAdresseBeskyttetPerson && !erSkjermetPerson) {
+                // opprett en ny sak :)
                 oppgaveMediator.opprettOppgaveForBehandling(
                     SøknadsbehandlingOpprettetHendelse(
                         søknadId = søknadId,

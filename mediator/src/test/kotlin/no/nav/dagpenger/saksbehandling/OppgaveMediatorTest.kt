@@ -48,6 +48,7 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.db.sak.InMemorySakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -208,6 +209,38 @@ OppgaveMediatorTest {
             oppgaveTilKontroll.tilstand().type shouldBe KLAR_TIL_KONTROLL
             oppgaveTilKontroll.behandlerIdent shouldBe null
             oppgaveTilKontroll.sisteSaksbehandler() shouldBe saksbehandler.navIdent
+        }
+    }
+
+    @Test
+    fun `Skal lage sak for SøknadOpprettetHendelse`() {
+        InMemorySakRepository.reset()
+        withMigratedDb { dataSource ->
+            val personRepository = PostgresPersonRepository(dataSource)
+            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
+            val oppgaveMediator =
+                OppgaveMediator(
+                    personRepository = personRepository,
+                    oppgaveRepository = oppgaveRepository,
+                    oppslag = oppslagMock,
+                    behandlingKlient = behandlingKlientMock,
+                    utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
+                    sakRepository = InMemorySakRepository,
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+            val behandlingId = UUIDv7.ny()
+            oppgaveMediator.opprettOppgaveForBehandling(
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = behandlingId,
+                    ident = "12345678910",
+                    opprettet = LocalDateTime.now(),
+                ),
+            )
+            InMemorySakRepository.finnAlle().size shouldBe 1
+            InMemorySakRepository.finnAlle().first().behandlinger.first().behandlingId shouldBe behandlingId
         }
     }
 
