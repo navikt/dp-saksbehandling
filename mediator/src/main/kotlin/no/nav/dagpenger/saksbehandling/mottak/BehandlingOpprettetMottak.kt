@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
@@ -82,19 +83,18 @@ internal class BehandlingOpprettetMottak(
                         context.publish(
                             key = ident,
                             message =
-                            JsonMessage.newMessage(
-                                eventName = "avbryt_behandling",
-                                map =
-                                mapOf(
-                                    "behandlingId" to behandlingId,
-                                    "søknadId" to søknadId,
-                                    "ident" to ident,
-                                ),
-                            ).toJson(),
+                                JsonMessage.newMessage(
+                                    eventName = "avbryt_behandling",
+                                    map =
+                                        mapOf(
+                                            "behandlingId" to behandlingId,
+                                            "søknadId" to søknadId,
+                                            "ident" to ident,
+                                        ),
+                                ).toJson(),
                         )
                         logger.info { "Publiserte avbryt_behandling hendelse" }
                     }
-
                 }
             }
 
@@ -102,25 +102,37 @@ internal class BehandlingOpprettetMottak(
                 val meldekortId = packet.meldekortId()
                 withLoggingContext("meldekortId" to "$meldekortId", "behandlingId" to "$behandlingId") {
                     logger.info { "Mottok behandling_opprettet hendelse for meldekort" }
-
+                    oppgaveMediator.opprettBehandlingFor(
+                        MeldekortbehandlingOpprettetHendelse(
+                            meldekortId = meldekortId,
+                            behandlingId = behandlingId,
+                            ident = ident,
+                            opprettet = opprettet,
+                        ),
                     )
                 }
             }
+
             else -> logger.warn { "Ukjent behandlingstype: $behandlingType" }
         }
+    }
 
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
+        logger.error { "!! Forstod ikke behandling_opprettet hendelse. \n $problems" }
+    }
 
+    override fun onSevere(
+        error: MessageProblems.MessageException,
+        context: MessageContext,
+    ) {
+        logger.error { "!! Forstod ikke behandling_opprettet hendelse. \n ${error.message}" }
     }
 }
 
-override fun onError(
-    problems: MessageProblems,
-    context: MessageContext,
-    metadata: MessageMetadata,
-) {
-    logger.error { "Forstod ikke behandling_opprettet hendelse. \n $problems" }
-}
-}
-
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
+
 private fun JsonMessage.meldekortId(): Long = this["behandletHendelse"]["id"].asLong()

@@ -33,4 +33,5 @@ data class Behandling(
 enum class BehandlingType {
     KLAGE,
     RETT_TIL_DAGPENGER,
+    MELDEKORT,
 }

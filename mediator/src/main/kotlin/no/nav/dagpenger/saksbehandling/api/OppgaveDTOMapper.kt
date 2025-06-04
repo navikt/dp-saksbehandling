@@ -213,5 +213,6 @@ internal fun Behandling.tilBehandlingTypeDTO(): BehandlingTypeDTO {
     return when (this.type) {
         BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
+        BehandlingType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
     }
 }

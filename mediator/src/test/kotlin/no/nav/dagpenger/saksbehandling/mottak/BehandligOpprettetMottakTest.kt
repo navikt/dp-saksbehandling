@@ -6,6 +6,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
@@ -19,6 +20,7 @@ import java.util.UUID
 class BehandligOpprettetMottakTest {
     val testIdent = "12345678901"
     val søknadId = UUID.randomUUID()
+    val meldekortId = 123L
     val behandlingId = UUID.randomUUID()
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
     private val søknadsbehandlingOpprettetHendelse =
@@ -46,10 +48,25 @@ class BehandligOpprettetMottakTest {
     }
 
     @Test
-    fun `Skal behandle behandling_opprettet hendelse`() {
-        testRapid.sendTestMessage(behandlingOpprettetMelding())
+    fun `Skal behandle behandling_opprettet hendelse for søknadsbehandling`() {
+        testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding())
         verify(exactly = 1) {
             oppgaveMediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal behandle behandling_opprettet hendelse for meldekortbehandling`() {
+        val meldekortbehandlingOpprettetHendelse =
+            MeldekortbehandlingOpprettetHendelse(
+                meldekortId = meldekortId,
+                behandlingId = behandlingId,
+                ident = testIdent,
+                opprettet = opprettet,
+            )
+        testRapid.sendTestMessage(meldekortbehandlingOpprettetMelding())
+        verify(exactly = 1) {
+            oppgaveMediatorMock.opprettBehandlingFor(meldekortbehandlingOpprettetHendelse)
         }
     }
 
@@ -68,7 +85,7 @@ class BehandligOpprettetMottakTest {
         coEvery { pdlKlientMock.erAdressebeskyttet(adressebeskyttetIdent) }.returns(Result.success(erAdressebeskyttet))
         coEvery { skjermetKlientMock.erSkjermetPerson(adressebeskyttetIdent) }.returns(Result.success(erSkjermet))
 
-        testRapid.sendTestMessage(behandlingOpprettetMelding(adressebeskyttetIdent))
+        testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding(adressebeskyttetIdent))
 
         verify(exactly = 0) {
             oppgaveMediatorMock.opprettOppgaveForBehandling(any<SøknadsbehandlingOpprettetHendelse>())
@@ -82,7 +99,7 @@ class BehandligOpprettetMottakTest {
     }
 
     @Language("JSON")
-    private fun behandlingOpprettetMelding(ident: String = testIdent) =
+    private fun søknadsbehandlingOpprettetMelding(ident: String = testIdent) =
         """
         {
             "@event_name": "behandling_opprettet",
@@ -92,6 +109,23 @@ class BehandligOpprettetMottakTest {
                 "datatype": "UUID",
                 "id": "$søknadId",
                 "type": "Søknad"
+            },
+            "behandlingId": "$behandlingId",
+            "ident": "$ident"
+        }
+        """
+
+    @Language("JSON")
+    private fun meldekortbehandlingOpprettetMelding(ident: String = testIdent) =
+        """
+        {
+            "@event_name": "behandling_opprettet",
+            "@opprettet": "$opprettet",
+            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandletHendelse": {
+                "datatype": "Long",
+                "id": $meldekortId,
+                "type": "Meldekort"
             },
             "behandlingId": "$behandlingId",
             "ident": "$ident"
