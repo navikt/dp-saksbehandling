@@ -25,6 +25,7 @@ object InmemoryRepository : SakRepository, NyPersonRepository {
     private val personer: MutableSet<NyPerson> = mutableSetOf()
 
     fun reset() {
+        personer.clear()
         saker.clear()
     }
 
