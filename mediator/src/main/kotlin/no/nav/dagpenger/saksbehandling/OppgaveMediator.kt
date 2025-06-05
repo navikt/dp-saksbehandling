@@ -31,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -62,6 +63,28 @@ class OppgaveMediator(
 
     fun setRapidsConnection(rapidsConnection: RapidsConnection) {
         this.rapidsConnection = rapidsConnection
+    }
+
+    fun opprettBehandlingFor(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
+        val person =
+            personRepository.finnPerson(meldekortbehandlingOpprettetHendelse.ident)
+                ?: runBlocking {
+                    oppslag.hentPersonMedSkjermingOgGradering(meldekortbehandlingOpprettetHendelse.ident)
+                }
+
+        if (oppgaveRepository.finnBehandling(meldekortbehandlingOpprettetHendelse.behandlingId) != null) {
+            logger.warn { "Mottatt hendelse behandling_opprettet, men behandling finnes allerede." }
+            return
+        }
+        val behandling =
+            Behandling(
+                behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
+                person = person,
+                opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
+                hendelse = meldekortbehandlingOpprettetHendelse,
+                type = BehandlingType.MELDEKORT,
+            )
+        oppgaveRepository.lagre(behandling)
     }
 
     fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {

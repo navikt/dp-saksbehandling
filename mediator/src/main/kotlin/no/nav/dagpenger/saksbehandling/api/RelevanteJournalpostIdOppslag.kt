@@ -33,6 +33,7 @@ class RelevanteJournalpostIdOppslag(
                         utsendingRepository.finnUtsendingFor(oppgave.oppgaveId)?.journalpostId()
                     (journalpostIderSøknad.await() + journalpostMeldingOmVedtak).filterNotNull().toSet()
                 }
+            BehandlingType.MELDEKORT -> return emptySet()
         }
     }
 
