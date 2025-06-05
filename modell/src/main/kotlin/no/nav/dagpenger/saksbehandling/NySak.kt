@@ -32,7 +32,7 @@ data class NyBehandling(
     val behandlingId: UUID,
     val behandlingType: BehandlingType,
     val opprettet: LocalDateTime,
-    val oppgave: UUID? = null,
+    val oppgaveId: UUID? = null,
 )
 
 class NyPerson(

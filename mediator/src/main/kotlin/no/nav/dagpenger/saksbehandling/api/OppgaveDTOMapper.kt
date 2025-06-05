@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
@@ -43,14 +44,33 @@ internal class OppgaveDTOMapper(
 
     private fun NyPerson?.saker(): List<SakDTO> {
         return when (this) {
-            null -> return emptyList()
-            else -> return emptyList()
+            null -> emptyList()
+            else ->
+                this.saker().map { sak ->
+                    SakDTO(
+                        id = sak.id,
+                        behandlinger =
+                            sak.behandlinger().map { behandling ->
+                                BehandlingDTO(
+                                    id = behandling.behandlingId,
+                                    behandlingType =
+                                        when (behandling.behandlingType) {
+                                            BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
+                                            BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                            BehandlingType.MELDEKORT -> BehandlingTypeDTO.MELDEKORT
+                                        },
+                                    opprettet = behandling.opprettet,
+                                    oppgaveId = behandling.oppgaveId,
+                                )
+                            },
+                    )
+                }
         }
     }
 
     private fun NyPerson?.oppgaver(): List<OppgaveOversiktDTO> {
         return when (this) {
-            null -> return emptyList()
+            null -> emptyList()
             else -> emptyList()
         }
     }

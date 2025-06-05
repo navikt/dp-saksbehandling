@@ -985,6 +985,7 @@ components:
       enum:
         - RETT_TIL_DAGPENGER
         - KLAGE
+        - MELDEKORT
 
     LovligeEndringer:
       type: object
