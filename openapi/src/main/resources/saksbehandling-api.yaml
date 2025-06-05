@@ -795,6 +795,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Sikkerhetstiltak'
+        saker:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sak'
+        oppgaver:
+            type: array
+            items:
+                $ref: '#/components/schemas/OppgaveOversikt'
       required:
         - ident
         - id
@@ -806,6 +814,40 @@ components:
         - skjermesSomEgneAnsatte
         - adressebeskyttelseGradering
         - sikkerhetstiltak
+        - saker
+        - oppgaver
+    Sak:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        behandlinger:
+          type: array
+          items:
+            $ref: '#/components/schemas/Behandling'
+      required:
+        - id
+        - behandlinger
+    Behandling:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
+        opprettet:
+          type: string
+          format: date-time
+        oppgaveId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - behandlingType
+        - opprettet
+
 
     OppgaveOversiktResultat:
       type: object

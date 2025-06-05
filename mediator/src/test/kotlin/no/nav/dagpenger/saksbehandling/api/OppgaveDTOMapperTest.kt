@@ -118,6 +118,8 @@ class OppgaveDTOMapperTest {
                             "gyldigTom": "${LocalDate.now().plusDays(1)}"
                           }
                         ],
+                        "saker": [],
+                        "oppgaver": [],
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
@@ -257,6 +259,8 @@ class OppgaveDTOMapperTest {
                             "gyldigTom": "${OppgaveApiTestHelper.testPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
+                        "saker": [],
+                        "oppgaver": [],
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",

@@ -272,7 +272,7 @@ class OppgaveApiTest {
                             object : TypeReference<OppgaveOversiktResultatDTO>() {},
                         )
                     oppgaveOversiktResultatDTO.totaltAntallOppgaver shouldBe 2
-                    oppgaveOversiktResultatDTO.oppgaver?.size shouldBe 2
+                    oppgaveOversiktResultatDTO.oppgaver.size shouldBe 2
                 }
         }
     }
@@ -843,6 +843,8 @@ class OppgaveApiTest {
                                             gyldigTom = testPerson.sikkerhetstiltak.first().gyldigTom,
                                         ),
                                     ),
+                                saker = emptyList(),
+                                oppgaver = emptyList(),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.behandling.tilBehandlingTypeDTO(),
@@ -1004,6 +1006,8 @@ class OppgaveApiTest {
                                 mellomnavn = testPerson.mellomnavn,
                                 statsborgerskap = testPerson.statsborgerskap,
                                 sikkerhetstiltak = emptyList(),
+                                saker = emptyList(),
+                                oppgaver = emptyList(),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.behandling.tilBehandlingTypeDTO(),
@@ -1263,6 +1267,8 @@ class OppgaveApiTest {
                         skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
                         adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                         sikkerhetstiltak = listOf(),
+                        saker = emptyList(),
+                        oppgaver = emptyList(),
                     )
             }
         withOppgaveApi(
@@ -1314,6 +1320,8 @@ class OppgaveApiTest {
                         skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
                         adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                         sikkerhetstiltak = listOf(),
+                        saker = emptyList(),
+                        oppgaver = emptyList(),
                     )
             }
         withOppgaveApi(
