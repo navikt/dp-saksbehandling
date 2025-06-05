@@ -16,10 +16,9 @@ import org.junit.jupiter.params.provider.CsvSource
 import java.time.LocalDateTime
 import java.util.UUID
 
-class BehandligOpprettetMottakTest {
+class BehandlingOpprettetMottakTest {
     val testIdent = "12345678901"
     val søknadId = UUID.randomUUID()
-    val meldekortId = 123L
     val behandlingId = UUID.randomUUID()
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
     private val søknadsbehandlingOpprettetHendelse =
@@ -93,23 +92,6 @@ class BehandligOpprettetMottakTest {
                 "datatype": "UUID",
                 "id": "$søknadId",
                 "type": "Søknad"
-            },
-            "behandlingId": "$behandlingId",
-            "ident": "$ident"
-        }
-        """
-
-    @Language("JSON")
-    private fun meldekortbehandlingOpprettetMelding(ident: String = testIdent) =
-        """
-        {
-            "@event_name": "behandling_opprettet",
-            "@opprettet": "$opprettet",
-            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
-            "behandletHendelse": {
-                "datatype": "Long",
-                "id": $meldekortId,
-                "type": "Meldekort"
             },
             "behandlingId": "$behandlingId",
             "ident": "$ident"
