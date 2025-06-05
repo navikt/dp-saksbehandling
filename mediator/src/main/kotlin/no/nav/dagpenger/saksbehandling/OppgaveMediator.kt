@@ -22,8 +22,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.Oppg
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.InMemorySakRepository
-import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -57,7 +55,6 @@ class OppgaveMediator(
     private val utsendingMediator: UtsendingMediator,
     private val oppslag: Oppslag,
     private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
-    private val sakRepository: SakRepository = InMemorySakRepository,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
 
@@ -107,7 +104,6 @@ class OppgaveMediator(
                 hendelse = søknadsbehandlingOpprettetHendelse,
             )
 
-        val sak = NySak(søknadId = søknadsbehandlingOpprettetHendelse.søknadId, behandlinger = listOf(behandling))
 
         val oppgave =
             Oppgave(
@@ -124,7 +120,6 @@ class OppgaveMediator(
                     ),
             )
 
-        sakRepository.lagre(sak)
         oppgaveRepository.lagre(oppgave)
     }
 

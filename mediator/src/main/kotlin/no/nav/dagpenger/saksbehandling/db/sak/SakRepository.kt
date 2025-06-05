@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db.sak
 
+import no.nav.dagpenger.saksbehandling.NyPerson
 import no.nav.dagpenger.saksbehandling.NySak
 import java.util.UUID
 
@@ -8,11 +9,19 @@ interface SakRepository {
 
     fun hent(sakId: UUID): NySak
 
-    fun finnAlle(): List<NySak>
+    fun finnAlle(): Set<NySak>
 }
 
-object InMemorySakRepository : SakRepository {
+interface NyPersonRepository {
+    fun lagre(person: NyPerson)
+
+    fun hent(ident: String): NyPerson
+    fun finn(ident: String): NyPerson?
+}
+
+object InmemoryRepository : SakRepository, NyPersonRepository {
     private val saker: MutableSet<NySak> = mutableSetOf()
+    private val personer: MutableSet<NyPerson> = mutableSetOf()
 
     fun reset() {
         saker.clear()
@@ -26,7 +35,20 @@ object InMemorySakRepository : SakRepository {
         return saker.single { it.id == sakId }
     }
 
-    override fun finnAlle(): List<NySak> {
-        return saker.toList()
+    override fun lagre(person: NyPerson) {
+        personer.add(person)
+    }
+
+    override fun hent(ident: String): NyPerson {
+        return personer.single { it.ident == ident }
+
+    }
+
+    override fun finn(ident: String): NyPerson? {
+        return personer.find { it.ident == ident }
+    }
+
+    override fun finnAlle(): Set<NySak> {
+        return saker
     }
 }

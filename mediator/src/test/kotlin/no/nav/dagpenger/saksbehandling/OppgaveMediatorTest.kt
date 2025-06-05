@@ -48,7 +48,7 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.InMemorySakRepository
+import no.nav.dagpenger.saksbehandling.db.sak.InmemoryRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -214,7 +214,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Skal lage sak for SøknadOpprettetHendelse`() {
-        InMemorySakRepository.reset()
+        InmemoryRepository.reset()
         withMigratedDb { dataSource ->
             val personRepository = PostgresPersonRepository(dataSource)
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
@@ -226,7 +226,7 @@ OppgaveMediatorTest {
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(),
                     meldingOmVedtakKlient = mockk(),
-                    sakRepository = InMemorySakRepository,
+                    sakRepository = InmemoryRepository,
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -240,9 +240,9 @@ OppgaveMediatorTest {
                     opprettet = LocalDateTime.now(),
                 ),
             )
-            InMemorySakRepository.finnAlle().size shouldBe 1
-            InMemorySakRepository.finnAlle().first().behandlinger.first().behandlingId shouldBe behandlingId
-            InMemorySakRepository.finnAlle().first().søknadId shouldBe søknadId
+            InmemoryRepository.finnAlle().size shouldBe 1
+            InmemoryRepository.finnAlle().first().behandlinger.first().behandlingId shouldBe behandlingId
+            InmemoryRepository.finnAlle().first().søknadId shouldBe søknadId
         }
     }
 
