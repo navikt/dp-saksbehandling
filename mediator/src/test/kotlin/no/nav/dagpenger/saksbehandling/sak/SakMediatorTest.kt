@@ -52,7 +52,7 @@ class SakMediatorTest {
         person.saker().single().let { sak ->
             sak.søknadId shouldBe søknadId
             sak.opprettet shouldBe opprettet
-            sak.behandlinger.single().behandlingId shouldBe behandlingIdSøknad
+            sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknad
         }
     }
 
@@ -66,9 +66,9 @@ class SakMediatorTest {
         sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
         sakMediator.knyttTilSak(meldekortbehandlingOpprettetHendelse)
 
-        InmemoryRepository.hent(testIdent).saker().single().behandlinger.let { behandlinger ->
+        InmemoryRepository.hent(testIdent).saker().single().behandlinger().let { behandlinger ->
             behandlinger.size shouldBe 2
-            behandlinger.last().behandlingId shouldBe meldekortId
+            behandlinger.last().behandlingId shouldBe behandlingIdMeldekort
         }
     }
 }

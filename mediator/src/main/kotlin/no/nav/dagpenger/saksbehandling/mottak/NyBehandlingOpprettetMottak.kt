@@ -32,7 +32,7 @@ internal class NyBehandlingOpprettetMottak(
             }
             validate {
                 it.requireKey("ident", "behandlingId", "@opprettet")
-                it.interestedIn("behandletHendelse")
+                it.interestedIn("behandletHendelse", "basertPåBehandlinger")
             }
         }
     }
@@ -78,6 +78,8 @@ internal class NyBehandlingOpprettetMottak(
                             behandlingId = behandlingId,
                             ident = ident,
                             opprettet = opprettet,
+                            basertPåBehandlinger =
+                                packet.basertPåBehandlinger(),
                         ),
                     )
                 }
@@ -87,5 +89,7 @@ internal class NyBehandlingOpprettetMottak(
 }
 
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
+
+private fun JsonMessage.basertPåBehandlinger(): List<UUID> = this["basertPåBehandlinger"].map { it.asUUID() }
 
 private fun JsonMessage.meldekortId(): Long = this["behandletHendelse"]["id"].asLong()

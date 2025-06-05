@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -56,7 +57,8 @@ class NyBehandlingOpprettetMottakTest {
 
     @Test
     fun `Skal behandle behandling_opprettet hendelse for meldekort`() {
-        testRapid.sendTestMessage(meldekortbehandlingOpprettetMelding())
+        val basertPåBehandlinger = listOf(UUIDv7.ny(), UUIDv7.ny())
+        testRapid.sendTestMessage(meldekortbehandlingOpprettetMelding(basertPåBehandlinger = basertPåBehandlinger))
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
                 meldekortbehandlingOpprettetHendelse =
@@ -65,6 +67,7 @@ class NyBehandlingOpprettetMottakTest {
                         behandlingId = behandlingId,
                         ident = testIdent,
                         opprettet = opprettet,
+                        basertPåBehandlinger = basertPåBehandlinger,
                     ),
             )
         }
@@ -88,8 +91,10 @@ class NyBehandlingOpprettetMottakTest {
         """
 
     @Language("JSON")
-    private fun meldekortbehandlingOpprettetMelding(ident: String = testIdent) =
-        """
+    private fun meldekortbehandlingOpprettetMelding(
+        ident: String = testIdent,
+        basertPåBehandlinger: List<UUID>,
+    ) = """
         {
             "@event_name": "behandling_opprettet",
             "@opprettet": "$opprettet",
@@ -99,6 +104,7 @@ class NyBehandlingOpprettetMottakTest {
                 "id": $meldekortId,
                 "type": "Meldekort"
             },
+            "basertPåBehandlinger": ${basertPåBehandlinger.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }},
             "behandlingId": "$behandlingId",
             "ident": "$ident"
         }

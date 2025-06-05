@@ -18,16 +18,16 @@ class SakMediator(
         val sak =
             NySak(
                 søknadId = søknadsbehandlingOpprettetHendelse.søknadId,
-                behandlinger =
-                    listOf(
-                        NyBehandling(
-                            behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
-                            opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                        ),
-                    ),
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-            )
+            ).also {
+                it.leggTilBehandling(
+                    NyBehandling(
+                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                        behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                    ),
+                )
+            }
 
         val person =
             personRepository.finn(søknadsbehandlingOpprettetHendelse.ident) ?: NyPerson(
@@ -39,8 +39,8 @@ class SakMediator(
     }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        TODO()
-        // val person = personRepository.hent(meldekortbehandlingOpprettetHendelse.ident)
-        // val sak = person.getSaker().find { it.behandlinger.contains(meldekortbehandlingOpprettetHendelse.behandlingId) }
+        personRepository.hent(meldekortbehandlingOpprettetHendelse.ident).knyttTilSak(
+            meldekortbehandlingOpprettetHendelse = meldekortbehandlingOpprettetHendelse,
+        )
     }
 }
