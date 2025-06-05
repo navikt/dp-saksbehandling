@@ -16,6 +16,7 @@ interface NyPersonRepository {
     fun lagre(person: NyPerson)
 
     fun hent(ident: String): NyPerson
+
     fun finn(ident: String): NyPerson?
 }
 
@@ -41,7 +42,6 @@ object InmemoryRepository : SakRepository, NyPersonRepository {
 
     override fun hent(ident: String): NyPerson {
         return personer.single { it.ident == ident }
-
     }
 
     override fun finn(ident: String): NyPerson? {

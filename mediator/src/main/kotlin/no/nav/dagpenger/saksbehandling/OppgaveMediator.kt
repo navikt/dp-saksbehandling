@@ -104,7 +104,6 @@ class OppgaveMediator(
                 hendelse = søknadsbehandlingOpprettetHendelse,
             )
 
-
         val oppgave =
             Oppgave(
                 oppgaveId = UUIDv7.ny(),

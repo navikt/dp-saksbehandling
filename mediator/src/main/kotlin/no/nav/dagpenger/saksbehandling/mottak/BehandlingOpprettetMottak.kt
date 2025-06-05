@@ -12,7 +12,6 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
@@ -30,7 +29,7 @@ internal class BehandlingOpprettetMottak(
 
             precondition {
                 it.requireValue("@event_name", "behandling_opprettet")
-                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort"))
+                it.requireValue("behandletHendelse.type", "Søknad")
             }
             validate {
                 it.requireKey("ident", "behandlingId", "@opprettet")
@@ -49,75 +48,59 @@ internal class BehandlingOpprettetMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandlingType = packet["behandletHendelse"]["type"].asText()
+        val søknadId = packet.søknadId()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
-        when (behandlingType) {
-            "Søknad" -> {
-                val søknadId = packet.søknadId()
-                withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse" }
+        withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+            logger.info { "Mottok behandling_opprettet hendelse" }
 
-                    val erAdresseBeskyttetPerson =
-                        runBlocking {
-                            pdlKlient.erAdressebeskyttet(ident).getOrThrow()
-                        }
-
-                    val erSkjermetPerson =
-                        runBlocking {
-                            skjermingKlient.erSkjermetPerson(ident).getOrThrow()
-                        }
-
-                    if (!erAdresseBeskyttetPerson && !erSkjermetPerson) {
-                        oppgaveMediator.opprettOppgaveForBehandling(
-                            SøknadsbehandlingOpprettetHendelse(
-                                søknadId = søknadId,
-                                behandlingId = behandlingId,
-                                ident = ident,
-                                opprettet = opprettet,
-                            ),
-                        )
-                    } else {
-                        context.publish(
-                            key = ident,
-                            message =
-                                JsonMessage.newMessage(
-                                    eventName = "avbryt_behandling",
-                                    map =
-                                        mapOf(
-                                            "behandlingId" to behandlingId,
-                                            "søknadId" to søknadId,
-                                            "ident" to ident,
-                                        ),
-                                ).toJson(),
-                        )
-                        logger.info { "Publiserte avbryt_behandling hendelse" }
-                    }
+            val erAdresseBeskyttetPerson =
+                runBlocking {
+                    pdlKlient.erAdressebeskyttet(ident).getOrThrow()
                 }
-            }
 
-            "Meldekort" -> {
-                val meldekortId = packet.meldekortId()
-                withLoggingContext("meldekortId" to "$meldekortId", "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse for meldekort" }
-                    oppgaveMediator.opprettBehandlingFor(
-                        MeldekortbehandlingOpprettetHendelse(
-                            meldekortId = meldekortId,
-                            behandlingId = behandlingId,
-                            ident = ident,
-                            opprettet = opprettet,
-                        ),
-                    )
+            val erSkjermetPerson =
+                runBlocking {
+                    skjermingKlient.erSkjermetPerson(ident).getOrThrow()
                 }
-            }
 
-            else -> logger.warn { "Ukjent behandlingstype: $behandlingType" }
+            if (!erAdresseBeskyttetPerson && !erSkjermetPerson) {
+                oppgaveMediator.opprettOppgaveForBehandling(
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = søknadId,
+                        behandlingId = behandlingId,
+                        ident = ident,
+                        opprettet = opprettet,
+                    ),
+                )
+            } else {
+                context.publish(
+                    key = ident,
+                    message =
+                        JsonMessage.newMessage(
+                            eventName = "avbryt_behandling",
+                            map =
+                                mapOf(
+                                    "behandlingId" to behandlingId,
+                                    "søknadId" to søknadId,
+                                    "ident" to ident,
+                                ),
+                        ).toJson(),
+                )
+                logger.info { "Publiserte avbryt_behandling hendelse" }
+            }
         }
+    }
+
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
+        logger.error { "Forstod ikke behandling_opprettet hendelse. \n $problems" }
     }
 }
 
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
-
-private fun JsonMessage.meldekortId(): Long = this["behandletHendelse"]["id"].asLong()

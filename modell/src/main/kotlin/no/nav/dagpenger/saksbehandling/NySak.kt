@@ -30,9 +30,6 @@ class NyPerson(
     }
 
     fun leggTilSak(sak: NySak) = saker.add(sak)
+
     fun getSaker(): List<NySak> = saker.toList()
 }
-
-
-
-

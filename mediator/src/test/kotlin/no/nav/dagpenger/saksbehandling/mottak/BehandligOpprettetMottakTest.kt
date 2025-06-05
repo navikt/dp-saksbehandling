@@ -6,7 +6,6 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
@@ -52,21 +51,6 @@ class BehandligOpprettetMottakTest {
         testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding())
         verify(exactly = 1) {
             oppgaveMediatorMock.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-        }
-    }
-
-    @Test
-    fun `Skal behandle behandling_opprettet hendelse for meldekortbehandling`() {
-        val meldekortbehandlingOpprettetHendelse =
-            MeldekortbehandlingOpprettetHendelse(
-                meldekortId = meldekortId,
-                behandlingId = behandlingId,
-                ident = testIdent,
-                opprettet = opprettet,
-            )
-        testRapid.sendTestMessage(meldekortbehandlingOpprettetMelding())
-        verify(exactly = 1) {
-            oppgaveMediatorMock.opprettBehandlingFor(meldekortbehandlingOpprettetHendelse)
         }
     }
 
