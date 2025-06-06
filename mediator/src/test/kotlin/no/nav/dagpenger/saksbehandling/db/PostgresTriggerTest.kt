@@ -34,6 +34,8 @@ class PostgresTriggerTest {
                 opprettet = opprettet,
                 tilstand = Oppgave.KlarTilBehandling,
                 behandling = testBehandling,
+                behandlingId = testBehandling.behandlingId,
+                behandlingType = testBehandling.type,
             )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)

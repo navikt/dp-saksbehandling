@@ -36,6 +36,18 @@ object OppgaveTestHelper {
                 AVVENTER_OPPLÅSING_AV_BEHANDLING -> Oppgave.AvventerOpplåsingAvBehandling
                 BEHANDLES_I_ARENA -> Oppgave.BehandlesIArena
             }
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                person =
+                    Person(
+                        id = UUIDv7.ny(),
+                        ident = "12345678910",
+                        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                        adressebeskyttelseGradering = adressebeskyttelseGradering,
+                    ),
+                opprettet = LocalDateTime.now(),
+            )
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             behandlerIdent = behandler?.navIdent,
@@ -43,19 +55,11 @@ object OppgaveTestHelper {
             emneknagger = emneknagger,
             tilstand = tilstand,
             behandling =
-                Behandling(
-                    behandlingId = UUIDv7.ny(),
-                    person =
-                        Person(
-                            id = UUIDv7.ny(),
-                            ident = "12345678910",
-                            skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
-                            adressebeskyttelseGradering = adressebeskyttelseGradering,
-                        ),
-                    opprettet = LocalDateTime.now(),
-                ),
+            behandling,
             utsattTil = null,
             tilstandslogg = tilstandslogg,
+            behandlingId = behandling.behandlingId,
+            behandlingType = behandling.type,
         )
     }
 

@@ -1116,6 +1116,8 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         behandling = behandling,
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
+        behandlingId = behandling.behandlingId,
+        behandlingType = behandling.type,
     )
 }
 

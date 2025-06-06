@@ -152,6 +152,8 @@ internal object OppgaveApiTestHelper {
                 },
             behandling = behandling,
             utsattTil = utsattTil,
+            behandlingId = behandling.behandlingId,
+            behandlingType = behandling.type,
             tilstandslogg =
                 Tilstandslogg.rehydrer(
                     listOf(

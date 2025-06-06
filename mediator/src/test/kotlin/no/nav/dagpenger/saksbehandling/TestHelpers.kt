@@ -47,6 +47,8 @@ fun lagOppgave(
         behandling = behandling,
         utsattTil = utsattTil,
         tilstandslogg = tilstandslogg,
+        behandlingId = behandling.behandlingId,
+        behandlingType = behandling.type,
     )
 }
 
