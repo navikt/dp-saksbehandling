@@ -29,7 +29,7 @@ class UtsendingMediatorTest {
         withMigratedDb { datasource ->
             val oppgave = lagreOppgave(datasource)
             val oppgaveId = oppgave.oppgaveId
-            val behandlingId = oppgave.behandling.behandlingId
+            val behandlingId = oppgave.behandlingId
 
             val utsendingRepository = PostgresUtsendingRepository(datasource)
             val utsendingMediator =

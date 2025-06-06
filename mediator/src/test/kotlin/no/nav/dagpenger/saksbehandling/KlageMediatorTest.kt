@@ -151,7 +151,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandling.behandlingId
+                ).behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -282,7 +282,7 @@ class KlageMediatorTest {
                         journalpostId = "journalpostId",
                         utførtAv = saksbehandler,
                     ),
-                ).behandling.behandlingId
+                ).behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -321,7 +321,7 @@ class KlageMediatorTest {
             klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
             testRapid.inspektør.size shouldBe 1
             val sendtMelding = testRapid.inspektør.message(0)
-            sendtMelding["behandlingId"].asUUID() shouldBe oppgave.behandling.behandlingId
+            sendtMelding["behandlingId"].asUUID() shouldBe oppgave.behandlingId
             sendtMelding["ident"].asText() shouldBe oppgave.personIdent()
             shouldNotBeNull { sendtMelding["fagsakId"].asUUID() }
             sendtMelding["behandlendeEnhet"].asText() shouldBe behandlerDTO.enhet.enhetNr
@@ -415,7 +415,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandling.behandlingId
+                ).behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
 
@@ -491,7 +491,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandling.behandlingId
+                ).behandlingId
 
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,
@@ -557,7 +557,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandling.behandlingId
+                ).behandlingId
 
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,
@@ -625,7 +625,7 @@ class KlageMediatorTest {
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
-                ).behandling.behandlingId
+                ).behandlingId
 
             klageMediator.hentKlageBehandling(
                 behandlingId = behandlingId,

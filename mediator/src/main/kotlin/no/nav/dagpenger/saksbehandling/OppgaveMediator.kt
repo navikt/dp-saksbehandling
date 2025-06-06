@@ -86,7 +86,6 @@ class OppgaveMediator(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = emptySet(),
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                behandling = behandling,
                 tilstandslogg =
                     Tilstandslogg(
                         Tilstandsendring(
@@ -109,22 +108,12 @@ class OppgaveMediator(
                     oppslag.hentPersonMedSkjermingOgGradering(behandlingOpprettetHendelse.ident)
                 }
 
-        val behandling =
-            Behandling(
-                behandlingId = behandlingOpprettetHendelse.behandlingId,
-                person = person,
-                opprettet = behandlingOpprettetHendelse.opprettet,
-                hendelse = behandlingOpprettetHendelse,
-                type = behandlingOpprettetHendelse.type,
-            )
-
         val oppgave =
             Oppgave(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = emptySet(),
                 opprettet = behandlingOpprettetHendelse.opprettet,
                 behandlerIdent = null,
-                behandling = behandling,
                 tilstand = Oppgave.KlarTilBehandling,
                 tilstandslogg =
                     Tilstandslogg(
@@ -133,8 +122,8 @@ class OppgaveMediator(
                             hendelse = behandlingOpprettetHendelse,
                         ),
                     ),
-                behandlingId = behandling.behandlingId,
-                behandlingType = behandling.type,
+                behandlingId = behandlingOpprettetHendelse.behandlingId,
+                behandlingType = behandlingOpprettetHendelse.type,
                 person = person,
             )
 
@@ -241,7 +230,7 @@ class OppgaveMediator(
         oppgaveRepository.hentOppgave(sendTilKontrollHendelse.oppgaveId).also { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
             ) {
                 logger.info {
                     "Mottatt SendTilKontrollHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
@@ -249,17 +238,17 @@ class OppgaveMediator(
                 runBlocking {
                     val kreverToTrinnsKontroll =
                         behandlingKlient.kreverTotrinnskontroll(
-                            oppgave.behandling.behandlingId,
+                            oppgave.behandlingId,
                             saksbehandlerToken = saksbehandlerToken,
                         ).onFailure {
-                            logger.error { "Feil ved henting av behandling med id ${oppgave.behandling.behandlingId}: ${it.message}" }
+                            logger.error { "Feil ved henting av behandling med id ${oppgave.behandlingId}: ${it.message}" }
                         }.getOrThrow()
 
                     when (kreverToTrinnsKontroll) {
                         true -> {
                             oppgave.sendTilKontroll(sendTilKontrollHendelse)
                             behandlingKlient.godkjenn(
-                                behandlingId = oppgave.behandling.behandlingId,
+                                behandlingId = oppgave.behandlingId,
                                 ident = oppgave.personIdent(),
                                 saksbehandlerToken = saksbehandlerToken,
                             ).onSuccess {
@@ -288,22 +277,22 @@ class OppgaveMediator(
         oppgaveRepository.hentOppgave(returnerTilSaksbehandlingHendelse.oppgaveId).also { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
             ) {
                 logger.info {
                     "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
                 behandlingKlient.sendTilbake(
-                    behandlingId = oppgave.behandling.behandlingId,
+                    behandlingId = oppgave.behandlingId,
                     ident = oppgave.personIdent(),
                     saksbehandlerToken = beslutterToken,
                 ).onSuccess {
                     oppgaveRepository.lagre(oppgave)
-                    logger.info { "Sendt behandling med id ${oppgave.behandling.behandlingId} tilbake til saksbehandling" }
+                    logger.info { "Sendt behandling med id ${oppgave.behandlingId} tilbake til saksbehandling" }
                 }.onFailure {
                     val feil =
-                        "Feil ved sending av behandling med id ${oppgave.behandling.behandlingId} " +
+                        "Feil ved sending av behandling med id ${oppgave.behandlingId} " +
                             "tilbake til saksbehandling: ${it.message}"
                     logger.error { feil }
                     throw it
@@ -334,7 +323,7 @@ class OppgaveMediator(
         oppgaveRepository.hentOppgaveFor(avbruttHendelse.behandlingId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
             ) {
                 logger.info {
                     "Mottatt AvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
@@ -352,7 +341,7 @@ class OppgaveMediator(
         oppgaveRepository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
             ) {
                 logger.info {
                     "Mottatt GodkjentBehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
@@ -411,7 +400,7 @@ class OppgaveMediator(
                     person = person.await(),
                     saksbehandler = saksbehandler.await(),
                     beslutter = beslutter.await(),
-                    behandlingId = oppgave.behandling.behandlingId,
+                    behandlingId = oppgave.behandlingId,
                     saksbehandlerToken,
                 ).onSuccess { html ->
                     ferdigstillOppgave(
@@ -438,7 +427,7 @@ class OppgaveMediator(
         oppgaveTilFerdigstilling ?: oppgaveRepository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandling.behandlingId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
             ) {
                 logger.info {
                     "Mottatt GodkjentBehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
@@ -455,7 +444,7 @@ class OppgaveMediator(
                 when (ferdigstillBehandling) {
                     Oppgave.FerdigstillBehandling.GODKJENN -> {
                         behandlingKlient.godkjenn(
-                            behandlingId = oppgave.behandling.behandlingId,
+                            behandlingId = oppgave.behandlingId,
                             ident = oppgave.personIdent(),
                             saksbehandlerToken = saksbehandlerToken,
                         ).onSuccess {
@@ -478,7 +467,7 @@ class OppgaveMediator(
 
                     Oppgave.FerdigstillBehandling.BESLUTT -> {
                         behandlingKlient.beslutt(
-                            behandlingId = oppgave.behandling.behandlingId,
+                            behandlingId = oppgave.behandlingId,
                             ident = oppgave.personIdent(),
                             saksbehandlerToken = saksbehandlerToken,
                         ).onSuccess {
@@ -511,7 +500,7 @@ class OppgaveMediator(
             oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
 
             behandlingKlient.godkjenn(
-                behandlingId = oppgave.behandling.behandlingId,
+                behandlingId = oppgave.behandlingId,
                 ident = oppgave.personIdent(),
                 saksbehandlerToken = saksbehandlerToken,
             ).onSuccess {

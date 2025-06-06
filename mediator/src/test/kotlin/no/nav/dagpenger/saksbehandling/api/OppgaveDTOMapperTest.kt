@@ -101,7 +101,7 @@ class OppgaveDTOMapperTest {
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
-                      "behandlingId": "${oppgave.behandling.behandlingId}",
+                      "behandlingId": "${oppgave.behandlingId}",
                       "person": {
                         "ident": "12345612345",
                         "id": "$TEST_UUID",
@@ -242,7 +242,7 @@ class OppgaveDTOMapperTest {
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
-                      "behandlingId": "${oppgave.behandling.behandlingId}",
+                      "behandlingId": "${oppgave.behandlingId}",
                       "person": {
                         "ident": "12345612345",
                         "id": "$TEST_UUID",

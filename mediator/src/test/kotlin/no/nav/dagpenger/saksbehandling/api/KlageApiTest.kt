@@ -147,7 +147,7 @@ class KlageApiTest {
                     """
                     {
                        "oppgaveId": "${oppgave.oppgaveId}",
-                       "behandlingId": "${oppgave.behandling.behandlingId}",
+                       "behandlingId": "${oppgave.behandlingId}",
                        "personIdent": "$ident",
                        "tidspunktOpprettet": "2025-01-01T01:01:00",
                        "behandlingType": "KLAGE"
@@ -211,7 +211,7 @@ class KlageApiTest {
                     """
                     {
                        "oppgaveId": "${oppgave.oppgaveId}",
-                       "behandlingId": "${oppgave.behandling.behandlingId}",
+                       "behandlingId": "${oppgave.behandlingId}",
                        "personIdent": "$ident",
                        "tidspunktOpprettet": "2025-01-01T01:01:00",
                        "behandlingType": "KLAGE"

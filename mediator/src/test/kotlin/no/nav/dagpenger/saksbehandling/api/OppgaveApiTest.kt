@@ -212,10 +212,10 @@ class OppgaveApiTest {
                       "oppgaver": [
                         {
                           "oppgaveId": "${oppgave1.oppgaveId}",
-                          "behandlingId": "${oppgave1.behandling.behandlingId}",
+                          "behandlingId": "${oppgave1.behandlingId}",
                           "personIdent": "${oppgave1.personIdent()}",
                           "emneknagger": [],
-                          "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
+                          "skjermesSomEgneAnsatte": ${oppgave1.person.skjermesSomEgneAnsatte},
                           "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                           "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}",
                           "behandlerIdent": "${oppgave1.behandlerIdent}",
@@ -223,10 +223,10 @@ class OppgaveApiTest {
                         },
                         {
                           "oppgaveId": "${oppgave2.oppgaveId}",
-                          "behandlingId": "${oppgave2.behandling.behandlingId}",
+                          "behandlingId": "${oppgave2.behandlingId}",
                           "personIdent": "${oppgave2.personIdent()}",
                           "emneknagger": [],
-                          "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
+                          "skjermesSomEgneAnsatte": ${oppgave2.person.skjermesSomEgneAnsatte},
                           "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
                           "tilstand": "${OppgaveTilstandDTO.KLAR_TIL_BEHANDLING}"
                         }
@@ -599,7 +599,7 @@ class OppgaveApiTest {
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
                     {
-                      "behandlingId": "${oppgave.behandling.behandlingId}",
+                      "behandlingId": "${oppgave.behandlingId}",
                       "person": {
                         "ident": "$TEST_IDENT",
                         "fornavn": "PETTER",
@@ -607,7 +607,7 @@ class OppgaveApiTest {
                         "fodselsdato": "2000-01-01",
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR",
-                        "skjermesSomEgneAnsatte": ${oppgave.behandling.person.skjermesSomEgneAnsatte}
+                        "skjermesSomEgneAnsatte": ${oppgave.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
@@ -822,17 +822,17 @@ class OppgaveApiTest {
                 coEvery { it.lagOppgaveDTO(testOppgave) } returns
                     OppgaveDTO(
                         oppgaveId = testOppgave.oppgaveId,
-                        behandlingId = testOppgave.behandling.behandlingId,
+                        behandlingId = testOppgave.behandlingId,
                         person =
                             PersonDTO(
                                 ident = testPerson.ident,
-                                id = testOppgave.behandling.person.id,
+                                id = testOppgave.person.id,
                                 fornavn = testPerson.fornavn,
                                 etternavn = testPerson.etternavn,
                                 fodselsdato = testPerson.fødselsdato,
                                 alder = testPerson.alder,
                                 kjonn = KjonnDTO.UKJENT,
-                                skjermesSomEgneAnsatte = testOppgave.behandling.person.skjermesSomEgneAnsatte,
+                                skjermesSomEgneAnsatte = testOppgave.person.skjermesSomEgneAnsatte,
                                 adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                                 mellomnavn = testPerson.mellomnavn,
                                 statsborgerskap = testPerson.statsborgerskap,
@@ -847,7 +847,7 @@ class OppgaveApiTest {
                                 oppgaver = emptyList(),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
-                        behandlingType = testOppgave.behandling.tilBehandlingTypeDTO(),
+                        behandlingType = testOppgave.tilBehandlingTypeDTO(),
                         emneknagger = testOppgave.emneknagger.toList(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
@@ -914,7 +914,7 @@ class OppgaveApiTest {
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
                     {
-                      "behandlingId": "${testOppgave.behandling.behandlingId}",
+                      "behandlingId": "${testOppgave.behandlingId}",
                       "person": {
                         "ident": "${testOppgave.personIdent()}",
                         "fornavn": "PETTER",
@@ -928,7 +928,7 @@ class OppgaveApiTest {
                             "gyldigTom": "${testPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
-                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
+                        "skjermesSomEgneAnsatte": ${testOppgave.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
@@ -991,7 +991,7 @@ class OppgaveApiTest {
                 coEvery { it.lagOppgaveDTO(testOppgave) } returns
                     OppgaveDTO(
                         oppgaveId = testOppgave.oppgaveId,
-                        behandlingId = testOppgave.behandling.behandlingId,
+                        behandlingId = testOppgave.behandlingId,
                         person =
                             PersonDTO(
                                 ident = testPerson.ident,
@@ -1001,7 +1001,7 @@ class OppgaveApiTest {
                                 fodselsdato = testPerson.fødselsdato,
                                 alder = testPerson.alder,
                                 kjonn = KjonnDTO.UKJENT,
-                                skjermesSomEgneAnsatte = testOppgave.behandling.person.skjermesSomEgneAnsatte,
+                                skjermesSomEgneAnsatte = testOppgave.person.skjermesSomEgneAnsatte,
                                 adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                                 mellomnavn = testPerson.mellomnavn,
                                 statsborgerskap = testPerson.statsborgerskap,
@@ -1010,7 +1010,7 @@ class OppgaveApiTest {
                                 oppgaver = emptyList(),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
-                        behandlingType = testOppgave.behandling.tilBehandlingTypeDTO(),
+                        behandlingType = testOppgave.tilBehandlingTypeDTO(),
                         emneknagger = testOppgave.emneknagger.toList(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
@@ -1077,7 +1077,7 @@ class OppgaveApiTest {
                 json shouldEqualSpecifiedJsonIgnoringOrder
                     """
                     {
-                      "behandlingId": "${testOppgave.behandling.behandlingId}",
+                      "behandlingId": "${testOppgave.behandlingId}",
                       "person": {
                         "ident": "${testOppgave.personIdent()}",
                         "fornavn": "PETTER",
@@ -1086,7 +1086,7 @@ class OppgaveApiTest {
                         "kjonn": "UKJENT",
                         "statsborgerskap": "NOR",
                         "sikkerhetstiltak": [],
-                        "skjermesSomEgneAnsatte": ${testOppgave.behandling.person.skjermesSomEgneAnsatte}
+                        "skjermesSomEgneAnsatte": ${testOppgave.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
                       "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
@@ -1245,7 +1245,7 @@ class OppgaveApiTest {
                 id = personId,
                 ident = testPerson.ident,
                 skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                adressebeskyttelseGradering = UGRADERT,
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {

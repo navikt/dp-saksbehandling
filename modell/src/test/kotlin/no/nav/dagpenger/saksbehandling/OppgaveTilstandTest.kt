@@ -127,7 +127,7 @@ class OppgaveTilstandTest {
             val resultat =
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = false,
@@ -154,7 +154,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = false,
@@ -174,7 +174,7 @@ class OppgaveTilstandTest {
             val resultat =
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         sak = sak,
@@ -195,7 +195,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = true,
@@ -217,7 +217,7 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     avbruttHendelse =
                         AvbruttHendelse(
-                            behandlingId = oppgave.behandling.behandlingId,
+                            behandlingId = oppgave.behandlingId,
                             utførtAv = saksbehandler,
                         ),
                 )
@@ -231,7 +231,7 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     avbruttHendelse =
                         AvbruttHendelse(
-                            behandlingId = oppgave.behandling.behandlingId,
+                            behandlingId = oppgave.behandlingId,
                             utførtAv = saksbehandler,
                         ),
                 )
@@ -257,7 +257,7 @@ class OppgaveTilstandTest {
             shouldNotThrowAny {
                 oppgave.behandlesIArena(
                     BehandlingAvbruttHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                     ),
@@ -271,7 +271,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.behandlesIArena(
                     BehandlingAvbruttHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                     ),
@@ -297,7 +297,7 @@ class OppgaveTilstandTest {
             shouldNotThrowAny {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                     ),
@@ -323,7 +323,7 @@ class OppgaveTilstandTest {
             shouldThrow<UlovligTilstandsendringException> {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                     ),
@@ -351,7 +351,7 @@ class OppgaveTilstandTest {
         shouldNotThrowAny {
             oppgave.behandlesIArena(
                 BehandlingAvbruttHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
+                    behandlingId = oppgave.behandlingId,
                     søknadId = UUIDv7.ny(),
                     ident = testIdent,
                 ),
@@ -442,7 +442,7 @@ class OppgaveTilstandTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = UUIDv7.ny(),
-                    behandlingId = oppgave.behandling.behandlingId,
+                    behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
                 ),
@@ -461,7 +461,7 @@ class OppgaveTilstandTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = UUIDv7.ny(),
-                    behandlingId = oppgave.behandling.behandlingId,
+                    behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
                 ),
@@ -480,7 +480,7 @@ class OppgaveTilstandTest {
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = UUIDv7.ny(),
-                    behandlingId = oppgave.behandling.behandlingId,
+                    behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
                 ),
@@ -699,7 +699,7 @@ class OppgaveTilstandTest {
         shouldNotThrowAny {
             oppgave.behandlesIArena(
                 BehandlingAvbruttHendelse(
-                    behandlingId = oppgave.behandling.behandlingId,
+                    behandlingId = oppgave.behandlingId,
                     søknadId = UUIDv7.ny(),
                     ident = testIdent,
                 ),

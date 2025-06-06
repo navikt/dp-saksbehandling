@@ -923,7 +923,6 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
 }
 
 private fun TransactionalSession.lagre(oppgave: Oppgave) {
-    this.lagre(oppgave.behandling)
     run(
         queryOf(
             //language=PostgreSQL
@@ -942,7 +941,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
             paramMap =
                 mapOf(
                     "id" to oppgave.oppgaveId,
-                    "behandling_id" to oppgave.behandling.behandlingId,
+                    "behandling_id" to oppgave.behandlingId,
                     "tilstand" to oppgave.tilstand().type.name,
                     "opprettet" to oppgave.opprettet,
                     "saksbehandler_ident" to oppgave.behandlerIdent,

@@ -40,7 +40,6 @@ internal class VedtakFattetMottakTest {
         Oppgave(
             oppgaveId = UUIDv7.ny(),
             opprettet = opprettet,
-            behandling = behandling,
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
             person = person,

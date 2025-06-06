@@ -51,7 +51,6 @@ data class Oppgave private constructor(
     var behandlerIdent: String? = null,
     private val _emneknagger: MutableSet<String>,
     private var tilstand: Tilstand = Opprettet,
-    val behandling: Behandling,
     private var utsattTil: LocalDate? = null,
     private val _tilstandslogg: Tilstandslogg = Tilstandslogg(),
     val behandlingId: UUID,
@@ -64,7 +63,6 @@ data class Oppgave private constructor(
         opprettet: LocalDateTime,
         tilstand: Tilstand = Opprettet,
         behandlerIdent: String? = null,
-        behandling: Behandling,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
         behandlingId: UUID,
         behandlingType: BehandlingType,
@@ -75,7 +73,6 @@ data class Oppgave private constructor(
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         tilstand = tilstand,
-        behandling = behandling,
         _tilstandslogg = tilstandslogg,
         behandlingId = behandlingId,
         behandlingType = behandlingType,
@@ -112,7 +109,6 @@ data class Oppgave private constructor(
                 behandlerIdent = behandlerIdent,
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,
-                behandling = behandling,
                 utsattTil = utsattTil,
                 _tilstandslogg = tilstandslogg,
                 behandlingId = behandlingId,
@@ -163,13 +159,13 @@ data class Oppgave private constructor(
     val tilstandslogg: Tilstandslogg
         get() = _tilstandslogg
 
-    fun personIdent() = behandling.person.ident
+    fun personIdent() = person.ident
 
     fun tilstand() = this.tilstand
 
     fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
         require(
-            if (this.behandling.person.skjermesSomEgneAnsatte) {
+            if (this.person.skjermesSomEgneAnsatte) {
                 saksbehandler.tilganger.contains(EGNE_ANSATTE)
             } else {
                 true
@@ -180,7 +176,7 @@ data class Oppgave private constructor(
     }
 
     fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) {
-        val adressebeskyttelseGradering = this.behandling.person.adressebeskyttelseGradering
+        val adressebeskyttelseGradering = this.person.adressebeskyttelseGradering
         require(
             when (adressebeskyttelseGradering) {
                 FORTROLIG -> saksbehandler.tilganger.contains(FORTROLIG_ADRESSE)

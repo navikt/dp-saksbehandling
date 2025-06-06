@@ -33,7 +33,6 @@ class PostgresTriggerTest {
                 emneknagger = setOf("Hugga", "Bugga"),
                 opprettet = opprettet,
                 tilstand = Oppgave.KlarTilBehandling,
-                behandling = testBehandling,
                 behandlingId = testBehandling.behandlingId,
                 behandlingType = testBehandling.type,
                 person = testPerson,

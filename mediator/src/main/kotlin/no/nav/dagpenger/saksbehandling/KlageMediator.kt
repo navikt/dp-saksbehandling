@@ -70,7 +70,6 @@ class KlageMediator(
                         ),
                     ),
             )
-
         klageRepository.lagre(klageBehandling)
         return kotlin.runCatching {
             oppgaveMediator.opprettOppgaveForBehandling(
@@ -181,7 +180,7 @@ class KlageMediator(
                         person = personDeferred.await(),
                         saksbehandler = saksbehandlerDeferred.await(),
                         beslutter = null,
-                        behandlingId = oppgave.behandling.behandlingId,
+                        behandlingId = oppgave.behandlingId,
                         saksbehandlerToken = saksbehandlerToken,
                         behandlingType = BehandlingType.KLAGE,
                     )
@@ -239,7 +238,7 @@ class KlageMediator(
                         "fagsakId" to sak.id,
                         "behandlendeEnhet" to saksbehandler.enhet.enhetNr,
                         "hjemler" to klageBehandling.hjemler(),
-                        "opprettet" to oppgave.behandling.opprettet.toLocalDate().toString(),
+                        "opprettet" to oppgave.opprettet.toLocalDate().toString(),
                     )
 
                 klageBehandling.synligeOpplysninger()

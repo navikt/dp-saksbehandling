@@ -4,7 +4,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.NyPerson
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -121,10 +120,10 @@ internal class OppgaveDTOMapper(
 
         OppgaveDTO(
             oppgaveId = oppgave.oppgaveId,
-            behandlingId = oppgave.behandling.behandlingId,
-            person = lagPersonDTO(oppgave.behandling.person, person),
+            behandlingId = oppgave.behandlingId,
+            person = lagPersonDTO(oppgave.person, person),
             tidspunktOpprettet = oppgave.opprettet,
-            behandlingType = oppgave.behandling.tilBehandlingTypeDTO(),
+            behandlingType = oppgave.tilBehandlingTypeDTO(),
             emneknagger = oppgave.emneknagger.toList(),
             tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
@@ -201,14 +200,14 @@ internal class OppgaveDTOMapper(
 internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
-        behandlingId = this.behandling.behandlingId,
+        behandlingId = this.behandlingId,
         personIdent = this.personIdent(),
         tidspunktOpprettet = this.opprettet,
-        behandlingType = this.behandling.tilBehandlingTypeDTO(),
+        behandlingType = this.tilBehandlingTypeDTO(),
         emneknagger = this.emneknagger.toList(),
-        skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
+        skjermesSomEgneAnsatte = this.person.skjermesSomEgneAnsatte,
         adressebeskyttelseGradering =
-            when (this.behandling.person.adressebeskyttelseGradering) {
+            when (this.person.adressebeskyttelseGradering) {
                 AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
                 AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
                 AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
@@ -249,12 +248,12 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
 internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
     return TildeltOppgaveDTO(
         nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
-        behandlingType = this.behandling.tilBehandlingTypeDTO(),
+        behandlingType = this.tilBehandlingTypeDTO(),
     )
 }
 
-internal fun Behandling.tilBehandlingTypeDTO(): BehandlingTypeDTO {
-    return when (this.type) {
+internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
+    return when (this.behandlingType) {
         BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
         BehandlingType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER

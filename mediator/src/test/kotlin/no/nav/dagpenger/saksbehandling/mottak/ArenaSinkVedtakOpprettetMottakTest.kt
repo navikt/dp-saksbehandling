@@ -18,7 +18,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
     private val testOppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet)
     private val oppgaveRepository =
         mockk<OppgaveRepository>(relaxed = true).apply {
-            every { hentOppgaveFor(testOppgave.behandling.behandlingId) } returns testOppgave
+            every { hentOppgaveFor(testOppgave.behandlingId) } returns testOppgave
         }
 
     @Test
@@ -36,13 +36,13 @@ class ArenaSinkVedtakOpprettetMottakTest {
 
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
         verify(exactly = 1) {
-            oppgaveRepository.hentOppgaveFor(testOppgave.behandling.behandlingId)
+            oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
         }
 
         val startUtsendingEvent = testRapid.inspektør.message(0)
 
         startUtsendingEvent["@event_name"].asText() shouldBe "start_utsending"
-        startUtsendingEvent["behandlingId"].asUUID() shouldBe testOppgave.behandling.behandlingId
+        startUtsendingEvent["behandlingId"].asUUID() shouldBe testOppgave.behandlingId
         startUtsendingEvent["oppgaveId"].asUUID() shouldBe testOppgave.oppgaveId
         startUtsendingEvent["ident"].asText() shouldBe testOppgave.personIdent()
         startUtsendingEvent["sak"]["id"].asText() shouldBe sakId
@@ -61,7 +61,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
             arenaSinkVedtakOpprettetHendelse.replace(VEDTAKSTATUS_IVERKSATT, "Muse Mikk")
         testRapid.sendTestMessage(vedtakOpprettetMenIkkeIverksattMelding)
         verify(exactly = 1) {
-            oppgaveRepository.hentOppgaveFor(testOppgave.behandling.behandlingId)
+            oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
         }
 
         testRapid.inspektør.size shouldBe 0
@@ -76,7 +76,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
         )
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
         verify(exactly = 1) {
-            oppgaveRepository.hentOppgaveFor(testOppgave.behandling.behandlingId)
+            oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
         }
         testRapid.inspektør.size shouldBe 0
     }
@@ -93,7 +93,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
           "rettighet": "PERM",
           "utfall": false,
           "kilde": {
-            "id": "${testOppgave.behandling.behandlingId}",
+            "id": "${testOppgave.behandlingId}",
             "system": "dp-behandling"
           },
           "@id": "b525ed15-e041-4d80-a20c-2a26885eae75",
