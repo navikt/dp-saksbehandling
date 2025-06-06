@@ -23,16 +23,17 @@ internal class VedtakFattetMottakTest {
     private val behandlingId = UUID.randomUUID()
     private val sak = Sak("12342", "Arena")
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
+    val person =
+        Person(
+            id = UUIDv7.ny(),
+            ident = testIdent,
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = UGRADERT,
+        )
     val behandling =
         Behandling(
             behandlingId = behandlingId,
-            person =
-                Person(
-                    id = UUIDv7.ny(),
-                    ident = testIdent,
-                    skjermesSomEgneAnsatte = false,
-                    adressebeskyttelseGradering = UGRADERT,
-                ),
+            person = person,
             opprettet = opprettet,
         )
     private val oppgave =
@@ -42,7 +43,7 @@ internal class VedtakFattetMottakTest {
             behandling = behandling,
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
-            personIdent = testIdent,
+            person = person,
         )
 
     private val testRapid = TestRapid()

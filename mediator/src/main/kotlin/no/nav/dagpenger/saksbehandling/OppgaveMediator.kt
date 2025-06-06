@@ -96,7 +96,7 @@ class OppgaveMediator(
                     ),
                 behandlingId = behandling.behandlingId,
                 behandlingType = behandling.type,
-                personIdent = person.ident,
+                person = person,
             )
 
         oppgaveRepository.lagre(oppgave)
@@ -135,7 +135,7 @@ class OppgaveMediator(
                     ),
                 behandlingId = behandling.behandlingId,
                 behandlingType = behandling.type,
-                personIdent = person.ident,
+                person = person,
             )
 
         oppgaveRepository.lagre(oppgave)

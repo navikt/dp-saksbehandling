@@ -56,7 +56,7 @@ data class Oppgave private constructor(
     private val _tilstandslogg: Tilstandslogg = Tilstandslogg(),
     val behandlingId: UUID,
     val behandlingType: BehandlingType,
-    val personIdent: String,
+    val person: Person,
 ) {
     constructor(
         oppgaveId: UUID,
@@ -68,7 +68,7 @@ data class Oppgave private constructor(
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
         behandlingId: UUID,
         behandlingType: BehandlingType,
-        personIdent: String,
+        person: Person,
     ) : this(
         oppgaveId = oppgaveId,
         behandlerIdent = behandlerIdent,
@@ -79,7 +79,7 @@ data class Oppgave private constructor(
         _tilstandslogg = tilstandslogg,
         behandlingId = behandlingId,
         behandlingType = behandlingType,
-        personIdent = personIdent,
+        person = person,
     )
 
     companion object {
@@ -104,7 +104,7 @@ data class Oppgave private constructor(
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
             behandlingId: UUID,
             behandlingType: BehandlingType,
-            personIdent: String,
+            person: Person,
         ): Oppgave =
             Oppgave(
                 oppgaveId = oppgaveId,
@@ -117,7 +117,7 @@ data class Oppgave private constructor(
                 _tilstandslogg = tilstandslogg,
                 behandlingId = behandlingId,
                 behandlingType = behandlingType,
-                personIdent = personIdent,
+                person = person,
             )
 
         private fun requireEierskapTilOppgave(

@@ -49,7 +49,7 @@ fun lagOppgave(
         tilstandslogg = tilstandslogg,
         behandlingId = behandling.behandlingId,
         behandlingType = behandling.type,
-        personIdent = person.ident,
+        person = person,
     )
 }
 

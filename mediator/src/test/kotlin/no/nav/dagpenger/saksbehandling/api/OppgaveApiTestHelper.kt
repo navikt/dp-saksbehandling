@@ -154,7 +154,7 @@ internal object OppgaveApiTestHelper {
             utsattTil = utsattTil,
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
-            personIdent = TEST_IDENT,
+            person = behandling.person,
             tilstandslogg =
                 Tilstandslogg.rehydrer(
                     listOf(

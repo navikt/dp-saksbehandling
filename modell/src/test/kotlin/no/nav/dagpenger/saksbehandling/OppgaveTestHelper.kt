@@ -36,17 +36,18 @@ object OppgaveTestHelper {
                 AVVENTER_OPPLÅSING_AV_BEHANDLING -> Oppgave.AvventerOpplåsingAvBehandling
                 BEHANDLES_I_ARENA -> Oppgave.BehandlesIArena
             }
-        val personIdent = "12345678910"
+        val person =
+            Person(
+                id = UUIDv7.ny(),
+                ident = "12345678910",
+                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                adressebeskyttelseGradering = adressebeskyttelseGradering,
+            )
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 person =
-                    Person(
-                        id = UUIDv7.ny(),
-                        ident = personIdent,
-                        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
-                        adressebeskyttelseGradering = adressebeskyttelseGradering,
-                    ),
+                person,
                 opprettet = LocalDateTime.now(),
             )
         return Oppgave.rehydrer(
@@ -55,13 +56,12 @@ object OppgaveTestHelper {
             opprettet = LocalDateTime.now(),
             emneknagger = emneknagger,
             tilstand = tilstand,
-            behandling =
-            behandling,
+            behandling = behandling,
             utsattTil = null,
             tilstandslogg = tilstandslogg,
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
-            personIdent = personIdent,
+            person = person,
         )
     }
 

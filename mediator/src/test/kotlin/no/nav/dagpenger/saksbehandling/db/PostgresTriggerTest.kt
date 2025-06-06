@@ -36,7 +36,7 @@ class PostgresTriggerTest {
                 behandling = testBehandling,
                 behandlingId = testBehandling.behandlingId,
                 behandlingType = testBehandling.type,
-                personIdent = testPerson.ident,
+                person = testPerson,
             )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
