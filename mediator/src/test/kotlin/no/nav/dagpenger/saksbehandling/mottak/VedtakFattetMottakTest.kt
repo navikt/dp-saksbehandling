@@ -42,6 +42,7 @@ internal class VedtakFattetMottakTest {
             behandling = behandling,
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
+            personIdent = testIdent,
         )
 
     private val testRapid = TestRapid()

@@ -1071,13 +1071,14 @@ private fun TransactionalSession.lagre(
 private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
     val behandlingId = this.uuid("behandling_id")
     val oppgaveId = this.uuid("oppgave_id")
+    val personIdent = this.string("person_ident")
     val behandling =
         Behandling.rehydrer(
             behandlingId = behandlingId,
             person =
                 Person(
                     id = this.uuid("person_id"),
-                    ident = this.string("person_ident"),
+                    ident = personIdent,
                     skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
                     adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
                 ),
@@ -1118,6 +1119,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         tilstandslogg = tilstandslogg,
         behandlingId = behandling.behandlingId,
         behandlingType = behandling.type,
+        personIdent = personIdent,
     )
 }
 

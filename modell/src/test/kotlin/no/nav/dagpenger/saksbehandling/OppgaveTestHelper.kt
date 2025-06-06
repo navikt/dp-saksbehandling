@@ -36,13 +36,14 @@ object OppgaveTestHelper {
                 AVVENTER_OPPLÅSING_AV_BEHANDLING -> Oppgave.AvventerOpplåsingAvBehandling
                 BEHANDLES_I_ARENA -> Oppgave.BehandlesIArena
             }
+        val personIdent = "12345678910"
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 person =
                     Person(
                         id = UUIDv7.ny(),
-                        ident = "12345678910",
+                        ident = personIdent,
                         skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
                         adressebeskyttelseGradering = adressebeskyttelseGradering,
                     ),
@@ -60,6 +61,7 @@ object OppgaveTestHelper {
             tilstandslogg = tilstandslogg,
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
+            personIdent = personIdent,
         )
     }
 
