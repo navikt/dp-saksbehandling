@@ -1,5 +1,7 @@
 package no.nav.dagpenger.saksbehandling.klage
 
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
@@ -7,6 +9,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.FERDIGSTILT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 fun lagKlagebehandling(
@@ -14,6 +17,13 @@ fun lagKlagebehandling(
     land: Land? = Land.NO,
     behandlendeEnhet: String? = null,
     tilstand: KlageTilstand.Type = BEHANDLES,
+    klageMottattTidspunkt: LocalDateTime = LocalDateTime.now(),
+    person: Person =
+        Person(
+            ident = "12345678910",
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+        ),
 ): KlageBehandling {
     val opplysninger =
         mutableSetOf(
@@ -43,7 +53,7 @@ fun lagKlagebehandling(
             ),
             Opplysning(
                 type = OpplysningType.KLAGE_MOTTATT,
-                verdi = Verdi.Dato(LocalDate.of(2025, 1, 1)),
+                verdi = Verdi.Dato(klageMottattTidspunkt.toLocalDate()),
             ),
             Opplysning(
                 type = OpplysningType.KLAGEFRIST,
@@ -130,6 +140,8 @@ fun lagKlagebehandling(
             },
         behandlingId = UUIDv7.ny(),
         journalpostId = null,
+        person = person,
+        opprettet = klageMottattTidspunkt,
     )
 }
 

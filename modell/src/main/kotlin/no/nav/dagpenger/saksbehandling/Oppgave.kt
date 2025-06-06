@@ -96,7 +96,6 @@ data class Oppgave private constructor(
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
             tilstand: Tilstand,
-            behandling: Behandling,
             utsattTil: LocalDate?,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
             behandlingId: UUID,

@@ -2,6 +2,8 @@ package no.nav.dagpenger.saksbehandling.db.klage
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -12,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -22,15 +25,27 @@ class PostgresKlageRepositoryTest {
     fun `Skal kunne lagre og hente klagebehandlinger`() {
         withMigratedDb { ds ->
             val klageRepository = PostgresKlageRepository(ds)
+            val testPerson =
+                Person(
+                    ident = "12345678901",
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                )
             val klageMottattHendelse =
                 KlageMottattHendelse(
-                    ident = "111111888888",
+                    ident = testPerson.ident,
                     opprettet = LocalDateTime.now(),
                     journalpostId = "journalpostId",
                 )
+
             val klageBehandling =
-                KlageBehandling(
+                KlageBehandling.rehydrer(
+                    behandlingId = UUIDv7.ny(),
+                    person = testPerson,
+                    opprettet = klageMottattHendelse.opprettet,
                     journalpostId = "journalpostId",
+                    tilstand = KlageBehandling.Behandles,
+                    behandlendeEnhet = null,
                     tilstandslogg =
                         KlageTilstandslogg(
                             KlageTilstandsendring(
@@ -39,19 +54,6 @@ class PostgresKlageRepositoryTest {
                             ),
                         ),
                 )
-            KlageBehandling.rehydrer(
-                behandlingId = UUIDv7.ny(),
-                journalpostId = "journalpostId",
-                tilstand = KlageBehandling.Behandles,
-                behandlendeEnhet = null,
-                tilstandslogg =
-                    KlageTilstandslogg(
-                        KlageTilstandsendring(
-                            tilstand = BEHANDLES,
-                            hendelse = klageMottattHendelse,
-                        ),
-                    ),
-            )
 
             val boolskOpplysningId =
                 klageBehandling.finnEnBoolskOpplysning().also {

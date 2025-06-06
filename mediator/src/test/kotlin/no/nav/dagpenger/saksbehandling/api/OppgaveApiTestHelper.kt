@@ -150,7 +150,6 @@ internal object OppgaveApiTestHelper {
                     AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
                     BEHANDLES_I_ARENA -> BehandlesIArena
                 },
-            behandling = behandling,
             utsattTil = utsattTil,
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,

@@ -4,7 +4,9 @@ import io.kotest.assertions.json.shouldEqualJson
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
@@ -13,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class KlageDTOMapperTest {
     private val testSaksbehandler =
@@ -21,11 +24,22 @@ class KlageDTOMapperTest {
             grupper = setOf(Configuration.saksbehandlerADGruppe),
             tilganger = setOf(TilgangType.SAKSBEHANDLER),
         )
+    private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
+    private val testPerson =
+        Person(
+            ident = "12345678901",
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+        )
 
     @Test
     fun `Skal mappe KlageBehandling til KlageDTO`() {
         runBlocking {
-            val klageBehandling = KlageBehandling()
+            val klageBehandling =
+                KlageBehandling(
+                    opprettet = opprettet,
+                    person = testPerson,
+                )
             val saksbehandlerDTO =
                 BehandlerDTO(
                     ident = testSaksbehandler.navIdent,

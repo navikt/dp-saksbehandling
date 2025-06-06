@@ -56,7 +56,6 @@ object OppgaveTestHelper {
             opprettet = LocalDateTime.now(),
             emneknagger = emneknagger,
             tilstand = tilstand,
-            behandling = behandling,
             utsattTil = null,
             tilstandslogg = tilstandslogg,
             behandlingId = behandling.behandlingId,

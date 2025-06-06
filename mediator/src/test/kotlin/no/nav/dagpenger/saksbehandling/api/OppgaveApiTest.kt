@@ -27,7 +27,6 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -84,7 +83,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -644,24 +642,20 @@ class OppgaveApiTest {
     @Test
     fun `Saksbehandler skal kunne ta en oppgave som er KLAR_TIL_BEHANDLING`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
-        val testOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
-
+//        val testOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
+        val testOppgaveId = UUIDv7.ny()
         coEvery {
             oppgaveMediatorMock.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
-                    oppgaveId = testOppgave.oppgaveId,
+                    oppgaveId = testOppgaveId,
                     ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 ),
             )
-        } returns
-            lagOppgave(
-                tilstand = Oppgave.UnderBehandling,
-                behandling = lagBehandling(type = BehandlingType.RETT_TIL_DAGPENGER),
-            )
+        } returns lagOppgave(oppgaveId = testOppgaveId, tilstand = Oppgave.UnderBehandling)
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${testOppgave.oppgaveId}/tildel") { autentisert() }.also { response ->
+            client.put("/oppgave/$testOppgaveId/tildel") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
                 response.bodyAsText() shouldEqualSpecifiedJson

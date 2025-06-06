@@ -922,7 +922,32 @@ private fun TransactionalSession.lagre(behandling: Behandling) {
     this.lagreHendelse(behandling.behandlingId, behandling.hendelse)
 }
 
+private fun TransactionalSession.lagreBehandlingFor(oppgave: Oppgave) {
+    this.lagre(person = oppgave.person)
+    run(
+        queryOf(
+            //language=PostgreSQL
+            statement =
+                """
+                INSERT INTO behandling_v1
+                    (id, person_id, opprettet, behandling_type)
+                VALUES
+                    (:id, :person_id, :opprettet, :behandling_type) 
+                ON CONFLICT DO NOTHING
+                """.trimIndent(),
+            paramMap =
+                mapOf(
+                    "id" to oppgave.behandlingId,
+                    "person_id" to oppgave.person.id,
+                    "opprettet" to oppgave.opprettet,
+                    "behandling_type" to oppgave.behandlingType.name,
+                ),
+        ).asUpdate,
+    )
+}
+
 private fun TransactionalSession.lagre(oppgave: Oppgave) {
+    this.lagreBehandlingFor(oppgave)
     run(
         queryOf(
             //language=PostgreSQL
@@ -949,8 +974,8 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
                 ),
         ).asUpdate,
     )
-    lagre(oppgave.oppgaveId, oppgave.emneknagger)
-    lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
+    this.lagre(oppgave.oppgaveId, oppgave.emneknagger)
+    this.lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
     oppgave.tilstand().notat()?.let {
         lagreNotat(
             notatId = it.notatId,
@@ -1113,7 +1138,6 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         opprettet = this.localDateTime("oppgave_opprettet"),
         emneknagger = hentEmneknaggerForOppgave(oppgaveId, dataSource),
         tilstand = tilstand,
-        behandling = behandling,
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
         behandlingId = behandling.behandlingId,

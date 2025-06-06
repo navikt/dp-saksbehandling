@@ -390,25 +390,28 @@ OppgaveMediatorTest {
                 ident = "12345678910",
                 opprettet = LocalDateTime.now(),
             )
+        val person =
+            Person(
+                id = UUIDv7.ny(),
+                ident = hendelse.ident,
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            )
         val behandling =
             Behandling(
                 behandlingId = hendelse.behandlingId,
-                person =
-                    Person(
-                        id = UUIDv7.ny(),
-                        ident = hendelse.ident,
-                        skjermesSomEgneAnsatte = false,
-                        adressebeskyttelseGradering = UGRADERT,
-                    ),
+                person = person,
                 opprettet = LocalDateTime.now(),
                 hendelse = hendelse,
             )
-        val oppgave = lagOppgave(tilstand = tilstand, behandling = behandling)
+        val oppgave =
+            lagOppgave(tilstand = tilstand, behandlingId = behandling.behandlingId, behandlingType = behandling.type, person = person)
 
         withMigratedDb { ds ->
             val personRepository = PostgresPersonRepository(ds)
             val oppgaveRepository = PostgresOppgaveRepository(ds)
 
+            oppgaveRepository.lagre(behandling)
             oppgaveRepository.lagre(oppgave)
 
             val oppgaveMediator =

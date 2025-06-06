@@ -20,8 +20,10 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
 import no.nav.dagpenger.saksbehandling.KlageMediator
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -38,7 +40,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -49,9 +50,16 @@ class KlageApiTest {
         mockAzure()
     }
 
+    private val testPerson =
+        Person(
+            ident = "12345678901",
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+        )
     private val klageBehandlingId = UUIDv7.ny()
     private val journalpostId = "journalpostId"
     private val opplysningId = UUIDv7.ny()
+    private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
     private val saksbehandler =
         Saksbehandler(
             navIdent = SAKSBEHANDLER_IDENT,
@@ -92,6 +100,8 @@ class KlageApiTest {
                         journalpostId = journalpostId,
                         tilstand = KlageBehandling.Behandles,
                         behandlendeEnhet = null,
+                        person = testPerson,
+                        opprettet = opprettet,
                     )
             }
 
@@ -108,7 +118,7 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en klage med maskintoken`() {
         val token = gyldigMaskinToken()
-        val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
+        val oppgave = lagOppgave(behandlingType = KLAGE, opprettet = dato)
         val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
@@ -171,7 +181,7 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
         val token = gyldigSaksbehandlerToken()
-        val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
+        val oppgave = lagOppgave(behandlingType = KLAGE, opprettet = dato)
         val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
