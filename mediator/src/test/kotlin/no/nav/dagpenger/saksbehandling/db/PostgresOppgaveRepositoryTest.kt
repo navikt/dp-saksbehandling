@@ -1242,11 +1242,12 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på behandlingstype`() {
         val søknadOppgave = lagOppgave(tilstand = KlarTilBehandling)
-
+        val person = lagPerson()
         val klageOppgave =
             lagOppgave(
                 tilstand = KlarTilBehandling,
-                behandling = lagBehandling(type = BehandlingType.KLAGE),
+                behandling = lagBehandling(type = BehandlingType.KLAGE, person = person),
+                person = person,
             )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
