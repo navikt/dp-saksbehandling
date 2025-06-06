@@ -135,7 +135,7 @@ class OppgaveHistorikkDTOMapperTest {
 
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
-                    ident = oppgave.behandling.person.ident,
+                    ident = oppgave.personIdent(),
                     søknadId = UUIDv7.ny(),
                     behandlingId = oppgave.behandling.behandlingId,
                 ),

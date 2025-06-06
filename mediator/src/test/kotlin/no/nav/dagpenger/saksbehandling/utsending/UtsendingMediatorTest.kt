@@ -50,7 +50,7 @@ class UtsendingMediatorTest {
             utsendingMediator.opprettUtsending(
                 oppgaveId = oppgaveId,
                 brev = htmlBrev,
-                ident = oppgave.behandling.person.ident,
+                ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,
             )
 
@@ -94,7 +94,7 @@ class UtsendingMediatorTest {
                    "dokumentNavn": "vedtak.pdf",
                    "kontekst": "oppgave/$oppgaveId",
                    "oppgaveId": "$oppgaveId",
-                   "ident": "${oppgave.behandling.person.ident}",
+                   "ident": "${oppgave.personIdent()}",
                    "sak": {
                       "id": "${sak.id}",
                       "kontekst": "${sak.kontekst}"
@@ -119,7 +119,7 @@ class UtsendingMediatorTest {
                   ],
                   "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
                   "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
-                  "ident": "${oppgave.behandling.person.ident}",
+                  "ident": "${oppgave.personIdent()}",
                   "pdfUrn": "$pdfUrnString",
                   "oppgaveId": "$oppgaveId",
                   "sak": {

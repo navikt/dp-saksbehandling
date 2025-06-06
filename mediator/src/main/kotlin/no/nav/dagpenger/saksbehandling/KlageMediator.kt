@@ -172,7 +172,7 @@ class KlageMediator(
 
             val personDeferred =
                 async(Dispatchers.IO) {
-                    oppslag.hentPerson(oppgave.behandling.person.ident)
+                    oppslag.hentPerson(oppgave.personIdent())
                 }
 
             val htmlDeferred =
@@ -206,14 +206,14 @@ class KlageMediator(
                     oppgaveId = oppgave.oppgaveId,
                     sak = sak,
                     behandlingId = klageBehandling.behandlingId,
-                    ident = oppgave.behandling.person.ident,
+                    ident = oppgave.personIdent(),
                 )
 
             val html = htmlDeferred.await().getOrThrow()
             utsendingMediator.opprettUtsending(
                 oppgaveId = oppgave.oppgaveId,
                 brev = html,
-                ident = oppgave.behandling.person.ident,
+                ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,
             )
 
@@ -235,7 +235,7 @@ class KlageMediator(
                 val body =
                     mutableMapOf(
                         "behandlingId" to klageBehandling.behandlingId.toString(),
-                        "ident" to oppgave.behandling.person.ident,
+                        "ident" to oppgave.personIdent(),
                         "fagsakId" to sak.id,
                         "behandlendeEnhet" to saksbehandler.enhet.enhetNr,
                         "hjemler" to klageBehandling.hjemler(),
@@ -273,7 +273,7 @@ class KlageMediator(
                         sikkerlogg.info { "Publiserer behov: $it for oversendelse til klageinstans" }
                     }
                 logger.info { "Publiserer behov OversendelseKlageinstans for klagebehandling ${klageBehandling.behandlingId}" }
-                rapidsConnection.publish(key = oppgave.behandling.person.ident, message = message)
+                rapidsConnection.publish(key = oppgave.personIdent(), message = message)
             }
         }
     }

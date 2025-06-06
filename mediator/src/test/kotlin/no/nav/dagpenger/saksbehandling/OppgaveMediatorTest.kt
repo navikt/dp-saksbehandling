@@ -731,7 +731,7 @@ OppgaveMediatorTest {
             val utsending = utsendingMediator.hent(ferdigbehandletOppgave.oppgaveId)
             utsending.brev() shouldBe meldingOmVedtak
             utsending.oppgaveId shouldBe ferdigbehandletOppgave.oppgaveId
-            utsending.ident shouldBe ferdigbehandletOppgave.behandling.person.ident
+            utsending.ident shouldBe ferdigbehandletOppgave.personIdent()
         }
     }
 

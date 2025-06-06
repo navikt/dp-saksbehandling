@@ -4,6 +4,27 @@ import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHen
 import java.time.LocalDateTime
 import java.util.UUID
 
+class NyPerson(
+    val id: UUID = UUIDv7.ny(),
+    val ident: String,
+    val skjermesSomEgneAnsatte: Boolean,
+    val adressebeskyttelseGradering: AdressebeskyttelseGradering,
+) {
+    private val saker: MutableSet<NySak> = mutableSetOf()
+
+    init {
+        require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
+    }
+
+    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
+        saker.forEach { it.knyttTilSak(meldekortbehandlingOpprettetHendelse) }
+    }
+
+    fun leggTilSak(sak: NySak) = saker.add(sak)
+
+    fun saker(): List<NySak> = saker.toList()
+}
+
 data class NySak(
     val id: UUID = UUIDv7.ny(),
     val søknadId: UUID,
@@ -34,24 +55,3 @@ data class NyBehandling(
     val opprettet: LocalDateTime,
     val oppgaveId: UUID? = null,
 )
-
-class NyPerson(
-    val id: UUID = UUIDv7.ny(),
-    val ident: String,
-    val skjermesSomEgneAnsatte: Boolean,
-    val adressebeskyttelseGradering: AdressebeskyttelseGradering,
-) {
-    private val saker: MutableSet<NySak> = mutableSetOf()
-
-    init {
-        require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
-    }
-
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        saker.forEach { it.knyttTilSak(meldekortbehandlingOpprettetHendelse) }
-    }
-
-    fun leggTilSak(sak: NySak) = saker.add(sak)
-
-    fun saker(): List<NySak> = saker.toList()
-}

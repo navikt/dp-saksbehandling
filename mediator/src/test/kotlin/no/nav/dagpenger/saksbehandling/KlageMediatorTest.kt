@@ -211,7 +211,7 @@ class KlageMediatorTest {
                   "@event_name" : "behov",
                   "@behov" : [ "OversendelseKlageinstans" ],
                   "behandlingId" : "$behandlingId",
-                  "ident" : "${oppgave.behandling.person.ident}",
+                  "ident" : "${oppgave.personIdent()}",
                   "fagsakId" : "$fagsakId",
                   "behandlendeEnhet": "${klageBehandling.behandlendeEnhet()}",
                   "hjemler": ${klageBehandling.hjemler().map { "\"$it\"" }},
@@ -222,7 +222,7 @@ class KlageMediatorTest {
                 """.trimIndent()
 
             testRapid.sendTestMessage(
-                key = oppgave.behandling.person.ident,
+                key = oppgave.personIdent(),
                 message = melding,
             )
 
@@ -238,7 +238,7 @@ class KlageMediatorTest {
                 utsendingMediator.opprettUtsending(
                     oppgaveId = oppgave.oppgaveId,
                     brev = html,
-                    ident = oppgave.behandling.person.ident,
+                    ident = oppgave.personIdent(),
                     type = UtsendingType.KLAGEMELDING,
                 )
             }
@@ -322,7 +322,7 @@ class KlageMediatorTest {
             testRapid.inspektør.size shouldBe 1
             val sendtMelding = testRapid.inspektør.message(0)
             sendtMelding["behandlingId"].asUUID() shouldBe oppgave.behandling.behandlingId
-            sendtMelding["ident"].asText() shouldBe oppgave.behandling.person.ident
+            sendtMelding["ident"].asText() shouldBe oppgave.personIdent()
             shouldNotBeNull { sendtMelding["fagsakId"].asUUID() }
             sendtMelding["behandlendeEnhet"].asText() shouldBe behandlerDTO.enhet.enhetNr
             sendtMelding["opprettet"].asLocalDate() shouldBe nå.toLocalDate()
@@ -346,7 +346,7 @@ class KlageMediatorTest {
                   "@event_name" : "behov",
                   "@behov" : [ "OversendelseKlageinstans" ],
                   "behandlingId" : "$behandlingId",
-                  "ident" : "${oppgave.behandling.person.ident}",
+                  "ident" : "${oppgave.personIdent()}",
                   "fagsakId" : "$fagsakId",
                   "behandlendeEnhet": "${klageBehandling.behandlendeEnhet()}",
                   "hjemler": ${klageBehandling.hjemler().map { "\"$it\"" }},
@@ -358,7 +358,7 @@ class KlageMediatorTest {
                 """.trimIndent()
 
             testRapid.sendTestMessage(
-                key = oppgave.behandling.person.ident,
+                key = oppgave.personIdent(),
                 message = melding,
             )
 
@@ -374,7 +374,7 @@ class KlageMediatorTest {
                 utsendingMediator.opprettUtsending(
                     oppgaveId = oppgave.oppgaveId,
                     brev = html,
-                    ident = oppgave.behandling.person.ident,
+                    ident = oppgave.personIdent(),
                     type = UtsendingType.KLAGEMELDING,
                 )
             }

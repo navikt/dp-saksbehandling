@@ -109,14 +109,14 @@ class KlageApiTest {
     fun `Skal kunne opprette en klage med maskintoken`() {
         val token = gyldigMaskinToken()
         val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
-        val ident = oppgave.behandling.person.ident
+        val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
                 every {
                     it.opprettKlage(
                         klageMottattHendelse =
                             KlageMottattHendelse(
-                                ident = oppgave.behandling.person.ident,
+                                ident = oppgave.personIdent(),
                                 opprettet = dato,
                                 journalpostId = "journalpostId",
                             ),
@@ -172,14 +172,14 @@ class KlageApiTest {
     fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
         val token = gyldigSaksbehandlerToken()
         val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
-        val ident = oppgave.behandling.person.ident
+        val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
                 every {
                     it.opprettManuellKlage(
                         manuellKlageMottattHendelse =
                             ManuellKlageMottattHendelse(
-                                ident = oppgave.behandling.person.ident,
+                                ident = oppgave.personIdent(),
                                 opprettet = dato,
                                 journalpostId = "journalpostId",
                                 utførtAv = saksbehandler,

@@ -254,7 +254,7 @@ class OppgaveMediator(
                             oppgave.sendTilKontroll(sendTilKontrollHendelse)
                             behandlingKlient.godkjenn(
                                 behandlingId = oppgave.behandling.behandlingId,
-                                ident = oppgave.behandling.person.ident,
+                                ident = oppgave.personIdent(),
                                 saksbehandlerToken = saksbehandlerToken,
                             ).onSuccess {
                                 oppgaveRepository.lagre(oppgave)
@@ -290,7 +290,7 @@ class OppgaveMediator(
                 oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
                 behandlingKlient.sendTilbake(
                     behandlingId = oppgave.behandling.behandlingId,
-                    ident = oppgave.behandling.person.ident,
+                    ident = oppgave.personIdent(),
                     saksbehandlerToken = beslutterToken,
                 ).onSuccess {
                     oppgaveRepository.lagre(oppgave)
@@ -387,7 +387,7 @@ class OppgaveMediator(
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
             coroutineScope {
-                val person = async(Dispatchers.IO) { oppslag.hentPerson(oppgave.behandling.person.ident) }
+                val person = async(Dispatchers.IO) { oppslag.hentPerson(oppgave.personIdent()) }
                 val saksbehandler =
                     async(Dispatchers.IO) {
                         oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
@@ -443,14 +443,14 @@ class OppgaveMediator(
                     utsendingMediator.opprettUtsending(
                         oppgave.oppgaveId,
                         godkjentBehandlingHendelse.meldingOmVedtak,
-                        oppgave.behandling.person.ident,
+                        oppgave.personIdent(),
                     )
 
                 when (ferdigstillBehandling) {
                     Oppgave.FerdigstillBehandling.GODKJENN -> {
                         behandlingKlient.godkjenn(
                             behandlingId = oppgave.behandling.behandlingId,
-                            ident = oppgave.behandling.person.ident,
+                            ident = oppgave.personIdent(),
                             saksbehandlerToken = saksbehandlerToken,
                         ).onSuccess {
                             oppgaveRepository.lagre(oppgave)
@@ -473,7 +473,7 @@ class OppgaveMediator(
                     Oppgave.FerdigstillBehandling.BESLUTT -> {
                         behandlingKlient.beslutt(
                             behandlingId = oppgave.behandling.behandlingId,
-                            ident = oppgave.behandling.person.ident,
+                            ident = oppgave.personIdent(),
                             saksbehandlerToken = saksbehandlerToken,
                         ).onSuccess {
                             oppgaveRepository.lagre(oppgave)
@@ -506,7 +506,7 @@ class OppgaveMediator(
 
             behandlingKlient.godkjenn(
                 behandlingId = oppgave.behandling.behandlingId,
-                ident = oppgave.behandling.person.ident,
+                ident = oppgave.personIdent(),
                 saksbehandlerToken = saksbehandlerToken,
             ).onSuccess {
                 oppgaveRepository.lagre(oppgave)

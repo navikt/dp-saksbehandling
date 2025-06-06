@@ -51,7 +51,7 @@ class UtsendingAlarmRepositoryTest {
             Utsending(
                 oppgaveId = oppgave.oppgaveId,
                 brev = "brev",
-                ident = oppgave.behandling.person.ident,
+                ident = oppgave.personIdent(),
             )
         sessionOf(this).use { session ->
             session.run(

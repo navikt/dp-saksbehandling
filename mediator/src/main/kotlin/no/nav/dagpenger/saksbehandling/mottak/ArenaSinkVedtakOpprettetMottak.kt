@@ -53,7 +53,7 @@ class ArenaSinkVedtakOpprettetMottak(
     ) {
         val behandlingId = packet["kilde"]["id"].asUUID()
         val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
-        val ident = oppgave.behandling.person.ident
+        val ident = oppgave.personIdent()
         val sakId = packet["sakId"].asText()
         val vedtakstatus = packet["vedtakstatus"].asText()
 
@@ -85,7 +85,7 @@ class ArenaSinkVedtakOpprettetMottak(
             "@event_name" to "start_utsending",
             "behandlingId" to oppgave.behandling.behandlingId,
             "oppgaveId" to oppgave.oppgaveId,
-            "ident" to oppgave.behandling.person.ident,
+            "ident" to oppgave.personIdent(),
             "sak" to
                 mapOf(
                     "id" to sakId,

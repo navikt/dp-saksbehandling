@@ -148,6 +148,8 @@ data class Oppgave private constructor(
     val tilstandslogg: Tilstandslogg
         get() = _tilstandslogg
 
+    fun personIdent() = behandling.person.ident
+
     fun tilstand() = this.tilstand
 
     fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {

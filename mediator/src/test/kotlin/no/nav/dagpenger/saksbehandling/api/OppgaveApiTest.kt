@@ -213,7 +213,7 @@ class OppgaveApiTest {
                         {
                           "oppgaveId": "${oppgave1.oppgaveId}",
                           "behandlingId": "${oppgave1.behandling.behandlingId}",
-                          "personIdent": "${oppgave1.behandling.person.ident}",
+                          "personIdent": "${oppgave1.personIdent()}",
                           "emneknagger": [],
                           "skjermesSomEgneAnsatte": ${oppgave1.behandling.person.skjermesSomEgneAnsatte},
                           "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
@@ -224,7 +224,7 @@ class OppgaveApiTest {
                         {
                           "oppgaveId": "${oppgave2.oppgaveId}",
                           "behandlingId": "${oppgave2.behandling.behandlingId}",
-                          "personIdent": "${oppgave2.behandling.person.ident}",
+                          "personIdent": "${oppgave2.personIdent()}",
                           "emneknagger": [],
                           "skjermesSomEgneAnsatte": ${oppgave2.behandling.person.skjermesSomEgneAnsatte},
                           "adressebeskyttelseGradering": "${AdressebeskyttelseGraderingDTO.UGRADERT}",
@@ -916,7 +916,7 @@ class OppgaveApiTest {
                     {
                       "behandlingId": "${testOppgave.behandling.behandlingId}",
                       "person": {
-                        "ident": "${testOppgave.behandling.person.ident}",
+                        "ident": "${testOppgave.personIdent()}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -1079,7 +1079,7 @@ class OppgaveApiTest {
                     {
                       "behandlingId": "${testOppgave.behandling.behandlingId}",
                       "person": {
-                        "ident": "${testOppgave.behandling.person.ident}",
+                        "ident": "${testOppgave.personIdent()}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",

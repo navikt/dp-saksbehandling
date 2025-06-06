@@ -82,7 +82,7 @@ internal class OppgaveDTOMapper(
 
     suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
         return coroutineScope {
-            val person = async { oppslag.hentPerson(oppgave.behandling.person.ident) }
+            val person = async { oppslag.hentPerson(oppgave.personIdent()) }
             val journalpostIder = async { oppslag.hentJournalpostIder(oppgave) }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
@@ -202,7 +202,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
         behandlingId = this.behandling.behandlingId,
-        personIdent = this.behandling.person.ident,
+        personIdent = this.personIdent(),
         tidspunktOpprettet = this.opprettet,
         behandlingType = this.behandling.tilBehandlingTypeDTO(),
         emneknagger = this.emneknagger.toList(),
