@@ -37,6 +37,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
         sessionOf(datasource).use { session ->
             session.transaction { tx ->
                 tx.lagre(klageBehandling)
+                tx.kanskjeLagre(klageBehandling)
             }
         }
     }
@@ -64,6 +65,30 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 )
             }
         return klageBehandling
+    }
+
+    private fun TransactionalSession.lagreBehandling(klageBehandling: KlageBehandling) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO behandling_v1
+                        (id, person_id, opprettet, behandling_type)
+                    VALUES
+                        (:id, :person_id, :opprettet, :behandling_type) 
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "id" to klageBehandling.behandlingId,
+                        "person_id" to klageBehandling.person.id,
+                        "opprettet" to klageBehandling.op
+                        "behandling_type" to klageBehandling.type.name,
+                    ),
+            ).asUpdate,
+        )
+        this.lagreHendelse(klageBehandling.behandlingId, klageBehandling.hendelse)
     }
 
     private fun TransactionalSession.lagre(klageBehandling: KlageBehandling) {
@@ -172,6 +197,9 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
             opplysninger = opplysninger,
             tilstandslogg = tilstandslogg,
         )
+    }
+
+    private fun TransactionalSession.kanskjeLagre(klageBehandling: KlageBehandling) {
     }
 
     private fun hentKlageTilstandslogg(

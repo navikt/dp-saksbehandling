@@ -59,9 +59,14 @@ class KlageMediator(
     }
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
+        //todo her kan en Exception kastes hvis personen ikke finnes
+        val person = oppgaveMediator.hentPerson(klageMottattHendelse.ident)
+
         val klageBehandling =
             KlageBehandling(
                 journalpostId = klageMottattHendelse.journalpostId,
+                opprettet  = klageMottattHendelse.opprettet,
+                person = person,
                 tilstandslogg =
                     KlageTilstandslogg(
                         KlageTilstandsendring(
@@ -91,9 +96,14 @@ class KlageMediator(
     }
 
     fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): Oppgave {
+        //todo her kan en Exception kastes hvis personen ikke finnes
+        val person = oppgaveMediator.hentPerson(manuellKlageMottattHendelse.ident)
+
         val klageBehandling =
             KlageBehandling(
                 journalpostId = manuellKlageMottattHendelse.journalpostId,
+                person = person,
+                opprettet = manuellKlageMottattHendelse.opprettet,
                 tilstandslogg =
                     KlageTilstandslogg(
                         KlageTilstandsendring(

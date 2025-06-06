@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -13,12 +14,15 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.UtfallType.Companion.toUtfallType
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
 data class KlageBehandling private constructor(
     val behandlingId: UUID = UUIDv7.ny(),
+    val person: Person,
+    val opprettet: LocalDateTime,
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private var tilstand: KlageTilstand = Behandles,
     private val journalpostId: String? = null,
@@ -37,9 +41,13 @@ data class KlageBehandling private constructor(
     constructor(
         journalpostId: String? = null,
         tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
+        person: Person,
+        opprettet: LocalDateTime = LocalDateTime.now(),
     ) : this (
         journalpostId = journalpostId,
         _tilstandslogg = tilstandslogg,
+        person = person,
+        opprettet = opprettet,
     )
 
     init {
@@ -49,6 +57,8 @@ data class KlageBehandling private constructor(
     companion object {
         fun rehydrer(
             behandlingId: UUID,
+            person: Person,
+            opprettet: LocalDateTime,
             opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
             tilstand: KlageTilstand,
             journalpostId: String?,
@@ -66,6 +76,8 @@ data class KlageBehandling private constructor(
         ): KlageBehandling =
             KlageBehandling(
                 behandlingId = behandlingId,
+                person = person,
+                opprettet = opprettet,
                 opplysninger = opplysninger,
                 tilstand = tilstand,
                 journalpostId = journalpostId,
