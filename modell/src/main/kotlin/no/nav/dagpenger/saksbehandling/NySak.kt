@@ -4,7 +4,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHen
 import java.time.LocalDateTime
 import java.util.UUID
 
-class NyPerson(
+data class NyPerson(
     val id: UUID = UUIDv7.ny(),
     val ident: String,
     val skjermesSomEgneAnsatte: Boolean,

@@ -1,11 +1,15 @@
 package no.nav.dagpenger.saksbehandling.db.sak
 
+import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.NyBehandling
 import no.nav.dagpenger.saksbehandling.NyPerson
 import no.nav.dagpenger.saksbehandling.NySak
+import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -37,11 +41,93 @@ class PostgresRepository(
         }
     }
 
+    override fun hent(ident: String): NyPerson {
+        return finn(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
+    }
+
+    override fun finn(ident: String): NyPerson? {
+        sessionOf(dataSource).use { session ->
+            return session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT * 
+                        FROM   person_v1
+                        WHERE  ident = :ident
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "ident" to ident,
+                        ),
+                ).map { row ->
+                    row.tilPerson()
+                }.asSingle,
+            )
+        }
+    }
+
     private fun TransactionalSession.lagreSaker(
         personId: UUID,
         saker: List<NySak>,
     ) {
         saker.forEach { sak -> this.lagreSak(personId, sak) }
+    }
+
+    private fun NyPerson.finnSaker() {
+        sessionOf(dataSource).use { session ->
+            val saker: List<NySak> =
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT id, soknad_id, opprettet
+                            FROM   sak_v2
+                            WHERE  person_id = :person_id
+                            """.trimIndent(),
+                        paramMap =
+                            mapOf(
+                                "person_id" to this.id,
+                            ),
+                    ).map { row ->
+                        row.tilSak()
+                    }.asList,
+                )
+            saker.forEach { sak ->
+                this.leggTilSak(sak)
+            }
+        }
+    }
+
+    private fun NySak.finnBehandlinger() {
+        sessionOf(dataSource).use { session ->
+            val behandlinger: List<NyBehandling> =
+                session.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            SELECT    beha.id AS behandling_id
+                                    , beha.behandling_type
+                                    , beha.opprettet
+                                    , oppg.id AS oppgave_id
+                            FROM      behandling_v2 beha
+                            LEFT JOIN oppgave_v1    oppg ON oppg.behandling_id = beha.id
+                            WHERE     beha.sak_id = :sak_id
+                            """.trimIndent(),
+                        paramMap =
+                            mapOf(
+                                "sak_id" to this.id,
+                            ),
+                    ).map { row ->
+                        row.tilBehandling()
+                    }.asList,
+                )
+            behandlinger.forEach { behandling ->
+                this.leggTilBehandling(behandling)
+            }
+        }
     }
 
     private fun TransactionalSession.lagreSak(
@@ -104,12 +190,47 @@ class PostgresRepository(
         )
     }
 
-    override fun hent(ident: String): NyPerson {
-        TODO("Not yet implemented")
+    private fun Row.tilPerson(): NyPerson {
+        val person =
+            NyPerson(
+                id = this.uuid("id"),
+                ident = this.string("ident"),
+                skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
+                adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
+            ).also { person ->
+                person.finnSaker()
+            }
+
+        return person
     }
 
-    override fun finn(ident: String): NyPerson? {
-        TODO("Not yet implemented")
+    private fun Row.tilSak(): NySak {
+        val sak =
+            NySak(
+                id = this.uuid("id"),
+                søknadId = this.uuid("soknad_id"),
+                opprettet = this.localDateTime("opprettet"),
+            ).also { sak ->
+                sak.finnBehandlinger()
+            }
+
+        return sak
+    }
+
+    private fun Row.tilBehandling(): NyBehandling {
+        val behandling =
+            NyBehandling(
+                behandlingId = this.uuid("behandling_id"),
+                behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
+                opprettet = this.localDateTime("opprettet"),
+                oppgaveId = this.uuidOrNull("oppgave_id"),
+            )
+
+        return behandling
+    }
+
+    private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
+        return AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
     }
 
     private fun TransactionalSession.lagrePerson(person: NyPerson) {
