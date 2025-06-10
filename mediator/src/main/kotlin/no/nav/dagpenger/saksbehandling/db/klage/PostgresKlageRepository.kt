@@ -39,8 +39,8 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
     override fun lagre(klageBehandling: KlageBehandling) {
         sessionOf(datasource).use { session ->
             session.transaction { tx ->
-                tx.lagre(klageBehandling)
                 tx.lagre(klageBehandling.person)
+                tx.lagre(klageBehandling)
                 tx.lagreBehandlingFor(klageBehandling)
             }
         }
@@ -81,30 +81,6 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
             }
         return klageBehandling
     }
-
-//    private fun TransactionalSession.lagreBehandling(klageBehandling: KlageBehandling) {
-//        run(
-//            queryOf(
-//                //language=PostgreSQL
-//                statement =
-//                    """
-//                    INSERT INTO behandling_v1
-//                        (id, person_id, opprettet, behandling_type)
-//                    VALUES
-//                        (:id, :person_id, :opprettet, :behandling_type)
-//                    ON CONFLICT DO NOTHING
-//                    """.trimIndent(),
-//                paramMap =
-//                    mapOf(
-//                        "id" to klageBehandling.behandlingId,
-//                        "person_id" to klageBehandling.person.id,
-//                        "opprettet" to klageBehandling.opprettet,
-//                        "behandling_type" to BehandlingType.KLAGE.name,
-//                    ),
-//            ).asUpdate,
-//        )
-// //        this.lagreHendelse(klageBehandling.behandlingId, klageBehandling.hendelse)
-//    }
 
     private fun TransactionalSession.lagre(klageBehandling: KlageBehandling) {
         run(
@@ -149,7 +125,9 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         (id, ident, skjermes_som_egne_ansatte, adressebeskyttelse_gradering) 
                     VALUES
                         (:id, :ident, :skjermes_som_egne_ansatte, :adressebeskyttelse_gradering) 
-                    ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte , adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
+                    ON CONFLICT (id) DO UPDATE 
+                    SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte, 
+                        adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
                     """.trimIndent(),
                 paramMap =
                     mapOf(

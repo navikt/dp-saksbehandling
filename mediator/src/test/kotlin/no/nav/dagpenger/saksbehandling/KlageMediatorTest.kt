@@ -60,6 +60,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import javax.sql.DataSource
 
 class KlageMediatorTest {
     private val testPersonIdent = "12345678901"
@@ -123,7 +124,7 @@ class KlageMediatorTest {
     fun `Livssyklus til en klage som ferdigstilles med opprettholdelse`() {
         val fagsakId = UUIDv7.ny()
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-        withMigratedDb { datasource ->
+        setupDb { datasource ->
             val klageRepository = PostgresKlageRepository(datasource)
             val oppgaveMediator =
                 OppgaveMediator(
@@ -253,7 +254,7 @@ class KlageMediatorTest {
         val fagsakId = UUIDv7.ny()
         val nå = LocalDateTime.now()
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-        withMigratedDb { datasource ->
+        setupDb { datasource ->
             val klageRepository = PostgresKlageRepository(datasource)
             val oppgaveMediator =
                 OppgaveMediator(
@@ -387,7 +388,7 @@ class KlageMediatorTest {
     @Test
     fun `Livssyklus til en klage som ferdigstilles med avvisning`() {
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-        withMigratedDb { datasource ->
+        setupDb { datasource ->
             val klageRepository = PostgresKlageRepository(datasource)
             val oppgaveMediator =
                 OppgaveMediator(
@@ -466,7 +467,7 @@ class KlageMediatorTest {
     @Test
     fun `Livssyklus til en klage som avbrytes`() {
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-        withMigratedDb { datasource ->
+        setupDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = PostgresPersonRepository(datasource),
@@ -532,7 +533,8 @@ class KlageMediatorTest {
     @Test
     fun `Kan ikke ferdigstille en klage med medhold`() {
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-        withMigratedDb { datasource ->
+        setupDb { datasource ->
+
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = PostgresPersonRepository(datasource),
@@ -600,7 +602,7 @@ class KlageMediatorTest {
     @Test
     fun `Kan ikke ferdigstille en klage med delvis medhold`() {
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-        withMigratedDb { datasource ->
+        setupDb { datasource ->
             val oppgaveMediator =
                 OppgaveMediator(
                     personRepository = PostgresPersonRepository(datasource),
@@ -899,5 +901,19 @@ class KlageMediatorTest {
                     .single { it.type == FULLMEKTIG_LAND }.opplysningId,
             svar = Verdi.TekstVerdi("Norge"),
         )
+    }
+
+    private fun setupDb(test: (DataSource) -> Unit) {
+        withMigratedDb { datasource ->
+            val personRepository = PostgresPersonRepository(datasource)
+            personRepository.lagre(
+                Person(
+                    ident = testPersonIdent,
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                ),
+            )
+            test(datasource)
+        }
     }
 }
