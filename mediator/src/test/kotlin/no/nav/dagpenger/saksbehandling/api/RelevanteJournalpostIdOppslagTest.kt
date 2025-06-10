@@ -6,10 +6,12 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType
+import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
-import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdKlient
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.lagBehandling
@@ -24,22 +26,24 @@ class RelevanteJournalpostIdOppslagTest {
     fun `For søknadsbehandling skal vi først hente journalposter for søknad og ettersendinger sortert stigende og deretter utsending`() {
         val oppgave =
             lagOppgave(
-                behandling =
-                    lagBehandling(
-                        hendelse =
-                            SøknadsbehandlingOpprettetHendelse(
-                                søknadId = UUIDv7.ny(),
-                                behandlingId = UUIDv7.ny(),
-                                ident = "12345678901",
-                                opprettet = LocalDateTime.now(),
-                            ),
-                    ),
+                tilstandslogg =
+                    Tilstandslogg().also {
+                        it.leggTil(
+                            nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            hendelse =
+                                ForslagTilVedtakHendelse(
+                                    søknadId = UUIDv7.ny(),
+                                    behandlingId = UUIDv7.ny(),
+                                    ident = "12345678901",
+                                ),
+                        )
+                    },
             )
 
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
                 journalpostIdKlient =
-                    mockk<JournalpostIdKlient>().also {
+                    mockk<JournalpostIdKlient>(relaxed = false).also {
                         coEvery { it.hentJournalpostIder(any(), any()) } returns Result.success(listOf("3", "4", "2"))
                     },
                 klageRepository = mockk(),
@@ -61,7 +65,7 @@ class RelevanteJournalpostIdOppslagTest {
         val klageBehandling = lagBehandling(type = BehandlingType.KLAGE)
         val oppgave =
             lagOppgave(
-                behandling = klageBehandling,
+                behandlingType = BehandlingType.KLAGE,
             )
         val testPerson =
             Person(
