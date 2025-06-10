@@ -7,6 +7,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
@@ -54,17 +55,28 @@ internal class NyBehandlingOpprettetMottak(
 
         when (behandlingType) {
             "Søknad" -> {
-                val søknadId = packet.søknadId()
-                withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse for søknad" }
-                    sakMediator.opprettSak(
-                        SøknadsbehandlingOpprettetHendelse(
-                            søknadId = søknadId,
-                            behandlingId = behandlingId,
-                            ident = ident,
-                            opprettet = opprettet,
-                        ),
-                    )
+                val erAdresseBeskyttetPerson =
+                    runBlocking {
+                        pdlKlient.erAdressebeskyttet(ident).getOrThrow()
+                    }
+
+                val erSkjermetPerson =
+                    runBlocking {
+                        skjermingKlient.erSkjermetPerson(ident).getOrThrow()
+                    }
+                if (!erAdresseBeskyttetPerson && !erSkjermetPerson) {
+                    val søknadId = packet.søknadId()
+                    withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+                        logger.info { "Mottok behandling_opprettet hendelse for søknad" }
+                        sakMediator.opprettSak(
+                            SøknadsbehandlingOpprettetHendelse(
+                                søknadId = søknadId,
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                opprettet = opprettet,
+                            ),
+                        )
+                    }
                 }
             }
 

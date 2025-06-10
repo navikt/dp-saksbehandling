@@ -239,17 +239,9 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun slettBehandling(behandlingId: UUID) {
-        val behandling =
-            try {
-                hentBehandling(behandlingId)
-            } catch (e: DataNotFoundException) {
-                logger.warn("Behandling med id $behandlingId finnes ikke, sletter ikke noe")
-                return
-            }
         sessionOf(datasource).use { session ->
             session.transaction { tx ->
                 tx.slettBehandling(behandlingId)
-                tx.slettPersonUtenBehandlinger(behandling.person.ident)
             }
         }
     }
@@ -297,9 +289,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         )
                     Behandling.rehydrer(
                         behandlingId = behandlingId,
-                        person = person,
                         opprettet = row.localDateTime("opprettet"),
-                        hendelse = finnHendelseForBehandling(behandlingId, datasource),
                         type = BehandlingType.valueOf(row.string("behandling_type")),
                     )
                 }.asSingle,
@@ -898,7 +888,6 @@ private fun TransactionalSession.lagreHendelse(
 }
 
 private fun TransactionalSession.lagre(behandling: Behandling) {
-    this.lagre(behandling.person)
     run(
         queryOf(
             //language=PostgreSQL

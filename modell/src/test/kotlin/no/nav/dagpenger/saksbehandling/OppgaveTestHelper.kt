@@ -46,8 +46,6 @@ object OppgaveTestHelper {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                person =
-                person,
                 opprettet = LocalDateTime.now(),
             )
         return Oppgave.rehydrer(
