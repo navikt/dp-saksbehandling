@@ -46,22 +46,37 @@ class PostgresRepository(
     }
 
     override fun finn(ident: String): NyPerson? {
+        val person = mutableListOf<NyPerson>()
+
         sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
-                    //language=PostgreSQL
                     statement =
                         """
-                        SELECT * 
-                        FROM   person_v1
-                        WHERE  ident = :ident
+                        SELECT 
+                            per.id AS person_id,
+                            per.ident AS person_ident,
+                            per.adressebeskyttelse_gradering AS person_adressebeskyttelse_gradering,
+                            per.skjermes_som_egne_ansatte AS person_skjermes_som_egne_ansatte,
+                            sak.id AS sak_id,
+                            sak.soknad_id AS sak_soknad_id,
+                            sak.opprettet AS sak_opprettet,
+                            beh.id AS behandling_id,
+                            beh.behandling_type AS behandling_type,
+                            beh.opprettet AS behandling_opprettet,
+                            opp.id AS oppgave_id
+                        FROM person_v1 per
+                        LEFT JOIN sak_v2 sak ON sak.person_id = per.id
+                        LEFT JOIN behandling_v1 beh ON beh.sak_id = sak.id
+                        LEFT JOIN oppgave_v1 opp ON opp.behandling_id = beh.id
+                        WHERE per.ident = :ident
                         """.trimIndent(),
                     paramMap =
                         mapOf(
                             "ident" to ident,
                         ),
                 ).map { row ->
-                    row.tilPerson()
+                    row.tilPerson(person)
                 }.asSingle,
             )
         }
@@ -72,62 +87,6 @@ class PostgresRepository(
         saker: List<NySak>,
     ) {
         saker.forEach { sak -> this.lagreSak(personId, sak) }
-    }
-
-    private fun NyPerson.finnSaker() {
-        sessionOf(dataSource).use { session ->
-            val saker: List<NySak> =
-                session.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement =
-                            """
-                            SELECT id, soknad_id, opprettet
-                            FROM   sak_v2
-                            WHERE  person_id = :person_id
-                            """.trimIndent(),
-                        paramMap =
-                            mapOf(
-                                "person_id" to this.id,
-                            ),
-                    ).map { row ->
-                        row.tilSak()
-                    }.asList,
-                )
-            saker.forEach { sak ->
-                this.leggTilSak(sak)
-            }
-        }
-    }
-
-    private fun NySak.finnBehandlinger() {
-        sessionOf(dataSource).use { session ->
-            val behandlinger: List<NyBehandling> =
-                session.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement =
-                            """
-                            SELECT    beha.id AS behandling_id
-                                    , beha.behandling_type
-                                    , beha.opprettet
-                                    , oppg.id AS oppgave_id
-                            FROM      behandling_v2 beha
-                            LEFT JOIN oppgave_v1    oppg ON oppg.behandling_id = beha.id
-                            WHERE     beha.sak_id = :sak_id
-                            """.trimIndent(),
-                        paramMap =
-                            mapOf(
-                                "sak_id" to this.sakId,
-                            ),
-                    ).map { row ->
-                        row.tilBehandling()
-                    }.asList,
-                )
-            behandlinger.forEach { behandling ->
-                this.leggTilBehandling(behandling)
-            }
-        }
     }
 
     private fun TransactionalSession.lagreSak(
@@ -154,17 +113,29 @@ class PostgresRepository(
                     ),
             ).asUpdate,
         )
-        this.lagreBehandlinger(sak.sakId, sak.behandlinger())
+        this.lagreBehandlinger(
+            sakId = sak.sakId,
+            personId = personId,
+            behandlinger = sak.behandlinger(),
+        )
     }
 
     private fun TransactionalSession.lagreBehandlinger(
+        personId: UUID,
         sakId: UUID,
         behandlinger: List<NyBehandling>,
     ) {
-        behandlinger.forEach { behandling -> this.lagreBehandling(sakId, behandling) }
+        behandlinger.forEach { behandling ->
+            this.lagreBehandling(
+                sakId = sakId,
+                personId = personId,
+                behandling = behandling,
+            )
+        }
     }
 
     private fun TransactionalSession.lagreBehandling(
+        personId: UUID,
         sakId: UUID,
         behandling: NyBehandling,
     ) {
@@ -173,15 +144,16 @@ class PostgresRepository(
                 //language=PostgreSQL
                 statement =
                     """
-                    INSERT INTO behandling_v2
-                        (id, behandling_type, sak_id, opprettet) 
+                    INSERT INTO behandling_v1
+                        (id, person_id, behandling_type, sak_id, opprettet) 
                     VALUES
-                        (:id, :behandling_type,:sak_id, :opprettet) 
+                        (:id, :person_id, :behandling_type, :sak_id, :opprettet) 
                     ON CONFLICT (id) DO NOTHING 
                     """.trimIndent(),
                 paramMap =
                     mapOf(
                         "id" to behandling.behandlingId,
+                        "person_id" to personId,
                         "behandling_type" to behandling.behandlingType.name,
                         "sak_id" to sakId,
                         "opprettet" to behandling.opprettet,
@@ -190,47 +162,43 @@ class PostgresRepository(
         )
     }
 
-    private fun Row.tilPerson(): NyPerson {
+    private fun Row.tilPerson(nyPerson: MutableList<NyPerson>): NyPerson {
         val person =
-            NyPerson(
-                id = this.uuid("id"),
-                ident = this.string("ident"),
-                skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-                adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
-            ).also { person ->
-                person.finnSaker()
+            nyPerson.singleOrNull() ?: NyPerson(
+                id = this.uuid("person_id"),
+                ident = this.string("person_ident"),
+                skjermesSomEgneAnsatte = this.boolean("person_skjermes_som_egne_ansatte"),
+                adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("person_adressebeskyttelse_gradering")),
+            ).also {
+                nyPerson.add(it)
             }
 
+        // Map Sak
+        val sakId = this.uuidOrNull("sak_id")
+        if (sakId != null) {
+            val sak =
+                person.saker().singleOrNull { it.sakId == sakId } ?: NySak(
+                    sakId = sakId,
+                    søknadId = this.uuid("sak_soknad_id"),
+                    opprettet = this.localDateTime("sak_opprettet"),
+                ).also {
+                    person.leggTilSak(it)
+                }
+
+            // Map Behandling
+            val behandlingId = this.uuidOrNull("behandling_id")
+            if (behandlingId != null) {
+                sak.leggTilBehandling(
+                    NyBehandling(
+                        behandlingId = behandlingId,
+                        behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
+                        opprettet = this.localDateTime("behandling_opprettet"),
+                        oppgaveId = this.uuidOrNull("oppgave_id"),
+                    ),
+                )
+            }
+        }
         return person
-    }
-
-    private fun Row.tilSak(): NySak {
-        val sak =
-            NySak(
-                sakId = this.uuid("id"),
-                søknadId = this.uuid("soknad_id"),
-                opprettet = this.localDateTime("opprettet"),
-            ).also { sak ->
-                sak.finnBehandlinger()
-            }
-
-        return sak
-    }
-
-    private fun Row.tilBehandling(): NyBehandling {
-        val behandling =
-            NyBehandling(
-                behandlingId = this.uuid("behandling_id"),
-                behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
-                opprettet = this.localDateTime("opprettet"),
-                oppgaveId = this.uuidOrNull("oppgave_id"),
-            )
-
-        return behandling
-    }
-
-    private fun Row.adresseBeskyttelseGradering(): AdressebeskyttelseGradering {
-        return AdressebeskyttelseGradering.valueOf(this.string("adressebeskyttelse_gradering"))
     }
 
     private fun TransactionalSession.lagrePerson(person: NyPerson) {

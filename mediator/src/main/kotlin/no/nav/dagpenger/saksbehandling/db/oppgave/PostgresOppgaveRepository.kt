@@ -68,7 +68,7 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-class PostgresOppgaveRepository(private val datasource: DataSource) :
+class PostgresOppgaveRepository(private val dataSource: DataSource) :
     OppgaveRepository {
     override fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
@@ -82,7 +82,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
     ): UUID? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val emneknagger = filter.emneknagg.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
@@ -246,7 +246,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 logger.warn("Behandling med id $behandlingId finnes ikke, sletter ikke noe")
                 return
             }
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 tx.slettBehandling(behandlingId)
                 tx.slettPersonUtenBehandlinger(behandling.person.ident)
@@ -255,7 +255,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun lagre(behandling: Behandling) {
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 tx.lagre(behandling)
             }
@@ -263,7 +263,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun lagre(oppgave: Oppgave) {
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 tx.lagre(oppgave)
             }
@@ -271,7 +271,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun finnBehandling(behandlingId: UUID): Behandling? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -299,7 +299,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         behandlingId = behandlingId,
                         person = person,
                         opprettet = row.localDateTime("opprettet"),
-                        hendelse = finnHendelseForBehandling(behandlingId, datasource),
+                        hendelse = finnHendelseForBehandling(behandlingId, dataSource),
                         type = BehandlingType.valueOf(row.string("behandling_type")),
                     )
                 }.asSingle,
@@ -334,7 +334,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                         statement = "SELECT * FROM oppgave_v1 WHERE id = :oppgave_id",
                         paramMap = mapOf("oppgave_id" to oppgaveId),
                     ).map { row ->
-                        row.rehydrerOppgave(datasource)
+                        row.rehydrerOppgave(dataSource)
                     }.asSingle,
                 )
             }
@@ -342,7 +342,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -374,7 +374,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         ).oppgaver.singleOrNull()
 
     override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -394,7 +394,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -413,13 +413,13 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
     }
 
-    override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, datasource)
+    override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, dataSource)
 
     override fun lagreNotatFor(oppgave: Oppgave): LocalDateTime {
         return when (val notat = oppgave.tilstand().notat()) {
             null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
             else -> {
-                sessionOf(datasource).use { session ->
+                sessionOf(dataSource).use { session ->
                     session.lagreNotat(
                         notatId = notat.notatId,
                         tilstandsendringId = oppgave.tilstandslogg.first().id,
@@ -434,7 +434,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     override fun slettNotatFor(oppgave: Oppgave) {
         val tilstandsloggId = oppgave.tilstandslogg.first().id
 
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -446,7 +446,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -473,7 +473,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         ident: String,
         søknadId: UUID,
     ): Type? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -529,7 +529,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     )
 
     override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
             // TODO: sjekk på tilstand != OPPRETTET bør erstattes med noe logikk for ikke-søkbare tilstander
             val tilstandClause =
@@ -662,7 +662,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             val oppgaver =
                 session.run(
                     queryOf(statement = oppgaverQuery, paramMap = paramap).map { row ->
-                        row.rehydrerOppgave(datasource)
+                        row.rehydrerOppgave(dataSource)
                     }.asList,
                 )
             OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)

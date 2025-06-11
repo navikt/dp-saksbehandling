@@ -9,8 +9,24 @@ data class NyPerson(
     val ident: String,
     val skjermesSomEgneAnsatte: Boolean,
     val adressebeskyttelseGradering: AdressebeskyttelseGradering,
+    private val saker: MutableSet<NySak> = mutableSetOf(),
 ) {
-    private val saker: MutableSet<NySak> = mutableSetOf()
+    companion object {
+        fun rehydrer(
+            id: UUID,
+            ident: String,
+            skjermesSomEgneAnsatte: Boolean,
+            adressebeskyttelseGradering: AdressebeskyttelseGradering,
+            saker: Set<NySak>,
+        ) = NyPerson(
+            id = id,
+            ident = ident,
+            skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+            adressebeskyttelseGradering = adressebeskyttelseGradering,
+        ).also {
+            it.saker.addAll(saker)
+        }
+    }
 
     init {
         require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
@@ -29,9 +45,8 @@ data class NySak(
     val sakId: UUID = UUIDv7.ny(),
     val søknadId: UUID,
     val opprettet: LocalDateTime,
+    private val behandlinger: MutableList<NyBehandling> = mutableListOf(),
 ) {
-    private val behandlinger: MutableList<NyBehandling> = mutableListOf()
-
     fun behandlinger(): List<NyBehandling> = behandlinger.toList()
 
     fun leggTilBehandling(behandling: NyBehandling) = behandlinger.add(behandling)
