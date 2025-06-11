@@ -4,32 +4,17 @@ import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHen
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class NyPerson(
-    val id: UUID = UUIDv7.ny(),
-    val ident: String,
-    val skjermesSomEgneAnsatte: Boolean,
-    val adressebeskyttelseGradering: AdressebeskyttelseGradering,
+data class SakHistorikk(
+    val person: Person,
     private val saker: MutableSet<NySak> = mutableSetOf(),
 ) {
     companion object {
         fun rehydrer(
-            id: UUID,
-            ident: String,
-            skjermesSomEgneAnsatte: Boolean,
-            adressebeskyttelseGradering: AdressebeskyttelseGradering,
+            person: Person,
             saker: Set<NySak>,
-        ) = NyPerson(
-            id = id,
-            ident = ident,
-            skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
-            adressebeskyttelseGradering = adressebeskyttelseGradering,
-        ).also {
+        ) = SakHistorikk(person = person).also {
             it.saker.addAll(saker)
         }
-    }
-
-    init {
-        require(ident.matches(Regex("[0-9]{11}"))) { "Person-ident må ha 11 siffer, fikk ${ident.length}" }
     }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
@@ -42,12 +27,8 @@ data class NyPerson(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is NyPerson) return false
-
-        if (id != other.id) return false
-        if (ident != other.ident) return false
-        if (skjermesSomEgneAnsatte != other.skjermesSomEgneAnsatte) return false
-        if (adressebeskyttelseGradering != other.adressebeskyttelseGradering) return false
+        if (other !is SakHistorikk) return false
+        if (this.person != other.person) return false
         if (this.saker().sortedBy { it.sakId } != other.saker().sortedBy { it.sakId }) return false
 
         return true
@@ -85,7 +66,12 @@ data class NySak(
         if (sakId != other.sakId) return false
         if (søknadId != other.søknadId) return false
         if (opprettet != other.opprettet) return false
-        if (this.behandlinger().sortedBy { it.behandlingId } != other.behandlinger().sortedBy { it.behandlingId }) return false
+        if (this.behandlinger().sortedBy { it.behandlingId } !=
+            other.behandlinger()
+                .sortedBy { it.behandlingId }
+        ) {
+            return false
+        }
         return true
     }
 }

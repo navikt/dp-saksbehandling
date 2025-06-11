@@ -7,46 +7,41 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.NyBehandling
-import no.nav.dagpenger.saksbehandling.NyPerson
 import no.nav.dagpenger.saksbehandling.NySak
+import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import java.util.UUID
 import javax.sql.DataSource
 
 interface SakRepository {
-    fun lagre(sak: NySak)
+    fun lagre(sakHistorikk: SakHistorikk)
 
-    fun hent(sakId: UUID): NySak
+    fun hentSakHistorikk(ident: String): SakHistorikk
 
-    fun finnAlle(): Set<NySak>
-}
-
-interface NyPersonRepository {
-    fun lagre(person: NyPerson)
-
-    fun hent(ident: String): NyPerson
-
-    fun finn(ident: String): NyPerson?
+    fun finn(ident: String): SakHistorikk?
 }
 
 class PostgresRepository(
     private val dataSource: DataSource,
-) : NyPersonRepository {
-    override fun lagre(person: NyPerson) {
+) : SakRepository {
+    override fun lagre(sakHistorikk: SakHistorikk) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
-                tx.lagrePerson(person)
-                tx.lagreSaker(person.id, person.saker())
+                tx.lagreSakHistorikk(
+                    personId = sakHistorikk.person.id,
+                    saker = sakHistorikk.saker(),
+                )
             }
         }
     }
 
-    override fun hent(ident: String): NyPerson {
-        return finn(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
+    override fun hentSakHistorikk(ident: String): SakHistorikk {
+        return finn(ident) ?: throw DataNotFoundException("Kan ikke finne sakHistorikk for ident $ident")
     }
 
-    override fun finn(ident: String): NyPerson? {
-        val person = mutableListOf<NyPerson>()
+    override fun finn(ident: String): SakHistorikk? {
+        val person = mutableListOf<SakHistorikk>()
 
         sessionOf(dataSource).use { session ->
             return session.run(
@@ -82,7 +77,7 @@ class PostgresRepository(
         }
     }
 
-    private fun TransactionalSession.lagreSaker(
+    private fun TransactionalSession.lagreSakHistorikk(
         personId: UUID,
         saker: List<NySak>,
     ) {
@@ -162,27 +157,29 @@ class PostgresRepository(
         )
     }
 
-    private fun Row.tilPerson(nyPerson: MutableList<NyPerson>): NyPerson {
-        val person =
-            nyPerson.singleOrNull() ?: NyPerson(
-                id = this.uuid("person_id"),
-                ident = this.string("person_ident"),
-                skjermesSomEgneAnsatte = this.boolean("person_skjermes_som_egne_ansatte"),
-                adressebeskyttelseGradering = AdressebeskyttelseGradering.valueOf(this.string("person_adressebeskyttelse_gradering")),
-            ).also {
-                nyPerson.add(it)
-            }
+    private fun Row.tilPerson(sakHistorikkListe: MutableList<SakHistorikk>): SakHistorikk {
+        val sakHistorikk =
+            sakHistorikkListe.singleOrNull() ?: SakHistorikk(
+                person =
+                    Person(
+                        id = this.uuid("person_id"),
+                        ident = this.string("person_ident"),
+                        skjermesSomEgneAnsatte = this.boolean("person_skjermes_som_egne_ansatte"),
+                        adressebeskyttelseGradering =
+                            AdressebeskyttelseGradering.valueOf(this.string("person_adressebeskyttelse_gradering")),
+                    ),
+            ).also { sakHistorikkListe.add(it) }
 
         // Map Sak
         val sakId = this.uuidOrNull("sak_id")
         if (sakId != null) {
             val sak =
-                person.saker().singleOrNull { it.sakId == sakId } ?: NySak(
+                sakHistorikk.saker().singleOrNull { it.sakId == sakId } ?: NySak(
                     sakId = sakId,
                     søknadId = this.uuid("sak_soknad_id"),
                     opprettet = this.localDateTime("sak_opprettet"),
                 ).also {
-                    person.leggTilSak(it)
+                    sakHistorikk.leggTilSak(it)
                 }
 
             // Map Behandling
@@ -198,63 +195,6 @@ class PostgresRepository(
                 )
             }
         }
-        return person
-    }
-
-    private fun TransactionalSession.lagrePerson(person: NyPerson) {
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO person_v1
-                        (id, ident, skjermes_som_egne_ansatte, adressebeskyttelse_gradering) 
-                    VALUES
-                        (:id, :ident, :skjermes_som_egne_ansatte, :adressebeskyttelse_gradering) 
-                    ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte , adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "id" to person.id,
-                        "ident" to person.ident,
-                        "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
-                        "adressebeskyttelse_gradering" to person.adressebeskyttelseGradering.name,
-                    ),
-            ).asUpdate,
-        )
-    }
-}
-
-object InmemoryRepository : SakRepository, NyPersonRepository {
-    private val saker: MutableSet<NySak> = mutableSetOf()
-    private val personer: MutableSet<NyPerson> = mutableSetOf()
-
-    fun reset() {
-        personer.clear()
-        saker.clear()
-    }
-
-    override fun lagre(sak: NySak) {
-        saker.add(sak)
-    }
-
-    override fun hent(sakId: UUID): NySak {
-        return saker.single { it.sakId == sakId }
-    }
-
-    override fun lagre(person: NyPerson) {
-        personer.add(person)
-    }
-
-    override fun hent(ident: String): NyPerson {
-        return personer.single { it.ident == ident }
-    }
-
-    override fun finn(ident: String): NyPerson? {
-        return personer.find { it.ident == ident }
-    }
-
-    override fun finnAlle(): Set<NySak> {
-        return saker
+        return sakHistorikk
     }
 }

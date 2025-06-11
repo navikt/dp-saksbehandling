@@ -54,7 +54,7 @@ class NyPersonTest {
     fun `Rekkefølge og antall ganger en unik sak legges til er likegyldig`() {
         val id = UUIDv7.ny()
         val person1 =
-            NyPerson(
+            SakHistorikk(
                 id = id,
                 ident = "12345678901",
                 skjermesSomEgneAnsatte = false,
@@ -65,7 +65,7 @@ class NyPersonTest {
             }
 
         val person2 =
-            NyPerson(
+            SakHistorikk(
                 id = id,
                 ident = "12345678901",
                 skjermesSomEgneAnsatte = false,

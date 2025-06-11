@@ -6,9 +6,9 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.NyBehandling
-import no.nav.dagpenger.saksbehandling.NyPerson
 import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
@@ -63,8 +63,8 @@ class PostgresRepositoryTest {
             it.leggTilBehandling(behandling3)
             it.leggTilBehandling(behandling4)
         }
-    private val nyPerson =
-        NyPerson(
+    private val sakHistorikk =
+        SakHistorikk(
             ident = "12345678901",
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = UGRADERT,
@@ -77,12 +77,12 @@ class PostgresRepositoryTest {
     fun `Skal kunne lagre en person`() {
         withMigratedDb {
             val personRepository = PostgresRepository(dataSource = dataSource)
-            personRepository.lagre(nyPerson)
+            personRepository.lagre(sakHistorikk)
             dataSource.insertOppgaveRad(oppgaveId, behandling1.behandlingId)
 
-            val personFraDB = personRepository.hent(nyPerson.ident)
+            val personFraDB = personRepository.hent(sakHistorikk.ident)
 
-            personFraDB shouldBe nyPerson
+            personFraDB shouldBe sakHistorikk
         }
     }
 

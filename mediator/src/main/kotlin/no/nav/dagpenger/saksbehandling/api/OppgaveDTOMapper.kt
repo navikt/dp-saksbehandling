@@ -5,10 +5,10 @@ import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.NyPerson
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
@@ -37,11 +37,11 @@ internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
-    private fun hentNyPerson(ident: String): NyPerson? {
+    private fun hentNyPerson(ident: String): SakHistorikk? {
         return InmemoryRepository.finn(ident)
     }
 
-    private fun NyPerson?.saker(): List<SakDTO> {
+    private fun SakHistorikk?.saker(): List<SakDTO> {
         return when (this) {
             null -> emptyList()
             else ->
@@ -67,7 +67,7 @@ internal class OppgaveDTOMapper(
         }
     }
 
-    private fun NyPerson?.oppgaver(): List<OppgaveOversiktDTO> {
+    private fun SakHistorikk?.oppgaver(): List<OppgaveOversiktDTO> {
         return when (this) {
             null -> emptyList()
             else -> emptyList()
