@@ -49,43 +49,33 @@ class NyPersonTest {
             it.leggTilBehandling(behandling3)
             it.leggTilBehandling(behandling4)
         }
-    private val nyPerson =
-        NyPerson(
-            ident = "12345678901",
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = UGRADERT,
-        ).also {
-            it.leggTilSak(sak1)
-            it.leggTilSak(sak2)
-        }
 
     @Test
-    fun hubba() {
-        val person =
+    fun `Rekkefølge og antall ganger en unik sak legges til er likegyldig`() {
+        val id = UUIDv7.ny()
+        val person1 =
             NyPerson(
-                id = nyPerson.id,
-                ident = nyPerson.ident,
-                skjermesSomEgneAnsatte = nyPerson.skjermesSomEgneAnsatte,
-                adressebeskyttelseGradering = nyPerson.adressebeskyttelseGradering,
+                id = id,
+                ident = "12345678901",
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
             ).also {
-                it.leggTilSak(
-                    NySak(
-                        sakId = sak1.sakId,
-                        søknadId = sak1.søknadId,
-                        opprettet = sak1.opprettet,
-                        behandlinger = mutableListOf(behandling1, behandling2),
-                    ),
-                )
-                it.leggTilSak(
-                    NySak(
-                        sakId = sak2.sakId,
-                        søknadId = sak2.søknadId,
-                        opprettet = sak2.opprettet,
-                        behandlinger = mutableListOf(behandling3, behandling4),
-                    ),
-                )
+                it.leggTilSak(sak1)
+                it.leggTilSak(sak2)
             }
 
-        person shouldBe nyPerson
+        val person2 =
+            NyPerson(
+                id = id,
+                ident = "12345678901",
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            ).also {
+                it.leggTilSak(sak2)
+                it.leggTilSak(sak1)
+                it.leggTilSak(sak2)
+            }
+
+        person1 shouldBe person2
     }
 }

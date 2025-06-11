@@ -81,14 +81,8 @@ class PostgresRepositoryTest {
             dataSource.insertOppgaveRad(oppgaveId, behandling1.behandlingId)
 
             val personFraDB = personRepository.hent(nyPerson.ident)
-            val nyPerson1 = nyPerson
-            personFraDB.saker().first().behandlinger() shouldBe nyPerson.saker().first().behandlinger()
-            personFraDB.saker().last().behandlinger() shouldBe nyPerson.saker().last().behandlinger()
 
-            personFraDB.saker() shouldBe nyPerson1.saker()
-            personFraDB.saker shouldBe nyPerson1.saker
-
-            personFraDB shouldBe nyPerson1
+            personFraDB shouldBe nyPerson
         }
     }
 

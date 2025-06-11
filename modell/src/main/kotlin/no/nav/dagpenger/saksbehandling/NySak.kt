@@ -9,7 +9,7 @@ data class NyPerson(
     val ident: String,
     val skjermesSomEgneAnsatte: Boolean,
     val adressebeskyttelseGradering: AdressebeskyttelseGradering,
-    val saker: MutableSet<NySak> = mutableSetOf(),
+    private val saker: MutableSet<NySak> = mutableSetOf(),
 ) {
     companion object {
         fun rehydrer(
@@ -39,20 +39,35 @@ data class NyPerson(
     fun leggTilSak(sak: NySak) = saker.add(sak)
 
     fun saker(): List<NySak> = saker.toList()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is NyPerson) return false
+
+        if (id != other.id) return false
+        if (ident != other.ident) return false
+        if (skjermesSomEgneAnsatte != other.skjermesSomEgneAnsatte) return false
+        if (adressebeskyttelseGradering != other.adressebeskyttelseGradering) return false
+        if (this.saker().sortedBy { it.sakId } != other.saker().sortedBy { it.sakId }) return false
+
+        return true
+    }
 }
 
 data class NySak(
     val sakId: UUID = UUIDv7.ny(),
     val søknadId: UUID,
     val opprettet: LocalDateTime,
-    private val behandlinger: MutableList<NyBehandling> = mutableListOf(),
+    private val behandlinger: MutableSet<NyBehandling> = mutableSetOf(),
 ) {
     fun behandlinger(): List<NyBehandling> = behandlinger.toList()
 
     fun leggTilBehandling(behandling: NyBehandling) = behandlinger.add(behandling)
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        if (this.behandlinger.map { it.behandlingId }.containsAll(meldekortbehandlingOpprettetHendelse.basertPåBehandlinger)) {
+        if (this.behandlinger.map { it.behandlingId }
+                .containsAll(meldekortbehandlingOpprettetHendelse.basertPåBehandlinger)
+        ) {
             behandlinger.add(
                 NyBehandling(
                     behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
@@ -61,6 +76,17 @@ data class NySak(
                 ),
             )
         }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is NySak) return false
+
+        if (sakId != other.sakId) return false
+        if (søknadId != other.søknadId) return false
+        if (opprettet != other.opprettet) return false
+        if (this.behandlinger().sortedBy { it.behandlingId } != other.behandlinger().sortedBy { it.behandlingId }) return false
+        return true
     }
 }
 
