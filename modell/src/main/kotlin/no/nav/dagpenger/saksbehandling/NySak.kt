@@ -9,7 +9,7 @@ data class NyPerson(
     val ident: String,
     val skjermesSomEgneAnsatte: Boolean,
     val adressebeskyttelseGradering: AdressebeskyttelseGradering,
-    private val saker: MutableSet<NySak> = mutableSetOf(),
+    val saker: MutableSet<NySak> = mutableSetOf(),
 ) {
     companion object {
         fun rehydrer(

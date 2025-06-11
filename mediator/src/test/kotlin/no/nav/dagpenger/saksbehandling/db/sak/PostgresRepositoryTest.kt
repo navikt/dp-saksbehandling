@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling.db.sak
 
-import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -15,11 +14,12 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.sql.DataSource
 
 class PostgresRepositoryTest {
-    private val nå = LocalDateTime.now()
+    private val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
 
     private val oppgaveId = UUIDv7.ny()
     private val behandling1 =
@@ -86,8 +86,9 @@ class PostgresRepositoryTest {
             personFraDB.saker().last().behandlinger() shouldBe nyPerson.saker().last().behandlinger()
 
             personFraDB.saker() shouldBe nyPerson1.saker()
+            personFraDB.saker shouldBe nyPerson1.saker
 
-            personFraDB shouldBeEqual nyPerson
+            personFraDB shouldBe nyPerson1
         }
     }
 
