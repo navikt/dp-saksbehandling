@@ -1,19 +1,26 @@
 package no.nav.dagpenger.saksbehandling.sak
 
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.NyBehandling
 import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
-import no.nav.dagpenger.saksbehandling.db.sak.NyPersonRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonMediator
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 
 class SakMediator(
-    private val personRepository: NyPersonRepository,
+    private val personMediator: PersonMediator,
     private val sakRepository: SakRepository,
 ) {
+    fun hentSakHistorikk(ident: String): SakHistorikk {
+        return sakRepository.hentSakHistorikk(ident)
+    }
+
+    fun finnSak(ident: String): SakHistorikk? {
+        return sakRepository.finn(ident)
+    }
+
     fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         val sak =
             NySak(
@@ -29,17 +36,17 @@ class SakMediator(
                 )
             }
 
-        val person =
-            personRepository.finn(søknadsbehandlingOpprettetHendelse.ident) ?: SakHistorikk(
-                ident = søknadsbehandlingOpprettetHendelse.ident,
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-            ).also { it.leggTilSak(sak) }
-        personRepository.lagre(person)
+        val sakHistorikk =
+            sakRepository.finn(søknadsbehandlingOpprettetHendelse.ident) ?: SakHistorikk(
+                person = personMediator.finnEllerOpprettPerson(søknadsbehandlingOpprettetHendelse.ident),
+            )
+
+        sakHistorikk.leggTilSak(sak)
+        sakRepository.lagre(sakHistorikk)
     }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        personRepository.hent(meldekortbehandlingOpprettetHendelse.ident).knyttTilSak(
+        sakRepository.hentSakHistorikk(meldekortbehandlingOpprettetHendelse.ident).knyttTilSak(
             meldekortbehandlingOpprettetHendelse = meldekortbehandlingOpprettetHendelse,
         )
     }

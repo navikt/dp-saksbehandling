@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class NyPersonTest {
+class SaksHistorikkTest {
     private val nå = LocalDateTime.now()
     private val oppgaveId = UUIDv7.ny()
     private val behandling1 =
@@ -50,32 +50,33 @@ class NyPersonTest {
             it.leggTilBehandling(behandling4)
         }
 
+    private val person =
+        Person(
+            id = UUIDv7.ny(),
+            ident = "12345678901",
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = UGRADERT,
+        )
+
     @Test
     fun `Rekkefølge og antall ganger en unik sak legges til er likegyldig`() {
-        val id = UUIDv7.ny()
-        val person1 =
+        val sakHistorikk1 =
             SakHistorikk(
-                id = id,
-                ident = "12345678901",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
+                person = person,
             ).also {
                 it.leggTilSak(sak1)
                 it.leggTilSak(sak2)
             }
 
-        val person2 =
+        val saksHistorikk2 =
             SakHistorikk(
-                id = id,
-                ident = "12345678901",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
+                person = person,
             ).also {
                 it.leggTilSak(sak2)
                 it.leggTilSak(sak1)
                 it.leggTilSak(sak2)
             }
 
-        person1 shouldBe person2
+        sakHistorikk1 shouldBe saksHistorikk2
     }
 }

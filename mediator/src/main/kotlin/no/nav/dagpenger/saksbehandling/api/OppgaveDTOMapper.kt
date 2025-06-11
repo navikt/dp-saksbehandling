@@ -28,7 +28,6 @@ import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.sak.InmemoryRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import java.time.LocalDate
 import java.util.UUID
@@ -38,7 +37,8 @@ internal class OppgaveDTOMapper(
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
     private fun hentNyPerson(ident: String): SakHistorikk? {
-        return InmemoryRepository.finn(ident)
+        // todo
+        return null
     }
 
     private fun SakHistorikk?.saker(): List<SakDTO> {

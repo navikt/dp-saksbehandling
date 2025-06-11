@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.NyBehandling
 import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
@@ -20,6 +21,13 @@ import javax.sql.DataSource
 
 class PostgresRepositoryTest {
     private val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+    private val person =
+        Person(
+            id = UUIDv7.ny(),
+            ident = "12345678901",
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = UGRADERT,
+        )
 
     private val oppgaveId = UUIDv7.ny()
     private val behandling1 =
@@ -65,9 +73,7 @@ class PostgresRepositoryTest {
         }
     private val sakHistorikk =
         SakHistorikk(
-            ident = "12345678901",
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = UGRADERT,
+            person = person,
         ).also {
             it.leggTilSak(sak1)
             it.leggTilSak(sak2)
@@ -76,13 +82,13 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne lagre en person`() {
         withMigratedDb {
-            val personRepository = PostgresRepository(dataSource = dataSource)
-            personRepository.lagre(sakHistorikk)
+            val sakRepository = PostgresRepository(dataSource = dataSource)
+            sakRepository.lagre(sakHistorikk)
             dataSource.insertOppgaveRad(oppgaveId, behandling1.behandlingId)
 
-            val personFraDB = personRepository.hent(sakHistorikk.ident)
+            val saksHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
 
-            personFraDB shouldBe sakHistorikk
+            saksHistorikkFraDB shouldBe sakHistorikk
         }
     }
 
