@@ -47,7 +47,7 @@ internal class OppgaveDTOMapper(
             else ->
                 this.saker().map { sak ->
                     SakDTO(
-                        id = sak.id,
+                        id = sak.sakId,
                         behandlinger =
                             sak.behandlinger().map { behandling ->
                                 BehandlingDTO(

@@ -118,7 +118,7 @@ class PostgresRepository(
                             """.trimIndent(),
                         paramMap =
                             mapOf(
-                                "sak_id" to this.id,
+                                "sak_id" to this.sakId,
                             ),
                     ).map { row ->
                         row.tilBehandling()
@@ -147,14 +147,14 @@ class PostgresRepository(
                     """.trimIndent(),
                 paramMap =
                     mapOf(
-                        "id" to sak.id,
+                        "id" to sak.sakId,
                         "person_id" to personId,
                         "soknad_id" to sak.søknadId,
                         "opprettet" to sak.opprettet,
                     ),
             ).asUpdate,
         )
-        this.lagreBehandlinger(sak.id, sak.behandlinger())
+        this.lagreBehandlinger(sak.sakId, sak.behandlinger())
     }
 
     private fun TransactionalSession.lagreBehandlinger(
@@ -207,7 +207,7 @@ class PostgresRepository(
     private fun Row.tilSak(): NySak {
         val sak =
             NySak(
-                id = this.uuid("id"),
+                sakId = this.uuid("id"),
                 søknadId = this.uuid("soknad_id"),
                 opprettet = this.localDateTime("opprettet"),
             ).also { sak ->
@@ -271,7 +271,7 @@ object InmemoryRepository : SakRepository, NyPersonRepository {
     }
 
     override fun hent(sakId: UUID): NySak {
-        return saker.single { it.id == sakId }
+        return saker.single { it.sakId == sakId }
     }
 
     override fun lagre(person: NyPerson) {

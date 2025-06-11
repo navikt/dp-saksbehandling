@@ -26,7 +26,7 @@ data class NyPerson(
 }
 
 data class NySak(
-    val id: UUID = UUIDv7.ny(),
+    val sakId: UUID = UUIDv7.ny(),
     val søknadId: UUID,
     val opprettet: LocalDateTime,
 ) {
