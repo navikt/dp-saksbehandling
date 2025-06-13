@@ -59,7 +59,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
@@ -490,8 +489,6 @@ OppgaveMediatorTest {
                     utsendingMediator = utsendingMediatorMock,
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
             val søknadsbehandlingOpprettetHendelse =
@@ -577,8 +574,6 @@ OppgaveMediatorTest {
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     utsendingMediator = utsendingMediatorMock,
                 )
-
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
@@ -667,8 +662,6 @@ OppgaveMediatorTest {
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
                 )
-
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
 
             val søknadId = UUIDv7.ny()
             val søknadsbehandlingOpprettetHendelse =
@@ -767,8 +760,6 @@ OppgaveMediatorTest {
                     utsendingMediator = utsendingMediator,
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
             val søknadId = UUIDv7.ny()
             val søknadsbehandlingOpprettetHendelse =
                 SøknadsbehandlingOpprettetHendelse(
@@ -865,8 +856,6 @@ OppgaveMediatorTest {
                     utsendingMediator = utsendingMediator,
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
             val søknadId = UUIDv7.ny()
             val søknadsbehandlingOpprettetHendelse =
                 SøknadsbehandlingOpprettetHendelse(
@@ -942,8 +931,6 @@ OppgaveMediatorTest {
                     utsendingMediator = utsendingMediator,
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
             val søknadId = UUIDv7.ny()
             val søknadsbehandlingOpprettetHendelse =
                 SøknadsbehandlingOpprettetHendelse(
@@ -1006,8 +993,6 @@ OppgaveMediatorTest {
                     utsendingMediator = mockk(),
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
 
@@ -1067,8 +1052,6 @@ OppgaveMediatorTest {
                     utsendingMediator = mockk(),
                 )
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
 
@@ -1107,8 +1090,6 @@ OppgaveMediatorTest {
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
                 )
-
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
@@ -1183,8 +1164,6 @@ OppgaveMediatorTest {
                     it.setRapidsConnection(testRapid)
                 }
 
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
-
             val søknadId = UUIDv7.ny()
             val behandlingId = behandlingIDKreverIkkeTotrinnskontroll
 
@@ -1256,8 +1235,6 @@ OppgaveMediatorTest {
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
-
-            BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
 
             oppgaveMediator.opprettOppgaveForBehandling(
                 søknadsbehandlingOpprettetHendelse =
@@ -1351,7 +1328,6 @@ OppgaveMediatorTest {
                 it.setRapidsConnection(testRapid)
             }
 
-        BehandlingOpprettetMottak(testRapid, oppgaveMediator, pdlKlientMock, skjermingKlientMock)
         VedtakFattetMottak(testRapid, oppgaveMediator)
 
         val søknadId = UUIDv7.ny()

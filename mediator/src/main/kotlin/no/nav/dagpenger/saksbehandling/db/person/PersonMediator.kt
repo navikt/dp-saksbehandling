@@ -1,10 +1,12 @@
-package no.nav.dagpenger.saksbehandling.db.person
+
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import java.util.UUID
 
 class PersonMediator(
@@ -32,9 +34,23 @@ class PersonMediator(
                         skjermesSomEgneAnsatte = erSkjermet.await(),
                         adressebeskyttelseGradering = erAdresseBeskyttet.await(),
                     )
+                validerPerson(person)
                 personRepository.lagre(person)
                 person
             }
         }
     }
+
+    private fun validerPerson(person: Person) {
+        if (person.adressebeskyttelseGradering != AdressebeskyttelseGradering.UGRADERT) {
+            throw AdresseBeeskyttetPersonException()
+        }
+        if (person.skjermesSomEgneAnsatte) {
+            throw SkjermetPersonException()
+        }
+    }
 }
+
+internal class AdresseBeeskyttetPersonException() : RuntimeException("Person er adressebeskyttet")
+
+internal class SkjermetPersonException() : RuntimeException("Person er skjermet")
