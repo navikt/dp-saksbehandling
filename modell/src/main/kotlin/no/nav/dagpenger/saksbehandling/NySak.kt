@@ -4,37 +4,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHen
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class SakHistorikk(
-    val person: Person,
-    private val saker: MutableSet<NySak> = mutableSetOf(),
-) {
-    companion object {
-        fun rehydrer(
-            person: Person,
-            saker: Set<NySak>,
-        ) = SakHistorikk(person = person).also {
-            it.saker.addAll(saker)
-        }
-    }
-
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        saker.forEach { it.knyttTilSak(meldekortbehandlingOpprettetHendelse) }
-    }
-
-    fun leggTilSak(sak: NySak) = saker.add(sak)
-
-    fun saker(): List<NySak> = saker.toList()
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is SakHistorikk) return false
-        if (this.person != other.person) return false
-        if (this.saker().sortedBy { it.sakId } != other.saker().sortedBy { it.sakId }) return false
-
-        return true
-    }
-}
-
 data class NySak(
     val sakId: UUID = UUIDv7.ny(),
     val søknadId: UUID,
