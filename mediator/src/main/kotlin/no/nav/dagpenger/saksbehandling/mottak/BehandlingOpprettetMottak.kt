@@ -16,7 +16,7 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import java.util.UUID
 
-internal class NyBehandlingOpprettetMottak(
+internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
     private val sakMediator: SakMediator,
     private val pdlKlient: PDLKlient,

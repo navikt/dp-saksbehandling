@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class NyBehandlingOpprettetMottakTest {
+class BehandlingOpprettetMottakTest {
     val testIdent = "12345678901"
     val søknadId = UUID.randomUUID()
     val meldekortId = 123L
@@ -42,7 +42,7 @@ class NyBehandlingOpprettetMottakTest {
         }
 
     init {
-        NyBehandlingOpprettetMottak(testRapid, sakMediatorMock, pdlKlientMock, skjermetKlientMock)
+        BehandlingOpprettetMottak(testRapid, sakMediatorMock, pdlKlientMock, skjermetKlientMock)
     }
 
     @Test
