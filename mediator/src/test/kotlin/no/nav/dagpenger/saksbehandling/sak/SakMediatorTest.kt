@@ -35,6 +35,7 @@ class SakMediatorTest {
             behandlingId = behandlingIdMeldekort,
             ident = testIdent,
             opprettet = opprettet,
+            basertPåBehandlinger = listOf(behandlingIdSøknad),
         )
 
     private val oppslagMock: Oppslag =

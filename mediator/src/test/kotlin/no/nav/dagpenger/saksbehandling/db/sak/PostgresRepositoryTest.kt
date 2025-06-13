@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -82,6 +83,8 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne lagre en person`() {
         withMigratedDb {
+            val personRepository = PostgresPersonRepository(dataSource = dataSource)
+            personRepository.lagre(person)
             val sakRepository = PostgresRepository(dataSource = dataSource)
             sakRepository.lagre(sakHistorikk)
             dataSource.insertOppgaveRad(oppgaveId, behandling1.behandlingId)

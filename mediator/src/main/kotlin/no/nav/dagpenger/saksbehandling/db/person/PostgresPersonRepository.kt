@@ -15,13 +15,13 @@ import javax.sql.DataSource
 
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-class PostgresPersonRepository(private val datasource: DataSource) :
+class PostgresPersonRepository(private val dataSource: DataSource) :
     PersonRepository,
     SkjermingRepository,
     AdressebeskyttelseRepository {
     override fun finnPerson(ident: String): Person? {
         sikkerlogg.info { "Søker etter person med ident $ident" }
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -44,7 +44,7 @@ class PostgresPersonRepository(private val datasource: DataSource) :
 
     override fun finnPerson(id: UUID): Person? {
         sikkerlogg.info { "Søker etter person med id $id" }
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -79,7 +79,7 @@ class PostgresPersonRepository(private val datasource: DataSource) :
     override fun hentPerson(id: UUID) = finnPerson(id) ?: throw DataNotFoundException("Kan ikke finne person med id $id")
 
     override fun lagre(person: Person) {
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 tx.lagre(person)
             }
@@ -90,7 +90,7 @@ class PostgresPersonRepository(private val datasource: DataSource) :
         fnr: String,
         skjermet: Boolean,
     ): Int {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -114,7 +114,7 @@ class PostgresPersonRepository(private val datasource: DataSource) :
         fnr: String,
         adresseBeskyttelseGradering: AdressebeskyttelseGradering,
     ): Int {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -136,7 +136,7 @@ class PostgresPersonRepository(private val datasource: DataSource) :
 
     override fun eksistererIDPsystem(fnrs: Set<String>): Set<String> {
         val identer = fnrs.joinToString { "'$it'" }
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL

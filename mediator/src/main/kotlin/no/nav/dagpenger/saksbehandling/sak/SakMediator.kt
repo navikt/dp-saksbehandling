@@ -46,8 +46,9 @@ class SakMediator(
     }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        sakRepository.hentSakHistorikk(meldekortbehandlingOpprettetHendelse.ident).knyttTilSak(
-            meldekortbehandlingOpprettetHendelse = meldekortbehandlingOpprettetHendelse,
-        )
+        sakRepository.hentSakHistorikk(meldekortbehandlingOpprettetHendelse.ident).also {
+            it.knyttTilSak(meldekortbehandlingOpprettetHendelse)
+            sakRepository.lagre(it)
+        }
     }
 }
