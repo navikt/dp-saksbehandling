@@ -46,7 +46,7 @@ class ForslagTilVedtakMottakTest {
 
         val hendelse = slot<ForslagTilVedtakHendelse>()
         verify(exactly = 1) {
-            oppgaveMediator.settOppgaveKlarTilBehandling(capture(hendelse))
+            oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
         }
         hendelse.captured.ident shouldBe ident
         hendelse.captured.søknadId shouldBe søknadId
@@ -69,7 +69,7 @@ class ForslagTilVedtakMottakTest {
                     behandlingId = behandlingId,
                     emneknagger = setOf(AVSLAG.visningsnavn, AVSLAG_ALDER.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 
@@ -100,7 +100,7 @@ class ForslagTilVedtakMottakTest {
                             AVSLAG_UTDANNING.visningsnavn,
                         ),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 
@@ -116,7 +116,7 @@ class ForslagTilVedtakMottakTest {
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_VERNEPLIKT.visningsnavn),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 
@@ -132,7 +132,7 @@ class ForslagTilVedtakMottakTest {
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 
@@ -148,7 +148,7 @@ class ForslagTilVedtakMottakTest {
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 
@@ -164,7 +164,7 @@ class ForslagTilVedtakMottakTest {
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT_FISK.visningsnavn),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 
@@ -180,7 +180,7 @@ class ForslagTilVedtakMottakTest {
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_KONKURS.visningsnavn),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 
@@ -196,7 +196,7 @@ class ForslagTilVedtakMottakTest {
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 

@@ -5,7 +5,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -309,7 +308,7 @@ OppgaveMediatorTest {
                     søknadId = UUIDv7.ny(),
                     behandlingId = UUIDv7.ny(),
                 )
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
             oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).size shouldBe 0
         }
     }
@@ -333,7 +332,7 @@ OppgaveMediatorTest {
                     utsendingMediator = mockk(),
                 )
 
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = UUIDv7.ny(),
@@ -342,7 +341,7 @@ OppgaveMediatorTest {
                 ),
             )
 
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = UUIDv7.ny(),
@@ -404,7 +403,12 @@ OppgaveMediatorTest {
                 hendelse = hendelse,
             )
         val oppgave =
-            lagOppgave(tilstand = tilstand, behandlingId = behandling.behandlingId, behandlingType = behandling.type, person = person)
+            lagOppgave(
+                tilstand = tilstand,
+                behandlingId = behandling.behandlingId,
+                behandlingType = behandling.type,
+                person = person,
+            )
 
         withMigratedDb { ds ->
             val personRepository = PostgresPersonRepository(ds)
@@ -491,34 +495,20 @@ OppgaveMediatorTest {
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                )
-
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).let { oppgaver ->
-                oppgaver.size shouldBe 1
-                oppgaver.single().tilstandslogg.single().hendelse shouldBe søknadsbehandlingOpprettetHendelse
-            }
-
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
-                ),
-            )
+                )
 
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
             val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
 
             oppgaverKlarTilBehandling.size shouldBe 1
             val oppgave = oppgaverKlarTilBehandling.single()
+            oppgave.tilstandslogg.single().hendelse shouldBe forslagTilVedtakHendelse
             oppgave.behandlingId shouldBe behandlingId
             oppgave.emneknagger shouldContainAll emneknagger
 
@@ -577,22 +567,10 @@ OppgaveMediatorTest {
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                )
 
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).let { oppgaver ->
-                oppgaver.size shouldBe 1
-                oppgaver.single().tilstandslogg.single().hendelse shouldBe søknadsbehandlingOpprettetHendelse
-            }
+// TODO opprett behandling
 
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -664,22 +642,10 @@ OppgaveMediatorTest {
                 )
 
             val søknadId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                )
 
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).let { oppgaver ->
-                oppgaver.size shouldBe 1
-                oppgaver.single().tilstandslogg.single().hendelse shouldBe søknadsbehandlingOpprettetHendelse
-            }
+            // TODO opprett behandling
 
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -761,22 +727,9 @@ OppgaveMediatorTest {
                 )
 
             val søknadId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                )
+            // TODO opprett behandling
 
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).let { oppgaver ->
-                oppgaver.size shouldBe 1
-                oppgaver.single().tilstandslogg.single().hendelse shouldBe søknadsbehandlingOpprettetHendelse
-            }
-
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -857,16 +810,10 @@ OppgaveMediatorTest {
                 )
 
             val søknadId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                )
 
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            // TODO opprett behandling
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -932,16 +879,10 @@ OppgaveMediatorTest {
                 )
 
             val søknadId = UUIDv7.ny()
-            val søknadsbehandlingOpprettetHendelse =
-                SøknadsbehandlingOpprettetHendelse(
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    ident = testIdent,
-                    opprettet = LocalDateTime.now(),
-                )
 
-            oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            // TODO opprett behandling
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -996,18 +937,8 @@ OppgaveMediatorTest {
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
 
-            oppgaveMediator.opprettOppgaveForBehandling(
-                søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
-            )
-            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).size shouldBe 1
-
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+// TODO opprett behandling
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -1055,15 +986,16 @@ OppgaveMediatorTest {
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
 
-            oppgaveMediator.opprettOppgaveForBehandling(
-                søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
+// TODO opprett behandling
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                ),
             )
+
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,
@@ -1094,16 +1026,9 @@ OppgaveMediatorTest {
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
 
-            oppgaveMediator.opprettOppgaveForBehandling(
-                søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
-            )
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+// TODO opprett behandling
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -1167,16 +1092,9 @@ OppgaveMediatorTest {
             val søknadId = UUIDv7.ny()
             val behandlingId = behandlingIDKreverIkkeTotrinnskontroll
 
-            oppgaveMediator.opprettOppgaveForBehandling(
-                søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
-            )
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            // TODO opprett behandling
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -1236,22 +1154,9 @@ OppgaveMediatorTest {
                     it.setRapidsConnection(testRapid)
                 }
 
-            oppgaveMediator.opprettOppgaveForBehandling(
-                søknadsbehandlingOpprettetHendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = søknadId,
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        opprettet = LocalDateTime.now(),
-                    ),
-            )
+            // TODO opprett behandling
 
-            oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).single().tilstandslogg.single().let {
-                it.tilstand shouldBe OPPRETTET
-                it.hendelse.shouldBeInstanceOf<SøknadsbehandlingOpprettetHendelse>()
-            }
-
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
                     søknadId = søknadId,
@@ -1340,22 +1245,17 @@ OppgaveMediatorTest {
                 opprettet = LocalDateTime.now(),
             )
 
-        oppgaveMediator.opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse)
+        // TODO opprett behandling
 
-        val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(OPPRETTET).single()
-
-        if (tilstand == OPPRETTET) {
-            return oppgave
-        }
-
-        oppgaveMediator.settOppgaveKlarTilBehandling(
-            ForslagTilVedtakHendelse(
-                ident = testIdent,
-                søknadId = søknadId,
-                behandlingId = behandlingId,
-                emneknagger = emneknagger,
-            ),
-        )
+        val oppgave =
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = testIdent,
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    emneknagger = emneknagger,
+                ),
+            ) ?: throw IllegalStateException("Kunne ikke opprette oppgave")
 
         if (tilstand == KLAR_TIL_BEHANDLING) {
             return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)

@@ -30,7 +30,7 @@ class OppgaveMediatorAlertTest {
             meldingOmVedtakKlient = mockk(),
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
 
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = "12345678910",
                     søknadId = UUIDv7.ny(),

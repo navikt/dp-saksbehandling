@@ -124,7 +124,8 @@ class OppgaveMediator(
         }
     }
 
-    fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
+    fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
+        var oppgave: Oppgave? = null
         val behandling = oppgaveRepository.finnBehandling(forslagTilVedtakHendelse.behandlingId)
         if (behandling == null) {
             val feilmelding =
@@ -135,11 +136,11 @@ class OppgaveMediator(
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
             val person = personRepository.hentPerson(forslagTilVedtakHendelse.ident)
-            val oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
+            oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
 
             when (oppgave == null) {
                 true -> {
-                    val oppgave =
+                    oppgave =
                         Oppgave(
                             oppgaveId = UUIDv7.ny(),
                             emneknagger = forslagTilVedtakHendelse.emneknagger,
@@ -181,6 +182,7 @@ class OppgaveMediator(
                 }
             }
         }
+        return oppgave
     }
 
     fun fristillOppgave(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
