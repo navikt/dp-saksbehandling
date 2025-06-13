@@ -38,6 +38,10 @@ object AlertManager {
             override val feilMelding = "Oppgave ikke funnet"
             override val type: String = name
         },
+        BEHANDLING_IKKE_FUNNET {
+            override val feilMelding = "Behandling ikke funnet"
+            override val type: String = name
+        },
     }
 
     fun RapidsConnection.sendAlertTilRapid(

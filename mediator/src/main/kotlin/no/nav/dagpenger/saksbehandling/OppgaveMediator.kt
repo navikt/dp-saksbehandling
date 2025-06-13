@@ -7,7 +7,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.OPPGAVE_IKKE_FUNNET
+import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.BEHANDLING_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -36,7 +36,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendel
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -59,46 +58,6 @@ class OppgaveMediator(
 
     fun setRapidsConnection(rapidsConnection: RapidsConnection) {
         this.rapidsConnection = rapidsConnection
-    }
-
-    fun opprettOppgaveForBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        val person =
-            personRepository.finnPerson(søknadsbehandlingOpprettetHendelse.ident)
-                ?: runBlocking {
-                    oppslag.hentPersonMedSkjermingOgGradering(søknadsbehandlingOpprettetHendelse.ident)
-                }
-
-        if (oppgaveRepository.finnBehandling(søknadsbehandlingOpprettetHendelse.behandlingId) != null) {
-            logger.warn { "Mottatt hendelse behandling_opprettet, men behandling finnes allerede." }
-
-            return
-        }
-        val behandling =
-            Behandling(
-                behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                person = person,
-                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                hendelse = søknadsbehandlingOpprettetHendelse,
-            )
-
-        val oppgave =
-            Oppgave(
-                oppgaveId = UUIDv7.ny(),
-                emneknagger = emptySet(),
-                opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                tilstandslogg =
-                    Tilstandslogg(
-                        Tilstandsendring(
-                            tilstand = OPPRETTET,
-                            hendelse = søknadsbehandlingOpprettetHendelse,
-                        ),
-                    ),
-                behandlingId = behandling.behandlingId,
-                behandlingType = behandling.type,
-                person = person,
-            )
-
-        oppgaveRepository.lagre(oppgave)
     }
 
     fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
@@ -166,25 +125,41 @@ class OppgaveMediator(
     }
 
     fun settOppgaveKlarTilBehandling(forslagTilVedtakHendelse: ForslagTilVedtakHendelse) {
-        val oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
-        when (oppgave) {
-            null -> {
-                val feilmelding =
-                    "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                        "${forslagTilVedtakHendelse.behandlingId}." +
-                        "Fant ikke oppgave for behandlingen. Gjør derfor ingenting med hendelsen."
-                logger.error { feilmelding }
-                sendAlertTilRapid(OPPGAVE_IKKE_FUNNET, feilmelding)
-            }
+        val behandling = oppgaveRepository.finnBehandling(forslagTilVedtakHendelse.behandlingId)
+        if (behandling == null) {
+            val feilmelding =
+                "Mottatt hendelse forslag_til_vedtak for behandling med id " +
+                    "${forslagTilVedtakHendelse.behandlingId}." +
+                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
+            logger.error { feilmelding }
+            sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
+        } else {
+            val person = personRepository.hentPerson(forslagTilVedtakHendelse.ident)
+            val oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
 
-            else -> {
-                withLoggingContext(
-                    "oppgaveId" to oppgave.oppgaveId.toString(),
-                ) {
-                    logger.info {
-                        "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er" +
-                            " ${oppgave.tilstand().type} når hendelsen mottas."
-                    }
+            when (oppgave == null) {
+                true -> {
+                    val oppgave =
+                        Oppgave(
+                            oppgaveId = UUIDv7.ny(),
+                            emneknagger = forslagTilVedtakHendelse.emneknagger,
+                            opprettet = behandling.opprettet,
+                            tilstandslogg =
+                                Tilstandslogg(
+                                    Tilstandsendring(
+                                        tilstand = KLAR_TIL_BEHANDLING,
+                                        hendelse = forslagTilVedtakHendelse,
+                                    ),
+                                ),
+                            behandlingId = behandling.behandlingId,
+                            behandlingType = behandling.type,
+                            person = person,
+                        )
+
+                    oppgaveRepository.lagre(oppgave)
+                }
+
+                false -> {
                     oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let { handling ->
                         when (handling) {
                             Oppgave.Handling.LAGRE_OPPGAVE -> {
