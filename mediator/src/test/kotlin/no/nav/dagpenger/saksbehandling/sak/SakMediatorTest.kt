@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -46,13 +47,12 @@ class SakMediatorTest {
             coEvery { it.erAdressebeskyttetPerson(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
         }
 
-    private val testRapid =  TestRapid()
+    private val testRapid = TestRapid()
 
     @BeforeEach
     fun setup() {
         testRapid.reset()
     }
-
 
     @Test
     fun `Skal opprette sak ved mottak av søknadsbehandlingOpprettetHendelse`() {
@@ -105,7 +105,7 @@ class SakMediatorTest {
     }
 
     @Test
-    fun `Skal sende avbrytBehandling ved adressebeskyttet eller skjermet person`() {
+    fun `Skal sende avbrytBehandling ved adressebeskyttet person`() {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
@@ -119,14 +119,44 @@ class SakMediatorTest {
                 )
 
             coEvery { oppslagMock.erAdressebeskyttetPerson(testIdent) } returns AdressebeskyttelseGradering.FORTROLIG
+            coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns false
+
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
+
+            testRapid.inspektør.size shouldBe 1
+            val packet = testRapid.inspektør.message(0)
+            packet["@event_name"].asText() shouldBe "avbryt_behandling"
+            packet["behandlingId"].asUUID() shouldBe behandlingIdSøknad
+            packet["søknadId"].asUUID() shouldBe søknadId
+            packet["ident"].asText() shouldBe testIdent
+        }
+    }
+
+    @Test
+    fun `Skal sende avbrytBehandling ved skjermet person`() {
+        withMigratedDb { ds ->
+            val sakMediator =
+                SakMediator(
+                    sakRepository = PostgresRepository(ds),
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(ds),
+                            oppslag = oppslagMock,
+                        ),
+                    rapidsConnection = testRapid,
+                )
+
+            coEvery { oppslagMock.erAdressebeskyttetPerson(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns true
 
             sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
 
             testRapid.inspektør.size shouldBe 1
-            val packet = testRapid.inspektør.packet(0)
-            packet["@event_name"] shouldBe "avbryt_behandling"
+            val packet = testRapid.inspektør.message(0)
+            packet["@event_name"].asText() shouldBe "avbryt_behandling"
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknad
+            packet["søknadId"].asUUID() shouldBe søknadId
+            packet["ident"].asText() shouldBe testIdent
         }
     }
 }

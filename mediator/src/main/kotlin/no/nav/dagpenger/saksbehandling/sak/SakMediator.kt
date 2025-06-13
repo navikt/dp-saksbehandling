@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHen
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 
 private val logger = mu.KotlinLogging.logger {}
+
 class SakMediator(
     private val personMediator: PersonMediator,
     private val sakRepository: SakRepository,
@@ -47,9 +48,11 @@ class SakMediator(
         }.onFailure { e ->
             when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
                 true -> {
-                    sendAvbrytBehandling( søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
+                    sendAvbrytBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
                 }
-                else -> { throw e }
+                else -> {
+                    throw e
+                }
             }
         }.onSuccess { person ->
             val sakHistorikk =
@@ -68,19 +71,19 @@ class SakMediator(
         }
     }
 
-    private fun  sendAvbrytBehandling(
-        søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse
-    ) {
+    private fun sendAvbrytBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         rapidsConnection.publish(
             key = søknadsbehandlingOpprettetHendelse.ident,
-            message =  JsonMessage.newMessage(
-                eventName = "avbryt_behandling",
-                map = mapOf(
-                    "behandlingId" to søknadsbehandlingOpprettetHendelse.behandlingId,
-                    "søknadId" to søknadsbehandlingOpprettetHendelse.søknadId,
-                    "ident" to søknadsbehandlingOpprettetHendelse.ident,
-                )
-            ).toJson()
+            message =
+                JsonMessage.newMessage(
+                    eventName = "avbryt_behandling",
+                    map =
+                        mapOf(
+                            "behandlingId" to søknadsbehandlingOpprettetHendelse.behandlingId,
+                            "søknadId" to søknadsbehandlingOpprettetHendelse.søknadId,
+                            "ident" to søknadsbehandlingOpprettetHendelse.ident,
+                        ),
+                ).toJson(),
         )
         logger.info { "Publiserte avbryt_behandling hendelse" }
     }
