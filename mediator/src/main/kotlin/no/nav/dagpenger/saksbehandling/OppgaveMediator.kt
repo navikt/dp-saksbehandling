@@ -130,8 +130,8 @@ class OppgaveMediator(
         if (behandling == null) {
             val feilmelding =
                 "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                    "${forslagTilVedtakHendelse.behandlingId}." +
-                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
+                        "${forslagTilVedtakHendelse.behandlingId}." +
+                        "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
@@ -167,14 +167,14 @@ class OppgaveMediator(
                                 oppgaveRepository.lagre(oppgave)
                                 logger.info {
                                     "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
-                                        " ${oppgave.tilstand().type} etter behandling."
+                                            " ${oppgave.tilstand().type} etter behandling."
                                 }
                             }
 
                             Oppgave.Handling.INGEN -> {
                                 logger.info {
                                     "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
-                                        " ${oppgave.tilstand().type}"
+                                            " ${oppgave.tilstand().type}"
                                 }
                             }
                         }
@@ -270,7 +270,7 @@ class OppgaveMediator(
                 }.onFailure {
                     val feil =
                         "Feil ved sending av behandling med id ${oppgave.behandlingId} " +
-                            "tilbake til saksbehandling: ${it.message}"
+                                "tilbake til saksbehandling: ${it.message}"
                     logger.error { feil }
                     throw it
                 }
@@ -496,14 +496,9 @@ class OppgaveMediator(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
             ) {
                 logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
-                if (oppgave.tilstand() == Oppgave.Opprettet) {
-                    oppgaveRepository.slettBehandling(hendelse.behandlingId)
-                } else {
-                    logger.info { "Oppgaven behandles i Arena" }
-                    oppgave.behandlesIArena(hendelse)
-                    oppgaveRepository.lagre(oppgave)
-                    logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
-                }
+                oppgave.behandlesIArena(hendelse)
+                oppgaveRepository.lagre(oppgave)
+                logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
             }
         }
     }
