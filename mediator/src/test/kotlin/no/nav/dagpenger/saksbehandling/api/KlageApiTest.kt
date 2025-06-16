@@ -486,6 +486,7 @@ class KlageApiTest {
                     statistikkTjeneste = mockk(),
                     klageMediator = klageMediator,
                     klageDTOMapper = KlageDTOMapper(oppslag = oppslag),
+                    personMediator = mockk(),
                 )
             }
             test()

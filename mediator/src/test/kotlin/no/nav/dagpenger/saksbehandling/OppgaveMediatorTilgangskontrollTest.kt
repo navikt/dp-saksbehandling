@@ -65,12 +65,12 @@ class OppgaveMediatorTilgangskontrollTest {
         val oppgaveRepositoryMock = mockk<OppgaveRepository>().also { every { it.hentOppgave(oppgave.oppgaveId) } returns oppgave }
         val oppgaveMediator =
             OppgaveMediator(
-                personRepository = mockk(),
                 oppgaveRepository = oppgaveRepositoryMock,
                 oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
                 meldingOmVedtakKlient = mockk(),
+                sakMediator = mockk(),
             )
 
         if (forventetTilgang) {
@@ -87,12 +87,12 @@ class OppgaveMediatorTilgangskontrollTest {
         val oppgaveRepositoryMock = mockk<OppgaveRepository>().also { every { it.hentOppgave(oppgave.oppgaveId) } returns oppgave }
         val oppgaveMediator =
             OppgaveMediator(
-                personRepository = mockk(),
                 oppgaveRepository = oppgaveRepositoryMock,
                 oppslag = mockk(),
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
                 meldingOmVedtakKlient = mockk(),
+                sakMediator = mockk(),
             )
 
         shouldNotThrow<ManglendeTilgang> {

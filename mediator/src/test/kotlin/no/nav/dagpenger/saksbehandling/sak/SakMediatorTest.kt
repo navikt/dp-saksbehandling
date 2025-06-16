@@ -66,8 +66,9 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                    rapidsConnection = testRapid,
-                )
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
 
             sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
             sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).let {
@@ -92,8 +93,9 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                    rapidsConnection = testRapid,
-                )
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
             sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
             sakMediator.knyttTilSak(meldekortbehandlingOpprettetHendelse)
 
@@ -115,8 +117,9 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                    rapidsConnection = testRapid,
-                )
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
 
             coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.FORTROLIG
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns false
@@ -143,8 +146,9 @@ class SakMediatorTest {
                             personRepository = PostgresPersonRepository(ds),
                             oppslag = oppslagMock,
                         ),
-                    rapidsConnection = testRapid,
-                )
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
 
             coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns true

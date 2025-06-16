@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
@@ -36,7 +37,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
@@ -47,6 +47,7 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
@@ -62,6 +63,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -180,21 +182,8 @@ OppgaveMediatorTest {
 
     @Test
     fun `Skal kunne sette oppgave til kontroll`() {
-        withMigratedDb { dataSource ->
-            val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val oppgave = dataSource.lagTestoppgave(UNDER_BEHANDLING)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    personRepository = personRepository,
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    utsendingMediator = utsendingMediatorMock,
-                    meldingOmVedtakKlient = mockk(),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(UNDER_BEHANDLING)
             oppgaveMediator.sendTilKontroll(
                 SendTilKontrollHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -211,21 +200,8 @@ OppgaveMediatorTest {
 
     @Test
     fun `Skal kunne ta en oppgave under kontroll`() {
-        withMigratedDb { dataSource ->
-            val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val oppgave = dataSource.lagTestoppgave(KLAR_TIL_KONTROLL)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    personRepository = personRepository,
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    utsendingMediator = mockk(),
-                    meldingOmVedtakKlient = mockk(),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(KLAR_TIL_KONTROLL)
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -243,20 +219,8 @@ OppgaveMediatorTest {
 
     @Test
     fun `Skal kunne lagre og slette et notat på en oppgave`() {
-        withMigratedDb { dataSource ->
-            val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val oppgave = dataSource.lagTestoppgave(UNDER_KONTROLL)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    personRepository = personRepository,
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    utsendingMediator = mockk(),
-                    meldingOmVedtakKlient = mockk(),
-                )
-
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave = datasource.lagTestoppgave(UNDER_KONTROLL)
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().notat() shouldBe null
 
             oppgaveMediator.lagreNotat(
@@ -286,20 +250,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
-        withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    personRepository = personRepository,
-                    oppgaveRepository = oppgaveRepository,
-                    behandlingKlient = behandlingKlientMock,
-                    utsendingMediator = mockk(),
-                    oppslag = oppslagMock,
-                    meldingOmVedtakKlient = mockk(),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =
@@ -315,22 +266,10 @@ OppgaveMediatorTest {
 
     @Test
     fun `Skal kunne motta flere forslag til vedtak hendelser og oppdatere emneknaggene med de siste mottatte`() {
-        withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
             val testEmneknagger1 = setOf("a", "b", "c")
             val testEmneknagger2 = setOf("x", "y")
             val oppgave = datasource.lagTestoppgave(tilstand = OPPRETTET)
-
-            val oppgaveMediator =
-                OppgaveMediator(
-                    personRepository = personRepository,
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = mockk(),
-                )
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -410,58 +349,16 @@ OppgaveMediatorTest {
                 person = person,
             )
 
-        withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgaveRepository = PostgresOppgaveRepository(datasource)
 
             oppgaveRepository.lagre(behandling)
             oppgaveRepository.lagre(oppgave)
 
-            val oppgaveMediator =
-                OppgaveMediator(
-                    personRepository = personRepository,
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = mockk(),
-                )
             oppgaveMediator.skalEttersendingTilSøknadVarsles(
                 hendelse.søknadId,
                 hendelse.ident,
             ) shouldBe skalLageGosysOppgave
-        }
-    }
-
-    @Test
-    fun `Skal kunne hente en person basert op ident og fnr`() {
-        val personId = UUIDv7.ny()
-        val person =
-            Person(
-                id = personId,
-                ident = OppgaveApiTestHelper.testPerson.ident,
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
-            )
-        val oppgave = lagOppgave(person = person)
-
-        withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
-
-            oppgaveRepository.lagre(oppgave)
-
-            val oppgaveMediator =
-                OppgaveMediator(
-                    personRepository = personRepository,
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = mockk(),
-                )
-            oppgaveMediator.hentPerson(person.ident).shouldBe(person)
-            oppgaveMediator.hentPerson(personId).shouldBe(person)
         }
     }
 
@@ -481,16 +378,27 @@ OppgaveMediatorTest {
             }
 
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     utsendingMediator = utsendingMediatorMock,
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
@@ -553,22 +461,31 @@ OppgaveMediatorTest {
             }
 
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     utsendingMediator = utsendingMediatorMock,
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
-
-// TODO opprett behandling
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -628,22 +545,30 @@ OppgaveMediatorTest {
                 } returns Result.success(Unit)
             }
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
-
-            // TODO opprett behandling
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -713,21 +638,31 @@ OppgaveMediatorTest {
             }
 
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
-            // TODO opprett behandling
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -796,17 +731,28 @@ OppgaveMediatorTest {
                 } returns Result.success(Unit)
             }
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
@@ -865,17 +811,28 @@ OppgaveMediatorTest {
                 } returns Result.failure(BehandlingException("Feil ved godkjenning av behandling", 403))
             }
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingClientMock,
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = utsendingMediator,
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
@@ -922,16 +879,27 @@ OppgaveMediatorTest {
     @Test
     fun `Livssyklus for søknadsbehandling som blir avbrutt`() {
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
@@ -971,22 +939,31 @@ OppgaveMediatorTest {
     @Test
     fun `Livssyklus for søknadsbehandling som blir opprettet og så avbrutt`() {
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
-
-// TODO opprett behandling
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -1011,16 +988,27 @@ OppgaveMediatorTest {
     @Test
     fun `Livssyklus for søknadsbehandling som blir satt på vent`() {
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     meldingOmVedtakKlient = mockk(),
                     utsendingMediator = mockk(),
+                    sakMediator = sakMediator,
                 )
 
             val søknadId = UUIDv7.ny()
@@ -1066,11 +1054,21 @@ OppgaveMediatorTest {
     @Test
     fun `Kast feil når send til kontroll kalles uten at det kreves totrinnskontroll`() {
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient =
@@ -1085,6 +1083,7 @@ OppgaveMediatorTest {
                         },
                     utsendingMediator = mockk(),
                     meldingOmVedtakKlient = mockk(),
+                    sakMediator = sakMediator,
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -1140,16 +1139,26 @@ OppgaveMediatorTest {
             }
 
         withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(dataSource)
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
             val oppgaveRepository = PostgresOppgaveRepository(dataSource)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = oppgaveRepository,
                     oppslag = oppslagMock,
                     behandlingKlient = behandlingKlientMock,
                     utsendingMediator = mockk(relaxed = true),
                     meldingOmVedtakKlient = mockk(),
+                    sakMediator = sakMediator,
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -1220,32 +1229,45 @@ OppgaveMediatorTest {
     }
 
     private fun DataSource.lagTestoppgave(tilstand: Type): Oppgave {
+        val søknadId = UUIDv7.ny()
+        val behandlingId = UUIDv7.ny()
         val personRepository = PostgresPersonRepository(this)
+        val sakMediator =
+            SakMediator(
+                personMediator =
+                    PersonMediator(
+                        personRepository = personRepository,
+                        oppslag = oppslagMock,
+                    ),
+                sakRepository = PostgresRepository(dataSource),
+            ).also {
+                it.setRapidsConnection(testRapid)
+            }
+
         val oppgaveMediator =
             OppgaveMediator(
-                personRepository = personRepository,
                 oppgaveRepository = PostgresOppgaveRepository(this),
                 behandlingKlient = behandlingKlientMock,
                 oppslag = oppslagMock,
                 utsendingMediator = mockk(),
                 meldingOmVedtakKlient = mockk(),
+                sakMediator = sakMediator,
             ).also {
                 it.setRapidsConnection(testRapid)
             }
 
+        sakMediator.opprettSak(
+            søknadsbehandlingOpprettetHendelse =
+                SøknadsbehandlingOpprettetHendelse(
+                    søknadId = søknadId,
+                    behandlingId = behandlingId,
+                    ident = testIdent,
+                    opprettet = LocalDateTime.now(),
+                    utførtAv = Applikasjon(navn = ""),
+                ),
+        )
+
         VedtakFattetMottak(testRapid, oppgaveMediator)
-
-        val søknadId = UUIDv7.ny()
-        val behandlingId = UUIDv7.ny()
-        val søknadsbehandlingOpprettetHendelse =
-            SøknadsbehandlingOpprettetHendelse(
-                søknadId = søknadId,
-                behandlingId = behandlingId,
-                ident = testIdent,
-                opprettet = LocalDateTime.now(),
-            )
-
-        // TODO opprett behandling
 
         val oppgave =
             oppgaveMediator.opprettEllerOppdaterOppgave(
@@ -1298,5 +1320,35 @@ OppgaveMediatorTest {
         }
 
         return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+    }
+
+    fun settOppOppgaveMediator(test: (dataSource: DataSource, oppgaveMediator: OppgaveMediator) -> Unit) {
+        withMigratedDb { datasource ->
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(dataSource),
+                            oppslag = oppslagMock,
+                        ),
+                    sakRepository = PostgresRepository(dataSource),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(datasource),
+                    behandlingKlient = behandlingKlientMock,
+                    oppslag = oppslagMock,
+                    utsendingMediator = mockk(),
+                    meldingOmVedtakKlient = mockk(),
+                    sakMediator = sakMediator,
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+            VedtakFattetMottak(testRapid, oppgaveMediator)
+            test(dataSource, oppgaveMediator)
+        }
     }
 }

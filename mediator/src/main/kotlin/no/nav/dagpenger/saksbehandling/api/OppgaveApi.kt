@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import PersonMediator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -49,6 +50,7 @@ private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal fun Route.oppgaveApi(
     oppgaveMediator: OppgaveMediator,
+    personMediator: PersonMediator,
     oppgaveDTOMapper: OppgaveDTOMapper,
     applicationCallParser: ApplicationCallParser,
 ) {
@@ -71,7 +73,7 @@ internal fun Route.oppgaveApi(
             post {
                 val ident: PersonIdentDTO = call.receive<PersonIdentDTO>()
                 sikkerlogger.info { "Søker etter person med ident i request body: $ident" }
-                val person = oppgaveMediator.hentPerson(ident.ident)
+                val person = personMediator.hentPerson(ident.ident)
                 val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
                 call.respond(status = HttpStatusCode.OK, personDTO)
             }
@@ -81,7 +83,7 @@ internal fun Route.oppgaveApi(
             get {
                 val personId: UUID = call.finnUUID("personId")
                 sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
-                val person = oppgaveMediator.hentPerson(personId)
+                val person = personMediator.hentPerson(personId)
                 val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
                 call.respond(status = HttpStatusCode.OK, personDTO)
             }

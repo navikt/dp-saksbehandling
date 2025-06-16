@@ -7,7 +7,6 @@ import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -19,7 +18,6 @@ class OppgaveMediatorAlertTest {
     fun `Skal sende alert på rapid dersom oppgave ikke finnes`() {
         val behandlingId = UUIDv7.ny()
         OppgaveMediator(
-            personRepository = mockk<PersonRepository>(),
             oppgaveRepository =
                 mockk<OppgaveRepository>().also {
                     every { it.finnOppgaveFor(any()) } returns null
@@ -28,6 +26,7 @@ class OppgaveMediatorAlertTest {
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
             meldingOmVedtakKlient = mockk(),
+            sakMediator = mockk(),
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
 
 // TODO opprett behandling

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import PersonMediator
 import com.fasterxml.jackson.core.type.TypeReference
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
@@ -1241,8 +1242,8 @@ class OppgaveApiTest {
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
             )
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
+        val personMediatorMock =
+            mockk<PersonMediator>().also {
                 every { it.hentPerson(personId) } returns person
             }
         val oppgaveDTOMapperMock =
@@ -1266,7 +1267,7 @@ class OppgaveApiTest {
                     )
             }
         withOppgaveApi(
-            oppgaveMediator = oppgaveMediatorMock,
+            personMediator = personMediatorMock,
             oppgaveDTOMapper = oppgaveDTOMapperMock,
         ) {
             client.get("/person/$personId") { autentisert() }
@@ -1294,8 +1295,8 @@ class OppgaveApiTest {
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
             )
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
+        val personMediator =
+            mockk<PersonMediator>().also {
                 every { it.hentPerson(testPerson.ident) } returns person
             }
         val oppgaveDTOMapperMock =
@@ -1319,7 +1320,7 @@ class OppgaveApiTest {
                     )
             }
         withOppgaveApi(
-            oppgaveMediator = oppgaveMediatorMock,
+            personMediator = personMediator,
             oppgaveDTOMapper = oppgaveDTOMapperMock,
         ) {
             client.post("/person") {
@@ -1345,13 +1346,13 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal kaste feil når person ikke finnes`() {
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
+        val personMediator =
+            mockk<PersonMediator>().also {
                 every { it.hentPerson(any<String>()) } throws DataNotFoundException("Fant ikke person")
                 every { it.hentPerson(any<UUID>()) } throws DataNotFoundException("Fant ikke person")
             }
         withOppgaveApi(
-            oppgaveMediator = oppgaveMediatorMock,
+            personMediator = personMediator,
         ) {
             client.post("/person") {
                 autentisert()

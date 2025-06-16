@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
@@ -60,6 +61,7 @@ internal object OppgaveApiTestHelper {
     fun withOppgaveApi(
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         oppgaveDTOMapper: OppgaveDTOMapper = mockk<OppgaveDTOMapper>(relaxed = true),
+        personMediator: PersonMediator = mockk(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -70,6 +72,7 @@ internal object OppgaveApiTestHelper {
                     mockk(relaxed = true),
                     mockk(relaxed = true),
                     mockk(relaxed = true),
+                    personMediator = personMediator,
                 )
             }
             test()
@@ -82,6 +85,7 @@ internal object OppgaveApiTestHelper {
         relevanteJournalpostIdOppslag: RelevanteJournalpostIdOppslag = mockk(relaxed = true),
         saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
         oppgaveRepository: OppgaveRepository = mockk<OppgaveRepository>(relaxed = true),
+        personMediator: PersonMediator = mockk(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -100,6 +104,7 @@ internal object OppgaveApiTestHelper {
                     mockk(relaxed = true),
                     mockk(relaxed = true),
                     mockk(relaxed = true),
+                    personMediator = personMediator,
                 )
             }
             test()

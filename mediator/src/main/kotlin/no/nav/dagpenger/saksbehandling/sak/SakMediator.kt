@@ -18,10 +18,19 @@ private val logger = mu.KotlinLogging.logger {}
 class SakMediator(
     private val personMediator: PersonMediator,
     private val sakRepository: SakRepository,
-    private val rapidsConnection: RapidsConnection,
 ) {
+    private lateinit var rapidsConnection: RapidsConnection
+
+    fun setRapidsConnection(rapidsConnection: RapidsConnection) {
+        this.rapidsConnection = rapidsConnection
+    }
+
     fun hentSakHistorikk(ident: String): SakHistorikk {
         return sakRepository.hentSakHistorikk(ident)
+    }
+
+    fun finnSakHistorikkk(ident: String): SakHistorikk? {
+        return sakRepository.finn(ident)
     }
 
     fun finnSak(ident: String): SakHistorikk? {

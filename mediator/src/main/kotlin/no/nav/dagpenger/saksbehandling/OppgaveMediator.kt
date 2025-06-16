@@ -21,7 +21,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.OppgaveSøkResultat
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
-import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -38,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.time.LocalDate
@@ -47,12 +47,12 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 class OppgaveMediator(
-    private val personRepository: PersonRepository,
     private val oppgaveRepository: OppgaveRepository,
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
     private val oppslag: Oppslag,
     private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
+    private val sakMediator: SakMediator,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
 
@@ -61,33 +61,47 @@ class OppgaveMediator(
     }
 
     fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
-        val person =
-            personRepository.finnPerson(behandlingOpprettetHendelse.ident)
-                ?: runBlocking {
-                    oppslag.hentPersonMedSkjermingOgAdressebeskyttelse(behandlingOpprettetHendelse.ident)
-                }
+        var oppgave: Oppgave? = null
 
-        val oppgave =
-            Oppgave(
-                oppgaveId = UUIDv7.ny(),
-                emneknagger = emptySet(),
-                opprettet = behandlingOpprettetHendelse.opprettet,
-                behandlerIdent = null,
-                tilstand = Oppgave.KlarTilBehandling,
-                tilstandslogg =
-                    Tilstandslogg(
-                        Tilstandsendring(
-                            tilstand = Oppgave.KlarTilBehandling.type,
-                            hendelse = behandlingOpprettetHendelse,
+        // todo hva skjer dersom vi ikke finner sakHistorikk? Dette skal ikke skje,
+        val sakHistorikk = sakMediator.finnSakHistorikkk(behandlingOpprettetHendelse.ident)
+
+        val behandling =
+            sakHistorikk
+                ?.finnBehandling(behandlingOpprettetHendelse.behandlingId)
+
+        if (behandling == null) {
+            val feilmelding =
+                "Mottatt hendelse behandlingOpprettetHendelse for behandling med id " +
+                    "${behandlingOpprettetHendelse.behandlingId}." +
+                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
+            logger.error { feilmelding }
+            sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
+        } else {
+            oppgave =
+                Oppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    emneknagger = emptySet(),
+                    opprettet = behandling.opprettet,
+                    tilstandslogg =
+                        Tilstandslogg(
+                            Tilstandsendring(
+                                tilstand = KLAR_TIL_BEHANDLING,
+                                hendelse = behandlingOpprettetHendelse,
+                            ),
                         ),
-                    ),
-                behandlingId = behandlingOpprettetHendelse.behandlingId,
-                behandlingType = behandlingOpprettetHendelse.type,
-                person = person,
-            )
+                    behandlingId = behandling.behandlingId,
+                    behandlingType = behandling.behandlingType,
+                    person = sakHistorikk.person,
+                )
+            oppgaveRepository.lagre(oppgave)
+        }
 
-        oppgaveRepository.lagre(oppgave)
-        return oppgave
+        // todo Bedre  Exception håndtering
+        return oppgave ?: throw RuntimeException(
+            "Kunne ikke opprette oppgave for hendelse behandlingOpprettetHendelse med id " +
+                "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
+        )
     }
 
     fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
@@ -126,7 +140,14 @@ class OppgaveMediator(
 
     fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
         var oppgave: Oppgave? = null
-        val behandling = oppgaveRepository.finnBehandling(forslagTilVedtakHendelse.behandlingId)
+
+        // todo hva skjer dersom vi ikke finner sakHistorikk? Dette skal ikke skje,
+        val sakHistorikk = sakMediator.finnSakHistorikkk(forslagTilVedtakHendelse.ident)
+
+        val behandling =
+            sakHistorikk
+                ?.finnBehandling(forslagTilVedtakHendelse.behandlingId)
+
         if (behandling == null) {
             val feilmelding =
                 "Mottatt hendelse forslag_til_vedtak for behandling med id " +
@@ -135,9 +156,7 @@ class OppgaveMediator(
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
-            val person = personRepository.hentPerson(forslagTilVedtakHendelse.ident)
             oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
-
             when (oppgave == null) {
                 true -> {
                     oppgave =
@@ -153,10 +172,9 @@ class OppgaveMediator(
                                     ),
                                 ),
                             behandlingId = behandling.behandlingId,
-                            behandlingType = behandling.type,
-                            person = person,
+                            behandlingType = behandling.behandlingType,
+                            person = sakHistorikk.person,
                         )
-
                     oppgaveRepository.lagre(oppgave)
                 }
 
@@ -553,14 +571,6 @@ class OppgaveMediator(
             AVVENTER_OPPLÅSING_AV_BEHANDLING -> false
             else -> true
         }
-    }
-
-    fun hentPerson(ident: String): Person {
-        return personRepository.hentPerson(ident)
-    }
-
-    fun hentPerson(personId: UUID): Person {
-        return personRepository.hentPerson(personId)
     }
 
     private fun sendAlertTilRapid(

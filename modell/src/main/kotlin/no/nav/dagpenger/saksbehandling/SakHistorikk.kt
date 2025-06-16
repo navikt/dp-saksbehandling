@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import java.util.UUID
 
 data class SakHistorikk(
     val person: Person,
@@ -13,6 +14,12 @@ data class SakHistorikk(
         ) = SakHistorikk(person = person).also {
             it.saker.addAll(saker)
         }
+    }
+
+    fun finnBehandling(behandinId: UUID): NyBehandling? {
+        return saker.asSequence()
+            .flatMap { it.behandlinger() }
+            .firstOrNull { it.behandlingId == behandinId }
     }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {

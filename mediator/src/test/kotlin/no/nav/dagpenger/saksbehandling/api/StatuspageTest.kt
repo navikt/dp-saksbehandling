@@ -35,7 +35,14 @@ class StatuspageTest {
             val message = "Fant ikke oppgave med id"
             val path = "/v1/oppgave/id/DataNotFoundException"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) { throw DataNotFoundException(message) }
                 }
@@ -64,7 +71,14 @@ class StatuspageTest {
             val message = "Kan ikke lage melding om vedtak"
             val path = "/KanIkkeLageMeldingOmVedtak"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) { throw MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak(message) }
                 }
@@ -93,7 +107,14 @@ class StatuspageTest {
             val message = "Kunne ikke rehydrere med ugyldig tilstand"
             val path = "/UkjentTilstandException"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) { throw Tilstand.UgyldigTilstandException(message) }
                 }
@@ -122,7 +143,14 @@ class StatuspageTest {
             val message = "Kan ikke håndtere hendelsen i denne tilstanden"
             val path = "/UlovligTilstandsendringException"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) { throw UlovligTilstandsendringException(message) }
                 }
@@ -151,7 +179,14 @@ class StatuspageTest {
             val message = "Kunne ikke finne oppgaveId i path"
             val path = "/IllegalArgumentException"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) { throw IllegalArgumentException(message) }
                 }
@@ -179,7 +214,14 @@ class StatuspageTest {
         testApplication {
             val path = "/UgyldigOpplysningException"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) {
                         throw UgyldigOpplysningException(
@@ -215,7 +257,14 @@ class StatuspageTest {
             val message = "Mangler tilgang"
             val path = "/ManglendeTilgang"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) { throw ManglendeBeslutterTilgang(message) }
                 }
@@ -244,7 +293,14 @@ class StatuspageTest {
             val message = "Feil jved parsing av dato/tid"
             val path = "/DateTimeParseException"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) {
                         throw DateTimeParseException(message, "syttende mai 2024 klokka 19:43", 1)
@@ -275,7 +331,14 @@ class StatuspageTest {
             val message = "Uhåndtert feil i koden"
             val path = "/Exception"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) {
                         throw RuntimeException(message)
@@ -306,7 +369,14 @@ class StatuspageTest {
             val message = "Oppgaven eies av noen andre"
             val path = "/AlleredeTildeltException"
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get(path) { throw Oppgave.AlleredeTildeltException(message) }
                 }
@@ -343,7 +413,14 @@ class StatuspageTest {
                     """
         testApplication {
             application {
-                installerApis(mockk(), mockk(), mockk(), mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockk(),
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
                 routing {
                     get("/BehandlingException") { throw BehandlingException(httpProblem, 403) }
                 }

@@ -28,12 +28,12 @@ class OppgaveFristUtgåttJobTest {
             val repo = PostgresOppgaveRepository(ds)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = repo,
                     oppslag = mockk(),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     meldingOmVedtakKlient = mockk(),
+                    sakMediator = mockk(),
                 )
             val saksbehandlerIdent1 = "ident 1"
             val saksbehandlerIdent2 = "ident 2"

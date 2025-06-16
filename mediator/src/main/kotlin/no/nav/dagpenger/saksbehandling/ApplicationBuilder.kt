@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.KafkaRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.ktor.server.application.install
@@ -19,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
@@ -35,6 +37,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.CachedSaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
@@ -80,6 +83,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             dpBehandlingApiUrl = Configuration.dbBehandlingApiUrl,
             tokenProvider = Configuration.dpBehandlingOboExchanger,
         )
+
     private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(personRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(personRepository, pdlKlient)
@@ -97,19 +101,30 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             saksbehandlerOppslag = saksbehandlerOppslag,
             skjermingKlient = skjermingKlient,
         )
-    val meldingOmVedtakKlient =
+    private val personMediator =
+        PersonMediator(
+            personRepository = personRepository,
+            oppslag = oppslag,
+        )
+    private val sakMediator =
+        SakMediator(
+            personMediator = personMediator,
+            sakRepository = PostgresRepository(dataSource = dataSource),
+        )
+
+    private val meldingOmVedtakKlient =
         MeldingOmVedtakKlient(
             dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
             tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
         )
     private val oppgaveMediator =
         OppgaveMediator(
-            personRepository = personRepository,
             oppgaveRepository = oppgaveRepository,
             oppslag = oppslag,
             behandlingKlient = behandlingKlient,
             utsendingMediator = utsendingMediator,
             meldingOmVedtakKlient = meldingOmVedtakKlient,
+            sakMediator = sakMediator,
         )
     private val klageMediator =
         KlageMediator(
@@ -118,6 +133,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             utsendingMediator = utsendingMediator,
             oppslag = oppslag,
             meldingOmVedtakKlient = meldingOmVedtakKlient,
+            personMediator = personMediator,
         )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(
@@ -141,6 +157,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                         statistikkTjeneste = PostgresStatistikkTjeneste(dataSource),
                         klageMediator = klageMediator,
                         klageDTOMapper = KlageDTOMapper(oppslag),
+                        personMediator = personMediator,
                     )
                     this.install(KafkaStreamsPlugin) {
                         kafkaStreams =
@@ -159,6 +176,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             },
         ) { _: EmbeddedServer<CIOApplicationEngine, CIOApplicationEngine.Configuration>, _: KafkaRapid ->
         }.also { rapidsConnection ->
+            sakMediator.setRapidsConnection(rapidsConnection)
             utsendingMediator.setRapidsConnection(rapidsConnection)
             oppgaveMediator.setRapidsConnection(rapidsConnection)
             klageMediator.setRapidsConnection(rapidsConnection)
