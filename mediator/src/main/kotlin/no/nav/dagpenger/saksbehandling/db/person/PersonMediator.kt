@@ -3,7 +3,7 @@
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
@@ -27,12 +27,12 @@ class PersonMediator(
         return personRepository.finnPerson(ident) ?: runBlocking {
             coroutineScope {
                 val erSkjermet = async { oppslag.erSkjermetPerson(ident) }
-                val erAdresseBeskyttet = async { oppslag.erAdressebeskyttetPerson(ident) }
+                val adressebeskyttelseGradering = async { oppslag.adressebeskyttelseGradering(ident) }
                 val person =
                     Person(
                         ident = ident,
                         skjermesSomEgneAnsatte = erSkjermet.await(),
-                        adressebeskyttelseGradering = erAdresseBeskyttet.await(),
+                        adressebeskyttelseGradering = adressebeskyttelseGradering.await(),
                     )
                 validerPerson(person)
                 personRepository.lagre(person)
@@ -42,7 +42,7 @@ class PersonMediator(
     }
 
     private fun validerPerson(person: Person) {
-        if (person.adressebeskyttelseGradering != AdressebeskyttelseGradering.UGRADERT) {
+        if (person.adressebeskyttelseGradering != UGRADERT) {
             throw AdresseBeeskyttetPersonException()
         }
         if (person.skjermesSomEgneAnsatte) {

@@ -54,7 +54,7 @@ class PostgresPersonRepositoryTest {
             personRepository.lagre(testPerson)
             personRepository.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe UGRADERT
 
-            personRepository.oppdaterAdressebeskyttetStatus(testPerson.ident, STRENGT_FORTROLIG)
+            personRepository.oppdaterAdressebeskyttelseGradering(testPerson.ident, STRENGT_FORTROLIG)
             personRepository.hentPerson(testPerson.ident).adressebeskyttelseGradering shouldBe STRENGT_FORTROLIG
         }
     }

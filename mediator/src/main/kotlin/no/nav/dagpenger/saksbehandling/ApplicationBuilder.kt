@@ -151,7 +151,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                                 )
                                 adressebeskyttetStream(
                                     Configuration.leesahTopic,
-                                    adressebeskyttelseConsumer::oppdaterAdressebeskyttelseStatus,
+                                    adressebeskyttelseConsumer::oppdaterAdressebeskyttelseGradering,
                                 )
                             }
                     }

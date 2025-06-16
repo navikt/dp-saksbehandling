@@ -110,7 +110,7 @@ class PostgresPersonRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun oppdaterAdressebeskyttetStatus(
+    override fun oppdaterAdressebeskyttelseGradering(
         fnr: String,
         adresseBeskyttelseGradering: AdressebeskyttelseGradering,
     ): Int {

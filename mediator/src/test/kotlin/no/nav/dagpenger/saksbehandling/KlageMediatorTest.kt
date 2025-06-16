@@ -100,7 +100,7 @@ class KlageMediatorTest {
                     skjermesSomEgneAnsatte = false,
                     adressebeskyttelseGradering = UGRADERT,
                 )
-            coEvery { it.hentPersonMedSkjermingOgGradering(testPersonIdent) } returns person
+            coEvery { it.hentPersonMedSkjermingOgAdressebeskyttelse(testPersonIdent) } returns person
             coEvery { it.hentPerson(testPersonIdent) } returns
                 pdlPersonIntern
             coEvery { it.hentBehandler(ident = any()) } returns behandlerDTO

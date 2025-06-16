@@ -64,7 +64,7 @@ class OppgaveMediator(
         val person =
             personRepository.finnPerson(behandlingOpprettetHendelse.ident)
                 ?: runBlocking {
-                    oppslag.hentPersonMedSkjermingOgGradering(behandlingOpprettetHendelse.ident)
+                    oppslag.hentPersonMedSkjermingOgAdressebeskyttelse(behandlingOpprettetHendelse.ident)
                 }
 
         val oppgave =
@@ -130,8 +130,8 @@ class OppgaveMediator(
         if (behandling == null) {
             val feilmelding =
                 "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                        "${forslagTilVedtakHendelse.behandlingId}." +
-                        "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
+                    "${forslagTilVedtakHendelse.behandlingId}." +
+                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
             logger.error { feilmelding }
             sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
@@ -167,14 +167,14 @@ class OppgaveMediator(
                                 oppgaveRepository.lagre(oppgave)
                                 logger.info {
                                     "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
-                                            " ${oppgave.tilstand().type} etter behandling."
+                                        " ${oppgave.tilstand().type} etter behandling."
                                 }
                             }
 
                             Oppgave.Handling.INGEN -> {
                                 logger.info {
                                     "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
-                                            " ${oppgave.tilstand().type}"
+                                        " ${oppgave.tilstand().type}"
                                 }
                             }
                         }
@@ -270,7 +270,7 @@ class OppgaveMediator(
                 }.onFailure {
                     val feil =
                         "Feil ved sending av behandling med id ${oppgave.behandlingId} " +
-                                "tilbake til saksbehandling: ${it.message}"
+                            "tilbake til saksbehandling: ${it.message}"
                     logger.error { feil }
                     throw it
                 }

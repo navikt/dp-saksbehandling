@@ -44,7 +44,7 @@ class SakMediatorTest {
     private val oppslagMock: Oppslag =
         mockk<Oppslag>(relaxed = false).also {
             coEvery { it.erSkjermetPerson(testIdent) } returns false
-            coEvery { it.erAdressebeskyttetPerson(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
+            coEvery { it.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
         }
 
     private val testRapid = TestRapid()
@@ -118,7 +118,7 @@ class SakMediatorTest {
                     rapidsConnection = testRapid,
                 )
 
-            coEvery { oppslagMock.erAdressebeskyttetPerson(testIdent) } returns AdressebeskyttelseGradering.FORTROLIG
+            coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.FORTROLIG
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns false
 
             sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
@@ -146,7 +146,7 @@ class SakMediatorTest {
                     rapidsConnection = testRapid,
                 )
 
-            coEvery { oppslagMock.erAdressebeskyttetPerson(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
+            coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns true
 
             sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)

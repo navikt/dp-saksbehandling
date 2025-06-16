@@ -33,11 +33,11 @@ class Oppslag(
         return skjermingKlient.erSkjermetPerson(ident).getOrThrow()
     }
 
-    suspend fun erAdressebeskyttetPerson(ident: String): AdressebeskyttelseGradering {
+    suspend fun adressebeskyttelseGradering(ident: String): AdressebeskyttelseGradering {
         return pdlKlient.person(ident).getOrThrow().adresseBeskyttelseGradering
     }
 
-    suspend fun hentPersonMedSkjermingOgGradering(ident: String): Person {
+    suspend fun hentPersonMedSkjermingOgAdressebeskyttelse(ident: String): Person {
         return coroutineScope {
             val skjermesSomEgneAnsatte =
                 async {
@@ -46,7 +46,7 @@ class Oppslag(
 
             val adresseBeskyttelseGradering =
                 async {
-                    erAdressebeskyttetPerson(ident)
+                    adressebeskyttelseGradering(ident)
                 }
 
             Person(

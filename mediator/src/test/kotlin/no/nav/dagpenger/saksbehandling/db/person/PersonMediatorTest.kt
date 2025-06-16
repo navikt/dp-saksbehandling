@@ -31,7 +31,7 @@ class PersonMediatorTest {
     fun `Skal ikke opprette person hvis personen er skjermet`() {
         val skjermetIdent = "12345678901"
         val ikkeSkjermetIdent = "12345678902"
-        coEvery { oppslagMock.erAdressebeskyttetPerson(any()) } returns UGRADERT
+        coEvery { oppslagMock.adressebeskyttelseGradering(any()) } returns UGRADERT
         coEvery { oppslagMock.erSkjermetPerson(skjermetIdent) } returns true
         coEvery { oppslagMock.erSkjermetPerson(ikkeSkjermetIdent) } returns false
 
@@ -52,9 +52,9 @@ class PersonMediatorTest {
         val fortroligBeskyttetIdent = "12345678901"
         val strengtFortroligBeskyttetIdent = "12345678903"
         val ikkeAddressebeskyttetIdent = "12345678902"
-        coEvery { oppslagMock.erAdressebeskyttetPerson(strengtFortroligBeskyttetIdent) } returns STRENGT_FORTROLIG
-        coEvery { oppslagMock.erAdressebeskyttetPerson(fortroligBeskyttetIdent) } returns FORTROLIG
-        coEvery { oppslagMock.erAdressebeskyttetPerson(ikkeAddressebeskyttetIdent) } returns UGRADERT
+        coEvery { oppslagMock.adressebeskyttelseGradering(strengtFortroligBeskyttetIdent) } returns STRENGT_FORTROLIG
+        coEvery { oppslagMock.adressebeskyttelseGradering(fortroligBeskyttetIdent) } returns FORTROLIG
+        coEvery { oppslagMock.adressebeskyttelseGradering(ikkeAddressebeskyttetIdent) } returns UGRADERT
         coEvery { oppslagMock.erSkjermetPerson(any()) } returns false
 
         val personMediator = PersonMediator(personRepositoryMock, oppslagMock)
