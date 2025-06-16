@@ -63,7 +63,6 @@ class OppgaveMediator(
     fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
         var oppgave: Oppgave? = null
 
-        // todo hva skjer dersom vi ikke finner sakHistorikk? Dette skal ikke skje,
         val sakHistorikk = sakMediator.finnSakHistorikkk(behandlingOpprettetHendelse.ident)
 
         val behandling =
@@ -98,7 +97,7 @@ class OppgaveMediator(
         }
 
         // todo Bedre  Exception håndtering
-        return oppgave ?: throw RuntimeException(
+        return oppgave ?: throw IllegalStateException(
             "Kunne ikke opprette oppgave for hendelse behandlingOpprettetHendelse med id " +
                 "${behandlingOpprettetHendelse.behandlingId}. Oppgave ble ikke opprettet.",
         )

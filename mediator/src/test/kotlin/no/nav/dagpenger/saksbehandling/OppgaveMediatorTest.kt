@@ -4,7 +4,6 @@ import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
@@ -48,6 +47,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -137,7 +137,7 @@ OppgaveMediatorTest {
                 )
         }
 
-    val behandlingIDKreverIkkeTotrinnskontroll = UUIDv7.ny()
+    private val behandlingIDKreverIkkeTotrinnskontroll = UUIDv7.ny()
 
     private val behandlingKlientMock =
         mockk<BehandlingKlient>().also {
@@ -160,11 +160,6 @@ OppgaveMediatorTest {
             coEvery { it.erSkjermetPerson(any()) } returns Result.success(false)
         }
 
-    private val utsendingMediatorMock =
-        mockk<UtsendingMediator>(relaxed = true).also {
-            coEvery { it.opprettUtsending(any(), any(), any()) } returns UUIDv7.ny()
-        }
-
     private val saksbehandlerOppslagMock =
         mockk<SaksbehandlerOppslag>().also {
             coEvery { it.hentSaksbehandler(saksbehandler.navIdent) } returns behandlerDTO
@@ -179,6 +174,87 @@ OppgaveMediatorTest {
         )
 
     private val emneknagger = setOf("Emneknagg 1", "Emneknagg 2")
+
+    @Test
+    fun `Kan ikke opprette oppgave dersom sak eller behandling ikke finnes`() {
+        val personUtenSakshistorikk = "12345678901"
+        val personUtenBehandling = "12345678902"
+
+        val sakMediatorMock =
+            mockk<SakMediator>().also {
+                every { it.finnSakHistorikkk(personUtenSakshistorikk) } returns null
+                every { it.finnSakHistorikkk(personUtenBehandling) } returns
+                    SakHistorikk(
+                        person =
+                            Person(
+                                id = UUIDv7.ny(),
+                                ident = personUtenBehandling,
+                                skjermesSomEgneAnsatte = false,
+                                adressebeskyttelseGradering = UGRADERT,
+                            ),
+                        saker = mutableSetOf(),
+                    )
+            }
+
+        val oppgaveMediator =
+            OppgaveMediator(
+                oppgaveRepository = mockk(),
+                behandlingKlient = mockk(),
+                utsendingMediator = mockk(),
+                oppslag = mockk(),
+                meldingOmVedtakKlient = mockk(),
+                sakMediator = sakMediatorMock,
+            ).also {
+                it.setRapidsConnection(testRapid)
+            }
+
+        shouldThrow<IllegalStateException> {
+            oppgaveMediator.opprettOppgaveForBehandling(
+                BehandlingOpprettetHendelse(
+                    behandlingId = UUIDv7.ny(),
+                    ident = personUtenSakshistorikk,
+                    opprettet = LocalDateTime.now(),
+                    type = BehandlingType.KLAGE,
+                ),
+            )
+        }
+        shouldThrow<IllegalStateException> {
+            oppgaveMediator.opprettOppgaveForBehandling(
+                BehandlingOpprettetHendelse(
+                    behandlingId = UUIDv7.ny(),
+                    ident = personUtenBehandling,
+                    opprettet = LocalDateTime.now(),
+                    type = BehandlingType.KLAGE,
+                ),
+            )
+        }
+
+        oppgaveMediator.opprettEllerOppdaterOppgave(
+            ForslagTilVedtakHendelse(
+                ident = personUtenBehandling,
+                behandlingId = UUIDv7.ny(),
+                søknadId = UUIDv7.ny(),
+            ),
+        ) shouldBe null
+
+        oppgaveMediator.opprettEllerOppdaterOppgave(
+            ForslagTilVedtakHendelse(
+                ident = personUtenSakshistorikk,
+                behandlingId = UUIDv7.ny(),
+                søknadId = UUIDv7.ny(),
+            ),
+        ) shouldBe null
+
+        testRapid.inspektør.let {
+            it.size shouldBe 4
+            for (i in 0 until it.size) {
+                it.message(i).let { message ->
+                    message["@event_name"].asText() shouldBe "saksbehandling_alert"
+                    message["alertType"].asText() shouldBe "BEHANDLING_IKKE_FUNNET"
+                }
+            }
+        }
+    }
 
     @Test
     fun `Skal kunne sette oppgave til kontroll`() {
@@ -250,7 +326,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
-        settOppOppgaveMediator { datasource, oppgaveMediator ->
+        settOppOppgaveMediator { _, oppgaveMediator ->
             ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =
@@ -364,6 +440,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
+        val behandlingId = UUIDv7.ny()
         val meldingOmVedtakKlientMock =
             mockk<MeldingOmVedtakKlient>().also {
                 coEvery {
@@ -371,54 +448,18 @@ OppgaveMediatorTest {
                         person = any(),
                         saksbehandler = any(),
                         beslutter = any(),
-                        behandlingId = any(),
+                        behandlingId = behandlingId,
                         saksbehandlerToken = any(),
                     )
                 } returns Result.success("<html>brev</html>")
             }
 
-        withMigratedDb { datasource ->
-            val sakMediator =
-                SakMediator(
-                    personMediator =
-                        PersonMediator(
-                            personRepository = PostgresPersonRepository(dataSource),
-                            oppslag = oppslagMock,
-                        ),
-                    sakRepository = PostgresRepository(dataSource),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
-
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
-                    utsendingMediator = utsendingMediatorMock,
-                    sakMediator = sakMediator,
-                )
-
-            val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
-            val forslagTilVedtakHendelse =
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    søknadId = søknadId,
+        settOppOppgaveMediator(movKlient = meldingOmVedtakKlientMock) { datasource, oppgaveMediator ->
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
                     behandlingId = behandlingId,
-                    emneknagger = emneknagger,
                 )
-
-            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
-            val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
-
-            oppgaverKlarTilBehandling.size shouldBe 1
-            val oppgave = oppgaverKlarTilBehandling.single()
-            oppgave.tilstandslogg.single().hendelse shouldBe forslagTilVedtakHendelse
-            oppgave.behandlingId shouldBe behandlingId
-            oppgave.emneknagger shouldContainAll emneknagger
 
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
@@ -447,6 +488,7 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for søknadsbehandling som feiler ved laging av html`() {
+        val behandlingId = UUIDv7.ny()
         val meldingOmVedtakKlientMock =
             mockk<MeldingOmVedtakKlient>().also {
                 coEvery {
@@ -454,54 +496,19 @@ OppgaveMediatorTest {
                         person = any(),
                         saksbehandler = any(),
                         beslutter = any(),
-                        behandlingId = any(),
+                        behandlingId = behandlingId,
                         saksbehandlerToken = any(),
                     )
                 } returns Result.failure(MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak("Feil ved henting/lagring av melding om vedtak"))
             }
 
-        withMigratedDb { datasource ->
-            val sakMediator =
-                SakMediator(
-                    personMediator =
-                        PersonMediator(
-                            personRepository = PostgresPersonRepository(dataSource),
-                            oppslag = oppslagMock,
-                        ),
-                    sakRepository = PostgresRepository(dataSource),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+        settOppOppgaveMediator(movKlient = meldingOmVedtakKlientMock) { datasource, oppgaveMediator ->
 
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
-                    utsendingMediator = utsendingMediatorMock,
-                    sakMediator = sakMediator,
-                )
-
-            val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
-
-            oppgaveMediator.opprettEllerOppdaterOppgave(
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    søknadId = søknadId,
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
                     behandlingId = behandlingId,
-                    emneknagger = emneknagger,
-                ),
-            )
-
-            val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
-
-            oppgaverKlarTilBehandling.size shouldBe 1
-            val oppgave = oppgaverKlarTilBehandling.single()
-            oppgave.behandlingId shouldBe behandlingId
-            oppgave.emneknagger shouldContainAll emneknagger
+                )
 
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
@@ -533,6 +540,7 @@ OppgaveMediatorTest {
     @Test
     fun `Livssyklus for oppgave ferdigstilles med melding om vedtak fra saksbehandler`() {
         val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
         val saksbehandlerToken = "token"
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
@@ -544,31 +552,10 @@ OppgaveMediatorTest {
                     )
                 } returns Result.success(Unit)
             }
-        withMigratedDb { datasource ->
-            val sakMediator =
-                SakMediator(
-                    personMediator =
-                        PersonMediator(
-                            personRepository = PostgresPersonRepository(dataSource),
-                            oppslag = oppslagMock,
-                        ),
-                    sakRepository = PostgresRepository(dataSource),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
+        settOppOppgaveMediator(
+            behandlingKlient = behandlingClientMock,
+        ) { datasource, oppgaveMediator ->
             val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingClientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = utsendingMediator,
-                    sakMediator = sakMediator,
-                )
-
-            val søknadId = UUIDv7.ny()
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -579,12 +566,12 @@ OppgaveMediatorTest {
                 ),
             )
 
-            val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
-
-            oppgaverKlarTilBehandling.size shouldBe 1
-            val oppgave = oppgaverKlarTilBehandling.single()
-            oppgave.behandlingId shouldBe behandlingId
-            oppgave.emneknagger shouldContainAll emneknagger
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                )
 
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
@@ -626,6 +613,7 @@ OppgaveMediatorTest {
     fun `Skal slette utsending hvis godkjenning av behandling feiler`() {
         val behandlingId = UUIDv7.ny()
         val saksbehandlerToken = "token"
+        val søknadId = UUIDv7.ny()
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
@@ -638,32 +626,6 @@ OppgaveMediatorTest {
             }
 
         settOppOppgaveMediator(behandlingKlient = behandlingClientMock) { datasource, oppgaveMediator ->
-            val sakMediator =
-                SakMediator(
-                    personMediator =
-                        PersonMediator(
-                            personRepository = PostgresPersonRepository(dataSource),
-                            oppslag = oppslagMock,
-                        ),
-                    sakRepository = PostgresRepository(dataSource),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
-
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingClientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = utsendingMediator,
-                    sakMediator = sakMediator,
-                )
-
-            val søknadId = UUIDv7.ny()
-
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
@@ -673,12 +635,12 @@ OppgaveMediatorTest {
                 ),
             )
 
-            val oppgaverKlarTilBehandling = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING)
-
-            oppgaverKlarTilBehandling.size shouldBe 1
-            val oppgave = oppgaverKlarTilBehandling.single()
-            oppgave.behandlingId shouldBe behandlingId
-            oppgave.emneknagger shouldContainAll emneknagger
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                )
 
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
@@ -712,13 +674,16 @@ OppgaveMediatorTest {
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
-            utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
+            UtsendingMediator(PostgresUtsendingRepository(datasource)).also { utsendingMediator ->
+                utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
+            }
         }
     }
 
     @Test
     fun `Livssyklus for oppgave ferdigstilles med brev-håndtering i Arena`() {
         val behandlingId = UUIDv7.ny()
+        val søknadId = UUIDv7.ny()
         val saksbehandlerToken = "token"
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
@@ -730,35 +695,7 @@ OppgaveMediatorTest {
                     )
                 } returns Result.success(Unit)
             }
-        withMigratedDb { datasource ->
-            val sakMediator =
-                SakMediator(
-                    personMediator =
-                        PersonMediator(
-                            personRepository = PostgresPersonRepository(dataSource),
-                            oppslag = oppslagMock,
-                        ),
-                    sakRepository = PostgresRepository(dataSource),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
-
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingClientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = utsendingMediator,
-                    sakMediator = sakMediator,
-                )
-
-            val søknadId = UUIDv7.ny()
-
-            // TODO opprett behandling
-
+        settOppOppgaveMediator(behandlingKlient = behandlingClientMock) { datasource, oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
@@ -768,7 +705,12 @@ OppgaveMediatorTest {
                 ),
             )
 
-            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
+                )
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -792,7 +734,8 @@ OppgaveMediatorTest {
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
 
-            utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
+            UtsendingMediator(PostgresUtsendingRepository(datasource))
+                .finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
         }
     }
 
@@ -800,6 +743,7 @@ OppgaveMediatorTest {
     fun `Skal kaste feil dersom godkjenn behandling feiler`() {
         val behandlingId = UUIDv7.ny()
         val saksbehandlerToken = "token"
+        val søknadId = UUIDv7.ny()
         val behandlingClientMock =
             mockk<BehandlingKlient>().also {
                 every {
@@ -810,45 +754,15 @@ OppgaveMediatorTest {
                     )
                 } returns Result.failure(BehandlingException("Feil ved godkjenning av behandling", 403))
             }
-        withMigratedDb { datasource ->
-            val sakMediator =
-                SakMediator(
-                    personMediator =
-                        PersonMediator(
-                            personRepository = PostgresPersonRepository(dataSource),
-                            oppslag = oppslagMock,
-                        ),
-                    sakRepository = PostgresRepository(dataSource),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+        settOppOppgaveMediator(behandlingKlient = behandlingClientMock) { datasource, oppgaveMediator ->
 
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingClientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = utsendingMediator,
-                    sakMediator = sakMediator,
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    behandlingId = behandlingId,
+                    søknadId = søknadId,
                 )
 
-            val søknadId = UUIDv7.ny()
-
-            // TODO opprett behandling
-
-            oppgaveMediator.opprettEllerOppdaterOppgave(
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    emneknagger = emneknagger,
-                ),
-            )
-
-            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -878,43 +792,9 @@ OppgaveMediatorTest {
 
     @Test
     fun `Livssyklus for søknadsbehandling som blir avbrutt`() {
-        withMigratedDb { datasource ->
-            val sakMediator =
-                SakMediator(
-                    personMediator =
-                        PersonMediator(
-                            personRepository = PostgresPersonRepository(dataSource),
-                            oppslag = oppslagMock,
-                        ),
-                    sakRepository = PostgresRepository(dataSource),
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
 
-            val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = oppgaveRepository,
-                    oppslag = oppslagMock,
-                    behandlingKlient = behandlingKlientMock,
-                    meldingOmVedtakKlient = mockk(),
-                    utsendingMediator = mockk(),
-                    sakMediator = sakMediator,
-                )
-
-            val søknadId = UUIDv7.ny()
-            val behandlingId = UUIDv7.ny()
-
-// TODO opprett behandling
-            oppgaveMediator.opprettEllerOppdaterOppgave(
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                ),
-            )
-
-            val oppgave = oppgaveMediator.hentAlleOppgaverMedTilstand(KLAR_TIL_BEHANDLING).single()
+            val oppgave = datasource.lagTestoppgave()
             oppgaveMediator.tildelOppgave(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -925,14 +805,13 @@ OppgaveMediatorTest {
 
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
-                    behandlingId = behandlingId,
-                    søknadId = søknadId,
+                    behandlingId = oppgave.behandlingId,
+                    søknadId = oppgave.soknadId()!!,
                     ident = testIdent,
                 ),
             )
 
-            val avbruttOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            avbruttOppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe BEHANDLES_I_ARENA
         }
     }
 
@@ -1069,9 +948,11 @@ OppgaveMediatorTest {
         }
     }
 
-    private fun DataSource.lagTestoppgave(tilstand: Type): Oppgave {
-        val søknadId = UUIDv7.ny()
-        val behandlingId = UUIDv7.ny()
+    private fun DataSource.lagTestoppgave(
+        tilstand: Type = KLAR_TIL_BEHANDLING,
+        behandlingId: UUID = UUIDv7.ny(),
+        søknadId: UUID = UUIDv7.ny(),
+    ): Oppgave {
         val personRepository = PostgresPersonRepository(this)
         val sakMediator =
             SakMediator(
@@ -1163,9 +1044,10 @@ OppgaveMediatorTest {
         return oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
     }
 
-    fun settOppOppgaveMediator(
+    private fun settOppOppgaveMediator(
         behandlingKlient: BehandlingKlient = behandlingKlientMock,
-        test: (dataSource: DataSource, oppgaveMediator: OppgaveMediator) -> Unit,
+        movKlient: MeldingOmVedtakKlient = mockk(),
+        test: (datasource: DataSource, oppgaveMediator: OppgaveMediator) -> Unit,
     ) {
         withMigratedDb { datasource ->
             val sakMediator =
@@ -1185,8 +1067,8 @@ OppgaveMediatorTest {
                     oppgaveRepository = PostgresOppgaveRepository(datasource),
                     behandlingKlient = behandlingKlient,
                     oppslag = oppslagMock,
-                    utsendingMediator = mockk(relaxed = true),
-                    meldingOmVedtakKlient = mockk(),
+                    utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource)),
+                    meldingOmVedtakKlient = movKlient,
                     sakMediator = sakMediator,
                 ).also {
                     it.setRapidsConnection(testRapid)
