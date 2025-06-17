@@ -27,6 +27,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.klage.HvemKlagerType
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
@@ -125,46 +126,14 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som ferdigstilles med opprettholdelse`() {
-        val fagsakId = UUIDv7.ny()
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-        setupDb { datasource ->
-            val personMediator =
-                PersonMediator(
-                    personRepository = PostgresPersonRepository(dataSource = datasource),
-                    oppslag = oppslagMock,
-                )
-            val sakMediator =
-                SakMediator(
-                    personMediator = personMediator,
-                    sakRepository = PostgresRepository(dataSource = datasource),
-                ).also {
-                    it.setRapidsConnection(rapidsConnection = testRapid)
-                }
-            val klageRepository = PostgresKlageRepository(datasource)
-            val oppgaveMediator =
-                OppgaveMediator(
-                    oppgaveRepository = PostgresOppgaveRepository(datasource),
-                    behandlingKlient = mockk(),
-                    utsendingMediator = utsendingMediator,
-                    oppslag = oppslagMock,
-                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
-                    sakMediator = sakMediator,
-                )
-            val klageMediator =
-                KlageMediator(
-                    klageRepository = klageRepository,
-                    oppgaveMediator = oppgaveMediator,
-                    utsendingMediator = utsendingMediator,
-                    oppslag = oppslagMock,
-                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
-                    personMediator = personMediator,
-                ).also {
-                    it.setRapidsConnection(testRapid)
-                }
+        setupHubba { klageMediator, oppgaveMediator, sakId ->
+
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
                         ident = testPersonIdent,
+                        sakId = sakId,
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
@@ -215,7 +184,7 @@ class KlageMediatorTest {
                 klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
             klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
             klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
-            testRapid.inspektør.size shouldBe 1
+            testRapid.inspektør.message(testRapid.inspektør.size - 1)["@behov"].single().asText() shouldBe "OversendelseKlageinstans"
 
             OversendtKlageinstansMottak(
                 rapidsConnection = testRapid,
@@ -229,7 +198,7 @@ class KlageMediatorTest {
                   "@behov" : [ "OversendelseKlageinstans" ],
                   "behandlingId" : "$behandlingId",
                   "ident" : "${oppgave.personIdent()}",
-                  "fagsakId" : "$fagsakId",
+                  "fagsakId" : "$sakId",
                   "behandlendeEnhet": "${klageBehandling.behandlendeEnhet()}",
                   "hjemler": ${klageBehandling.hjemler().map { "\"$it\"" }},
                   "@løsning": {
@@ -301,6 +270,7 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     personMediator = personMediator,
+                    sakMediator = sakMediator,
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -308,6 +278,7 @@ class KlageMediatorTest {
                 klageMediator.opprettManuellKlage(
                     ManuellKlageMottattHendelse(
                         ident = testPersonIdent,
+                        sakId = UUIDv7.ny(),
                         opprettet = nå,
                         journalpostId = "journalpostId",
                         utførtAv = saksbehandler,
@@ -448,6 +419,7 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     personMediator = personMediator,
+                    sakMediator = sakMediator,
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
@@ -455,6 +427,7 @@ class KlageMediatorTest {
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
                         ident = testPersonIdent,
+                        sakId = UUIDv7.ny(),
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
@@ -539,11 +512,13 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     personMediator = personMediator,
+                    sakMediator = sakMediator,
                 )
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
                         ident = testPersonIdent,
+                        sakId = UUIDv7.ny(),
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
@@ -619,11 +594,13 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     personMediator = personMediator,
+                    sakMediator = sakMediator,
                 )
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
                         ident = testPersonIdent,
+                        sakId = UUIDv7.ny(),
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
@@ -701,11 +678,13 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     personMediator = personMediator,
+                    sakMediator = sakMediator,
                 )
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
                         ident = testPersonIdent,
+                        sakId = UUIDv7.ny(),
                         opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                     ),
@@ -996,6 +975,62 @@ class KlageMediatorTest {
                 ),
             )
             test(datasource)
+        }
+    }
+
+    private fun setupHubba(test: (KlageMediator, OppgaveMediator, UUID) -> Unit) {
+        withMigratedDb { dataSource ->
+            val personRepository = PostgresPersonRepository(dataSource)
+            val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
+
+            val sakMediator =
+                SakMediator(
+                    personMediator = personMediator,
+                    sakRepository = PostgresRepository(dataSource = dataSource),
+                ).also {
+                    it.setRapidsConnection(rapidsConnection = testRapid)
+                }
+            val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
+//                UtsendingMediator(
+//                    repository = PostgresUtsendingRepository(dataSource),
+//                ).also { it.setRapidsConnection(rapidsConnection = testRapid) }
+            val oppgaveMediator =
+                OppgaveMediator(
+                    oppgaveRepository = PostgresOppgaveRepository(dataSource),
+                    behandlingKlient = mockk(),
+                    utsendingMediator = utsendingMediator,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
+                    sakMediator = sakMediator,
+                )
+            val klageMediator =
+                KlageMediator(
+                    klageRepository = PostgresKlageRepository(dataSource),
+                    oppgaveMediator = oppgaveMediator,
+                    utsendingMediator = utsendingMediator,
+                    oppslag = oppslagMock,
+                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
+                    personMediator = personMediator,
+                    sakMediator = sakMediator,
+                ).also { it.setRapidsConnection(rapidsConnection = testRapid) }
+            personRepository.lagre(
+                Person(
+                    ident = testPersonIdent,
+                    skjermesSomEgneAnsatte = false,
+                    adressebeskyttelseGradering = UGRADERT,
+                ),
+            )
+            val sak =
+                sakMediator.opprettSak(
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = UUIDv7.ny(),
+                        behandlingId = UUIDv7.ny(),
+                        ident = testPersonIdent,
+                        opprettet = LocalDateTime.now(),
+                    ),
+                )
+
+            test(klageMediator, oppgaveMediator, sak.sakId)
         }
     }
 }

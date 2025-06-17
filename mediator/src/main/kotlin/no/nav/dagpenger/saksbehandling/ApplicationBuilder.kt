@@ -134,6 +134,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             oppslag = oppslag,
             meldingOmVedtakKlient = meldingOmVedtakKlient,
             personMediator = personMediator,
+            sakMediator = sakMediator,
         )
     private val oppgaveDTOMapper =
         OppgaveDTOMapper(

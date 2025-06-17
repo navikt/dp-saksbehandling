@@ -118,6 +118,7 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en klage med maskintoken`() {
         val token = gyldigMaskinToken()
+        val sakId = UUIDv7.ny()
         val oppgave = lagOppgave(behandlingType = KLAGE, opprettet = dato)
         val ident = oppgave.personIdent()
         val mediator =
@@ -127,6 +128,7 @@ class KlageApiTest {
                         klageMottattHendelse =
                             KlageMottattHendelse(
                                 ident = oppgave.personIdent(),
+                                sakId = sakId,
                                 opprettet = dato,
                                 journalpostId = "journalpostId",
                             ),
@@ -144,7 +146,7 @@ class KlageApiTest {
                     {
                         "journalpostId": "journalpostId",
                         "opprettet": "$dato",
-                        "sakId": "sakId",
+                        "sakId": "$sakId",
                         "personIdent": {"ident":  "$ident"}
                     }
                     """.trimIndent(),
@@ -171,6 +173,7 @@ class KlageApiTest {
                 klageMottattHendelse =
                     KlageMottattHendelse(
                         ident = ident,
+                        sakId = sakId,
                         opprettet = dato,
                         journalpostId = "journalpostId",
                     ),
@@ -183,6 +186,7 @@ class KlageApiTest {
         val token = gyldigSaksbehandlerToken()
         val oppgave = lagOppgave(behandlingType = KLAGE, opprettet = dato)
         val ident = oppgave.personIdent()
+        val sakId = UUIDv7.ny()
         val mediator =
             mockk<KlageMediator>().also {
                 every {
@@ -190,6 +194,7 @@ class KlageApiTest {
                         manuellKlageMottattHendelse =
                             ManuellKlageMottattHendelse(
                                 ident = oppgave.personIdent(),
+                                sakId = sakId,
                                 opprettet = dato,
                                 journalpostId = "journalpostId",
                                 utførtAv = saksbehandler,
@@ -208,7 +213,7 @@ class KlageApiTest {
                     {
                         "journalpostId": "journalpostId",
                         "opprettet": "$dato",
-                        "sakId": "sakId",
+                        "sakId": "$sakId",
                         "personIdent": {"ident":  "$ident"}
                     }
                     """.trimIndent(),
@@ -235,6 +240,7 @@ class KlageApiTest {
                 manuellKlageMottattHendelse =
                     ManuellKlageMottattHendelse(
                         ident = ident,
+                        sakId = sakId,
                         opprettet = dato,
                         journalpostId = "journalpostId",
                         utførtAv = saksbehandler,

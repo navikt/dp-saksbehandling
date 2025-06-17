@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -29,6 +30,7 @@ class HendelseJsonSerDerTest {
         BehandlingOpprettetHendelse(
             behandlingId = UUID.fromString(aUUID),
             ident = "1234",
+            sakId = UUIDv7.ny(),
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
             type = BehandlingType.RETT_TIL_DAGPENGER,
             utførtAv = utførtAv,
@@ -55,6 +57,7 @@ class HendelseJsonSerDerTest {
              { 
                 "behandlingId": "$aUUID",
                 "ident": "1234",
+                "sakId": "${hendelse.sakId}",
                 "opprettet": "-999999999-01-01T00:00:00",
                 "type": "RETT_TIL_DAGPENGER",
                 "utførtAv": { "navn": "dp-mottak" }

@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.INTERN_MELDING
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
@@ -42,6 +43,7 @@ class KlageMediator(
     private val oppslag: Oppslag,
     private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
     private val personMediator: PersonMediator,
+    private val sakMediator: SakMediator,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
 
@@ -77,17 +79,20 @@ class KlageMediator(
                         ),
                     ),
             )
-        klageRepository.lagre(klageBehandling)
+        klageRepository.lagre(klageBehandling = klageBehandling)
+        val behandlingOpprettetHendelse =
+            BehandlingOpprettetHendelse(
+                behandlingId = klageBehandling.behandlingId,
+                ident = klageMottattHendelse.ident,
+                sakId = klageMottattHendelse.sakId,
+                opprettet = klageMottattHendelse.opprettet,
+                type = BehandlingType.KLAGE,
+                utførtAv = klageMottattHendelse.utførtAv,
+            )
+        sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
         return kotlin.runCatching {
             oppgaveMediator.opprettOppgaveForBehandling(
-                behandlingOpprettetHendelse =
-                    BehandlingOpprettetHendelse(
-                        behandlingId = klageBehandling.behandlingId,
-                        ident = klageMottattHendelse.ident,
-                        opprettet = klageMottattHendelse.opprettet,
-                        type = BehandlingType.KLAGE,
-                        utførtAv = klageMottattHendelse.utførtAv,
-                    ),
+                behandlingOpprettetHendelse = behandlingOpprettetHendelse,
             )
         }
             .onFailure { e ->
@@ -124,6 +129,7 @@ class KlageMediator(
                         BehandlingOpprettetHendelse(
                             behandlingId = klageBehandling.behandlingId,
                             ident = manuellKlageMottattHendelse.ident,
+                            sakId = manuellKlageMottattHendelse.sakId,
                             opprettet = manuellKlageMottattHendelse.opprettet,
                             type = BehandlingType.KLAGE,
                             utførtAv = utførtAv,
@@ -204,11 +210,12 @@ class KlageMediator(
                         hendelse = hendelse,
                     )
                 }
+            val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
 
             // TODO: Fiks sak.... Den skal ikke lages her
             val sak =
                 Sak(
-                    id = UUIDv7.ny().toString(),
+                    id = sakId.toString(),
                     kontekst = "Dagpenger",
                 )
 

@@ -1056,6 +1056,7 @@ class PostgresOppgaveRepositoryTest {
                     BehandlingOpprettetHendelse(
                         behandlingId = UUIDv7.ny(),
                         ident = testPerson.ident,
+                        sakId = UUIDv7.ny(),
                         opprettet = LocalDateTime.MIN,
                         type = BehandlingType.KLAGE,
                     ),

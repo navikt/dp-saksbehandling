@@ -212,6 +212,7 @@ OppgaveMediatorTest {
             oppgaveMediator.opprettOppgaveForBehandling(
                 BehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
+                    sakId = UUIDv7.ny(),
                     ident = personUtenSakshistorikk,
                     opprettet = LocalDateTime.now(),
                     type = BehandlingType.KLAGE,
@@ -222,6 +223,7 @@ OppgaveMediatorTest {
             oppgaveMediator.opprettOppgaveForBehandling(
                 BehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
+                    sakId = UUIDv7.ny(),
                     ident = personUtenBehandling,
                     opprettet = LocalDateTime.now(),
                     type = BehandlingType.KLAGE,

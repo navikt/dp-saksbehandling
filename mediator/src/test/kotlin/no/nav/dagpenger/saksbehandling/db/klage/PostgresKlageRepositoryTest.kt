@@ -14,7 +14,6 @@ import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandslogg
 import no.nav.dagpenger.saksbehandling.klage.Opplysning
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -34,6 +33,7 @@ class PostgresKlageRepositoryTest {
             val klageMottattHendelse =
                 KlageMottattHendelse(
                     ident = testPerson.ident,
+                    sakId = UUIDv7.ny(),
                     opprettet = LocalDateTime.now(),
                     journalpostId = "journalpostId",
                 )

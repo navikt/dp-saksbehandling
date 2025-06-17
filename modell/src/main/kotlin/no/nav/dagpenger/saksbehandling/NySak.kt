@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -26,6 +27,16 @@ data class NySak(
                 ),
             )
         }
+    }
+
+    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
+        behandlinger.add(
+            NyBehandling(
+                behandlingId = behandlingOpprettetHendelse.behandlingId,
+                behandlingType = behandlingOpprettetHendelse.type,
+                opprettet = behandlingOpprettetHendelse.opprettet,
+            ),
+        )
     }
 
     override fun equals(other: Any?): Boolean {

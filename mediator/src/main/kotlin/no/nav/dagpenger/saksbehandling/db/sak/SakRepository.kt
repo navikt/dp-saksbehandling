@@ -20,6 +20,8 @@ interface SakRepository {
     fun hentSakHistorikk(ident: String): SakHistorikk
 
     fun finn(ident: String): SakHistorikk?
+
+    fun hentSakIdForBehandlingId(behandlingId: UUID): UUID
 }
 
 class PostgresRepository(
@@ -46,6 +48,7 @@ class PostgresRepository(
         sessionOf(dataSource).use { session ->
             return session.run(
                 queryOf(
+                    //language=PostgreSQL
                     statement =
                         """
                         SELECT 
@@ -74,6 +77,29 @@ class PostgresRepository(
                     row.tilPerson(person)
                 }.asSingle,
             )
+        }
+    }
+
+    override fun hentSakIdForBehandlingId(behandlingId: UUID): UUID {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT  sak.id
+                        FROM    sak_v2 sak
+                        JOIN    behandling_v1 beh ON beh.sak_id = sak.id
+                        WHERE   beh.id = :behandling_id
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandlingId,
+                        ),
+                ).map { row ->
+                    row.uuid("id")
+                }.asSingle,
+            ) ?: throw DataNotFoundException("Kan ikke finne sak for behandlingId $behandlingId")
         }
     }
 

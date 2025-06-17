@@ -10,8 +10,10 @@ import no.nav.dagpenger.saksbehandling.NyBehandling
 import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import java.util.UUID
 
 private val logger = mu.KotlinLogging.logger {}
 
@@ -37,7 +39,7 @@ class SakMediator(
         return sakRepository.finn(ident)
     }
 
-    fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
+    fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): NySak {
         val sak =
             NySak(
                 søknadId = søknadsbehandlingOpprettetHendelse.søknadId,
@@ -71,6 +73,7 @@ class SakMediator(
             sakHistorikk.leggTilSak(sak)
             sakRepository.lagre(sakHistorikk)
         }
+        return sak
     }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
@@ -78,6 +81,17 @@ class SakMediator(
             it.knyttTilSak(meldekortbehandlingOpprettetHendelse)
             sakRepository.lagre(it)
         }
+    }
+
+    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
+        sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
+            it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
+            sakRepository.lagre(it)
+        }
+    }
+
+    fun hentSakIdForBehandlingId(behandlingId: UUID): UUID {
+        return sakRepository.hentSakIdForBehandlingId(behandlingId)
     }
 
     private fun sendAvbrytBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
