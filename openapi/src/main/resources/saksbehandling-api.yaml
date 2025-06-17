@@ -1290,6 +1290,7 @@ components:
           type: string
         sakId:
           type: string
+          format: uuid
         personIdent:
           $ref: '#/components/schemas/PersonIdent'
       required:

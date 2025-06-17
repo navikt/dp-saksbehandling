@@ -36,6 +36,7 @@ fun Route.klageApi(
                             journalpostId = klage.journalpostId,
                             utførtAv = Applikasjon("dp-mottak"),
                             ident = klage.personIdent.ident,
+                            sakId = klage.sakId,
                         ),
                 ).let { oppgave ->
 
