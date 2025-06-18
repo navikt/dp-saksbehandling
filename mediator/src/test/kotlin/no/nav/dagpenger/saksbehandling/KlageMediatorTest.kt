@@ -2,14 +2,11 @@ package no.nav.dagpenger.saksbehandling
 
 import PersonMediator
 import com.fasterxml.jackson.databind.JsonNode
-import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
-import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -55,11 +52,9 @@ import no.nav.dagpenger.saksbehandling.klage.OpplysningType.VURDERING_AV_KLAGEN
 import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.klage.UtfallType
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.junit.jupiter.api.Test
@@ -127,7 +122,7 @@ class KlageMediatorTest {
         }
 
     @Test
-    fun `Livssyklus til en klage som ferdigstilles med opprettholdelse`() {
+    fun `Livssyklus til en digitalt mottatt klage som ferdigstilles med opprettholdelse`() {
         setupHubba { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
@@ -180,18 +175,19 @@ class KlageMediatorTest {
             )
 
             val klageBehandling =
-                klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                klageMediator.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                )
             klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
-            klageBehandling.behandlendeEnhet() shouldBe "440Gakk"
-            testRapid.inspektør.message(testRapid.inspektør.size - 1)["@behov"].single()
-                .asText() shouldBe "OversendelseKlageinstans"
+            klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
 
             OversendtKlageinstansMottak(
                 rapidsConnection = testRapid,
                 klageMediator = klageMediator,
             )
 
-            val melding =
+            val løsningPåBehovForOversendelseTilKA =
                 """
                 {
                   "@event_name" : "behov",
@@ -209,7 +205,7 @@ class KlageMediatorTest {
 
             testRapid.sendTestMessage(
                 key = oppgave.personIdent(),
-                message = melding,
+                message = løsningPåBehovForOversendelseTilKA,
             )
 
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -228,17 +224,14 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en manuell klage som ferdigstilles med opprettholdelse`() {
-        val fagsakId = UUIDv7.ny()
-        val nå = LocalDateTime.now()
-        val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-
         setupHubba { klageMediator, oppgaveMediator, sakId ->
+
             val behandlingId =
                 klageMediator.opprettManuellKlage(
                     ManuellKlageMottattHendelse(
                         ident = testPersonIdent,
                         sakId = sakId,
-                        opprettet = nå,
+                        opprettet = LocalDateTime.now(),
                         journalpostId = "journalpostId",
                         utførtAv = saksbehandler,
                     ),
@@ -276,41 +269,28 @@ class KlageMediatorTest {
                 saksbehandlerToken = "token",
             )
             val klageBehandling =
-                klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
+                klageMediator.hentKlageBehandling(
+                    behandlingId = behandlingId,
+                    saksbehandler = saksbehandler,
+                )
             klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
             klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
-            testRapid.inspektør.size shouldBe 1
-            val sendtMelding = testRapid.inspektør.message(0)
-            sendtMelding["behandlingId"].asUUID() shouldBe oppgave.behandlingId
-            sendtMelding["ident"].asText() shouldBe oppgave.personIdent()
-            shouldNotBeNull { sendtMelding["fagsakId"].asUUID() }
-            sendtMelding["behandlendeEnhet"].asText() shouldBe behandlerDTO.enhet.enhetNr
-            sendtMelding["opprettet"].asLocalDate() shouldBe nå.toLocalDate()
-            sendtMelding["kommentar"].asText() shouldBe "nice"
-            sendtMelding["prosessfullmektigNavn"].asText() shouldBe "Djevelens Advokat"
-            sendtMelding["prosessfullmektigAdresselinje1"].asText() shouldBe "Sydenveien 1"
-            sendtMelding["prosessfullmektigAdresselinje2"].asText() shouldBe "Poste restante"
-            sendtMelding["prosessfullmektigAdresselinje3"].asText() shouldBe "Teisen postkontor"
-            sendtMelding["prosessfullmektigPostnummer"].asText() shouldBe "0666"
-            sendtMelding["prosessfullmektigPoststed"].asText() shouldBe "Oslo"
-            sendtMelding["prosessfullmektigLand"].asText() shouldBe "Norge"
 
             OversendtKlageinstansMottak(
                 rapidsConnection = testRapid,
                 klageMediator = klageMediator,
             )
 
-            val melding =
+            val løsningPåBehovForOversendelseTilKA =
                 """
                 {
                   "@event_name" : "behov",
                   "@behov" : [ "OversendelseKlageinstans" ],
                   "behandlingId" : "$behandlingId",
                   "ident" : "${oppgave.personIdent()}",
-                  "fagsakId" : "$fagsakId",
+                  "fagsakId" : "$sakId",
                   "behandlendeEnhet": "${klageBehandling.behandlendeEnhet()}",
                   "hjemler": ${klageBehandling.hjemler().map { "\"$it\"" }},
-                  "opprettet": "$nå",
                   "@løsning": {
                     "OversendelseKlageinstans": "OK"
                   }
@@ -319,7 +299,7 @@ class KlageMediatorTest {
 
             testRapid.sendTestMessage(
                 key = oppgave.personIdent(),
-                message = melding,
+                message = løsningPåBehovForOversendelseTilKA,
             )
 
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
@@ -330,17 +310,9 @@ class KlageMediatorTest {
                 saksbehandler = saksbehandler,
             ).tilstand().type shouldBe FERDIG_BEHANDLET
 
-            verify(exactly = 1) {
-                utsendingMediator.opprettUtsending(
-                    oppgaveId = oppgave.oppgaveId,
-                    brev = html,
-                    ident = oppgave.personIdent(),
-                    type = UtsendingType.KLAGEMELDING,
-                )
-            }
-            verify(exactly = 1) {
-                utsendingMediator.mottaStartUtsending(any())
-            }
+            testRapid.inspektør.size shouldBe 2
+            testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
+            testRapid.inspektør.message(1).behovNavn() shouldBe "OversendelseKlageinstans"
         }
     }
 

@@ -69,8 +69,8 @@ class KlageMediator(
         val klageBehandling =
             KlageBehandling(
                 journalpostId = klageMottattHendelse.journalpostId,
-                opprettet = klageMottattHendelse.opprettet,
                 person = person,
+                opprettet = klageMottattHendelse.opprettet,
                 tilstandslogg =
                     KlageTilstandslogg(
                         KlageTilstandsendring(
@@ -121,30 +121,34 @@ class KlageMediator(
             )
 
         klageRepository.lagre(klageBehandling)
-        return kotlin.runCatching {
-            val utførtAv = manuellKlageMottattHendelse.utførtAv
-            val oppgave =
-                oppgaveMediator.opprettOppgaveForBehandling(
-                    behandlingOpprettetHendelse =
-                        BehandlingOpprettetHendelse(
-                            behandlingId = klageBehandling.behandlingId,
-                            ident = manuellKlageMottattHendelse.ident,
-                            sakId = manuellKlageMottattHendelse.sakId,
-                            opprettet = manuellKlageMottattHendelse.opprettet,
-                            type = BehandlingType.KLAGE,
-                            utførtAv = utførtAv,
-                        ),
-                )
-            oppgaveMediator.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = utførtAv.navIdent,
-                    utførtAv = utførtAv,
-                ),
+
+        val utførtAv = manuellKlageMottattHendelse.utførtAv
+        val behandlingOpprettetHendelse =
+            BehandlingOpprettetHendelse(
+                behandlingId = klageBehandling.behandlingId,
+                ident = manuellKlageMottattHendelse.ident,
+                sakId = manuellKlageMottattHendelse.sakId,
+                opprettet = manuellKlageMottattHendelse.opprettet,
+                type = BehandlingType.KLAGE,
+                utførtAv = utførtAv,
             )
+        sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
+
+        return kotlin.runCatching {
+            oppgaveMediator.opprettOppgaveForBehandling(
+                behandlingOpprettetHendelse = behandlingOpprettetHendelse,
+            ).also { oppgave ->
+                oppgaveMediator.tildelOppgave(
+                    SettOppgaveAnsvarHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        ansvarligIdent = utførtAv.navIdent,
+                        utførtAv = utførtAv,
+                    ),
+                )
+            }
         }
             .onFailure { e ->
-                logger.error { "Kunne ikke opprette oppgave for manuell klagebehandling: ${klageBehandling.behandlingId}" }
+                logger.error { "Kunne ikke opprette oppgave for klagebehandling: ${klageBehandling.behandlingId}" }
                 throw e
             }
             .getOrThrow()
