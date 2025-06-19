@@ -17,7 +17,7 @@ data class SakHistorikk(
         }
     }
 
-    fun finnBehandling(behandinId: UUID): NyBehandling? {
+    fun finnBehandling(behandinId: UUID): Behandling? {
         return saker.asSequence()
             .flatMap { it.behandlinger() }
             .firstOrNull { it.behandlingId == behandinId }

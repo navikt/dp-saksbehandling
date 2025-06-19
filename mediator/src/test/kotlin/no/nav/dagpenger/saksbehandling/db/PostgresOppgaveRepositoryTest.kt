@@ -2,14 +2,12 @@ package no.nav.dagpenger.saksbehandling.db
 
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
@@ -897,17 +895,6 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Exception hvis vi ikke får hentet behandling basert på behandlingId`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-
-            shouldThrow<DataNotFoundException> {
-                repo.hentBehandling(UUIDv7.ny())
-            }
-        }
-    }
-
-    @Test
     fun `Skal kunne lagre både en behandling og en oppgave flere ganger`() {
         val testOppgave = lagOppgave()
         withMigratedDb { ds ->
@@ -1009,12 +996,6 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente en oppgave`() {
         val testOppgave = lagOppgave()
-        val testBehandling =
-            Behandling(
-                behandlingId = testOppgave.behandlingId,
-                type = testOppgave.behandlingType,
-                opprettet = testOppgave.opprettet,
-            )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
@@ -1026,12 +1007,6 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne slette et notat for en oppgave`() {
         val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        val testBehandling =
-            Behandling(
-                behandlingId = testOppgave.behandlingId,
-                type = testOppgave.behandlingType,
-                opprettet = testOppgave.opprettet,
-            )
         testOppgave.tildel(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = testOppgave.oppgaveId,

@@ -90,7 +90,7 @@ class OppgaveMediator(
                             ),
                         ),
                     behandlingId = behandling.behandlingId,
-                    behandlingType = behandling.behandlingType,
+                    behandlingType = behandling.type,
                     person = sakHistorikk.person,
                 )
             oppgaveRepository.lagre(oppgave)
@@ -171,7 +171,7 @@ class OppgaveMediator(
                                     ),
                                 ),
                             behandlingId = behandling.behandlingId,
-                            behandlingType = behandling.behandlingType,
+                            behandlingType = behandling.type,
                             person = sakHistorikk.person,
                         )
                     oppgaveRepository.lagre(oppgave)

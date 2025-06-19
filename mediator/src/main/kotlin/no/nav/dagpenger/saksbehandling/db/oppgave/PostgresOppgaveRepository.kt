@@ -7,7 +7,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -54,7 +53,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
@@ -246,47 +244,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun finnBehandling(behandlingId: UUID): Behandling? {
-        return sessionOf(dataSource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT beha.id behandling_id, beha.opprettet, beha.behandling_type, pers.id person_id, pers.ident,
-                               pers.skjermes_som_egne_ansatte, pers.adressebeskyttelse_gradering
-                        FROM   behandling_v1 beha
-                        JOIN   person_v1     pers ON pers.id = beha.person_id
-                        WHERE  beha.id     = :behandling_id
-                        """.trimIndent(),
-                    paramMap = mapOf("behandling_id" to behandlingId),
-                ).map { row ->
-                    val person =
-                        Person(
-                            id = row.uuid("person_id"),
-                            ident = row.string("ident"),
-                            skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
-                            adressebeskyttelseGradering =
-                                AdressebeskyttelseGradering.valueOf(
-                                    row.string("adressebeskyttelse_gradering"),
-                                ),
-                        )
-                    Behandling.rehydrer(
-                        behandlingId = behandlingId,
-                        opprettet = row.localDateTime("opprettet"),
-                        hendelse = finnHendelseForBehandling(behandlingId, dataSource),
-                        type = BehandlingType.valueOf(row.string("behandling_type")),
-                    )
-                }.asSingle,
-            )
-        }
-    }
-
-    override fun hentBehandling(behandlingId: UUID): Behandling {
-        return finnBehandling(behandlingId)
-            ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
-    }
-
     override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
         søk(
             søkeFilter =
@@ -296,25 +253,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     saksbehandlerIdent = null,
                 ),
         ).oppgaver
-
-    private fun hentOppgave(
-        transactionalSession: TransactionalSession,
-        oppgaveId: UUID,
-    ): Oppgave? {
-        val oppgave =
-            transactionalSession.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement = "SELECT * FROM oppgave_v1 WHERE id = :oppgave_id",
-                        paramMap = mapOf("oppgave_id" to oppgaveId),
-                    ).map { row ->
-                        row.rehydrerOppgave(dataSource)
-                    }.asSingle,
-                )
-            }
-        return oppgave
-    }
 
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
         return sessionOf(dataSource).use { session ->
@@ -728,41 +666,6 @@ private fun rehydrerTilstandsendringHendelse(
     }
 }
 
-private fun Row.rehydrerHendelse(): Hendelse {
-    return when (val hendelseType = this.string("hendelse_type")) {
-        "TomHendelse" -> return TomHendelse
-        "SøknadsbehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-        "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
-        else -> {
-            logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
-            sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
-            throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
-        }
-    }
-}
-
-private fun finnHendelseForBehandling(
-    behandlingId: UUID,
-    dataSource: DataSource,
-): Hendelse {
-    return sessionOf(dataSource).use { session ->
-        session.run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    SELECT hendelse_type, hendelse_data
-                    FROM   hendelse_v1
-                    WHERE  behandling_id = :behandling_id
-                    """.trimIndent(),
-                paramMap = mapOf("behandling_id" to behandlingId),
-            ).map { row ->
-                row.rehydrerHendelse()
-            }.asSingle,
-        ) ?: TomHendelse
-    }
-}
-
 private fun hentEmneknaggerForOppgave(
     oppgaveId: UUID,
     dataSource: DataSource,
@@ -1043,7 +946,6 @@ private fun TransactionalSession.lagre(
 }
 
 private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
-    val behandlingId = this.uuid("behandling_id")
     val oppgaveId = this.uuid("oppgave_id")
     val person =
         Person(
@@ -1052,14 +954,6 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
             skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
             adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
         )
-    val behandling =
-        Behandling.rehydrer(
-            behandlingId = behandlingId,
-            opprettet = this.localDateTime("behandling_opprettet"),
-            hendelse = finnHendelseForBehandling(behandlingId, dataSource),
-            type = BehandlingType.valueOf(this.string("behandling_type")),
-        )
-
     val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId, dataSource)
 
     val tilstand =
@@ -1089,8 +983,8 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         tilstand = tilstand,
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
-        behandlingId = behandling.behandlingId,
-        behandlingType = behandling.type,
+        behandlingId = this.uuid("behandling_id"),
+        behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
         person = person,
     )
 }

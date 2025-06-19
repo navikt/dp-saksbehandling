@@ -4,13 +4,22 @@ import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.NyBehandling
 import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.serder.tilHendelse
+import no.nav.dagpenger.saksbehandling.serder.tilJson
+import org.postgresql.util.PGobject
 import java.util.UUID
 import javax.sql.DataSource
 
@@ -23,6 +32,9 @@ interface SakRepository {
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID
 }
+
+private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 class PostgresRepository(
     private val dataSource: DataSource,
@@ -43,7 +55,7 @@ class PostgresRepository(
     }
 
     override fun finn(ident: String): SakHistorikk? {
-        val person = mutableListOf<SakHistorikk>()
+        val sakHistorikk = mutableListOf<SakHistorikk>()
 
         sessionOf(dataSource).use { session ->
             return session.run(
@@ -62,11 +74,14 @@ class PostgresRepository(
                             beh.id AS behandling_id,
                             beh.behandling_type AS behandling_type,
                             beh.opprettet AS behandling_opprettet,
-                            opp.id AS oppgave_id
+                            opp.id AS oppgave_id,
+                            hen.hendelse_type AS hendelse_type,
+                            hen.hendelse_data AS hendelse_data
                         FROM person_v1 per
                         LEFT JOIN sak_v2 sak ON sak.person_id = per.id
                         LEFT JOIN behandling_v1 beh ON beh.sak_id = sak.id
                         LEFT JOIN oppgave_v1 opp ON opp.behandling_id = beh.id
+                        LEFT JOIN hendelse_v1 hen ON hen.behandling_id = beh.id
                         WHERE per.ident = :ident
                         """.trimIndent(),
                     paramMap =
@@ -74,7 +89,7 @@ class PostgresRepository(
                             "ident" to ident,
                         ),
                 ).map { row ->
-                    row.tilPerson(person)
+                    row.tilSakHistorikk(sakHistorikk)
                 }.asSingle,
             )
         }
@@ -144,7 +159,7 @@ class PostgresRepository(
     private fun TransactionalSession.lagreBehandlinger(
         personId: UUID,
         sakId: UUID,
-        behandlinger: List<NyBehandling>,
+        behandlinger: List<Behandling>,
     ) {
         behandlinger.forEach { behandling ->
             this.lagreBehandling(
@@ -155,10 +170,39 @@ class PostgresRepository(
         }
     }
 
+    private fun TransactionalSession.lagreHendelse(
+        behandlingId: UUID,
+        hendelse: Hendelse,
+    ) {
+        run(
+            queryOf(
+                //language=PostgreSQL
+                statement =
+                    """
+                    INSERT INTO hendelse_v1
+                        (behandling_id, hendelse_type, hendelse_data)
+                    VALUES
+                        (:behandling_id, :hendelse_type, :hendelse_data) 
+                    ON CONFLICT DO NOTHING
+                    """.trimIndent(),
+                paramMap =
+                    mapOf(
+                        "behandling_id" to behandlingId,
+                        "hendelse_type" to hendelse.javaClass.simpleName,
+                        "hendelse_data" to
+                            PGobject().also {
+                                it.type = "JSONB"
+                                it.value = hendelse.tilJson()
+                            },
+                    ),
+            ).asUpdate,
+        )
+    }
+
     private fun TransactionalSession.lagreBehandling(
         personId: UUID,
         sakId: UUID,
-        behandling: NyBehandling,
+        behandling: Behandling,
     ) {
         run(
             queryOf(
@@ -175,15 +219,22 @@ class PostgresRepository(
                     mapOf(
                         "id" to behandling.behandlingId,
                         "person_id" to personId,
-                        "behandling_type" to behandling.behandlingType.name,
+                        "behandling_type" to behandling.type.name,
                         "sak_id" to sakId,
                         "opprettet" to behandling.opprettet,
                     ),
             ).asUpdate,
         )
+        this.lagreHendelse(behandling.behandlingId, behandling.hendelse)
     }
 
-    private fun Row.tilPerson(sakHistorikkListe: MutableList<SakHistorikk>): SakHistorikk {
+    /**
+     * Mapper en [Row] fra SQL-spørringen til en [SakHistorikk].
+     * Hvis det ikke finnes en [SakHistorikk] for personen, opprettes en ny.
+     * Hvis det finnes en sak, legges den til i [SakHistorikk].
+     * Hvis det finnes en behandling, legges den til i [NySak].
+     */
+    private fun Row.tilSakHistorikk(sakHistorikkListe: MutableList<SakHistorikk>): SakHistorikk {
         val sakHistorikk =
             sakHistorikkListe.singleOrNull() ?: SakHistorikk(
                 person =
@@ -212,15 +263,31 @@ class PostgresRepository(
             val behandlingId = this.uuidOrNull("behandling_id")
             if (behandlingId != null) {
                 sak.leggTilBehandling(
-                    NyBehandling(
+                    Behandling(
                         behandlingId = behandlingId,
-                        behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
+                        type = BehandlingType.valueOf(this.string("behandling_type")),
                         opprettet = this.localDateTime("behandling_opprettet"),
                         oppgaveId = this.uuidOrNull("oppgave_id"),
+                        hendelse = this.rehydrerHendelse(),
                     ),
                 )
             }
         }
         return sakHistorikk
+    }
+
+    private fun Row.rehydrerHendelse(): Hendelse {
+        return when (val hendelseType = this.string("hendelse_type")) {
+            "TomHendelse" -> return TomHendelse
+            "SøknadsbehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<SøknadsbehandlingOpprettetHendelse>()
+            "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
+            "MeldekortbehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<MeldekortbehandlingOpprettetHendelse>()
+
+            else -> {
+                logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
+                sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
+                throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
+            }
+        }
     }
 }

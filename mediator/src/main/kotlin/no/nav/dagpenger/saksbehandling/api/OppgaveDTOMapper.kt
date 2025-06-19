@@ -53,7 +53,7 @@ internal class OppgaveDTOMapper(
                                 BehandlingDTO(
                                     id = behandling.behandlingId,
                                     behandlingType =
-                                        when (behandling.behandlingType) {
+                                        when (behandling.type) {
                                             BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
                                             BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             BehandlingType.MELDEKORT -> BehandlingTypeDTO.MELDEKORT

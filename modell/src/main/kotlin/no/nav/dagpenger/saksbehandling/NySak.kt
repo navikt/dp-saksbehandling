@@ -9,21 +9,22 @@ data class NySak(
     val sakId: UUID = UUIDv7.ny(),
     val søknadId: UUID,
     val opprettet: LocalDateTime,
-    private val behandlinger: MutableSet<NyBehandling> = mutableSetOf(),
+    private val behandlinger: MutableSet<Behandling> = mutableSetOf(),
 ) {
-    fun behandlinger(): List<NyBehandling> = behandlinger.toList()
+    fun behandlinger(): List<Behandling> = behandlinger.toList()
 
-    fun leggTilBehandling(behandling: NyBehandling) = behandlinger.add(behandling)
+    fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
         if (this.behandlinger.map { it.behandlingId }
                 .containsAll(meldekortbehandlingOpprettetHendelse.basertPåBehandlinger)
         ) {
             behandlinger.add(
-                NyBehandling(
+                Behandling(
                     behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
-                    behandlingType = BehandlingType.MELDEKORT,
+                    type = BehandlingType.MELDEKORT,
                     opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
+                    hendelse = meldekortbehandlingOpprettetHendelse,
                 ),
             )
         }
@@ -31,10 +32,11 @@ data class NySak(
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
         behandlinger.add(
-            NyBehandling(
+            Behandling(
                 behandlingId = behandlingOpprettetHendelse.behandlingId,
-                behandlingType = behandlingOpprettetHendelse.type,
+                type = behandlingOpprettetHendelse.type,
                 opprettet = behandlingOpprettetHendelse.opprettet,
+                hendelse = behandlingOpprettetHendelse,
             ),
         )
     }
@@ -55,10 +57,3 @@ data class NySak(
         return true
     }
 }
-
-data class NyBehandling(
-    val behandlingId: UUID,
-    val behandlingType: BehandlingType,
-    val opprettet: LocalDateTime,
-    val oppgaveId: UUID? = null,
-)

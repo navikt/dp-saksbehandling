@@ -5,8 +5,8 @@ import PersonMediator
 import SkjermetPersonException
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.NyBehandling
 import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
@@ -46,10 +46,11 @@ class SakMediator(
                 opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
             ).also {
                 it.leggTilBehandling(
-                    NyBehandling(
+                    Behandling(
                         behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+                        type = BehandlingType.RETT_TIL_DAGPENGER,
                         opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                        hendelse = søknadsbehandlingOpprettetHendelse,
                     ),
                 )
             }

@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -10,10 +9,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface OppgaveRepository {
-    fun finnBehandling(behandlingId: UUID): Behandling?
-
-    fun hentBehandling(behandlingId: UUID): Behandling
-
     fun hentOppgave(oppgaveId: UUID): Oppgave
 
     fun lagre(oppgave: Oppgave)

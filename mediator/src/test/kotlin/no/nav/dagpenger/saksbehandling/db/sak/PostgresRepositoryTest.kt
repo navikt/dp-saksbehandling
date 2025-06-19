@@ -4,8 +4,8 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.NyBehandling
 import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -32,29 +33,33 @@ class PostgresRepositoryTest {
 
     private val oppgaveId = UUIDv7.ny()
     private val behandling1 =
-        NyBehandling(
+        Behandling(
             behandlingId = UUIDv7.ny(),
-            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+            type = BehandlingType.RETT_TIL_DAGPENGER,
             opprettet = nå,
             oppgaveId = oppgaveId,
+            hendelse = TomHendelse,
         )
     private val behandling2 =
-        NyBehandling(
+        Behandling(
             behandlingId = UUIDv7.ny(),
-            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+            type = BehandlingType.RETT_TIL_DAGPENGER,
             opprettet = nå,
+            hendelse = TomHendelse,
         )
     private val behandling3 =
-        NyBehandling(
+        Behandling(
             behandlingId = UUIDv7.ny(),
-            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+            type = BehandlingType.RETT_TIL_DAGPENGER,
             opprettet = nå,
+            hendelse = TomHendelse,
         )
     private val behandling4 =
-        NyBehandling(
+        Behandling(
             behandlingId = UUIDv7.ny(),
-            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+            type = BehandlingType.RETT_TIL_DAGPENGER,
             opprettet = nå,
+            hendelse = TomHendelse,
         )
     private val sak1 =
         NySak(
