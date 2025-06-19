@@ -62,7 +62,6 @@ fun lagBehandling(
 ): Behandling {
     return Behandling(
         behandlingId = behandlingId,
-        person = person,
         opprettet = opprettet,
         hendelse = hendelse,
         type = type,

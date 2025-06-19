@@ -415,7 +415,6 @@ OppgaveMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = hendelse.behandlingId,
-                person = person,
                 opprettet = LocalDateTime.now(),
                 hendelse = hendelse,
             )
@@ -430,7 +429,6 @@ OppgaveMediatorTest {
         settOppOppgaveMediator { datasource, oppgaveMediator ->
             val oppgaveRepository = PostgresOppgaveRepository(datasource)
 
-            oppgaveRepository.lagre(behandling)
             oppgaveRepository.lagre(oppgave)
 
             oppgaveMediator.skalEttersendingTilSøknadVarsles(

@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -26,15 +26,14 @@ class PostgresTriggerTest {
                 adressebeskyttelseGradering = UGRADERT,
             )
         val opprettet = LocalDateTime.now()
-        val testBehandling = Behandling(behandlingId = UUIDv7.ny(), testPerson, opprettet = opprettet)
         val testOppgave =
             Oppgave(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = setOf("Hugga", "Bugga"),
                 opprettet = opprettet,
                 tilstand = Oppgave.KlarTilBehandling,
-                behandlingId = testBehandling.behandlingId,
-                behandlingType = testBehandling.type,
+                behandlingId = UUIDv7.ny(),
+                behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
                 person = testPerson,
             )
         withMigratedDb { ds ->

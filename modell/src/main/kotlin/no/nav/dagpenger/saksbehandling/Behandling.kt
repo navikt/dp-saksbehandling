@@ -8,21 +8,19 @@ import java.util.UUID
 
 data class Behandling(
     val behandlingId: UUID,
-    val person: Person,
     val opprettet: LocalDateTime,
     val hendelse: Hendelse = TomHendelse,
     val type: BehandlingType = RETT_TIL_DAGPENGER,
+    val oppgaveId: UUID? = null,
 ) {
     companion object {
         fun rehydrer(
             behandlingId: UUID,
-            person: Person,
             opprettet: LocalDateTime,
             hendelse: Hendelse,
             type: BehandlingType = RETT_TIL_DAGPENGER,
         ) = Behandling(
             behandlingId = behandlingId,
-            person = person,
             opprettet = opprettet,
             hendelse = hendelse,
             type = type,

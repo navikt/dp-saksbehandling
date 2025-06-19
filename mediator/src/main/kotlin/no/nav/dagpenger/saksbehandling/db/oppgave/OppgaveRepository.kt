@@ -14,10 +14,6 @@ interface OppgaveRepository {
 
     fun hentBehandling(behandlingId: UUID): Behandling
 
-    fun lagre(behandling: Behandling)
-
-    fun slettBehandling(behandlingId: UUID)
-
     fun hentOppgave(oppgaveId: UUID): Oppgave
 
     fun lagre(oppgave: Oppgave)

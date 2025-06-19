@@ -4,8 +4,6 @@ import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import kotliquery.queryOf
-import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
@@ -48,8 +46,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Paginering
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
-import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -59,7 +55,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.opprettetNå
@@ -92,14 +87,6 @@ class PostgresOppgaveRepositoryTest {
                     grupper = emptySet(),
                 )
             val oppgave = lagOppgave(tilstand = FerdigBehandlet)
-            val behandling =
-                Behandling(
-                    behandlingId = oppgave.behandlingId,
-                    person = oppgave.person,
-                    type = oppgave.behandlingType,
-                    opprettet = oppgave.opprettet,
-                )
-            repo.lagre(behandling)
             repo.lagre(oppgave)
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
@@ -134,14 +121,6 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå.minusDays(1),
                     person = person,
                 )
-            val søknadBehandling =
-                Behandling(
-                    behandlingId = søknadOppgave.behandlingId,
-                    person = søknadOppgave.person,
-                    type = søknadOppgave.behandlingType,
-                    opprettet = søknadOppgave.opprettet,
-                )
-
             val klageOppgave =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
@@ -149,16 +128,7 @@ class PostgresOppgaveRepositoryTest {
                     person = person,
                     behandlingType = BehandlingType.KLAGE,
                 )
-            val behandlingForKlage =
-                Behandling(
-                    behandlingId = klageOppgave.behandlingId,
-                    person = klageOppgave.person,
-                    opprettet = klageOppgave.opprettet,
-                    type = klageOppgave.behandlingType,
-                )
-            repo.lagre(søknadBehandling)
             repo.lagre(søknadOppgave)
-            repo.lagre(behandlingForKlage)
             repo.lagre(klageOppgave)
             val nesteOppgave =
                 repo.tildelOgHentNesteOppgave(
@@ -199,14 +169,6 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            val eldsteBehandlingMedSkjermingSomEgneAnsatte =
-                Behandling(
-                    behandlingId = eldsteOppgaveMedSkjermingSomEgneAnsatte.behandlingId,
-                    person = eldsteOppgaveMedSkjermingSomEgneAnsatte.person,
-                    type = eldsteOppgaveMedSkjermingSomEgneAnsatte.behandlingType,
-                    opprettet = eldsteOppgaveMedSkjermingSomEgneAnsatte.opprettet,
-                )
-            repo.lagre(eldsteBehandlingMedSkjermingSomEgneAnsatte)
             repo.lagre(eldsteOppgaveMedSkjermingSomEgneAnsatte)
 
             val eldsteOppgaveUtenSkjermingAvEgenAnsatt =
@@ -220,14 +182,6 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            val eldsteBehandlingUtenSkjermingAvEgenAnsatt =
-                Behandling(
-                    behandlingId = eldsteOppgaveUtenSkjermingAvEgenAnsatt.behandlingId,
-                    person = eldsteOppgaveUtenSkjermingAvEgenAnsatt.person,
-                    type = eldsteOppgaveUtenSkjermingAvEgenAnsatt.behandlingType,
-                    opprettet = eldsteOppgaveUtenSkjermingAvEgenAnsatt.opprettet,
-                )
-            repo.lagre(eldsteBehandlingUtenSkjermingAvEgenAnsatt)
             repo.lagre(eldsteOppgaveUtenSkjermingAvEgenAnsatt)
 
             val nyesteOppgaveUtenSkjermingAvEgenAnsatt =
@@ -241,14 +195,6 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            val nyesteBehandlingUtenSkjermingAvEgenAnsatt =
-                Behandling(
-                    behandlingId = nyesteOppgaveUtenSkjermingAvEgenAnsatt.behandlingId,
-                    person = nyesteOppgaveUtenSkjermingAvEgenAnsatt.person,
-                    type = nyesteOppgaveUtenSkjermingAvEgenAnsatt.behandlingType,
-                    opprettet = nyesteOppgaveUtenSkjermingAvEgenAnsatt.opprettet,
-                )
-            repo.lagre(nyesteBehandlingUtenSkjermingAvEgenAnsatt)
             repo.lagre(nyesteOppgaveUtenSkjermingAvEgenAnsatt)
 
             val saksbehandlerUtenTilgangTilEgneAnsatte =
@@ -320,14 +266,6 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = FORTROLIG,
                         ),
                 )
-            val eldsteBehandlingMedAdressebeskyttelse =
-                Behandling(
-                    behandlingId = eldsteOppgaveMedAdressebeskyttelse.behandlingId,
-                    person = eldsteOppgaveMedAdressebeskyttelse.person,
-                    type = eldsteOppgaveMedAdressebeskyttelse.behandlingType,
-                    opprettet = eldsteOppgaveMedAdressebeskyttelse.opprettet,
-                )
-            repo.lagre(eldsteBehandlingMedAdressebeskyttelse)
             repo.lagre(eldsteOppgaveMedAdressebeskyttelse)
 
             val eldsteOppgaveUtenAdressebeskyttelse =
@@ -341,14 +279,6 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            val eldsteBehandlingUtenAdressebeskyttelse =
-                Behandling(
-                    behandlingId = eldsteOppgaveUtenAdressebeskyttelse.behandlingId,
-                    person = eldsteOppgaveUtenAdressebeskyttelse.person,
-                    type = eldsteOppgaveUtenAdressebeskyttelse.behandlingType,
-                    opprettet = eldsteOppgaveUtenAdressebeskyttelse.opprettet,
-                )
-            repo.lagre(eldsteBehandlingUtenAdressebeskyttelse)
             repo.lagre(eldsteOppgaveUtenAdressebeskyttelse)
 
             val saksbehandlernUtenTilgangTilAdressebeskyttede =
@@ -428,14 +358,6 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå,
                     emneknagger = setOf("Testknagg"),
                 )
-            val behandling =
-                Behandling(
-                    behandlingId = oppgave.behandlingId,
-                    person = oppgave.person,
-                    type = oppgave.behandlingType,
-                    opprettet = oppgave.opprettet,
-                )
-            repo.lagre(behandling)
             repo.lagre(oppgave)
             val rehydrertOppgave = repo.hentOppgave(oppgave.oppgaveId)
 
@@ -532,16 +454,8 @@ class PostgresOppgaveRepositoryTest {
                     tilstand = Oppgave.KlarTilKontroll,
                     tilstandslogg = tilstandsloggUnderBehandling,
                 )
-            val behandling =
-                Behandling(
-                    behandlingId = oppgave.behandlingId,
-                    person = oppgave.person,
-                    type = oppgave.behandlingType,
-                    opprettet = oppgave.opprettet,
-                )
 
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(behandling)
             repo.lagre(oppgave)
 
             repo.tildelOgHentNesteOppgave(
@@ -983,48 +897,6 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne slette behandling`() {
-        val testOppgave = lagOppgave(emneknagger = setOf("hugga", "bugga"))
-        val testBehandling =
-            Behandling(
-                behandlingId = testOppgave.behandlingId,
-                person = testOppgave.person,
-                type = testOppgave.behandlingType,
-                opprettet = testOppgave.opprettet,
-            )
-        withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
-            val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testBehandling)
-            repo.lagre(testOppgave)
-            repo.slettBehandling(testOppgave.behandlingId)
-
-            assertThrows<DataNotFoundException> {
-                repo.hentBehandling(testOppgave.behandlingId)
-            }
-
-            assertThrows<DataNotFoundException> {
-                personRepository.hentPerson(testPerson.ident)
-            }
-
-            assertThrows<DataNotFoundException> {
-                repo.hentOppgave(oppgaveIdTest)
-            }
-
-            sessionOf(ds).use { session ->
-                session.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement = """SELECT COUNT(*) FROM emneknagg_v1 WHERE oppgave_id = '${testOppgave.oppgaveId}'""",
-                    ).map { row ->
-                        row.int(1)
-                    }.asSingle,
-                )
-            } shouldBe 0
-        }
-    }
-
-    @Test
     fun `Exception hvis vi ikke får hentet behandling basert på behandlingId`() {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -1036,59 +908,12 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne lagre en behandling`() {
-        val søknadBehandling =
-            lagBehandling(
-                type = BehandlingType.RETT_TIL_DAGPENGER,
-                hendelse =
-                    SøknadsbehandlingOpprettetHendelse(
-                        søknadId = UUIDv7.ny(),
-                        behandlingId = UUIDv7.ny(),
-                        ident = testPerson.ident,
-                        opprettet = LocalDateTime.now(),
-                    ),
-            )
-
-        val klageBehandling =
-            lagBehandling(
-                type = BehandlingType.KLAGE,
-                hendelse =
-                    BehandlingOpprettetHendelse(
-                        behandlingId = UUIDv7.ny(),
-                        ident = testPerson.ident,
-                        sakId = UUIDv7.ny(),
-                        opprettet = LocalDateTime.MIN,
-                        type = BehandlingType.KLAGE,
-                    ),
-            )
-
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-
-            repo.lagre(søknadBehandling)
-            repo.lagre(klageBehandling)
-
-            repo.hentBehandling(søknadBehandling.behandlingId) shouldBe søknadBehandling
-            repo.hentBehandling(klageBehandling.behandlingId) shouldBe klageBehandling
-        }
-    }
-
-    @Test
     fun `Skal kunne lagre både en behandling og en oppgave flere ganger`() {
         val testOppgave = lagOppgave()
-        val testBehandling =
-            Behandling(
-                behandlingId = testOppgave.behandlingId,
-                person = testOppgave.person,
-                type = testOppgave.behandlingType,
-                opprettet = testOppgave.opprettet,
-            )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
 
             shouldNotThrowAny {
-                repo.lagre(testBehandling)
-                repo.lagre(testBehandling)
                 repo.lagre(testOppgave)
                 repo.lagre(testOppgave)
             }
@@ -1098,13 +923,6 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente en oppgave med notat`() {
         val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        val testBehandling =
-            Behandling(
-                behandlingId = testOppgave.behandlingId,
-                person = testOppgave.person,
-                type = testOppgave.behandlingType,
-                opprettet = testOppgave.opprettet,
-            )
         testOppgave.tildel(
             SettOppgaveAnsvarHendelse(
                 oppgaveId = testOppgave.oppgaveId,
@@ -1122,7 +940,6 @@ class PostgresOppgaveRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testBehandling)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase shouldBe testOppgave
@@ -1132,16 +949,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre notatet til en oppgave`() {
         val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        val behandling =
-            Behandling(
-                behandlingId = oppgave.behandlingId,
-                person = oppgave.person,
-                type = oppgave.behandlingType,
-                opprettet = oppgave.opprettet,
-            )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(behandling)
             repo.lagre(oppgave)
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -1170,16 +979,8 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne finne et notat`() {
         val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        val behandling =
-            Behandling(
-                behandlingId = oppgave.behandlingId,
-                person = oppgave.person,
-                type = oppgave.behandlingType,
-                opprettet = oppgave.opprettet,
-            )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(behandling)
             repo.lagre(oppgave)
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -1211,13 +1012,11 @@ class PostgresOppgaveRepositoryTest {
         val testBehandling =
             Behandling(
                 behandlingId = testOppgave.behandlingId,
-                person = testOppgave.person,
                 type = testOppgave.behandlingType,
                 opprettet = testOppgave.opprettet,
             )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testBehandling)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase shouldBe testOppgave
@@ -1230,7 +1029,6 @@ class PostgresOppgaveRepositoryTest {
         val testBehandling =
             Behandling(
                 behandlingId = testOppgave.behandlingId,
-                person = testOppgave.person,
                 type = testOppgave.behandlingType,
                 opprettet = testOppgave.opprettet,
             )
@@ -1251,7 +1049,6 @@ class PostgresOppgaveRepositoryTest {
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testBehandling)
             repo.lagre(testOppgave)
 
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
@@ -1304,16 +1101,8 @@ class PostgresOppgaveRepositoryTest {
                 ),
             )
         val testOppgave = lagOppgave(tilstandslogg = tilstandslogg, oppgaveId = oppgaveIdTest)
-        val testBehandling =
-            Behandling(
-                behandlingId = testOppgave.behandlingId,
-                person = testOppgave.person,
-                type = testOppgave.behandlingType,
-                opprettet = testOppgave.opprettet,
-            )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testBehandling)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase.tilstandslogg.size shouldBe testOppgave.tilstandslogg.size
@@ -1331,17 +1120,9 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne endre tilstand på en oppgave`() {
         val testOppgave = lagOppgave(tilstand = KlarTilBehandling)
-        val testBehandling =
-            Behandling(
-                behandlingId = testOppgave.behandlingId,
-                person = testOppgave.person,
-                type = testOppgave.behandlingType,
-                opprettet = testOppgave.opprettet,
-            )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
 
-            repo.lagre(testBehandling)
             repo.lagre(testOppgave)
             repo.hentOppgave(testOppgave.oppgaveId).tilstand().type shouldBe KLAR_TIL_BEHANDLING
 
@@ -1353,18 +1134,9 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `CRUD på oppgave i tilstand PAA_VENT`() {
         val testOppgave = lagOppgave(tilstand = UnderBehandling)
-        val testBehandling =
-            Behandling(
-                behandlingId = testOppgave.behandlingId,
-                person = testOppgave.person,
-                type = testOppgave.behandlingType,
-                opprettet = testOppgave.opprettet,
-            )
         val utsattTil = LocalDate.now().plusDays(1)
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-
-            repo.lagre(testBehandling)
             repo.lagre(
                 testOppgave.copy(
                     tilstand = Oppgave.PåVent,
@@ -1381,26 +1153,10 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på tilstand`() {
         val oppgaveKlarTilBehandling = lagOppgave(tilstand = KlarTilBehandling)
-        val behandlingKlarTilBehandling =
-            Behandling(
-                behandlingId = oppgaveKlarTilBehandling.behandlingId,
-                person = oppgaveKlarTilBehandling.person,
-                type = oppgaveKlarTilBehandling.behandlingType,
-                opprettet = oppgaveKlarTilBehandling.opprettet,
-            )
         val oppgaveFerdigBehandlet = lagOppgave(tilstand = FerdigBehandlet)
-        val behandlingFerdigBehandlet =
-            Behandling(
-                behandlingId = oppgaveFerdigBehandlet.behandlingId,
-                person = oppgaveFerdigBehandlet.person,
-                type = oppgaveFerdigBehandlet.behandlingType,
-                opprettet = oppgaveFerdigBehandlet.opprettet,
-            )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(behandlingKlarTilBehandling)
             repo.lagre(oppgaveKlarTilBehandling)
-            repo.lagre(behandlingFerdigBehandlet)
             repo.lagre(oppgaveFerdigBehandlet)
 
             repo.hentAlleOppgaverMedTilstand(FERDIG_BEHANDLET).let { oppgaver ->
@@ -1418,26 +1174,10 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på behandlingstype`() {
         val søknadOppgave = lagOppgave(tilstand = KlarTilBehandling, behandlingType = BehandlingType.RETT_TIL_DAGPENGER)
-        val behandlingForSøknad =
-            Behandling(
-                behandlingId = søknadOppgave.behandlingId,
-                person = søknadOppgave.person,
-                type = søknadOppgave.behandlingType,
-                opprettet = søknadOppgave.opprettet,
-            )
         val klageOppgave = lagOppgave(tilstand = KlarTilBehandling, behandlingType = BehandlingType.KLAGE)
-        val behandlingForKlage =
-            Behandling(
-                behandlingId = klageOppgave.behandlingId,
-                person = klageOppgave.person,
-                type = klageOppgave.behandlingType,
-                opprettet = klageOppgave.opprettet,
-            )
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(behandlingForSøknad)
             repo.lagre(søknadOppgave)
-            repo.lagre(behandlingForKlage)
             repo.lagre(klageOppgave)
             repo.søk(
                 søkeFilter =
@@ -1503,18 +1243,9 @@ class PostgresOppgaveRepositoryTest {
                 person = person,
                 behandlingId = hendelse.behandlingId,
             )
-        val behandling =
-            Behandling(
-                behandlingId = oppgaveKlarTilBehandling.behandlingId,
-                person = oppgaveKlarTilBehandling.person,
-                type = oppgaveKlarTilBehandling.behandlingType,
-                opprettet = oppgaveKlarTilBehandling.opprettet,
-                hendelse = hendelse,
-            )
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(behandling)
             repo.lagre(oppgaveKlarTilBehandling)
 
             repo.oppgaveTilstandForSøknad(
@@ -1531,15 +1262,14 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal hente oppgaveId fra behandlingId`() {
-        val behandling = lagBehandling()
-        val oppgave = lagOppgave(behandlingId = behandling.behandlingId, behandlingType = behandling.type)
+        val behandlingId = UUIDv7.ny()
+        val oppgave = lagOppgave(behandlingId = behandlingId, behandlingType = BehandlingType.RETT_TIL_DAGPENGER)
 
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(behandling)
             repo.lagre(oppgave)
 
-            repo.hentOppgaveIdFor(behandlingId = behandling.behandlingId) shouldBe oppgave.oppgaveId
+            repo.hentOppgaveIdFor(behandlingId = behandlingId) shouldBe oppgave.oppgaveId
             repo.hentOppgaveIdFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
     }
@@ -1867,14 +1597,6 @@ class PostgresOppgaveRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val oppgave = lagOppgave()
-            val behandling =
-                Behandling(
-                    behandlingId = oppgave.behandlingId,
-                    person = oppgave.person,
-                    opprettet = oppgave.opprettet,
-                    type = BehandlingType.RETT_TIL_DAGPENGER,
-                )
-            repo.lagre(behandling)
             repo.lagre(oppgave)
             repo.hentOppgaveFor(oppgave.behandlingId) shouldBe oppgave
 
@@ -1889,14 +1611,6 @@ class PostgresOppgaveRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val oppgave = lagOppgave()
-            val behandling =
-                Behandling(
-                    behandlingId = oppgave.behandlingId,
-                    person = oppgave.person,
-                    opprettet = oppgave.opprettet,
-                    type = BehandlingType.RETT_TIL_DAGPENGER,
-                )
-            repo.lagre(behandling)
             repo.lagre(oppgave)
             repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null

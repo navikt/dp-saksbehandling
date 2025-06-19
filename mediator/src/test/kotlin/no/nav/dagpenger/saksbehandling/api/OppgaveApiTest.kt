@@ -794,13 +794,6 @@ class OppgaveApiTest {
                     Behandling(
                         behandlingId = UUIDv7.ny(),
                         opprettet = LocalDateTime.now(),
-                        person =
-                            Person(
-                                id = UUIDv7.ny(),
-                                ident = TEST_IDENT,
-                                skjermesSomEgneAnsatte = true,
-                                adressebeskyttelseGradering = UGRADERT,
-                            ),
                         hendelse =
                             SøknadsbehandlingOpprettetHendelse(
                                 søknadId = UUIDv7.ny(),
@@ -963,13 +956,6 @@ class OppgaveApiTest {
                     Behandling(
                         behandlingId = UUIDv7.ny(),
                         opprettet = LocalDateTime.now(),
-                        person =
-                            Person(
-                                id = UUIDv7.ny(),
-                                ident = TEST_IDENT,
-                                skjermesSomEgneAnsatte = true,
-                                adressebeskyttelseGradering = UGRADERT,
-                            ),
                         hendelse =
                             SøknadsbehandlingOpprettetHendelse(
                                 søknadId = UUIDv7.ny(),

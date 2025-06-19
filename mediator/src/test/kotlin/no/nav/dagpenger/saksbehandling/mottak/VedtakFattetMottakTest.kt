@@ -5,7 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
@@ -23,25 +23,19 @@ internal class VedtakFattetMottakTest {
     private val behandlingId = UUID.randomUUID()
     private val sak = Sak("12342", "Arena")
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
-    val person =
+    private val person =
         Person(
             id = UUIDv7.ny(),
             ident = testIdent,
             skjermesSomEgneAnsatte = false,
             adressebeskyttelseGradering = UGRADERT,
         )
-    val behandling =
-        Behandling(
-            behandlingId = behandlingId,
-            person = person,
-            opprettet = opprettet,
-        )
     private val oppgave =
         Oppgave(
             oppgaveId = UUIDv7.ny(),
             opprettet = opprettet,
-            behandlingId = behandling.behandlingId,
-            behandlingType = behandling.type,
+            behandlingId = behandlingId,
+            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
             person = person,
         )
 

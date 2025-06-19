@@ -11,16 +11,12 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import java.util.UUID
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
     private val sakMediator: SakMediator,
-    private val pdlKlient: PDLKlient,
-    private val skjermingKlient: SkjermingKlient,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}

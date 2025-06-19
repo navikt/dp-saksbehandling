@@ -238,30 +238,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
-    override fun slettBehandling(behandlingId: UUID) {
-        val behandling =
-            try {
-                hentBehandling(behandlingId)
-            } catch (e: DataNotFoundException) {
-                logger.warn("Behandling med id $behandlingId finnes ikke, sletter ikke noe")
-                return
-            }
-        sessionOf(dataSource).use { session ->
-            session.transaction { tx ->
-                tx.slettBehandling(behandlingId)
-                tx.slettPersonUtenBehandlinger(behandling.person.ident)
-            }
-        }
-    }
-
-    override fun lagre(behandling: Behandling) {
-        sessionOf(dataSource).use { session ->
-            session.transaction { tx ->
-                tx.lagre(behandling)
-            }
-        }
-    }
-
     override fun lagre(oppgave: Oppgave) {
         sessionOf(dataSource).use { session ->
             session.transaction { tx ->
@@ -297,7 +273,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         )
                     Behandling.rehydrer(
                         behandlingId = behandlingId,
-                        person = person,
                         opprettet = row.localDateTime("opprettet"),
                         hendelse = finnHendelseForBehandling(behandlingId, dataSource),
                         type = BehandlingType.valueOf(row.string("behandling_type")),
@@ -897,31 +872,6 @@ private fun TransactionalSession.lagreHendelse(
     )
 }
 
-private fun TransactionalSession.lagre(behandling: Behandling) {
-    this.lagre(behandling.person)
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO behandling_v1
-                    (id, person_id, opprettet, behandling_type)
-                VALUES
-                    (:id, :person_id, :opprettet, :behandling_type) 
-                ON CONFLICT DO NOTHING
-                """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "id" to behandling.behandlingId,
-                    "person_id" to behandling.person.id,
-                    "opprettet" to behandling.opprettet,
-                    "behandling_type" to behandling.type.name,
-                ),
-        ).asUpdate,
-    )
-    this.lagreHendelse(behandling.behandlingId, behandling.hendelse)
-}
-
 private fun TransactionalSession.lagreBehandlingFor(oppgave: Oppgave) {
     this.lagre(person = oppgave.person)
     run(
@@ -1105,7 +1055,6 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
     val behandling =
         Behandling.rehydrer(
             behandlingId = behandlingId,
-            person = person,
             opprettet = this.localDateTime("behandling_opprettet"),
             hendelse = finnHendelseForBehandling(behandlingId, dataSource),
             type = BehandlingType.valueOf(this.string("behandling_type")),

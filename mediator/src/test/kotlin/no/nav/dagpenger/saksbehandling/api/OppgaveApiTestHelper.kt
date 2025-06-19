@@ -135,6 +135,13 @@ internal object OppgaveApiTestHelper {
         behandling: Behandling,
         utsattTil: LocalDate? = null,
         opprettet: LocalDateTime = LocalDateTime.now(),
+        person: Person =
+            Person(
+                id = TEST_UUID,
+                ident = TEST_IDENT,
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            ),
     ): Oppgave {
         val oppgaveId = UUIDv7.ny()
         return Oppgave.rehydrer(
@@ -158,7 +165,7 @@ internal object OppgaveApiTestHelper {
             utsattTil = utsattTil,
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
-            person = behandling.person,
+            person = person,
             tilstandslogg =
                 Tilstandslogg.rehydrer(
                     listOf(
@@ -203,20 +210,20 @@ internal object OppgaveApiTestHelper {
         skjermesSomEgneAnsatte: Boolean = false,
         utsattTil: LocalDate? = null,
         oprettet: LocalDateTime = LocalDateTime.now(),
+        person: Person =
+            Person(
+                id = TEST_UUID,
+                ident = TEST_IDENT,
+                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                adressebeskyttelseGradering = UGRADERT,
+            ),
     ): Oppgave {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                person =
-                    Person(
-                        id = TEST_UUID,
-                        ident = TEST_IDENT,
-                        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
-                        adressebeskyttelseGradering = UGRADERT,
-                    ),
                 opprettet = LocalDateTime.now(),
             )
-        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil, oprettet)
+        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil, oprettet, person)
     }
 
     val testPerson =
