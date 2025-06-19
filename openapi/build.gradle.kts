@@ -1,5 +1,5 @@
 plugins {
-    id("ch.acanda.gradle.fabrikt") version "1.15.4"
+    id("ch.acanda.gradle.fabrikt") version "1.16.1"
     id("common")
     idea
     `java-library`
@@ -34,7 +34,7 @@ ktlint {
 }
 
 dependencies {
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.19.1")
 }
 
 fabrikt {
