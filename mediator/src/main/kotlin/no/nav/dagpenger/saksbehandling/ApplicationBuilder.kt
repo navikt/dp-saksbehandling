@@ -133,7 +133,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             utsendingMediator = utsendingMediator,
             oppslag = oppslag,
             meldingOmVedtakKlient = meldingOmVedtakKlient,
-            personMediator = personMediator,
             sakMediator = sakMediator,
         )
     private val oppgaveDTOMapper =

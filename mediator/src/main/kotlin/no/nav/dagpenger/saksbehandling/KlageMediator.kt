@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +41,6 @@ class KlageMediator(
     private val utsendingMediator: UtsendingMediator,
     private val oppslag: Oppslag,
     private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
-    private val personMediator: PersonMediator,
     private val sakMediator: SakMediator,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
@@ -64,12 +62,10 @@ class KlageMediator(
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
         // todo her kan en Exception kastes hvis personen ikke finnes
-        val person = personMediator.hentPerson(klageMottattHendelse.ident)
 
         val klageBehandling =
             KlageBehandling(
                 journalpostId = klageMottattHendelse.journalpostId,
-                person = person,
                 opprettet = klageMottattHendelse.opprettet,
                 tilstandslogg =
                     KlageTilstandslogg(
@@ -103,13 +99,9 @@ class KlageMediator(
     }
 
     fun opprettManuellKlage(manuellKlageMottattHendelse: ManuellKlageMottattHendelse): Oppgave {
-        // todo her kan en Exception kastes hvis personen ikke finnes
-        val person = personMediator.hentPerson(manuellKlageMottattHendelse.ident)
-
         val klageBehandling =
             KlageBehandling(
                 journalpostId = manuellKlageMottattHendelse.journalpostId,
-                person = person,
                 opprettet = manuellKlageMottattHendelse.opprettet,
                 tilstandslogg =
                     KlageTilstandslogg(

@@ -4,10 +4,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
@@ -67,12 +65,6 @@ class RelevanteJournalpostIdOppslagTest {
             lagOppgave(
                 behandlingType = BehandlingType.KLAGE,
             )
-        val testPerson =
-            Person(
-                ident = "12345678901",
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-            )
         val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
         val journalpostIdOppslag =
             RelevanteJournalpostIdOppslag(
@@ -85,7 +77,6 @@ class RelevanteJournalpostIdOppslagTest {
                                 journalpostId = "1",
                                 tilstand = KlageBehandling.Behandles,
                                 behandlendeEnhet = null,
-                                person = testPerson,
                                 opprettet = opprettet,
                             )
                     },

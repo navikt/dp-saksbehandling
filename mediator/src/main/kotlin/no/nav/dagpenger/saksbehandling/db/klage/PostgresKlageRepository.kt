@@ -5,10 +5,7 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UgyldigTilstandException
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilKlageOpplysninger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
@@ -39,7 +36,6 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
     override fun lagre(klageBehandling: KlageBehandling) {
         sessionOf(datasource).use { session ->
             session.transaction { tx ->
-//                tx.lagre(klageBehandling.person)
                 tx.lagre(klageBehandling)
             }
         }
@@ -114,58 +110,6 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
         lagre(behandlingId = klageBehandling.behandlingId, tilstandslogg = klageBehandling.tilstandslogg)
     }
 
-    private fun TransactionalSession.lagre(person: Person) {
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO person_v1
-                        (id, ident, skjermes_som_egne_ansatte, adressebeskyttelse_gradering) 
-                    VALUES
-                        (:id, :ident, :skjermes_som_egne_ansatte, :adressebeskyttelse_gradering) 
-                    ON CONFLICT (id) DO UPDATE 
-                    SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte, 
-                        adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "id" to person.id,
-                        "ident" to person.ident,
-                        "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
-                        "adressebeskyttelse_gradering" to person.adressebeskyttelseGradering.name,
-                    ),
-            ).asUpdate,
-        )
-    }
-
-    private fun TransactionalSession.lagreBehandlingFor(
-        klageBehandling: KlageBehandling,
-        sakId: UUID,
-    ) {
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO behandling_v1
-                        (id, person_id, sak_id, opprettet, behandling_type)
-                    VALUES
-                        (:id, :person_id, :sak_id, :opprettet, :behandling_type) 
-                    ON CONFLICT DO NOTHING
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "id" to klageBehandling.behandlingId,
-                        "person_id" to klageBehandling.person.id,
-                        "sak_id" to sakId,
-                        "opprettet" to klageBehandling.opprettet,
-                        "behandling_type" to BehandlingType.KLAGE.name,
-                    ),
-            ).asUpdate,
-        )
-    }
-
     private fun TransactionalSession.lagre(
         behandlingId: UUID,
         tilstandslogg: KlageTilstandslogg,
@@ -231,16 +175,6 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 dataSource = dataSource,
             )
         val opprettet = this.localDateTime("opprettet")
-        val person =
-            Person(
-                id = this.uuid("person_id"),
-                ident = this.string("person_ident"),
-                skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-                adressebeskyttelseGradering =
-                    AdressebeskyttelseGradering.valueOf(
-                        this.string("adressebeskyttelse_gradering"),
-                    ),
-            )
 
         return KlageBehandling.rehydrer(
             behandlingId = behandlingId,
@@ -249,37 +183,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
             behandlendeEnhet = behandlendeEnhet,
             opplysninger = opplysninger,
             tilstandslogg = tilstandslogg,
-            person = person,
             opprettet = opprettet,
-        )
-    }
-
-    private fun TransactionalSession.lagreHendelse(
-        behandlingId: UUID,
-        hendelse: Hendelse,
-    ) {
-        run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    INSERT INTO hendelse_v1
-                        (behandling_id, hendelse_type, hendelse_data)
-                    VALUES
-                        (:behandling_id, :hendelse_type, :hendelse_data) 
-                    ON CONFLICT DO NOTHING
-                    """.trimIndent(),
-                paramMap =
-                    mapOf(
-                        "behandling_id" to behandlingId,
-                        "hendelse_type" to hendelse.javaClass.simpleName,
-                        "hendelse_data" to
-                            PGobject().also {
-                                it.type = "JSONB"
-                                it.value = hendelse.tilJson()
-                            },
-                    ),
-            ).asUpdate,
         )
     }
 

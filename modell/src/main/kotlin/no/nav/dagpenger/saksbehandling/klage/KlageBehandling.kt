@@ -1,7 +1,6 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import mu.KotlinLogging
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -21,7 +20,6 @@ private val logger = KotlinLogging.logger {}
 
 data class KlageBehandling private constructor(
     val behandlingId: UUID = UUIDv7.ny(),
-    val person: Person,
     val opprettet: LocalDateTime,
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private var tilstand: KlageTilstand = Behandles,
@@ -41,12 +39,10 @@ data class KlageBehandling private constructor(
     constructor(
         journalpostId: String? = null,
         tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
-        person: Person,
         opprettet: LocalDateTime = LocalDateTime.now(),
     ) : this (
         journalpostId = journalpostId,
         _tilstandslogg = tilstandslogg,
-        person = person,
         opprettet = opprettet,
     )
 
@@ -57,7 +53,6 @@ data class KlageBehandling private constructor(
     companion object {
         fun rehydrer(
             behandlingId: UUID,
-            person: Person,
             opprettet: LocalDateTime,
             opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
             tilstand: KlageTilstand,
@@ -76,7 +71,6 @@ data class KlageBehandling private constructor(
         ): KlageBehandling =
             KlageBehandling(
                 behandlingId = behandlingId,
-                person = person,
                 opprettet = opprettet,
                 opplysninger = opplysninger,
                 tilstand = tilstand,

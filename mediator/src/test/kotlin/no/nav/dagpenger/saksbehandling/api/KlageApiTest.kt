@@ -20,10 +20,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
 import no.nav.dagpenger.saksbehandling.KlageMediator
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -50,12 +48,6 @@ class KlageApiTest {
         mockAzure()
     }
 
-    private val testPerson =
-        Person(
-            ident = "12345678901",
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-        )
     private val klageBehandlingId = UUIDv7.ny()
     private val journalpostId = "journalpostId"
     private val opplysningId = UUIDv7.ny()
@@ -72,9 +64,7 @@ class KlageApiTest {
     fun `Skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<KlageMediator>()
         withKlageApi(mediator) {
-            client.get("klage/$klageBehandlingId").let { response ->
-                response.status shouldBe HttpStatusCode.Unauthorized
-            }
+            client.get("klage/$klageBehandlingId").status shouldBe HttpStatusCode.Unauthorized
             client.post("klage/opprett") {
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -100,7 +90,6 @@ class KlageApiTest {
                         journalpostId = journalpostId,
                         tilstand = KlageBehandling.Behandles,
                         behandlendeEnhet = null,
-                        person = testPerson,
                         opprettet = opprettet,
                     )
             }

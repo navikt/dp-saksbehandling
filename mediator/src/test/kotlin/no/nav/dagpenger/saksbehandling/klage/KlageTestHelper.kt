@@ -1,7 +1,5 @@
 package no.nav.dagpenger.saksbehandling.klage
 
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
@@ -18,12 +16,6 @@ fun lagKlagebehandling(
     behandlendeEnhet: String? = null,
     tilstand: KlageTilstand.Type = BEHANDLES,
     klageMottattTidspunkt: LocalDateTime = LocalDateTime.now(),
-    person: Person =
-        Person(
-            ident = "12345678910",
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-        ),
 ): KlageBehandling {
     val opplysninger =
         mutableSetOf(
@@ -140,7 +132,6 @@ fun lagKlagebehandling(
             },
         behandlingId = UUIDv7.ny(),
         journalpostId = null,
-        person = person,
         opprettet = klageMottattTidspunkt,
     )
 }

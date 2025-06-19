@@ -4,8 +4,6 @@ import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -37,16 +35,10 @@ class KlageBehandlingTest {
             grupper = setOf("SaksbehandlerADGruppe"),
             tilganger = setOf(SAKSBEHANDLER),
         )
-    private val person =
-        Person(
-            ident = "12345678910",
-            skjermesSomEgneAnsatte = false,
-            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-        )
 
     @Test
     fun `Skal kunne svare og endre på opplysninger med ulike datatyper`() {
-        val klageBehandling = KlageBehandling(person = person)
+        val klageBehandling = KlageBehandling()
 
         val boolskOpplysningId = klageBehandling.finnEnBoolskOpplysningId()
         val stringOpplysningId = klageBehandling.finnEnTekstOpplysningId()
@@ -86,7 +78,7 @@ class KlageBehandlingTest {
 
     @Test
     fun `Utfall skal kunne velges når alle behandlingsopplysninger er utfylt`() {
-        val klageBehandling = KlageBehandling(person = person)
+        val klageBehandling = KlageBehandling()
         klageBehandling.synligeOpplysninger().filter { opplysning ->
             opplysning.type in utfallOpplysningTyper &&
                 opplysning.synlighet()
@@ -164,7 +156,6 @@ class KlageBehandlingTest {
                 tilstand = Behandles,
                 journalpostId = null,
                 behandlendeEnhet = null,
-                person = person,
                 opprettet = LocalDateTime.now(),
             )
 
@@ -234,7 +225,6 @@ class KlageBehandlingTest {
                 tilstand = Behandles,
                 journalpostId = null,
                 behandlendeEnhet = null,
-                person = person,
                 opprettet = LocalDateTime.now(),
             )
         klageBehandling.tilstand().type shouldBe BEHANDLES
@@ -265,7 +255,7 @@ class KlageBehandlingTest {
 
     @Test
     fun `Klagebehandling skal kunne avbrytes fra tilstand BEHANDLES`() {
-        val klageBehandling = KlageBehandling(person = person)
+        val klageBehandling = KlageBehandling()
         klageBehandling.tilstand().type shouldBe BEHANDLES
 
         klageBehandling.avbryt(
@@ -281,7 +271,7 @@ class KlageBehandlingTest {
 
     @Test
     fun `Klagebehandling skal ikke kunne avbrytes fra tilstand FERDIGSTILT eller OVERSEND_KLAGEINSTANS`() {
-        val klageBehandling = KlageBehandling(person = person)
+        val klageBehandling = KlageBehandling()
         svarPåAlleOpplysninger(klageBehandling)
         val klageFerdigbehandletHendelse =
             KlageFerdigbehandletHendelse(

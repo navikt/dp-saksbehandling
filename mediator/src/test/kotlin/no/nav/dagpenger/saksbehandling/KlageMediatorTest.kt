@@ -61,7 +61,6 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.sql.DataSource
 
 class KlageMediatorTest {
     private val testPersonIdent = "12345678901"
@@ -429,7 +428,6 @@ class KlageMediatorTest {
 
     @Test
     fun `Kan ikke ferdigstille en klage med medhold`() {
-        val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
         setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator.opprettKlage(
@@ -767,20 +765,6 @@ class KlageMediatorTest {
         )
     }
 
-    private fun setupDb(test: (DataSource) -> Unit) {
-        withMigratedDb { datasource ->
-            val personRepository = PostgresPersonRepository(datasource)
-            personRepository.lagre(
-                Person(
-                    ident = testPersonIdent,
-                    skjermesSomEgneAnsatte = false,
-                    adressebeskyttelseGradering = UGRADERT,
-                ),
-            )
-            test(datasource)
-        }
-    }
-
     private fun setupMediatorerOgSak(test: (KlageMediator, OppgaveMediator, UUID) -> Unit) {
         withMigratedDb { dataSource ->
             val personRepository = PostgresPersonRepository(dataSource)
@@ -814,7 +798,6 @@ class KlageMediatorTest {
                     utsendingMediator = utsendingMediator,
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
-                    personMediator = personMediator,
                     sakMediator = sakMediator,
                 ).also { it.setRapidsConnection(rapidsConnection = testRapid) }
             personRepository.lagre(

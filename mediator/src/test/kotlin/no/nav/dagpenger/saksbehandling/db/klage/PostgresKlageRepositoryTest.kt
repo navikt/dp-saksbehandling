@@ -41,7 +41,6 @@ class PostgresKlageRepositoryTest {
             val klageBehandling =
                 KlageBehandling.rehydrer(
                     behandlingId = UUIDv7.ny(),
-                    person = testPerson,
                     opprettet = klageMottattHendelse.opprettet,
                     journalpostId = "journalpostId",
                     tilstand = KlageBehandling.Behandles,

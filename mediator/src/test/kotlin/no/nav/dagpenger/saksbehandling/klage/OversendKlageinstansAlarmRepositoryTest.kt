@@ -42,26 +42,22 @@ class OversendKlageinstansAlarmRepositoryTest {
                     KlageBehandling.OversendKlageinstans,
                     enTimeSiden,
                 )
-            val klageBehandlingOversendtLittMindreEnnEnTimeSiden =
-                ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.OversendKlageinstans,
-                    littMindreEnnEnTimeSiden,
-                )
-            val klageBehandlingOversendtNå =
-                ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.OversendKlageinstans,
-                    nå,
-                )
-            val klageBehandlingSomBehandles =
-                ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.Behandles,
-                    toTimerSiden,
-                )
-            val klageBehandlingSomErFerdigstilt =
-                ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.Ferdigstilt,
-                    toTimerSiden,
-                )
+            ds.opprettOgLagreKlageBehandling(
+                KlageBehandling.OversendKlageinstans,
+                littMindreEnnEnTimeSiden,
+            )
+            ds.opprettOgLagreKlageBehandling(
+                KlageBehandling.OversendKlageinstans,
+                nå,
+            )
+            ds.opprettOgLagreKlageBehandling(
+                KlageBehandling.Behandles,
+                toTimerSiden,
+            )
+            ds.opprettOgLagreKlageBehandling(
+                KlageBehandling.Ferdigstilt,
+                toTimerSiden,
+            )
 
             val ventendeOversendelser = repository.hentVentendeOversendelser(intervallAntallTimer = 1)
             ventendeOversendelser.size shouldBe 2
@@ -86,7 +82,6 @@ class OversendKlageinstansAlarmRepositoryTest {
                 journalpostId = Random.nextInt(1, 1000).toString(),
                 tilstand = tilstand,
                 behandlendeEnhet = "4408",
-                person = testPerson,
                 opprettet = tidspunkt,
             )
 
