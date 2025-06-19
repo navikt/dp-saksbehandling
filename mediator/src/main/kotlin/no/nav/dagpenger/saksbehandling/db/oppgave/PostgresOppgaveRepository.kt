@@ -583,58 +583,6 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     }
 }
 
-private fun TransactionalSession.lagre(person: Person) {
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO person_v1
-                    (id, ident, skjermes_som_egne_ansatte, adressebeskyttelse_gradering) 
-                VALUES
-                    (:id, :ident, :skjermes_som_egne_ansatte, :adressebeskyttelse_gradering) 
-                ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte , adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
-                """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "id" to person.id,
-                    "ident" to person.ident,
-                    "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
-                    "adressebeskyttelse_gradering" to person.adressebeskyttelseGradering.name,
-                ),
-        ).asUpdate,
-    )
-}
-
-private fun TransactionalSession.slettPersonUtenBehandlinger(ident: String) {
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                    DELETE FROM person_v1 pers 
-                    WHERE pers.ident = :ident
-                    AND NOT EXISTS(
-                        SELECT 1 
-                        FROM behandling_v1 beha 
-                        WHERE beha.person_id = pers.id
-                    )
-                """.trimMargin(),
-            paramMap = mapOf("ident" to ident),
-        ).asUpdate,
-    )
-}
-
-private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement = "DELETE  FROM behandling_v1 WHERE id = :behandling_id",
-            paramMap = mapOf("behandling_id" to behandlingId),
-        ).asUpdate,
-    )
-}
-
 private fun rehydrerTilstandsendringHendelse(
     hendelseType: String,
     hendelseJson: String,
@@ -746,61 +694,7 @@ private fun hentTilstandsloggForOppgave(
     }
 }
 
-private fun TransactionalSession.lagreHendelse(
-    behandlingId: UUID,
-    hendelse: Hendelse,
-) {
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO hendelse_v1
-                    (behandling_id, hendelse_type, hendelse_data)
-                VALUES
-                    (:behandling_id, :hendelse_type, :hendelse_data) 
-                ON CONFLICT DO NOTHING
-                """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "behandling_id" to behandlingId,
-                    "hendelse_type" to hendelse.javaClass.simpleName,
-                    "hendelse_data" to
-                        PGobject().also {
-                            it.type = "JSONB"
-                            it.value = hendelse.tilJson()
-                        },
-                ),
-        ).asUpdate,
-    )
-}
-
-private fun TransactionalSession.lagreBehandlingFor(oppgave: Oppgave) {
-    this.lagre(person = oppgave.person)
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO behandling_v1
-                    (id, person_id, opprettet, behandling_type)
-                VALUES
-                    (:id, :person_id, :opprettet, :behandling_type) 
-                ON CONFLICT DO NOTHING
-                """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "id" to oppgave.behandlingId,
-                    "person_id" to oppgave.person.id,
-                    "opprettet" to oppgave.opprettet,
-                    "behandling_type" to oppgave.behandlingType.name,
-                ),
-        ).asUpdate,
-    )
-}
-
 private fun TransactionalSession.lagre(oppgave: Oppgave) {
-    this.lagreBehandlingFor(oppgave)
     run(
         queryOf(
             //language=PostgreSQL

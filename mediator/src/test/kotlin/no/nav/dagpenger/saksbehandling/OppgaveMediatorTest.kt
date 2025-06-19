@@ -51,12 +51,14 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
@@ -426,7 +428,7 @@ OppgaveMediatorTest {
                 person = person,
             )
 
-        settOppOppgaveMediator { datasource, oppgaveMediator ->
+        settOppOppgaveMediator(hendelse = hendelse) { datasource, oppgaveMediator ->
             val oppgaveRepository = PostgresOppgaveRepository(datasource)
 
             oppgaveRepository.lagre(oppgave)
@@ -1045,6 +1047,7 @@ OppgaveMediatorTest {
     }
 
     private fun settOppOppgaveMediator(
+        hendelse: Hendelse = TomHendelse,
         behandlingKlient: BehandlingKlient = behandlingKlientMock,
         movKlient: MeldingOmVedtakKlient = mockk(),
         test: (datasource: DataSource, oppgaveMediator: OppgaveMediator) -> Unit,
@@ -1073,6 +1076,24 @@ OppgaveMediatorTest {
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
+
+            if (hendelse is SøknadsbehandlingOpprettetHendelse) {
+                val sak =
+                    sakMediator.opprettSak(
+                        søknadsbehandlingOpprettetHendelse = hendelse,
+                    )
+                sakMediator.knyttTilSak(
+                    behandlingOpprettetHendelse =
+                        BehandlingOpprettetHendelse(
+                            behandlingId = hendelse.behandlingId,
+                            ident = hendelse.ident,
+                            sakId = sak.sakId,
+                            opprettet = hendelse.opprettet,
+                            type = BehandlingType.RETT_TIL_DAGPENGER,
+                        ),
+                )
+            }
+
             VedtakFattetMottak(testRapid, oppgaveMediator)
             test(dataSource, oppgaveMediator)
         }
