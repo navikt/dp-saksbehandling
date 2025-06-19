@@ -7,7 +7,6 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -26,15 +25,17 @@ class HendelseJsonSerDerTest {
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
         )
 
-    private fun behandlingOppretteHendelse(utførtAv: Behandler) =
-        BehandlingOpprettetHendelse(
-            behandlingId = UUID.fromString(aUUID),
+    private fun behandlingOppretteHendelse(utførtAv: Behandler): BehandlingOpprettetHendelse {
+        val uuid = UUID.fromString(aUUID)
+        return BehandlingOpprettetHendelse(
+            behandlingId = uuid,
             ident = "1234",
-            sakId = UUIDv7.ny(),
+            sakId = uuid,
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
             type = BehandlingType.RETT_TIL_DAGPENGER,
             utførtAv = utførtAv,
         )
+    }
 
     private val søknadsbehandlingOpprettetHendelseJson =
         """
@@ -83,6 +84,7 @@ class HendelseJsonSerDerTest {
                 "ident": "1234",
                 "opprettet": "-999999999-01-01T00:00:00",
                 "type": "RETT_TIL_DAGPENGER",
+                "sakId": "$aUUID",
                 "utførtAv": {
                   "navIdent": "navIdent",
                   "grupper": [
