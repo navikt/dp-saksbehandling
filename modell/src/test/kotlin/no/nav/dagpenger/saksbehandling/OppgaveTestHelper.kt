@@ -12,6 +12,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
 
 object OppgaveTestHelper {
@@ -22,6 +24,7 @@ object OppgaveTestHelper {
         adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
         emneknagger: Set<String> = emptySet(),
+        hendelse: Hendelse = TomHendelse,
     ): Oppgave {
         val tilstand =
             when (tilstandType) {
@@ -47,6 +50,7 @@ object OppgaveTestHelper {
             Behandling(
                 behandlingId = UUIDv7.ny(),
                 opprettet = LocalDateTime.now(),
+                hendelse = hendelse,
             )
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
