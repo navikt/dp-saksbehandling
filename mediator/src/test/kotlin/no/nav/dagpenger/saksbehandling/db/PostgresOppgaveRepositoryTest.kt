@@ -1,8 +1,13 @@
 package no.nav.dagpenger.saksbehandling.db
 
+import PersonMediator
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
@@ -11,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -25,6 +31,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.EGNE_ANSATTE
@@ -36,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
+import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -44,6 +52,9 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter.Paginering
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
+import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -56,6 +67,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.opprettetNå
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -63,6 +75,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
+import javax.sql.DataSource
 
 class PostgresOppgaveRepositoryTest {
     private val saksbehandler =
@@ -74,17 +88,94 @@ class PostgresOppgaveRepositoryTest {
             setOf(BESLUTTER, SAKSBEHANDLER),
         )
     private val oppgaveIdTest = UUIDv7.ny()
+    private val sakId = UUIDv7.ny()
+    private val søknadId = UUIDv7.ny()
+    val person =
+        Person(
+            id = testPerson.id,
+            ident = testPerson.ident,
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = UGRADERT,
+        )
+
+    private fun settOppKul(test: (DataSource) -> Unit) {
+        withMigratedDb { ds ->
+            val postgresPersonRepository = PostgresPersonRepository(dataSource = ds)
+            postgresPersonRepository.lagre(
+                person,
+            )
+            val sakRepository = PostgresRepository(dataSource = ds)
+            sakRepository.lagre(
+                sakHistorikk =
+                    SakHistorikk(
+                        person = person,
+                        saker =
+                            mutableSetOf(
+                                NySak(
+                                    sakId = sakId,
+                                    søknadId = søknadId,
+                                    opprettet = LocalDateTime.now(),
+                                ),
+                            ),
+                    ),
+            )
+            test(ds)
+        }
+    }
+
+    private fun setOppNoe(test: (DataSource, UUID) -> Unit) {
+        withMigratedDb { ds ->
+            val behandlingId = UUIDv7.ny()
+            val sakMediator =
+                SakMediator(
+                    personMediator =
+                        PersonMediator(
+                            personRepository =
+                                PostgresPersonRepository(
+                                    dataSource = ds,
+                                ),
+                            oppslag =
+                                mockk<Oppslag>().also {
+                                    coEvery { it.erSkjermetPerson(testPerson.ident) } returns false
+                                    coEvery { it.adressebeskyttelseGradering(testPerson.ident) } returns UGRADERT
+                                },
+                        ),
+                    sakRepository = PostgresRepository(dataSource = ds),
+                )
+            val sak =
+                sakMediator.opprettSak(
+                    søknadsbehandlingOpprettetHendelse =
+                        SøknadsbehandlingOpprettetHendelse(
+                            ident = testPerson.ident,
+                            søknadId = UUIDv7.ny(),
+                            behandlingId = behandlingId,
+                            opprettet = LocalDateTime.now(),
+                        ),
+                )
+            sak.knyttTilSak(
+                behandlingOpprettetHendelse =
+                    BehandlingOpprettetHendelse(
+                        behandlingId = behandlingId,
+                        ident = testPerson.ident,
+                        sakId = sak.sakId,
+                        opprettet = sak.opprettet,
+                        type = BehandlingType.RETT_TIL_DAGPENGER,
+                    ),
+            )
+            test(ds, behandlingId)
+        }
+    }
 
     @Test
     fun `Det finnes ikke flere ledige oppgaver`() {
-        withMigratedDb { ds ->
+        setOppNoe { ds, behandlingId ->
             val repo = PostgresOppgaveRepository(ds)
             val saksbehandler =
                 Saksbehandler(
                     navIdent = "NAVIdent2",
                     grupper = emptySet(),
                 )
-            val oppgave = lagOppgave(tilstand = FerdigBehandlet)
+            val oppgave = lagOppgave(tilstand = FerdigBehandlet, behandlingId = behandlingId)
             repo.lagre(oppgave)
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
@@ -103,29 +194,55 @@ class PostgresOppgaveRepositoryTest {
         }
     }
 
+    private fun DataSource.lagreBehandlingOgOppgave(oppgave: Oppgave) {
+        sessionOf(this).use { session ->
+            session.transaction {
+                it.run(
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            INSERT INTO behandling_v1
+                                (id, person_id, behandling_type, sak_id, opprettet) 
+                            VALUES
+                                (:id, :person_id, :behandling_type, :sak_id, :opprettet) 
+                            ON CONFLICT (id) DO NOTHING 
+                            """.trimIndent(),
+                        paramMap =
+                            mapOf(
+                                "id" to oppgave.behandlingId,
+                                "person_id" to oppgave.person.id,
+                                "behandling_type" to oppgave.behandlingType.name,
+                                "sak_id" to sakId,
+                                "opprettet" to oppgave.opprettet,
+                            ),
+                    ).asUpdate,
+                )
+            }
+        }
+    }
+
     @Test
     fun `Tildel neste ledige klage-oppgave`() {
-        withMigratedDb { ds ->
+        settOppKul { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val person =
-                Person(
-                    ident = "12345123451",
-                    skjermesSomEgneAnsatte = false,
-                    adressebeskyttelseGradering = UGRADERT,
-                )
             val søknadOppgave =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
-                    person = person,
+                    behandlingId = UUIDv7.ny(),
+                    person = testPerson,
                 )
+            ds.lagreBehandlingOgOppgave(søknadOppgave)
             val klageOppgave =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå,
-                    person = person,
+                    behandlingId = UUIDv7.ny(),
+                    person = testPerson,
                     behandlingType = BehandlingType.KLAGE,
                 )
+            ds.lagreBehandlingOgOppgave(klageOppgave)
             repo.lagre(søknadOppgave)
             repo.lagre(klageOppgave)
             val nesteOppgave =
@@ -1148,7 +1265,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på behandlingstype`() {
-        val søknadOppgave = lagOppgave(tilstand = KlarTilBehandling, behandlingType = BehandlingType.RETT_TIL_DAGPENGER)
+        val søknadOppgave =
+            lagOppgave(tilstand = KlarTilBehandling, behandlingType = BehandlingType.RETT_TIL_DAGPENGER)
         val klageOppgave = lagOppgave(tilstand = KlarTilBehandling, behandlingType = BehandlingType.KLAGE)
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
@@ -1182,7 +1300,8 @@ class PostgresOppgaveRepositoryTest {
             )
 
         val oppgave1TilOla = lagOppgave(person = ola, tilstand = KlarTilBehandling, opprettet = opprettetNå)
-        val oppgave2TilOla = lagOppgave(person = ola, tilstand = FerdigBehandlet, opprettet = opprettetNå.minusDays(1))
+        val oppgave2TilOla =
+            lagOppgave(person = ola, tilstand = FerdigBehandlet, opprettet = opprettetNå.minusDays(1))
         val oppgave1TilKari = lagOppgave(person = kari, tilstand = FerdigBehandlet)
 
         withMigratedDb { ds ->
@@ -1304,7 +1423,12 @@ class PostgresOppgaveRepositoryTest {
         withMigratedDb { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val oppgave1 =
-                lagOppgave(UnderBehandling, enUkeSiden, saksbehandler1, emneknagger = setOf(INNVILGELSE.visningsnavn))
+                lagOppgave(
+                    UnderBehandling,
+                    enUkeSiden,
+                    saksbehandler1,
+                    emneknagger = setOf(INNVILGELSE.visningsnavn),
+                )
             val oppgave2 =
                 lagOppgave(
                     UnderBehandling,
@@ -1318,7 +1442,11 @@ class PostgresOppgaveRepositoryTest {
                     emneknagger = setOf(INNVILGELSE.visningsnavn),
                 )
             val oppgave4 =
-                lagOppgave(UnderBehandling, saksbehandlerIdent = null, emneknagger = setOf(INNVILGELSE.visningsnavn))
+                lagOppgave(
+                    UnderBehandling,
+                    saksbehandlerIdent = null,
+                    emneknagger = setOf(INNVILGELSE.visningsnavn),
+                )
 
             repo.lagre(oppgave1)
             repo.lagre(oppgave2)
