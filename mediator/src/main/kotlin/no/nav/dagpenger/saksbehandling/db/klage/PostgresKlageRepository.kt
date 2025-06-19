@@ -58,14 +58,9 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                                    klag.journalpost_id, 
                                    klag.behandlende_enhet, 
                                    klag.opplysninger,
-                                   beha.opprettet,
-                                   pers.id AS person_id,
-                                   pers.ident AS person_ident,
-                                   pers.adressebeskyttelse_gradering,
-                                   pers.skjermes_som_egne_ansatte
+                                   beha.opprettet
                             FROM   klage_v1       klag
                             JOIN   behandling_v1  beha ON beha.id = klag.id
-                            JOIN   person_v1      pers ON pers.id = beha.person_id
                             WHERE  klag.id = :behandling_id
                             """.trimIndent(),
                         paramMap = mapOf("behandling_id" to behandlingId),
