@@ -123,7 +123,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en digitalt mottatt klage som ferdigstilles med opprettholdelse`() {
-        setupHubba { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator.opprettKlage(
@@ -224,7 +224,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en manuell klage som ferdigstilles med opprettholdelse`() {
-        setupHubba { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator.opprettManuellKlage(
@@ -318,7 +318,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som ferdigstilles med avvisning`() {
-        setupHubba { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
 
             val behandlingId =
                 klageMediator.opprettKlage(
@@ -379,7 +379,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Livssyklus til en klage som avbrytes`() {
-        setupHubba { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
@@ -430,7 +430,7 @@ class KlageMediatorTest {
     @Test
     fun `Kan ikke ferdigstille en klage med medhold`() {
         val utsendingMediator = mockk<UtsendingMediator>(relaxed = true)
-        setupHubba { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
@@ -482,7 +482,7 @@ class KlageMediatorTest {
 
     @Test
     fun `Kan ikke ferdigstille en klage med delvis medhold`() {
-        setupHubba { klageMediator, oppgaveMediator, sakId ->
+        setupMediatorerOgSak { klageMediator, oppgaveMediator, sakId ->
             val behandlingId =
                 klageMediator.opprettKlage(
                     KlageMottattHendelse(
@@ -781,7 +781,7 @@ class KlageMediatorTest {
         }
     }
 
-    private fun setupHubba(test: (KlageMediator, OppgaveMediator, UUID) -> Unit) {
+    private fun setupMediatorerOgSak(test: (KlageMediator, OppgaveMediator, UUID) -> Unit) {
         withMigratedDb { dataSource ->
             val personRepository = PostgresPersonRepository(dataSource)
             val personMediator = PersonMediator(personRepository = personRepository, oppslagMock)
