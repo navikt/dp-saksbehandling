@@ -1103,7 +1103,7 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne endre tilstand på en oppgave`() {
         val testOppgave = lagOppgave(tilstand = KlarTilBehandling)
-        withMigratedDb { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
 
             repo.lagre(testOppgave)
@@ -1118,7 +1118,7 @@ class PostgresOppgaveRepositoryTest {
     fun `CRUD på oppgave i tilstand PAA_VENT`() {
         val testOppgave = lagOppgave(tilstand = UnderBehandling)
         val utsattTil = LocalDate.now().plusDays(1)
-        withMigratedDb { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(
                 testOppgave.copy(
