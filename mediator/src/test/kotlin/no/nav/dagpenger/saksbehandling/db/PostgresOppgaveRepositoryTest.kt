@@ -1317,39 +1317,30 @@ class PostgresOppgaveRepositoryTest {
         val saksbehandler1 = "saksbehandler1"
         val saksbehandler2 = "saksbehandler2"
 
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
+            this.leggTilOppgave(
+                tilstand = UnderBehandling,
+                opprettet = enUkeSiden,
+                saksBehandlerIdent = saksbehandler1,
+                emneknagger = setOf(INNVILGELSE.visningsnavn),
+            )
+            this.leggTilOppgave(
+                tilstand = UnderBehandling,
+                saksBehandlerIdent = saksbehandler2,
+                emneknagger = setOf(AVSLAG_MINSTEINNTEKT.visningsnavn),
+            )
+            this.leggTilOppgave(
+                tilstand = FerdigBehandlet,
+                saksBehandlerIdent = saksbehandler2,
+                emneknagger = setOf(INNVILGELSE.visningsnavn),
+            )
+            this.leggTilOppgave(
+                tilstand = UnderBehandling,
+                saksBehandlerIdent = null,
+                emneknagger = setOf(INNVILGELSE.visningsnavn),
+            )
+
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave1 =
-                lagOppgave(
-                    UnderBehandling,
-                    enUkeSiden,
-                    saksbehandler1,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn),
-                )
-            val oppgave2 =
-                lagOppgave(
-                    UnderBehandling,
-                    saksbehandlerIdent = saksbehandler2,
-                    emneknagger = setOf(AVSLAG_MINSTEINNTEKT.visningsnavn),
-                )
-            val oppgave3 =
-                lagOppgave(
-                    FerdigBehandlet,
-                    saksbehandlerIdent = saksbehandler2,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn),
-                )
-            val oppgave4 =
-                lagOppgave(
-                    UnderBehandling,
-                    saksbehandlerIdent = null,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn),
-                )
-
-            repo.lagre(oppgave1)
-            repo.lagre(oppgave2)
-            repo.lagre(oppgave3)
-            repo.lagre(oppgave4)
-
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
