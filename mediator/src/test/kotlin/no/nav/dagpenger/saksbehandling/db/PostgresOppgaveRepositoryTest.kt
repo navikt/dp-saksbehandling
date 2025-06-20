@@ -269,11 +269,10 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Finn neste ledige oppgave som ikke gjelder adressebeskyttede personer`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+        DBTestHelper.withMigratedDb { ds ->
 
             val eldsteOppgaveMedAdressebeskyttelse =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     person =
@@ -283,10 +282,9 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = FORTROLIG,
                         ),
                 )
-            repo.lagre(eldsteOppgaveMedAdressebeskyttelse)
 
             val eldsteOppgaveUtenAdressebeskyttelse =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
                     person =
@@ -296,7 +294,6 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            repo.lagre(eldsteOppgaveUtenAdressebeskyttelse)
 
             val saksbehandlernUtenTilgangTilAdressebeskyttede =
                 Saksbehandler(
@@ -304,6 +301,8 @@ class PostgresOppgaveRepositoryTest {
                     grupper = emptySet(),
                     tilganger = emptySet(),
                 )
+
+            val repo = PostgresOppgaveRepository(ds)
             val nesteOppgave =
                 repo.tildelOgHentNesteOppgave(
                     nesteOppgaveHendelse =
@@ -356,28 +355,27 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Ved tildeling av neste oppgave, skal det lagres en tilstandsendring i tilstandsendringsloggen`() {
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
+            val oppgave =
+                this.leggTilOppgave(
+                    tilstand = KlarTilBehandling,
+                    opprettet = opprettetNå,
+                    emneknagger = setOf("Testknagg"),
+                )
 
+            val repo = PostgresOppgaveRepository(ds)
             val saksbehandler =
                 Saksbehandler(
                     navIdent = "NAVIdent",
                     grupper = emptySet(),
                 )
-            val repo = PostgresOppgaveRepository(ds)
+
             val nesteOppgaveHendelse =
                 NesteOppgaveHendelse(
                     ansvarligIdent = saksbehandler.navIdent,
                     utførtAv = saksbehandler,
                 )
-            val oppgave =
-                lagOppgave(
-                    tilstand = KlarTilBehandling,
-                    opprettet = opprettetNå,
-                    emneknagger = setOf("Testknagg"),
-                )
-            repo.lagre(oppgave)
             val rehydrertOppgave = repo.hentOppgave(oppgave.oppgaveId)
-
             val antallTilstandsendringer = rehydrertOppgave.tilstandslogg.size
 
             val filter =
@@ -394,7 +392,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal ikke få tildelt kontrolloppgave som man selv har saksbehandlet`() {
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val saksbehandlerUtført =
                 Saksbehandler(
                     navIdent = "saksbehandlerUtført",
@@ -466,14 +464,13 @@ class PostgresOppgaveRepositoryTest {
                 )
 
             val oppgave =
-                lagOppgave(
-                    oppgaveId = oppgaveId,
+                this.leggTilOppgave(
+                    id = oppgaveId,
                     tilstand = Oppgave.KlarTilKontroll,
                     tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(oppgave)
 
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =

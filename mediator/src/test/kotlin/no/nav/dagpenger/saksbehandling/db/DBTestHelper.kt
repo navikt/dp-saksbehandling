@@ -7,6 +7,7 @@ import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -109,10 +110,13 @@ class DBTestHelper private constructor(private val ds: DataSource) :
         }
 
         fun leggTilOppgave(
+            id: UUID = UUIDv7.ny(),
             tilstand: Oppgave.Tilstand = Oppgave.KlarTilBehandling,
+            emneknagger: Set<String> = emptySet(),
             person: Person = testPerson,
             opprettet: LocalDateTime = LocalDateTime.now(),
             type: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+            tilstandslogg: Tilstandslogg = Tilstandslogg(),
         ): Oppgave {
             this.lagre(person)
 
@@ -139,9 +143,11 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             this.lagre(sakHistorikk)
 
             return Oppgave(
-                oppgaveId = UUIDv7.ny(),
+                oppgaveId = id,
                 opprettet = opprettet,
                 tilstand = tilstand,
+                emneknagger = emneknagger,
+                tilstandslogg = tilstandslogg,
                 behandlerIdent = null,
                 behandlingId = behandling.behandlingId,
                 behandlingType = type,
