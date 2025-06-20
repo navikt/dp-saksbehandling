@@ -902,9 +902,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre en oppgave flere ganger`() {
-        DBTestHelper.withMigratedDb { ds ->
-            val testOppgave = this.leggTilOppgave()
+        val testOppgave = lagOppgave()
 
+        DBTestHelper.withOppgave(oppgave = testOppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             shouldNotThrowAny {
                 repo.lagre(testOppgave)
@@ -915,9 +915,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre og hente en oppgave med notat`() {
-        DBTestHelper.withMigratedDb { ds ->
-            val testOppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilKontroll)
-
+        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        DBTestHelper.withOppgave(testOppgave) { ds ->
             testOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
@@ -942,9 +941,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre notatet til en oppgave`() {
-        DBTestHelper.withMigratedDb { ds ->
-
-            val oppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilKontroll)
+        val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        DBTestHelper.withOppgave(oppgave) { ds ->
 
             val repo = PostgresOppgaveRepository(ds)
             oppgave.tildel(
@@ -973,8 +971,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne finne et notat`() {
-        DBTestHelper.withMigratedDb { ds ->
-            val oppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilKontroll)
+        val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        DBTestHelper.withOppgave(oppgave) { ds ->
 
             val repo = PostgresOppgaveRepository(ds)
             oppgave.tildel(
@@ -1003,8 +1001,10 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre og hente en oppgave`() {
-        DBTestHelper.withMigratedDb { ds ->
-            val testOppgave = this.leggTilOppgave()
+        val behandling = lagBehandling()
+        val testOppgave = lagOppgave(behandlingId = behandling.behandlingId)
+
+        DBTestHelper.withBehandling(behandling = behandling) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
@@ -1014,8 +1014,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne slette et notat for en oppgave`() {
-        DBTestHelper.withMigratedDb { ds ->
-            val testOppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilKontroll)
+        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        DBTestHelper.withOppgave(testOppgave) { ds ->
+
             testOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = testOppgave.oppgaveId,
@@ -1083,9 +1084,9 @@ class PostgresOppgaveRepositoryTest {
                 ),
             )
         val testOppgave = lagOppgave(tilstandslogg = tilstandslogg, oppgaveId = oppgaveIdTest)
-        withMigratedDb { ds ->
+        DBTestHelper.withOppgave(testOppgave) { ds ->
+
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
             oppgaveFraDatabase.tilstandslogg.size shouldBe testOppgave.tilstandslogg.size
             oppgaveFraDatabase.tilstandslogg.forEachIndexed { index, tilstandsendring ->

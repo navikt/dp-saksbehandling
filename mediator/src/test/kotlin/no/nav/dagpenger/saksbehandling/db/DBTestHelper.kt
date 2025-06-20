@@ -107,6 +107,26 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                     block(ds)
                 }
             }
+
+            fun withOppgave(
+                oppgave: Oppgave,
+                block: DBTestHelper.(DataSource) -> Unit,
+            ) {
+                val behandling =
+                    Behandling(
+                        behandlingId = oppgave.behandlingId,
+                        type = oppgave.behandlingType,
+                        opprettet = oppgave.opprettet,
+                        hendelse = TomHendelse,
+                    )
+                withBehandling(
+                    person = oppgave.person,
+                    behandling = behandling,
+                ) { ds ->
+                    this.lagre(oppgave)
+                    block(ds)
+                }
+            }
         }
 
         fun leggTilOppgave(
