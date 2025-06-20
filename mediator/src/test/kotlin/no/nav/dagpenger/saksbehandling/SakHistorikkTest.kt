@@ -6,7 +6,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class SaksHistorikkTest {
+class SakHistorikkTest {
     private val nå = LocalDateTime.now()
     private val oppgaveId = UUIDv7.ny()
     private val behandling1 =
@@ -73,7 +73,7 @@ class SaksHistorikkTest {
                 it.leggTilSak(sak2)
             }
 
-        val saksHistorikk2 =
+        val sakHistorikk2 =
             SakHistorikk(
                 person = person,
             ).also {
@@ -82,6 +82,6 @@ class SaksHistorikkTest {
                 it.leggTilSak(sak2)
             }
 
-        sakHistorikk1 shouldBe saksHistorikk2
+        sakHistorikk1 shouldBe sakHistorikk2
     }
 }

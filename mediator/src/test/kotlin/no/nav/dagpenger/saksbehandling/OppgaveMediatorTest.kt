@@ -179,12 +179,12 @@ OppgaveMediatorTest {
 
     @Test
     fun `Kan ikke opprette oppgave dersom sak eller behandling ikke finnes`() {
-        val personUtenSakshistorikk = "12345678901"
+        val personUtenSakHistorikk = "12345678901"
         val personUtenBehandling = "12345678902"
 
         val sakMediatorMock =
             mockk<SakMediator>().also {
-                every { it.finnSakHistorikkk(personUtenSakshistorikk) } returns null
+                every { it.finnSakHistorikkk(personUtenSakHistorikk) } returns null
                 every { it.finnSakHistorikkk(personUtenBehandling) } returns
                     SakHistorikk(
                         person =
@@ -215,7 +215,7 @@ OppgaveMediatorTest {
                 BehandlingOpprettetHendelse(
                     behandlingId = UUIDv7.ny(),
                     sakId = UUIDv7.ny(),
-                    ident = personUtenSakshistorikk,
+                    ident = personUtenSakHistorikk,
                     opprettet = LocalDateTime.now(),
                     type = BehandlingType.KLAGE,
                 ),
@@ -243,7 +243,7 @@ OppgaveMediatorTest {
 
         oppgaveMediator.opprettEllerOppdaterOppgave(
             ForslagTilVedtakHendelse(
-                ident = personUtenSakshistorikk,
+                ident = personUtenSakHistorikk,
                 behandlingId = UUIDv7.ny(),
                 søknadId = UUIDv7.ny(),
             ),

@@ -28,7 +28,7 @@ interface SakRepository {
 
     fun hentSakHistorikk(ident: String): SakHistorikk
 
-    fun finn(ident: String): SakHistorikk?
+    fun finnSakHistorikk(ident: String): SakHistorikk?
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID
 }
@@ -51,10 +51,10 @@ class PostgresRepository(
     }
 
     override fun hentSakHistorikk(ident: String): SakHistorikk {
-        return finn(ident) ?: throw DataNotFoundException("Kan ikke finne sakHistorikk for ident $ident")
+        return finnSakHistorikk(ident) ?: throw DataNotFoundException("Kan ikke finne sakHistorikk for ident $ident")
     }
 
-    override fun finn(ident: String): SakHistorikk? {
+    override fun finnSakHistorikk(ident: String): SakHistorikk? {
         val sakHistorikk = mutableListOf<SakHistorikk>()
 
         sessionOf(dataSource).use { session ->

@@ -15,19 +15,3 @@ CREATE TRIGGER oppdater_endret_tidspunkt
     ON sak_v2
     FOR EACH ROW
 EXECUTE FUNCTION oppdater_endret_tidspunkt();
-
--- CREATE TABLE IF NOT EXISTS behandling_v2
--- (
---     id                   UUID PRIMARY KEY,
---     sak_id               UUID                        NOT NULL REFERENCES sak_v2 (id),
---     behandling_type      TEXT                        NOT NULL,
---     opprettet            TIMESTAMP WITH TIME ZONE    NOT NULL,
---     registrert_tidspunkt TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp),
---     endret_tidspunkt     TIMESTAMP WITHOUT TIME ZONE DEFAULT timezone('Europe/Oslo'::text, current_timestamp)
--- );
--- CREATE INDEX IF NOT EXISTS behandling_sak_id_index ON behandling_v2 (sak_id);
--- CREATE TRIGGER oppdater_endret_tidspunkt
---     BEFORE UPDATE
---     ON behandling_v2
---     FOR EACH ROW
--- EXECUTE FUNCTION oppdater_endret_tidspunkt();

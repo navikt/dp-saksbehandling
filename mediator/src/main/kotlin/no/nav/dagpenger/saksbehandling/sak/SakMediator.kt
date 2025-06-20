@@ -32,11 +32,7 @@ class SakMediator(
     }
 
     fun finnSakHistorikkk(ident: String): SakHistorikk? {
-        return sakRepository.finn(ident)
-    }
-
-    fun finnSak(ident: String): SakHistorikk? {
-        return sakRepository.finn(ident)
+        return sakRepository.finnSakHistorikk(ident)
     }
 
     fun opprettSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): NySak {
@@ -68,7 +64,7 @@ class SakMediator(
             }
         }.onSuccess { person ->
             val sakHistorikk =
-                sakRepository.finn(søknadsbehandlingOpprettetHendelse.ident) ?: SakHistorikk(
+                sakRepository.finnSakHistorikk(søknadsbehandlingOpprettetHendelse.ident) ?: SakHistorikk(
                     person = person,
                 )
             sakHistorikk.leggTilSak(sak)

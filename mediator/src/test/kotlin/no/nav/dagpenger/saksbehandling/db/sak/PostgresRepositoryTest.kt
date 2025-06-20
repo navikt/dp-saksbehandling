@@ -94,9 +94,9 @@ class PostgresRepositoryTest {
             sakRepository.lagre(sakHistorikk)
             dataSource.insertOppgaveRad(oppgaveId, behandling1.behandlingId)
 
-            val saksHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
 
-            saksHistorikkFraDB shouldBe sakHistorikk
+            sakHistorikkFraDB shouldBe sakHistorikk
         }
     }
 
