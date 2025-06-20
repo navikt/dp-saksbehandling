@@ -56,6 +56,27 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 }
             }
 
+            fun withSak(
+                person: Person = testPerson,
+                sak: NySak =
+                    NySak(
+                        sakId = sakId,
+                        søknadId = søknadId,
+                        opprettet = LocalDateTime.now(),
+                    ),
+                block: DBTestHelper.(DataSource) -> Unit,
+            ) {
+                withPerson(person) { ds ->
+                    this.lagre(
+                        SakHistorikk(
+                            person = person,
+                            saker = mutableSetOf(sak),
+                        ),
+                    )
+                    block(ds)
+                }
+            }
+
             fun withBehandling(
                 person: Person = testPerson,
                 behandling: Behandling =
@@ -72,18 +93,12 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                         opprettet = LocalDateTime.now(),
                         behandlinger = mutableSetOf(behandling),
                     ),
-                sakHistorikk: SakHistorikk =
-                    SakHistorikk(
-                        person = person,
-                        saker = mutableSetOf(sak),
-                    ),
                 block: DBTestHelper.(DataSource) -> Unit,
-            ) {
-                withPerson(person) { ds ->
-                    this.lagre(sakHistorikk)
-                    block(ds)
-                }
-            }
+            ) = withSak(
+                person = person,
+                sak = sak,
+                block = block,
+            )
 
             fun withBehandlinger(
                 person: Person = testPerson,
@@ -95,18 +110,12 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                         opprettet = LocalDateTime.now(),
                         behandlinger = behandlinger.toMutableSet(),
                     ),
-                sakHistorikk: SakHistorikk =
-                    SakHistorikk(
-                        person = person,
-                        saker = mutableSetOf(sak),
-                    ),
                 block: DBTestHelper.(DataSource) -> Unit,
-            ) {
-                withPerson(person) { ds ->
-                    this.lagre(sakHistorikk)
-                    block(ds)
-                }
-            }
+            ) = withSak(
+                person = person,
+                sak = sak,
+                block = block,
+            )
 
             fun withOppgave(
                 oppgave: Oppgave,
