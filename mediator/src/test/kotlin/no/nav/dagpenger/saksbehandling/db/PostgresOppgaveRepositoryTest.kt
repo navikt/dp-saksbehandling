@@ -1258,12 +1258,12 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal hente oppgaveId fra behandlingId`() {
         val behandlingId = UUIDv7.ny()
+        val behandling = lagBehandling(behandlingId = behandlingId)
         val oppgave = lagOppgave(behandlingId = behandlingId, behandlingType = RETT_TIL_DAGPENGER)
 
-        withMigratedDb { ds ->
+        DBTestHelper.withBehandling(behandling = behandling) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(oppgave)
-
             repo.hentOppgaveIdFor(behandlingId = behandlingId) shouldBe oppgave.oppgaveId
             repo.hentOppgaveIdFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
