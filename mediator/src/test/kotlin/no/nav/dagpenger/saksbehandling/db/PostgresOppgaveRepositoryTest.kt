@@ -973,10 +973,10 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne finne et notat`() {
-        val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
+            val oppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilKontroll)
+
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(oppgave)
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -1003,8 +1003,8 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre og hente en oppgave`() {
-        val testOppgave = lagOppgave()
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
+            val testOppgave = this.leggTilOppgave()
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
@@ -1014,23 +1014,22 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne slette et notat for en oppgave`() {
-        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        testOppgave.tildel(
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = testOppgave.oppgaveId,
-                ansvarligIdent = beslutter.navIdent,
-                utførtAv = beslutter,
-            ),
-        )
-        testOppgave.lagreNotat(
-            NotatHendelse(
-                oppgaveId = testOppgave.oppgaveId,
-                tekst = "Dette er et notat",
-                utførtAv = beslutter,
-            ),
-        )
-
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
+            val testOppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilKontroll)
+            testOppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = testOppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+            testOppgave.lagreNotat(
+                NotatHendelse(
+                    oppgaveId = testOppgave.oppgaveId,
+                    tekst = "Dette er et notat",
+                    utførtAv = beslutter,
+                ),
+            )
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
 
