@@ -901,11 +901,11 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne lagre både en behandling og en oppgave flere ganger`() {
-        val testOppgave = lagOppgave()
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+    fun `Skal kunne lagre en oppgave flere ganger`() {
+        DBTestHelper.withMigratedDb { ds ->
+            val testOppgave = this.leggTilOppgave()
 
+            val repo = PostgresOppgaveRepository(ds)
             shouldNotThrowAny {
                 repo.lagre(testOppgave)
                 repo.lagre(testOppgave)
@@ -915,36 +915,38 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre og hente en oppgave med notat`() {
-        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        testOppgave.tildel(
-            SettOppgaveAnsvarHendelse(
-                oppgaveId = testOppgave.oppgaveId,
-                ansvarligIdent = beslutter.navIdent,
-                utførtAv = beslutter,
-            ),
-        )
-        testOppgave.lagreNotat(
-            NotatHendelse(
-                oppgaveId = testOppgave.oppgaveId,
-                tekst = "Dette er et notat",
-                utførtAv = beslutter,
-            ),
-        )
+        DBTestHelper.withMigratedDb { ds ->
+            val testOppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilKontroll)
 
-        withMigratedDb { ds ->
+            testOppgave.tildel(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = testOppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+            testOppgave.lagreNotat(
+                NotatHendelse(
+                    oppgaveId = testOppgave.oppgaveId,
+                    tekst = "Dette er et notat",
+                    utførtAv = beslutter,
+                ),
+            )
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
+
             oppgaveFraDatabase shouldBe testOppgave
         }
     }
 
     @Test
     fun `Skal kunne lagre notatet til en oppgave`() {
-        val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
+
+            val oppgave = this.leggTilOppgave(tilstand = Oppgave.KlarTilKontroll)
+
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(oppgave)
             oppgave.tildel(
                 SettOppgaveAnsvarHendelse(
                     oppgaveId = oppgave.oppgaveId,
