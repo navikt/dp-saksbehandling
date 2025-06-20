@@ -31,6 +31,12 @@ interface SakRepository {
     fun finnSakHistorikk(ident: String): SakHistorikk?
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID
+
+    fun lagreBehandling(
+        personId: UUID,
+        sakId: UUID,
+        behandling: Behandling,
+    )
 }
 
 private val logger = KotlinLogging.logger {}
@@ -197,6 +203,22 @@ class PostgresRepository(
                     ),
             ).asUpdate,
         )
+    }
+
+    override fun lagreBehandling(
+        personId: UUID,
+        sakId: UUID,
+        behandling: Behandling,
+    ) {
+        sessionOf(dataSource).use { session ->
+            session.transaction { tx ->
+                tx.lagreBehandling(
+                    personId = personId,
+                    sakId = sakId,
+                    behandling = behandling,
+                )
+            }
+        }
     }
 
     private fun TransactionalSession.lagreBehandling(

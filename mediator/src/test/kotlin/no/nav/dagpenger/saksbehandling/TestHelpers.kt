@@ -56,7 +56,6 @@ fun lagOppgave(
 fun lagBehandling(
     behandlingId: UUID = UUIDv7.ny(),
     opprettet: LocalDateTime = opprettetNå,
-    person: Person = testPerson,
     hendelse: Hendelse = TomHendelse,
     type: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
 ): Behandling {
