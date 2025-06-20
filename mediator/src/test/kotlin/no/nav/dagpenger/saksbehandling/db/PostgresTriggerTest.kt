@@ -8,8 +8,8 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.lagBehandling
 import org.junit.jupiter.api.Test
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -26,17 +26,18 @@ class PostgresTriggerTest {
                 adressebeskyttelseGradering = UGRADERT,
             )
         val opprettet = LocalDateTime.now()
+        val behandlingId = UUIDv7.ny()
         val testOppgave =
             Oppgave(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = setOf("Hugga", "Bugga"),
                 opprettet = opprettet,
                 tilstand = Oppgave.KlarTilBehandling,
-                behandlingId = UUIDv7.ny(),
+                behandlingId = behandlingId,
                 behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
                 person = testPerson,
             )
-        withMigratedDb { ds ->
+        DBTestHelper.withBehandling(person = testPerson, behandling = lagBehandling(behandlingId = behandlingId)) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val endretTidspunkt = ds.hentEndretTidspunkt(testOppgave.oppgaveId)
