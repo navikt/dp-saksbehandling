@@ -1271,16 +1271,12 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne søke etter oppgaver filtrert på emneknagger`() {
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
+            val oppgave1 = this.leggTilOppgave(emneknagger = setOf("hubba", "bubba"))
+            val oppgave2 = this.leggTilOppgave(emneknagger = setOf("hubba"))
+            val oppgave3 = this.leggTilOppgave(emneknagger = emptySet())
+
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave1 = lagOppgave(emneknagger = setOf("hubba", "bubba"))
-            val oppgave2 = lagOppgave(emneknagger = setOf("hubba"))
-            val oppgave3 = lagOppgave(emneknagger = emptySet())
-
-            repo.lagre(oppgave1)
-            repo.lagre(oppgave2)
-            repo.lagre(oppgave3)
-
             repo.søk(
                 Søkefilter(
                     tilstander = Oppgave.Tilstand.Type.entries.toSet(),
