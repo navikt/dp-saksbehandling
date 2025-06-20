@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling.metrikker
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
+import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -11,27 +13,52 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
-import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
+import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.lagUtsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
 
 class MetrikkJobTest {
+    val person = lagPerson()
+    val behandling1 = lagBehandling(type = RETT_TIL_DAGPENGER)
+    val behandling2 = lagBehandling(type = RETT_TIL_DAGPENGER)
+    val behandling3 = lagBehandling(type = KLAGE)
+    val behandling4 = lagBehandling(type = KLAGE)
+    val behandling5 = lagBehandling(type = RETT_TIL_DAGPENGER)
+    val behandling6 = lagBehandling(type = RETT_TIL_DAGPENGER)
+    val behandling7 = lagBehandling(type = RETT_TIL_DAGPENGER)
+    val behandling8 = lagBehandling(type = RETT_TIL_DAGPENGER)
+
     @Test
     fun `Hent riktig distribusjon av oppgavetilstand`() {
-        withMigratedDb { ds ->
+        DBTestHelper.withBehandlinger(
+            person = person,
+            behandlinger =
+                listOf(
+                    behandling1,
+                    behandling2,
+                    behandling3,
+                    behandling4,
+                    behandling5,
+                    behandling6,
+                    behandling7,
+                    behandling8,
+                ),
+        ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(lagOppgave(tilstand = PåVent))
-            repo.lagre(lagOppgave(tilstand = PåVent))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling))
-            repo.lagre(lagOppgave(tilstand = KlarTilKontroll))
-            repo.lagre(lagOppgave(tilstand = AvventerLåsAvBehandling))
-            repo.lagre(lagOppgave(tilstand = AvventerOpplåsingAvBehandling))
+            repo.lagre(lagOppgave(tilstand = PåVent, behandlingId = behandling1.behandlingId))
+            repo.lagre(lagOppgave(tilstand = PåVent, behandlingId = behandling2.behandlingId))
+            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling3.behandlingId))
+            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling4.behandlingId))
+            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling5.behandlingId))
+            repo.lagre(lagOppgave(tilstand = KlarTilKontroll, behandlingId = behandling6.behandlingId))
+            repo.lagre(lagOppgave(tilstand = AvventerLåsAvBehandling, behandlingId = behandling7.behandlingId))
+            repo.lagre(lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandlingId = behandling8.behandlingId))
 
             val oppgaveTilstandDistribusjon = hentOppgaveTilstandDistribusjon(ds)
 
@@ -58,23 +85,63 @@ class MetrikkJobTest {
 
     @Test
     fun `Hent riktig distribusjon av utsendingtilstand`() {
-        withMigratedDb { ds ->
-            val oppgaveRepository = PostgresOppgaveRepository(ds)
+        DBTestHelper.withBehandlinger(
+            person = person,
+            behandlinger =
+                listOf(
+                    behandling1,
+                    behandling2,
+                    behandling3,
+                    behandling4,
+                    behandling5,
+                    behandling6,
+                    behandling7,
+                    behandling8,
+                ),
+        ) { ds ->
+            val repo = PostgresOppgaveRepository(ds)
             val utsendingRepository = PostgresUtsendingRepository(ds)
-
-            listOf(
-                Utsending.VenterPåVedtak,
-                Utsending.VenterPåVedtak,
-                Utsending.AvventerArkiverbarVersjonAvBrev,
-                Utsending.AvventerArkiverbarVersjonAvBrev,
-                Utsending.AvventerJournalføring,
-                Utsending.Distribuert,
-                Utsending.Distribuert,
-                Utsending.Distribuert,
-            ).forEach {
-                val oppgave = lagOppgave()
-                oppgaveRepository.lagre(oppgave)
-                utsendingRepository.lagre(lagUtsending(tilstand = it, oppgave.oppgaveId))
+            lagOppgave(tilstand = PåVent, behandlingId = behandling1.behandlingId).also {
+                repo.lagre(it)
+                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, it.oppgaveId))
+            }
+            lagOppgave(tilstand = PåVent, behandlingId = behandling2.behandlingId).also {
+                repo.lagre(it)
+                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, it.oppgaveId))
+            }
+            lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling3.behandlingId).also {
+                repo.lagre(it)
+                utsendingRepository.lagre(
+                    lagUtsending(
+                        tilstand = Utsending.AvventerArkiverbarVersjonAvBrev,
+                        it.oppgaveId,
+                    ),
+                )
+            }
+            lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling4.behandlingId).also {
+                repo.lagre(it)
+                utsendingRepository.lagre(
+                    lagUtsending(
+                        tilstand = Utsending.AvventerArkiverbarVersjonAvBrev,
+                        it.oppgaveId,
+                    ),
+                )
+            }
+            lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling5.behandlingId).also {
+                repo.lagre(it)
+                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.AvventerJournalføring, it.oppgaveId))
+            }
+            lagOppgave(tilstand = KlarTilKontroll, behandlingId = behandling6.behandlingId).also {
+                repo.lagre(it)
+                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, it.oppgaveId))
+            }
+            lagOppgave(tilstand = AvventerLåsAvBehandling, behandlingId = behandling7.behandlingId).also {
+                repo.lagre(it)
+                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, it.oppgaveId))
+            }
+            lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandlingId = behandling8.behandlingId).also {
+                repo.lagre(it)
+                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, it.oppgaveId))
             }
 
             val utsendingTilstandDistribusjon = hentUtsendingTilstandDistribusjon(ds)
