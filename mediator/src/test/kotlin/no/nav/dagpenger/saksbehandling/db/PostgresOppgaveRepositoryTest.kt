@@ -1378,18 +1378,13 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne hente paginerte oppgaver`() {
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
+            val nyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå)
+            val nestNyesteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(1))
+            val nestEldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(3))
+            val eldsteOppgave = this.leggTilOppgave(opprettet = opprettetNå.minusDays(7))
+
             val repo = PostgresOppgaveRepository(ds)
-            val nyesteOppgave = lagOppgave(opprettet = opprettetNå)
-            val nestNyesteOppgave = lagOppgave(opprettet = opprettetNå.minusDays(1))
-            val nestEldsteOppgave = lagOppgave(opprettet = opprettetNå.minusDays(3))
-            val eldsteOppgave = lagOppgave(opprettet = opprettetNå.minusDays(7))
-
-            repo.lagre(nestEldsteOppgave)
-            repo.lagre(nyesteOppgave)
-            repo.lagre(nestNyesteOppgave)
-            repo.lagre(eldsteOppgave)
-
             repo.søk(
                 Søkefilter(
                     tilstander = søkbareTilstander,
@@ -1458,18 +1453,21 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal kunne søke etter oppgaver filtrert på tilstand og opprettet`() {
         val enUkeSiden = opprettetNå.minusDays(7)
 
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
+        DBTestHelper.withMigratedDb { ds ->
             val oppgaveUnderBehandlingEnUkeGammel =
-                lagOppgave(UnderBehandling, opprettet = enUkeSiden, saksbehandlerIdent = saksbehandler.navIdent)
-            val oppgaveKlarTilBehandlingIDag = lagOppgave(KlarTilBehandling)
-            val oppgaveKlarTilBehandlingIGår = lagOppgave(KlarTilBehandling, opprettet = opprettetNå.minusDays(1))
-            val oppgaveOpprettetIDag = lagOppgave(Opprettet)
-            repo.lagre(oppgaveUnderBehandlingEnUkeGammel)
-            repo.lagre(oppgaveKlarTilBehandlingIDag)
-            repo.lagre(oppgaveKlarTilBehandlingIGår)
-            repo.lagre(oppgaveOpprettetIDag)
+                this.leggTilOppgave(
+                    tilstand = UnderBehandling,
+                    opprettet = enUkeSiden,
+                    saksBehandlerIdent = saksbehandler.navIdent,
+                )
+            this.leggTilOppgave(tilstand = KlarTilBehandling)
+            this.leggTilOppgave(
+                tilstand = KlarTilBehandling,
+                opprettet = opprettetNå.minusDays(1),
+            )
+            this.leggTilOppgave(tilstand = Opprettet)
 
+            val repo = PostgresOppgaveRepository(ds)
             repo.søk(
                 Søkefilter(
                     tilstander = setOf(UNDER_BEHANDLING),
@@ -1550,7 +1548,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne søke etter oppgaver opprettet en bestemt dato, uavhengig av tid på døgnet`() {
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val iDag = LocalDate.now()
             val iGår: LocalDate = iDag.minusDays(1)
             val iForgårs = iDag.minusDays(2)
@@ -1558,18 +1556,12 @@ class PostgresOppgaveRepositoryTest {
             val iGårSåTidligPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MIN)
             val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX)
             val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
+            val oppgaveOpprettetSeintForgårs = this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iForgårsSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetTidligIGår = this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iGårSåTidligPåDagenSomMulig)
+            val oppgaveOpprettetSeintIGår = this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iGårSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetTidligIDag = this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iDagSåTidligPåDagenSomMulig)
+
             val repo = PostgresOppgaveRepository(ds)
-            val oppgaveOpprettetSeintForgårs =
-                lagOppgave(KlarTilBehandling, opprettet = iForgårsSåSeintPåDagenSomMulig)
-            val oppgaveOpprettetTidligIGår = lagOppgave(KlarTilBehandling, opprettet = iGårSåTidligPåDagenSomMulig)
-            val oppgaveOpprettetSeintIGår = lagOppgave(KlarTilBehandling, opprettet = iGårSåSeintPåDagenSomMulig)
-            val oppgaveOpprettetTidligIDag = lagOppgave(KlarTilBehandling, opprettet = iDagSåTidligPåDagenSomMulig)
-
-            repo.lagre(oppgaveOpprettetSeintForgårs)
-            repo.lagre(oppgaveOpprettetTidligIGår)
-            repo.lagre(oppgaveOpprettetSeintIGår)
-            repo.lagre(oppgaveOpprettetTidligIDag)
-
             val oppgaver =
                 repo.søk(
                     Søkefilter(
