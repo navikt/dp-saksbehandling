@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.db
 
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
@@ -63,7 +64,6 @@ import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.opprettetNå
 import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -1556,10 +1556,14 @@ class PostgresOppgaveRepositoryTest {
             val iGårSåTidligPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MIN)
             val iGårSåSeintPåDagenSomMulig = LocalDateTime.of(iGår, LocalTime.MAX)
             val iDagSåTidligPåDagenSomMulig = LocalDateTime.of(iDag, LocalTime.MIN)
-            val oppgaveOpprettetSeintForgårs = this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iForgårsSåSeintPåDagenSomMulig)
-            val oppgaveOpprettetTidligIGår = this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iGårSåTidligPåDagenSomMulig)
-            val oppgaveOpprettetSeintIGår = this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iGårSåSeintPåDagenSomMulig)
-            val oppgaveOpprettetTidligIDag = this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iDagSåTidligPåDagenSomMulig)
+            val oppgaveOpprettetSeintForgårs =
+                this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iForgårsSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetTidligIGår =
+                this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iGårSåTidligPåDagenSomMulig)
+            val oppgaveOpprettetSeintIGår =
+                this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iGårSåSeintPåDagenSomMulig)
+            val oppgaveOpprettetTidligIDag =
+                this.leggTilOppgave(tilstand = KlarTilBehandling, opprettet = iDagSåTidligPåDagenSomMulig)
 
             val repo = PostgresOppgaveRepository(ds)
             val oppgaver =
@@ -1577,13 +1581,12 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal hente en oppgave basert på behandlingId`() {
-        withMigratedDb { ds ->
+        val oppgave = lagOppgave()
+        DBTestHelper.withOppgave(oppgave = oppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave = lagOppgave()
-            repo.lagre(oppgave)
             repo.hentOppgaveFor(oppgave.behandlingId) shouldBe oppgave
 
-            assertThrows<DataNotFoundException> {
+            shouldThrow<DataNotFoundException> {
                 repo.hentOppgaveFor(behandlingId = UUIDv7.ny())
             }
         }
@@ -1591,10 +1594,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal finne en oppgave basert på behandlingId hvis den finnes`() {
-        withMigratedDb { ds ->
+        val oppgave = lagOppgave()
+        DBTestHelper.withOppgave(oppgave) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            val oppgave = lagOppgave()
-            repo.lagre(oppgave)
             repo.finnOppgaveFor(oppgave.behandlingId) shouldBe oppgave
             repo.finnOppgaveFor(behandlingId = UUIDv7.ny()) shouldBe null
         }
@@ -1602,31 +1604,30 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Hent adressegraderingsbeskyttelse for person gitt oppgave`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-            val oppgave =
-                lagOppgave(
-                    person =
-                        lagPerson(
-                            ident = testPerson.ident,
-                            addresseBeskyttelseGradering = STRENGT_FORTROLIG,
-                        ),
-                )
-            repo.lagre(oppgave)
-            repo.adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
+        val oppgave =
+            lagOppgave(
+                person =
+                    lagPerson(
+                        ident = testPerson.ident,
+                        addresseBeskyttelseGradering = STRENGT_FORTROLIG,
+                    ),
+            )
+        DBTestHelper.withOppgave(oppgave = oppgave) { ds ->
+            PostgresOppgaveRepository(ds).adresseGraderingForPerson(oppgave.oppgaveId) shouldBe STRENGT_FORTROLIG
         }
     }
 
     @Test
     fun `Skal kunne lagre og hente en oppgave med SkriptHendelse i logginnslaget`() {
+        val behandling = lagBehandling()
         val tilstandsendring =
             Tilstandsendring(
                 tilstand = BEHANDLES_I_ARENA,
                 hendelse = SkriptHendelse(Applikasjon("Dette er et skript")),
                 tidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS),
             )
-        val testOppgave = lagOppgave(tilstandslogg = Tilstandslogg(mutableListOf(tilstandsendring)))
-        withMigratedDb { ds ->
+        val testOppgave = lagOppgave(behandlingId = behandling.behandlingId, tilstandslogg = Tilstandslogg(mutableListOf(tilstandsendring)))
+        DBTestHelper.withBehandling(behandling = behandling) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
