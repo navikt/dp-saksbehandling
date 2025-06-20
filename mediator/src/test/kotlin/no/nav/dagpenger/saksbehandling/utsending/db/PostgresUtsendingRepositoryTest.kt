@@ -3,23 +3,36 @@ package no.nav.dagpenger.saksbehandling.utsending.db
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
+import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.lagUtsending
+import no.nav.dagpenger.saksbehandling.testPerson
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
+import java.time.LocalDateTime
 import java.util.UUID
 
 class PostgresUtsendingRepositoryTest {
+    val behandling =
+        Behandling(
+            behandlingId = UUIDv7.ny(),
+            type = BehandlingType.RETT_TIL_DAGPENGER,
+            opprettet = LocalDateTime.now(),
+            hendelse = TomHendelse,
+        )
+
     @Test
     fun `lagring og henting av utsending`() {
-        withMigratedDb { ds ->
+        DBTestHelper.withBehandling(behandling = behandling, person = testPerson) { ds ->
 
-            val oppgave = lagreOppgave(ds)
+            val oppgave = lagreOppgave(ds, behandling.behandlingId, testPerson.ident)
             val brev = "vedtaksbrev.html"
             val sak = Sak("id", "fagsystem")
 
@@ -47,8 +60,8 @@ class PostgresUtsendingRepositoryTest {
 
     @Test
     fun `skal kunne finne ut om en utsending finnes eller ikke for oppgaveId og behandlingId`() {
-        withMigratedDb { ds ->
-            val oppgave = lagreOppgave(ds)
+        DBTestHelper.withBehandling(behandling = behandling, person = testPerson) { ds ->
+            val oppgave = lagreOppgave(ds, behandling.behandlingId, testPerson.ident)
             val repository = PostgresUtsendingRepository(ds)
             val utsending =
                 Utsending(
@@ -70,8 +83,8 @@ class PostgresUtsendingRepositoryTest {
 
     @Test
     fun `Skal ikke kunne lagre flere utsendinger for samme oppgave`() {
-        withMigratedDb { ds ->
-            val oppgave = lagreOppgave(ds)
+        DBTestHelper.withBehandling(behandling = behandling) { ds ->
+            val oppgave = lagreOppgave(ds, behandling.behandlingId)
             val repository = PostgresUtsendingRepository(ds)
             repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, oppgaveId = oppgave.oppgaveId))
             shouldThrow<PSQLException> {

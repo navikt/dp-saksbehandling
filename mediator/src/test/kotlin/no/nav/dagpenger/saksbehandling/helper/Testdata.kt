@@ -1,8 +1,11 @@
 package no.nav.dagpenger.saksbehandling.helper
 
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.lagOppgave
+import no.nav.dagpenger.saksbehandling.lagPerson
+import no.nav.dagpenger.saksbehandling.lagTilfeldigIdent
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
@@ -98,8 +101,16 @@ internal fun arkiverbartDokumentBehovLøsning(
         """.trimIndent()
 }
 
-internal fun lagreOppgave(dataSource: DataSource): Oppgave {
-    val oppgave = lagOppgave()
+internal fun lagreOppgave(
+    dataSource: DataSource,
+    behandlingId: UUID = UUIDv7.ny(),
+    personIdent: String = lagTilfeldigIdent(),
+): Oppgave {
+    val oppgave =
+        lagOppgave(
+            behandlingId = behandlingId,
+            person = lagPerson(ident = personIdent),
+        )
 
     val repository = PostgresOppgaveRepository(dataSource)
     repository.lagre(oppgave)

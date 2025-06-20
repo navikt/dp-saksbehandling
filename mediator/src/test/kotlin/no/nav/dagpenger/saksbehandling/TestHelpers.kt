@@ -81,7 +81,7 @@ fun lagUtsending(
     sak = null,
 )
 
-private fun lagTilfeldigIdent() =
+fun lagTilfeldigIdent() =
     (1..11)
         .map { Random.nextInt(0, 10) }
         .joinToString("")
