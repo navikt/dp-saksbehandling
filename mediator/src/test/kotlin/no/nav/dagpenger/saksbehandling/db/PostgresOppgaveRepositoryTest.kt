@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
+import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -1002,9 +1003,9 @@ class PostgresOppgaveRepositoryTest {
     @Test
     fun `Skal kunne lagre og hente en oppgave`() {
         val behandling = lagBehandling()
-        val testOppgave = lagOppgave(behandlingId = behandling.behandlingId)
+        val testOppgave = lagOppgave(behandlingId = behandling.behandlingId, person = testPerson)
 
-        DBTestHelper.withBehandling(behandling = behandling) { ds ->
+        DBTestHelper.withBehandling(behandling = behandling, person = testPerson) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val oppgaveFraDatabase = repo.hentOppgave(testOppgave.oppgaveId)
@@ -1214,15 +1215,33 @@ class PostgresOppgaveRepositoryTest {
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
             )
-        val oppgaveKlarTilBehandling =
-            lagOppgave(
-                tilstand = KlarTilBehandling,
-                person = person,
+
+        val behandling =
+            Behandling(
                 behandlingId = hendelse.behandlingId,
+                opprettet = hendelse.opprettet,
+                hendelse = hendelse,
+                type = RETT_TIL_DAGPENGER,
             )
 
-        withMigratedDb { ds ->
+        DBTestHelper.withBehandling(
+            person = person,
+            sak =
+                NySak(
+                    sakId = UUIDv7.ny(),
+                    søknadId = hendelse.søknadId,
+                    opprettet = hendelse.opprettet,
+                    behandlinger = mutableSetOf(behandling),
+                ),
+        ) { ds ->
+            val oppgve =
+                lagOppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    behandlingId = hendelse.behandlingId,
+                    person = person,
+                )
             val repo = PostgresOppgaveRepository(ds)
+            repo.lagre(oppgave = oppgve)
 
             repo.oppgaveTilstandForSøknad(
                 ident = hendelse.ident,
