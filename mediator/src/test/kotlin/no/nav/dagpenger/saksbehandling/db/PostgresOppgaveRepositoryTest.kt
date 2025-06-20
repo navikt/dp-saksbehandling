@@ -517,7 +517,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Tildeling av neste oppgave ut fra søkefilter og tilganger`() {
-        withMigratedDb { ds ->
+        DBTestHelper.withMigratedDb { ds ->
             val saksbehandlerUtført =
                 Saksbehandler(
                     navIdent = "saksbehandlerUtført",
@@ -582,108 +582,97 @@ class PostgresOppgaveRepositoryTest {
                     grupper = emptySet(),
                     tilganger = setOf(SAKSBEHANDLER, BESLUTTER, STRENGT_FORTROLIG_ADRESSE, EGNE_ANSATTE),
                 )
-            val repo = PostgresOppgaveRepository(ds)
 
             val yngsteLedigeOppgaveOpprettetIDag =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå,
                 )
 
             val oppgaveMedEmneknagg =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     emneknagger = setOf("Testknagg"),
                 )
 
             val eldsteLedigeOppgaveKlarTilBehandling =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(10),
                 )
 
             val endaEldreTildeltOppgave =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(11),
-                    saksbehandlerIdent = saksbehandler.navIdent,
+                    saksBehandlerIdent = saksbehandler.navIdent,
                 )
 
             val endaEldreFerdigOppgave =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = FerdigBehandlet,
                     opprettet = opprettetNå.minusDays(12),
-                    saksbehandlerIdent = testSaksbehandler.navIdent,
+                    saksBehandlerIdent = testSaksbehandler.navIdent,
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val endaEldreOpprettetOppgave =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = Opprettet,
                     opprettet = opprettetNå.minusDays(13),
                 )
 
             val eldsteKontrollOppgaveUtenSkjermingOgAdressegradering =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(14),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveEgneAnsatteSkjerming =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(15),
-                    skjermesSomEgneAnsatte = true,
+                    person = lagPerson(skjermesSomEgneAnsatte = true),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveFortroligAdresse =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(16),
-                    adressebeskyttelseGradering = FORTROLIG,
+                    person = lagPerson(addresseBeskyttelseGradering = FORTROLIG),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresse =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(17),
-                    adressebeskyttelseGradering = STRENGT_FORTROLIG,
+                    person = lagPerson(addresseBeskyttelseGradering = STRENGT_FORTROLIG),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseUtland =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(18),
-                    adressebeskyttelseGradering = STRENGT_FORTROLIG_UTLAND,
+                    person = lagPerson(addresseBeskyttelseGradering = STRENGT_FORTROLIG_UTLAND),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = Oppgave.KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(19),
-                    skjermesSomEgneAnsatte = true,
-                    adressebeskyttelseGradering = STRENGT_FORTROLIG,
+                    person =
+                        lagPerson(
+                            skjermesSomEgneAnsatte = true,
+                            addresseBeskyttelseGradering = STRENGT_FORTROLIG,
+                        ),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
-
-            repo.lagre(yngsteLedigeOppgaveOpprettetIDag)
-            repo.lagre(oppgaveMedEmneknagg)
-            repo.lagre(eldsteLedigeOppgaveKlarTilBehandling)
-            repo.lagre(endaEldreTildeltOppgave)
-            repo.lagre(endaEldreFerdigOppgave)
-            repo.lagre(endaEldreOpprettetOppgave)
-            repo.lagre(eldsteKontrollOppgaveUtenSkjermingOgAdressegradering)
-            repo.lagre(eldsteKontrollOppgaveEgneAnsatteSkjerming)
-            repo.lagre(eldsteKontrollOppgaveFortroligAdresse)
-            repo.lagre(eldsteKontrollOppgaveStrengtFortroligAdresse)
-            repo.lagre(eldsteKontrollOppgaveStrengtFortroligAdresseUtland)
-            repo.lagre(eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming)
 
             val emneknaggFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
@@ -700,6 +689,7 @@ class PostgresOppgaveRepositoryTest {
                     navIdent = testSaksbehandler.navIdent,
                 )
 
+            val repo = PostgresOppgaveRepository(ds)
             repo.tildelOgHentNesteOppgave(
                 nesteOppgaveHendelse =
                     NesteOppgaveHendelse(
