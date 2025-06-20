@@ -35,6 +35,14 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                     adressebeskyttelseGradering = UGRADERT,
                 )
 
+            fun withMigratedDb(block: DBTestHelper.(DataSource) -> Unit) {
+                Postgres.withMigratedDb { ds ->
+                    DBTestHelper(ds).apply {
+                        block(ds)
+                    }
+                }
+            }
+
             fun withPerson(
                 person: Person = testPerson,
                 block: DBTestHelper.(DataSource) -> Unit,
@@ -98,6 +106,47 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                     block(ds)
                 }
             }
+        }
+
+        fun leggTilOppgave(
+            tilstand: Oppgave.Tilstand = Oppgave.KlarTilBehandling,
+            person: Person = testPerson,
+            opprettet: LocalDateTime = LocalDateTime.now(),
+            type: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+        ): Oppgave {
+            this.lagre(person)
+
+            val behandling =
+                Behandling(
+                    behandlingId = UUIDv7.ny(),
+                    type = type,
+                    opprettet = opprettet,
+                    hendelse = TomHendelse,
+                )
+            val sak =
+                NySak(
+                    sakId = UUIDv7.ny(),
+                    søknadId = søknadId,
+                    opprettet = opprettet,
+                    behandlinger = mutableSetOf(behandling),
+                )
+
+            val sakHistorikk: SakHistorikk =
+                SakHistorikk(
+                    person = person,
+                    saker = mutableSetOf(sak),
+                )
+            this.lagre(sakHistorikk)
+
+            return Oppgave(
+                oppgaveId = UUIDv7.ny(),
+                opprettet = opprettet,
+                tilstand = tilstand,
+                behandlerIdent = null,
+                behandlingId = behandling.behandlingId,
+                behandlingType = type,
+                person = person,
+            ).also { this.lagre(it) }
         }
 
         fun leggTilOppgave(

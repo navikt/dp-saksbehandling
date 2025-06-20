@@ -138,6 +138,7 @@ class PostgresOppgaveRepositoryTest {
                 behandlingId = søknadBehandling.behandlingId,
                 person = testPerson,
             ).also { repo.lagre(it) }
+
             val klageOppgave =
                 lagOppgave(
                     tilstand = KlarTilBehandling,
@@ -146,7 +147,6 @@ class PostgresOppgaveRepositoryTest {
                     person = testPerson,
                     behandlingType = KLAGE,
                 ).also { repo.lagre(it) }
-
 
             val nesteOppgave =
                 repo.tildelOgHentNesteOppgave(
@@ -174,11 +174,9 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Finn neste ledige oppgave som ikke gjelder egne ansatte`() {
-        withMigratedDb { ds ->
-            val repo = PostgresOppgaveRepository(ds)
-
+        DBTestHelper.withMigratedDb { ds ->
             val eldsteOppgaveMedSkjermingSomEgneAnsatte =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(5),
                     person =
@@ -188,10 +186,9 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            repo.lagre(eldsteOppgaveMedSkjermingSomEgneAnsatte)
 
             val eldsteOppgaveUtenSkjermingAvEgenAnsatt =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå.minusDays(1),
                     person =
@@ -201,10 +198,9 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            repo.lagre(eldsteOppgaveUtenSkjermingAvEgenAnsatt)
 
             val nyesteOppgaveUtenSkjermingAvEgenAnsatt =
-                lagOppgave(
+                this.leggTilOppgave(
                     tilstand = KlarTilBehandling,
                     opprettet = opprettetNå,
                     person =
@@ -214,13 +210,15 @@ class PostgresOppgaveRepositoryTest {
                             adressebeskyttelseGradering = UGRADERT,
                         ),
                 )
-            repo.lagre(nyesteOppgaveUtenSkjermingAvEgenAnsatt)
+
+            val repo = PostgresOppgaveRepository(ds)
 
             val saksbehandlerUtenTilgangTilEgneAnsatte =
                 Saksbehandler(
                     navIdent = "NAVIdent2",
                     grupper = emptySet(),
                 )
+
             val nesteOppgave =
                 repo.tildelOgHentNesteOppgave(
                     nesteOppgaveHendelse =
