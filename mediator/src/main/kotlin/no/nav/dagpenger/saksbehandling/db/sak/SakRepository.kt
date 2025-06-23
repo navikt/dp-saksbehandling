@@ -8,8 +8,8 @@ import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -126,14 +126,14 @@ class PostgresRepository(
 
     private fun TransactionalSession.lagreSakHistorikk(
         personId: UUID,
-        saker: List<NySak>,
+        saker: List<Sak>,
     ) {
         saker.forEach { sak -> this.lagreSak(personId, sak) }
     }
 
     private fun TransactionalSession.lagreSak(
         personId: UUID,
-        sak: NySak,
+        sak: Sak,
     ) {
         run(
             queryOf(
@@ -254,7 +254,7 @@ class PostgresRepository(
      * Mapper en [Row] fra SQL-spørringen til en [SakHistorikk].
      * Hvis det ikke finnes en [SakHistorikk] for personen, opprettes en ny.
      * Hvis det finnes en sak, legges den til i [SakHistorikk].
-     * Hvis det finnes en behandling, legges den til i [NySak].
+     * Hvis det finnes en behandling, legges den til i [Sak].
      */
     private fun Row.tilSakHistorikk(sakHistorikkListe: MutableList<SakHistorikk>): SakHistorikk {
         val sakHistorikk =
@@ -273,7 +273,7 @@ class PostgresRepository(
         val sakId = this.uuidOrNull("sak_id")
         if (sakId != null) {
             val sak =
-                sakHistorikk.saker().singleOrNull { it.sakId == sakId } ?: NySak(
+                sakHistorikk.saker().singleOrNull { it.sakId == sakId } ?: Sak(
                     sakId = sakId,
                     søknadId = this.uuid("sak_soknad_id"),
                     opprettet = this.localDateTime("sak_opprettet"),

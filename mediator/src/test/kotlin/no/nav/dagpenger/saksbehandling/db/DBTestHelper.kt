@@ -3,9 +3,9 @@ package no.nav.dagpenger.saksbehandling.db
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -58,8 +58,8 @@ class DBTestHelper private constructor(private val ds: DataSource) :
 
             fun withSak(
                 person: Person = testPerson,
-                sak: NySak =
-                    NySak(
+                sak: Sak =
+                    Sak(
                         sakId = sakId,
                         søknadId = søknadId,
                         opprettet = LocalDateTime.now(),
@@ -86,8 +86,8 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                         opprettet = LocalDateTime.now(),
                         hendelse = TomHendelse,
                     ),
-                sak: NySak =
-                    NySak(
+                sak: Sak =
+                    Sak(
                         sakId = sakId,
                         søknadId = søknadId,
                         opprettet = LocalDateTime.now(),
@@ -103,8 +103,8 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             fun withBehandlinger(
                 person: Person = testPerson,
                 behandlinger: List<Behandling> = emptyList(),
-                sak: NySak =
-                    NySak(
+                sak: Sak =
+                    Sak(
                         sakId = sakId,
                         søknadId = søknadId,
                         opprettet = LocalDateTime.now(),
@@ -158,14 +158,13 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                     hendelse = TomHendelse,
                 )
             val sak =
-                NySak(
+                Sak(
                     sakId = UUIDv7.ny(),
                     søknadId = søknadId,
                     opprettet = opprettet,
                     behandlinger = mutableSetOf(behandling),
                 )
-
-            val sakHistorikk: SakHistorikk =
+            val sakHistorikk =
                 SakHistorikk(
                     person = person,
                     saker = mutableSetOf(sak),

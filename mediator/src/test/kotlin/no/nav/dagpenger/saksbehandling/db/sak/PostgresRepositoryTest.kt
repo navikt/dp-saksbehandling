@@ -4,8 +4,8 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.NySak
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
@@ -55,7 +55,7 @@ class PostgresRepositoryTest {
             hendelse = TomHendelse,
         )
     private val sak1 =
-        NySak(
+        Sak(
             søknadId = UUIDv7.ny(),
             opprettet = nå,
         ).also {
@@ -63,7 +63,7 @@ class PostgresRepositoryTest {
             it.leggTilBehandling(behandling2)
         }
     private val sak2 =
-        NySak(
+        Sak(
             søknadId = UUIDv7.ny(),
             opprettet = nå,
         ).also {

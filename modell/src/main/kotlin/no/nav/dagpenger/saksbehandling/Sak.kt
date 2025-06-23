@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHen
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class NySak(
+data class Sak(
     val sakId: UUID = UUIDv7.ny(),
     val søknadId: UUID,
     val opprettet: LocalDateTime,
@@ -43,7 +43,7 @@ data class NySak(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is NySak) return false
+        if (other !is Sak) return false
 
         if (sakId != other.sakId) return false
         if (søknadId != other.søknadId) return false

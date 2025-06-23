@@ -6,12 +6,12 @@ import java.util.UUID
 
 data class SakHistorikk(
     val person: Person,
-    private val saker: MutableSet<NySak> = mutableSetOf(),
+    private val saker: MutableSet<Sak> = mutableSetOf(),
 ) {
     companion object {
         fun rehydrer(
             person: Person,
-            saker: Set<NySak>,
+            saker: Set<Sak>,
         ) = SakHistorikk(person = person).also {
             it.saker.addAll(saker)
         }
@@ -33,9 +33,9 @@ data class SakHistorikk(
         )
     }
 
-    fun leggTilSak(sak: NySak) = saker.add(sak)
+    fun leggTilSak(sak: Sak) = saker.add(sak)
 
-    fun saker(): List<NySak> = saker.toList()
+    fun saker(): List<Sak> = saker.toList()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

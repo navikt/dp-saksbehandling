@@ -36,7 +36,7 @@ internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
 ) {
-    private fun hentNyPerson(ident: String): SakHistorikk? {
+    private fun finnSakHistorikk(ident: String): SakHistorikk? {
         // todo
         return null
     }
@@ -166,7 +166,7 @@ internal class OppgaveDTOMapper(
         person: Person,
         pdlPersonIntern: PDLPersonIntern,
     ): PersonDTO {
-        val nyPerson = hentNyPerson(ident = person.ident)
+        val sakHistorikk = finnSakHistorikk(ident = person.ident)
         return PersonDTO(
             ident = person.ident,
             id = person.id,
@@ -191,8 +191,8 @@ internal class OppgaveDTOMapper(
                     AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
                     AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
                 },
-            saker = nyPerson.saker(),
-            oppgaver = nyPerson.oppgaver(),
+            saker = sakHistorikk.saker(),
+            oppgaver = sakHistorikk.oppgaver(),
         )
     }
 }
