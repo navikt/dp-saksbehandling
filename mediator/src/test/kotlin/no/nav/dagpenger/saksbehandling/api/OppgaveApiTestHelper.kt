@@ -45,9 +45,11 @@ import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 internal object OppgaveApiTestHelper {
     const val TEST_IDENT = "12345612345"
@@ -101,6 +103,7 @@ internal object OppgaveApiTestHelper {
                             skjermingKlient = mockk(relaxed = true),
                         ),
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+                        mockk<SakMediator>(relaxed = true),
                     ),
                     mockk(relaxed = true),
                     mockk(relaxed = true),
@@ -136,6 +139,7 @@ internal object OppgaveApiTestHelper {
         behandling: Behandling,
         utsattTil: LocalDate? = null,
         opprettet: LocalDateTime = LocalDateTime.now(),
+        oppgaveId: UUID = UUIDv7.ny(),
         person: Person =
             Person(
                 id = TEST_UUID,
@@ -144,7 +148,6 @@ internal object OppgaveApiTestHelper {
                 adressebeskyttelseGradering = UGRADERT,
             ),
     ): Oppgave {
-        val oppgaveId = UUIDv7.ny()
         return Oppgave.rehydrer(
             oppgaveId = oppgaveId,
             behandlerIdent = tildeltBehandlerIdent,
@@ -211,6 +214,8 @@ internal object OppgaveApiTestHelper {
         skjermesSomEgneAnsatte: Boolean = false,
         utsattTil: LocalDate? = null,
         oprettet: LocalDateTime = LocalDateTime.now(),
+        behandlingId: UUID = UUIDv7.ny(),
+        oppgaveId: UUID = UUIDv7.ny(),
         person: Person =
             Person(
                 id = TEST_UUID,
@@ -221,11 +226,19 @@ internal object OppgaveApiTestHelper {
     ): Oppgave {
         val behandling =
             Behandling(
-                behandlingId = UUIDv7.ny(),
+                behandlingId = behandlingId,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
-        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil, oprettet, person)
+        return lagTestOppgaveMedTilstandOgBehandling(
+            tilstand = tilstand,
+            tildeltBehandlerIdent = saksbehandlerIdent,
+            behandling = behandling,
+            utsattTil = utsattTil,
+            opprettet = oprettet,
+            oppgaveId = oppgaveId,
+            person = person,
+        )
     }
 
     val testPerson =

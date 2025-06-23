@@ -29,16 +29,17 @@ import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.time.LocalDate
 import java.util.UUID
 
 internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
+    private val sakMediator: SakMediator,
 ) {
     private fun finnSakHistorikk(ident: String): SakHistorikk? {
-        // todo
-        return null
+        return sakMediator.finnSakHistorikkk(ident)
     }
 
     private fun SakHistorikk?.saker(): List<SakDTO> {

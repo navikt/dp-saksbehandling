@@ -140,6 +140,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         OppgaveDTOMapper(
             oppslag = oppslag,
             oppgaveHistorikkDTOMapper = OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+            sakMediator = sakMediator,
         )
     private val utsendingAlarmJob: Timer
     private val oversendKlageinstansAlarmJob: Timer
