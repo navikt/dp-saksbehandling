@@ -46,7 +46,7 @@ class OppgaveTilstandTest {
     private val oppgaveId = UUIDv7.ny()
     private val testIdent = "12345699999"
     private val saksbehandler = Saksbehandler("sbIdent", grupper = emptySet())
-    private val sak = Sak("12342", "Arena")
+    private val utsendingSak = UtsendingSak("12342", "Arena")
 
     @Test
     fun `Skal på nytt kunne tildele en tildelt oppgave til samme saksbehandler`() {
@@ -131,7 +131,7 @@ class OppgaveTilstandTest {
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = false,
-                        sak = sak,
+                        utsendingSak = utsendingSak,
                     ),
                 )
 
@@ -158,7 +158,7 @@ class OppgaveTilstandTest {
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = false,
-                        sak = sak,
+                        utsendingSak = utsendingSak,
                     ),
                 )
             }
@@ -177,7 +177,7 @@ class OppgaveTilstandTest {
                         behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
-                        sak = sak,
+                        utsendingSak = utsendingSak,
                         automatiskBehandlet = true,
                     ),
                 )
@@ -199,7 +199,7 @@ class OppgaveTilstandTest {
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = true,
-                        sak = sak,
+                        utsendingSak = utsendingSak,
                     ),
                 )
             }

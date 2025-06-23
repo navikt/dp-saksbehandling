@@ -5,8 +5,8 @@ import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.toUrnOrNull
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
@@ -27,7 +27,7 @@ data class Utsending(
     val oppgaveId: UUID,
     val ident: String,
     val type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
-    private var sak: Sak? = null,
+    private var utsendingSak: UtsendingSak? = null,
     private val brev: String,
     private var pdfUrn: URN? = null,
     private var journalpostId: String? = null,
@@ -44,12 +44,12 @@ data class Utsending(
 
     fun tilstand() = tilstand
 
-    fun sak() = sak
+    fun sak() = utsendingSak
 
     override fun toString(): String {
         return """
             Utsending(id=$id, oppgaveId=$oppgaveId, pdfUrn=$pdfUrn, journalpostId=$journalpostId, 
-            distribusjonId=$distribusjonId , tilstand=${tilstand.type}, type = $type, sak=$sak)
+            distribusjonId=$distribusjonId , tilstand=${tilstand.type}, type = $type, sak=$utsendingSak)
             """.trimIndent()
     }
 
@@ -70,7 +70,7 @@ data class Utsending(
             pdfUrn: String?,
             journalpostId: String?,
             distribusjonId: String?,
-            sak: Sak?,
+            utsendingSak: UtsendingSak?,
             type: UtsendingType,
         ): Utsending {
             return Utsending(
@@ -82,7 +82,7 @@ data class Utsending(
                 pdfUrn = pdfUrn.toUrnOrNull(),
                 journalpostId = journalpostId,
                 distribusjonId = distribusjonId,
-                sak = sak,
+                utsendingSak = utsendingSak,
                 type = type,
             )
         }
@@ -119,7 +119,7 @@ data class Utsending(
             ) {
                 logger.info { "Mottok start_utsending hendelse" }
                 utsending.tilstand = AvventerArkiverbarVersjonAvBrev
-                utsending.sak = startUtsendingHendelse.sak
+                utsending.utsendingSak = startUtsendingHendelse.utsendingSak
             }
         }
     }
@@ -132,7 +132,7 @@ data class Utsending(
                 oppgaveId = utsending.oppgaveId,
                 html = utsending.brev,
                 ident = utsending.ident,
-                sak = utsending.sak ?: throw IllegalStateException("Sak mangler"),
+                utsendingSak = utsending.utsendingSak ?: throw IllegalStateException("Sak mangler"),
             )
 
         override fun mottaUrnTilPdfAvBrev(
@@ -154,7 +154,7 @@ data class Utsending(
                 oppgaveId = utsending.oppgaveId,
                 pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
                 ident = utsending.ident,
-                sak = utsending.sak ?: throw IllegalStateException("Sak mangler"),
+                utsendingSak = utsending.utsendingSak ?: throw IllegalStateException("Sak mangler"),
                 utsendingType = utsending.type,
             )
         }

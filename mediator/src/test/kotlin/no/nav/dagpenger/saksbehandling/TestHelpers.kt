@@ -78,7 +78,7 @@ fun lagUtsending(
     pdfUrn = null,
     journalpostId = "journalpostId",
     distribusjonId = "distribusjonId",
-    sak = null,
+    utsendingSak = null,
 )
 
 fun lagTilfeldigIdent() =

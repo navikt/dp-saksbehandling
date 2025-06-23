@@ -208,9 +208,8 @@ class KlageMediator(
                 }
             val sakId = sakMediator.hentSakIdForBehandlingId(behandlingId = klageBehandling.behandlingId)
 
-            // TODO: Fiks sak.... Den skal ikke lages her
-            val sak =
-                Sak(
+            val utsendingSak =
+                UtsendingSak(
                     id = sakId.toString(),
                     kontekst = "Dagpenger",
                 )
@@ -218,7 +217,7 @@ class KlageMediator(
             val startUtsendingHendelse =
                 StartUtsendingHendelse(
                     oppgaveId = oppgave.oppgaveId,
-                    sak = sak,
+                    utsendingSak = utsendingSak,
                     behandlingId = klageBehandling.behandlingId,
                     ident = oppgave.personIdent(),
                 )
@@ -250,7 +249,7 @@ class KlageMediator(
                     mutableMapOf(
                         "behandlingId" to klageBehandling.behandlingId.toString(),
                         "ident" to oppgave.personIdent(),
-                        "fagsakId" to sak.id,
+                        "fagsakId" to utsendingSak.id,
                         "behandlendeEnhet" to saksbehandler.enhet.enhetNr,
                         "hjemler" to klageBehandling.hjemler(),
                         "opprettet" to oppgave.opprettet.toLocalDate().toString(),

@@ -9,8 +9,8 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
-import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ internal class VedtakFattetMottakTest {
     private val testIdent = "12345678901"
     private val søknadId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
-    private val sak = Sak("12342", "Arena")
+    private val utsendingSak = UtsendingSak("12342", "Arena")
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
     private val person =
         Person(
@@ -55,7 +55,7 @@ internal class VedtakFattetMottakTest {
                 søknadId = søknadId,
                 behandlingId = behandlingId,
                 automatiskBehandlet = true,
-                sakId = sak.id.toInt(),
+                sakId = utsendingSak.id.toInt(),
             ),
         )
 
@@ -65,7 +65,7 @@ internal class VedtakFattetMottakTest {
                 søknadId = søknadId,
                 ident = testIdent,
                 automatiskBehandlet = true,
-                sak = sak,
+                utsendingSak = utsendingSak,
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
@@ -81,7 +81,7 @@ internal class VedtakFattetMottakTest {
                 søknadId = søknadId,
                 behandlingId = behandlingId,
                 automatiskBehandlet = false,
-                sakId = sak.id.toInt(),
+                sakId = utsendingSak.id.toInt(),
             ),
         )
 
@@ -91,7 +91,7 @@ internal class VedtakFattetMottakTest {
                 søknadId = søknadId,
                 ident = testIdent,
                 automatiskBehandlet = false,
-                sak = sak,
+                utsendingSak = utsendingSak,
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)

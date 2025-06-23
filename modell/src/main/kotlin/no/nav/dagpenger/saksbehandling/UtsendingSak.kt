@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
-data class Sak(
+data class UtsendingSak(
     val id: String,
     val kontekst: String = "Arena",
 ) {

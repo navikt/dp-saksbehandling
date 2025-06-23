@@ -5,8 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -34,7 +34,7 @@ class PostgresUtsendingRepositoryTest {
 
             val oppgave = lagreOppgave(ds, behandling.behandlingId, testPerson.ident)
             val brev = "vedtaksbrev.html"
-            val sak = Sak("id", "fagsystem")
+            val utsendingSak = UtsendingSak("id", "fagsystem")
 
             val repository = PostgresUtsendingRepository(ds)
             val distribusjonId = "distribusjonId"
@@ -42,7 +42,7 @@ class PostgresUtsendingRepositoryTest {
                 Utsending(
                     oppgaveId = oppgave.oppgaveId,
                     brev = brev,
-                    sak = sak,
+                    utsendingSak = utsendingSak,
                     ident = oppgave.personIdent(),
                     distribusjonId = distribusjonId,
                     type = UtsendingType.KLAGEMELDING,
@@ -67,7 +67,7 @@ class PostgresUtsendingRepositoryTest {
                 Utsending(
                     oppgaveId = oppgave.oppgaveId,
                     brev = "brev",
-                    sak = Sak("id", "fagsystem"),
+                    utsendingSak = UtsendingSak("id", "fagsystem"),
                     ident = oppgave.personIdent(),
                     distribusjonId = "distribusjonId",
                 )

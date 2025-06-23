@@ -3,8 +3,8 @@ package no.nav.dagpenger.saksbehandling.utsending.mottak
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import org.intellij.lang.annotations.Language
@@ -14,8 +14,8 @@ internal class UtsendingMottakTest {
     private val testIdent = "12345678901"
     private val behandlingId = UUIDv7.ny()
     private val oppgaveId = UUIDv7.ny()
-    private val sak =
-        Sak(
+    private val utsendingSak =
+        UtsendingSak(
             id = "sakId",
             kontekst = "fagsystem",
         )
@@ -34,7 +34,7 @@ internal class UtsendingMottakTest {
                 oppgaveId = oppgaveId,
                 behandlingId = behandlingId,
                 ident = testIdent,
-                sak = sak,
+                utsendingSak = utsendingSak,
             )
         verify(exactly = 1) {
             utsendingMediatorMock.mottaStartUtsending(startUtsendingHendelse)
@@ -49,8 +49,8 @@ internal class UtsendingMottakTest {
           "behandlingId": "$behandlingId",
           "ident": "$testIdent",
           "sak": {
-              "id": "${sak.id}",
-              "kontekst": "${sak.kontekst}"
+              "id": "${utsendingSak.id}",
+              "kontekst": "${utsendingSak.kontekst}"
           }
         }
         """

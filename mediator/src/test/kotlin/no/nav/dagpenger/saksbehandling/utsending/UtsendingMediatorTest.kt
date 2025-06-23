@@ -5,8 +5,8 @@ import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
@@ -76,7 +76,7 @@ class UtsendingMediatorTest {
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe htmlBrev
 
-            val sak = Sak("sakId", "fagsystem")
+            val utsendingSak = UtsendingSak("sakId", "fagsystem")
             rapid.sendTestMessage(
                 //language=JSON
                 """
@@ -86,15 +86,15 @@ class UtsendingMediatorTest {
                     "behandlingId": "$behandlingId",
                     "ident": "12345678901",
                     "sak": {
-                        "id": "${sak.id}",
-                        "kontekst": "${sak.kontekst}"
+                        "id": "${utsendingSak.id}",
+                        "kontekst": "${utsendingSak.kontekst}"
                     }
                 }
                 """,
             )
 
             utsending = utsendingRepository.hent(oppgaveId)
-            utsending.sak() shouldBe sak
+            utsending.sak() shouldBe utsendingSak
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
 
             rapid.inspektør.size shouldBe 1
@@ -113,8 +113,8 @@ class UtsendingMediatorTest {
                    "oppgaveId": "$oppgaveId",
                    "ident": "${oppgave.personIdent()}",
                    "sak": {
-                      "id": "${sak.id}",
-                      "kontekst": "${sak.kontekst}"
+                      "id": "${utsendingSak.id}",
+                      "kontekst": "${utsendingSak.kontekst}"
                   }
                 }
                 """.trimIndent()
@@ -140,8 +140,8 @@ class UtsendingMediatorTest {
                   "pdfUrn": "$pdfUrnString",
                   "oppgaveId": "$oppgaveId",
                   "sak": {
-                    "id": "${sak.id}",
-                    "kontekst": "${sak.kontekst}"
+                    "id": "${utsendingSak.id}",
+                    "kontekst": "${utsendingSak.kontekst}"
                   }
                 }
                 """.trimIndent()
