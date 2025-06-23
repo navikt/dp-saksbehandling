@@ -5,6 +5,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
@@ -14,12 +15,14 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
+private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
+
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
     private val sakMediator: SakMediator,
 ) : River.PacketListener {
     companion object {
-        private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
 
             precondition {
@@ -45,6 +48,8 @@ internal class BehandlingOpprettetMottak(
     ) {
         val behandlingType = packet["behandletHendelse"]["type"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
+        sikkerlogger.info { "Mottok behandling_opprettet hendelse: $packet" }
+
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
@@ -67,7 +72,7 @@ internal class BehandlingOpprettetMottak(
             "Meldekort" -> {
                 val meldekortId = packet.meldekortId()
                 withLoggingContext("meldekortId" to "$meldekortId", "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse for søknad" }
+                    logger.info { "Mottok behandling_opprettet hendelse for meldekort" }
                     sakMediator.knyttTilSak(
                         MeldekortbehandlingOpprettetHendelse(
                             meldekortId = meldekortId,
@@ -81,6 +86,21 @@ internal class BehandlingOpprettetMottak(
                 }
             }
         }
+    }
+
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
+        sikkerlogger.info { "Mottok behandling opprettet. Feilet med error: $problems" }
+    }
+
+    override fun onSevere(
+        error: MessageProblems.MessageException,
+        context: MessageContext,
+    ) {
+        sikkerlogger.info { "Mottok behandling opprettet. Feilet med severe: $error" }
     }
 }
 
