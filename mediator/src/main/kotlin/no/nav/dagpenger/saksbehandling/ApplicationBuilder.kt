@@ -33,6 +33,7 @@ import no.nav.dagpenger.saksbehandling.klage.OversendtKlageinstansMottak
 import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
+import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
@@ -180,8 +181,9 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             utsendingMediator.setRapidsConnection(rapidsConnection)
             oppgaveMediator.setRapidsConnection(rapidsConnection)
             klageMediator.setRapidsConnection(rapidsConnection)
-            VedtakFattetMottak(rapidsConnection, oppgaveMediator)
+            BehandlingOpprettetMottak(rapidsConnection, sakMediator)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
+            VedtakFattetMottak(rapidsConnection, oppgaveMediator)
             ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
             UtsendingMottak(rapidsConnection, utsendingMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)

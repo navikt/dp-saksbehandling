@@ -48,8 +48,6 @@ internal class BehandlingOpprettetMottak(
     ) {
         val behandlingType = packet["behandletHendelse"]["type"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
-        sikkerlogger.info { "Mottok behandling_opprettet hendelse: $packet" }
-
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
@@ -86,21 +84,6 @@ internal class BehandlingOpprettetMottak(
                 }
             }
         }
-    }
-
-    override fun onError(
-        problems: MessageProblems,
-        context: MessageContext,
-        metadata: MessageMetadata,
-    ) {
-        sikkerlogger.info { "Mottok behandling opprettet. Feilet med error: $problems" }
-    }
-
-    override fun onSevere(
-        error: MessageProblems.MessageException,
-        context: MessageContext,
-    ) {
-        sikkerlogger.info { "Mottok behandling opprettet. Feilet med severe: $error" }
     }
 }
 
