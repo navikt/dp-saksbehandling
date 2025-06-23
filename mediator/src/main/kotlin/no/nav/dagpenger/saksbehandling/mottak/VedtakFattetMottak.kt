@@ -53,7 +53,7 @@ internal class VedtakFattetMottak(
                     behandlingId = behandlingId,
                     søknadId = søknadId,
                     ident = packet["ident"].asText(),
-                    utsendingSak = packet.sak(),
+                    sak = packet.sak(),
                     automatiskBehandlet = packet["automatisk"].asBoolean(),
                 ),
             )

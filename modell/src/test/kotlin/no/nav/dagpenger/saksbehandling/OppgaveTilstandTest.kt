@@ -131,7 +131,7 @@ class OppgaveTilstandTest {
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = false,
-                        utsendingSak = utsendingSak,
+                        sak = utsendingSak,
                     ),
                 )
 
@@ -158,7 +158,7 @@ class OppgaveTilstandTest {
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = false,
-                        utsendingSak = utsendingSak,
+                        sak = utsendingSak,
                     ),
                 )
             }
@@ -177,7 +177,7 @@ class OppgaveTilstandTest {
                         behandlingId = oppgave.behandlingId,
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
-                        utsendingSak = utsendingSak,
+                        sak = utsendingSak,
                         automatiskBehandlet = true,
                     ),
                 )
@@ -199,7 +199,7 @@ class OppgaveTilstandTest {
                         søknadId = UUIDv7.ny(),
                         ident = testIdent,
                         automatiskBehandlet = true,
-                        utsendingSak = utsendingSak,
+                        sak = utsendingSak,
                     ),
                 )
             }

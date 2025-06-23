@@ -8,7 +8,7 @@ data class VedtakFattetHendelse(
     val behandlingId: UUID,
     val søknadId: UUID,
     val ident: String,
-    val utsendingSak: UtsendingSak,
+    val sak: UtsendingSak,
     val automatiskBehandlet: Boolean? = null,
     override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
 ) : Hendelse(utførtAv)

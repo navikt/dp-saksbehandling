@@ -65,7 +65,7 @@ internal class VedtakFattetMottakTest {
                 søknadId = søknadId,
                 ident = testIdent,
                 automatiskBehandlet = true,
-                utsendingSak = utsendingSak,
+                sak = utsendingSak,
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
@@ -91,7 +91,7 @@ internal class VedtakFattetMottakTest {
                 søknadId = søknadId,
                 ident = testIdent,
                 automatiskBehandlet = false,
-                utsendingSak = utsendingSak,
+                sak = utsendingSak,
             )
         verify(exactly = 1) {
             oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
