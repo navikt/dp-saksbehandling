@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
@@ -22,8 +23,10 @@ class SakMediatorTest {
     private val testIdent = "12345678901"
     private val søknadId = UUID.randomUUID()
     private val meldekortId = 123L
+    private val manuellId = UUID.randomUUID()
     private val behandlingIdSøknad = UUID.randomUUID()
     private val behandlingIdMeldekort = UUID.randomUUID()
+    private val behandlingIdManuell = UUID.randomUUID()
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.8")
     private val søknadsbehandlingOpprettetHendelse =
         SøknadsbehandlingOpprettetHendelse(
@@ -36,6 +39,15 @@ class SakMediatorTest {
         MeldekortbehandlingOpprettetHendelse(
             meldekortId = meldekortId,
             behandlingId = behandlingIdMeldekort,
+            ident = testIdent,
+            opprettet = opprettet,
+            basertPåBehandlinger = listOf(behandlingIdSøknad),
+        )
+
+    private val manuellBehandlingOpprettetHendelse =
+        ManuellBehandlingOpprettetHendelse(
+            manuellId = manuellId,
+            behandlingId = behandlingIdManuell,
             ident = testIdent,
             opprettet = opprettet,
             basertPåBehandlinger = listOf(behandlingIdSøknad),
@@ -102,6 +114,30 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.last().behandlingId shouldBe behandlingIdMeldekort
+            }
+        }
+    }
+
+    @Test
+    fun `Skal knytte manuell behandling til sak ved mottak av manuellbehandlingOpprettetHendelse`() {
+        withMigratedDb { ds ->
+            val sakMediator =
+                SakMediator(
+                    sakRepository = PostgresRepository(ds),
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(ds),
+                            oppslag = oppslagMock,
+                        ),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
+            sakMediator.knyttTilSak(manuellBehandlingOpprettetHendelse)
+
+            sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
+                behandlinger.size shouldBe 2
+                behandlinger.last().behandlingId shouldBe behandlingIdManuell
             }
         }
     }

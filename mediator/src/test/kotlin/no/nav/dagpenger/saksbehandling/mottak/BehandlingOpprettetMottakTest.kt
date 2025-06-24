@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -16,6 +17,7 @@ class BehandlingOpprettetMottakTest {
     val testIdent = "12345678901"
     val søknadId = UUID.randomUUID()
     val meldekortId = 123L
+    val manuellId = UUID.randomUUID()
     val behandlingId = UUID.randomUUID()
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
     private val søknadsbehandlingOpprettetHendelse =
@@ -61,6 +63,24 @@ class BehandlingOpprettetMottakTest {
         }
     }
 
+    @Test
+    fun `Skal behandle behandling_opprettet hendelse for manuell`() {
+        val basertPåBehandlinge = listOf(UUIDv7.ny())
+        testRapid.sendTestMessage(manuellbehandlingOpprettetMelding(basertPåBehandlinger = basertPåBehandlinge))
+        verify(exactly = 1) {
+            sakMediatorMock.knyttTilSak(
+                manuellBehandlingOpprettetHendelse =
+                    ManuellBehandlingOpprettetHendelse(
+                        manuellId = manuellId,
+                        behandlingId = behandlingId,
+                        ident = testIdent,
+                        opprettet = opprettet,
+                        basertPåBehandlinger = basertPåBehandlinge,
+                    ),
+            )
+        }
+    }
+
     @Language("JSON")
     private fun søknadsbehandlingOpprettetMelding(ident: String = testIdent) =
         """
@@ -91,6 +111,26 @@ class BehandlingOpprettetMottakTest {
                 "datatype": "Long",
                 "id": $meldekortId,
                 "type": "Meldekort"
+            },
+            "basertPåBehandlinger": ${basertPåBehandlinger.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }},
+            "behandlingId": "$behandlingId",
+            "ident": "$ident"
+        }
+        """
+
+    @Language("JSON")
+    private fun manuellbehandlingOpprettetMelding(
+        ident: String = testIdent,
+        basertPåBehandlinger: List<UUID>,
+    ) = """
+        {
+            "@event_name": "behandling_opprettet",
+            "@opprettet": "$opprettet",
+            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$manuellId",
+                "type": "Manuell"
             },
             "basertPåBehandlinger": ${basertPåBehandlinger.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }},
             "behandlingId": "$behandlingId",

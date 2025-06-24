@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import java.util.UUID
 
@@ -25,6 +26,10 @@ data class SakHistorikk(
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
         saker.forEach { it.knyttTilSak(meldekortbehandlingOpprettetHendelse) }
+    }
+
+    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
+        saker.forEach { it.knyttTilSak(manuellBehandlingOpprettetHendelse) }
     }
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {

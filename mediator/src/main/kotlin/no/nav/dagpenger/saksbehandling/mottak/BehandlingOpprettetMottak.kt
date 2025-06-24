@@ -9,6 +9,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -25,7 +26,7 @@ internal class BehandlingOpprettetMottak(
 
             precondition {
                 it.requireValue("@event_name", "behandling_opprettet")
-                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort"))
+                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
             }
             validate {
                 it.requireKey("ident", "behandlingId", "@opprettet")
@@ -81,11 +82,29 @@ internal class BehandlingOpprettetMottak(
                     )
                 }
             }
+
+            "Manuell" -> {
+                val manuellId = packet.manuellId()
+                withLoggingContext("manuellId" to "$manuellId", "behandlingId" to "$behandlingId") {
+                    logger.info { "Mottok behandling_opprettet hendelse for manuell behandling" }
+                    sakMediator.knyttTilSak(
+                        ManuellBehandlingOpprettetHendelse(
+                            manuellId = manuellId,
+                            behandlingId = behandlingId,
+                            ident = ident,
+                            opprettet = opprettet,
+                            basertPåBehandlinger = packet.basertPåBehandlinger(),
+                        ),
+                    )
+                }
+            }
         }
     }
 }
 
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
+
+private fun JsonMessage.manuellId(): UUID = this["behandletHendelse"]["id"].asUUID()
 
 private fun JsonMessage.basertPåBehandlinger(): List<UUID> = this["basertPåBehandlinger"].map { it.asUUID() }
 

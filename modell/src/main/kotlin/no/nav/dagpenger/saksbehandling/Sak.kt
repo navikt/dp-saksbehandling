@@ -1,6 +1,7 @@
 package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -25,6 +26,24 @@ data class Sak(
                     type = BehandlingType.MELDEKORT,
                     opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
                     hendelse = meldekortbehandlingOpprettetHendelse,
+                ),
+            )
+        }
+    }
+
+    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
+        require(manuellBehandlingOpprettetHendelse.basertPåBehandlinger.size == 1)
+        val forrigeBehandling: Behandling? =
+            this.behandlinger
+                .find { it.behandlingId == manuellBehandlingOpprettetHendelse.basertPåBehandlinger.single() }
+
+        if (forrigeBehandling != null) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
+                    type = forrigeBehandling.type,
+                    opprettet = manuellBehandlingOpprettetHendelse.opprettet,
+                    hendelse = manuellBehandlingOpprettetHendelse,
                 ),
             )
         }

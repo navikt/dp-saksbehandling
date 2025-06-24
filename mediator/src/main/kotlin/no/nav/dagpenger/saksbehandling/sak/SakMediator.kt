@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
@@ -76,6 +77,13 @@ class SakMediator(
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(meldekortbehandlingOpprettetHendelse.ident).also {
             it.knyttTilSak(meldekortbehandlingOpprettetHendelse)
+            sakRepository.lagre(it)
+        }
+    }
+
+    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
+        sakRepository.hentSakHistorikk(manuellBehandlingOpprettetHendelse.ident).also {
+            it.knyttTilSak(manuellBehandlingOpprettetHendelse)
             sakRepository.lagre(it)
         }
     }
