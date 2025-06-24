@@ -43,6 +43,7 @@ import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
@@ -200,7 +201,10 @@ OppgaveMediatorTest {
 
         val oppgaveMediator =
             OppgaveMediator(
-                oppgaveRepository = mockk(),
+                oppgaveRepository =
+                    mockk<OppgaveRepository>().also {
+                        every { it.finnOppgaveFor(behandlingId = any()) } returns null
+                    },
                 behandlingKlient = mockk(),
                 utsendingMediator = mockk(),
                 oppslag = mockk(),

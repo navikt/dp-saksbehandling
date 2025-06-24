@@ -138,7 +138,7 @@ class OppgaveMediator(
     }
 
     fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
-        var oppgave: Oppgave? = null
+        var oppgave: Oppgave?
 
         // todo hva skjer dersom vi ikke finner sakHistorikk? Dette skal ikke skje,
         val sakHistorikk = sakMediator.finnSakHistorikkk(forslagTilVedtakHendelse.ident)
@@ -148,12 +148,36 @@ class OppgaveMediator(
                 ?.finnBehandling(forslagTilVedtakHendelse.behandlingId)
 
         if (behandling == null) {
-            val feilmelding =
-                "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                    "${forslagTilVedtakHendelse.behandlingId}." +
-                    "Fant ikke behandling for hendelsen. Gjør derfor ingenting med hendelsen."
-            logger.error { feilmelding }
-            sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
+            // TODO trenger ikke hente oppgave her når alle oppgaver som kan behandles tilhører sak
+            oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
+            if (oppgave == null) {
+                val feilmelding =
+                    "Mottatt hendelse forslag_til_vedtak for behandling med id " +
+                        "${forslagTilVedtakHendelse.behandlingId}." +
+                        "Fant verken behandling eller oppgave for hendelsen. Gjør derfor ingenting med hendelsen."
+                logger.error { feilmelding }
+                sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
+            } else {
+                // TODO fjernes når alle oppgaver som kan behandles tilhører sak
+                oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let { handling ->
+                    when (handling) {
+                        Oppgave.Handling.LAGRE_OPPGAVE -> {
+                            oppgaveRepository.lagre(oppgave)
+                            logger.info {
+                                "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
+                                    " ${oppgave.tilstand().type} etter behandling."
+                            }
+                        }
+
+                        Oppgave.Handling.INGEN -> {
+                            logger.info {
+                                "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
+                                    " ${oppgave.tilstand().type}"
+                            }
+                        }
+                    }
+                }
+            }
         } else {
             oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
             when (oppgave == null) {

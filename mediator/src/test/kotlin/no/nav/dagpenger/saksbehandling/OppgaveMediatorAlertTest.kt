@@ -5,10 +5,14 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.util.UUID
 
 class OppgaveMediatorAlertTest {
@@ -18,7 +22,10 @@ class OppgaveMediatorAlertTest {
     fun `Skal sende alert på rapid dersom behandling ikke finnes`() {
         val behandlingId = UUIDv7.ny()
         OppgaveMediator(
-            oppgaveRepository = mockk(),
+            oppgaveRepository =
+                mockk<OppgaveRepository>().also {
+                    every { it.finnOppgaveFor(behandlingId = any()) } returns null
+                },
             oppslag = mockk(),
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
@@ -39,6 +46,53 @@ class OppgaveMediatorAlertTest {
             )
             rapid.inspektør.size shouldBe 1
             rapid.inspektør.message(0).forventetAlert(behandlingId) shouldBe true
+        }
+    }
+
+    @Test
+    fun `Skal ikke sende alert på rapid dersom sak mangler - men oppgave finnes`() {
+        val behandlingId = UUIDv7.ny()
+        OppgaveMediator(
+            oppgaveRepository =
+                mockk<OppgaveRepository>().also {
+                    every { it.finnOppgaveFor(behandlingId = any()) } returns
+                        Oppgave.rehydrer(
+                            oppgaveId = UUIDv7.ny(),
+                            opprettet = LocalDateTime.now(),
+                            emneknagger = emptySet(),
+                            tilstand = Oppgave.KlarTilBehandling,
+                            behandlingId = behandlingId,
+                            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+                            behandlerIdent = null,
+                            utsattTil = null,
+                            person =
+                                Person(
+                                    ident = "12345678910",
+                                    skjermesSomEgneAnsatte = false,
+                                    adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                                ),
+                        )
+                    every { it.lagre(any()) } just runs
+                },
+            oppslag = mockk(),
+            behandlingKlient = mockk(),
+            utsendingMediator = mockk(),
+            meldingOmVedtakKlient = mockk(),
+            sakMediator =
+                mockk<SakMediator>().also {
+                    every { it.finnSakHistorikkk(any()) } returns null
+                },
+        ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
+
+            oppgaveMediator.opprettEllerOppdaterOppgave(
+                ForslagTilVedtakHendelse(
+                    ident = "12345678910",
+                    søknadId = UUIDv7.ny(),
+                    behandlingId = behandlingId,
+                    emneknagger = emptySet(),
+                ),
+            )
+            rapid.inspektør.size shouldBe 0
         }
     }
 
