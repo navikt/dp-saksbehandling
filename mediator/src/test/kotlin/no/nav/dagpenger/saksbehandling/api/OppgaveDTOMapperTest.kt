@@ -4,7 +4,12 @@ import io.kotest.assertions.json.shouldEqualJson
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Sak
+import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
@@ -15,7 +20,9 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
@@ -32,14 +39,20 @@ class OppgaveDTOMapperTest {
             coEvery { it.hentJournalpostIder(any()) } returns setOf("søknadJournalpostId", "vedtakJournalpostId")
         }
 
+    private val søknadId = UUIDv7.ny()
+    private val behandlingId = UUIDv7.ny()
+    private val sakId = UUIDv7.ny()
+
     @Test
     fun `Skal mappe og berike oppgaveDTO for tilstand Under kontroll`() {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
+
         runBlocking {
             val oppgave =
                 OppgaveApiTestHelper.lagTestOppgaveMedTilstand(
                     tilstand = Oppgave.Tilstand.Type.UNDER_KONTROLL,
                     oprettet = etTidspunkt,
+                    behandlingId = behandlingId,
                 )
             OppgaveDTOMapper(
                 oppslag =
@@ -91,6 +104,31 @@ class OppgaveDTOMapperTest {
                                 ),
                             )
                     },
+                sakMediator =
+                    mockk<SakMediator>().also {
+                        coEvery { it.finnSakHistorikkk(ident = oppgave.personIdent()) } returns
+                            SakHistorikk(
+                                person = oppgave.person,
+                                saker =
+                                    mutableSetOf(
+                                        Sak(
+                                            sakId = sakId,
+                                            søknadId = søknadId,
+                                            opprettet = oppgave.opprettet,
+                                            behandlinger =
+                                                mutableSetOf(
+                                                    Behandling(
+                                                        behandlingId = oppgave.behandlingId,
+                                                        opprettet = oppgave.opprettet,
+                                                        hendelse = TomHendelse,
+                                                        type = BehandlingType.RETT_TIL_DAGPENGER,
+                                                        oppgaveId = oppgave.oppgaveId,
+                                                    ),
+                                                ),
+                                        ),
+                                    ),
+                            )
+                    },
             ).let { mapper ->
                 val oppgaveDTO =
                     mapper.lagOppgaveDTO(
@@ -101,7 +139,7 @@ class OppgaveDTOMapperTest {
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
-                      "behandlingId": "${oppgave.behandling.behandlingId}",
+                      "behandlingId": "${oppgave.behandlingId}",
                       "person": {
                         "ident": "12345612345",
                         "id": "$TEST_UUID",
@@ -118,6 +156,20 @@ class OppgaveDTOMapperTest {
                             "gyldigTom": "${LocalDate.now().plusDays(1)}"
                           }
                         ],
+                        "saker": [
+                          {
+                            "id": "$sakId",
+                            "behandlinger": [
+                              {
+                                "id": "$behandlingId",
+                                "behandlingType": "RETT_TIL_DAGPENGER",
+                                "opprettet": "2024-11-01T09:50:00",
+                                "oppgaveId": "${oppgave.oppgaveId}"
+                              }
+                            ]
+                          }
+                        ],
+                        "oppgaver": [],
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
@@ -178,6 +230,7 @@ class OppgaveDTOMapperTest {
                 OppgaveApiTestHelper.lagTestOppgaveMedTilstand(
                     tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
                     oprettet = etTidspunkt,
+                    behandlingId = behandlingId,
                 )
             OppgaveDTOMapper(
                 oppslag =
@@ -230,6 +283,31 @@ class OppgaveDTOMapperTest {
                                 ),
                             )
                     },
+                sakMediator =
+                    mockk<SakMediator>().also {
+                        coEvery { it.finnSakHistorikkk(ident = oppgave.personIdent()) } returns
+                            SakHistorikk(
+                                person = oppgave.person,
+                                saker =
+                                    mutableSetOf(
+                                        Sak(
+                                            sakId = sakId,
+                                            søknadId = søknadId,
+                                            opprettet = oppgave.opprettet,
+                                            behandlinger =
+                                                mutableSetOf(
+                                                    Behandling(
+                                                        behandlingId = oppgave.behandlingId,
+                                                        opprettet = oppgave.opprettet,
+                                                        hendelse = TomHendelse,
+                                                        type = BehandlingType.RETT_TIL_DAGPENGER,
+                                                        oppgaveId = oppgave.oppgaveId,
+                                                    ),
+                                                ),
+                                        ),
+                                    ),
+                            )
+                    },
             ).let { mapper ->
                 val oppgaveDTO =
                     mapper.lagOppgaveDTO(
@@ -240,7 +318,7 @@ class OppgaveDTOMapperTest {
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
-                      "behandlingId": "${oppgave.behandling.behandlingId}",
+                      "behandlingId": "${oppgave.behandlingId}",
                       "person": {
                         "ident": "12345612345",
                         "id": "$TEST_UUID",
@@ -257,6 +335,20 @@ class OppgaveDTOMapperTest {
                             "gyldigTom": "${OppgaveApiTestHelper.testPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
+                        "saker": [
+                          {
+                            "id": "$sakId",
+                            "behandlinger": [
+                              {
+                                "id": "$behandlingId",
+                                "behandlingType": "RETT_TIL_DAGPENGER",
+                                "opprettet": "2024-11-01T09:50:00",
+                                "oppgaveId": "${oppgave.oppgaveId}"
+                              }
+                            ]
+                          }
+                        ],
+                        "oppgaver": [],
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",

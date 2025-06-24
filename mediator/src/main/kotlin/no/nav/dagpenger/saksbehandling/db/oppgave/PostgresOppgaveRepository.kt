@@ -7,7 +7,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -54,7 +53,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SkriptHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.serder.tilHendelse
@@ -68,7 +66,7 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-class PostgresOppgaveRepository(private val datasource: DataSource) :
+class PostgresOppgaveRepository(private val dataSource: DataSource) :
     OppgaveRepository {
     override fun tildelOgHentNesteOppgave(
         nesteOppgaveHendelse: NesteOppgaveHendelse,
@@ -82,7 +80,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         nesteOppgaveHendelse: NesteOppgaveHendelse,
         filter: TildelNesteOppgaveFilter,
     ): UUID? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val emneknagger = filter.emneknagg.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
@@ -238,78 +236,12 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         }
     }
 
-    override fun slettBehandling(behandlingId: UUID) {
-        val behandling =
-            try {
-                hentBehandling(behandlingId)
-            } catch (e: DataNotFoundException) {
-                logger.warn("Behandling med id $behandlingId finnes ikke, sletter ikke noe")
-                return
-            }
-        sessionOf(datasource).use { session ->
-            session.transaction { tx ->
-                tx.slettBehandling(behandlingId)
-                tx.slettPersonUtenBehandlinger(behandling.person.ident)
-            }
-        }
-    }
-
-    override fun lagre(behandling: Behandling) {
-        sessionOf(datasource).use { session ->
-            session.transaction { tx ->
-                tx.lagre(behandling)
-            }
-        }
-    }
-
     override fun lagre(oppgave: Oppgave) {
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 tx.lagre(oppgave)
             }
         }
-    }
-
-    override fun finnBehandling(behandlingId: UUID): Behandling? {
-        return sessionOf(datasource).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT beha.id behandling_id, beha.opprettet, beha.behandling_type, pers.id person_id, pers.ident,
-                               pers.skjermes_som_egne_ansatte, pers.adressebeskyttelse_gradering
-                        FROM   behandling_v1 beha
-                        JOIN   person_v1     pers ON pers.id = beha.person_id
-                        WHERE  beha.id     = :behandling_id
-                        """.trimIndent(),
-                    paramMap = mapOf("behandling_id" to behandlingId),
-                ).map { row ->
-                    val person =
-                        Person(
-                            id = row.uuid("person_id"),
-                            ident = row.string("ident"),
-                            skjermesSomEgneAnsatte = row.boolean("skjermes_som_egne_ansatte"),
-                            adressebeskyttelseGradering =
-                                AdressebeskyttelseGradering.valueOf(
-                                    row.string("adressebeskyttelse_gradering"),
-                                ),
-                        )
-                    Behandling.rehydrer(
-                        behandlingId = behandlingId,
-                        person = person,
-                        opprettet = row.localDateTime("opprettet"),
-                        hendelse = finnHendelseForBehandling(behandlingId, datasource),
-                        type = BehandlingType.valueOf(row.string("behandling_type")),
-                    )
-                }.asSingle,
-            )
-        }
-    }
-
-    override fun hentBehandling(behandlingId: UUID): Behandling {
-        return finnBehandling(behandlingId)
-            ?: throw DataNotFoundException("Kunne ikke finne behandling med id: $behandlingId")
     }
 
     override fun hentAlleOppgaverMedTilstand(tilstand: Type): List<Oppgave> =
@@ -322,27 +254,8 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
                 ),
         ).oppgaver
 
-    private fun hentOppgave(
-        transactionalSession: TransactionalSession,
-        oppgaveId: UUID,
-    ): Oppgave? {
-        val oppgave =
-            transactionalSession.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        //language=PostgreSQL
-                        statement = "SELECT * FROM oppgave_v1 WHERE id = :oppgave_id",
-                        paramMap = mapOf("oppgave_id" to oppgaveId),
-                    ).map { row ->
-                        row.rehydrerOppgave(datasource)
-                    }.asSingle,
-                )
-            }
-        return oppgave
-    }
-
     override fun hentOppgaveIdFor(behandlingId: UUID): UUID? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -374,7 +287,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         ).oppgaver.singleOrNull()
 
     override fun personSkjermesSomEgneAnsatte(oppgaveId: UUID): Boolean? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -394,7 +307,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun adresseGraderingForPerson(oppgaveId: UUID): AdressebeskyttelseGradering {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -413,13 +326,13 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         } ?: throw DataNotFoundException("Fant ikke person for oppgave med id $oppgaveId")
     }
 
-    override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, datasource)
+    override fun finnNotat(oppgaveTilstandLoggId: UUID): Notat? = finnNotat(oppgaveTilstandLoggId, dataSource)
 
     override fun lagreNotatFor(oppgave: Oppgave): LocalDateTime {
         return when (val notat = oppgave.tilstand().notat()) {
             null -> throw IllegalStateException("Kan ikke lagre notat for oppgave uten notat")
             else -> {
-                sessionOf(datasource).use { session ->
+                sessionOf(dataSource).use { session ->
                     session.lagreNotat(
                         notatId = notat.notatId,
                         tilstandsendringId = oppgave.tilstandslogg.first().id,
@@ -434,7 +347,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     override fun slettNotatFor(oppgave: Oppgave) {
         val tilstandsloggId = oppgave.tilstandslogg.first().id
 
-        sessionOf(datasource).use { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -446,7 +359,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     }
 
     override fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -473,7 +386,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
         ident: String,
         søknadId: UUID,
     ): Type? {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -529,7 +442,7 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
     )
 
     override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat {
-        return sessionOf(datasource).use { session ->
+        return sessionOf(dataSource).use { session ->
             val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
             // TODO: sjekk på tilstand != OPPRETTET bør erstattes med noe logikk for ikke-søkbare tilstander
             val tilstandClause =
@@ -662,64 +575,12 @@ class PostgresOppgaveRepository(private val datasource: DataSource) :
             val oppgaver =
                 session.run(
                     queryOf(statement = oppgaverQuery, paramMap = paramap).map { row ->
-                        row.rehydrerOppgave(datasource)
+                        row.rehydrerOppgave(dataSource)
                     }.asList,
                 )
             OppgaveSøkResultat(oppgaver = oppgaver, totaltAntallOppgaver = antallOppgaver)
         }
     }
-}
-
-private fun TransactionalSession.lagre(person: Person) {
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO person_v1
-                    (id, ident, skjermes_som_egne_ansatte, adressebeskyttelse_gradering) 
-                VALUES
-                    (:id, :ident, :skjermes_som_egne_ansatte, :adressebeskyttelse_gradering) 
-                ON CONFLICT (id) DO UPDATE SET skjermes_som_egne_ansatte = :skjermes_som_egne_ansatte , adressebeskyttelse_gradering = :adressebeskyttelse_gradering             
-                """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "id" to person.id,
-                    "ident" to person.ident,
-                    "skjermes_som_egne_ansatte" to person.skjermesSomEgneAnsatte,
-                    "adressebeskyttelse_gradering" to person.adressebeskyttelseGradering.name,
-                ),
-        ).asUpdate,
-    )
-}
-
-private fun TransactionalSession.slettPersonUtenBehandlinger(ident: String) {
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                    DELETE FROM person_v1 pers 
-                    WHERE pers.ident = :ident
-                    AND NOT EXISTS(
-                        SELECT 1 
-                        FROM behandling_v1 beha 
-                        WHERE beha.person_id = pers.id
-                    )
-                """.trimMargin(),
-            paramMap = mapOf("ident" to ident),
-        ).asUpdate,
-    )
-}
-
-private fun TransactionalSession.slettBehandling(behandlingId: UUID) {
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement = "DELETE  FROM behandling_v1 WHERE id = :behandling_id",
-            paramMap = mapOf("behandling_id" to behandlingId),
-        ).asUpdate,
-    )
 }
 
 private fun rehydrerTilstandsendringHendelse(
@@ -750,41 +611,6 @@ private fun rehydrerTilstandsendringHendelse(
             sikkerlogger.error { "rehydrerTilstandsendringHendelse: Ukjent hendelse med type $hendelseType: $hendelseJson" }
             throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
         }
-    }
-}
-
-private fun Row.rehydrerHendelse(): Hendelse {
-    return when (val hendelseType = this.string("hendelse_type")) {
-        "TomHendelse" -> return TomHendelse
-        "SøknadsbehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<SøknadsbehandlingOpprettetHendelse>()
-        "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
-        else -> {
-            logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }
-            sikkerlogger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType: ${this.string("hendelse_data")}" }
-            throw IllegalArgumentException("Ukjent hendelse type $hendelseType")
-        }
-    }
-}
-
-private fun finnHendelseForBehandling(
-    behandlingId: UUID,
-    dataSource: DataSource,
-): Hendelse {
-    return sessionOf(dataSource).use { session ->
-        session.run(
-            queryOf(
-                //language=PostgreSQL
-                statement =
-                    """
-                    SELECT hendelse_type, hendelse_data
-                    FROM   hendelse_v1
-                    WHERE  behandling_id = :behandling_id
-                    """.trimIndent(),
-                paramMap = mapOf("behandling_id" to behandlingId),
-            ).map { row ->
-                row.rehydrerHendelse()
-            }.asSingle,
-        ) ?: TomHendelse
     }
 }
 
@@ -868,62 +694,7 @@ private fun hentTilstandsloggForOppgave(
     }
 }
 
-private fun TransactionalSession.lagreHendelse(
-    behandlingId: UUID,
-    hendelse: Hendelse,
-) {
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO hendelse_v1
-                    (behandling_id, hendelse_type, hendelse_data)
-                VALUES
-                    (:behandling_id, :hendelse_type, :hendelse_data) 
-                ON CONFLICT DO NOTHING
-                """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "behandling_id" to behandlingId,
-                    "hendelse_type" to hendelse.javaClass.simpleName,
-                    "hendelse_data" to
-                        PGobject().also {
-                            it.type = "JSONB"
-                            it.value = hendelse.tilJson()
-                        },
-                ),
-        ).asUpdate,
-    )
-}
-
-private fun TransactionalSession.lagre(behandling: Behandling) {
-    this.lagre(behandling.person)
-    run(
-        queryOf(
-            //language=PostgreSQL
-            statement =
-                """
-                INSERT INTO behandling_v1
-                    (id, person_id, opprettet, behandling_type)
-                VALUES
-                    (:id, :person_id, :opprettet, :behandling_type) 
-                ON CONFLICT DO NOTHING
-                """.trimIndent(),
-            paramMap =
-                mapOf(
-                    "id" to behandling.behandlingId,
-                    "person_id" to behandling.person.id,
-                    "opprettet" to behandling.opprettet,
-                    "behandling_type" to behandling.type.name,
-                ),
-        ).asUpdate,
-    )
-    this.lagreHendelse(behandling.behandlingId, behandling.hendelse)
-}
-
 private fun TransactionalSession.lagre(oppgave: Oppgave) {
-    this.lagre(oppgave.behandling)
     run(
         queryOf(
             //language=PostgreSQL
@@ -942,7 +713,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
             paramMap =
                 mapOf(
                     "id" to oppgave.oppgaveId,
-                    "behandling_id" to oppgave.behandling.behandlingId,
+                    "behandling_id" to oppgave.behandlingId,
                     "tilstand" to oppgave.tilstand().type.name,
                     "opprettet" to oppgave.opprettet,
                     "saksbehandler_ident" to oppgave.behandlerIdent,
@@ -950,8 +721,8 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
                 ),
         ).asUpdate,
     )
-    lagre(oppgave.oppgaveId, oppgave.emneknagger)
-    lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
+    this.lagre(oppgave.oppgaveId, oppgave.emneknagger)
+    this.lagre(oppgave.oppgaveId, oppgave.tilstandslogg)
     oppgave.tilstand().notat()?.let {
         lagreNotat(
             notatId = it.notatId,
@@ -1069,23 +840,14 @@ private fun TransactionalSession.lagre(
 }
 
 private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
-    val behandlingId = this.uuid("behandling_id")
     val oppgaveId = this.uuid("oppgave_id")
-    val behandling =
-        Behandling.rehydrer(
-            behandlingId = behandlingId,
-            person =
-                Person(
-                    id = this.uuid("person_id"),
-                    ident = this.string("person_ident"),
-                    skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
-                    adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
-                ),
-            opprettet = this.localDateTime("behandling_opprettet"),
-            hendelse = finnHendelseForBehandling(behandlingId, dataSource),
-            type = BehandlingType.valueOf(this.string("behandling_type")),
+    val person =
+        Person(
+            id = this.uuid("person_id"),
+            ident = this.string("person_ident"),
+            skjermesSomEgneAnsatte = this.boolean("skjermes_som_egne_ansatte"),
+            adressebeskyttelseGradering = this.adresseBeskyttelseGradering(),
         )
-
     val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId, dataSource)
 
     val tilstand =
@@ -1113,9 +875,11 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         opprettet = this.localDateTime("oppgave_opprettet"),
         emneknagger = hentEmneknaggerForOppgave(oppgaveId, dataSource),
         tilstand = tilstand,
-        behandling = behandling,
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
+        behandlingId = this.uuid("behandling_id"),
+        behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
+        person = person,
     )
 }
 

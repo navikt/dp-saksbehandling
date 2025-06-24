@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class KlageDTOMapperTest {
     private val testSaksbehandler =
@@ -21,11 +22,15 @@ class KlageDTOMapperTest {
             grupper = setOf(Configuration.saksbehandlerADGruppe),
             tilganger = setOf(TilgangType.SAKSBEHANDLER),
         )
+    private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
 
     @Test
     fun `Skal mappe KlageBehandling til KlageDTO`() {
         runBlocking {
-            val klageBehandling = KlageBehandling()
+            val klageBehandling =
+                KlageBehandling(
+                    opprettet = opprettet,
+                )
             val saksbehandlerDTO =
                 BehandlerDTO(
                     ident = testSaksbehandler.navIdent,

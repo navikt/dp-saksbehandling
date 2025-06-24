@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.header
@@ -41,11 +42,14 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 internal object OppgaveApiTestHelper {
     const val TEST_IDENT = "12345612345"
@@ -60,6 +64,7 @@ internal object OppgaveApiTestHelper {
     fun withOppgaveApi(
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
         oppgaveDTOMapper: OppgaveDTOMapper = mockk<OppgaveDTOMapper>(relaxed = true),
+        personMediator: PersonMediator = mockk(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -70,6 +75,7 @@ internal object OppgaveApiTestHelper {
                     mockk(relaxed = true),
                     mockk(relaxed = true),
                     mockk(relaxed = true),
+                    personMediator = personMediator,
                 )
             }
             test()
@@ -82,6 +88,7 @@ internal object OppgaveApiTestHelper {
         relevanteJournalpostIdOppslag: RelevanteJournalpostIdOppslag = mockk(relaxed = true),
         saksbehandlerOppslag: SaksbehandlerOppslag = mockk(relaxed = true),
         oppgaveRepository: OppgaveRepository = mockk<OppgaveRepository>(relaxed = true),
+        personMediator: PersonMediator = mockk(relaxed = true),
         test: suspend ApplicationTestBuilder.() -> Unit,
     ) {
         testApplication {
@@ -96,10 +103,12 @@ internal object OppgaveApiTestHelper {
                             skjermingKlient = mockk(relaxed = true),
                         ),
                         OppgaveHistorikkDTOMapper(oppgaveRepository, saksbehandlerOppslag),
+                        mockk<SakMediator>(relaxed = true),
                     ),
                     mockk(relaxed = true),
                     mockk(relaxed = true),
                     mockk(relaxed = true),
+                    personMediator = personMediator,
                 )
             }
             test()
@@ -130,8 +139,15 @@ internal object OppgaveApiTestHelper {
         behandling: Behandling,
         utsattTil: LocalDate? = null,
         opprettet: LocalDateTime = LocalDateTime.now(),
+        oppgaveId: UUID = UUIDv7.ny(),
+        person: Person =
+            Person(
+                id = TEST_UUID,
+                ident = TEST_IDENT,
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            ),
     ): Oppgave {
-        val oppgaveId = UUIDv7.ny()
         return Oppgave.rehydrer(
             oppgaveId = oppgaveId,
             behandlerIdent = tildeltBehandlerIdent,
@@ -150,8 +166,10 @@ internal object OppgaveApiTestHelper {
                     AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
                     BEHANDLES_I_ARENA -> BehandlesIArena
                 },
-            behandling = behandling,
             utsattTil = utsattTil,
+            behandlingId = behandling.behandlingId,
+            behandlingType = behandling.type,
+            person = person,
             tilstandslogg =
                 Tilstandslogg.rehydrer(
                     listOf(
@@ -196,20 +214,31 @@ internal object OppgaveApiTestHelper {
         skjermesSomEgneAnsatte: Boolean = false,
         utsattTil: LocalDate? = null,
         oprettet: LocalDateTime = LocalDateTime.now(),
+        behandlingId: UUID = UUIDv7.ny(),
+        oppgaveId: UUID = UUIDv7.ny(),
+        person: Person =
+            Person(
+                id = TEST_UUID,
+                ident = TEST_IDENT,
+                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                adressebeskyttelseGradering = UGRADERT,
+            ),
     ): Oppgave {
         val behandling =
             Behandling(
-                behandlingId = UUIDv7.ny(),
-                person =
-                    Person(
-                        id = TEST_UUID,
-                        ident = TEST_IDENT,
-                        skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
-                        adressebeskyttelseGradering = UGRADERT,
-                    ),
+                behandlingId = behandlingId,
                 opprettet = LocalDateTime.now(),
+                hendelse = TomHendelse,
             )
-        return lagTestOppgaveMedTilstandOgBehandling(tilstand, saksbehandlerIdent, behandling, utsattTil, oprettet)
+        return lagTestOppgaveMedTilstandOgBehandling(
+            tilstand = tilstand,
+            tildeltBehandlerIdent = saksbehandlerIdent,
+            behandling = behandling,
+            utsattTil = utsattTil,
+            opprettet = oprettet,
+            oppgaveId = oppgaveId,
+            person = person,
+        )
     }
 
     val testPerson =

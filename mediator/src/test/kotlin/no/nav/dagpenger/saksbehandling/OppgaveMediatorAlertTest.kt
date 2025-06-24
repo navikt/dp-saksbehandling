@@ -6,9 +6,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -16,21 +15,21 @@ class OppgaveMediatorAlertTest {
     private val rapid = TestRapid()
 
     @Test
-    fun `Skal sende alert på rapid dersom oppgave ikke finnes`() {
+    fun `Skal sende alert på rapid dersom behandling ikke finnes`() {
         val behandlingId = UUIDv7.ny()
         OppgaveMediator(
-            personRepository = mockk<PersonRepository>(),
-            oppgaveRepository =
-                mockk<OppgaveRepository>().also {
-                    every { it.finnOppgaveFor(any()) } returns null
-                },
+            oppgaveRepository = mockk(),
             oppslag = mockk(),
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
             meldingOmVedtakKlient = mockk(),
+            sakMediator =
+                mockk<SakMediator>().also {
+                    every { it.finnSakHistorikkk(any()) } returns null
+                },
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
 
-            oppgaveMediator.settOppgaveKlarTilBehandling(
+            oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = "12345678910",
                     søknadId = UUIDv7.ny(),
@@ -45,8 +44,8 @@ class OppgaveMediatorAlertTest {
 
     private fun JsonNode.forventetAlert(behandlingId: UUID): Boolean {
         this["@event_name"].asText() shouldBe "saksbehandling_alert"
-        this["alertType"].asText() shouldBe "OPPGAVE_IKKE_FUNNET"
-        this["feilMelding"].asText() shouldBe "Oppgave ikke funnet"
+        this["alertType"].asText() shouldBe "BEHANDLING_IKKE_FUNNET"
+        this["feilMelding"].asText() shouldBe "Behandling ikke funnet"
         this["utvidetFeilMelding"].asText() shouldContain behandlingId.toString()
         return true
     }

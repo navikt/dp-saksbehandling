@@ -4,12 +4,12 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.lagBehandling
 import org.junit.jupiter.api.Test
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -26,16 +26,18 @@ class PostgresTriggerTest {
                 adressebeskyttelseGradering = UGRADERT,
             )
         val opprettet = LocalDateTime.now()
-        val testBehandling = Behandling(behandlingId = UUIDv7.ny(), testPerson, opprettet = opprettet)
+        val behandlingId = UUIDv7.ny()
         val testOppgave =
             Oppgave(
                 oppgaveId = UUIDv7.ny(),
                 emneknagger = setOf("Hugga", "Bugga"),
                 opprettet = opprettet,
                 tilstand = Oppgave.KlarTilBehandling,
-                behandling = testBehandling,
+                behandlingId = behandlingId,
+                behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+                person = testPerson,
             )
-        withMigratedDb { ds ->
+        DBTestHelper.withBehandling(person = testPerson, behandling = lagBehandling(behandlingId = behandlingId)) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             repo.lagre(testOppgave)
             val endretTidspunkt = ds.hentEndretTidspunkt(testOppgave.oppgaveId)

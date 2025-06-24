@@ -4,14 +4,15 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
@@ -22,18 +23,58 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.SakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.time.LocalDate
 import java.util.UUID
 
 internal class OppgaveDTOMapper(
     private val oppslag: Oppslag,
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
+    private val sakMediator: SakMediator,
 ) {
+    private fun finnSakHistorikk(ident: String): SakHistorikk? {
+        return sakMediator.finnSakHistorikkk(ident)
+    }
+
+    private fun SakHistorikk?.saker(): List<SakDTO> {
+        return when (this) {
+            null -> emptyList()
+            else ->
+                this.saker().map { sak ->
+                    SakDTO(
+                        id = sak.sakId,
+                        behandlinger =
+                            sak.behandlinger().map { behandling ->
+                                BehandlingDTO(
+                                    id = behandling.behandlingId,
+                                    behandlingType =
+                                        when (behandling.type) {
+                                            BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
+                                            BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                            BehandlingType.MELDEKORT -> BehandlingTypeDTO.MELDEKORT
+                                        },
+                                    opprettet = behandling.opprettet,
+                                    oppgaveId = behandling.oppgaveId,
+                                )
+                            },
+                    )
+                }
+        }
+    }
+
+    private fun SakHistorikk?.oppgaver(): List<OppgaveOversiktDTO> {
+        return when (this) {
+            null -> emptyList()
+            else -> emptyList()
+        }
+    }
+
     suspend fun lagPersonDTO(person: Person): PersonDTO {
         val pdlPerson = oppslag.hentPerson(person.ident)
         return lagPersonDTO(person, pdlPerson)
@@ -41,7 +82,7 @@ internal class OppgaveDTOMapper(
 
     suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
         return coroutineScope {
-            val person = async { oppslag.hentPerson(oppgave.behandling.person.ident) }
+            val person = async { oppslag.hentPerson(oppgave.personIdent()) }
             val journalpostIder = async { oppslag.hentJournalpostIder(oppgave) }
             val sisteSaksbehandlerDTO =
                 oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
@@ -80,10 +121,10 @@ internal class OppgaveDTOMapper(
 
         OppgaveDTO(
             oppgaveId = oppgave.oppgaveId,
-            behandlingId = oppgave.behandling.behandlingId,
-            person = lagPersonDTO(oppgave.behandling.person, person),
+            behandlingId = oppgave.behandlingId,
+            person = lagPersonDTO(oppgave.person, person),
             tidspunktOpprettet = oppgave.opprettet,
-            behandlingType = oppgave.behandling.tilBehandlingTypeDTO(),
+            behandlingType = oppgave.tilBehandlingTypeDTO(),
             emneknagger = oppgave.emneknagger.toList(),
             tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
             journalpostIder = journalpostIder.toList(),
@@ -126,6 +167,7 @@ internal class OppgaveDTOMapper(
         person: Person,
         pdlPersonIntern: PDLPersonIntern,
     ): PersonDTO {
+        val sakHistorikk = finnSakHistorikk(ident = person.ident)
         return PersonDTO(
             ident = person.ident,
             id = person.id,
@@ -150,6 +192,8 @@ internal class OppgaveDTOMapper(
                     AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
                     AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
                 },
+            saker = sakHistorikk.saker(),
+            oppgaver = sakHistorikk.oppgaver(),
         )
     }
 }
@@ -157,14 +201,14 @@ internal class OppgaveDTOMapper(
 internal fun Oppgave.tilOppgaveOversiktDTO() =
     OppgaveOversiktDTO(
         oppgaveId = this.oppgaveId,
-        behandlingId = this.behandling.behandlingId,
-        personIdent = this.behandling.person.ident,
+        behandlingId = this.behandlingId,
+        personIdent = this.personIdent(),
         tidspunktOpprettet = this.opprettet,
-        behandlingType = this.behandling.tilBehandlingTypeDTO(),
+        behandlingType = this.tilBehandlingTypeDTO(),
         emneknagger = this.emneknagger.toList(),
-        skjermesSomEgneAnsatte = this.behandling.person.skjermesSomEgneAnsatte,
+        skjermesSomEgneAnsatte = this.person.skjermesSomEgneAnsatte,
         adressebeskyttelseGradering =
-            when (this.behandling.person.adressebeskyttelseGradering) {
+            when (this.person.adressebeskyttelseGradering) {
                 AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG_UTLAND
                 AdressebeskyttelseGradering.STRENGT_FORTROLIG -> AdressebeskyttelseGraderingDTO.STRENGT_FORTROLIG
                 AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
@@ -205,12 +249,12 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
 internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
     return TildeltOppgaveDTO(
         nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
-        behandlingType = this.behandling.tilBehandlingTypeDTO(),
+        behandlingType = this.tilBehandlingTypeDTO(),
     )
 }
 
-internal fun Behandling.tilBehandlingTypeDTO(): BehandlingTypeDTO {
-    return when (this.type) {
+internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
+    return when (this.behandlingType) {
         BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
         BehandlingType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER

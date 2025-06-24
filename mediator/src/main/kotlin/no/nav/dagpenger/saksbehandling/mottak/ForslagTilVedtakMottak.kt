@@ -86,7 +86,7 @@ internal class ForslagTilVedtakMottak(
             }
 
             sikkerlogg.info { "Mottok forslag_til_vedtak hendelse: $forslagTilVedtakHendelse" }
-            oppgaveMediator.settOppgaveKlarTilBehandling(forslagTilVedtakHendelse)
+            oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
 

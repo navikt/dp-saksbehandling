@@ -25,6 +25,7 @@ import no.nav.dagpenger.saksbehandling.klage.Verdi.Flervalg
 import no.nav.dagpenger.saksbehandling.klage.Verdi.TekstVerdi
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class KlageBehandlingTest {
@@ -155,6 +156,7 @@ class KlageBehandlingTest {
                 tilstand = Behandles,
                 journalpostId = null,
                 behandlendeEnhet = null,
+                opprettet = LocalDateTime.now(),
             )
 
         klageBehandling.tilstand().type shouldBe BEHANDLES
@@ -223,6 +225,7 @@ class KlageBehandlingTest {
                 tilstand = Behandles,
                 journalpostId = null,
                 behandlendeEnhet = null,
+                opprettet = LocalDateTime.now(),
             )
         klageBehandling.tilstand().type shouldBe BEHANDLES
 

@@ -1,0 +1,2 @@
+ALTER TABLE IF EXISTS behandling_v1
+    ADD COLUMN IF NOT EXISTS  sak_id UUID REFERENCES sak_v2 (id);

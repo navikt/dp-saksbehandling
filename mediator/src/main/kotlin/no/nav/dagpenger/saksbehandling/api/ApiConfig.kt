@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api
 
+import PersonMediator
 import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.JacksonConverter
 import io.ktor.server.application.Application
@@ -28,6 +29,7 @@ internal fun Application.installerApis(
     statistikkTjeneste: StatistikkTjeneste,
     klageMediator: KlageMediator,
     klageDTOMapper: KlageDTOMapper,
+    personMediator: PersonMediator,
 ) {
     this.authConfig()
     install(CallId) {
@@ -66,6 +68,7 @@ internal fun Application.installerApis(
             oppgaveMediator = oppgaveMediator,
             oppgaveDTOMapper = oppgaveDTOMapper,
             applicationCallParser = applicationCallParser,
+            personMediator = personMediator,
         )
         statistikkApi(statistikkTjeneste)
         klageApi(

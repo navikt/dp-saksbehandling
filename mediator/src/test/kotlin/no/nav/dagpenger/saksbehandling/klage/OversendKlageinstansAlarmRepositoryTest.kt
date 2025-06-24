@@ -3,6 +3,8 @@ package no.nav.dagpenger.saksbehandling.klage
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
+import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.KlageOpplysningerMapper.tilJson
@@ -13,6 +15,13 @@ import javax.sql.DataSource
 import kotlin.random.Random
 
 class OversendKlageinstansAlarmRepositoryTest {
+    private val testPerson =
+        Person(
+            ident = "12345678910",
+            skjermesSomEgneAnsatte = false,
+            adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+        )
+
     @Test
     fun `Skal hente oversendelser til klageinstans som ikke er ferdigstilt innen 1 time`() {
         val nå = LocalDateTime.now()
@@ -33,26 +42,22 @@ class OversendKlageinstansAlarmRepositoryTest {
                     KlageBehandling.OversendKlageinstans,
                     enTimeSiden,
                 )
-            val klageBehandlingOversendtLittMindreEnnEnTimeSiden =
-                ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.OversendKlageinstans,
-                    littMindreEnnEnTimeSiden,
-                )
-            val klageBehandlingOversendtNå =
-                ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.OversendKlageinstans,
-                    nå,
-                )
-            val klageBehandlingSomBehandles =
-                ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.Behandles,
-                    toTimerSiden,
-                )
-            val klageBehandlingSomErFerdigstilt =
-                ds.opprettOgLagreKlageBehandling(
-                    KlageBehandling.Ferdigstilt,
-                    toTimerSiden,
-                )
+            ds.opprettOgLagreKlageBehandling(
+                KlageBehandling.OversendKlageinstans,
+                littMindreEnnEnTimeSiden,
+            )
+            ds.opprettOgLagreKlageBehandling(
+                KlageBehandling.OversendKlageinstans,
+                nå,
+            )
+            ds.opprettOgLagreKlageBehandling(
+                KlageBehandling.Behandles,
+                toTimerSiden,
+            )
+            ds.opprettOgLagreKlageBehandling(
+                KlageBehandling.Ferdigstilt,
+                toTimerSiden,
+            )
 
             val ventendeOversendelser = repository.hentVentendeOversendelser(intervallAntallTimer = 1)
             ventendeOversendelser.size shouldBe 2
@@ -77,6 +82,7 @@ class OversendKlageinstansAlarmRepositoryTest {
                 journalpostId = Random.nextInt(1, 1000).toString(),
                 tilstand = tilstand,
                 behandlendeEnhet = "4408",
+                opprettet = tidspunkt,
             )
 
         sessionOf(this).use { session ->

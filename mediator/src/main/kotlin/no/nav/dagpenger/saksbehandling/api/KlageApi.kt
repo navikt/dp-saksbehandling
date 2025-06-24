@@ -36,6 +36,7 @@ fun Route.klageApi(
                             journalpostId = klage.journalpostId,
                             utførtAv = Applikasjon("dp-mottak"),
                             ident = klage.personIdent.ident,
+                            sakId = klage.sakId,
                         ),
                 ).let { oppgave ->
 
@@ -53,10 +54,11 @@ fun Route.klageApi(
                 mediator.opprettManuellKlage(
                     manuellKlageMottattHendelse =
                         ManuellKlageMottattHendelse(
+                            ident = klage.personIdent.ident,
+                            sakId = klage.sakId,
                             opprettet = klage.opprettet,
                             journalpostId = klage.journalpostId,
                             utførtAv = saksbehandler,
-                            ident = klage.personIdent.ident,
                         ),
                 ).let { oppgave ->
 

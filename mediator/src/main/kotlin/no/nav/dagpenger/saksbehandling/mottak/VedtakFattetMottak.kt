@@ -9,7 +9,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.Sak
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
 
@@ -61,6 +61,6 @@ internal class VedtakFattetMottak(
     }
 }
 
-private fun JsonMessage.sak(): Sak = Sak(id = this["fagsakId"].asText())
+private fun JsonMessage.sak(): UtsendingSak = UtsendingSak(id = this["fagsakId"].asText())
 
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()

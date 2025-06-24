@@ -4,7 +4,7 @@ import kotliquery.Row
 import kotliquery.Session
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.saksbehandling.Sak
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avbrutt
@@ -141,8 +141,8 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                     paramMap = mapOf("oppgave_id" to oppgaveId),
                 ).map { row ->
                     val tilstand = row.rehydrerUtsendingTilstand("tilstand")
-                    val sak: Sak? =
-                        row.stringOrNull("sak_id")?.let { Sak(row.string("sak_id"), row.string("kontekst")) }
+                    val utsendingSak: UtsendingSak? =
+                        row.stringOrNull("sak_id")?.let { UtsendingSak(row.string("sak_id"), row.string("kontekst")) }
 
                     Utsending.rehydrer(
                         id = row.uuid("utsending_id"),
@@ -154,7 +154,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         journalpostId = row.stringOrNull("journalpost_id"),
                         distribusjonId = row.stringOrNull("distribusjon_id"),
                         type = UtsendingType.valueOf(row.string("type")),
-                        sak = sak,
+                        utsendingSak = utsendingSak,
                     )
                 }.asSingle,
             )
@@ -192,7 +192,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
     }
 }
 
-private fun Session.lagreSak(sak: Sak) {
+private fun Session.lagreSak(utsendingSak: UtsendingSak) {
     this.run(
         queryOf(
             //language=PostgreSQL
@@ -206,8 +206,8 @@ private fun Session.lagreSak(sak: Sak) {
                 """.trimIndent(),
             paramMap =
                 mapOf(
-                    "id" to sak.id,
-                    "kontekst" to sak.kontekst,
+                    "id" to utsendingSak.id,
+                    "kontekst" to utsendingSak.kontekst,
                 ),
         ).asUpdate,
     )

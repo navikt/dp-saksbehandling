@@ -12,6 +12,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
+import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
 
 object OppgaveTestHelper {
@@ -22,6 +24,7 @@ object OppgaveTestHelper {
         adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
         emneknagger: Set<String> = emptySet(),
+        hendelse: Hendelse = TomHendelse,
     ): Oppgave {
         val tilstand =
             when (tilstandType) {
@@ -36,26 +39,30 @@ object OppgaveTestHelper {
                 AVVENTER_OPPLÅSING_AV_BEHANDLING -> Oppgave.AvventerOpplåsingAvBehandling
                 BEHANDLES_I_ARENA -> Oppgave.BehandlesIArena
             }
+        val person =
+            Person(
+                id = UUIDv7.ny(),
+                ident = "12345678910",
+                skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
+                adressebeskyttelseGradering = adressebeskyttelseGradering,
+            )
+        val behandling =
+            Behandling(
+                behandlingId = UUIDv7.ny(),
+                opprettet = LocalDateTime.now(),
+                hendelse = hendelse,
+            )
         return Oppgave.rehydrer(
             oppgaveId = UUIDv7.ny(),
             behandlerIdent = behandler?.navIdent,
             opprettet = LocalDateTime.now(),
             emneknagger = emneknagger,
             tilstand = tilstand,
-            behandling =
-                Behandling(
-                    behandlingId = UUIDv7.ny(),
-                    person =
-                        Person(
-                            id = UUIDv7.ny(),
-                            ident = "12345678910",
-                            skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
-                            adressebeskyttelseGradering = adressebeskyttelseGradering,
-                        ),
-                    opprettet = LocalDateTime.now(),
-                ),
             utsattTil = null,
             tilstandslogg = tilstandslogg,
+            behandlingId = behandling.behandlingId,
+            behandlingType = behandling.type,
+            person = person,
         )
     }
 

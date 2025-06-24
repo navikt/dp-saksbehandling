@@ -50,27 +50,33 @@ data class Oppgave private constructor(
     val opprettet: LocalDateTime,
     var behandlerIdent: String? = null,
     private val _emneknagger: MutableSet<String>,
-    private var tilstand: Tilstand = Opprettet,
-    val behandling: Behandling,
+    private var tilstand: Tilstand = KlarTilBehandling,
     private var utsattTil: LocalDate? = null,
     private val _tilstandslogg: Tilstandslogg = Tilstandslogg(),
+    val behandlingId: UUID,
+    val behandlingType: BehandlingType,
+    val person: Person,
 ) {
     constructor(
         oppgaveId: UUID,
         emneknagger: Set<String> = emptySet(),
         opprettet: LocalDateTime,
-        tilstand: Tilstand = Opprettet,
+        tilstand: Tilstand = KlarTilBehandling,
         behandlerIdent: String? = null,
-        behandling: Behandling,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
+        behandlingId: UUID,
+        behandlingType: BehandlingType,
+        person: Person,
     ) : this(
         oppgaveId = oppgaveId,
         behandlerIdent = behandlerIdent,
         opprettet = opprettet,
         _emneknagger = emneknagger.toMutableSet(),
         tilstand = tilstand,
-        behandling = behandling,
         _tilstandslogg = tilstandslogg,
+        behandlingId = behandlingId,
+        behandlingType = behandlingType,
+        person = person,
     )
 
     companion object {
@@ -90,9 +96,11 @@ data class Oppgave private constructor(
             opprettet: LocalDateTime,
             emneknagger: Set<String>,
             tilstand: Tilstand,
-            behandling: Behandling,
             utsattTil: LocalDate?,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
+            behandlingId: UUID,
+            behandlingType: BehandlingType,
+            person: Person,
         ): Oppgave =
             Oppgave(
                 oppgaveId = oppgaveId,
@@ -100,9 +108,11 @@ data class Oppgave private constructor(
                 behandlerIdent = behandlerIdent,
                 _emneknagger = emneknagger.toMutableSet(),
                 tilstand = tilstand,
-                behandling = behandling,
                 utsattTil = utsattTil,
                 _tilstandslogg = tilstandslogg,
+                behandlingId = behandlingId,
+                behandlingType = behandlingType,
+                person = person,
             )
 
         private fun requireEierskapTilOppgave(
@@ -148,11 +158,13 @@ data class Oppgave private constructor(
     val tilstandslogg: Tilstandslogg
         get() = _tilstandslogg
 
+    fun personIdent() = person.ident
+
     fun tilstand() = this.tilstand
 
     fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
         require(
-            if (this.behandling.person.skjermesSomEgneAnsatte) {
+            if (this.person.skjermesSomEgneAnsatte) {
                 saksbehandler.tilganger.contains(EGNE_ANSATTE)
             } else {
                 true
@@ -163,7 +175,7 @@ data class Oppgave private constructor(
     }
 
     fun adressebeskyttelseTilgangskontroll(saksbehandler: Saksbehandler) {
-        val adressebeskyttelseGradering = this.behandling.person.adressebeskyttelseGradering
+        val adressebeskyttelseGradering = this.person.adressebeskyttelseGradering
         require(
             when (adressebeskyttelseGradering) {
                 FORTROLIG -> saksbehandler.tilganger.contains(FORTROLIG_ADRESSE)

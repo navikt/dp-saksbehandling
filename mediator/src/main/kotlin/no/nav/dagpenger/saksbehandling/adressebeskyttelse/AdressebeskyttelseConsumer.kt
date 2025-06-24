@@ -13,7 +13,7 @@ internal class AdressebeskyttelseConsumer(
 ) {
     private val counter: Counter = registry.lagCounter()
 
-    fun oppdaterAdressebeskyttelseStatus(identer: Set<String>) {
+    fun oppdaterAdressebeskyttelseGradering(identer: Set<String>) {
         repository.eksistererIDPsystem(identer).forEach { ident ->
             val adresseBeskyttelseGradering =
                 runBlocking {
@@ -21,7 +21,7 @@ internal class AdressebeskyttelseConsumer(
                 }
 
             adresseBeskyttelseGradering.let { gradering: AdressebeskyttelseGradering ->
-                repository.oppdaterAdressebeskyttetStatus(ident, gradering)
+                repository.oppdaterAdressebeskyttelseGradering(ident, gradering)
                 counter.inc("$gradering")
             }
         }

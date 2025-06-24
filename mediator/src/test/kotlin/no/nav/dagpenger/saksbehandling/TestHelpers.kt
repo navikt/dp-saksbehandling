@@ -32,7 +32,8 @@ fun lagOppgave(
     skjermesSomEgneAnsatte: Boolean = false,
     adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
     person: Person = lagPerson(addresseBeskyttelseGradering = adressebeskyttelseGradering, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
-    behandling: Behandling = lagBehandling(person = person),
+    behandlingId: UUID = UUIDv7.ny(),
+    behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
     emneknagger: Set<String> = emptySet(),
     utsattTil: LocalDate? = null,
     tilstandslogg: Tilstandslogg = Tilstandslogg(),
@@ -44,22 +45,22 @@ fun lagOppgave(
         opprettet = opprettet,
         emneknagger = emneknagger,
         tilstand = tilstand,
-        behandling = behandling,
         utsattTil = utsattTil,
         tilstandslogg = tilstandslogg,
+        behandlingId = behandlingId,
+        behandlingType = behandlingType,
+        person = person,
     )
 }
 
 fun lagBehandling(
     behandlingId: UUID = UUIDv7.ny(),
     opprettet: LocalDateTime = opprettetNå,
-    person: Person = testPerson,
     hendelse: Hendelse = TomHendelse,
     type: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
 ): Behandling {
     return Behandling(
         behandlingId = behandlingId,
-        person = person,
         opprettet = opprettet,
         hendelse = hendelse,
         type = type,
@@ -77,10 +78,10 @@ fun lagUtsending(
     pdfUrn = null,
     journalpostId = "journalpostId",
     distribusjonId = "distribusjonId",
-    sak = null,
+    utsendingSak = null,
 )
 
-private fun lagTilfeldigIdent() =
+fun lagTilfeldigIdent() =
     (1..11)
         .map { Random.nextInt(0, 10) }
         .joinToString("")

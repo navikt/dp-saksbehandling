@@ -4,8 +4,8 @@ import de.slub.urn.URN
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
@@ -28,7 +28,7 @@ class UtsendingTilstandTest {
                 oppgaveId = oppgaveId,
                 behandlingId = UUIDv7.ny(),
                 ident = ident,
-                sak = Sak(id = "sakId", kontekst = "fagsystem"),
+                utsendingSak = UtsendingSak(id = "sakId", kontekst = "fagsystem"),
             ),
         )
         utsending.tilstand() shouldBe Utsending.AvventerArkiverbarVersjonAvBrev

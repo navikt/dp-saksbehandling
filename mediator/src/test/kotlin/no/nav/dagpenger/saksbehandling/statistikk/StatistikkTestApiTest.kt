@@ -30,7 +30,14 @@ class StatistikkTestApiTest {
             }
         testApplication {
             application {
-                installerApis(mockk(), mockk(), mockStatistikkTjeneste, mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockStatistikkTjeneste,
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
             }
 
             client.get("public/statistikk").let { httpResponse ->
@@ -51,7 +58,14 @@ class StatistikkTestApiTest {
 
         testApplication {
             application {
-                installerApis(mockk(), mockk(), mockStatistikkTjeneste, mockk(), mockk())
+                installerApis(
+                    oppgaveMediator = mockk(),
+                    oppgaveDTOMapper = mockk(),
+                    statistikkTjeneste = mockStatistikkTjeneste,
+                    klageMediator = mockk(),
+                    klageDTOMapper = mockk(),
+                    personMediator = mockk(),
+                )
             }
 
             client.get("statistikk") {

@@ -5,27 +5,22 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
-import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
-import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
-    private val oppgaveMediator: OppgaveMediator,
-    private val pdlKlient: PDLKlient,
-    private val skjermingKlient: SkjermingKlient,
+    private val sakMediator: SakMediator,
 ) : River.PacketListener {
     companion object {
-        private val logger = KotlinLogging.logger {}
         val rapidFilter: River.() -> Unit = {
 
             precondition {
@@ -34,7 +29,7 @@ internal class BehandlingOpprettetMottak(
             }
             validate {
                 it.requireKey("ident", "behandlingId", "@opprettet")
-                it.interestedIn("behandletHendelse")
+                it.interestedIn("behandletHendelse", "basertPåBehandlinger")
             }
         }
     }
@@ -58,53 +53,10 @@ internal class BehandlingOpprettetMottak(
             "Søknad" -> {
                 val søknadId = packet.søknadId()
                 withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse" }
-
-                    val erAdresseBeskyttetPerson =
-                        runBlocking {
-                            pdlKlient.erAdressebeskyttet(ident).getOrThrow()
-                        }
-
-                    val erSkjermetPerson =
-                        runBlocking {
-                            skjermingKlient.erSkjermetPerson(ident).getOrThrow()
-                        }
-
-                    if (!erAdresseBeskyttetPerson && !erSkjermetPerson) {
-                        oppgaveMediator.opprettOppgaveForBehandling(
-                            SøknadsbehandlingOpprettetHendelse(
-                                søknadId = søknadId,
-                                behandlingId = behandlingId,
-                                ident = ident,
-                                opprettet = opprettet,
-                            ),
-                        )
-                    } else {
-                        context.publish(
-                            key = ident,
-                            message =
-                                JsonMessage.newMessage(
-                                    eventName = "avbryt_behandling",
-                                    map =
-                                        mapOf(
-                                            "behandlingId" to behandlingId,
-                                            "søknadId" to søknadId,
-                                            "ident" to ident,
-                                        ),
-                                ).toJson(),
-                        )
-                        logger.info { "Publiserte avbryt_behandling hendelse" }
-                    }
-                }
-            }
-
-            "Meldekort" -> {
-                val meldekortId = packet.meldekortId()
-                withLoggingContext("meldekortId" to "$meldekortId", "behandlingId" to "$behandlingId") {
-                    logger.info { "Mottok behandling_opprettet hendelse for meldekort" }
-                    oppgaveMediator.opprettBehandlingFor(
-                        MeldekortbehandlingOpprettetHendelse(
-                            meldekortId = meldekortId,
+                    logger.info { "Mottok behandling_opprettet hendelse for søknad" }
+                    sakMediator.opprettSak(
+                        SøknadsbehandlingOpprettetHendelse(
+                            søknadId = søknadId,
                             behandlingId = behandlingId,
                             ident = ident,
                             opprettet = opprettet,
@@ -113,26 +65,28 @@ internal class BehandlingOpprettetMottak(
                 }
             }
 
-            else -> logger.warn { "Ukjent behandlingstype: $behandlingType" }
+            "Meldekort" -> {
+                val meldekortId = packet.meldekortId()
+                withLoggingContext("meldekortId" to "$meldekortId", "behandlingId" to "$behandlingId") {
+                    logger.info { "Mottok behandling_opprettet hendelse for meldekort" }
+                    sakMediator.knyttTilSak(
+                        MeldekortbehandlingOpprettetHendelse(
+                            meldekortId = meldekortId,
+                            behandlingId = behandlingId,
+                            ident = ident,
+                            opprettet = opprettet,
+                            basertPåBehandlinger =
+                                packet.basertPåBehandlinger(),
+                        ),
+                    )
+                }
+            }
         }
-    }
-
-    override fun onError(
-        problems: MessageProblems,
-        context: MessageContext,
-        metadata: MessageMetadata,
-    ) {
-        logger.error { "!! Forstod ikke behandling_opprettet hendelse. \n $problems" }
-    }
-
-    override fun onSevere(
-        error: MessageProblems.MessageException,
-        context: MessageContext,
-    ) {
-        logger.error { "!! Forstod ikke behandling_opprettet hendelse. \n ${error.message}" }
     }
 }
 
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
+
+private fun JsonMessage.basertPåBehandlinger(): List<UUID> = this["basertPåBehandlinger"].map { it.asUUID() }
 
 private fun JsonMessage.meldekortId(): Long = this["behandletHendelse"]["id"].asLong()

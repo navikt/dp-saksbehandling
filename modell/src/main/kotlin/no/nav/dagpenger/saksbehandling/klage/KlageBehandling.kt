@@ -13,12 +13,14 @@ import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.OVERSEND_KLAGEINSTANS
 import no.nav.dagpenger.saksbehandling.klage.OpplysningType.UTFALL
 import no.nav.dagpenger.saksbehandling.klage.UtfallType.Companion.toUtfallType
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
 data class KlageBehandling private constructor(
     val behandlingId: UUID = UUIDv7.ny(),
+    val opprettet: LocalDateTime,
     private val opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
     private var tilstand: KlageTilstand = Behandles,
     private val journalpostId: String? = null,
@@ -37,9 +39,11 @@ data class KlageBehandling private constructor(
     constructor(
         journalpostId: String? = null,
         tilstandslogg: KlageTilstandslogg = KlageTilstandslogg(),
+        opprettet: LocalDateTime = LocalDateTime.now(),
     ) : this (
         journalpostId = journalpostId,
         _tilstandslogg = tilstandslogg,
+        opprettet = opprettet,
     )
 
     init {
@@ -49,6 +53,7 @@ data class KlageBehandling private constructor(
     companion object {
         fun rehydrer(
             behandlingId: UUID,
+            opprettet: LocalDateTime,
             opplysninger: Set<Opplysning> = OpplysningBygger.lagOpplysninger(OpplysningType.entries.toSet()),
             tilstand: KlageTilstand,
             journalpostId: String?,
@@ -66,6 +71,7 @@ data class KlageBehandling private constructor(
         ): KlageBehandling =
             KlageBehandling(
                 behandlingId = behandlingId,
+                opprettet = opprettet,
                 opplysninger = opplysninger,
                 tilstand = tilstand,
                 journalpostId = journalpostId,

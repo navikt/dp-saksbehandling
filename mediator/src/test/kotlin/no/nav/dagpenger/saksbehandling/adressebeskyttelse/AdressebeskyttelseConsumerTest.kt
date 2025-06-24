@@ -19,7 +19,7 @@ import java.time.LocalDate
 
 internal class AdressebeskyttelseConsumerTest {
     @Test
-    fun `test oppdaterAdressebeskyttelseStatus`() {
+    fun `Adressebeskyttelse gradering skal kunne oppdateres`() {
         val repository =
             mockk<AdressebeskyttelseRepository>(relaxed = true).also {
                 every { it.eksistererIDPsystem(setOf("1", "2")) } returns setOf("1", "2")
@@ -37,13 +37,13 @@ internal class AdressebeskyttelseConsumerTest {
                 pdlKlient = pdlKlient,
                 registry = registry,
             )
-        adressebeskyttelseConsumer.oppdaterAdressebeskyttelseStatus(setOf("2", "1"))
+        adressebeskyttelseConsumer.oppdaterAdressebeskyttelseGradering(setOf("2", "1"))
 
         verify(exactly = 1) {
-            repository.oppdaterAdressebeskyttetStatus("1", STRENGT_FORTROLIG)
+            repository.oppdaterAdressebeskyttelseGradering("1", STRENGT_FORTROLIG)
         }
         verify(exactly = 1) {
-            repository.oppdaterAdressebeskyttetStatus("2", UGRADERT)
+            repository.oppdaterAdressebeskyttelseGradering("2", UGRADERT)
         }
 
         registry.getSnapShot<CounterSnapshot> { it == "dp_saksbehandling_adressebeskyttelse_oppdateringer" }.let { snapshot ->

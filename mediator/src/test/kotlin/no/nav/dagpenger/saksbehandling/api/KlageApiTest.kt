@@ -38,7 +38,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -52,6 +51,7 @@ class KlageApiTest {
     private val klageBehandlingId = UUIDv7.ny()
     private val journalpostId = "journalpostId"
     private val opplysningId = UUIDv7.ny()
+    private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
     private val saksbehandler =
         Saksbehandler(
             navIdent = SAKSBEHANDLER_IDENT,
@@ -64,9 +64,7 @@ class KlageApiTest {
     fun `Skal kaste feil når det mangler autentisering`() {
         val mediator = mockk<KlageMediator>()
         withKlageApi(mediator) {
-            client.get("klage/$klageBehandlingId").let { response ->
-                response.status shouldBe HttpStatusCode.Unauthorized
-            }
+            client.get("klage/$klageBehandlingId").status shouldBe HttpStatusCode.Unauthorized
             client.post("klage/opprett") {
                 headers[HttpHeaders.ContentType] = "application/json"
                 //language=json
@@ -92,6 +90,7 @@ class KlageApiTest {
                         journalpostId = journalpostId,
                         tilstand = KlageBehandling.Behandles,
                         behandlendeEnhet = null,
+                        opprettet = opprettet,
                     )
             }
 
@@ -108,15 +107,17 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en klage med maskintoken`() {
         val token = gyldigMaskinToken()
-        val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
-        val ident = oppgave.behandling.person.ident
+        val sakId = UUIDv7.ny()
+        val oppgave = lagOppgave(behandlingType = KLAGE, opprettet = dato)
+        val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
                 every {
                     it.opprettKlage(
                         klageMottattHendelse =
                             KlageMottattHendelse(
-                                ident = oppgave.behandling.person.ident,
+                                ident = oppgave.personIdent(),
+                                sakId = sakId,
                                 opprettet = dato,
                                 journalpostId = "journalpostId",
                             ),
@@ -134,7 +135,7 @@ class KlageApiTest {
                     {
                         "journalpostId": "journalpostId",
                         "opprettet": "$dato",
-                        "sakId": "sakId",
+                        "sakId": "$sakId",
                         "personIdent": {"ident":  "$ident"}
                     }
                     """.trimIndent(),
@@ -147,7 +148,7 @@ class KlageApiTest {
                     """
                     {
                        "oppgaveId": "${oppgave.oppgaveId}",
-                       "behandlingId": "${oppgave.behandling.behandlingId}",
+                       "behandlingId": "${oppgave.behandlingId}",
                        "personIdent": "$ident",
                        "tidspunktOpprettet": "2025-01-01T01:01:00",
                        "behandlingType": "KLAGE"
@@ -161,6 +162,7 @@ class KlageApiTest {
                 klageMottattHendelse =
                     KlageMottattHendelse(
                         ident = ident,
+                        sakId = sakId,
                         opprettet = dato,
                         journalpostId = "journalpostId",
                     ),
@@ -171,15 +173,17 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
         val token = gyldigSaksbehandlerToken()
-        val oppgave = lagOppgave(behandling = lagBehandling(type = KLAGE), opprettet = dato)
-        val ident = oppgave.behandling.person.ident
+        val oppgave = lagOppgave(behandlingType = KLAGE, opprettet = dato)
+        val ident = oppgave.personIdent()
+        val sakId = UUIDv7.ny()
         val mediator =
             mockk<KlageMediator>().also {
                 every {
                     it.opprettManuellKlage(
                         manuellKlageMottattHendelse =
                             ManuellKlageMottattHendelse(
-                                ident = oppgave.behandling.person.ident,
+                                ident = oppgave.personIdent(),
+                                sakId = sakId,
                                 opprettet = dato,
                                 journalpostId = "journalpostId",
                                 utførtAv = saksbehandler,
@@ -198,7 +202,7 @@ class KlageApiTest {
                     {
                         "journalpostId": "journalpostId",
                         "opprettet": "$dato",
-                        "sakId": "sakId",
+                        "sakId": "$sakId",
                         "personIdent": {"ident":  "$ident"}
                     }
                     """.trimIndent(),
@@ -211,7 +215,7 @@ class KlageApiTest {
                     """
                     {
                        "oppgaveId": "${oppgave.oppgaveId}",
-                       "behandlingId": "${oppgave.behandling.behandlingId}",
+                       "behandlingId": "${oppgave.behandlingId}",
                        "personIdent": "$ident",
                        "tidspunktOpprettet": "2025-01-01T01:01:00",
                        "behandlingType": "KLAGE"
@@ -225,6 +229,7 @@ class KlageApiTest {
                 manuellKlageMottattHendelse =
                     ManuellKlageMottattHendelse(
                         ident = ident,
+                        sakId = sakId,
                         opprettet = dato,
                         journalpostId = "journalpostId",
                         utførtAv = saksbehandler,
@@ -476,6 +481,7 @@ class KlageApiTest {
                     statistikkTjeneste = mockk(),
                     klageMediator = klageMediator,
                     klageDTOMapper = KlageDTOMapper(oppslag = oppslag),
+                    personMediator = mockk(),
                 )
             }
             test()

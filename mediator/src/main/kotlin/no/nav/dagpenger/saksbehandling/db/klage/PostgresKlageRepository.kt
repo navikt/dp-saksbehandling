@@ -53,11 +53,17 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                         //language=PostgreSQL
                         statement =
                             """
-                            SELECT id, tilstand, journalpost_id, behandlende_enhet, opplysninger
-                            FROM   klage_v1 
-                            WHERE  id = :id
+                            SELECT klag.id AS behandling_id, 
+                                   klag.tilstand, 
+                                   klag.journalpost_id, 
+                                   klag.behandlende_enhet, 
+                                   klag.opplysninger,
+                                   beha.opprettet
+                            FROM   klage_v1       klag
+                            JOIN   behandling_v1  beha ON beha.id = klag.id
+                            WHERE  klag.id = :behandling_id
                             """.trimIndent(),
-                        paramMap = mapOf("id" to behandlingId),
+                        paramMap = mapOf("behandling_id" to behandlingId),
                     ).map { row ->
                         row.rehydrerKlageBehandling(datasource)
                     }.asSingle,
@@ -141,7 +147,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
     }
 
     private fun Row.rehydrerKlageBehandling(dataSource: DataSource): KlageBehandling {
-        val behandlingId = this.uuid("id")
+        val behandlingId = this.uuid("behandling_id")
         val tilstandAsText = this.string("tilstand")
         val tilstand =
             kotlin
@@ -163,6 +169,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
                 behandlingId = behandlingId,
                 dataSource = dataSource,
             )
+        val opprettet = this.localDateTime("opprettet")
 
         return KlageBehandling.rehydrer(
             behandlingId = behandlingId,
@@ -171,6 +178,7 @@ class PostgresKlageRepository(private val datasource: DataSource) : KlageReposit
             behandlendeEnhet = behandlendeEnhet,
             opplysninger = opplysninger,
             tilstandslogg = tilstandslogg,
+            opprettet = opprettet,
         )
     }
 

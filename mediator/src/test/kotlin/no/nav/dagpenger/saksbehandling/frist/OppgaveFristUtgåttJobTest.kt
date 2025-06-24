@@ -6,6 +6,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
+import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
@@ -13,27 +15,34 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
+import no.nav.dagpenger.saksbehandling.lagBehandling
 import no.nav.dagpenger.saksbehandling.lagOppgave
+import no.nav.dagpenger.saksbehandling.lagPerson
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class OppgaveFristUtgåttJobTest {
     @Test
-    fun `Sett utgåtte oppgaver klare igjen`() =
-        withMigratedDb { ds ->
-            val personRepository = PostgresPersonRepository(ds)
+    fun `Sett utgåtte oppgaver klare igjen`() {
+        val behandling1 = lagBehandling(type = RETT_TIL_DAGPENGER)
+        val behandling2 = lagBehandling(type = RETT_TIL_DAGPENGER)
+        val behandling3 = lagBehandling(type = KLAGE)
+        val behandling4 = lagBehandling(type = KLAGE)
+        DBTestHelper.withBehandlinger(
+            person = lagPerson(),
+            behandlinger = listOf(behandling1, behandling2, behandling3, behandling4),
+        ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
             val oppgaveMediator =
                 OppgaveMediator(
-                    personRepository = personRepository,
                     oppgaveRepository = repo,
                     oppslag = mockk(),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
                     meldingOmVedtakKlient = mockk(),
+                    sakMediator = mockk(),
                 )
             val saksbehandlerIdent1 = "ident 1"
             val saksbehandlerIdent2 = "ident 2"
@@ -44,12 +53,14 @@ class OppgaveFristUtgåttJobTest {
                 lagOppgave(
                     tilstand = PåVent,
                     utsattTil = iDag,
+                    behandlingId = behandling1.behandlingId,
                     saksbehandlerIdent = null,
                 )
             val oppgave2 =
                 lagOppgave(
                     tilstand = PåVent,
                     utsattTil = iDag,
+                    behandlingId = behandling2.behandlingId,
                     saksbehandlerIdent = saksbehandlerIdent1,
                     emneknagger = setOf(TIDLIGERE_UTSATT.visningsnavn),
                 )
@@ -57,12 +68,14 @@ class OppgaveFristUtgåttJobTest {
                 lagOppgave(
                     tilstand = PåVent,
                     utsattTil = iDag,
+                    behandlingId = behandling3.behandlingId,
                     saksbehandlerIdent = saksbehandlerIdent2,
                 )
             val oppgave4 =
                 lagOppgave(
                     tilstand = PåVent,
                     utsattTil = iMorgen,
+                    behandlingId = behandling4.behandlingId,
                     saksbehandlerIdent = saksbehandlerIdent1,
                 )
 
@@ -106,4 +119,5 @@ class OppgaveFristUtgåttJobTest {
                 oppgave.utsattTil() shouldNotBe null
             }
         }
+    }
 }
