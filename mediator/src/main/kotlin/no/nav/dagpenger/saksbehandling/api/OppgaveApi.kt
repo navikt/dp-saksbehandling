@@ -156,6 +156,7 @@ internal fun Route.oppgaveApi(
                 route("notat") {
                     put {
                         val notat = call.receiveText()
+                        sikkerlogger.info { "Lagrer notat: $notat" }
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
