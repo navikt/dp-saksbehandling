@@ -8,12 +8,14 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -88,6 +90,7 @@ import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -366,7 +369,12 @@ class OppgaveApiTest {
                 adGrupper = listOf(Configuration.beslutterADGruppe),
                 navIdent = beslutter.navIdent,
             )
-        val notat = "Dette er et notat"
+
+        val notat: String = "Dette er et notat"
+
+        @Language("JSON")
+        val notatJson = """ {"tekst": "$notat"} """
+
         val sisteEndretTidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
@@ -378,7 +386,8 @@ class OppgaveApiTest {
         withOppgaveApi(oppgaveMediatorMock) {
             client.put("/oppgave/$oppgaveId/notat") {
                 autentisert(token = beslutterToken)
-                setBody(notat)
+                header(HttpHeaders.ContentType, "application/json")
+                setBody(notatJson)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
