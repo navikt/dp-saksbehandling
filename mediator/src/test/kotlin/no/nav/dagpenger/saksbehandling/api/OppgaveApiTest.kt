@@ -25,7 +25,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
@@ -68,6 +67,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
@@ -831,8 +831,6 @@ class OppgaveApiTest {
                                             gyldigTom = testPerson.sikkerhetstiltak.first().gyldigTom,
                                         ),
                                     ),
-                                saker = emptyList(),
-                                oppgaver = emptyList(),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
@@ -987,8 +985,6 @@ class OppgaveApiTest {
                                 mellomnavn = testPerson.mellomnavn,
                                 statsborgerskap = testPerson.statsborgerskap,
                                 sikkerhetstiltak = emptyList(),
-                                saker = emptyList(),
-                                oppgaver = emptyList(),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
                         behandlingType = testOppgave.tilBehandlingTypeDTO(),
@@ -1219,7 +1215,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunen hente ut person via personId`() {
+    fun `Skal kunne hente ut person via personId`() {
         val personId = UUIDv7.ny()
         val person =
             Person(
@@ -1232,9 +1228,9 @@ class OppgaveApiTest {
             mockk<PersonMediator>().also {
                 every { it.hentPerson(personId) } returns person
             }
-        val oppgaveDTOMapperMock =
-            mockk<OppgaveDTOMapper>().also {
-                coEvery { it.lagPersonDTO(person) } returns
+        val forventetPersonOversikt =
+            PersonOversiktDTO(
+                person =
                     PersonDTO(
                         ident = person.ident,
                         id = personId,
@@ -1248,9 +1244,14 @@ class OppgaveApiTest {
                         skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
                         adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                         sikkerhetstiltak = listOf(),
-                        saker = emptyList(),
-                        oppgaver = emptyList(),
-                    )
+                    ),
+                saker = emptyList(),
+                oppgaver = emptyList(),
+            )
+        val oppgaveDTOMapperMock =
+            mockk<OppgaveDTOMapper>().also {
+                coEvery { it.lagPersonOversiktDTO(person) } returns
+                    forventetPersonOversikt
             }
         withOppgaveApi(
             personMediator = personMediatorMock,
@@ -1260,34 +1261,33 @@ class OppgaveApiTest {
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
-                    val personDTO =
+                    val personOversiktDTO =
                         objectMapper.readValue(
                             response.bodyAsText(),
-                            object : TypeReference<PersonDTO>() {},
+                            object : TypeReference<PersonOversiktDTO>() {},
                         )
-                    personDTO.ident shouldBe person.ident
-                    personDTO.id shouldBe personId
+                    personOversiktDTO shouldBe forventetPersonOversikt
                 }
         }
     }
 
     @Test
-    fun `Skal kunen hente ut person via fnr`() {
+    fun `Skal kunne hente ut person via fnr`() {
         val personId = UUIDv7.ny()
         val person =
             Person(
                 id = personId,
                 ident = testPerson.ident,
                 skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
+                adressebeskyttelseGradering = UGRADERT,
             )
         val personMediator =
             mockk<PersonMediator>().also {
                 every { it.hentPerson(testPerson.ident) } returns person
             }
-        val oppgaveDTOMapperMock =
-            mockk<OppgaveDTOMapper>().also {
-                coEvery { it.lagPersonDTO(person) } returns
+        val forventetPersonOversikt =
+            PersonOversiktDTO(
+                person =
                     PersonDTO(
                         ident = person.ident,
                         id = personId,
@@ -1301,9 +1301,14 @@ class OppgaveApiTest {
                         skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
                         adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
                         sikkerhetstiltak = listOf(),
-                        saker = emptyList(),
-                        oppgaver = emptyList(),
-                    )
+                    ),
+                saker = emptyList(),
+                oppgaver = emptyList(),
+            )
+        val oppgaveDTOMapperMock =
+            mockk<OppgaveDTOMapper>().also {
+                coEvery { it.lagPersonOversiktDTO(person) } returns
+                    forventetPersonOversikt
             }
         withOppgaveApi(
             personMediator = personMediator,
@@ -1319,13 +1324,12 @@ class OppgaveApiTest {
             }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
                 "${response.contentType()}" shouldContain "application/json"
-                val personDTO =
+                val personOversiktDTO =
                     objectMapper.readValue(
                         response.bodyAsText(),
-                        object : TypeReference<PersonDTO>() {},
+                        object : TypeReference<PersonOversiktDTO>() {},
                     )
-                personDTO.ident shouldBe person.ident
-                personDTO.id shouldBe personId
+                personOversiktDTO shouldBe forventetPersonOversikt
             }
         }
     }

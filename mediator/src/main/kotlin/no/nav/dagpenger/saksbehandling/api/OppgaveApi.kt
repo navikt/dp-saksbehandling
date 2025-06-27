@@ -71,11 +71,11 @@ internal fun Route.oppgaveApi(
     authenticate("azureAd") {
         route("person") {
             post {
-                val ident: PersonIdentDTO = call.receive<PersonIdentDTO>()
-                sikkerlogger.info { "Søker etter person med ident i request body: $ident" }
-                val person = personMediator.hentPerson(ident.ident)
-                val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
-                call.respond(status = HttpStatusCode.OK, personDTO)
+                val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
+                sikkerlogger.info { "Søker etter person med ident i request body: $personIdentDTO" }
+                val person = personMediator.hentPerson(personIdentDTO.ident)
+                val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person)
+                call.respond(status = HttpStatusCode.OK, personOversiktDTO)
             }
         }
 
@@ -84,8 +84,8 @@ internal fun Route.oppgaveApi(
                 val personId: UUID = call.finnUUID("personId")
                 sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
                 val person = personMediator.hentPerson(personId)
-                val personDTO = oppgaveDTOMapper.lagPersonDTO(person)
-                call.respond(status = HttpStatusCode.OK, personDTO)
+                val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person)
+                call.respond(status = HttpStatusCode.OK, personOversiktDTO)
             }
         }
 

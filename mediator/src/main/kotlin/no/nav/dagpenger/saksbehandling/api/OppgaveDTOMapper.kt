@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.SakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
@@ -78,6 +79,15 @@ internal class OppgaveDTOMapper(
     suspend fun lagPersonDTO(person: Person): PersonDTO {
         val pdlPerson = oppslag.hentPerson(person.ident)
         return lagPersonDTO(person, pdlPerson)
+    }
+
+    suspend fun lagPersonOversiktDTO(person: Person): PersonOversiktDTO {
+        val sakHistorikk = finnSakHistorikk(ident = person.ident)
+        return PersonOversiktDTO(
+            person = lagPersonDTO(person = person),
+            saker = sakHistorikk.saker(),
+            oppgaver = sakHistorikk.oppgaver(),
+        )
     }
 
     suspend fun lagOppgaveDTO(oppgave: Oppgave): OppgaveDTO {
@@ -167,7 +177,6 @@ internal class OppgaveDTOMapper(
         person: Person,
         pdlPersonIntern: PDLPersonIntern,
     ): PersonDTO {
-        val sakHistorikk = finnSakHistorikk(ident = person.ident)
         return PersonDTO(
             ident = person.ident,
             id = person.id,
@@ -192,8 +201,6 @@ internal class OppgaveDTOMapper(
                     AdressebeskyttelseGradering.FORTROLIG -> AdressebeskyttelseGraderingDTO.FORTROLIG
                     AdressebeskyttelseGradering.UGRADERT -> AdressebeskyttelseGraderingDTO.UGRADERT
                 },
-            saker = sakHistorikk.saker(),
-            oppgaver = sakHistorikk.oppgaver(),
         )
     }
 }

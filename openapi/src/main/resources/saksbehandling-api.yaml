@@ -606,7 +606,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: '#/components/schemas/PersonOversikt'
         default:
           description: Feil
           content:
@@ -630,7 +630,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: '#/components/schemas/PersonOversikt'
         default:
           description: Feil
           content:
@@ -795,14 +795,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Sikkerhetstiltak'
-        saker:
-          type: array
-          items:
-            $ref: '#/components/schemas/Sak'
-        oppgaver:
-            type: array
-            items:
-                $ref: '#/components/schemas/OppgaveOversikt'
       required:
         - ident
         - id
@@ -814,6 +806,22 @@ components:
         - skjermesSomEgneAnsatte
         - adressebeskyttelseGradering
         - sikkerhetstiltak
+    
+    PersonOversikt:
+      type: object
+      properties:
+        person:
+          $ref: '#/components/schemas/Person'
+        saker:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sak'
+        oppgaver:
+            type: array
+            items:
+                $ref: '#/components/schemas/OppgaveOversikt'
+      required:
+        - person
         - saker
         - oppgaver
     Sak:
