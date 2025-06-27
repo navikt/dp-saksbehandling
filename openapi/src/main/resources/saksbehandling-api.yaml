@@ -153,9 +153,9 @@ paths:
       requestBody:
         required: true
         content:
-          plain/text:
+          application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/NotatRequest'
 
       responses:
         '200':
@@ -1115,7 +1115,6 @@ components:
         - AVVENT_RAPPORTERINGSFRIST
         - AVVENT_SVAR_PÅ_FORESPØRSEL
         - ANNET
-
     LagreNotatResponse:
       type: object
       properties:
@@ -1125,6 +1124,13 @@ components:
           description: Tidspunkt notat sist ble endret
       required:
         - sistEndretTidspunkt
+    NotatRequest:
+      type: object
+      properties:
+        tekst:
+          type: string
+      required:
+        - tekst
     Notat:
       type: object
       properties:

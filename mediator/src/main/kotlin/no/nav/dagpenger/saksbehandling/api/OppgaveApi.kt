@@ -7,7 +7,6 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.request.path
 import io.ktor.server.request.receive
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -24,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
+import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.SoknadDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
@@ -155,7 +155,7 @@ internal fun Route.oppgaveApi(
                 }
                 route("notat") {
                     put {
-                        val notat = call.receiveText()
+                        val notat = call.receive<NotatRequestDTO>()
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val saksbehandler = applicationCallParser.saksbehandler(call)
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
@@ -163,7 +163,7 @@ internal fun Route.oppgaveApi(
                                 oppgaveMediator.lagreNotat(
                                     NotatHendelse(
                                         oppgaveId = oppgaveId,
-                                        tekst = notat,
+                                        tekst = notat.tekst,
                                         utførtAv = saksbehandler,
                                     ),
                                 )
