@@ -613,6 +613,28 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+  /person/personId:
+    post:
+      summary: Hent personId basert på personIdent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonIdent'
+      responses:
+        '200':
+          description: Vellykket respons med personinformasjon
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonId'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /person/{personId}:
     get:
@@ -1034,6 +1056,15 @@ components:
           pattern: '^[0-9]{11}$'
       required:
         - ident
+        -
+    PersonId:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+      required:
+        - id
 
     Soknad:
       type: object

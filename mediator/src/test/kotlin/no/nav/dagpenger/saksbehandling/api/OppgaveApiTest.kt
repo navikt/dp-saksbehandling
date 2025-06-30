@@ -1344,6 +1344,44 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Skal kunne hente ut personId via personIdent(fnr)`() {
+        val personId = UUIDv7.ny()
+        val person =
+            Person(
+                id = personId,
+                ident = testPerson.ident,
+                skjermesSomEgneAnsatte = false,
+                adressebeskyttelseGradering = UGRADERT,
+            )
+        val personMediator =
+            mockk<PersonMediator>().also {
+                every { it.hentPerson(testPerson.ident) } returns person
+            }
+
+        withOppgaveApi(
+            personMediator = personMediator,
+        ) {
+            client.post("/person/personId") {
+                autentisert()
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"ident": "${testPerson.ident}"}""",
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                "${response.contentType()}" shouldContain "application/json"
+                response.bodyAsText() shouldEqualSpecifiedJson
+                    """
+                    {
+                        "id": "$personId"
+                    }
+                    """.trimIndent()
+            }
+        }
+    }
+
+    @Test
     fun `Skal kaste feil når person ikke finnes`() {
         val personMediator =
             mockk<PersonMediator>().also {

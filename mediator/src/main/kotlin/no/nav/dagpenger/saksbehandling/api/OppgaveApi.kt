@@ -24,6 +24,7 @@ import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
+import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
 import no.nav.dagpenger.saksbehandling.api.models.SoknadDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
@@ -76,6 +77,14 @@ internal fun Route.oppgaveApi(
                 val person = personMediator.hentPerson(personIdentDTO.ident)
                 val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person)
                 call.respond(status = HttpStatusCode.OK, personOversiktDTO)
+            }
+        }
+
+        route("person/personId") {
+            post {
+                val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
+                val personIdDTO = PersonIdDTO(id = personMediator.hentPerson(personIdentDTO.ident).id)
+                call.respond(status = HttpStatusCode.OK, personIdDTO)
             }
         }
 

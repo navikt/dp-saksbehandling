@@ -13,10 +13,6 @@ class PersonMediator(
     private val personRepository: PersonRepository,
     private val oppslag: Oppslag,
 ) {
-    fun finnPerson(ident: String): Person? = personRepository.finnPerson(ident)
-
-    fun finnPerson(id: UUID): Person? = personRepository.finnPerson(id)
-
     fun hentPerson(ident: String): Person = personRepository.hentPerson(ident)
 
     fun hentPerson(id: UUID): Person = personRepository.hentPerson(id)
