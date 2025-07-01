@@ -69,24 +69,20 @@ internal class OppgaveDTOMapper(
         }
     }
 
-    private fun SakHistorikk?.oppgaver(): List<OppgaveOversiktDTO> {
-        return when (this) {
-            null -> emptyList()
-            else -> emptyList()
-        }
-    }
-
     suspend fun lagPersonDTO(person: Person): PersonDTO {
         val pdlPerson = oppslag.hentPerson(person.ident)
         return lagPersonDTO(person, pdlPerson)
     }
 
-    suspend fun lagPersonOversiktDTO(person: Person): PersonOversiktDTO {
+    suspend fun lagPersonOversiktDTO(
+        person: Person,
+        oppgaver: List<OppgaveOversiktDTO>,
+    ): PersonOversiktDTO {
         val sakHistorikk = finnSakHistorikk(ident = person.ident)
         return PersonOversiktDTO(
             person = lagPersonDTO(person = person),
             saker = sakHistorikk.saker(),
-            oppgaver = sakHistorikk.oppgaver(),
+            oppgaver = oppgaver,
         )
     }
 

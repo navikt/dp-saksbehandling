@@ -1259,7 +1259,7 @@ class OppgaveApiTest {
             )
         val oppgaveDTOMapperMock =
             mockk<OppgaveDTOMapper>().also {
-                coEvery { it.lagPersonOversiktDTO(person) } returns
+                coEvery { it.lagPersonOversiktDTO(person, emptyList()) } returns
                     forventetPersonOversikt
             }
         withOppgaveApi(
@@ -1316,7 +1316,7 @@ class OppgaveApiTest {
             )
         val oppgaveDTOMapperMock =
             mockk<OppgaveDTOMapper>().also {
-                coEvery { it.lagPersonOversiktDTO(person) } returns
+                coEvery { it.lagPersonOversiktDTO(person, emptyList()) } returns
                     forventetPersonOversikt
             }
         withOppgaveApi(

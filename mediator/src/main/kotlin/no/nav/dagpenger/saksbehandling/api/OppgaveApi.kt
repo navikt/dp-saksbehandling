@@ -72,10 +72,11 @@ internal fun Route.oppgaveApi(
     authenticate("azureAd") {
         route("person") {
             post {
+                // TODO Fjernes når Sindre har tatt i bruke person/personId
                 val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
                 sikkerlogger.info { "Søker etter person med ident i request body: $personIdentDTO" }
                 val person = personMediator.hentPerson(personIdentDTO.ident)
-                val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person)
+                val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person, emptyList())
                 call.respond(status = HttpStatusCode.OK, personOversiktDTO)
             }
         }
@@ -93,7 +94,10 @@ internal fun Route.oppgaveApi(
                 val personId: UUID = call.finnUUID("personId")
                 sikkerlogger.info { "Søker etter person med UUID i url: $personId" }
                 val person = personMediator.hentPerson(personId)
-                val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person)
+                val oppgaver =
+                    oppgaveMediator.finnOppgaverFor(person.ident)
+                        .tilOppgaveOversiktDTOListe()
+                val personOversiktDTO = oppgaveDTOMapper.lagPersonOversiktDTO(person, oppgaver)
                 call.respond(status = HttpStatusCode.OK, personOversiktDTO)
             }
         }
