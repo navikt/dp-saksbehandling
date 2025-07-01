@@ -21,6 +21,9 @@ class UtsendingAlarmJobTest {
             val igår = idag.minusDays(1)
             val utsendingId1 = UUIDv7.ny()
             val utsendingId2 = UUIDv7.ny()
+            val oppgaveId = UUIDv7.ny()
+            val personId = UUIDv7.ny()
+            val behandlingId = UUIDv7.ny()
             UtsendingAlarmJob(
                 rapidsConnection = testRapid,
                 utsendingAlarmRepository =
@@ -31,11 +34,17 @@ class UtsendingAlarmJobTest {
                                     utsendingId = utsendingId1,
                                     tilstand = "AvventerArkiverbarVersjonAvBrev",
                                     sistEndret = igår,
+                                    oppgaveId = oppgaveId,
+                                    behandlingId = behandlingId,
+                                    personId = personId,
                                 ),
                                 AlertManager.UtsendingIkkeFullført(
                                     utsendingId = utsendingId2,
                                     tilstand = "AvventerDistribuering",
-                                    sistEndret = idag,
+                                    sistEndret = igår,
+                                    oppgaveId = oppgaveId,
+                                    behandlingId = behandlingId,
+                                    personId = personId,
                                 ),
                             )
                     },
@@ -45,15 +54,27 @@ class UtsendingAlarmJobTest {
             testRapid.inspektør.message(0).let { jsonNode ->
                 jsonNode["alertType"].asText() shouldBe "UTSENDING_IKKE_FULLFØRT"
                 jsonNode["@event_name"].asText() shouldBe "saksbehandling_alert"
-                jsonNode["feilMelding"].asText() shouldBe "Utsending ikke fullført for $utsendingId1. Den har vært " +
-                    "i tilstand AvventerArkiverbarVersjonAvBrev siden $igår"
+                jsonNode["feilMelding"].asText() shouldBe
+                    """
+                    Utsending ikke fullført for $utsendingId1.
+                    Den har vært i tilstand AvventerArkiverbarVersjonAvBrev i 24 timer (sist endret: $igår)
+                    OppgaveId: $oppgaveId
+                    BehandlingId: $behandlingId
+                    PersonId: $personId
+                    """.trimIndent()
             }
 
             testRapid.inspektør.message(1).let { jsonNode ->
                 jsonNode["alertType"].asText() shouldBe "UTSENDING_IKKE_FULLFØRT"
                 jsonNode["@event_name"].asText() shouldBe "saksbehandling_alert"
-                jsonNode["feilMelding"].asText() shouldBe "Utsending ikke fullført for $utsendingId2. Den har vært " +
-                    "i tilstand AvventerDistribuering siden $idag"
+                jsonNode["feilMelding"].asText() shouldBe
+                    """
+                    Utsending ikke fullført for $utsendingId2.
+                    Den har vært i tilstand AvventerDistribuering i 24 timer (sist endret: $igår)
+                    OppgaveId: $oppgaveId
+                    BehandlingId: $behandlingId
+                    PersonId: $personId
+                    """.trimIndent()
             }
         }
     }

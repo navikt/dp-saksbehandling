@@ -39,11 +39,19 @@ internal class UtsendingAlarmRepository(private val ds: DataSource) {
                     //language=PostgreSQL
                     statement =
                         """
-                        SELECT  *
-                        FROM    utsending_v1
-                        WHERE   tilstand != :distribuert 
-                        AND     tilstand != :avbrutt
-                        AND     endret_tidspunkt < NOW() - INTERVAL '$intervallAntallTimer hours'
+                        SELECT per.id               AS person_id,
+                               opp.id               AS oppgave_id,
+                               beh.id               AS behandling_id,
+                               uts.id               AS utsending_id,
+                               uts.tilstand         AS utsending_tilstand,
+                               uts.endret_tidspunkt AS utsending_endret_tidspunkt
+                        FROM utsending_v1 uts
+                                 JOIN oppgave_v1 opp ON uts.oppgave_id = opp.id
+                                 JOIN behandling_v1 beh ON opp.behandling_id = beh.id
+                                 JOIN person_v1 per ON beh.person_id = per.id
+                        WHERE uts.tilstand != :distribuert
+                          AND uts.tilstand != :avbrutt
+                          AND uts.endret_tidspunkt < NOW() - INTERVAL '$intervallAntallTimer hours'
                         """.trimIndent(),
                     paramMap =
                         mapOf(
@@ -52,9 +60,12 @@ internal class UtsendingAlarmRepository(private val ds: DataSource) {
                         ),
                 ).map { row ->
                     AlertManager.UtsendingIkkeFullført(
-                        utsendingId = row.uuid("id"),
-                        tilstand = row.string("tilstand"),
-                        sistEndret = row.localDateTime("endret_tidspunkt"),
+                        utsendingId = row.uuid("utsending_id"),
+                        tilstand = row.string("utsending_tilstand"),
+                        sistEndret = row.localDateTime("utsending_endret_tidspunkt"),
+                        oppgaveId = row.uuid("oppgave_id"),
+                        behandlingId = row.uuid("behandling_id"),
+                        personId = row.uuid("person_id"),
                     )
                 }.asList,
             )

@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 object AlertManager {
@@ -15,10 +16,22 @@ object AlertManager {
         val utsendingId: UUID,
         val tilstand: String,
         val sistEndret: LocalDateTime,
+        val oppgaveId: UUID,
+        val behandlingId: UUID,
+        val personId: UUID,
     ) : AlertType {
-        override val feilMelding =
-            "Utsending ikke fullført for $utsendingId. " +
-                "Den har vært i tilstand $tilstand siden $sistEndret"
+        override val feilMelding by lazy {
+            """
+            Utsending ikke fullført for $utsendingId.
+            Den har vært i tilstand $tilstand i ${timerSiden()} timer (sist endret: $sistEndret)
+            OppgaveId: $oppgaveId
+            BehandlingId: $behandlingId
+            PersonId: $personId
+            """.trimIndent()
+        }
+
+        private fun timerSiden(): String = ChronoUnit.HOURS.between(sistEndret, LocalDateTime.now()).toString()
+
         override val type: String = "UTSENDING_IKKE_FULLFØRT"
     }
 
