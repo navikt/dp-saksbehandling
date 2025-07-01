@@ -24,8 +24,8 @@ internal class UtsendingAlarmJob(
             logger.info { "Fant ${it.size} ventende utsendinger: $it" }
         }.forEach {
             rapidsConnection.sendAlertTilRapid(
-                it,
-                it.feilMelding,
+                feilType = it,
+                utvidetFeilMelding = null,
             )
         }
     }

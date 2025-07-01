@@ -59,16 +59,19 @@ object AlertManager {
 
     fun RapidsConnection.sendAlertTilRapid(
         feilType: AlertType,
-        utvidetFeilMelding: String,
+        utvidetFeilMelding: String?,
     ) {
         this.publish(
             JsonMessage.newMessage(
                 eventName = "saksbehandling_alert",
-                mapOf(
+                mutableMapOf(
                     "alertType" to feilType.type,
                     "feilMelding" to feilType.feilMelding,
-                    "utvidetFeilMelding" to utvidetFeilMelding,
-                ),
+                ).also {
+                    utvidetFeilMelding?.let { feilMelding ->
+                        it["utvidetFeilMelding"] = feilMelding
+                    }
+                },
             ).toJson(),
         )
     }
