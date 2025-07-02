@@ -108,7 +108,7 @@ class UtsendingAlarmRepositoryTest {
                         """
                         INSERT INTO utsending_v1
                          ( id, oppgave_id, tilstand, brev, pdf_urn, 
-                           journalpost_id, distribusjon_id, sak_id,
+                           journalpost_id, distribusjon_id, utsending_sak_id,
                            registrert_tidspunkt, endret_tidspunkt)
                         VALUES (:id, :oppgave_id, :tilstand, null, null, null, null, null, :tidspunkt, :tidspunkt);
                         """.trimIndent(),

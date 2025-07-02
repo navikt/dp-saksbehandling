@@ -21,23 +21,23 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
     override fun lagre(utsending: Utsending) {
         sessionOf(ds).use { session ->
             session.transaction { tx ->
-                utsending.sak()?.let { tx.lagreSak(it) }
+                utsending.sak()?.let { tx.lagreUtsendingSak(it) }
                 tx.run(
                     queryOf(
                         //language=PostgreSQL
                         statement =
                             """
                             INSERT INTO utsending_v1
-                                (id, oppgave_id, tilstand, brev, pdf_urn, journalpost_id, distribusjon_id, sak_id, type) 
+                                (id, oppgave_id, tilstand, brev, pdf_urn, journalpost_id, distribusjon_id, utsending_sak_id, type) 
                             VALUES
-                                (:id, :oppgave_id, :tilstand, :brev, :pdf_urn, :journalpost_id, :distribusjon_id, :sak_id, :type) 
+                                (:id, :oppgave_id, :tilstand, :brev, :pdf_urn, :journalpost_id, :distribusjon_id, :utsending_sak_id, :type) 
                             ON CONFLICT (id) DO UPDATE SET 
                                 tilstand = :tilstand,
                                 brev = :brev,
                                 pdf_urn = :pdf_urn,
                                 journalpost_id = :journalpost_id,
                                 distribusjon_id = :distribusjon_id,
-                                sak_id = :sak_id,
+                                utsending_sak_id = :utsending_sak_id,
                                 type = :type
                             """.trimIndent(),
                         paramMap =
@@ -49,7 +49,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                                 "pdf_urn" to utsending.pdfUrn()?.toString(),
                                 "journalpost_id" to utsending.journalpostId(),
                                 "distribusjon_id" to utsending.distribusjonId(),
-                                "sak_id" to utsending.sak()?.id,
+                                "utsending_sak_id" to utsending.sak()?.id,
                                 "type" to utsending.type.name,
                             ),
                     ).asUpdate,
@@ -128,14 +128,14 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                                 uts.journalpost_id,
                                 uts.distribusjon_id,
                                 uts.type,
-                                sak.id as sak_id, 
-                                sak.kontekst,
+                                usak.id as sak_id, 
+                                usak.kontekst,
                                 per.ident
                         FROM utsending_v1 uts
                         JOIN oppgave_v1 opp on uts.oppgave_id = opp.id
                         JOIN behandling_v1 beh on opp.behandling_id = beh.id
                         JOIN person_v1 per on beh.person_id = per.id
-                        LEFT JOIN sak_v1 sak on uts.sak_id = sak.id
+                        LEFT JOIN utsending_sak_v1 usak on uts.utsending_sak_id = usak.id
                         WHERE uts.oppgave_id = :oppgave_id
                         """.trimIndent(),
                     paramMap = mapOf("oppgave_id" to oppgaveId),
@@ -192,13 +192,13 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
     }
 }
 
-private fun Session.lagreSak(utsendingSak: UtsendingSak) {
+private fun Session.lagreUtsendingSak(utsendingSak: UtsendingSak) {
     this.run(
         queryOf(
             //language=PostgreSQL
             statement =
                 """
-                INSERT INTO sak_v1
+                INSERT INTO utsending_sak_v1
                     (id, kontekst) 
                 VALUES
                     (:id, :kontekst) 
