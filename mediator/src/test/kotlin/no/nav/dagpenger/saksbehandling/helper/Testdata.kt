@@ -16,7 +16,8 @@ internal fun vedtakFattetHendelse(
     ident: String,
     søknadId: UUID,
     behandlingId: UUID,
-    sakId: Int,
+    utfall: Boolean = true,
+    sakId: Int = 123,
     automatiskBehandlet: Boolean = false,
 ): String {
     //language=JSON
@@ -27,6 +28,9 @@ internal fun vedtakFattetHendelse(
         "id": "$søknadId",
         "type": "Søknad"
       },
+       "fastsatt": {
+         "utfall": $utfall
+       },
       "behandlingId": "$behandlingId",
       "ident": "$ident",
       "fagsakId": $sakId,

@@ -93,7 +93,7 @@ class UtsendingMediator(
         rapidsConnection.publish(key = utsending.ident, message = message)
     }
 
-    fun hubba(vedtakInnvilgetHendelse: VedtakInnvilgetHendelse) {
+    fun behandleUtsendingForVedtakFattetIDpSak(vedtakInnvilgetHendelse: VedtakInnvilgetHendelse) {
         val sakId = sakRepository.hentSakIdForBehandlingId(vedtakInnvilgetHendelse.behandlingId).toString()
         val utsendingSak =
             UtsendingSak(

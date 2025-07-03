@@ -123,12 +123,12 @@ data class Utsending(
                 "behandlingId" to startUtsendingHendelse.behandlingId.toString(),
             ) {
                 logger.info { "Mottok start_utsending hendelse" }
-                utsending.nyTilstand(AvventerArkiverbarVersjonAvBrev)
-                utsending.utsendingSak = startUtsendingHendelse.utsendingSak
                 startUtsendingHendelse.brev?.let {
                     logger.info { "Brev er sendt med hendelsen, setter det på utsending" }
                     utsending.brev = it
                 }
+                utsending.utsendingSak = startUtsendingHendelse.utsendingSak
+                utsending.nyTilstand(AvventerArkiverbarVersjonAvBrev)
             }
         }
     }

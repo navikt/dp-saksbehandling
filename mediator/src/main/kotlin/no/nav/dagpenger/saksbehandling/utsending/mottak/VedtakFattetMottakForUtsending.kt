@@ -23,7 +23,7 @@ internal class VedtakFattetMottakForUtsending(
             precondition {
                 it.requireValue("@event_name", "vedtak_fattet")
                 it.requireValue("behandletHendelse.type", "Søknad")
-                it.requireKey("fastsatt.utfall")
+                it.requireKey("fastsatt")
             }
             validate {
                 it.requireKey("ident", "behandlingId")
@@ -41,10 +41,12 @@ internal class VedtakFattetMottakForUtsending(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        if (packet["fastsatt"]["utfall"].asBoolean()) {
+        val utfall = packet["fastsatt"]["utfall"].asBoolean()
+
+        if (utfall) {
             val behandlingId = packet["behandlingId"].asUUID()
             val ident = packet["ident"].asText()
-            utsendingMediator.hubba(
+            utsendingMediator.behandleUtsendingForVedtakFattetIDpSak(
                 VedtakInnvilgetHendelse(
                     behandlingId = behandlingId,
                     ident = ident,

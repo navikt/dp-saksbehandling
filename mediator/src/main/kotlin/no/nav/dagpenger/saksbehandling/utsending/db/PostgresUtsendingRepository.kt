@@ -97,7 +97,51 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
     }
 
     override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? {
-        TODO("Not yet implemented")
+        sessionOf(ds).use { session ->
+            return session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT  uts.id as utsending_id, 
+                                uts.oppgave_id, 
+                                uts.tilstand, 
+                                uts.brev, 
+                                uts.pdf_urn, 
+                                uts.journalpost_id,
+                                uts.distribusjon_id,
+                                uts.type,
+                                usak.id as sak_id, 
+                                usak.kontekst,
+                                per.ident
+                        FROM utsending_v1 uts
+                        JOIN oppgave_v1 opp on uts.oppgave_id = opp.id
+                        JOIN behandling_v1 beh on opp.behandling_id = beh.id
+                        JOIN person_v1 per on beh.person_id = per.id
+                        LEFT JOIN utsending_sak_v1 usak on uts.utsending_sak_id = usak.id
+                        WHERE beh.id = :behandling_id
+                        """.trimIndent(),
+                    paramMap = mapOf("behandling_id" to behandlingId),
+                ).map { row ->
+                    val tilstand = row.rehydrerUtsendingTilstand("tilstand")
+                    val utsendingSak: UtsendingSak? =
+                        row.stringOrNull("sak_id")?.let { UtsendingSak(row.string("sak_id"), row.string("kontekst")) }
+
+                    Utsending.rehydrer(
+                        id = row.uuid("utsending_id"),
+                        oppgaveId = row.uuid("oppgave_id"),
+                        ident = row.string("ident"),
+                        tilstand = tilstand,
+                        brev = row.stringOrNull("brev"),
+                        pdfUrn = row.stringOrNull("pdf_urn"),
+                        journalpostId = row.stringOrNull("journalpost_id"),
+                        distribusjonId = row.stringOrNull("distribusjon_id"),
+                        type = UtsendingType.valueOf(row.string("type")),
+                        utsendingSak = utsendingSak,
+                    )
+                }.asSingle,
+            )
+        }
     }
 
     override fun utsendingFinnesForOppgave(oppgaveId: UUID): Boolean {

@@ -8,6 +8,7 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.withBehandling
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.lagUtsending
@@ -55,6 +56,29 @@ class PostgresUtsendingRepositoryTest {
             shouldThrow<UtsendingIkkeFunnet> {
                 repository.hent(UUID.randomUUID())
             }
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente utsending for behandlingId`() {
+        val testPerson = DBTestHelper.testPerson
+
+        withBehandling(behandling = behandling, person = testPerson) { ds ->
+            val repository = PostgresUtsendingRepository(ds)
+            val oppgave = lagreOppgave(ds, behandling.behandlingId, testPerson.ident)
+            val utsending =
+                Utsending(
+                    oppgaveId = oppgave.oppgaveId,
+                    brev = null,
+                    ident = testPerson.ident,
+                )
+
+            repository.lagre(utsending)
+
+            val finnUtsendingForBehandlingId =
+                repository.finnUtsendingForBehandlingId(behandlingId = behandling.behandlingId)
+            finnUtsendingForBehandlingId shouldBe utsending
+            repository.finnUtsendingForBehandlingId(behandlingId = UUID.randomUUID()) shouldBe null
         }
     }
 
