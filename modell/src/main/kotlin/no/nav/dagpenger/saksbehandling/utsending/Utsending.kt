@@ -28,13 +28,14 @@ data class Utsending(
     val ident: String,
     val type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
     private var utsendingSak: UtsendingSak? = null,
-    private val brev: String,
+    private var brev: String,
     private var pdfUrn: URN? = null,
     private var journalpostId: String? = null,
     private var distribusjonId: String? = null,
     private var tilstand: Tilstand = VenterPåVedtak,
 ) {
     fun brev(): String = brev
+
 
     fun pdfUrn(): URN? = pdfUrn
 
@@ -120,6 +121,10 @@ data class Utsending(
                 logger.info { "Mottok start_utsending hendelse" }
                 utsending.tilstand = AvventerArkiverbarVersjonAvBrev
                 utsending.utsendingSak = startUtsendingHendelse.utsendingSak
+                startUtsendingHendelse.brev?.let {
+                    logger.info { "Brev er sendt med hendelsen, setter det på utsending" }
+                    utsending.brev = it
+                }
             }
         }
     }

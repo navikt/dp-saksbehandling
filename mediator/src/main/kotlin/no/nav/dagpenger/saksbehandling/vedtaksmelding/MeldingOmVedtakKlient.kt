@@ -47,6 +47,7 @@ class MeldingOmVedtakKlient(
         behandlingId: UUID,
         saksbehandlerToken: String,
         behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+        sakId: String? = null
     ): Result<String> {
         val meldingOmVedtakDataDTO =
             MeldingOmVedtakDataDTO(
@@ -56,6 +57,7 @@ class MeldingOmVedtakKlient(
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
                 behandlingstype = behandlingType.name,
+                sakId = sakId,
             )
         return kotlin.runCatching {
             httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
@@ -80,4 +82,5 @@ private data class MeldingOmVedtakDataDTO(
     val mellomnavn: String? = null,
     val beslutter: BehandlerDTO? = null,
     val behandlingstype: String,
+    val sakId: String? = null,
 )

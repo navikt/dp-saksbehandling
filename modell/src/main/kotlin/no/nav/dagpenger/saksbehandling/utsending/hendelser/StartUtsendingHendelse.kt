@@ -8,4 +8,5 @@ data class StartUtsendingHendelse(
     val utsendingSak: UtsendingSak,
     val behandlingId: UUID,
     val ident: String,
+    val brev: String ? = null,
 ) : UtsendingHendelse

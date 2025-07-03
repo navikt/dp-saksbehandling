@@ -50,7 +50,7 @@ class UtsendingMediatorTest {
 
             val utsendingRepository = PostgresUtsendingRepository(ds)
             val utsendingMediator =
-                UtsendingMediator(repository = utsendingRepository).also {
+                UtsendingMediator(utsendingRepository = utsendingRepository).also {
                     it.setRapidsConnection(rapid)
                 }
             UtsendingMottak(

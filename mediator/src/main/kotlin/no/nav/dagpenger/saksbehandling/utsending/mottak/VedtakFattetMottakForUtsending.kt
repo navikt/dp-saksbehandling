@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.utsending.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.be
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -11,8 +12,10 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtakInnvilgetHendelse
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -44,8 +47,17 @@ internal class VedtakFattetMottakForUtsending(
         meterRegistry: MeterRegistry,
     ) {
         if (packet["fastsatt"]["utfall"].asBoolean() ) {
-            utsendingMediator.
+            val behandlingId = packet["behandlingId"].asUUID()
+            val ident = packet["ident"].asText(),
+            utsendingMediator.hubba(
+                VedtakInnvilgetHendelse(
+                    behandlingId = behandlingId,
+                    ident = ident
+                )
+            )
+
         }
+
     }
 }
 

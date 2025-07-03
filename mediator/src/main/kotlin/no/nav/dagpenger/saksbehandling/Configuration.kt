@@ -68,9 +68,11 @@ object Configuration {
             ?: throw RuntimeException("Failed to get access token")
     }
 
+    val dpMeldingOmVedtakScope by lazy { properties[Key("DP_MELDING_OM_VEDTAK_API_SCOPE", stringType)] }
     val pdlUrl: String = properties[Key("PDL_API_URL", stringType)]
     val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
     val pdlTokenProvider = { clientCredentialsTokenProvider(pdlApiScope) }
+    val meldingOmVedtakMaskinTokenProvider  = { clientCredentialsTokenProvider(dpMeldingOmVedtakScope)}
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
     val beslutterADGruppe by lazy { properties[Key("GRUPPE_BESLUTTER", stringType)] }
@@ -120,9 +122,8 @@ object Configuration {
 
     val dpMeldingOmVedtakBaseUrl = "http://dp-melding-om-vedtak"
     val dpMeldingOmVedtakOboExchanger: (String) -> String by lazy {
-        val scope = properties[Key("DP_MELDING_OM_VEDTAK_API_SCOPE", stringType)]
         { token: String ->
-            val accessToken = azureAdClient.onBehalfOf(token, scope).access_token
+            val accessToken = azureAdClient.onBehalfOf(token, dpMeldingOmVedtakScope).access_token
             requireNotNull(accessToken) { "Failed to get access token" }
             accessToken
         }
