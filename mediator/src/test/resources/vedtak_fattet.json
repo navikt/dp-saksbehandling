@@ -1,8 +1,9 @@
 {
   "@event_name": "vedtak_fattet",
   "behandlingId": "0195b37b-aaef-7cca-b397-3ef004deaf9f",
+  "basertPåBehandlinger": [],
   "fagsakId": "15351633",
-  "søknadId": "d4a68748-8436-4f88-822f-91a78f0e4872",
+  "automatisk": true,
   "ident": "11111111111",
   "vedtakstidspunkt": "2025-03-20T13:16:24.241890598",
   "virkningsdato": "2025-03-20",
@@ -1275,8 +1276,6 @@
       }
     }
   ],
-  "basertPåBehandlinger": [],
-  "automatisk": true,
   "gjenstående": {},
   "@id": "5efff58a-304c-43d9-954c-524d4c6a91af",
   "@opprettet": "2025-03-20T13:16:24.242697158",

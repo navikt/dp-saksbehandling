@@ -604,13 +604,13 @@ class PostgresOppgaveRepositoryTest {
             this.leggTilOppgave(
                 tilstand = KlarTilBehandling,
                 opprettet = opprettetNå.minusDays(11),
-                saksBehandlerIdent = saksbehandler.navIdent,
+                saksbehandlerIdent = saksbehandler.navIdent,
             )
 
             this.leggTilOppgave(
                 tilstand = FerdigBehandlet,
                 opprettet = opprettetNå.minusDays(12),
-                saksBehandlerIdent = testSaksbehandler.navIdent,
+                saksbehandlerIdent = testSaksbehandler.navIdent,
                 tilstandslogg = tilstandsloggUnderBehandling(),
             )
 
@@ -1317,22 +1317,22 @@ class PostgresOppgaveRepositoryTest {
             this.leggTilOppgave(
                 tilstand = UnderBehandling,
                 opprettet = enUkeSiden,
-                saksBehandlerIdent = saksbehandler1,
+                saksbehandlerIdent = saksbehandler1,
                 emneknagger = setOf(INNVILGELSE.visningsnavn),
             )
             this.leggTilOppgave(
                 tilstand = UnderBehandling,
-                saksBehandlerIdent = saksbehandler2,
+                saksbehandlerIdent = saksbehandler2,
                 emneknagger = setOf(AVSLAG_MINSTEINNTEKT.visningsnavn),
             )
             this.leggTilOppgave(
                 tilstand = FerdigBehandlet,
-                saksBehandlerIdent = saksbehandler2,
+                saksbehandlerIdent = saksbehandler2,
                 emneknagger = setOf(INNVILGELSE.visningsnavn),
             )
             this.leggTilOppgave(
                 tilstand = UnderBehandling,
-                saksBehandlerIdent = null,
+                saksbehandlerIdent = null,
                 emneknagger = setOf(INNVILGELSE.visningsnavn),
             )
 
@@ -1454,7 +1454,7 @@ class PostgresOppgaveRepositoryTest {
                 this.leggTilOppgave(
                     tilstand = UnderBehandling,
                     opprettet = enUkeSiden,
-                    saksBehandlerIdent = saksbehandler.navIdent,
+                    saksbehandlerIdent = saksbehandler.navIdent,
                 )
             this.leggTilOppgave(tilstand = KlarTilBehandling)
             this.leggTilOppgave(

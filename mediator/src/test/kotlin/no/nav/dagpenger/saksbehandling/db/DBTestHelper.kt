@@ -146,7 +146,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             opprettet: LocalDateTime = LocalDateTime.now(),
             type: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
-            saksBehandlerIdent: String? = null,
+            saksbehandlerIdent: String? = null,
         ): Oppgave {
             this.lagre(person)
 
@@ -177,7 +177,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 tilstand = tilstand,
                 emneknagger = emneknagger,
                 tilstandslogg = tilstandslogg,
-                behandlerIdent = saksBehandlerIdent,
+                behandlerIdent = saksbehandlerIdent,
                 behandlingId = behandling.behandlingId,
                 behandlingType = type,
                 person = person,

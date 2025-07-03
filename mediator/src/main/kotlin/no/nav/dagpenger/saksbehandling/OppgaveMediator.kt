@@ -392,7 +392,7 @@ class OppgaveMediator(
 
     fun ferdigstillOppgave(
         oppgaveId: UUID,
-        saksBehandler: Saksbehandler,
+        saksbehandler: Saksbehandler,
         saksbehandlerToken: String,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
@@ -406,11 +406,11 @@ class OppgaveMediator(
                             GodkjentBehandlingHendelse(
                                 oppgaveId = oppgaveId,
                                 meldingOmVedtak = null,
-                                utførtAv = saksBehandler,
+                                utførtAv = saksbehandler,
                             ),
                     )
 
-                val utsendingID =
+                val utsendingId =
                     utsendingMediator.opprettUtsending(
                         oppgaveId = oppgave.oppgaveId,
                         brev = null,
@@ -426,10 +426,10 @@ class OppgaveMediator(
                         ).onSuccess {
                             oppgaveRepository.lagre(oppgave)
                         }.onFailure {
-                            utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
+                            utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
                                 when (rowsDeleted) {
-                                    1 -> logger.info { "Slettet utsending med id $utsendingID" }
-                                    else -> logger.error { "Fant ikke utsending med id $utsendingID" }
+                                    1 -> logger.info { "Slettet utsending med id $utsendingId" }
+                                    else -> logger.error { "Fant ikke utsending med id $utsendingId" }
                                 }
                             }
                             throw it
@@ -444,10 +444,10 @@ class OppgaveMediator(
                         ).onSuccess {
                             oppgaveRepository.lagre(oppgave)
                         }.onFailure {
-                            utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
+                            utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
                                 when (rowsDeleted) {
-                                    1 -> logger.info { "Slettet utsending med id $utsendingID" }
-                                    else -> logger.error { "Fant ikke utsending med id $utsendingID" }
+                                    1 -> logger.info { "Slettet utsending med id $utsendingId" }
+                                    else -> logger.error { "Fant ikke utsending med id $utsendingId" }
                                 }
                             }
                             throw it

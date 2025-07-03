@@ -36,7 +36,7 @@ class UtsendingMediatorTest {
     private val rapid = TestRapid()
 
     @Test
-    fun `livssyklus for en utsending uten brev ved opprettelse med vedtak i dp-sak`() {
+    fun `livssyklus for en utsending uten brev ved opprettelse når vedtak fattes i dp-sak`() {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
@@ -202,7 +202,7 @@ class UtsendingMediatorTest {
     }
 
     @Test
-    fun `livssyklus for en utsending uten brev ved opprettelse med vedtak i Arena`() {
+    fun `livssyklus for en utsending uten brev ved opprettelse når vedtak fattes i Arena`() {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),

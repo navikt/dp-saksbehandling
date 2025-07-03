@@ -285,7 +285,7 @@ internal fun Route.oppgaveApi(
                             val saksbehandlerToken = call.request.jwt()
                             oppgaveMediator.ferdigstillOppgave(
                                 oppgaveId = oppgaveId,
-                                saksBehandler = saksbehandler,
+                                saksbehandler = saksbehandler,
                                 saksbehandlerToken = saksbehandlerToken,
                             )
                             call.respond(HttpStatusCode.NoContent)

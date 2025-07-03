@@ -139,18 +139,18 @@ OppgaveMediatorTest {
                 )
         }
 
-    private val behandlingIDKreverIkkeTotrinnskontroll = UUIDv7.ny()
+    private val behandlingIdKreverIkkeTotrinnskontroll = UUIDv7.ny()
 
     private val behandlingKlientMock =
         mockk<BehandlingKlient>().also {
             every { it.godkjenn(any(), any(), any()) } returns Result.success(Unit)
-            coEvery { it.kreverTotrinnskontroll(behandlingIDKreverIkkeTotrinnskontroll, any()) } returns
+            coEvery { it.kreverTotrinnskontroll(behandlingIdKreverIkkeTotrinnskontroll, any()) } returns
                 Result.success(
                     false,
                 )
             coEvery {
                 it.kreverTotrinnskontroll(
-                    not(behandlingIDKreverIkkeTotrinnskontroll),
+                    not(behandlingIdKreverIkkeTotrinnskontroll),
                     any(),
                 )
             } returns Result.success(true)
@@ -481,7 +481,7 @@ OppgaveMediatorTest {
             runBlocking {
                 oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
-                    saksBehandler = saksbehandler,
+                    saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
                 )
             }
@@ -546,7 +546,7 @@ OppgaveMediatorTest {
 
             oppgaveMediator.ferdigstillOppgave(
                 oppgaveId = oppgave.oppgaveId,
-                saksBehandler = saksbehandler,
+                saksbehandler = saksbehandler,
                 saksbehandlerToken = "token",
             )
 
@@ -611,7 +611,7 @@ OppgaveMediatorTest {
             shouldThrow<BehandlingException> {
                 oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
-                    saksBehandler = saksbehandler,
+                    saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
                 )
             }
@@ -896,7 +896,7 @@ OppgaveMediatorTest {
 
             oppgaveMediator.ferdigstillOppgave(
                 oppgaveId = oppgave.oppgaveId,
-                saksBehandler = beslutter,
+                saksbehandler = beslutter,
                 saksbehandlerToken = "token",
             )
         }
