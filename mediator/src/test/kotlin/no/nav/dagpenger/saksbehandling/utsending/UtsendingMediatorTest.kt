@@ -53,6 +53,7 @@ class UtsendingMediatorTest {
             val oppgaveId = oppgave.oppgaveId
             val behandlingId = oppgave.behandlingId
             val sakId = DBTestHelper.sakId.toString()
+            val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
 
             val utsendingRepository = PostgresUtsendingRepository(ds)
@@ -113,7 +114,8 @@ class UtsendingMediatorTest {
             }
 
             utsending = utsendingRepository.hent(oppgaveId)
-            utsending.sak() shouldBe UtsendingSak(sakId, "Dagpenger")
+
+            utsending.sak() shouldBe utsendingSak
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
 
             rapid.inspektør.size shouldBe 1
@@ -132,8 +134,8 @@ class UtsendingMediatorTest {
                    "oppgaveId": "$oppgaveId",
                    "ident": "${oppgave.personIdent()}",
                    "sak": {
-                      "id": "${UtsendingSak(sakId, "Dagpenger").id}",
-                      "kontekst": "${UtsendingSak(sakId, "Dagpenger").kontekst}"
+                      "id": "${utsendingSak.id}",
+                      "kontekst": "${utsendingSak.kontekst}"
                   }
                 }
                 """.trimIndent()
