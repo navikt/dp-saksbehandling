@@ -27,7 +27,7 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 class UtsendingMediator(
     private val utsendingRepository: UtsendingRepository,
     private val sakRepository: SakRepository,
-    private val brevProdusent: BrevProdusent
+    private val brevProdusent: BrevProdusent,
 ) : UtsendingRepository by utsendingRepository {
     private lateinit var rapidsConnection: RapidsConnection
 
@@ -37,7 +37,7 @@ class UtsendingMediator(
 
     fun opprettUtsending(
         oppgaveId: UUID,
-        brev: String,
+        brev: String?,
         ident: String,
         type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
     ): UUID {
@@ -95,28 +95,32 @@ class UtsendingMediator(
 
     fun hubba(vedtakInnvilgetHendelse: VedtakInnvilgetHendelse) {
         val sakId = sakRepository.hentSakIdForBehandlingId(vedtakInnvilgetHendelse.behandlingId).toString()
-        val utsendingSak = UtsendingSak(
-            id = sakId,
-            kontekst = "Dagpenger",
-        )
-
-        val brev = runBlocking {
-            brevProdusent.lagBrev(
-                ident = vedtakInnvilgetHendelse.ident,
-                behandlingId = vedtakInnvilgetHendelse.behandlingId,
-                sakId = sakId
+        val utsendingSak =
+            UtsendingSak(
+                id = sakId,
+                kontekst = "Dagpenger",
             )
-        }
+
+        val brev =
+            runBlocking {
+                brevProdusent.lagBrev(
+                    ident = vedtakInnvilgetHendelse.ident,
+                    behandlingId = vedtakInnvilgetHendelse.behandlingId,
+                    sakId = sakId,
+                )
+            }
+
         utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakInnvilgetHendelse.behandlingId)
             ?.let { utsending ->
                 utsending.startUtsending(
-                    startUtsendingHendelse = StartUtsendingHendelse(
-                        oppgaveId = vedtakInnvilgetHendelse.oppgaveId,
-                        utsendingSak = utsendingSak,
-                        behandlingId = vedtakInnvilgetHendelse.behandlingId,
-                        ident = vedtakInnvilgetHendelse.ident,
-                        brev = brev
-                    )
+                    startUtsendingHendelse =
+                        StartUtsendingHendelse(
+                            oppgaveId = vedtakInnvilgetHendelse.oppgaveId,
+                            utsendingSak = utsendingSak,
+                            behandlingId = vedtakInnvilgetHendelse.behandlingId,
+                            ident = vedtakInnvilgetHendelse.ident,
+                            brev = brev,
+                        ),
                 )
                 lagreOgPubliserBehov(utsending = utsending)
             }
@@ -143,7 +147,8 @@ class BrevProdusent(
                         oppslag.hentBehandler(saksbehandlerIdent)
                     } ?: throw RuntimeException("Fant ikke saksbehandler for oppgave ${oppgave.oppgaveId}")
                 }
-            val beslutter = async(Dispatchers.IO) {
+            val beslutter =
+                async(Dispatchers.IO) {
                     oppgave.sisteBeslutter()?.let { beslutterIdent ->
                         oppslag.hentBehandler(beslutterIdent)
                     }
@@ -152,26 +157,12 @@ class BrevProdusent(
             meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
                 person = person.await(),
                 saksbehandler = saksbehandler.await(),
-                beslutter =  beslutter.await(),
+                beslutter = beslutter.await(),
                 behandlingId = behandlingId,
                 saksbehandlerToken = tokenProvider.invoke(),
                 behandlingType = oppgave.behandlingType,
-                sakId =  sakId,
+                sakId = sakId,
             ).getOrThrow()
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

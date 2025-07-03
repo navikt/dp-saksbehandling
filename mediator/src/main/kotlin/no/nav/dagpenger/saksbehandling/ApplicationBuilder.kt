@@ -48,6 +48,7 @@ import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
+import no.nav.dagpenger.saksbehandling.utsending.BrevProdusent
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -59,10 +60,12 @@ import no.nav.helse.rapids_rivers.RapidApplication
 import java.util.Timer
 
 internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsConnection.StatusListener {
-    private val personRepository = PostgresPersonRepository(dataSource)
-    private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
-    private val utsendingRepository = PostgresUtsendingRepository(dataSource)
     private val klageRepository = PostgresKlageRepository(dataSource)
+    private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
+    private val personRepository = PostgresPersonRepository(dataSource)
+    private val sakRepository = PostgresRepository(dataSource = dataSource)
+    private val utsendingRepository = PostgresUtsendingRepository(dataSource)
+
     private val skjermingKlient =
         SkjermingHttpKlient(
             skjermingApiUrl = Configuration.skjermingApiUrl,
@@ -85,7 +88,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             tokenProvider = Configuration.dpBehandlingOboExchanger,
         )
 
-    private val utsendingMediator = UtsendingMediator(utsendingRepository)
     private val skjermingConsumer = SkjermingConsumer(personRepository)
     private val adressebeskyttelseConsumer = AdressebeskyttelseConsumer(personRepository, pdlKlient)
     private val saksbehandlerOppslag =
@@ -110,13 +112,27 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val sakMediator =
         SakMediator(
             personMediator = personMediator,
-            sakRepository = PostgresRepository(dataSource = dataSource),
+            sakRepository = sakRepository,
         )
 
     private val meldingOmVedtakKlient =
         MeldingOmVedtakKlient(
             dpMeldingOmVedtakUrl = Configuration.dpMeldingOmVedtakBaseUrl,
             tokenProvider = Configuration.dpMeldingOmVedtakOboExchanger,
+        )
+
+    private val brevProdusent =
+        BrevProdusent(
+            oppslag = oppslag,
+            meldingOmVedtakKlient = meldingOmVedtakKlient,
+            oppgaveRepository = oppgaveRepository,
+            tokenProvider = Configuration.meldingOmVedtakMaskinTokenProvider,
+        )
+    private val utsendingMediator =
+        UtsendingMediator(
+            utsendingRepository = utsendingRepository,
+            sakRepository = sakRepository,
+            brevProdusent = brevProdusent,
         )
     private val oppgaveMediator =
         OppgaveMediator(

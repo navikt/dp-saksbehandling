@@ -5,6 +5,6 @@ import java.util.UUID
 
 data class GodkjentBehandlingHendelse(
     val oppgaveId: UUID,
-    val meldingOmVedtak: String,
+    val meldingOmVedtak: String? = null,
     override val utførtAv: Saksbehandler,
 ) : Hendelse(utførtAv)

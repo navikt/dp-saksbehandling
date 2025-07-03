@@ -72,7 +72,7 @@ object Configuration {
     val pdlUrl: String = properties[Key("PDL_API_URL", stringType)]
     val pdlApiScope: String = properties[Key("PDL_API_SCOPE", stringType)]
     val pdlTokenProvider = { clientCredentialsTokenProvider(pdlApiScope) }
-    val meldingOmVedtakMaskinTokenProvider  = { clientCredentialsTokenProvider(dpMeldingOmVedtakScope)}
+    val meldingOmVedtakMaskinTokenProvider = { clientCredentialsTokenProvider(dpMeldingOmVedtakScope) }
 
     val saksbehandlerADGruppe by lazy { properties[Key("GRUPPE_SAKSBEHANDLER", stringType)] }
     val beslutterADGruppe by lazy { properties[Key("GRUPPE_BESLUTTER", stringType)] }

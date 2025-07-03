@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.utsending
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -50,7 +51,11 @@ class UtsendingMediatorTest {
 
             val utsendingRepository = PostgresUtsendingRepository(ds)
             val utsendingMediator =
-                UtsendingMediator(utsendingRepository = utsendingRepository).also {
+                UtsendingMediator(
+                    utsendingRepository = utsendingRepository,
+                    sakRepository = mockk(),
+                    brevProdusent = mockk(),
+                ).also {
                     it.setRapidsConnection(rapid)
                 }
             UtsendingMottak(

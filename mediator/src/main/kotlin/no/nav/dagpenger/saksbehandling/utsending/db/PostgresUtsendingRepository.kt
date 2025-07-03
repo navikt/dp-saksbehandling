@@ -96,6 +96,10 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
+    override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? {
+        TODO("Not yet implemented")
+    }
+
     override fun utsendingFinnesForOppgave(oppgaveId: UUID): Boolean {
         return sessionOf(ds).use { session ->
             session.run(
@@ -149,7 +153,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         oppgaveId = row.uuid("oppgave_id"),
                         ident = row.string("ident"),
                         tilstand = tilstand,
-                        brev = row.string("brev"),
+                        brev = row.stringOrNull("brev"),
                         pdfUrn = row.stringOrNull("pdf_urn"),
                         journalpostId = row.stringOrNull("journalpost_id"),
                         distribusjonId = row.stringOrNull("distribusjon_id"),

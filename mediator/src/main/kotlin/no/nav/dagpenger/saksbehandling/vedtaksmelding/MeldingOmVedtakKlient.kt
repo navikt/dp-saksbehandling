@@ -47,7 +47,7 @@ class MeldingOmVedtakKlient(
         behandlingId: UUID,
         saksbehandlerToken: String,
         behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
-        sakId: String? = null
+        sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
             MeldingOmVedtakDataDTO(

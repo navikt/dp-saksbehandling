@@ -1,9 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
@@ -393,70 +390,31 @@ class OppgaveMediator(
         }
     }
 
-    suspend fun ferdigstillOppgave(
+    fun ferdigstillOppgave(
         oppgaveId: UUID,
         saksBehandler: Saksbehandler,
         saksbehandlerToken: String,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
-            coroutineScope {
-                val person = async(Dispatchers.IO) { oppslag.hentPerson(oppgave.personIdent()) }
-                val saksbehandler =
-                    async(Dispatchers.IO) {
-                        oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
-                            oppslag.hentBehandler(saksbehandlerIdent)
-                        } ?: throw RuntimeException("Fant ikke saksbehandler for oppgave ${oppgave.oppgaveId}")
-                    }
-                val beslutter =
-                    async(Dispatchers.IO) {
-                        oppgave.sisteBeslutter()?.let { beslutterIdent ->
-                            oppslag.hentBehandler(beslutterIdent)
-                        }
-                    }
-
-                meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
-                    person = person.await(),
-                    saksbehandler = saksbehandler.await(),
-                    beslutter = beslutter.await(),
-                    behandlingId = oppgave.behandlingId,
-                    saksbehandlerToken,
-                ).onSuccess { html ->
-                    ferdigstillOppgave(
-                        godkjentBehandlingHendelse =
-                            GodkjentBehandlingHendelse(
-                                oppgaveId = oppgaveId,
-                                meldingOmVedtak = html,
-                                utførtAv = saksBehandler,
-                            ),
-                        saksbehandlerToken = saksbehandlerToken,
-                    )
-                }.onFailure {
-                    throw it
-                }
-            }
-        }
-    }
-
-    fun ferdigstillOppgave(
-        godkjentBehandlingHendelse: GodkjentBehandlingHendelse,
-        saksbehandlerToken: String,
-        oppgaveTilFerdigstilling: Oppgave? = null,
-    ) {
-        oppgaveTilFerdigstilling ?: oppgaveRepository.hentOppgave(godkjentBehandlingHendelse.oppgaveId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandlingId.toString(),
             ) {
-                logger.info {
-                    "Mottatt GodkjentBehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
-                }
-                val ferdigstillBehandling = oppgave.ferdigstill(godkjentBehandlingHendelse)
+                val ferdigstillBehandling =
+                    oppgave.ferdigstill(
+                        godkjentBehandlingHendelse =
+                            GodkjentBehandlingHendelse(
+                                oppgaveId = oppgaveId,
+                                meldingOmVedtak = null,
+                                utførtAv = saksBehandler,
+                            ),
+                    )
 
                 val utsendingID =
                     utsendingMediator.opprettUtsending(
-                        oppgave.oppgaveId,
-                        godkjentBehandlingHendelse.meldingOmVedtak,
-                        oppgave.personIdent(),
+                        oppgaveId = oppgave.oppgaveId,
+                        brev = null,
+                        ident = oppgave.personIdent(),
                     )
 
                 when (ferdigstillBehandling) {
@@ -467,12 +425,7 @@ class OppgaveMediator(
                             saksbehandlerToken = saksbehandlerToken,
                         ).onSuccess {
                             oppgaveRepository.lagre(oppgave)
-                            logger.info {
-                                "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                            }
                         }.onFailure {
-                            val feil = "Feil ved godkjenning av behandling: ${it.message}"
-                            logger.error { feil }
                             utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
                                 when (rowsDeleted) {
                                     1 -> logger.info { "Slettet utsending med id $utsendingID" }
@@ -490,12 +443,7 @@ class OppgaveMediator(
                             saksbehandlerToken = saksbehandlerToken,
                         ).onSuccess {
                             oppgaveRepository.lagre(oppgave)
-                            logger.info {
-                                "Behandlet GodkjentBehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                            }
                         }.onFailure {
-                            val feil = "Feil ved beslutting av behandling: ${it.message}"
-                            logger.error { feil }
                             utsendingMediator.slettUtsending(utsendingID).also { rowsDeleted ->
                                 when (rowsDeleted) {
                                     1 -> logger.info { "Slettet utsending med id $utsendingID" }

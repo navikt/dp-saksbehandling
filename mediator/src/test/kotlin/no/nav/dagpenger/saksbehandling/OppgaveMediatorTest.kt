@@ -51,7 +51,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -493,57 +492,6 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Livssyklus for søknadsbehandling som feiler ved laging av html`() {
-        val behandlingId = UUIDv7.ny()
-        val meldingOmVedtakKlientMock =
-            mockk<MeldingOmVedtakKlient>().also {
-                coEvery {
-                    it.lagOgHentMeldingOmVedtak(
-                        person = any(),
-                        saksbehandler = any(),
-                        beslutter = any(),
-                        behandlingId = behandlingId,
-                        saksbehandlerToken = any(),
-                    )
-                } returns Result.failure(MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak("Feil ved henting/lagring av melding om vedtak"))
-            }
-
-        settOppOppgaveMediator(movKlient = meldingOmVedtakKlientMock) { datasource, oppgaveMediator ->
-
-            val oppgave =
-                datasource.lagTestoppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
-                    behandlingId = behandlingId,
-                )
-
-            oppgaveMediator.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
-                    utførtAv = saksbehandler,
-                ),
-            )
-
-            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
-            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
-
-            runBlocking {
-                shouldThrow<MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak> {
-                    oppgaveMediator.ferdigstillOppgave(
-                        oppgaveId = oppgave.oppgaveId,
-                        saksBehandler = saksbehandler,
-                        saksbehandlerToken = "token",
-                    )
-                }
-            }
-
-            val oppgaveUnderBehandling = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            oppgaveUnderBehandling.tilstand().type shouldBe UNDER_BEHANDLING
-        }
-    }
-
-    @Test
     fun `Livssyklus for oppgave ferdigstilles med melding om vedtak fra saksbehandler`() {
         val behandlingId = UUIDv7.ny()
         val søknadId = UUIDv7.ny()
@@ -561,7 +509,12 @@ OppgaveMediatorTest {
         settOppOppgaveMediator(
             behandlingKlient = behandlingClientMock,
         ) { datasource, oppgaveMediator ->
-            val utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource))
+            val utsendingMediator =
+                UtsendingMediator(
+                    utsendingRepository = PostgresUtsendingRepository(datasource),
+                    sakRepository = mockk(),
+                    brevProdusent = mockk(),
+                )
 
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -591,14 +544,10 @@ OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
-            val meldingOmVedtak = "<H1>Hei</H1><p>Her er et brev</p>"
             oppgaveMediator.ferdigstillOppgave(
-                GodkjentBehandlingHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    meldingOmVedtak = meldingOmVedtak,
-                    utførtAv = saksbehandler,
-                ),
-                "token",
+                oppgaveId = oppgave.oppgaveId,
+                saksBehandler = saksbehandler,
+                saksbehandlerToken = "token",
             )
 
             verify(exactly = 1) {
@@ -609,7 +558,6 @@ OppgaveMediatorTest {
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
 
             val utsending = utsendingMediator.hent(ferdigbehandletOppgave.oppgaveId)
-            utsending.brev() shouldBe meldingOmVedtak
             utsending.oppgaveId shouldBe ferdigbehandletOppgave.oppgaveId
             utsending.ident shouldBe ferdigbehandletOppgave.personIdent()
         }
@@ -660,16 +608,11 @@ OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
 
-            val meldingOmVedtak = "<H1>Hei</H1><p>Her er et brev</p>"
-
             shouldThrow<BehandlingException> {
                 oppgaveMediator.ferdigstillOppgave(
-                    GodkjentBehandlingHendelse(
-                        oppgaveId = oppgave.oppgaveId,
-                        meldingOmVedtak = meldingOmVedtak,
-                        utførtAv = saksbehandler,
-                    ),
-                    "token",
+                    oppgaveId = oppgave.oppgaveId,
+                    saksBehandler = saksbehandler,
+                    saksbehandlerToken = "token",
                 )
             }
 
@@ -680,7 +623,11 @@ OppgaveMediatorTest {
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe UNDER_BEHANDLING
 
-            UtsendingMediator(PostgresUtsendingRepository(datasource)).also { utsendingMediator ->
+            UtsendingMediator(
+                utsendingRepository = PostgresUtsendingRepository(datasource),
+                sakRepository = mockk(),
+                brevProdusent = mockk(),
+            ).also { utsendingMediator ->
                 utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
             }
         }
@@ -740,7 +687,11 @@ OppgaveMediatorTest {
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
 
-            UtsendingMediator(PostgresUtsendingRepository(datasource))
+            UtsendingMediator(
+                utsendingRepository = PostgresUtsendingRepository(datasource),
+                sakRepository = mockk(),
+                brevProdusent = mockk(),
+            )
                 .finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
         }
     }
@@ -944,12 +895,9 @@ OppgaveMediatorTest {
             )
 
             oppgaveMediator.ferdigstillOppgave(
-                GodkjentBehandlingHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    meldingOmVedtak = "test",
-                    utførtAv = beslutter,
-                ),
-                "testtoken",
+                oppgaveId = oppgave.oppgaveId,
+                saksBehandler = beslutter,
+                saksbehandlerToken = "token",
             )
         }
     }
@@ -1074,7 +1022,12 @@ OppgaveMediatorTest {
                     oppgaveRepository = PostgresOppgaveRepository(datasource),
                     behandlingKlient = behandlingKlient,
                     oppslag = oppslagMock,
-                    utsendingMediator = UtsendingMediator(PostgresUtsendingRepository(datasource)),
+                    utsendingMediator =
+                        UtsendingMediator(
+                            utsendingRepository = PostgresUtsendingRepository(datasource),
+                            sakRepository = mockk(),
+                            brevProdusent = mockk(),
+                        ),
                     meldingOmVedtakKlient = movKlient,
                     sakMediator = sakMediator,
                 ).also {

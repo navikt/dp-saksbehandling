@@ -28,14 +28,13 @@ data class Utsending(
     val ident: String,
     val type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
     private var utsendingSak: UtsendingSak? = null,
-    private var brev: String,
+    private var brev: String?,
     private var pdfUrn: URN? = null,
     private var journalpostId: String? = null,
     private var distribusjonId: String? = null,
     private var tilstand: Tilstand = VenterPåVedtak,
 ) {
-    fun brev(): String = brev
-
+    fun brev(): String? = brev
 
     fun pdfUrn(): URN? = pdfUrn
 
@@ -67,7 +66,7 @@ data class Utsending(
             oppgaveId: UUID,
             ident: String,
             tilstand: Tilstand,
-            brev: String,
+            brev: String?,
             pdfUrn: String?,
             journalpostId: String?,
             distribusjonId: String?,
@@ -107,6 +106,11 @@ data class Utsending(
         counter.labelValues("avslagMinsteinntekt").inc()
     }
 
+    private fun nyTilstand(nyTilstand: Tilstand) {
+        nyTilstand.entering(this)
+        tilstand = nyTilstand
+    }
+
     object VenterPåVedtak : Tilstand {
         override val type = Tilstand.Type.VenterPåVedtak
 
@@ -119,7 +123,7 @@ data class Utsending(
                 "behandlingId" to startUtsendingHendelse.behandlingId.toString(),
             ) {
                 logger.info { "Mottok start_utsending hendelse" }
-                utsending.tilstand = AvventerArkiverbarVersjonAvBrev
+                utsending.nyTilstand(AvventerArkiverbarVersjonAvBrev)
                 utsending.utsendingSak = startUtsendingHendelse.utsendingSak
                 startUtsendingHendelse.brev?.let {
                     logger.info { "Brev er sendt med hendelsen, setter det på utsending" }
@@ -132,13 +136,24 @@ data class Utsending(
     object AvventerArkiverbarVersjonAvBrev : Tilstand {
         override val type = Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 
-        override fun behov(utsending: Utsending) =
-            ArkiverbartBrevBehov(
+        override fun entering(utsending: Utsending) {
+            require(utsending.brev != null) {
+                "Brev må være satt før vi kan vente på arkiverbar versjon av brev"
+            }
+        }
+
+        override fun behov(utsending: Utsending): ArkiverbartBrevBehov {
+            val brev = utsending.brev
+            require(brev != null) {
+                "Brev må være satt før vi kan sende ut behov om arkiverbar versjon av brev"
+            }
+            return ArkiverbartBrevBehov(
                 oppgaveId = utsending.oppgaveId,
-                html = utsending.brev,
+                html = brev,
                 ident = utsending.ident,
                 utsendingSak = utsending.utsendingSak ?: throw IllegalStateException("Sak mangler"),
             )
+        }
 
         override fun mottaUrnTilPdfAvBrev(
             utsending: Utsending,
@@ -146,7 +161,7 @@ data class Utsending(
         ) {
             withLoggingContext("oppgaveId" to arkiverbartBrevHendelse.oppgaveId.toString()) {
                 logger.info { "Mottok arkiverbart dokument med urn: ${arkiverbartBrevHendelse.pdfUrn}" }
-                utsending.tilstand = AvventerJournalføring
+                utsending.nyTilstand(AvventerJournalføring)
             }
         }
     }
@@ -197,7 +212,7 @@ data class Utsending(
             ) {
                 logger.info { "Mottok journalført kvittering" }
                 utsending.journalpostId = journalførtHendelse.journalpostId
-                utsending.tilstand = AvventerDistribuering
+                utsending.nyTilstand(AvventerDistribuering)
             }
         }
     }
@@ -225,7 +240,7 @@ data class Utsending(
                 }
                 // TODO: Sanity check av noe slag
                 utsending.distribusjonId = distribuertHendelse.distribusjonId
-                utsending.tilstand = Distribuert
+                utsending.nyTilstand(Distribuert)
             }
         }
     }
@@ -239,6 +254,8 @@ data class Utsending(
     }
 
     interface Tilstand {
+        fun entering(utsending: Utsending) {}
+
         fun behov(utsending: Utsending): Behov = IngenBehov
 
         fun mottaUrnTilPdfAvBrev(
