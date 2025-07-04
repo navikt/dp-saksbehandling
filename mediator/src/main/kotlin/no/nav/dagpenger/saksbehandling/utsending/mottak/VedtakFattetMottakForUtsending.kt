@@ -61,6 +61,7 @@ internal class VedtakFattetMottakForUtsending(
                     automatiskBehandlet = automatiskBehandlet,
                 ),
             )
+            // TODO publiser event om at vedtak er fattet og skal tilhøre sak i dp-sak
         }
     }
 
