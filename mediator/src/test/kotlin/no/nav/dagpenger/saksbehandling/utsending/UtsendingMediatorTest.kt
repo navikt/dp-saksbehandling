@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
@@ -18,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.lagPerson
+import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
@@ -214,18 +216,25 @@ class UtsendingMediatorTest {
 
             val oppgaveId = oppgave.oppgaveId
             val behandlingId = oppgave.behandlingId
+            val utsendingSak = UtsendingSak("123", "Arena")
+            val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
 
             val utsendingRepository = PostgresUtsendingRepository(ds)
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
-                    brevProdusent = mockk(),
+                    brevProdusent =
+                        mockk<UtsendingMediator.BrevProdusent>().also {
+                            coEvery { it.lagBrev(person.ident, behandlingId, utsendingSak.id) } returns htmlBrev
+                        },
                 ).also {
                     it.setRapidsConnection(rapid)
                 }
-            UtsendingMottak(
+
+            ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
+                oppgaveRepository = PostgresOppgaveRepository(ds),
             )
 
             UtsendingBehovLøsningMottak(
@@ -233,7 +242,6 @@ class UtsendingMediatorTest {
                 rapidsConnection = rapid,
             )
 
-            val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
             utsendingMediator.opprettUtsending(
                 oppgaveId = oppgaveId,
                 brev = null,
@@ -246,7 +254,6 @@ class UtsendingMediatorTest {
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe null
 
-            val utsendingSak = UtsendingSak("sakId", "fagsystem")
             rapid.sendTestMessage(
                 //language=JSON
                 """
@@ -261,6 +268,27 @@ class UtsendingMediatorTest {
                     }
                 }
                 """,
+            )
+
+            //language=JSON
+            rapid.sendTestMessage(
+                message =
+                    """
+                    {
+                      "@event_name": "arenasink_vedtak_opprettet",
+                      "søknadId": "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
+                      "sakId": ${utsendingSak.id},
+                      "rettighet": "Dagpenger",
+                      "vedtakId": 0,
+                      "vedtakstatus": "IVERK",
+                      "utfall": false,
+                      "kilde": {
+                        "id": "$behandlingId",
+                        "system": "dp-behandling"
+                      }
+                    }
+                              
+                    """.trimIndent(),
             )
 
             utsending = utsendingRepository.hent(oppgaveId)

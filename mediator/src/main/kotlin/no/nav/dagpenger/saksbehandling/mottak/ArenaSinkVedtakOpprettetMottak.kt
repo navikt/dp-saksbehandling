@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
@@ -45,6 +46,29 @@ class ArenaSinkVedtakOpprettetMottak(
 
     init {
         River(rapidsConnection).apply(rapidFilter).register(this)
+    }
+
+    override fun onError(
+        problems: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
+        super.onError(problems, context, metadata)
+    }
+
+    override fun onPreconditionError(
+        error: MessageProblems,
+        context: MessageContext,
+        metadata: MessageMetadata,
+    ) {
+        super.onPreconditionError(error, context, metadata)
+    }
+
+    override fun onSevere(
+        error: MessageProblems.MessageException,
+        context: MessageContext,
+    ) {
+        super.onSevere(error, context)
     }
 
     override fun onPacket(
