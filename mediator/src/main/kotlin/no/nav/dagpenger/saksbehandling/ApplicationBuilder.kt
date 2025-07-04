@@ -137,10 +137,8 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val oppgaveMediator =
         OppgaveMediator(
             oppgaveRepository = oppgaveRepository,
-            oppslag = oppslag,
             behandlingKlient = behandlingKlient,
             utsendingMediator = utsendingMediator,
-            meldingOmVedtakKlient = meldingOmVedtakKlient,
             sakMediator = sakMediator,
         )
     private val klageMediator =

@@ -38,10 +38,8 @@ class OppgaveFristUtgåttJobTest {
             val oppgaveMediator =
                 OppgaveMediator(
                     oppgaveRepository = repo,
-                    oppslag = mockk(),
                     behandlingKlient = mockk(),
                     utsendingMediator = mockk(),
-                    meldingOmVedtakKlient = mockk(),
                     sakMediator = mockk(),
                 )
             val saksbehandlerIdent1 = "ident 1"

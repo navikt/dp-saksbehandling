@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.OPPRETTET
-import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKlient
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
@@ -36,7 +35,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -47,8 +45,6 @@ class OppgaveMediator(
     private val oppgaveRepository: OppgaveRepository,
     private val behandlingKlient: BehandlingKlient,
     private val utsendingMediator: UtsendingMediator,
-    private val oppslag: Oppslag,
-    private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
     private val sakMediator: SakMediator,
 ) {
     private lateinit var rapidsConnection: RapidsConnection

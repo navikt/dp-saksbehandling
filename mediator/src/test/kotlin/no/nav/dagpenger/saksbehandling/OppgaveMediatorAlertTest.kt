@@ -26,10 +26,8 @@ class OppgaveMediatorAlertTest {
                 mockk<OppgaveRepository>().also {
                     every { it.finnOppgaveFor(behandlingId = any()) } returns null
                 },
-            oppslag = mockk(),
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
-            meldingOmVedtakKlient = mockk(),
             sakMediator =
                 mockk<SakMediator>().also {
                     every { it.finnSakHistorikkk(any()) } returns null
@@ -74,10 +72,8 @@ class OppgaveMediatorAlertTest {
                         )
                     every { it.lagre(any()) } just runs
                 },
-            oppslag = mockk(),
             behandlingKlient = mockk(),
             utsendingMediator = mockk(),
-            meldingOmVedtakKlient = mockk(),
             sakMediator =
                 mockk<SakMediator>().also {
                     every { it.finnSakHistorikkk(any()) } returns null

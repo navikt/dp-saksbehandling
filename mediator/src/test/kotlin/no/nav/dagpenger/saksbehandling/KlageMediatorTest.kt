@@ -789,8 +789,6 @@ class KlageMediatorTest {
                     oppgaveRepository = PostgresOppgaveRepository(dataSource),
                     behandlingKlient = mockk(),
                     utsendingMediator = utsendingMediator,
-                    oppslag = oppslagMock,
-                    meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     sakMediator = sakMediator,
                 )
             val klageMediator =
