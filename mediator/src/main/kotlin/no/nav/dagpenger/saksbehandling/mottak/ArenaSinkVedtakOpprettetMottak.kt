@@ -4,12 +4,10 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageProblems
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -48,29 +46,6 @@ class ArenaSinkVedtakOpprettetMottak(
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
-    override fun onError(
-        problems: MessageProblems,
-        context: MessageContext,
-        metadata: MessageMetadata,
-    ) {
-        super.onError(problems, context, metadata)
-    }
-
-    override fun onPreconditionError(
-        error: MessageProblems,
-        context: MessageContext,
-        metadata: MessageMetadata,
-    ) {
-        super.onPreconditionError(error, context, metadata)
-    }
-
-    override fun onSevere(
-        error: MessageProblems.MessageException,
-        context: MessageContext,
-    ) {
-        super.onSevere(error, context)
-    }
-
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
@@ -103,25 +78,8 @@ class ArenaSinkVedtakOpprettetMottak(
                     ),
                 )
             } else {
-                logg.info("Vedtakstatus fra Arena er $vedtakstatus. Sender ikke start_utsending event for behandlingen")
+                logg.info("Vedtakstatus fra Arena er $vedtakstatus. Gjor ingenting.")
             }
         }
     }
-
-    private fun lagStartUtsendingEvent(
-        oppgave: Oppgave,
-        sakId: String?,
-    ) = JsonMessage.newMessage(
-        mapOf(
-            "@event_name" to "start_utsending",
-            "behandlingId" to oppgave.behandlingId,
-            "oppgaveId" to oppgave.oppgaveId,
-            "ident" to oppgave.personIdent(),
-            "sak" to
-                mapOf(
-                    "id" to sakId,
-                    "kontekst" to "Arena",
-                ),
-        ),
-    ).toJson()
 }

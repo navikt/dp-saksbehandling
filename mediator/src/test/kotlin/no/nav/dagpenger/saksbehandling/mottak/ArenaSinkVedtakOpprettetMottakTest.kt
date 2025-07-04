@@ -3,7 +3,6 @@ package no.nav.dagpenger.saksbehandling.mottak
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -58,7 +57,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
     }
 
     @Test
-    fun `Ikke send start_utsending event når vedtakstatus != IVERK`() {
+    fun `Skal ikke gjøre noe dersom vedtak ikke iverksetttes i Arena`() {
         ArenaSinkVedtakOpprettetMottak(
             testRapid,
             oppgaveRepository,
@@ -72,20 +71,6 @@ class ArenaSinkVedtakOpprettetMottakTest {
             oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
         }
 
-        testRapid.inspektør.size shouldBe 0
-    }
-
-    @Test
-    fun `Skal ikke sende ut start utsending events når utsending ikke finnes `() {
-        ArenaSinkVedtakOpprettetMottak(
-            testRapid,
-            oppgaveRepository,
-            mockk<UtsendingMediator>().also { coEvery { it.utsendingFinnesForOppgave(testOppgave.oppgaveId) } returns false },
-        )
-        testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
-        verify(exactly = 1) {
-            oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
-        }
         testRapid.inspektør.size shouldBe 0
     }
 

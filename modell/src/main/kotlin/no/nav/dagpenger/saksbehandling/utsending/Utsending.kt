@@ -122,7 +122,7 @@ data class Utsending(
                 "oppgaveId" to startUtsendingHendelse.oppgaveId.toString(),
                 "behandlingId" to startUtsendingHendelse.behandlingId.toString(),
             ) {
-                logger.info { "Mottok start_utsending hendelse" }
+                logger.info { "Mottok StartUtsendingHendelse hendelse" }
                 startUtsendingHendelse.brev?.let {
                     logger.info { "Brev er sendt med hendelsen, setter det på utsending" }
                     utsending.brev = it

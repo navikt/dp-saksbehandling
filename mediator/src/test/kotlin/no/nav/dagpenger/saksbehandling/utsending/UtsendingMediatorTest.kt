@@ -27,8 +27,8 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
-import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.VedtakFattetMottakForUtsending
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -254,22 +254,6 @@ class UtsendingMediatorTest {
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe null
 
-            rapid.sendTestMessage(
-                //language=JSON
-                """
-                {
-                    "@event_name": "start_utsending",
-                    "oppgaveId": "$oppgaveId",
-                    "behandlingId": "$behandlingId",
-                    "ident": "12345678901",
-                    "sak": {
-                        "id": "${utsendingSak.id}",
-                        "kontekst": "${utsendingSak.kontekst}"
-                    }
-                }
-                """,
-            )
-
             //language=JSON
             rapid.sendTestMessage(
                 message =
@@ -405,10 +389,6 @@ class UtsendingMediatorTest {
                 ).also {
                     it.setRapidsConnection(rapid)
                 }
-            UtsendingMottak(
-                rapidsConnection = rapid,
-                utsendingMediator = utsendingMediator,
-            )
 
             UtsendingBehovLøsningMottak(
                 utsendingMediator = utsendingMediator,
@@ -429,20 +409,16 @@ class UtsendingMediatorTest {
             utsending.brev() shouldBe htmlBrev
 
             val utsendingSak = UtsendingSak("sakId", "fagsystem")
-            rapid.sendTestMessage(
-                //language=JSON
-                """
-                {
-                    "@event_name": "start_utsending",
-                    "oppgaveId": "$oppgaveId",
-                    "behandlingId": "$behandlingId",
-                    "ident": "12345678901",
-                    "sak": {
-                        "id": "${utsendingSak.id}",
-                        "kontekst": "${utsendingSak.kontekst}"
-                    }
-                }
-                """,
+
+            utsendingMediator.mottaStartUtsending(
+                startUtsendingHendelse =
+                    StartUtsendingHendelse(
+                        oppgaveId = oppgaveId,
+                        utsendingSak = utsendingSak,
+                        behandlingId = behandlingId,
+                        ident = oppgave.personIdent(),
+                        brev = null,
+                    ),
             )
 
             utsending = utsendingRepository.hent(oppgaveId)

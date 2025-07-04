@@ -53,7 +53,6 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
-import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingMottak
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.helse.rapids_rivers.RapidApplication
 import java.util.Timer
@@ -198,7 +197,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
             VedtakFattetMottak(rapidsConnection, oppgaveMediator)
             ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
-            UtsendingMottak(rapidsConnection, utsendingMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapidsConnection,
