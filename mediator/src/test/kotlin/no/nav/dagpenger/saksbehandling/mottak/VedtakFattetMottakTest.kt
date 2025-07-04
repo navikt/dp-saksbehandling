@@ -19,7 +19,6 @@ import java.util.UUID
 
 internal class VedtakFattetMottakTest {
     private val testIdent = "12345678901"
-    private val søknadId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
     private val utsendingSak = UtsendingSak("12342", "Arena")
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
@@ -52,7 +51,6 @@ internal class VedtakFattetMottakTest {
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
-                søknadId = søknadId,
                 behandlingId = behandlingId,
                 automatiskBehandlet = true,
                 sakId = utsendingSak.id.toInt(),
@@ -62,7 +60,6 @@ internal class VedtakFattetMottakTest {
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = behandlingId,
-                søknadId = søknadId,
                 ident = testIdent,
                 automatiskBehandlet = true,
                 sak = utsendingSak,
@@ -78,7 +75,6 @@ internal class VedtakFattetMottakTest {
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
-                søknadId = søknadId,
                 behandlingId = behandlingId,
                 automatiskBehandlet = false,
                 sakId = utsendingSak.id.toInt(),
@@ -88,7 +84,6 @@ internal class VedtakFattetMottakTest {
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = behandlingId,
-                søknadId = søknadId,
                 ident = testIdent,
                 automatiskBehandlet = false,
                 sak = utsendingSak,

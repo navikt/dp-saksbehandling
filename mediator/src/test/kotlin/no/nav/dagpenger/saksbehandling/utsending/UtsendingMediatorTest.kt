@@ -99,7 +99,6 @@ class UtsendingMediatorTest {
             val message =
                 vedtakFattetHendelse(
                     ident = person.ident,
-                    søknadId = UUIDv7.ny(),
                     behandlingId = behandling.behandlingId,
                     utfall = true,
                 )

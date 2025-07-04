@@ -11,7 +11,6 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -43,15 +42,13 @@ internal class VedtakFattetMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val søknadId = packet.søknadId()
         val behandlingId = packet["behandlingId"].asUUID()
 
-        withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+        withLoggingContext("behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak_fattet hendelse" }
             oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
-                    søknadId = søknadId,
                     ident = packet["ident"].asText(),
                     sak = packet.sak(),
                     automatiskBehandlet = packet["automatisk"].asBoolean(),
@@ -62,5 +59,3 @@ internal class VedtakFattetMottak(
 }
 
 private fun JsonMessage.sak(): UtsendingSak = UtsendingSak(id = this["fagsakId"].asText())
-
-private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()

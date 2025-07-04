@@ -45,7 +45,6 @@ internal class VedtakFattetMottakForUtsending(
     ) {
         if (vedtakSkalTilhøreDpSak(packet)) {
             val behandlingId = packet["behandlingId"].asUUID()
-            val søknadId = packet["behandletHendelse"]["id"].asUUID()
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
             val automatiskBehandlet = packet["automatisk"].asBoolean()
@@ -53,7 +52,6 @@ internal class VedtakFattetMottakForUtsending(
             utsendingMediator.startUtsendingForVedtakFattet(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
-                    søknadId = søknadId,
                     ident = ident,
                     sak =
                         UtsendingSak(

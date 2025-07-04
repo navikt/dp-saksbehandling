@@ -7,9 +7,12 @@ import no.nav.dagpenger.saksbehandling.Behandler
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
+import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -113,5 +116,35 @@ class HendelseJsonSerDerTest {
     fun `should deserialize hendelse to json`() {
         """{}""".tilHendelse<TomHendelse>() shouldBe TomHendelse
         søknadsbehandlingOpprettetHendelseJson.tilHendelse<SøknadsbehandlingOpprettetHendelse>() shouldBe søknadsbehandlingOpprettetHendelse
+    }
+
+    @Test
+    fun `skal ignorere ukjente felter ved deserialisering av Json`() {
+        //language=JSON
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = UUIDv7.ny(),
+                ident = "12345678901",
+                sak =
+                    UtsendingSak(
+                        id = UUIDv7.ny().toString(),
+                    ),
+                automatiskBehandlet = false,
+            )
+        val json =
+            """
+            {
+                "behandlingId": "${vedtakFattetHendelse.behandlingId}",
+                "ident": "${vedtakFattetHendelse.ident}",
+                "sak": {
+                    "id": "${vedtakFattetHendelse.sak.id}",
+                    "kontekst": "Arena"
+                },
+                "automatiskBehandlet": ${vedtakFattetHendelse.automatiskBehandlet},
+                "ukjentFelt": "Dette feltet skal ignoreres"
+            }
+            """.trimIndent()
+
+        json.tilHendelse<VedtakFattetHendelse>() shouldBe vedtakFattetHendelse
     }
 }

@@ -9,7 +9,9 @@ import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 
 private val logg = KotlinLogging.logger {}
@@ -65,12 +67,17 @@ class ArenaSinkVedtakOpprettetMottak(
             logg.info("Mottok arenasink_vedtak_opprettet hendelse")
             sikkerlogg.info("Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}")
             if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
-                if (utsendingMediator.utsendingFinnesForOppgave(oppgave.oppgaveId)) {
-                    context.publish(key = ident, message = lagStartUtsendingEvent(oppgave, sakId))
-                    logg.info("Publiserte start_utsending hendelse")
-                } else {
-                    logg.info("Fant ingen utsending for behandlingen. Sender ikke start_utsending event")
-                }
+                utsendingMediator.startUtsendingForVedtakFattet(
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        ident = ident,
+                        sak =
+                            UtsendingSak(
+                                id = sakId,
+                                kontekst = "Arena",
+                            ),
+                    ),
+                )
             } else {
                 logg.info("Vedtakstatus fra Arena er $vedtakstatus. Sender ikke start_utsending event for behandlingen")
             }

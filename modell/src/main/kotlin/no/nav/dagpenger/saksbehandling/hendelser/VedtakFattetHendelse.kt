@@ -6,7 +6,6 @@ import java.util.UUID
 
 data class VedtakFattetHendelse(
     val behandlingId: UUID,
-    val søknadId: UUID,
     val ident: String,
     val sak: UtsendingSak,
     val automatiskBehandlet: Boolean? = null,

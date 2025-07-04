@@ -2,13 +2,18 @@ package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.lagOppgave
+import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
 
@@ -26,12 +31,27 @@ class ArenaSinkVedtakOpprettetMottakTest {
         val utsendingRepository =
             mockk<UtsendingMediator>().also {
                 every { it.utsendingFinnesForOppgave(oppgaveId = testOppgave.oppgaveId) } returns true
+                every { it.finnUtsendingForBehandlingId(behandlingId = testOppgave.behandlingId) } returns Utsending
+                every {
+                    it.startUtsendingForVedtakFattet(
+                        VedtakFattetHendelse(
+                            behandlingId = testOppgave.behandlingId,
+                            ident = testOppgave.person.ident,
+                            sak =
+                                UtsendingSak(
+                                    id = sakId,
+                                    kontekst = "Arena",
+                                ),
+                            automatiskBehandlet = null,
+                        ),
+                    )
+                } just Runs
             }
 
         ArenaSinkVedtakOpprettetMottak(
-            testRapid,
-            oppgaveRepository,
-            utsendingRepository,
+            rapidsConnection = testRapid,
+            oppgaveRepository = oppgaveRepository,
+            utsendingMediator = utsendingRepository,
         )
 
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)

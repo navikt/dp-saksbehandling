@@ -14,7 +14,6 @@ import javax.sql.DataSource
 
 internal fun vedtakFattetHendelse(
     ident: String,
-    søknadId: UUID,
     behandlingId: UUID,
     utfall: Boolean = true,
     sakId: Int = 123,
@@ -24,9 +23,9 @@ internal fun vedtakFattetHendelse(
     return """{
       "@event_name": "vedtak_fattet",
       "behandletHendelse": {
-        "datatype": "UUID",
-        "id": "$søknadId",
-        "type": "Søknad"
+          "type": "Søknad",
+          "id": "${UUIDv7.ny()}",
+          "datatype": "UUID"
       },
        "fastsatt": {
          "utfall": $utfall
