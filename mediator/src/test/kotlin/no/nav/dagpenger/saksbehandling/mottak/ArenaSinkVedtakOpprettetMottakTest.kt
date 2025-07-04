@@ -13,7 +13,6 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.lagOppgave
-import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
 
@@ -28,45 +27,34 @@ class ArenaSinkVedtakOpprettetMottakTest {
 
     @Test
     fun `Skal ta imot arenasink_vedtak_opprettet hendelser`() {
-        val utsendingRepository =
+        val forventetVedtakFattetNendelse =
+            VedtakFattetHendelse(
+                behandlingId = testOppgave.behandlingId,
+                ident = testOppgave.person.ident,
+                sak =
+                    UtsendingSak(
+                        id = sakId,
+                        kontekst = "Arena",
+                    ),
+                automatiskBehandlet = null,
+            )
+        val mockUtsendingMediator =
             mockk<UtsendingMediator>().also {
                 every { it.utsendingFinnesForOppgave(oppgaveId = testOppgave.oppgaveId) } returns true
-                every { it.finnUtsendingForBehandlingId(behandlingId = testOppgave.behandlingId) } returns Utsending
-                every {
-                    it.startUtsendingForVedtakFattet(
-                        VedtakFattetHendelse(
-                            behandlingId = testOppgave.behandlingId,
-                            ident = testOppgave.person.ident,
-                            sak =
-                                UtsendingSak(
-                                    id = sakId,
-                                    kontekst = "Arena",
-                                ),
-                            automatiskBehandlet = null,
-                        ),
-                    )
-                } just Runs
+                every { it.startUtsendingForVedtakFattet(forventetVedtakFattetNendelse) } just Runs
             }
 
         ArenaSinkVedtakOpprettetMottak(
             rapidsConnection = testRapid,
             oppgaveRepository = oppgaveRepository,
-            utsendingMediator = utsendingRepository,
+            utsendingMediator = mockUtsendingMediator,
         )
 
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
         verify(exactly = 1) {
             oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
+            mockUtsendingMediator.startUtsendingForVedtakFattet(forventetVedtakFattetNendelse)
         }
-
-        val startUtsendingEvent = testRapid.inspektør.message(0)
-
-        startUtsendingEvent["@event_name"].asText() shouldBe "start_utsending"
-        startUtsendingEvent["behandlingId"].asUUID() shouldBe testOppgave.behandlingId
-        startUtsendingEvent["oppgaveId"].asUUID() shouldBe testOppgave.oppgaveId
-        startUtsendingEvent["ident"].asText() shouldBe testOppgave.personIdent()
-        startUtsendingEvent["sak"]["id"].asText() shouldBe sakId
-        startUtsendingEvent["sak"]["kontekst"].asText() shouldBe "Arena"
     }
 
     @Test
