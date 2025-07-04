@@ -7,16 +7,18 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
+import no.nav.dagpenger.saksbehandling.UtsendingSak
+import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtakInnvilgetHendelse
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
 internal class VedtakFattetMottakForUtsending(
     rapidsConnection: RapidsConnection,
     private val utsendingMediator: UtsendingMediator,
+    private val sakRepository: SakRepository,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -26,7 +28,7 @@ internal class VedtakFattetMottakForUtsending(
                 it.requireKey("fastsatt")
             }
             validate {
-                it.requireKey("ident", "behandlingId")
+                it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
             }
         }
     }
@@ -41,19 +43,31 @@ internal class VedtakFattetMottakForUtsending(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val utfall = packet["fastsatt"]["utfall"].asBoolean()
-
-        if (utfall) {
+        if (vedtakSkalTilhøreDpSak(packet)) {
             val behandlingId = packet["behandlingId"].asUUID()
+            val søknadId = packet["behandletHendelse"]["id"].asUUID()
             val ident = packet["ident"].asText()
-            utsendingMediator.behandleUtsendingForVedtakFattetIDpSak(
-                VedtakInnvilgetHendelse(
+            val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
+            val automatiskBehandlet = packet["automatisk"].asBoolean()
+
+            utsendingMediator.startUtsendingForVedtakFattet(
+                VedtakFattetHendelse(
                     behandlingId = behandlingId,
+                    søknadId = søknadId,
                     ident = ident,
-                    // todo not in use. Fjerne når vi fjerner oppgaveId fra Utsending
-                    oppgaveId = UUID.randomUUID(),
+                    sak =
+                        UtsendingSak(
+                            id = sakId,
+                            kontekst = "Dagpenger",
+                        ),
+                    automatiskBehandlet = automatiskBehandlet,
                 ),
             )
         }
+    }
+
+    private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
+        val dagpengerInnvilget = packet["fastsatt"]["utfall"].asBoolean()
+        return dagpengerInnvilget
     }
 }

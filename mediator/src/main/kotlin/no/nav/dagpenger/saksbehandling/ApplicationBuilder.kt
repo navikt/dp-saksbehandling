@@ -48,7 +48,6 @@ import no.nav.dagpenger.saksbehandling.streams.kafka.KafkaStreamsPlugin
 import no.nav.dagpenger.saksbehandling.streams.kafka.kafkaStreams
 import no.nav.dagpenger.saksbehandling.streams.leesah.adressebeskyttetStream
 import no.nav.dagpenger.saksbehandling.streams.skjerming.skjermetPersonStatus
-import no.nav.dagpenger.saksbehandling.utsending.BrevProdusent
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -122,7 +121,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
         )
 
     private val brevProdusent =
-        BrevProdusent(
+        UtsendingMediator.BrevProdusent(
             oppslag = oppslag,
             meldingOmVedtakKlient = meldingOmVedtakKlient,
             oppgaveRepository = oppgaveRepository,
@@ -131,7 +130,6 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val utsendingMediator =
         UtsendingMediator(
             utsendingRepository = utsendingRepository,
-            sakRepository = sakRepository,
             brevProdusent = brevProdusent,
         )
     private val oppgaveMediator =

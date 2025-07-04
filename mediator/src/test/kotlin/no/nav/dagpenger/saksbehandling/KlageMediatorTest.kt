@@ -780,7 +780,6 @@ class KlageMediatorTest {
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = PostgresUtsendingRepository(dataSource),
-                    sakRepository = mockk(),
                     brevProdusent = mockk(),
                 ).also { it.setRapidsConnection(rapidsConnection = testRapid) }
 

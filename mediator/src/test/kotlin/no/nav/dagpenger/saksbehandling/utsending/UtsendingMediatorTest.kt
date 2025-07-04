@@ -55,16 +55,12 @@ class UtsendingMediatorTest {
             val sakId = DBTestHelper.sakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
-
             val utsendingRepository = PostgresUtsendingRepository(ds)
-            val sakRepository = PostgresRepository(ds)
-
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
-                    sakRepository = sakRepository,
                     brevProdusent =
-                        mockk<BrevProdusent>().also {
+                        mockk<UtsendingMediator.BrevProdusent>().also {
                             coEvery {
                                 it.lagBrev(
                                     ident = person.ident,
@@ -80,6 +76,7 @@ class UtsendingMediatorTest {
             VedtakFattetMottakForUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
+                sakRepository = PostgresRepository(ds),
             )
 
             UtsendingBehovLøsningMottak(
@@ -223,7 +220,6 @@ class UtsendingMediatorTest {
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
-                    sakRepository = mockk(),
                     brevProdusent = mockk(),
                 ).also {
                     it.setRapidsConnection(rapid)
@@ -378,7 +374,6 @@ class UtsendingMediatorTest {
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = utsendingRepository,
-                    sakRepository = mockk(),
                     brevProdusent = mockk(),
                 ).also {
                     it.setRapidsConnection(rapid)

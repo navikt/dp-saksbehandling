@@ -6,4 +6,5 @@ data class VedtakInnvilgetHendelse(
     override val oppgaveId: UUID,
     val ident: String,
     val behandlingId: UUID,
+    val sakId: String? = null,
 ) : UtsendingHendelse

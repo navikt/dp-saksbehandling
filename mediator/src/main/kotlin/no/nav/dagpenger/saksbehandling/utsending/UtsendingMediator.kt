@@ -8,16 +8,15 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.UtsendingSak
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.JournalførtHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
-import no.nav.dagpenger.saksbehandling.utsending.hendelser.VedtakInnvilgetHendelse
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import java.util.UUID
 
@@ -26,7 +25,6 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class UtsendingMediator(
     private val utsendingRepository: UtsendingRepository,
-    private val sakRepository: SakRepository,
     private val brevProdusent: BrevProdusent,
 ) : UtsendingRepository by utsendingRepository {
     private lateinit var rapidsConnection: RapidsConnection
@@ -93,76 +91,69 @@ class UtsendingMediator(
         rapidsConnection.publish(key = utsending.ident, message = message)
     }
 
-    fun behandleUtsendingForVedtakFattetIDpSak(vedtakInnvilgetHendelse: VedtakInnvilgetHendelse) {
-        val sakId = sakRepository.hentSakIdForBehandlingId(vedtakInnvilgetHendelse.behandlingId).toString()
-        val utsendingSak =
-            UtsendingSak(
-                id = sakId,
-                kontekst = "Dagpenger",
-            )
-
-        val brev =
-            runBlocking {
-                brevProdusent.lagBrev(
-                    ident = vedtakInnvilgetHendelse.ident,
-                    behandlingId = vedtakInnvilgetHendelse.behandlingId,
-                    sakId = sakId,
-                )
-            }
-
-        utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakInnvilgetHendelse.behandlingId)
+    fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
+        utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
             ?.let { utsending ->
+                val brev =
+                    runBlocking {
+                        brevProdusent.lagBrev(
+                            ident = vedtakFattetHendelse.ident,
+                            behandlingId = vedtakFattetHendelse.behandlingId,
+                            sakId = vedtakFattetHendelse.sak.id,
+                        )
+                    }
                 utsending.startUtsending(
                     startUtsendingHendelse =
                         StartUtsendingHendelse(
-                            oppgaveId = vedtakInnvilgetHendelse.oppgaveId,
-                            utsendingSak = utsendingSak,
-                            behandlingId = vedtakInnvilgetHendelse.behandlingId,
-                            ident = vedtakInnvilgetHendelse.ident,
+                            // TODO: OPPGAV-ID ER IKKE I BRUK! Skal fjernes når oppgave er fjernet fra utsending
+                            oppgaveId = UUIDv7.ny(),
+                            utsendingSak = vedtakFattetHendelse.sak,
+                            behandlingId = vedtakFattetHendelse.behandlingId,
+                            ident = vedtakFattetHendelse.ident,
                             brev = brev,
                         ),
                 )
                 lagreOgPubliserBehov(utsending = utsending)
             }
     }
-}
 
-class BrevProdusent(
-    private val oppslag: Oppslag,
-    private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
-    private val oppgaveRepository: OppgaveRepository,
-    private val tokenProvider: () -> String = Configuration.meldingOmVedtakMaskinTokenProvider,
-) {
-    suspend fun lagBrev(
-        ident: String,
-        behandlingId: UUID,
-        sakId: String,
-    ): String {
-        return coroutineScope {
-            val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
-            val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
-            val saksbehandler =
-                async(Dispatchers.IO) {
-                    oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
-                        oppslag.hentBehandler(saksbehandlerIdent)
-                    } ?: throw RuntimeException("Fant ikke saksbehandler for oppgave ${oppgave.oppgaveId}")
-                }
-            val beslutter =
-                async(Dispatchers.IO) {
-                    oppgave.sisteBeslutter()?.let { beslutterIdent ->
-                        oppslag.hentBehandler(beslutterIdent)
+    class BrevProdusent(
+        private val oppslag: Oppslag,
+        private val meldingOmVedtakKlient: MeldingOmVedtakKlient,
+        private val oppgaveRepository: OppgaveRepository,
+        private val tokenProvider: () -> String = Configuration.meldingOmVedtakMaskinTokenProvider,
+    ) {
+        suspend fun lagBrev(
+            ident: String,
+            behandlingId: UUID,
+            sakId: String,
+        ): String {
+            return coroutineScope {
+                val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
+                val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
+                val saksbehandler =
+                    async(Dispatchers.IO) {
+                        oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->
+                            oppslag.hentBehandler(saksbehandlerIdent)
+                        } ?: throw RuntimeException("Fant ikke saksbehandler for oppgave ${oppgave.oppgaveId}")
                     }
-                }
+                val beslutter =
+                    async(Dispatchers.IO) {
+                        oppgave.sisteBeslutter()?.let { beslutterIdent ->
+                            oppslag.hentBehandler(beslutterIdent)
+                        }
+                    }
 
-            meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
-                person = person.await(),
-                saksbehandler = saksbehandler.await(),
-                beslutter = beslutter.await(),
-                behandlingId = behandlingId,
-                saksbehandlerToken = tokenProvider.invoke(),
-                behandlingType = oppgave.behandlingType,
-                sakId = sakId,
-            ).getOrThrow()
+                meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
+                    person = person.await(),
+                    saksbehandler = saksbehandler.await(),
+                    beslutter = beslutter.await(),
+                    behandlingId = behandlingId,
+                    saksbehandlerToken = tokenProvider.invoke(),
+                    behandlingType = oppgave.behandlingType,
+                    sakId = sakId,
+                ).getOrThrow()
+            }
         }
     }
 }

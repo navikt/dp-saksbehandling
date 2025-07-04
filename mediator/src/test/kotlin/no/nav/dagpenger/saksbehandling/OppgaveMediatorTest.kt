@@ -497,7 +497,6 @@ OppgaveMediatorTest {
             val utsendingMediator =
                 UtsendingMediator(
                     utsendingRepository = PostgresUtsendingRepository(datasource),
-                    sakRepository = mockk(),
                     brevProdusent = mockk(),
                 )
 
@@ -610,7 +609,6 @@ OppgaveMediatorTest {
 
             UtsendingMediator(
                 utsendingRepository = PostgresUtsendingRepository(datasource),
-                sakRepository = mockk(),
                 brevProdusent = mockk(),
             ).also { utsendingMediator ->
                 utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
@@ -674,7 +672,6 @@ OppgaveMediatorTest {
 
             UtsendingMediator(
                 utsendingRepository = PostgresUtsendingRepository(datasource),
-                sakRepository = mockk(),
                 brevProdusent = mockk(),
             )
                 .finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
@@ -1006,7 +1003,6 @@ OppgaveMediatorTest {
                     utsendingMediator =
                         UtsendingMediator(
                             utsendingRepository = PostgresUtsendingRepository(datasource),
-                            sakRepository = mockk(),
                             brevProdusent = mockk(),
                         ),
                     sakMediator = sakMediator,
