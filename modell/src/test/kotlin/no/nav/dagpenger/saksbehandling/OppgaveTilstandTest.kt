@@ -99,7 +99,8 @@ class OppgaveTilstandTest {
         val hendelse =
             ForslagTilVedtakHendelse(
                 ident = testIdent,
-                søknadId = UUIDv7.ny(),
+                id = UUIDv7.ny().toString(),
+                behandletHendelseType = "Søknad",
                 behandlingId = UUIDv7.ny(),
                 utførtAv = Applikasjon("dp-behandling"),
             )
@@ -298,7 +299,8 @@ class OppgaveTilstandTest {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
                         behandlingId = oppgave.behandlingId,
-                        søknadId = UUIDv7.ny(),
+                        id = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
                         ident = testIdent,
                     ),
                 )
@@ -324,7 +326,8 @@ class OppgaveTilstandTest {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
                         behandlingId = oppgave.behandlingId,
-                        søknadId = UUIDv7.ny(),
+                        id = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
                         ident = testIdent,
                     ),
                 )
@@ -441,7 +444,8 @@ class OppgaveTilstandTest {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = UUIDv7.ny(),
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
@@ -460,7 +464,8 @@ class OppgaveTilstandTest {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = UUIDv7.ny(),
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
@@ -479,7 +484,8 @@ class OppgaveTilstandTest {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = UUIDv7.ny(),
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
                     emneknagger = nyeEmneknagger,
@@ -795,8 +801,9 @@ class OppgaveTilstandTest {
                             hendelse =
                                 ForslagTilVedtakHendelse(
                                     ident = "11111155555",
-                                    søknadId = UUIDv7.ny(),
+                                    id = UUIDv7.ny().toString(),
                                     behandlingId = UUIDv7.ny(),
+                                    behandletHendelseType = "Søknad",
                                     emneknagger = emptySet(),
                                 ),
                         )
@@ -820,7 +827,8 @@ class OppgaveTilstandTest {
         oppgave.oppgaveKlarTilBehandling(
             ForslagTilVedtakHendelse(
                 ident = testIdent,
-                søknadId = UUIDv7.ny(),
+                id = UUIDv7.ny().toString(),
+                behandletHendelseType = "Søknad",
                 behandlingId = UUIDv7.ny(),
                 utførtAv = Applikasjon("dp-behandling"),
             ),

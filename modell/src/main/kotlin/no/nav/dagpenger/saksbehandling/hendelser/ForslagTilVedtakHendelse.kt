@@ -5,7 +5,8 @@ import java.util.UUID
 
 data class ForslagTilVedtakHendelse(
     val ident: String,
-    val søknadId: UUID,
+    val id: String,
+    val behandletHendelseType: String,
     val behandlingId: UUID,
     val emneknagger: Set<String> = emptySet(),
     override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),

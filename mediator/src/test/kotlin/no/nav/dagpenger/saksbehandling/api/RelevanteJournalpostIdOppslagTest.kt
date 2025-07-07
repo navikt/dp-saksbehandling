@@ -30,7 +30,8 @@ class RelevanteJournalpostIdOppslagTest {
                             nyTilstand = Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
                             hendelse =
                                 ForslagTilVedtakHendelse(
-                                    søknadId = UUIDv7.ny(),
+                                    id = UUIDv7.ny().toString(),
+                                    behandletHendelseType = "Søknad",
                                     behandlingId = UUIDv7.ny(),
                                     ident = "12345678901",
                                 ),

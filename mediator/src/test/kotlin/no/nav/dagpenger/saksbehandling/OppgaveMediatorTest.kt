@@ -241,7 +241,8 @@ OppgaveMediatorTest {
             ForslagTilVedtakHendelse(
                 ident = personUtenBehandling,
                 behandlingId = UUIDv7.ny(),
-                søknadId = UUIDv7.ny(),
+                id = UUIDv7.ny().toString(),
+                behandletHendelseType = "Søknad",
             ),
         ) shouldBe null
 
@@ -249,7 +250,8 @@ OppgaveMediatorTest {
             ForslagTilVedtakHendelse(
                 ident = personUtenSakHistorikk,
                 behandlingId = UUIDv7.ny(),
-                søknadId = UUIDv7.ny(),
+                id = UUIDv7.ny().toString(),
+                behandletHendelseType = "Søknad",
             ),
         ) shouldBe null
 
@@ -340,7 +342,8 @@ OppgaveMediatorTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = "ad",
-                    søknadId = UUIDv7.ny(),
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = UUIDv7.ny(),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
@@ -358,7 +361,8 @@ OppgaveMediatorTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = UUIDv7.ny(),
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandlingId,
                     emneknagger = testEmneknagger1,
                 ),
@@ -367,7 +371,8 @@ OppgaveMediatorTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = UUIDv7.ny(),
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandlingId,
                     emneknagger = testEmneknagger2,
                 ),
@@ -566,7 +571,8 @@ OppgaveMediatorTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = søknadId,
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 ),
@@ -635,7 +641,8 @@ OppgaveMediatorTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = søknadId,
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 ),
@@ -705,7 +712,8 @@ OppgaveMediatorTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = søknadId,
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 ),
@@ -1001,7 +1009,8 @@ OppgaveMediatorTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    søknadId = søknadId,
+                    id = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 ),

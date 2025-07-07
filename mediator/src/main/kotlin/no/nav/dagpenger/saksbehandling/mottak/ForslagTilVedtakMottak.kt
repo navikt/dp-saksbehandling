@@ -76,7 +76,8 @@ internal class ForslagTilVedtakMottak(
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 )

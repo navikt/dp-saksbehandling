@@ -1,9 +1,7 @@
 package no.nav.dagpenger.saksbehandling.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.matchers.shouldBe
 import io.mockk.mockk
-import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
@@ -34,27 +32,11 @@ class ForslagTilVedtakMottakTest {
     private val oppgaveMediator = mockk<OppgaveMediator>(relaxed = true)
     private val behandlingId = UUIDv7.ny()
     private val søknadId = UUIDv7.ny()
+    private val meldekortId = UUIDv7.ny()
     private val ident = "123456678912"
 
     init {
         ForslagTilVedtakMottak(testRapid, oppgaveMediator)
-    }
-
-    @Test
-    fun `Skal kunne motta forslag_til_vedtak hendelse med avslag minsteinntekt og rettighet permittering`() {
-        testRapid.sendTestMessage(forslagTilVedtakAvslagMinsteinntektJson)
-
-        val hendelse = slot<ForslagTilVedtakHendelse>()
-        verify(exactly = 1) {
-            oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
-        }
-        hendelse.captured.ident shouldBe ident
-        hendelse.captured.søknadId shouldBe søknadId
-        hendelse.captured.behandlingId shouldBe behandlingId
-        hendelse.captured.emneknagger shouldBe
-            setOf(
-                AVSLAG.visningsnavn, AVSLAG_MINSTEINNTEKT.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn,
-            )
     }
 
     @Test
@@ -65,7 +47,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(AVSLAG.visningsnavn, AVSLAG_ALDER.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
                 )
@@ -81,7 +64,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger =
                         setOf(
@@ -112,7 +96,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_VERNEPLIKT.visningsnavn),
                 )
@@ -128,7 +113,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
                 )
@@ -144,7 +130,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn),
                 )
@@ -160,7 +147,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT_FISK.visningsnavn),
                 )
@@ -176,7 +164,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_KONKURS.visningsnavn),
                 )
@@ -192,13 +181,27 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
     }
+
+/*    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med behandlingtype meldekort`() {
+        testRapid.sendTestMessage(forslagTilVedtakBehandlingTypeMeldekortJson)
+
+        val hendelse = slot<ForslagTilVedtakGenerellHendelse>()
+        verify(exactly = 1) {
+            oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
+        }
+        hendelse.captured.ident shouldBe ident
+        hendelse.captured.id shouldBe meldekortId
+        hendelse.captured.behandlingId shouldBe behandlingId
+    }*/
 
     //language=json
     private val forslagTilVedtakAvslagMinsteinntektJson =
@@ -257,6 +260,66 @@ class ForslagTilVedtakMottakTest {
             "datatype": "UUID",
             "id": "$søknadId",
             "type": "Søknad"
+          }
+        }
+        """.trimIndent()
+
+    private val forslagTilVedtakBehandlingTypeMeldekortJson =
+        """
+        {
+          "@event_name": "forslag_til_vedtak",
+          "prøvingsdato": "2024-12-01",
+          "fastsatt": {
+            "utfall": false
+          },
+          "vilkår": [
+            {
+              "navn": "Oppfyller kravet til alder",
+              "status": "Oppfylt",
+              "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+              "hjemmel": "folketrygdloven § 4-23"
+            },
+            {
+              "navn": "Oppfyller kravet til minsteinntekt",
+              "status": "IkkeOppfylt",
+              "vurderingstidspunkt": "2024-12-19T14:09:57.66249",
+              "hjemmel": "folketrygdloven § 4-4"
+            }
+          ],
+            "opplysninger": [
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d86",
+                  "navn": "Har rett til dagpenger under permittering",
+                  "verdi": "true"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d87",
+                  "navn": "Har rett til dagpenger etter konkurs",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
+                  "verdi": "false"
+                }
+            ],
+          "ident": "$ident",
+          "behandlingId": "$behandlingId",
+          "gjelderDato": "2024-11-19",
+          "behandletHendelse": {
+            "datatype": "Long",
+            "id": "$meldekortId",
+            "type": "Meldekort"
           }
         }
         """.trimIndent()

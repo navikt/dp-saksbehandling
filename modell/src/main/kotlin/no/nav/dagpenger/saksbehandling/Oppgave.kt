@@ -303,9 +303,10 @@ data class Oppgave private constructor(
     }
 
     fun soknadId(): UUID? {
+        // TODO: Kan ikke mappe meldekortId og manuell Id til søknadId
         return runCatching {
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
-                (it.hendelse as ForslagTilVedtakHendelse).søknadId
+                (it.hendelse as ForslagTilVedtakHendelse).id.let { UUID.fromString(it) }
             }
         }
             .onFailure { e -> logger.error(e) { "Feil ved henting av søknadId for oppgave:  ${this.oppgaveId}" } }
