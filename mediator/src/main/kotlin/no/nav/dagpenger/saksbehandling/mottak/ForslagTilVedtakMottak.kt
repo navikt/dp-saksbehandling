@@ -8,6 +8,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import mu.withLoggingContext
+import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MANUELL
+import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MELDEKORT
+import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
@@ -47,7 +50,7 @@ internal class ForslagTilVedtakMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "forslag_til_vedtak")
-                it.requireValue("behandletHendelse.type", "Søknad")
+                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
             }
             validate { it.requireKey("ident", "behandlingId") }
             validate { it.interestedIn("utfall", "harAvklart") }
@@ -66,18 +69,19 @@ internal class ForslagTilVedtakMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val søknadId = packet.søknadId()
+        val id = packet["behandletHendelse"]["id"].asText()
+        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
 
-        withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+        withLoggingContext("Id" to "$id", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_vedtak hendelse" }
             val ident = packet["ident"].asText()
             val emneknagger = packet.emneknagger()
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
-                    behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
+                    id = id,
+                    behandletHendelseType = behandletHendelseType,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 )
@@ -98,9 +102,15 @@ internal class ForslagTilVedtakMottak(
                 true -> add(INNVILGELSE.visningsnavn)
                 false -> addAll(avslagEmneknagger)
             }
+            when (behandletHendelseType) {
+                "Søknad" -> add(SØKNAD.visningsnavn)
+                "Meldekort" -> add(MELDEKORT.visningsnavn)
+                "Manuell" -> add(MANUELL.visningsnavn)
+            }
         }
 
     private val JsonMessage.utfall get() = this["fastsatt"].get("utfall").asBoolean()
+    private val JsonMessage.behandletHendelseType get() = this["behandletHendelse"]["type"].asText()
 
     private val JsonMessage.avslagEmneknagger: Set<String>
         get() {

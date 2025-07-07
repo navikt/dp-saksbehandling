@@ -34,4 +34,10 @@ class Emneknagg(val navn: String) {
 
         TIDLIGERE_UTSATT("Tidligere utsatt"),
     }
+
+    enum class BehandletHendelseType(val visningsnavn: String) {
+        SØKNAD("Søknadsbehandling"),
+        MELDEKORT("Meldekortsbehandling"),
+        MANUELL("Manuell behandling"),
+    }
 }

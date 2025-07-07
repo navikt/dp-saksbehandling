@@ -304,6 +304,7 @@ data class Oppgave private constructor(
 
     fun soknadId(): UUID? {
         // TODO: Kan ikke mappe meldekortId og manuell Id til søknadId
+        // TODO: Må alle gamle forslag til vedtak hendelser migreres til nytt format for å kunne hentes opp her?
         return runCatching {
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
                 (it.hendelse as ForslagTilVedtakHendelse).id.let { UUID.fromString(it) }
