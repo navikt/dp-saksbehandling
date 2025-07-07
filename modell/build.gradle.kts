@@ -12,7 +12,7 @@ dependencies {
     implementation(libs.jackson.kotlin)
     implementation(libs.kotlin.logging)
     implementation("de.slub-dresden:urnlib:2.0.1")
-    implementation("io.prometheus:prometheus-metrics-core:1.3.8")
+    implementation("io.prometheus:prometheus-metrics-core:1.3.9")
     implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
     testImplementation(libs.bundles.kotest.assertions)
     testImplementation("org.junit.jupiter:junit-jupiter-params:${libs.versions.junit.get()}")
