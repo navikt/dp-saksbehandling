@@ -303,14 +303,30 @@ data class Oppgave private constructor(
     }
 
     fun soknadId(): UUID? {
-        // TODO: Kan ikke mappe meldekortId og manuell Id til søknadId
         // TODO: Må alle gamle forslag til vedtak hendelser migreres til nytt format for å kunne hentes opp her?
         return runCatching {
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
-                (it.hendelse as ForslagTilVedtakHendelse).id.let { UUID.fromString(it) }
+                val hendelse = it.hendelse as ForslagTilVedtakHendelse
+                when (hendelse.behandletHendelseType) {
+                    "Søknad" -> UUID.fromString(hendelse.id)
+                    "Manuell", "Meldekort" -> {
+                        logger.info {
+                            "behandletHendelseType is ${hendelse.behandletHendelseType} " +
+                                "for oppgave: ${this.oppgaveId} søknadId eksisterer derfro ikke"
+                        }
+                        null
+                    }
+                    else -> {
+                        logger.error { "Ukjent behandletHendelseType ${hendelse.behandletHendelseType} for oppgave ${this.oppgaveId}" }
+                        null
+                    }
+                }
             }
         }
-            .onFailure { e -> logger.error(e) { "Feil ved henting av søknadId for oppgave:  ${this.oppgaveId}" } }
+            .onFailure {
+                    e ->
+                logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
+            }
             .getOrThrow()
     }
 
