@@ -36,8 +36,7 @@ class Emneknagg(val navn: String) {
     }
 
     enum class BehandletHendelseType(val visningsnavn: String) {
-        SØKNAD("Søknadsbehandling"),
-        MELDEKORT("Meldekortsbehandling"),
-        MANUELL("Manuell behandling"),
+        MELDEKORT("Meldekortsberegning"),
+        MANUELL("Manuell"),
     }
 }

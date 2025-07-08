@@ -10,7 +10,6 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MANUELL
 import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MELDEKORT
-import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
@@ -103,7 +102,6 @@ internal class ForslagTilVedtakMottak(
                 false -> addAll(avslagEmneknagger)
             }
             when (behandletHendelseType) {
-                "Søknad" -> add(SØKNAD.visningsnavn)
                 "Meldekort" -> add(MELDEKORT.visningsnavn)
                 "Manuell" -> add(MANUELL.visningsnavn)
             }

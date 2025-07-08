@@ -7,7 +7,6 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MANUELL
 import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MELDEKORT
-import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
@@ -59,7 +58,7 @@ class ForslagTilVedtakMottakTest {
         hendelse.captured.behandletHendelseType shouldBe "Søknad"
         hendelse.captured.emneknagger shouldBe
             setOf(
-                AVSLAG.visningsnavn, AVSLAG_MINSTEINNTEKT.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn, SØKNAD.visningsnavn,
+                AVSLAG.visningsnavn, AVSLAG_MINSTEINNTEKT.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn,
             )
     }
 
@@ -79,7 +78,6 @@ class ForslagTilVedtakMottakTest {
                             AVSLAG.visningsnavn,
                             AVSLAG_ALDER.visningsnavn,
                             RETTIGHET_ORDINÆR.visningsnavn,
-                            SØKNAD.visningsnavn,
                         ),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
@@ -112,7 +110,6 @@ class ForslagTilVedtakMottakTest {
                             AVSLAG_IKKE_REGISTRERT.visningsnavn,
                             AVSLAG_UTESTENGT.visningsnavn,
                             AVSLAG_UTDANNING.visningsnavn,
-                            SØKNAD.visningsnavn,
                         ),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
@@ -130,7 +127,7 @@ class ForslagTilVedtakMottakTest {
                     id = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_VERNEPLIKT.visningsnavn, SØKNAD.visningsnavn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_VERNEPLIKT.visningsnavn),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
@@ -147,7 +144,7 @@ class ForslagTilVedtakMottakTest {
                     id = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn, SØKNAD.visningsnavn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
@@ -164,7 +161,7 @@ class ForslagTilVedtakMottakTest {
                     id = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn, SØKNAD.visningsnavn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
@@ -181,7 +178,7 @@ class ForslagTilVedtakMottakTest {
                     id = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT_FISK.visningsnavn, SØKNAD.visningsnavn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT_FISK.visningsnavn),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
@@ -198,7 +195,7 @@ class ForslagTilVedtakMottakTest {
                     id = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_KONKURS.visningsnavn, SØKNAD.visningsnavn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_KONKURS.visningsnavn),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
@@ -215,7 +212,7 @@ class ForslagTilVedtakMottakTest {
                     id = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
-                    emneknagger = setOf(INNVILGELSE.visningsnavn, SØKNAD.visningsnavn),
+                    emneknagger = setOf(INNVILGELSE.visningsnavn),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
