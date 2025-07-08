@@ -293,6 +293,22 @@ internal fun Route.oppgaveApi(
                     }
                 }
 
+                route("ferdigstill/uten-melding-om-vedtak") {
+                    put {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                            val saksbehandler = applicationCallParser.saksbehandler(call)
+                            val saksbehandlerToken = call.request.jwt()
+                            oppgaveMediator.ferdigstillOppgaveUtenMeldingOmVedtak(
+                                oppgaveId = oppgaveId,
+                                saksBehandler = saksbehandler,
+                                saksbehandlerToken = saksbehandlerToken,
+                            )
+                            call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
+                }
+
                 route("ferdigstill/melding-om-vedtak-arena") {
                     put {
                         val saksbehandler = applicationCallParser.saksbehandler(call)

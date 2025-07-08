@@ -137,6 +137,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/ferdigstill/uten-melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
                 Arguments.of("/person", HttpMethod.Post),
@@ -436,7 +437,29 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak v2`() {
+    fun `Skal kunne ferdigstille en oppgave uten melding om vedtak`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                coEvery { it.ferdigstillOppgaveUtenMeldingOmVedtak(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/uten-melding-om-vedtak") {
+                autentisert(token = saksbehandlerToken)
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            coVerify(exactly = 1) {
+                oppgaveMediatorMock.ferdigstillOppgaveUtenMeldingOmVedtak(oppgave.oppgaveId, any(), saksbehandlerToken)
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =

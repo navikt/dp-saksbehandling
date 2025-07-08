@@ -21,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -452,6 +453,28 @@ class OppgaveTilgangTest {
         shouldNotThrow<ManglendeTilgang> {
             oppgave.ferdigstill(
                 GodkjennBehandlingMedBrevIArena(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandlerUtenEkstraTilganger,
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun `Ferdigstilling av oppgave under behandling uten brev krever at utførende saksbehandler også eier oppgaven`() {
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
+        shouldThrow<ManglendeTilgang> {
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelseUtenMeldingOmVedtak(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                ),
+            )
+        }
+
+        shouldNotThrow<ManglendeTilgang> {
+            oppgave.ferdigstill(
+                GodkjentBehandlingHendelseUtenMeldingOmVedtak(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = saksbehandlerUtenEkstraTilganger,
                 ),
