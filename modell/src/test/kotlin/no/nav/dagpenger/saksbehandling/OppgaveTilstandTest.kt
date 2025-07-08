@@ -129,7 +129,8 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
                         behandlingId = oppgave.behandlingId,
-                        søknadId = UUIDv7.ny(),
+                        id = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
                         ident = testIdent,
                         automatiskBehandlet = false,
                         sak = utsendingSak,
@@ -156,7 +157,8 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
                         behandlingId = oppgave.behandlingId,
-                        søknadId = UUIDv7.ny(),
+                        id = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
                         ident = testIdent,
                         automatiskBehandlet = false,
                         sak = utsendingSak,
@@ -176,7 +178,8 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
                         behandlingId = oppgave.behandlingId,
-                        søknadId = UUIDv7.ny(),
+                        id = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
                         ident = testIdent,
                         sak = utsendingSak,
                         automatiskBehandlet = true,
@@ -197,7 +200,8 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
                         behandlingId = oppgave.behandlingId,
-                        søknadId = UUIDv7.ny(),
+                        id = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
                         ident = testIdent,
                         automatiskBehandlet = true,
                         sak = utsendingSak,

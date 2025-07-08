@@ -51,7 +51,8 @@ internal class VedtakFattetMottak(
             oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
-                    søknadId = søknadId,
+                    id = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     ident = packet["ident"].asText(),
                     sak = packet.sak(),
                     automatiskBehandlet = packet["automatisk"].asBoolean(),

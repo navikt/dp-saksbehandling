@@ -62,7 +62,8 @@ internal class VedtakFattetMottakTest {
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = behandlingId,
-                søknadId = søknadId,
+                id = søknadId.toString(),
+                behandletHendelseType = "Søknad",
                 ident = testIdent,
                 automatiskBehandlet = true,
                 sak = utsendingSak,
@@ -88,7 +89,8 @@ internal class VedtakFattetMottakTest {
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = behandlingId,
-                søknadId = søknadId,
+                id = søknadId.toString(),
+                behandletHendelseType = "Søknad",
                 ident = testIdent,
                 automatiskBehandlet = false,
                 sak = utsendingSak,
