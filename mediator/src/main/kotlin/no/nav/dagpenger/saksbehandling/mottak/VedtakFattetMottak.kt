@@ -11,7 +11,6 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -23,7 +22,7 @@ internal class VedtakFattetMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "vedtak_fattet")
-                it.requireValue("behandletHendelse.type", "Søknad")
+                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
                 it.forbid("meldingOmVedtakProdusent")
             }
             validate {
@@ -43,16 +42,17 @@ internal class VedtakFattetMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val søknadId = packet.søknadId()
+        val id = packet.id()
         val behandlingId = packet["behandlingId"].asUUID()
+        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
 
-        withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+        withLoggingContext("id" to "$id", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak_fattet hendelse" }
             oppgaveMediator.ferdigstillOppgave(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
-                    id = søknadId.toString(),
-                    behandletHendelseType = "Søknad",
+                    id = id.toString(),
+                    behandletHendelseType = behandletHendelseType,
                     ident = packet["ident"].asText(),
                     sak = packet.sak(),
                     automatiskBehandlet = packet["automatisk"].asBoolean(),
@@ -64,4 +64,4 @@ internal class VedtakFattetMottak(
 
 private fun JsonMessage.sak(): UtsendingSak = UtsendingSak(id = this["fagsakId"].asText())
 
-private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
+private fun JsonMessage.id(): String = this["behandletHendelse"]["id"].asText()

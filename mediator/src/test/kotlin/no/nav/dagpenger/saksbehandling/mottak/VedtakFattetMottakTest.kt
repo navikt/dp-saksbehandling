@@ -52,7 +52,7 @@ internal class VedtakFattetMottakTest {
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
-                søknadId = søknadId,
+                id = søknadId.toString(),
                 behandlingId = behandlingId,
                 automatiskBehandlet = true,
                 sakId = utsendingSak.id.toInt(),
@@ -79,7 +79,7 @@ internal class VedtakFattetMottakTest {
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
-                søknadId = søknadId,
+                id = søknadId.toString(),
                 behandlingId = behandlingId,
                 automatiskBehandlet = false,
                 sakId = utsendingSak.id.toInt(),
@@ -91,6 +91,64 @@ internal class VedtakFattetMottakTest {
                 behandlingId = behandlingId,
                 id = søknadId.toString(),
                 behandletHendelseType = "Søknad",
+                ident = testIdent,
+                automatiskBehandlet = false,
+                sak = utsendingSak,
+            )
+        verify(exactly = 1) {
+            oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal behandle vedtak fattet hendelse for meldekorthendelse`() {
+        val meldekortId = "12345"
+        every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
+        testRapid.sendTestMessage(
+            vedtakFattetHendelse(
+                ident = testIdent,
+                id = meldekortId,
+                behandletHendelseType = "Meldekort",
+                behandlingId = behandlingId,
+                automatiskBehandlet = false,
+                sakId = utsendingSak.id.toInt(),
+            ),
+        )
+
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = behandlingId,
+                id = meldekortId,
+                behandletHendelseType = "Meldekort",
+                ident = testIdent,
+                automatiskBehandlet = false,
+                sak = utsendingSak,
+            )
+        verify(exactly = 1) {
+            oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal behandle vedtak fattet hendelse for manuell`() {
+        val manuellId = UUIDv7.ny()
+        every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
+        testRapid.sendTestMessage(
+            vedtakFattetHendelse(
+                ident = testIdent,
+                id = manuellId.toString(),
+                behandletHendelseType = "Manuell",
+                behandlingId = behandlingId,
+                automatiskBehandlet = false,
+                sakId = utsendingSak.id.toInt(),
+            ),
+        )
+
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = behandlingId,
+                id = manuellId.toString(),
+                behandletHendelseType = "Manuell",
                 ident = testIdent,
                 automatiskBehandlet = false,
                 sak = utsendingSak,
