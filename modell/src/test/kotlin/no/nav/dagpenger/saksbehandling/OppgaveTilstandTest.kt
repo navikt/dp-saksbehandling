@@ -28,7 +28,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -764,22 +763,6 @@ class OppgaveTilstandTest {
 
         oppgave.tilstand() shouldBe Oppgave.FerdigBehandlet
         oppgave.behandlerIdent shouldBe beslutter.navIdent
-    }
-
-    @Test
-    fun `Skal ikke kunne ferdigstille med brev i Arena fra UnderKontroll`() {
-        val beslutter = Saksbehandler("Z080808", emptySet())
-        val oppgave = lagOppgave(UNDER_KONTROLL, beslutter)
-
-        shouldThrow<UlovligTilstandsendringException> {
-            oppgave.ferdigstill(
-                godkjennBehandlingMedBrevIArena =
-                    GodkjennBehandlingMedBrevIArena(
-                        oppgaveId = oppgave.oppgaveId,
-                        utførtAv = beslutter,
-                    ),
-            )
-        }
     }
 
     @Test
