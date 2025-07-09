@@ -19,7 +19,6 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -439,28 +438,6 @@ class OppgaveTilgangTest {
     }
 
     @Test
-    fun `Ferdigstilling av oppgave under behandling med brev fra Arena krever at utførende saksbehandler også eier oppgaven`() {
-        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
-        shouldThrow<ManglendeTilgang> {
-            oppgave.ferdigstill(
-                GodkjennBehandlingMedBrevIArena(
-                    oppgaveId = oppgave.oppgaveId,
-                    utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
-                ),
-            )
-        }
-
-        shouldNotThrow<ManglendeTilgang> {
-            oppgave.ferdigstill(
-                GodkjennBehandlingMedBrevIArena(
-                    oppgaveId = oppgave.oppgaveId,
-                    utførtAv = saksbehandlerUtenEkstraTilganger,
-                ),
-            )
-        }
-    }
-
-    @Test
     fun `Ferdigstilling av oppgave under behandling uten brev krever at utførende saksbehandler også eier oppgaven`() {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
         shouldThrow<ManglendeTilgang> {
@@ -761,9 +738,10 @@ class OppgaveTilgangTest {
                     behandler = saksbehandler,
                 )
             oppgave.ferdigstill(
-                GodkjennBehandlingMedBrevIArena(
+                GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = saksbehandler,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
                 ),
             )
         }
@@ -776,47 +754,12 @@ class OppgaveTilgangTest {
                     behandler = saksbehandlerMedEgneAnsatteTilgang,
                 )
             oppgave.ferdigstill(
-                GodkjennBehandlingMedBrevIArena(
+                GodkjentBehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
                     utførtAv = saksbehandlerMedEgneAnsatteTilgang,
+                    meldingOmVedtak = "<HTML>en melding</HTML>",
                 ),
             )
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("adressebeskyttelseTester")
-    fun `Saksbehandler må ha tilgang for å ferdigstille en oppgave med brev i Arena med adressebeskyttelse`(
-        adressebeskyttelseGradering: AdressebeskyttelseGradering,
-        saksbehandlerTilgang: TilgangType,
-        forventetTilgang: Boolean,
-    ) {
-        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
-        val oppgave =
-            lagOppgave(
-                adressebeskyttelseGradering = adressebeskyttelseGradering,
-                tilstandType = UNDER_BEHANDLING,
-                behandler = saksbehandler,
-            )
-
-        if (forventetTilgang) {
-            shouldNotThrow<ManglendeTilgang> {
-                oppgave.ferdigstill(
-                    GodkjennBehandlingMedBrevIArena(
-                        oppgaveId = oppgave.oppgaveId,
-                        utførtAv = saksbehandler,
-                    ),
-                )
-            }
-        } else {
-            shouldThrow<ManglendeTilgang> {
-                oppgave.ferdigstill(
-                    GodkjennBehandlingMedBrevIArena(
-                        oppgaveId = oppgave.oppgaveId,
-                        utførtAv = saksbehandler,
-                    ),
-                )
-            }
         }
     }
 }

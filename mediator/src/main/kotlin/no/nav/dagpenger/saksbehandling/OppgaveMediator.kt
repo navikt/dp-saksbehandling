@@ -26,7 +26,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
@@ -581,27 +580,6 @@ class OppgaveMediator(
                         }
                     }
                 }
-            }
-        }
-    }
-
-    fun ferdigstillOppgave(
-        godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
-        saksbehandlerToken: String,
-    ) {
-        oppgaveRepository.hentOppgave(godkjennBehandlingMedBrevIArena.oppgaveId).let { oppgave ->
-            oppgave.ferdigstill(godkjennBehandlingMedBrevIArena)
-
-            behandlingKlient.godkjenn(
-                behandlingId = oppgave.behandlingId,
-                ident = oppgave.personIdent(),
-                saksbehandlerToken = saksbehandlerToken,
-            ).onSuccess {
-                oppgaveRepository.lagre(oppgave)
-            }.onFailure {
-                val feil = "Feil ved godkjenning av behandling: ${it.message}"
-                logger.error { feil }
-                throw it
             }
         }
     }

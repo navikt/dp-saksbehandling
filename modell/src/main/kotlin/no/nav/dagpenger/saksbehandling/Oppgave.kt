@@ -28,7 +28,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -221,12 +220,6 @@ data class Oppgave private constructor(
         adressebeskyttelseTilgangskontroll(avbruttHendelse.utførtAv)
         egneAnsatteTilgangskontroll(avbruttHendelse.utførtAv)
         tilstand.ferdigstill(this, avbruttHendelse)
-    }
-
-    fun ferdigstill(godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena) {
-        adressebeskyttelseTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
-        egneAnsatteTilgangskontroll(godkjennBehandlingMedBrevIArena.utførtAv)
-        tilstand.ferdigstill(this, godkjennBehandlingMedBrevIArena)
     }
 
     fun fjernAnsvar(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
@@ -518,18 +511,6 @@ data class Oppgave private constructor(
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelseUtenMeldingOmVedtak)
             return FerdigstillBehandling.GODKJENN
-        }
-
-        override fun ferdigstill(
-            oppgave: Oppgave,
-            godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
-        ) {
-            requireEierskapTilOppgave(
-                oppgave,
-                godkjennBehandlingMedBrevIArena.utførtAv,
-                godkjennBehandlingMedBrevIArena.javaClass.simpleName,
-            )
-            oppgave.endreTilstand(FerdigBehandlet, godkjennBehandlingMedBrevIArena)
         }
 
         override fun ferdigstill(
@@ -929,18 +910,6 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName}",
-            )
-        }
-
-        fun ferdigstill(
-            oppgave: Oppgave,
-            godkjennBehandlingMedBrevIArena: GodkjennBehandlingMedBrevIArena,
-        ) {
-            ulovligTilstandsendring(
-                oppgaveId = oppgave.oppgaveId,
-                message =
-                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
-                        "${godkjennBehandlingMedBrevIArena.javaClass.simpleName}",
             )
         }
 

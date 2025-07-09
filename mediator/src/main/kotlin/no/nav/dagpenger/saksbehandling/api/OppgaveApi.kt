@@ -32,7 +32,6 @@ import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -303,24 +302,6 @@ internal fun Route.oppgaveApi(
                                 oppgaveId = oppgaveId,
                                 saksBehandler = saksbehandler,
                                 saksbehandlerToken = saksbehandlerToken,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-
-                route("ferdigstill/melding-om-vedtak-arena") {
-                    put {
-                        val saksbehandler = applicationCallParser.saksbehandler(call)
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val saksbehandlerToken = call.request.jwt()
-                            oppgaveMediator.ferdigstillOppgave(
-                                GodkjennBehandlingMedBrevIArena(
-                                    oppgaveId = oppgaveId,
-                                    utførtAv = saksbehandler,
-                                ),
-                                saksbehandlerToken,
                             )
                             call.respond(HttpStatusCode.NoContent)
                         }
