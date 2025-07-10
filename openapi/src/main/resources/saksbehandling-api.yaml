@@ -303,7 +303,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-
   /oppgave/{oppgaveId}/utsett:
     put:
       summary: Saksbehandler utsetter oppgaven
