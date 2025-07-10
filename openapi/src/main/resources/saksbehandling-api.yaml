@@ -272,6 +272,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /oppgave/{oppgaveId}/ferdigstill:
+    put:
+      summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending.
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Oppgaven er ferdig behandlet og utsending av melding om vedtak har startet
+        '404':
+          description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak:
     put:
       summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending.
