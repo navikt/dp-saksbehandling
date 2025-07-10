@@ -137,7 +137,6 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill", HttpMethod.Put),
-                Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
                 Arguments.of("/person", HttpMethod.Post),
                 Arguments.of("/person/${UUIDv7.ny()}", HttpMethod.Get),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
