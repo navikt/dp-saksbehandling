@@ -272,33 +272,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-  /oppgave/{oppgaveId}/ferdigstill/uten-melding-om-vedtak:
-    put:
-      summary: Ferdigstill en Oppgave ved å godkjenne behandlingen.
-      parameters:
-        - in: path
-          name: oppgaveId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Oppgaven er ferdig behandlet
-        '404':
-          description: Oppgaven ble ikke funnet
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-        default:
-          description: Feil
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-
-  /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak:
+  /oppgave/{oppgaveId}/ferdigstill:
     put:
       summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending.
       parameters:
@@ -308,6 +282,11 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMeldingOmVedtak'
       responses:
         '204':
           description: Oppgaven er ferdig behandlet og utsending av melding om vedtak har startet
@@ -1588,6 +1567,15 @@ components:
       required:
         - verdi
         - tilgjengeligeUtfall
+
+    SendMeldingOmVedtak:
+      type: object
+      properties:
+        sendMeldingOmVedtak:
+          type: string
+          enum:
+            - DP-SAK
+            - IKKE_SEND
 
     HttpProblem:
       type: object

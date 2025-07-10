@@ -136,8 +136,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
-                Arguments.of("/oppgave/oppgaveId/ferdigstill/uten-melding-om-vedtak", HttpMethod.Put),
-                Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/ferdigstill", HttpMethod.Put),
                 Arguments.of("/person", HttpMethod.Post),
                 Arguments.of("/person/${UUIDv7.ny()}", HttpMethod.Get),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
@@ -444,8 +443,15 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/uten-melding-om-vedtak") {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
                 autentisert(token = saksbehandlerToken)
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """
+                        {"sendMeldingOmVedtak":"IKKE_SEND"}
+                    """.trimMargin(),
+                )
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
@@ -466,7 +472,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
                 autentisert(token = saksbehandlerToken)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
@@ -479,7 +485,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Feilhåndtering for melding om vedtak v2`() {
+    fun `Feilhåndtering for melding om vedtak`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =
@@ -490,7 +496,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
                 autentisert(token = saksbehandlerToken)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.InternalServerError

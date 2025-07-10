@@ -26,6 +26,8 @@ import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
+import no.nav.dagpenger.saksbehandling.api.models.SendMeldingOmVedtakDTO
+import no.nav.dagpenger.saksbehandling.api.models.SendMeldingOmVedtakDTOSendMeldingOmVedtakDTO
 import no.nav.dagpenger.saksbehandling.api.models.SoknadDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
@@ -276,33 +278,32 @@ internal fun Route.oppgaveApi(
                     }
                 }
 
-                route("ferdigstill/melding-om-vedtak") {
+                route("ferdigstill") {
                     put {
                         val oppgaveId = call.finnUUID("oppgaveId")
+                        val meldingOmVedtak =
+                            try {
+                                call.receive<SendMeldingOmVedtakDTO>()
+                            } catch (t: Throwable) {
+                                logger.warn("Kunne ikke lese meldingOmVedtak fra request body, bruker DP_SAK som default")
+                                SendMeldingOmVedtakDTOSendMeldingOmVedtakDTO.DP_SAK
+                            }
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val saksbehandler = applicationCallParser.saksbehandler(call)
                             val saksbehandlerToken = call.request.jwt()
-                            oppgaveMediator.ferdigstillOppgave(
-                                oppgaveId = oppgaveId,
-                                saksBehandler = saksbehandler,
-                                saksbehandlerToken = saksbehandlerToken,
-                            )
-                            call.respond(HttpStatusCode.NoContent)
-                        }
-                    }
-                }
-
-                route("ferdigstill/uten-melding-om-vedtak") {
-                    put {
-                        val oppgaveId = call.finnUUID("oppgaveId")
-                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            val saksbehandler = applicationCallParser.saksbehandler(call)
-                            val saksbehandlerToken = call.request.jwt()
-                            oppgaveMediator.ferdigstillOppgaveUtenMeldingOmVedtak(
-                                oppgaveId = oppgaveId,
-                                saksBehandler = saksbehandler,
-                                saksbehandlerToken = saksbehandlerToken,
-                            )
+                            if (meldingOmVedtak == SendMeldingOmVedtakDTOSendMeldingOmVedtakDTO.DP_SAK) {
+                                oppgaveMediator.ferdigstillOppgave(
+                                    oppgaveId = oppgaveId,
+                                    saksBehandler = saksbehandler,
+                                    saksbehandlerToken = saksbehandlerToken,
+                                )
+                            } else {
+                                oppgaveMediator.ferdigstillOppgaveUtenMeldingOmVedtak(
+                                    oppgaveId = oppgaveId,
+                                    saksBehandler = saksbehandler,
+                                    saksbehandlerToken = saksbehandlerToken,
+                                )
+                            }
                             call.respond(HttpStatusCode.NoContent)
                         }
                     }
