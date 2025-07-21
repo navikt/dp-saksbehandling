@@ -7,6 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -44,9 +45,14 @@ class KlageMediator(
     private val sakMediator: SakMediator,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
+    private lateinit var auditlogg: Auditlogg
 
     fun setRapidsConnection(rapidsConnection: RapidsConnection) {
         this.rapidsConnection = rapidsConnection
+    }
+
+    fun setAuditlogg(auditlogg: Auditlogg) {
+        this.auditlogg = auditlogg
     }
 
     fun hentKlageBehandling(
