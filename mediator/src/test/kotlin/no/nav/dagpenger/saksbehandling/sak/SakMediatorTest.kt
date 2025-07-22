@@ -137,7 +137,7 @@ class SakMediatorTest {
 
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
-                behandlinger.last().behandlingId shouldBe behandlingIdManuell
+                behandlinger.first().behandlingId shouldBe behandlingIdManuell
             }
         }
     }
