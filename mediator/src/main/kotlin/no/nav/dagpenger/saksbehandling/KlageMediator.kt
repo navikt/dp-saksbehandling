@@ -63,7 +63,9 @@ class KlageMediator(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         )
-        return klageRepository.hentKlageBehandling(behandlingId)
+        val klageBehandling = klageRepository.hentKlageBehandling(behandlingId)
+        // auditlogg.les("Så en klagebehandling", /* ident her? */, saksbehandler.navIdent)
+        return klageBehandling
     }
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
@@ -132,6 +134,12 @@ class KlageMediator(
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
 
+        auditlogg.opprett(
+            "Opprettet en manuell klage",
+            manuellKlageMottattHendelse.ident,
+            utførtAv.navIdent,
+        )
+
         return kotlin.runCatching {
             oppgaveMediator.opprettOppgaveForBehandling(
                 behandlingOpprettetHendelse = behandlingOpprettetHendelse,
@@ -162,6 +170,7 @@ class KlageMediator(
         klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
             klageBehandling.svar(opplysningId, verdi)
             klageRepository.lagre(klageBehandling = klageBehandling)
+            // auditlogg.oppdater("Oppdaterte en klageopplysning", /* ident her? */, saksbehandler.navIdent)
         }
     }
 
@@ -251,6 +260,7 @@ class KlageMediator(
 
             val saksbehandler = saksbehandlerDeferred.await()
             if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+                auditlogg.oppdater("Ferdigstilte en klage", oppgave.personIdent(), saksbehandler.ident)
                 val body =
                     mutableMapOf(
                         "behandlingId" to klageBehandling.behandlingId.toString(),
@@ -311,6 +321,7 @@ class KlageMediator(
 
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
+        // auditlogg.oppdater("Avbrutte en klage", /* ident her? */, hendelse.utførtAv.navIdent)
     }
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {

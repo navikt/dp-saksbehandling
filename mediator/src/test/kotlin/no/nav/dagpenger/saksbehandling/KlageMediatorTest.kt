@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -118,6 +119,23 @@ class KlageMediatorTest {
                     behandlingType = BehandlingType.KLAGE,
                 )
             } returns Result.success(html)
+        }
+    private val auditloggMock =
+        mockk<ApiAuditlogg>().also {
+            coEvery {
+                it.opprett(
+                    melding = any(),
+                    ident = any(),
+                    saksbehandler = any(),
+                )
+            } returns Unit
+            coEvery {
+                it.oppdater(
+                    melding = any(),
+                    ident = any(),
+                    saksbehandler = any(),
+                )
+            } returns Unit
         }
 
     @Test
@@ -799,7 +817,10 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     sakMediator = sakMediator,
-                ).also { it.setRapidsConnection(rapidsConnection = testRapid) }
+                ).also {
+                    it.setAuditlogg(auditlogg = auditloggMock)
+                    it.setRapidsConnection(rapidsConnection = testRapid)
+                }
             personRepository.lagre(
                 Person(
                     ident = testPersonIdent,
