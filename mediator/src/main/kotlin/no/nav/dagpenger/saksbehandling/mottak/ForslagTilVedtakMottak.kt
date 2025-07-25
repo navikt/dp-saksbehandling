@@ -68,10 +68,6 @@ internal class ForslagTilVedtakMottak(
     ) {
         val søknadId = packet.søknadId()
         val behandlingId = packet["behandlingId"].asUUID()
-        if (UUID.fromString("0197d4e6-b481-78dc-a9ad-2daf498bcc5b") == behandlingId) {
-            logger.info { "Skipper forslag til vedtak for 0197d4e6-b481-78dc-a9ad-2daf498bcc5b" }
-            return
-        }
 
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_vedtak hendelse" }
