@@ -33,12 +33,6 @@ internal class VedtakFattetMottak(
         }
     }
 
-    // Se https://nav-it.slack.com/archives/C063581H0PR/p1753450480334419
-    private val skipBehandlinger =
-        setOf(
-            "01984174-1dd2-7ebc-86d1-c85702ffaaf4",
-        ).map { UUID.fromString(it) }
-
     init {
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
@@ -55,19 +49,17 @@ internal class VedtakFattetMottak(
         withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak_fattet hendelse" }
 
-            if (behandlingId in skipBehandlinger) {
-                logger.info { "Skipper behandling med id $behandlingId" }
-                return
+            oppgaveMediator.hentOppgaveIdFor(behandlingId)?.let {
+                oppgaveMediator.ferdigstillOppgave(
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        søknadId = søknadId,
+                        ident = packet["ident"].asText(),
+                        sak = packet.sak(),
+                        automatiskBehandlet = packet["automatisk"].asBoolean(),
+                    ),
+                )
             }
-            oppgaveMediator.ferdigstillOppgave(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    søknadId = søknadId,
-                    ident = packet["ident"].asText(),
-                    sak = packet.sak(),
-                    automatiskBehandlet = packet["automatisk"].asBoolean(),
-                ),
-            )
         }
     }
 }
