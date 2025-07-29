@@ -7,6 +7,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -136,6 +137,20 @@ class KlageMediatorTest {
                     saksbehandler = any(),
                 )
             } returns Unit
+            coEvery {
+                it.les(
+                    melding = any(),
+                    ident = any(),
+                    saksbehandler = any(),
+                )
+            } returns Unit
+            coEvery {
+                it.slett(
+                    melding = any(),
+                    ident = any(),
+                    saksbehandler = any(),
+                )
+            } returns Unit
         }
 
     @Test
@@ -153,6 +168,7 @@ class KlageMediatorTest {
                 ).behandlingId
 
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
+            verify(exactly = 1) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -169,6 +185,8 @@ class KlageMediatorTest {
             )
 
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            verify(exactly = 7) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
+            verify(exactly = 9) { auditloggMock.oppdater("Oppdaterte en klageopplysning", testPersonIdent, saksbehandler.navIdent) }
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
@@ -180,8 +198,11 @@ class KlageMediatorTest {
                     saksbehandlerToken = "token",
                 )
             }
+            verify(exactly = 0) { auditloggMock.oppdater("Ferdigstilte en klage", testPersonIdent, saksbehandler.navIdent) }
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
+            verify(exactly = 19) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
+            verify(exactly = 21) { auditloggMock.oppdater("Oppdaterte en klageopplysning", testPersonIdent, saksbehandler.navIdent) }
             klageMediator.ferdigstill(
                 hendelse =
                     KlageFerdigbehandletHendelse(
@@ -190,12 +211,14 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
+            verify(exactly = 1) { auditloggMock.oppdater("Ferdigstilte en klage", testPersonIdent, saksbehandler.navIdent) }
 
             val klageBehandling =
                 klageMediator.hentKlageBehandling(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 )
+            verify(exactly = 20) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
             klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
             klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
 
@@ -228,6 +251,7 @@ class KlageMediatorTest {
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand().type shouldBe FERDIGSTILT
 
+            verify(exactly = 21) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
             oppgaveMediator.hentOppgaveFor(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
@@ -254,7 +278,10 @@ class KlageMediatorTest {
                     ),
                 ).behandlingId
 
+            verify(exactly = 1) { auditloggMock.opprett("Opprettet en manuell klage", testPersonIdent, saksbehandler.navIdent) }
+
             klageMediator.hentKlageBehandling(behandlingId, saksbehandler).tilstand().type shouldBe BEHANDLES
+            verify(exactly = 1) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
 
             val oppgave = oppgaveMediator.hentOppgaveFor(behandlingId = behandlingId, saksbehandler = saksbehandler)
 
@@ -264,6 +291,8 @@ class KlageMediatorTest {
             oppgave.sisteSaksbehandler() shouldBe saksbehandler.navIdent
 
             klageMediator.registrerKlageBehandlingOpplysninger(behandlingId, saksbehandler)
+            verify(exactly = 7) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
+            verify(exactly = 9) { auditloggMock.oppdater("Oppdaterte en klageopplysning", testPersonIdent, saksbehandler.navIdent) }
 
             shouldThrow<IllegalStateException> {
                 klageMediator.ferdigstill(
@@ -275,8 +304,11 @@ class KlageMediatorTest {
                     saksbehandlerToken = "token",
                 )
             }
+            verify(exactly = 0) { auditloggMock.oppdater("Ferdigstilte en klage", testPersonIdent, saksbehandler.navIdent) }
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
+            verify(exactly = 19) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
+            verify(exactly = 21) { auditloggMock.oppdater("Oppdaterte en klageopplysning", testPersonIdent, saksbehandler.navIdent) }
             klageMediator.ferdigstill(
                 hendelse =
                     KlageFerdigbehandletHendelse(
@@ -285,11 +317,13 @@ class KlageMediatorTest {
                     ),
                 saksbehandlerToken = "token",
             )
+            verify(exactly = 1) { auditloggMock.oppdater("Ferdigstilte en klage", testPersonIdent, saksbehandler.navIdent) }
             val klageBehandling =
                 klageMediator.hentKlageBehandling(
                     behandlingId = behandlingId,
                     saksbehandler = saksbehandler,
                 )
+            verify(exactly = 20) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
             klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
             klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
 
@@ -321,7 +355,7 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand().type shouldBe FERDIGSTILT
-
+            verify(exactly = 21) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
             oppgaveMediator.hentOppgaveFor(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,

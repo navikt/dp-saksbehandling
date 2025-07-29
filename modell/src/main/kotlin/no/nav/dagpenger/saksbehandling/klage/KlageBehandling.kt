@@ -5,6 +5,8 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.AVBRUTT
@@ -18,6 +20,7 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
+@ConsistentCopyVisibility
 data class KlageBehandling private constructor(
     val behandlingId: UUID = UUIDv7.ny(),
     val opprettet: LocalDateTime,
@@ -113,6 +116,20 @@ data class KlageBehandling private constructor(
 
     fun synligeOpplysninger(): Set<Opplysning> {
         return opplysninger.filter { it.synlighet() }.toSet()
+    }
+
+    fun personIdent(): String {
+        return runCatching {
+            _tilstandslogg.firstOrNull { it.hendelse is KlageMottattHendelse || it.hendelse is ManuellKlageMottattHendelse }?.let {
+                if (it.hendelse is KlageMottattHendelse) {
+                    (it.hendelse).ident
+                } else {
+                    (it.hendelse as ManuellKlageMottattHendelse).ident
+                }
+            }
+        }
+            .onFailure { e -> logger.error(e) { "Feil ved henting av personident for klagebehandling: ${this.behandlingId}" } }
+            .getOrThrow()!!
     }
 
     fun svar(

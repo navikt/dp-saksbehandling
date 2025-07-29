@@ -64,7 +64,7 @@ class KlageMediator(
             saksbehandler = saksbehandler,
         )
         val klageBehandling = klageRepository.hentKlageBehandling(behandlingId)
-        // auditlogg.les("Så en klagebehandling", /* ident her? */, saksbehandler.navIdent)
+        auditlogg.les("Så en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
         return klageBehandling
     }
 
@@ -170,7 +170,7 @@ class KlageMediator(
         klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
             klageBehandling.svar(opplysningId, verdi)
             klageRepository.lagre(klageBehandling = klageBehandling)
-            // auditlogg.oppdater("Oppdaterte en klageopplysning", /* ident her? */, saksbehandler.navIdent)
+            auditlogg.oppdater("Oppdaterte en klageopplysning", klageBehandling.personIdent(), saksbehandler.navIdent)
         }
     }
 
@@ -321,7 +321,7 @@ class KlageMediator(
 
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
-        // auditlogg.oppdater("Avbrutte en klage", /* ident her? */, hendelse.utførtAv.navIdent)
+        auditlogg.oppdater("Avbrutte en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
     }
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {
