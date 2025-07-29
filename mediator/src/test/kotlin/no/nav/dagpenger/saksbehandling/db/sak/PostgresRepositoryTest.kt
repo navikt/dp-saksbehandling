@@ -67,8 +67,9 @@ class PostgresRepositoryTest {
             søknadId = UUIDv7.ny(),
             opprettet = nå,
         ).also {
-            it.leggTilBehandling(behandling3)
+            // Emulerer out of order lesing
             it.leggTilBehandling(behandling4)
+            it.leggTilBehandling(behandling3)
         }
     private val sakHistorikk =
         SakHistorikk(
@@ -87,6 +88,14 @@ class PostgresRepositoryTest {
             val saksHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
 
             saksHistorikkFraDB shouldBe sakHistorikk
+
+            // Sjekker at saker og behandling blir sortert kronologisk, med nyeste først
+            saksHistorikkFraDB
+                .saker()
+                .first()
+                .behandlinger()
+                .first()
+                .behandlingId shouldBe behandling4.behandlingId
         }
     }
 }
