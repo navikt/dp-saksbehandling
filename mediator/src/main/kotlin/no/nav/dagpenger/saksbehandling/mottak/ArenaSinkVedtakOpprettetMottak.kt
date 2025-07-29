@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+import java.util.UUID
 
 private val logg = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -42,6 +43,12 @@ class ArenaSinkVedtakOpprettetMottak(
         }
     }
 
+    // Se https://nav-it.slack.com/archives/C063581H0PR/p1753450480334419
+    private val skipBehandlinger =
+        setOf(
+            "01984174-1dd2-7ebc-86d1-c85702ffaaf4",
+        ).map { UUID.fromString(it) }
+
     init {
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
@@ -53,6 +60,10 @@ class ArenaSinkVedtakOpprettetMottak(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["kilde"]["id"].asUUID()
+        if (behandlingId in skipBehandlinger) {
+            logg.info { "Skipper behandling med id $behandlingId" }
+            return
+        }
         val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
         val ident = oppgave.personIdent()
         val sakId = packet["sakId"].asText()

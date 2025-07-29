@@ -15,7 +15,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
-import no.nav.dagpenger.saksbehandling.Oppgave.BehandlesIArena
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
@@ -50,7 +49,6 @@ import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -382,7 +380,6 @@ OppgaveMediatorTest {
             return Stream.of(
                 Arguments.of(Opprettet, false),
                 Arguments.of(KlarTilBehandling, false),
-                Arguments.of(BehandlesIArena, false),
                 Arguments.of(AvventerOpplåsingAvBehandling, false),
                 Arguments.of(AvventerLåsAvBehandling, false),
                 Arguments.of(Oppgave.PåVent, true),
@@ -617,68 +614,6 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Livssyklus for oppgave ferdigstilles med brev-håndtering i Arena`() {
-        val behandlingId = UUIDv7.ny()
-        val søknadId = UUIDv7.ny()
-        val saksbehandlerToken = "token"
-        val behandlingClientMock =
-            mockk<BehandlingKlient>().also {
-                every {
-                    it.godkjenn(
-                        behandlingId = behandlingId,
-                        ident = testIdent,
-                        saksbehandlerToken = saksbehandlerToken,
-                    )
-                } returns Result.success(Unit)
-            }
-        settOppOppgaveMediator(behandlingKlient = behandlingClientMock) { datasource, oppgaveMediator ->
-            oppgaveMediator.opprettEllerOppdaterOppgave(
-                ForslagTilVedtakHendelse(
-                    ident = testIdent,
-                    søknadId = søknadId,
-                    behandlingId = behandlingId,
-                    emneknagger = emneknagger,
-                ),
-            )
-
-            val oppgave =
-                datasource.lagTestoppgave(
-                    tilstand = KLAR_TIL_BEHANDLING,
-                    behandlingId = behandlingId,
-                    søknadId = søknadId,
-                )
-            oppgaveMediator.tildelOppgave(
-                SettOppgaveAnsvarHendelse(
-                    oppgaveId = oppgave.oppgaveId,
-                    ansvarligIdent = saksbehandler.navIdent,
-                    utførtAv = saksbehandler,
-                ),
-            )
-
-            oppgaveMediator.ferdigstillOppgave(
-                GodkjennBehandlingMedBrevIArena(
-                    oppgaveId = oppgave.oppgaveId,
-                    utførtAv = saksbehandler,
-                ),
-                "token",
-            )
-
-            verify(exactly = 1) {
-                behandlingClientMock.godkjenn(behandlingId, testIdent, saksbehandlerToken)
-            }
-
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
-
-            UtsendingMediator(
-                utsendingRepository = PostgresUtsendingRepository(datasource),
-                brevProdusent = mockk(),
-            )
-                .finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
-        }
-    }
-
-    @Test
     fun `Skal kaste feil dersom godkjenn behandling feiler`() {
         val behandlingId = UUIDv7.ny()
         val saksbehandlerToken = "token"
@@ -712,11 +647,9 @@ OppgaveMediatorTest {
 
             shouldThrow<BehandlingException> {
                 oppgaveMediator.ferdigstillOppgave(
-                    GodkjennBehandlingMedBrevIArena(
-                        oppgaveId = oppgave.oppgaveId,
-                        utførtAv = saksbehandler,
-                    ),
-                    "token",
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandler = saksbehandler,
+                    saksbehandlerToken = "token",
                 )
             }
 

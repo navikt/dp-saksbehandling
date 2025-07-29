@@ -272,7 +272,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-  /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak:
+  /oppgave/{oppgaveId}/ferdigstill:
     put:
       summary: Ferdigstill en Oppgave ved å godkjenne behandlingen og starte utsending.
       parameters:
@@ -285,32 +285,6 @@ paths:
       responses:
         '204':
           description: Oppgaven er ferdig behandlet og utsending av melding om vedtak har startet
-        '404':
-          description: Oppgaven ble ikke funnet
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-        default:
-          description: Feil
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-
-  /oppgave/{oppgaveId}/ferdigstill/melding-om-vedtak-arena:
-    put:
-      summary: Ferdigstill en Oppgave ved å la arena lage melding om vedtak.
-      parameters:
-        - in: path
-          name: oppgaveId
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: Oppgaven er ferdig behandlet og utsending av melding om vedtak håndteres i Arena
         '404':
           description: Oppgaven ble ikke funnet
           content:
@@ -1056,7 +1030,7 @@ components:
           pattern: '^[0-9]{11}$'
       required:
         - ident
-        -
+
     PersonId:
       type: object
       properties:

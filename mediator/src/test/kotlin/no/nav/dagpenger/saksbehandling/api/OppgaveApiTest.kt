@@ -78,7 +78,6 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjennBehandlingMedBrevIArena
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SendTilKontrollHendelse
@@ -137,8 +136,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
-                Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak", HttpMethod.Put),
-                Arguments.of("/oppgave/oppgaveId/ferdigstill/melding-om-vedtak-arena", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/ferdigstill", HttpMethod.Put),
                 Arguments.of("/person", HttpMethod.Post),
                 Arguments.of("/person/${UUIDv7.ny()}", HttpMethod.Get),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
@@ -436,7 +434,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak v2`() {
+    fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =
@@ -445,7 +443,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
                 autentisert(token = saksbehandlerToken)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
@@ -458,7 +456,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Feilhåndtering for melding om vedtak v2`() {
+    fun `Feilhåndtering for melding om vedtak`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =
@@ -469,7 +467,7 @@ class OppgaveApiTest {
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak") {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
                 autentisert(token = saksbehandlerToken)
             }.let { response ->
                 response.status shouldBe HttpStatusCode.InternalServerError
@@ -549,32 +547,6 @@ class OppgaveApiTest {
             }
             verify(exactly = 1) {
                 oppgaveMediatorMock.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse, beslutterToken)
-            }
-        }
-    }
-
-    @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak i Arena`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken()
-        val godkjennBehandlingMedBrevIArena =
-            GodkjennBehandlingMedBrevIArena(
-                oppgaveId = oppgave.oppgaveId,
-                utførtAv = saksbehandler,
-            )
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                every { it.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any()) } just Runs
-            }
-
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill/melding-om-vedtak-arena") {
-                autentisert(token = saksbehandlerToken)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
-            verify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(godkjennBehandlingMedBrevIArena, any())
             }
         }
     }
