@@ -83,7 +83,9 @@ class SakMediator(
 
     fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(manuellBehandlingOpprettetHendelse.ident).also {
+            logger.info("Knytt til sak: SakId = ${it.saker().map { it.sakId }}")
             it.knyttTilSak(manuellBehandlingOpprettetHendelse)
+            logger.info { "Knyttet behandling ${manuellBehandlingOpprettetHendelse.behandlingId} til sak ${it.saker().map { it.sakId }}" }
             sakRepository.lagre(it)
         }
     }
