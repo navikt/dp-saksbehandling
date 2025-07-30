@@ -866,9 +866,4 @@ class KlageMediatorTest {
         require(this["@event_name"].asText() == "behov") { "Forventet behov som event_name" }
         return this["@behov"].single().asText()
     }
-
-    private fun JsonNode.aktivitetsloggMelding(): String {
-        require(this["@event_name"].asText() == "aktivitetslogg") { "Forventet behov som aktivitetslogg" }
-        return this["melding"].single().asText()
-    }
 }
