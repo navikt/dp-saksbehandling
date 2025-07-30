@@ -7,6 +7,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -250,6 +251,12 @@ class KlageMediatorTest {
             testRapid.inspektør.size shouldBe 2
             testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
             testRapid.inspektør.message(1).behovNavn() shouldBe "OversendelseKlageinstans"
+
+            // i hver /registrer\w+?Opplysninger/-funksjon leses klagebehandlingen for hver opplysning som legges på.
+            // dermed blir tallene for både lesing og oppdatering sykt store.
+            verify(exactly = 21) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
+            verify(exactly = 21) { auditloggMock.oppdater("Oppdaterte en klageopplysning", testPersonIdent, saksbehandler.navIdent) }
+            verify(exactly = 1) { auditloggMock.oppdater("Ferdigstilte en klage", testPersonIdent, saksbehandler.navIdent) }
         }
     }
 
