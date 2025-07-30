@@ -50,7 +50,7 @@ internal class BehandlingOpprettetMottak(
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
-        val skipSet = setOf(UUID.fromString("01985ada-8a76-7e98-820e-22e8e7d23bf0"))
+        val skipSet = emptySet<UUID>()
         if (behandlingId in skipSet) {
             return
         }
@@ -91,7 +91,6 @@ internal class BehandlingOpprettetMottak(
                 val manuellId = packet.manuellId()
                 withLoggingContext("manuellId" to "$manuellId", "behandlingId" to "$behandlingId") {
                     logger.info { "Mottok behandling_opprettet hendelse for manuell behandling" }
-                    logger.info { "basertPåBehandlinger: ${packet.basertPåBehandlinger()}" }
                     val hendelse =
                         ManuellBehandlingOpprettetHendelse(
                             manuellId = manuellId,
@@ -100,7 +99,6 @@ internal class BehandlingOpprettetMottak(
                             opprettet = opprettet,
                             basertPåBehandlinger = packet.basertPåBehandlinger(),
                         )
-                    logger.info { "Mottok manuell behandling: $hendelse" }
                     sakMediator.knyttTilSak(
                         manuellBehandlingOpprettetHendelse = hendelse,
                     )
