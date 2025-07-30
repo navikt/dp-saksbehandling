@@ -50,6 +50,10 @@ internal class BehandlingOpprettetMottak(
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
 
+        val skipSet = setOf(UUID.fromString("01985ada-8a76-7e98-820e-22e8e7d23bf0"))
+        if (behandlingId in skipSet) {
+            return
+        }
         when (behandlingType) {
             "Søknad" -> {
                 val søknadId = packet.søknadId()
