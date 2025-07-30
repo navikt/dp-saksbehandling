@@ -178,7 +178,7 @@ internal object OppgaveApiTestHelper {
                             hendelse =
                                 ForslagTilVedtakHendelse(
                                     ident = TEST_IDENT,
-                                    id = SOKNAD_ID.toString(),
+                                    behandletHendelseId = SOKNAD_ID.toString(),
                                     behandletHendelseType = "Søknad",
                                     behandlingId = behandling.behandlingId,
                                 ),

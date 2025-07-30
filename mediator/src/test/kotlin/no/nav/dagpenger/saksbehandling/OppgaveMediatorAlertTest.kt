@@ -39,7 +39,7 @@ class OppgaveMediatorAlertTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = "12345678910",
-                    id = UUIDv7.ny().toString(),
+                    behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = emptySet(),
@@ -88,7 +88,7 @@ class OppgaveMediatorAlertTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
                     ident = "12345678910",
-                    id = UUIDv7.ny().toString(),
+                    behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = emptySet(),

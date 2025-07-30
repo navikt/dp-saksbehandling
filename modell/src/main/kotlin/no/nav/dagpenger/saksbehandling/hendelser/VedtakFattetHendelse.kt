@@ -6,7 +6,7 @@ import java.util.UUID
 
 data class VedtakFattetHendelse(
     val behandlingId: UUID,
-    val id: String,
+    val behandletHendelseId: String,
     val behandletHendelseType: String,
     val ident: String,
     val sak: UtsendingSak,

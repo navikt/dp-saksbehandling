@@ -308,11 +308,12 @@ data class Oppgave private constructor(
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
                 val hendelse = it.hendelse as ForslagTilVedtakHendelse
                 when (hendelse.behandletHendelseType) {
-                    "Søknad" -> UUID.fromString(hendelse.id)
+                    "Søknad" -> UUID.fromString(hendelse.behandletHendelseId)
                     "Manuell", "Meldekort" -> {
                         logger.info {
                             "behandletHendelseType is ${hendelse.behandletHendelseType} " +
-                                "for oppgave: ${this.oppgaveId} søknadId eksisterer derfro ikke"
+                                "for oppgave: ${this.oppgaveId} " +
+                                "søknadId eksisterer derfor ikke"
                         }
                         null
                     }

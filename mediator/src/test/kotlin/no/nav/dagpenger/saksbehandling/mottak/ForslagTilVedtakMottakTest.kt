@@ -53,7 +53,7 @@ class ForslagTilVedtakMottakTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
         }
         hendelse.captured.ident shouldBe ident
-        hendelse.captured.id shouldBe søknadId.toString()
+        hendelse.captured.behandletHendelseId shouldBe søknadId.toString()
         hendelse.captured.behandlingId shouldBe behandlingId
         hendelse.captured.behandletHendelseType shouldBe "Søknad"
         hendelse.captured.emneknagger shouldBe
@@ -70,7 +70,7 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger =
@@ -92,7 +92,7 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger =
@@ -124,7 +124,7 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_VERNEPLIKT.visningsnavn),
@@ -141,7 +141,7 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
@@ -158,7 +158,7 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn),
@@ -175,7 +175,7 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT_FISK.visningsnavn),
@@ -192,7 +192,7 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_KONKURS.visningsnavn),
@@ -209,7 +209,7 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = søknadId.toString(),
+                    behandletHendelseId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn),
@@ -227,7 +227,7 @@ class ForslagTilVedtakMottakTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
         }
         hendelse.captured.ident shouldBe ident
-        hendelse.captured.id shouldBe meldekortId.toString()
+        hendelse.captured.behandletHendelseId shouldBe meldekortId.toString()
         hendelse.captured.behandlingId shouldBe behandlingId
         hendelse.captured.behandletHendelseType shouldBe "Meldekort"
         hendelse.captured.emneknagger shouldBe
@@ -245,7 +245,7 @@ class ForslagTilVedtakMottakTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
         }
         hendelse.captured.ident shouldBe ident
-        hendelse.captured.id shouldBe manuell.toString()
+        hendelse.captured.behandletHendelseId shouldBe manuell.toString()
         hendelse.captured.behandlingId shouldBe behandlingId
         hendelse.captured.behandletHendelseType shouldBe "Manuell"
         hendelse.captured.emneknagger shouldBe

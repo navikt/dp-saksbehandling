@@ -5,7 +5,7 @@ import java.util.UUID
 
 data class ForslagTilVedtakHendelse(
     val ident: String,
-    val id: String,
+    val behandletHendelseId: String,
     val behandletHendelseType: String,
     val behandlingId: UUID,
     val emneknagger: Set<String> = emptySet(),

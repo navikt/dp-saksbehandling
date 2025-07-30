@@ -98,7 +98,7 @@ class OppgaveTilstandTest {
         val hendelse =
             ForslagTilVedtakHendelse(
                 ident = testIdent,
-                id = UUIDv7.ny().toString(),
+                behandletHendelseId = UUIDv7.ny().toString(),
                 behandletHendelseType = "Søknad",
                 behandlingId = UUIDv7.ny(),
                 utførtAv = Applikasjon("dp-behandling"),
@@ -128,7 +128,7 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
                         behandlingId = oppgave.behandlingId,
-                        id = UUIDv7.ny().toString(),
+                        behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
                         automatiskBehandlet = false,
@@ -156,7 +156,7 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
                         behandlingId = oppgave.behandlingId,
-                        id = UUIDv7.ny().toString(),
+                        behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
                         automatiskBehandlet = false,
@@ -177,7 +177,7 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
                         behandlingId = oppgave.behandlingId,
-                        id = UUIDv7.ny().toString(),
+                        behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
                         sak = utsendingSak,
@@ -199,7 +199,7 @@ class OppgaveTilstandTest {
                 oppgave.ferdigstill(
                     VedtakFattetHendelse(
                         behandlingId = oppgave.behandlingId,
-                        id = UUIDv7.ny().toString(),
+                        behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
                         automatiskBehandlet = true,
@@ -302,7 +302,7 @@ class OppgaveTilstandTest {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
                         behandlingId = oppgave.behandlingId,
-                        id = UUIDv7.ny().toString(),
+                        behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
                     ),
@@ -329,7 +329,7 @@ class OppgaveTilstandTest {
                 oppgave.oppgaveKlarTilBehandling(
                     ForslagTilVedtakHendelse(
                         behandlingId = oppgave.behandlingId,
-                        id = UUIDv7.ny().toString(),
+                        behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
                     ),
@@ -447,7 +447,7 @@ class OppgaveTilstandTest {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    id = UUIDv7.ny().toString(),
+                    behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
@@ -467,7 +467,7 @@ class OppgaveTilstandTest {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    id = UUIDv7.ny().toString(),
+                    behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
@@ -487,7 +487,7 @@ class OppgaveTilstandTest {
             oppgave.oppgaveKlarTilBehandling(
                 ForslagTilVedtakHendelse(
                     ident = testIdent,
-                    id = UUIDv7.ny().toString(),
+                    behandletHendelseId = UUIDv7.ny().toString(),
                     behandletHendelseType = "Søknad",
                     behandlingId = oppgave.behandlingId,
                     utførtAv = Applikasjon("dp-behandling"),
@@ -788,7 +788,7 @@ class OppgaveTilstandTest {
                             hendelse =
                                 ForslagTilVedtakHendelse(
                                     ident = "11111155555",
-                                    id = UUIDv7.ny().toString(),
+                                    behandletHendelseId = UUIDv7.ny().toString(),
                                     behandlingId = UUIDv7.ny(),
                                     behandletHendelseType = "Søknad",
                                     emneknagger = emptySet(),
@@ -814,7 +814,7 @@ class OppgaveTilstandTest {
         oppgave.oppgaveKlarTilBehandling(
             ForslagTilVedtakHendelse(
                 ident = testIdent,
-                id = UUIDv7.ny().toString(),
+                behandletHendelseId = UUIDv7.ny().toString(),
                 behandletHendelseType = "Søknad",
                 behandlingId = UUIDv7.ny(),
                 utførtAv = Applikasjon("dp-behandling"),

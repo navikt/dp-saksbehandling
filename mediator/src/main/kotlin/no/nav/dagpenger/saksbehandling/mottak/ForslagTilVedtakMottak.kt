@@ -79,7 +79,7 @@ internal class ForslagTilVedtakMottak(
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    id = id,
+                    behandletHendelseId = id,
                     behandletHendelseType = behandletHendelseType,
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
