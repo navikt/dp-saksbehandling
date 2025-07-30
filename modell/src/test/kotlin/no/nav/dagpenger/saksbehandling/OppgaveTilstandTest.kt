@@ -136,12 +136,16 @@ class OppgaveTilstandTest {
                     ),
                 )
 
-            if (tilstand == UNDER_KONTROLL) {
-                oppgave.tilstand().type shouldBe UNDER_KONTROLL
-            } else if (tilstand == UNDER_BEHANDLING) {
-                oppgave.tilstand().type shouldBe UNDER_BEHANDLING
-            } else {
-                oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            when (tilstand) {
+                UNDER_KONTROLL -> {
+                    oppgave.tilstand().type shouldBe UNDER_KONTROLL
+                }
+                UNDER_BEHANDLING -> {
+                    oppgave.tilstand().type shouldBe UNDER_BEHANDLING
+                }
+                else -> {
+                    oppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+                }
             }
 
             when (tilstand) {
@@ -262,7 +266,8 @@ class OppgaveTilstandTest {
                 oppgave.behandlesIArena(
                     BehandlingAvbruttHendelse(
                         behandlingId = oppgave.behandlingId,
-                        søknadId = UUIDv7.ny(),
+                        behandletHendelseId = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
                         ident = testIdent,
                     ),
                 )
@@ -276,7 +281,8 @@ class OppgaveTilstandTest {
                 oppgave.behandlesIArena(
                     BehandlingAvbruttHendelse(
                         behandlingId = oppgave.behandlingId,
-                        søknadId = UUIDv7.ny(),
+                        behandletHendelseId = UUIDv7.ny().toString(),
+                        behandletHendelseType = "Søknad",
                         ident = testIdent,
                     ),
                 )
@@ -358,7 +364,8 @@ class OppgaveTilstandTest {
             oppgave.behandlesIArena(
                 BehandlingAvbruttHendelse(
                     behandlingId = oppgave.behandlingId,
-                    søknadId = UUIDv7.ny(),
+                    behandletHendelseId = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     ident = testIdent,
                 ),
             )
@@ -709,7 +716,8 @@ class OppgaveTilstandTest {
             oppgave.behandlesIArena(
                 BehandlingAvbruttHendelse(
                     behandlingId = oppgave.behandlingId,
-                    søknadId = UUIDv7.ny(),
+                    behandletHendelseId = UUIDv7.ny().toString(),
+                    behandletHendelseType = "Søknad",
                     ident = testIdent,
                 ),
             )

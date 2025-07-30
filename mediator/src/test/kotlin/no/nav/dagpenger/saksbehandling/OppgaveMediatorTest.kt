@@ -758,7 +758,8 @@ OppgaveMediatorTest {
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = oppgave.behandlingId,
-                    søknadId = oppgave.soknadId()!!,
+                    behandletHendelseId = oppgave.soknadId()!!.toString(),
+                    behandletHendelseType = "Søknad",
                     ident = testIdent,
                 ),
             )
