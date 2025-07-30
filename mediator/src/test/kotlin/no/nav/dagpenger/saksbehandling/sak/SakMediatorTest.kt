@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -24,9 +25,9 @@ class SakMediatorTest {
     private val søknadId = UUID.randomUUID()
     private val meldekortId = 123L
     private val manuellId = UUID.randomUUID()
-    private val behandlingIdSøknad = UUID.randomUUID()
-    private val behandlingIdMeldekort = UUID.randomUUID()
-    private val behandlingIdManuell = UUID.randomUUID()
+    private val behandlingIdSøknad = UUIDv7.ny()
+    private val behandlingIdMeldekort = UUIDv7.ny()
+    private val behandlingIdManuell = UUIDv7.ny()
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.8")
     private val søknadsbehandlingOpprettetHendelse =
         SøknadsbehandlingOpprettetHendelse(
@@ -113,7 +114,7 @@ class SakMediatorTest {
 
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
-                behandlinger.last().behandlingId shouldBe behandlingIdMeldekort
+                behandlinger.first().behandlingId shouldBe behandlingIdMeldekort
             }
         }
     }
@@ -137,7 +138,7 @@ class SakMediatorTest {
 
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
-                behandlinger.last().behandlingId shouldBe behandlingIdManuell
+                behandlinger.first().behandlingId shouldBe behandlingIdManuell
             }
         }
     }

@@ -14,7 +14,7 @@ import javax.sql.DataSource
 
 internal fun vedtakFattetHendelse(
     ident: String,
-    id: String,
+    behandletHendelseId: String,
     behandletHendelseType: String = "Søknad",
     behandlingId: UUID,
     sakId: Int,
@@ -25,7 +25,7 @@ internal fun vedtakFattetHendelse(
       "@event_name": "vedtak_fattet",
       "behandletHendelse": {
         "datatype": "UUID",
-        "id": "$id",
+        "id": "$behandletHendelseId",
         "type": "$behandletHendelseType"
       },
       "behandlingId": "$behandlingId",

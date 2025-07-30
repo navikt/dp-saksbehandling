@@ -57,9 +57,8 @@ class PostgresRepository(
         }
     }
 
-    override fun hentSakHistorikk(ident: String): SakHistorikk {
-        return finnSakHistorikk(ident) ?: throw DataNotFoundException("Kan ikke finne sakHistorikk for ident $ident")
-    }
+    override fun hentSakHistorikk(ident: String): SakHistorikk =
+        finnSakHistorikk(ident) ?: throw DataNotFoundException("Kan ikke finne sakHistorikk for ident $ident")
 
     override fun finnSakHistorikk(ident: String): SakHistorikk? {
         val sakHistorikk = mutableListOf<SakHistorikk>()
@@ -90,6 +89,7 @@ class PostgresRepository(
                         LEFT JOIN oppgave_v1 opp ON opp.behandling_id = beh.id
                         LEFT JOIN hendelse_v1 hen ON hen.behandling_id = beh.id
                         WHERE per.ident = :ident
+                        ORDER BY sak.id DESC, beh.id DESC
                         """.trimIndent(),
                     paramMap =
                         mapOf(
@@ -102,8 +102,8 @@ class PostgresRepository(
         }
     }
 
-    override fun hentSakIdForBehandlingId(behandlingId: UUID): UUID {
-        return sessionOf(dataSource).use { session ->
+    override fun hentSakIdForBehandlingId(behandlingId: UUID): UUID =
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -123,7 +123,6 @@ class PostgresRepository(
                 }.asSingle,
             ) ?: throw DataNotFoundException("Kan ikke finne sak for behandlingId $behandlingId")
         }
-    }
 
     private fun TransactionalSession.lagreSakHistorikk(
         personId: UUID,

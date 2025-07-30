@@ -47,16 +47,19 @@ internal class VedtakFattetMottak(
 
         withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak_fattet hendelse" }
-            oppgaveMediator.ferdigstillOppgave(
-                VedtakFattetHendelse(
-                    behandlingId = behandlingId,
-                    behandletHendelseId = behandletHendelseId.toString(),
-                    behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
-                    ident = packet["ident"].asText(),
-                    sak = packet.sak(),
-                    automatiskBehandlet = packet["automatisk"].asBoolean(),
-                ),
-            )
+
+            oppgaveMediator.hentOppgaveIdFor(behandlingId)?.let {
+                oppgaveMediator.ferdigstillOppgave(
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = behandletHendelseId.toString(),
+                        behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
+                        ident = packet["ident"].asText(),
+                        sak = packet.sak(),
+                        automatiskBehandlet = packet["automatisk"].asBoolean(),
+                    ),
+                )
+            }
         }
     }
 }
