@@ -87,14 +87,18 @@ internal class BehandlingOpprettetMottak(
                 val manuellId = packet.manuellId()
                 withLoggingContext("manuellId" to "$manuellId", "behandlingId" to "$behandlingId") {
                     logger.info { "Mottok behandling_opprettet hendelse for manuell behandling" }
-                    sakMediator.knyttTilSak(
+                    logger.info { "basertPåBehandlinger: ${packet.basertPåBehandlinger()}" }
+                    val hendelse =
                         ManuellBehandlingOpprettetHendelse(
                             manuellId = manuellId,
                             behandlingId = behandlingId,
                             ident = ident,
                             opprettet = opprettet,
                             basertPåBehandlinger = packet.basertPåBehandlinger(),
-                        ),
+                        )
+                    logger.info { "Mottok manuell behandling: $hendelse" }
+                    sakMediator.knyttTilSak(
+                        manuellBehandlingOpprettetHendelse = hendelse,
                     )
                 }
             }
