@@ -37,18 +37,17 @@ internal class BehandlingAvbruttMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["ident"].asText()
         val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
-        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
+
         withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_avbrutt hendelse" }
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,
                     behandletHendelseId = behandletHendelseId,
-                    behandletHendelseType = behandletHendelseType,
-                    ident = ident,
+                    behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
+                    ident = packet["ident"].asText(),
                 ),
             )
         }

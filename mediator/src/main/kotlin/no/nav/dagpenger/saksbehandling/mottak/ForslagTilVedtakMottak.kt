@@ -68,19 +68,18 @@ internal class ForslagTilVedtakMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val id = packet["behandletHendelse"]["id"].asText()
-        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
+        val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
 
-        withLoggingContext("Id" to "$id", "behandlingId" to "$behandlingId") {
+        withLoggingContext("Id" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_vedtak hendelse" }
             val ident = packet["ident"].asText()
             val emneknagger = packet.emneknagger()
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    behandletHendelseId = id,
-                    behandletHendelseType = behandletHendelseType,
+                    behandletHendelseId = behandletHendelseId,
+                    behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
                     behandlingId = behandlingId,
                     emneknagger = emneknagger,
                 )
@@ -158,5 +157,3 @@ internal class ForslagTilVedtakMottak(
                 .toSet()
         }
 }
-
-private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
