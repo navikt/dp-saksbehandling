@@ -9,6 +9,6 @@ data class ManuellBehandlingOpprettetHendelse(
     val behandlingId: UUID,
     val ident: String,
     val opprettet: LocalDateTime,
-    val basertPåBehandlinger: List<UUID> = emptyList(),
+    val basertPåBehandling: UUID,
     override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
 ) : Hendelse(utførtAv)

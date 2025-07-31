@@ -5,6 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MANUELL
+import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
@@ -34,6 +36,8 @@ class ForslagTilVedtakMottakTest {
     private val oppgaveMediator = mockk<OppgaveMediator>(relaxed = true)
     private val behandlingId = UUIDv7.ny()
     private val søknadId = UUIDv7.ny()
+    private val meldekortId = UUIDv7.ny()
+    private val manuell = UUIDv7.ny()
     private val ident = "123456678912"
 
     init {
@@ -49,8 +53,9 @@ class ForslagTilVedtakMottakTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
         }
         hendelse.captured.ident shouldBe ident
-        hendelse.captured.søknadId shouldBe søknadId
+        hendelse.captured.behandletHendelseId shouldBe søknadId.toString()
         hendelse.captured.behandlingId shouldBe behandlingId
+        hendelse.captured.behandletHendelseType shouldBe "Søknad"
         hendelse.captured.emneknagger shouldBe
             setOf(
                 AVSLAG.visningsnavn, AVSLAG_MINSTEINNTEKT.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn,
@@ -65,9 +70,15 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
-                    emneknagger = setOf(AVSLAG.visningsnavn, AVSLAG_ALDER.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
+                    emneknagger =
+                        setOf(
+                            AVSLAG.visningsnavn,
+                            AVSLAG_ALDER.visningsnavn,
+                            RETTIGHET_ORDINÆR.visningsnavn,
+                        ),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
@@ -81,7 +92,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger =
                         setOf(
@@ -112,7 +124,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_VERNEPLIKT.visningsnavn),
                 )
@@ -128,7 +141,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn),
                 )
@@ -144,7 +158,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT.visningsnavn),
                 )
@@ -160,7 +175,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_PERMITTERT_FISK.visningsnavn),
                 )
@@ -176,7 +192,8 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn, RETTIGHET_KONKURS.visningsnavn),
                 )
@@ -192,12 +209,49 @@ class ForslagTilVedtakMottakTest {
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
                     ident = ident,
-                    søknadId = søknadId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     behandlingId = behandlingId,
                     emneknagger = setOf(INNVILGELSE.visningsnavn),
                 )
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
         }
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med behandlingtype meldekort`() {
+        testRapid.sendTestMessage(forslagTilVedtakBehandlingTypeMeldekortJson)
+
+        val hendelse = slot<ForslagTilVedtakHendelse>()
+        verify(exactly = 1) {
+            oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
+        }
+        hendelse.captured.ident shouldBe ident
+        hendelse.captured.behandletHendelseId shouldBe meldekortId.toString()
+        hendelse.captured.behandlingId shouldBe behandlingId
+        hendelse.captured.behandletHendelseType shouldBe "Meldekort"
+        hendelse.captured.emneknagger shouldBe
+            setOf(
+                AVSLAG.visningsnavn, MELDEKORT.visningsnavn,
+            )
+    }
+
+    @Test
+    fun `Skal kunne motta forslag_til_vedtak hendelse med behandlingtype manuell`() {
+        testRapid.sendTestMessage(forslagTilVedtakBehandlingTypeManuellJson)
+
+        val hendelse = slot<ForslagTilVedtakHendelse>()
+        verify(exactly = 1) {
+            oppgaveMediator.opprettEllerOppdaterOppgave(capture(hendelse))
+        }
+        hendelse.captured.ident shouldBe ident
+        hendelse.captured.behandletHendelseId shouldBe manuell.toString()
+        hendelse.captured.behandlingId shouldBe behandlingId
+        hendelse.captured.behandletHendelseType shouldBe "Manuell"
+        hendelse.captured.emneknagger shouldBe
+            setOf(
+                AVSLAG.visningsnavn, MANUELL.visningsnavn,
+            )
     }
 
     //language=json
@@ -257,6 +311,93 @@ class ForslagTilVedtakMottakTest {
             "datatype": "UUID",
             "id": "$søknadId",
             "type": "Søknad"
+          }
+        }
+        """.trimIndent()
+
+    private val forslagTilVedtakBehandlingTypeMeldekortJson =
+        """
+        {
+          "@event_name": "forslag_til_vedtak",
+          "prøvingsdato": "2024-12-01",
+          "fastsatt": {
+            "utfall": false
+          },
+          "vilkår": [
+            {
+              "navn": "Oppfyller kravet til alder",
+              "status": "Oppfylt",
+              "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+              "hjemmel": "folketrygdloven § 4-23"
+            }
+          ],
+            "opplysninger": [
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
+                  "verdi": "false"
+                }
+            ],
+          "ident": "$ident",
+          "behandlingId": "$behandlingId",
+          "gjelderDato": "2024-11-19",
+          "behandletHendelse": {
+            "datatype": "Long",
+            "id": "$meldekortId",
+            "type": "Meldekort"
+          }
+        }
+        """.trimIndent()
+    private val forslagTilVedtakBehandlingTypeManuellJson =
+        """
+        {
+          "@event_name": "forslag_til_vedtak",
+          "prøvingsdato": "2024-12-01",
+          "fastsatt": {
+            "utfall": false
+          },
+          "vilkår": [
+            {
+              "navn": "Oppfyller kravet til alder",
+              "status": "Oppfylt",
+              "vurderingstidspunkt": "2024-12-19T14:09:57.269936",
+              "hjemmel": "folketrygdloven § 4-23"
+            }
+          ],
+            "opplysninger": [
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d8a",
+                  "navn": "Har rett til ordinære dagpenger",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "0194881f-9444-7a73-a458-0af81c034d88",
+                  "navn": "Har rett til dagpenger under permittering i fiskeforedlingsindustri",
+                  "verdi": "false"
+                },
+                {
+                  "opplysningTypeId": "01948d43-e218-76f1-b29b-7e604241d98a",
+                  "navn": "Har utført minst tre måneders militærtjeneste eller obligatorisk sivilforsvarstjeneste",
+                  "verdi": "false"
+                }
+            ],
+          "ident": "$ident",
+          "behandlingId": "$behandlingId",
+          "gjelderDato": "2024-11-19",
+          "behandletHendelse": {
+            "datatype": "UUID",
+            "id": "$manuell",
+            "type": "Manuell"
           }
         }
         """.trimIndent()

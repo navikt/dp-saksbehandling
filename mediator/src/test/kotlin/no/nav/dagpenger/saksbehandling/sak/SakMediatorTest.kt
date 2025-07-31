@@ -42,7 +42,7 @@ class SakMediatorTest {
             behandlingId = behandlingIdMeldekort,
             ident = testIdent,
             opprettet = opprettet,
-            basertPåBehandlinger = listOf(behandlingIdSøknad),
+            basertPåBehandling = behandlingIdSøknad,
         )
 
     private val manuellBehandlingOpprettetHendelse =
@@ -51,7 +51,7 @@ class SakMediatorTest {
             behandlingId = behandlingIdManuell,
             ident = testIdent,
             opprettet = opprettet,
-            basertPåBehandlinger = listOf(behandlingIdSøknad),
+            basertPåBehandling = behandlingIdSøknad,
         )
 
     private val oppslagMock: Oppslag =

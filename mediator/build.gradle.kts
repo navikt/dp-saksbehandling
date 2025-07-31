@@ -39,6 +39,9 @@ dependencies {
     implementation("de.slub-dresden:urnlib:2.0.1")
     implementation("dev.hsbrysk:caffeine-coroutines:2.0.2")
 
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.1.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.52.0")
+
     api("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
     testImplementation(libs.mockk)

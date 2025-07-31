@@ -8,6 +8,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test
 class ArenaSinkVedtakOpprettetMottakTest {
     private val testRapid = TestRapid()
     private val sakId = "123"
+    private val søknadId = UUIDv7.ny()
     private val testOppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet)
     private val oppgaveRepository =
         mockk<OppgaveRepository>(relaxed = true).apply {
@@ -29,6 +31,8 @@ class ArenaSinkVedtakOpprettetMottakTest {
         val forventetVedtakFattetNendelse =
             VedtakFattetHendelse(
                 behandlingId = testOppgave.behandlingId,
+                behandletHendelseId = søknadId.toString(),
+                behandletHendelseType = "Søknad",
                 ident = testOppgave.person.ident,
                 sak =
                     UtsendingSak(
@@ -79,7 +83,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
         """
         {
           "@event_name": "arenasink_vedtak_opprettet",
-          "søknadId": "4afce924-6cb4-4ab4-a92b-fe91e24f31bf",
+          "søknadId": "$søknadId",
           "sakId": $sakId,
           "vedtakId": 0,
           "vedtakstatus": "IVERK",

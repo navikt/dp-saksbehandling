@@ -19,6 +19,7 @@ import java.util.UUID
 
 internal class VedtakFattetMottakTest {
     private val testIdent = "12345678901"
+    private val søknadId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
     private val utsendingSak = UtsendingSak("12342", "Arena")
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
@@ -52,6 +53,7 @@ internal class VedtakFattetMottakTest {
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
+                behandletHendelseId = søknadId.toString(),
                 behandlingId = behandlingId,
                 automatiskBehandlet = true,
                 sakId = utsendingSak.id.toInt(),
@@ -61,6 +63,8 @@ internal class VedtakFattetMottakTest {
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = behandlingId,
+                behandletHendelseId = søknadId.toString(),
+                behandletHendelseType = "Søknad",
                 ident = testIdent,
                 automatiskBehandlet = true,
                 sak = utsendingSak,
@@ -77,6 +81,7 @@ internal class VedtakFattetMottakTest {
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
+                behandletHendelseId = søknadId.toString(),
                 behandlingId = behandlingId,
                 automatiskBehandlet = false,
                 sakId = utsendingSak.id.toInt(),
@@ -86,6 +91,68 @@ internal class VedtakFattetMottakTest {
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = behandlingId,
+                behandletHendelseId = søknadId.toString(),
+                behandletHendelseType = "Søknad",
+                ident = testIdent,
+                automatiskBehandlet = false,
+                sak = utsendingSak,
+            )
+        verify(exactly = 1) {
+            oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal behandle vedtak fattet hendelse for meldekorthendelse`() {
+        val meldekortId = "12345"
+        every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
+        every { oppgaveMediatorMock.hentOppgaveIdFor(behandlingId) } returns oppgave.oppgaveId
+        testRapid.sendTestMessage(
+            vedtakFattetHendelse(
+                ident = testIdent,
+                behandletHendelseId = meldekortId,
+                behandletHendelseType = "Meldekort",
+                behandlingId = behandlingId,
+                automatiskBehandlet = false,
+                sakId = utsendingSak.id.toInt(),
+            ),
+        )
+
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = behandlingId,
+                behandletHendelseId = meldekortId,
+                behandletHendelseType = "Meldekort",
+                ident = testIdent,
+                automatiskBehandlet = false,
+                sak = utsendingSak,
+            )
+        verify(exactly = 1) {
+            oppgaveMediatorMock.ferdigstillOppgave(vedtakFattetHendelse)
+        }
+    }
+
+    @Test
+    fun `Skal behandle vedtak fattet hendelse for manuell`() {
+        val manuellId = UUIDv7.ny()
+        every { oppgaveMediatorMock.ferdigstillOppgave(any<VedtakFattetHendelse>()) } returns oppgave
+        every { oppgaveMediatorMock.hentOppgaveIdFor(behandlingId) } returns oppgave.oppgaveId
+        testRapid.sendTestMessage(
+            vedtakFattetHendelse(
+                ident = testIdent,
+                behandletHendelseId = manuellId.toString(),
+                behandletHendelseType = "Manuell",
+                behandlingId = behandlingId,
+                automatiskBehandlet = false,
+                sakId = utsendingSak.id.toInt(),
+            ),
+        )
+
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = behandlingId,
+                behandletHendelseId = manuellId.toString(),
+                behandletHendelseType = "Manuell",
                 ident = testIdent,
                 automatiskBehandlet = false,
                 sak = utsendingSak,
@@ -101,6 +168,7 @@ internal class VedtakFattetMottakTest {
         testRapid.sendTestMessage(
             vedtakFattetHendelse(
                 ident = testIdent,
+                behandletHendelseId = søknadId.toString(),
                 behandlingId = behandlingId,
                 automatiskBehandlet = true,
                 sakId = utsendingSak.id.toInt(),
@@ -110,6 +178,8 @@ internal class VedtakFattetMottakTest {
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = behandlingId,
+                behandletHendelseId = søknadId.toString(),
+                behandletHendelseType = "Søknad",
                 ident = testIdent,
                 automatiskBehandlet = true,
                 sak = utsendingSak,

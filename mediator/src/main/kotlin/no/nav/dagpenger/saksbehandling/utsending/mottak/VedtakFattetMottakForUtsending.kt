@@ -48,10 +48,14 @@ internal class VedtakFattetMottakForUtsending(
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
             val automatiskBehandlet = packet["automatisk"].asBoolean()
+            val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
+            val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
 
             utsendingMediator.startUtsendingForVedtakFattet(
                 VedtakFattetHendelse(
                     behandlingId = behandlingId,
+                    behandletHendelseId = behandletHendelseId,
+                    behandletHendelseType = behandletHendelseType,
                     ident = ident,
                     sak =
                         UtsendingSak(

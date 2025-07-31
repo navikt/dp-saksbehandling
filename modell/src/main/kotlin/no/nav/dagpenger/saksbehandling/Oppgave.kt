@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -209,6 +210,12 @@ data class Oppgave private constructor(
         return tilstand.ferdigstill(this, godkjentBehandlingHendelse)
     }
 
+    fun ferdigstill(godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak): FerdigstillBehandling {
+        adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv)
+        egneAnsatteTilgangskontroll(godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv)
+        return tilstand.ferdigstill(this, godkjentBehandlingHendelseUtenMeldingOmVedtak)
+    }
+
     fun ferdigstill(avbruttHendelse: AvbruttHendelse) {
         adressebeskyttelseTilgangskontroll(avbruttHendelse.utførtAv)
         egneAnsatteTilgangskontroll(avbruttHendelse.utførtAv)
@@ -296,12 +303,31 @@ data class Oppgave private constructor(
     }
 
     fun soknadId(): UUID? {
+        // TODO: Må alle gamle forslag til vedtak hendelser migreres til nytt format for å kunne hentes opp her?
         return runCatching {
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
-                (it.hendelse as ForslagTilVedtakHendelse).søknadId
+                val hendelse = it.hendelse as ForslagTilVedtakHendelse
+                when (hendelse.behandletHendelseType) {
+                    "Søknad" -> UUID.fromString(hendelse.behandletHendelseId)
+                    "Manuell", "Meldekort" -> {
+                        logger.info {
+                            "behandletHendelseType is ${hendelse.behandletHendelseType} " +
+                                "for oppgave: ${this.oppgaveId} " +
+                                "søknadId eksisterer derfor ikke"
+                        }
+                        null
+                    }
+                    else -> {
+                        logger.error { "Ukjent behandletHendelseType ${hendelse.behandletHendelseType} for oppgave ${this.oppgaveId}" }
+                        null
+                    }
+                }
             }
         }
-            .onFailure { e -> logger.error(e) { "Feil ved henting av søknadId for oppgave:  ${this.oppgaveId}" } }
+            .onFailure {
+                    e ->
+                logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
+            }
             .getOrThrow()
     }
 
@@ -472,6 +498,19 @@ data class Oppgave private constructor(
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
+            return FerdigstillBehandling.GODKJENN
+        }
+
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
+        ): FerdigstillBehandling {
+            requireEierskapTilOppgave(
+                oppgave = oppgave,
+                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
+                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
+            )
+            oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelseUtenMeldingOmVedtak)
             return FerdigstillBehandling.GODKJENN
         }
 
@@ -667,6 +706,30 @@ data class Oppgave private constructor(
             return BESLUTT
         }
 
+        override fun ferdigstill(
+            oppgave: Oppgave,
+            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
+        ): FerdigstillBehandling {
+            requireBeslutterTilgang(
+                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
+                tilstandType = type,
+                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
+            )
+            requireEierskapTilOppgave(
+                oppgave = oppgave,
+                saksbehandler = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
+                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
+            )
+            requireBeslutterUlikSaksbehandler(
+                oppgave = oppgave,
+                beslutter = godkjentBehandlingHendelseUtenMeldingOmVedtak.utførtAv,
+                hendelseNavn = godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName,
+            )
+
+            oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelseUtenMeldingOmVedtak)
+            return BESLUTT
+        }
+
         override fun oppgaveKlarTilBehandling(
             oppgave: Oppgave,
             forslagTilVedtakHendelse: ForslagTilVedtakHendelse,
@@ -836,6 +899,18 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke ferdigstille oppgave i tilstand $type for " +
                         "${godkjentBehandlingHendelse.javaClass.simpleName}",
+            )
+        }
+
+        fun ferdigstill(
+            oppgave: Oppgave,
+            godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
+        ): FerdigstillBehandling {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke ferdigstille oppgave i tilstand $type for " +
+                        "${godkjentBehandlingHendelseUtenMeldingOmVedtak.javaClass.simpleName}",
             )
         }
 

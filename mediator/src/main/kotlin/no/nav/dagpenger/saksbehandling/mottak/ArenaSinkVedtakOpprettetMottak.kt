@@ -68,6 +68,7 @@ class ArenaSinkVedtakOpprettetMottak(
         val ident = oppgave.personIdent()
         val sakId = packet["sakId"].asText()
         val vedtakstatus = packet["vedtakstatus"].asText()
+        val behandletHendelseId = packet["søknadId"].asText()
 
         withLoggingContext(
             "behandlingId" to "$behandlingId",
@@ -80,6 +81,8 @@ class ArenaSinkVedtakOpprettetMottak(
                 utsendingMediator.startUtsendingForVedtakFattet(
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
+                        behandletHendelseId = behandletHendelseId,
+                        behandletHendelseType = "Søknad",
                         ident = ident,
                         sak =
                             UtsendingSak(

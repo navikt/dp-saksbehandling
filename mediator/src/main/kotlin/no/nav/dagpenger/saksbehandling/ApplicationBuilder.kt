@@ -14,6 +14,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveHistorikkDTOMapper
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.RelevanteJournalpostIdOppslag
 import no.nav.dagpenger.saksbehandling.api.installerApis
+import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingHttpKlient
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
@@ -193,6 +194,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             utsendingMediator.setRapidsConnection(rapidsConnection)
             oppgaveMediator.setRapidsConnection(rapidsConnection)
             klageMediator.setRapidsConnection(rapidsConnection)
+            klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
             BehandlingOpprettetMottak(rapidsConnection, sakMediator)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
             VedtakFattetMottak(rapidsConnection, oppgaveMediator)

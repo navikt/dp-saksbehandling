@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.mottak
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
+import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -30,7 +31,7 @@ internal class BehandlingOpprettetMottak(
             }
             validate {
                 it.requireKey("ident", "behandlingId", "@opprettet")
-                it.interestedIn("behandletHendelse", "basertPåBehandlinger")
+                it.interestedIn("behandletHendelse", "basertPåBehandling")
             }
         }
     }
@@ -49,7 +50,18 @@ internal class BehandlingOpprettetMottak(
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
+        val basertPåBehandling: UUID? =
+            if (packet["basertPåBehandling"].isMissingOrNull()) {
+                null
+            } else {
+                packet["basertPåBehandling"].asUUID()
+            }
 
+        val skipSet = emptySet<UUID>()
+        if (behandlingId in skipSet) {
+            logger.info { "Skipper behandlingId: $behandlingId" }
+            return
+        }
         when (behandlingType) {
             "Søknad" -> {
                 val søknadId = packet.søknadId()
@@ -70,16 +82,19 @@ internal class BehandlingOpprettetMottak(
                 val meldekortId = packet.meldekortId()
                 withLoggingContext("meldekortId" to "$meldekortId", "behandlingId" to "$behandlingId") {
                     logger.info { "Mottok behandling_opprettet hendelse for meldekort" }
-                    sakMediator.knyttTilSak(
-                        MeldekortbehandlingOpprettetHendelse(
-                            meldekortId = meldekortId,
-                            behandlingId = behandlingId,
-                            ident = ident,
-                            opprettet = opprettet,
-                            basertPåBehandlinger =
-                                packet.basertPåBehandlinger(),
-                        ),
-                    )
+                    if (basertPåBehandling != null) {
+                        sakMediator.knyttTilSak(
+                            MeldekortbehandlingOpprettetHendelse(
+                                meldekortId = meldekortId,
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                opprettet = opprettet,
+                                basertPåBehandling = basertPåBehandling,
+                            ),
+                        )
+                    } else {
+                        logger.warn { "Mottok behandling_opprettet av type meldekort, uten 'basertPåBehandling'. Opprettes ikke!" }
+                    }
                 }
             }
 
@@ -87,15 +102,19 @@ internal class BehandlingOpprettetMottak(
                 val manuellId = packet.manuellId()
                 withLoggingContext("manuellId" to "$manuellId", "behandlingId" to "$behandlingId") {
                     logger.info { "Mottok behandling_opprettet hendelse for manuell behandling" }
-                    sakMediator.knyttTilSak(
-                        ManuellBehandlingOpprettetHendelse(
-                            manuellId = manuellId,
-                            behandlingId = behandlingId,
-                            ident = ident,
-                            opprettet = opprettet,
-                            basertPåBehandlinger = packet.basertPåBehandlinger(),
-                        ),
-                    )
+                    if (basertPåBehandling != null) {
+                        sakMediator.knyttTilSak(
+                            ManuellBehandlingOpprettetHendelse(
+                                manuellId = manuellId,
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                opprettet = opprettet,
+                                basertPåBehandling = basertPåBehandling,
+                            ),
+                        )
+                    } else {
+                        logger.warn { "Mottok behandling_opprettet av type manuell, uten 'basertPåBehandling'. Opprettes ikke!" }
+                    }
                 }
             }
         }
@@ -105,7 +124,5 @@ internal class BehandlingOpprettetMottak(
 private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
 
 private fun JsonMessage.manuellId(): UUID = this["behandletHendelse"]["id"].asUUID()
-
-private fun JsonMessage.basertPåBehandlinger(): List<UUID> = this["basertPåBehandlinger"].map { it.asUUID() }
 
 private fun JsonMessage.meldekortId(): Long = this["behandletHendelse"]["id"].asLong()

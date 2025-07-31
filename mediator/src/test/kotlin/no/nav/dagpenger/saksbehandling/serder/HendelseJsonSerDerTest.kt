@@ -124,6 +124,8 @@ class HendelseJsonSerDerTest {
         val vedtakFattetHendelse =
             VedtakFattetHendelse(
                 behandlingId = UUIDv7.ny(),
+                behandletHendelseId = UUIDv7.ny().toString(),
+                behandletHendelseType = "Søknad",
                 ident = "12345678901",
                 sak =
                     UtsendingSak(
@@ -135,6 +137,8 @@ class HendelseJsonSerDerTest {
             """
             {
                 "behandlingId": "${vedtakFattetHendelse.behandlingId}",
+                "behandletHendelseId": "${vedtakFattetHendelse.behandletHendelseId}",
+                "behandletHendelseType": "${vedtakFattetHendelse.behandletHendelseType}",
                 "ident": "${vedtakFattetHendelse.ident}",
                 "sak": {
                     "id": "${vedtakFattetHendelse.sak.id}",

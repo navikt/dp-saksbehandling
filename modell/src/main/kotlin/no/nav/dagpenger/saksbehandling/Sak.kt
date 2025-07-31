@@ -18,7 +18,7 @@ data class Sak(
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
         if (this.behandlinger.map { it.behandlingId }
-                .containsAll(meldekortbehandlingOpprettetHendelse.basertPåBehandlinger)
+                .contains(meldekortbehandlingOpprettetHendelse.basertPåBehandling)
         ) {
             behandlinger.add(
                 Behandling(
@@ -32,10 +32,8 @@ data class Sak(
     }
 
     fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
-        require(manuellBehandlingOpprettetHendelse.basertPåBehandlinger.size == 1)
         val forrigeBehandling: Behandling? =
-            this.behandlinger
-                .find { it.behandlingId == manuellBehandlingOpprettetHendelse.basertPåBehandlinger.single() }
+            this.behandlinger.find { it.behandlingId == manuellBehandlingOpprettetHendelse.basertPåBehandling }
 
         if (forrigeBehandling != null) {
             behandlinger.add(

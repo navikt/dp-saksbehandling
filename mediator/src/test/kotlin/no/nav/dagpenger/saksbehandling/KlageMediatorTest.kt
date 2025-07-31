@@ -7,6 +7,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
@@ -15,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
+import no.nav.dagpenger.saksbehandling.audit.ApiAuditlogg
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -119,6 +121,37 @@ class KlageMediatorTest {
                 )
             } returns Result.success(html)
         }
+    private val auditloggMock =
+        mockk<ApiAuditlogg>().also {
+            coEvery {
+                it.opprett(
+                    melding = any(),
+                    ident = any(),
+                    saksbehandler = any(),
+                )
+            } returns Unit
+            coEvery {
+                it.oppdater(
+                    melding = any(),
+                    ident = any(),
+                    saksbehandler = any(),
+                )
+            } returns Unit
+            coEvery {
+                it.les(
+                    melding = any(),
+                    ident = any(),
+                    saksbehandler = any(),
+                )
+            } returns Unit
+            coEvery {
+                it.slett(
+                    melding = any(),
+                    ident = any(),
+                    saksbehandler = any(),
+                )
+            } returns Unit
+        }
 
     @Test
     fun `Livssyklus til en digitalt mottatt klage som ferdigstilles med opprettholdelse`() {
@@ -218,6 +251,12 @@ class KlageMediatorTest {
             testRapid.inspektør.size shouldBe 2
             testRapid.inspektør.message(0).behovNavn() shouldBe "SaksbehandlingPdfBehov"
             testRapid.inspektør.message(1).behovNavn() shouldBe "OversendelseKlageinstans"
+
+            // i hver /registrer\w+?Opplysninger/-funksjon leses klagebehandlingen for hver opplysning som legges på.
+            // dermed blir tallene for både lesing og oppdatering sykt store.
+            verify(exactly = 21) { auditloggMock.les("Så en klagebehandling", testPersonIdent, saksbehandler.navIdent) }
+            verify(exactly = 21) { auditloggMock.oppdater("Oppdaterte en klageopplysning", testPersonIdent, saksbehandler.navIdent) }
+            verify(exactly = 1) { auditloggMock.oppdater("Ferdigstilte en klage", testPersonIdent, saksbehandler.navIdent) }
         }
     }
 
@@ -303,7 +342,6 @@ class KlageMediatorTest {
 
             klageMediator.hentKlageBehandling(behandlingId = behandlingId, saksbehandler = saksbehandler)
                 .tilstand().type shouldBe FERDIGSTILT
-
             oppgaveMediator.hentOppgaveFor(
                 behandlingId = behandlingId,
                 saksbehandler = saksbehandler,
@@ -798,7 +836,10 @@ class KlageMediatorTest {
                     oppslag = oppslagMock,
                     meldingOmVedtakKlient = meldingOmVedtakKlientMock,
                     sakMediator = sakMediator,
-                ).also { it.setRapidsConnection(rapidsConnection = testRapid) }
+                ).also {
+                    it.setAuditlogg(auditlogg = auditloggMock)
+                    it.setRapidsConnection(rapidsConnection = testRapid)
+                }
             personRepository.lagre(
                 Person(
                     ident = testPersonIdent,

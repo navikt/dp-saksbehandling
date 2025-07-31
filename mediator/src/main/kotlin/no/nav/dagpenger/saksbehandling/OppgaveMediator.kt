@@ -23,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -145,7 +146,7 @@ class OppgaveMediator(
             if (oppgave == null) {
                 val feilmelding =
                     "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                        "${forslagTilVedtakHendelse.behandlingId}." +
+                        "${forslagTilVedtakHendelse.behandlingId}. " +
                         "Fant verken behandling eller oppgave for hendelsen. Gjør derfor ingenting med hendelsen."
                 logger.error { feilmelding }
                 sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
@@ -385,6 +386,23 @@ class OppgaveMediator(
         }
     }
 
+    fun ferdigstillOppgaveUtenMeldingOmVedtak(
+        oppgaveId: UUID,
+        saksbehandler: Saksbehandler,
+        saksbehandlerToken: String,
+    ) {
+        oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
+            ferdigstillOppgaveUtenUtsending(
+                godkjentBehandlingHendelseUtenMeldingOmVedtak =
+                    GodkjentBehandlingHendelseUtenMeldingOmVedtak(
+                        oppgaveId = oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = saksbehandlerToken,
+            )
+        }
+    }
+
     fun ferdigstillOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
@@ -445,6 +463,62 @@ class OppgaveMediator(
                                     else -> logger.error { "Fant ikke utsending med id $utsendingId" }
                                 }
                             }
+                            throw it
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun ferdigstillOppgaveUtenUtsending(
+        godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
+        saksbehandlerToken: String,
+        oppgaveTilFerdigstilling: Oppgave? = null,
+    ) {
+        oppgaveTilFerdigstilling ?: oppgaveRepository.hentOppgave(godkjentBehandlingHendelseUtenMeldingOmVedtak.oppgaveId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
+            ) {
+                logger.info {
+                    "Mottatt GodkjentBehandlingHendelseUtenMeldingOmVedtak for oppgave i tilstand ${oppgave.tilstand().type}"
+                }
+                val ferdigstillBehandling = oppgave.ferdigstill(godkjentBehandlingHendelseUtenMeldingOmVedtak)
+
+                when (ferdigstillBehandling) {
+                    Oppgave.FerdigstillBehandling.GODKJENN -> {
+                        behandlingKlient.godkjenn(
+                            behandlingId = oppgave.behandlingId,
+                            ident = oppgave.personIdent(),
+                            saksbehandlerToken = saksbehandlerToken,
+                        ).onSuccess {
+                            oppgaveRepository.lagre(oppgave)
+                            logger.info {
+                                "Behandlet GodkjentBehandlingHendelseUtenMeldingOmVedtak. " +
+                                    "Tilstand etter behandling: ${oppgave.tilstand().type}"
+                            }
+                        }.onFailure {
+                            val feil = "Feil ved godkjenning av behandling: ${it.message}"
+                            logger.error { feil }
+                            throw it
+                        }
+                    }
+
+                    Oppgave.FerdigstillBehandling.BESLUTT -> {
+                        behandlingKlient.beslutt(
+                            behandlingId = oppgave.behandlingId,
+                            ident = oppgave.personIdent(),
+                            saksbehandlerToken = saksbehandlerToken,
+                        ).onSuccess {
+                            oppgaveRepository.lagre(oppgave)
+                            logger.info {
+                                "Behandlet GodkjentBehandlingHendelseUtenMeldingOmVedtak. " +
+                                    "Tilstand etter behandling: ${oppgave.tilstand().type}"
+                            }
+                        }.onFailure {
+                            val feil = "Feil ved beslutting av behandling: ${it.message}"
+                            logger.error { feil }
                             throw it
                         }
                     }

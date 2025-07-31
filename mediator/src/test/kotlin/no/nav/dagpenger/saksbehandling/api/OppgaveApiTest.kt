@@ -434,6 +434,35 @@ class OppgaveApiTest {
     }
 
     @Test
+    fun `Skal kunne ferdigstille en oppgave uten melding om vedtak`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                coEvery { it.ferdigstillOppgaveUtenMeldingOmVedtak(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
+                autentisert(token = saksbehandlerToken)
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """
+                        {"sendMeldingOmVedtak":"IKKE_SEND"}
+                    """.trimMargin(),
+                )
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            coVerify(exactly = 1) {
+                oppgaveMediatorMock.ferdigstillOppgaveUtenMeldingOmVedtak(oppgave.oppgaveId, any(), saksbehandlerToken)
+            }
+        }
+    }
+
+    @Test
     fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)

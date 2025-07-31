@@ -34,4 +34,9 @@ class Emneknagg(val navn: String) {
 
         TIDLIGERE_UTSATT("Tidligere utsatt"),
     }
+
+    enum class BehandletHendelseType(val visningsnavn: String) {
+        MELDEKORT("Meldekortsberegning"),
+        MANUELL("Manuell"),
+    }
 }

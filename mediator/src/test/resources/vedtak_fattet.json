@@ -1,7 +1,6 @@
 {
   "@event_name": "vedtak_fattet",
   "behandlingId": "0195b37b-aaef-7cca-b397-3ef004deaf9f",
-  "basertPåBehandlinger": [],
   "fagsakId": "15351633",
   "automatisk": true,
   "ident": "11111111111",

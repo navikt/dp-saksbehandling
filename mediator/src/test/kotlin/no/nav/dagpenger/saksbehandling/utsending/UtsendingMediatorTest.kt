@@ -54,6 +54,7 @@ class UtsendingMediatorTest {
 
             val oppgaveId = oppgave.oppgaveId
             val behandlingId = oppgave.behandlingId
+            val søknadId = UUIDv7.ny()
             val sakId = DBTestHelper.sakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
@@ -102,6 +103,8 @@ class UtsendingMediatorTest {
                 vedtakFattetHendelse(
                     ident = person.ident,
                     behandlingId = behandling.behandlingId,
+                    behandletHendelseId = søknadId.toString(),
+                    behandletHendelseType = "Søknad",
                     utfall = true,
                 )
             rapid.sendTestMessage(message = message)

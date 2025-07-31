@@ -22,7 +22,7 @@ internal class VedtakFattetMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "vedtak_fattet")
-                it.requireValue("behandletHendelse.type", "Søknad")
+                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
                 it.forbid("meldingOmVedtakProdusent")
             }
             validate {
@@ -42,15 +42,18 @@ internal class VedtakFattetMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
+        val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
 
-        withLoggingContext("behandlingId" to "$behandlingId") {
+        withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok vedtak_fattet hendelse" }
 
             oppgaveMediator.hentOppgaveIdFor(behandlingId)?.let {
                 oppgaveMediator.ferdigstillOppgave(
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
+                        behandletHendelseId = behandletHendelseId,
+                        behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
                         ident = packet["ident"].asText(),
                         sak = packet.sak(),
                         automatiskBehandlet = packet["automatisk"].asBoolean(),

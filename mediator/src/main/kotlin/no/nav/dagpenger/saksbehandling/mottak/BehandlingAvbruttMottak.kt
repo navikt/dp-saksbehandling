@@ -10,7 +10,6 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
-import java.util.UUID
 
 internal class BehandlingAvbruttMottak(
     rapidsConnection: RapidsConnection,
@@ -38,20 +37,19 @@ internal class BehandlingAvbruttMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["ident"].asText()
-        val søknadId = packet.søknadId()
+        val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
-        withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
+
+        withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandling_avbrutt hendelse" }
             oppgaveMediator.avbrytOppgave(
                 BehandlingAvbruttHendelse(
                     behandlingId = behandlingId,
-                    søknadId = søknadId,
-                    ident = ident,
+                    behandletHendelseId = behandletHendelseId,
+                    behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
+                    ident = packet["ident"].asText(),
                 ),
             )
         }
     }
 }
-
-private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUUID()
