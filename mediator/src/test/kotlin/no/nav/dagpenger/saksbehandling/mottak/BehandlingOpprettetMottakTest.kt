@@ -47,8 +47,8 @@ class BehandlingOpprettetMottakTest {
 
     @Test
     fun `Skal behandle behandling_opprettet hendelse for meldekort`() {
-        val basertPåBehandlinger = listOf(UUIDv7.ny(), UUIDv7.ny())
-        testRapid.sendTestMessage(meldekortbehandlingOpprettetMelding(basertPåBehandlinger = basertPåBehandlinger))
+        val basertPåBehandling = UUIDv7.ny()
+        testRapid.sendTestMessage(meldekortbehandlingOpprettetMelding(basertPåBehandling = basertPåBehandling))
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
                 meldekortbehandlingOpprettetHendelse =
@@ -57,7 +57,7 @@ class BehandlingOpprettetMottakTest {
                         behandlingId = behandlingId,
                         ident = testIdent,
                         opprettet = opprettet,
-                        basertPåBehandlinger = basertPåBehandlinger,
+                        basertPåBehandling = basertPåBehandling,
                     ),
             )
         }
@@ -65,8 +65,8 @@ class BehandlingOpprettetMottakTest {
 
     @Test
     fun `Skal behandle behandling_opprettet hendelse for manuell`() {
-        val basertPåBehandlinge = listOf(UUIDv7.ny())
-        testRapid.sendTestMessage(manuellbehandlingOpprettetMelding(basertPåBehandlinger = basertPåBehandlinge))
+        val basertPåBehandling = UUIDv7.ny()
+        testRapid.sendTestMessage(manuellbehandlingOpprettetMelding(basertPåBehandling = basertPåBehandling))
         verify(exactly = 1) {
             sakMediatorMock.knyttTilSak(
                 manuellBehandlingOpprettetHendelse =
@@ -75,7 +75,7 @@ class BehandlingOpprettetMottakTest {
                         behandlingId = behandlingId,
                         ident = testIdent,
                         opprettet = opprettet,
-                        basertPåBehandlinger = basertPåBehandlinge,
+                        basertPåBehandling = basertPåBehandling,
                     ),
             )
         }
@@ -101,7 +101,7 @@ class BehandlingOpprettetMottakTest {
     @Language("JSON")
     private fun meldekortbehandlingOpprettetMelding(
         ident: String = testIdent,
-        basertPåBehandlinger: List<UUID>,
+        basertPåBehandling: UUID,
     ) = """
         {
             "@event_name": "behandling_opprettet",
@@ -112,7 +112,7 @@ class BehandlingOpprettetMottakTest {
                 "id": $meldekortId,
                 "type": "Meldekort"
             },
-            "basertPåBehandlinger": ${basertPåBehandlinger.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }},
+            "basertPåBehandling": "$basertPåBehandling",
             "behandlingId": "$behandlingId",
             "ident": "$ident"
         }
@@ -121,7 +121,7 @@ class BehandlingOpprettetMottakTest {
     @Language("JSON")
     private fun manuellbehandlingOpprettetMelding(
         ident: String = testIdent,
-        basertPåBehandlinger: List<UUID>,
+        basertPåBehandling: UUID,
     ) = """
         {
             "@event_name": "behandling_opprettet",
@@ -132,7 +132,7 @@ class BehandlingOpprettetMottakTest {
                 "id": "$manuellId",
                 "type": "Manuell"
             },
-            "basertPåBehandlinger": ${basertPåBehandlinger.joinToString(prefix = "[", postfix = "]") { "\"$it\"" }},
+            "basertPåBehandling": "$basertPåBehandling",
             "behandlingId": "$behandlingId",
             "ident": "$ident"
         }
