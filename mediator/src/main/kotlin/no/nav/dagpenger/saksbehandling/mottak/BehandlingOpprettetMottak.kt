@@ -59,6 +59,7 @@ internal class BehandlingOpprettetMottak(
 
         val skipSet = emptySet<UUID>()
         if (behandlingId in skipSet) {
+            logger.info { "Skipper behandlingId: $behandlingId" }
             return
         }
         when (behandlingType) {
