@@ -7,6 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.api.Oppslag
+import no.nav.dagpenger.saksbehandling.audit.Auditlogg
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -44,9 +45,14 @@ class KlageMediator(
     private val sakMediator: SakMediator,
 ) {
     private lateinit var rapidsConnection: RapidsConnection
+    private lateinit var auditlogg: Auditlogg
 
     fun setRapidsConnection(rapidsConnection: RapidsConnection) {
         this.rapidsConnection = rapidsConnection
+    }
+
+    fun setAuditlogg(auditlogg: Auditlogg) {
+        this.auditlogg = auditlogg
     }
 
     fun hentKlageBehandling(
@@ -57,7 +63,9 @@ class KlageMediator(
             behandlingId = behandlingId,
             saksbehandler = saksbehandler,
         )
-        return klageRepository.hentKlageBehandling(behandlingId)
+        val klageBehandling = klageRepository.hentKlageBehandling(behandlingId)
+        auditlogg.les("Så en klagebehandling", klageBehandling.personIdent(), saksbehandler.navIdent)
+        return klageBehandling
     }
 
     fun opprettKlage(klageMottattHendelse: KlageMottattHendelse): Oppgave {
@@ -126,6 +134,12 @@ class KlageMediator(
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
 
+        auditlogg.opprett(
+            "Opprettet en manuell klage",
+            manuellKlageMottattHendelse.ident,
+            utførtAv.navIdent,
+        )
+
         return kotlin.runCatching {
             oppgaveMediator.opprettOppgaveForBehandling(
                 behandlingOpprettetHendelse = behandlingOpprettetHendelse,
@@ -156,6 +170,7 @@ class KlageMediator(
         klageRepository.hentKlageBehandling(behandlingId).let { klageBehandling ->
             klageBehandling.svar(opplysningId, verdi)
             klageRepository.lagre(klageBehandling = klageBehandling)
+            auditlogg.oppdater("Oppdaterte en klageopplysning", klageBehandling.personIdent(), saksbehandler.navIdent)
         }
     }
 
@@ -245,6 +260,7 @@ class KlageMediator(
 
             val saksbehandler = saksbehandlerDeferred.await()
             if (klageBehandling.utfall() == UtfallType.OPPRETTHOLDELSE) {
+                auditlogg.oppdater("Ferdigstilte en klage", oppgave.personIdent(), saksbehandler.ident)
                 val body =
                     mutableMapOf(
                         "behandlingId" to klageBehandling.behandlingId.toString(),
@@ -305,6 +321,7 @@ class KlageMediator(
 
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
+        auditlogg.oppdater("Avbrutte en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
     }
 
     fun oversendtTilKlageinstans(hendelse: OversendtKlageinstansHendelse) {
