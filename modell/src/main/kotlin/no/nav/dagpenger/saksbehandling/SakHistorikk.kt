@@ -18,10 +18,10 @@ data class SakHistorikk(
         }
     }
 
-    fun finnBehandling(behandinId: UUID): Behandling? {
+    fun finnBehandling(behandlingId: UUID): Behandling? {
         return saker.asSequence()
             .flatMap { it.behandlinger() }
-            .firstOrNull { it.behandlingId == behandinId }
+            .firstOrNull { it.behandlingId == behandlingId }
     }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {

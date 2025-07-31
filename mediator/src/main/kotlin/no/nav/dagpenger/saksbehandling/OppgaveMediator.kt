@@ -153,7 +153,7 @@ class OppgaveMediator(
             if (oppgave == null) {
                 val feilmelding =
                     "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                        "${forslagTilVedtakHendelse.behandlingId}." +
+                        "${forslagTilVedtakHendelse.behandlingId}. " +
                         "Fant verken behandling eller oppgave for hendelsen. Gjør derfor ingenting med hendelsen."
                 logger.error { feilmelding }
                 sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
