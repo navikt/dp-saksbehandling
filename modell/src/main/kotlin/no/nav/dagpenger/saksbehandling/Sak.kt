@@ -1,10 +1,14 @@
 package no.nav.dagpenger.saksbehandling
 
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 data class Sak(
     val sakId: UUID = UUIDv7.ny(),
@@ -15,6 +19,27 @@ data class Sak(
     fun behandlinger(): List<Behandling> = behandlinger.toList()
 
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
+
+    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
+        if (this.behandlinger.map { it.behandlingId }
+                .contains(søknadsbehandlingOpprettetHendelse.basertPåBehandling)
+        ) {
+            behandlinger.add(
+                Behandling(
+                    behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                    type = BehandlingType.RETT_TIL_DAGPENGER,
+                    opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                    hendelse = søknadsbehandlingOpprettetHendelse,
+                ),
+            )
+            logger.info { "Mottok søknadsbehandlingOpprettetHendelse og knyttet den til sakId $sakId" }
+        } else {
+            logger.info {
+                "Mottok søknadsbehandlingOpprettetHendelse, men den ble ikke knyttet til sakId $sakId. " +
+                    "Basert på behandlingId: ${søknadsbehandlingOpprettetHendelse.basertPåBehandling} var ikke i denne saken."
+            }
+        }
+    }
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
         if (this.behandlinger.map { it.behandlingId }

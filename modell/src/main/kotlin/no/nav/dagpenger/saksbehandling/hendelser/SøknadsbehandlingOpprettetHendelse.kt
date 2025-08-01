@@ -14,6 +14,7 @@ data class SøknadsbehandlingOpprettetHendelse(
     val behandlingId: UUID,
     val ident: String,
     val opprettet: LocalDateTime,
+    val basertPåBehandling: UUID? = null,
     override val utførtAv: Applikasjon = Applikasjon("dp-behandling"),
 ) : Hendelse(utførtAv) {
     companion object {
