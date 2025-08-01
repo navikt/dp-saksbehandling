@@ -447,7 +447,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Livssyklus for søknadsbehandling som blir vedtatt`() {
+    fun `Livssyklus for søknadsbehandling som blir vedtatt med vedtaksbrev`() {
         val behandlingId = UUIDv7.ny()
         val meldingOmVedtakKlientMock =
             mockk<MeldingOmVedtakKlient>().also {
@@ -483,6 +483,43 @@ OppgaveMediatorTest {
 
             runBlocking {
                 oppgaveMediator.ferdigstillOppgave(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksBehandler = saksbehandler,
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+        }
+    }
+
+    // TODO Vurder om vi skal ha egen funksjon for å ferdigstille oppgave uten vedtaksbrev
+    @Test
+    fun `Livssyklus for søknadsbehandling som blir vedtatt uten vedtaksbrev`() {
+        val behandlingId = UUIDv7.ny()
+
+        settOppOppgaveMediator(movKlient = mockk()) { datasource, oppgaveMediator ->
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    behandlingId = behandlingId,
+                )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+
+            runBlocking {
+                oppgaveMediator.ferdigstillOppgaveUtenMeldingOmVedtak(
                     oppgaveId = oppgave.oppgaveId,
                     saksBehandler = saksbehandler,
                     saksbehandlerToken = "token",
