@@ -439,7 +439,10 @@ class OppgaveApiTest {
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                coEvery { it.ferdigstillOppgaveUtenMeldingOmVedtak(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
+// TODO Vurder om vi skal ha egen hendelse uten melding om vedtak
+// FRA BRANCHEN TIL AURORA:
+//                coEvery { it.ferdigstillOppgaveUtenMeldingOmVedtak(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
+                coEvery { it.ferdigstillOppgave(oppgave.oppgaveId, any(), saksbehandlerToken) } just Runs
             }
 
         withOppgaveApi(oppgaveMediatorMock) {
@@ -457,7 +460,14 @@ class OppgaveApiTest {
             }
 
             coVerify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgaveUtenMeldingOmVedtak(oppgave.oppgaveId, any(), saksbehandlerToken)
+// TODO Vurder om vi skal ha egen hendelse uten melding om vedtak
+// FRA BRANCHEN TIL AURORA:
+//                oppgaveMediatorMock.ferdigstillOppgaveUtenMeldingOmVedtak(oppgave.oppgaveId, any(), saksbehandlerToken)
+                oppgaveMediatorMock.ferdigstillOppgave(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandler = any(),
+                    saksbehandlerToken = saksbehandlerToken,
+                )
             }
         }
     }
@@ -479,7 +489,11 @@ class OppgaveApiTest {
             }
 
             coVerify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(oppgave.oppgaveId, any(), saksbehandlerToken)
+                oppgaveMediatorMock.ferdigstillOppgave(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandler = any(),
+                    saksbehandlerToken = saksbehandlerToken,
+                )
             }
         }
     }

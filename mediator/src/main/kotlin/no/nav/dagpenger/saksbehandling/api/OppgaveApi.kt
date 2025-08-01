@@ -276,6 +276,37 @@ internal fun Route.oppgaveApi(
                     }
                 }
 
+// FRA BRANCHEN TIL AURORA:
+//                route("ferdigstill") {
+//                    put {
+//                        val oppgaveId = call.finnUUID("oppgaveId")
+//                        val meldingOmVedtak =
+//                            try {
+//                                call.receive<SendMeldingOmVedtakDTO>()
+//                            } catch (t: Throwable) {
+//                                logger.warn("Kunne ikke lese meldingOmVedtak fra request body, bruker DP_SAK som default")
+//                                SendMeldingOmVedtakDTOSendMeldingOmVedtakDTO.DP_SAK
+//                            }
+//                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+//                            val saksbehandler = applicationCallParser.saksbehandler(call)
+//                            val saksbehandlerToken = call.request.jwt()
+//                            if (meldingOmVedtak == SendMeldingOmVedtakDTOSendMeldingOmVedtakDTO.DP_SAK) {
+//                                oppgaveMediator.ferdigstillOppgave(
+//                                    oppgaveId = oppgaveId,
+//                                    saksBehandler = saksbehandler,
+//                                    saksbehandlerToken = saksbehandlerToken,
+//                                )
+//                            } else {
+//                                oppgaveMediator.ferdigstillOppgaveUtenMeldingOmVedtak(
+//                                    oppgaveId = oppgaveId,
+//                                    saksBehandler = saksbehandler,
+//                                    saksbehandlerToken = saksbehandlerToken,
+//                                )
+//                            }
+//                            call.respond(HttpStatusCode.NoContent)
+//                        }
+//                    }
+//                }
                 route("ferdigstill") {
                     put {
                         val oppgaveId = call.finnUUID("oppgaveId")
