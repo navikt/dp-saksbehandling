@@ -67,14 +67,26 @@ internal class BehandlingOpprettetMottak(
                 val søknadId = packet.søknadId()
                 withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {
                     logger.info { "Mottok behandling_opprettet hendelse for søknad" }
-                    sakMediator.opprettSak(
-                        SøknadsbehandlingOpprettetHendelse(
-                            søknadId = søknadId,
-                            behandlingId = behandlingId,
-                            ident = ident,
-                            opprettet = opprettet,
-                        ),
-                    )
+                    if (basertPåBehandling != null) {
+                        sakMediator.knyttTilSak(
+                            SøknadsbehandlingOpprettetHendelse(
+                                søknadId = søknadId,
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                opprettet = opprettet,
+                                basertPåBehandling = basertPåBehandling,
+                            ),
+                        )
+                    } else {
+                        sakMediator.opprettSak(
+                            SøknadsbehandlingOpprettetHendelse(
+                                søknadId = søknadId,
+                                behandlingId = behandlingId,
+                                ident = ident,
+                                opprettet = opprettet,
+                            ),
+                        )
+                    }
                 }
             }
 

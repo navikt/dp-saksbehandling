@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
 
 data class SakHistorikk(
@@ -36,6 +37,10 @@ data class SakHistorikk(
         saker().single { it.sakId == behandlingOpprettetHendelse.sakId }.knyttTilSak(
             behandlingOpprettetHendelse = behandlingOpprettetHendelse,
         )
+    }
+
+    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
+        saker.forEach { it.knyttTilSak(søknadsbehandlingOpprettetHendelse) }
     }
 
     fun leggTilSak(sak: Sak) = saker.add(sak)

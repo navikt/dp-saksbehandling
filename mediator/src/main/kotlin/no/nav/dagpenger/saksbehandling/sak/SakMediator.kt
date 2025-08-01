@@ -5,6 +5,7 @@ import PersonMediator
 import SkjermetPersonException
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Sak
@@ -16,7 +17,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHen
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import java.util.UUID
 
-private val logger = mu.KotlinLogging.logger {}
+private val logger = KotlinLogging.logger {}
 
 class SakMediator(
     private val personMediator: PersonMediator,
@@ -59,6 +60,7 @@ class SakMediator(
                 true -> {
                     sendAvbrytBehandling(søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse)
                 }
+
                 else -> {
                     throw e
                 }
@@ -91,6 +93,13 @@ class SakMediator(
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
             it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
+            sakRepository.lagre(it)
+        }
+    }
+
+    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
+        sakRepository.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).also {
+            it.knyttTilSak(søknadsbehandlingOpprettetHendelse)
             sakRepository.lagre(it)
         }
     }

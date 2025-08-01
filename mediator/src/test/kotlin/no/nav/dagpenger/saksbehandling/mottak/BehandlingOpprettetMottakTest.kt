@@ -18,14 +18,23 @@ class BehandlingOpprettetMottakTest {
     val søknadId = UUID.randomUUID()
     val meldekortId = 123L
     val manuellId = UUID.randomUUID()
-    val behandlingId = UUID.randomUUID()
+    val behandlingIdNyRett = UUID.randomUUID()
+    val behandlingIdGjenopptak = UUID.randomUUID()
     val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
-    private val søknadsbehandlingOpprettetHendelse =
+    private val søknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
-            behandlingId = behandlingId,
+            behandlingId = behandlingIdNyRett,
             ident = testIdent,
             opprettet = opprettet,
+        )
+    private val søknadsbehandlingOpprettetHendelseGjenopptak =
+        SøknadsbehandlingOpprettetHendelse(
+            søknadId = søknadId,
+            behandlingId = behandlingIdGjenopptak,
+            ident = testIdent,
+            opprettet = opprettet,
+            basertPåBehandling = behandlingIdNyRett,
         )
 
     private val testRapid = TestRapid()
@@ -36,11 +45,21 @@ class BehandlingOpprettetMottakTest {
     }
 
     @Test
-    fun `Skal behandle behandling_opprettet hendelse for søknadsbehandling`() {
-        testRapid.sendTestMessage(søknadsbehandlingOpprettetMelding())
+    fun `Skal behandle behandling_opprettet hendelse for søknadsbehandling av ny dagpengerett`() {
+        testRapid.sendTestMessage(søknadsbehandlingOpprettetMeldingNyRett())
         verify(exactly = 1) {
             sakMediatorMock.opprettSak(
-                søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelse,
+                søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelseNyRett,
+            )
+        }
+    }
+
+    @Test
+    fun `Skal behandle behandling_opprettet hendelse for søknadsbehandling som er basert på en annen behandling`() {
+        testRapid.sendTestMessage(søknadsbehandlingOpprettetMeldingBasertPåBehandling())
+        verify(exactly = 1) {
+            sakMediatorMock.knyttTilSak(
+                søknadsbehandlingOpprettetHendelse = søknadsbehandlingOpprettetHendelseGjenopptak,
             )
         }
     }
@@ -54,7 +73,7 @@ class BehandlingOpprettetMottakTest {
                 meldekortbehandlingOpprettetHendelse =
                     MeldekortbehandlingOpprettetHendelse(
                         meldekortId = meldekortId,
-                        behandlingId = behandlingId,
+                        behandlingId = behandlingIdNyRett,
                         ident = testIdent,
                         opprettet = opprettet,
                         basertPåBehandling = basertPåBehandling,
@@ -72,7 +91,7 @@ class BehandlingOpprettetMottakTest {
                 manuellBehandlingOpprettetHendelse =
                     ManuellBehandlingOpprettetHendelse(
                         manuellId = manuellId,
-                        behandlingId = behandlingId,
+                        behandlingId = behandlingIdNyRett,
                         ident = testIdent,
                         opprettet = opprettet,
                         basertPåBehandling = basertPåBehandling,
@@ -82,7 +101,7 @@ class BehandlingOpprettetMottakTest {
     }
 
     @Language("JSON")
-    private fun søknadsbehandlingOpprettetMelding(ident: String = testIdent) =
+    private fun søknadsbehandlingOpprettetMeldingNyRett(ident: String = testIdent) =
         """
         {
             "@event_name": "behandling_opprettet",
@@ -93,7 +112,25 @@ class BehandlingOpprettetMottakTest {
                 "id": "$søknadId",
                 "type": "Søknad"
             },
-            "behandlingId": "$behandlingId",
+            "behandlingId": "$behandlingIdNyRett",
+            "ident": "$ident"
+        }
+        """
+
+    @Language("JSON")
+    private fun søknadsbehandlingOpprettetMeldingBasertPåBehandling(ident: String = testIdent) =
+        """
+        {
+            "@event_name": "behandling_opprettet",
+            "@opprettet": "$opprettet",
+            "@id": "9fca5cad-d6fa-4296-a057-1c5bb04cdaac",
+            "behandletHendelse": {
+                "datatype": "UUID",
+                "id": "$søknadId",
+                "type": "Søknad"
+            },
+            "basertPåBehandling": "$behandlingIdNyRett",
+            "behandlingId": "$behandlingIdGjenopptak",
             "ident": "$ident"
         }
         """
@@ -113,7 +150,7 @@ class BehandlingOpprettetMottakTest {
                 "type": "Meldekort"
             },
             "basertPåBehandling": "$basertPåBehandling",
-            "behandlingId": "$behandlingId",
+            "behandlingId": "$behandlingIdNyRett",
             "ident": "$ident"
         }
         """
@@ -133,7 +170,7 @@ class BehandlingOpprettetMottakTest {
                 "type": "Manuell"
             },
             "basertPåBehandling": "$basertPåBehandling",
-            "behandlingId": "$behandlingId",
+            "behandlingId": "$behandlingIdNyRett",
             "ident": "$ident"
         }
         """

@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.sak
 
 import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -25,16 +26,25 @@ class SakMediatorTest {
     private val søknadId = UUID.randomUUID()
     private val meldekortId = 123L
     private val manuellId = UUID.randomUUID()
-    private val behandlingIdSøknad = UUIDv7.ny()
+    private val behandlingIdSøknadNyRett = UUIDv7.ny()
+    private val behandlingIdSøknadGjenopptak = UUIDv7.ny()
     private val behandlingIdMeldekort = UUIDv7.ny()
     private val behandlingIdManuell = UUIDv7.ny()
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.8")
-    private val søknadsbehandlingOpprettetHendelse =
+    private val søknadsbehandlingOpprettetHendelseNyRett =
         SøknadsbehandlingOpprettetHendelse(
             søknadId = søknadId,
-            behandlingId = behandlingIdSøknad,
+            behandlingId = behandlingIdSøknadNyRett,
             ident = testIdent,
             opprettet = opprettet,
+        )
+    private val søknadsbehandlingOpprettetHendelseGjenopptak =
+        SøknadsbehandlingOpprettetHendelse(
+            søknadId = søknadId,
+            behandlingId = behandlingIdSøknadGjenopptak,
+            ident = testIdent,
+            opprettet = opprettet,
+            basertPåBehandling = søknadsbehandlingOpprettetHendelseNyRett.behandlingId,
         )
     private val meldekortbehandlingOpprettetHendelse =
         MeldekortbehandlingOpprettetHendelse(
@@ -42,7 +52,7 @@ class SakMediatorTest {
             behandlingId = behandlingIdMeldekort,
             ident = testIdent,
             opprettet = opprettet,
-            basertPåBehandling = behandlingIdSøknad,
+            basertPåBehandling = behandlingIdSøknadNyRett,
         )
 
     private val manuellBehandlingOpprettetHendelse =
@@ -51,7 +61,7 @@ class SakMediatorTest {
             behandlingId = behandlingIdManuell,
             ident = testIdent,
             opprettet = opprettet,
-            basertPåBehandling = behandlingIdSøknad,
+            basertPåBehandling = behandlingIdSøknadNyRett,
         )
 
     private val oppslagMock: Oppslag =
@@ -83,13 +93,51 @@ class SakMediatorTest {
                     it.setRapidsConnection(testRapid)
                 }
 
-            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
-            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).let {
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
+            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
                 it.person.ident shouldBe testIdent
                 it.saker().single().let { sak ->
                     sak.søknadId shouldBe søknadId
                     sak.opprettet shouldBe opprettet
-                    sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknad
+                    sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `Skal knytte søknadsbehandling til eksisterende sak når basertPåBehandling er gitt`() {
+        withMigratedDb { ds ->
+
+            val sakMediator =
+                SakMediator(
+                    sakRepository = PostgresRepository(ds),
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(ds),
+                            oppslag = oppslagMock,
+                        ),
+                ).also {
+                    it.setRapidsConnection(testRapid)
+                }
+
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
+            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
+                it.person.ident shouldBe testIdent
+                it.saker().single().let { sak ->
+                    sak.søknadId shouldBe søknadId
+                    sak.opprettet shouldBe opprettet
+                    sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
+                }
+            }
+            sakMediator.knyttTilSak(søknadsbehandlingOpprettetHendelseGjenopptak)
+            sakMediator.hentSakHistorikk(søknadsbehandlingOpprettetHendelseNyRett.ident).let {
+                it.person.ident shouldBe testIdent
+                it.saker().single().let { sak ->
+                    sak.søknadId shouldBe søknadId
+                    sak.opprettet shouldBe opprettet
+                    sak.behandlinger().map { it.behandlingId } shouldContain behandlingIdSøknadNyRett
+                    sak.behandlinger().map { it.behandlingId } shouldContain behandlingIdSøknadGjenopptak
                 }
             }
         }
@@ -109,7 +157,7 @@ class SakMediatorTest {
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
-            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
             sakMediator.knyttTilSak(meldekortbehandlingOpprettetHendelse)
 
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
@@ -133,7 +181,7 @@ class SakMediatorTest {
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
-            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
             sakMediator.knyttTilSak(manuellBehandlingOpprettetHendelse)
 
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
@@ -161,12 +209,12 @@ class SakMediatorTest {
             coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.FORTROLIG
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns false
 
-            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
 
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
             packet["@event_name"].asText() shouldBe "avbryt_behandling"
-            packet["behandlingId"].asUUID() shouldBe behandlingIdSøknad
+            packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
             packet["søknadId"].asUUID() shouldBe søknadId
             packet["ident"].asText() shouldBe testIdent
         }
@@ -190,12 +238,12 @@ class SakMediatorTest {
             coEvery { oppslagMock.adressebeskyttelseGradering(testIdent) } returns AdressebeskyttelseGradering.UGRADERT
             coEvery { oppslagMock.erSkjermetPerson(testIdent) } returns true
 
-            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelse)
+            sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
 
             testRapid.inspektør.size shouldBe 1
             val packet = testRapid.inspektør.message(0)
             packet["@event_name"].asText() shouldBe "avbryt_behandling"
-            packet["behandlingId"].asUUID() shouldBe behandlingIdSøknad
+            packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
             packet["søknadId"].asUUID() shouldBe søknadId
             packet["ident"].asText() shouldBe testIdent
         }
