@@ -96,12 +96,14 @@ class UtsendingMediator(
             ?.let { utsending ->
                 val brev =
                     runBlocking {
+                        //todo håndter exception
                         brevProdusent.lagBrev(
                             ident = vedtakFattetHendelse.ident,
                             behandlingId = vedtakFattetHendelse.behandlingId,
                             sakId = vedtakFattetHendelse.sak.id,
                         )
                     }
+
                 utsending.startUtsending(
                     startUtsendingHendelse =
                         StartUtsendingHendelse(
@@ -144,12 +146,12 @@ class UtsendingMediator(
                         }
                     }
 
-                meldingOmVedtakKlient.lagOgHentMeldingOmVedtak(
+                meldingOmVedtakKlient.lagOgHentMeldingOmVedtakM2M(
                     person = person.await(),
                     saksbehandler = saksbehandler.await(),
                     beslutter = beslutter.await(),
                     behandlingId = behandlingId,
-                    saksbehandlerToken = tokenProvider.invoke(),
+                    maskinToken = tokenProvider.invoke(),
                     behandlingType = oppgave.behandlingType,
                     sakId = sakId,
                 ).getOrThrow()
