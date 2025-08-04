@@ -71,6 +71,37 @@ class MeldingOmVedtakKlient(
         }
     }
 
+    suspend fun lagOgHentMeldingOmVedtakM2M(
+        person: PDLPersonIntern,
+        saksbehandler: BehandlerDTO,
+        beslutter: BehandlerDTO?,
+        behandlingId: UUID,
+        maskinToken:  String,
+        behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+        sakId: String? = null,
+    ): Result<String> {
+        val meldingOmVedtakDataDTO =
+            MeldingOmVedtakDataDTO(
+                fornavn = person.fornavn,
+                etternavn = person.etternavn,
+                fodselsnummer = person.ident,
+                saksbehandler = saksbehandler,
+                beslutter = beslutter,
+                behandlingstype = behandlingType.name,
+                sakId = sakId,
+            )
+        return kotlin.runCatching {
+            httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
+                header("Authorization", "Bearer $maskinToken" )
+                header(HttpHeaders.ContentType, ContentType.Application.Json)
+                setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
+            }.bodyAsText()
+        }.onFailure {
+            logger.error(it) { "Feil ved henting av melding om vedtak for behandlingId: $behandlingId" }
+            throw KanIkkeLageMeldingOmVedtak("Kan ikke lage melding om vedtak for behandlingId: $behandlingId")
+        }
+    }
+
     class KanIkkeLageMeldingOmVedtak(message: String) : RuntimeException(message)
 }
 
