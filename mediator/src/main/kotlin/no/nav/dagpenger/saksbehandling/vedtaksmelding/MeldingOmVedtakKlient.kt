@@ -76,7 +76,7 @@ class MeldingOmVedtakKlient(
         saksbehandler: BehandlerDTO,
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
-        maskinToken:  String,
+        maskinToken: String,
         behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
         sakId: String? = null,
     ): Result<String> {
@@ -92,7 +92,7 @@ class MeldingOmVedtakKlient(
             )
         return kotlin.runCatching {
             httpClient.post("$dpMeldingOmVedtakUrl/melding-om-vedtak/$behandlingId/vedtaksmelding") {
-                header("Authorization", "Bearer $maskinToken" )
+                header("Authorization", "Bearer $maskinToken")
                 header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(objectMapper.writeValueAsString(meldingOmVedtakDataDTO))
             }.bodyAsText()
