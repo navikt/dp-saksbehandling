@@ -96,7 +96,7 @@ class UtsendingMediator(
             ?.let { utsending ->
                 val brev =
                     runBlocking {
-                        //todo håndter exception
+                        // todo håndter exception
                         brevProdusent.lagBrev(
                             ident = vedtakFattetHendelse.ident,
                             behandlingId = vedtakFattetHendelse.behandlingId,
