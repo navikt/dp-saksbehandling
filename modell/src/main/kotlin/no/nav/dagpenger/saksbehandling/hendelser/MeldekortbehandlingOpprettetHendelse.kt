@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 data class MeldekortbehandlingOpprettetHendelse(
-    val meldekortId: Long,
+    val meldekortId: String,
     val behandlingId: UUID,
     val ident: String,
     val opprettet: LocalDateTime,
