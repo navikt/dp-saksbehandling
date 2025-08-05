@@ -43,6 +43,7 @@ internal class VedtakFattetMottakForUtsending(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
+        logger.info { "VedtakFattetMottakForUtsending - behandlingId: ${packet["behandlingId"].asUUID()}" }
         if (vedtakSkalTilhøreDpSak(packet)) {
             val behandlingId = packet["behandlingId"].asUUID()
             val ident = packet["ident"].asText()
@@ -71,6 +72,7 @@ internal class VedtakFattetMottakForUtsending(
 
     private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
         val dagpengerInnvilget = packet["fastsatt"]["utfall"].asBoolean()
+        logger.info { "VedtakFattetForUtsending med utfall: $dagpengerInnvilget" }
         return dagpengerInnvilget
     }
 }
