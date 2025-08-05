@@ -94,28 +94,41 @@ class UtsendingMediator(
     fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
         utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
             ?.let { utsending ->
-                val brev =
-                    runBlocking {
-                        // todo håndter exception
-                        brevProdusent.lagBrev(
-                            ident = vedtakFattetHendelse.ident,
-                            behandlingId = vedtakFattetHendelse.behandlingId,
-                            sakId = vedtakFattetHendelse.sak.id,
-                        )
-                    }
+                // TODO: Fjern sjekk på om brev er null
+                // Dette er en midlertidig løsning i dev, for å unngå at vi starter utsending på nytt fra
+                // ArenaSinkVedtakOpprettetMottak når vedtak fattes i Arena
+                if (utsending.brev() == null) {
+                    val brev =
+                        runBlocking {
+                            // todo håndter exception
+                            brevProdusent.lagBrev(
+                                ident = vedtakFattetHendelse.ident,
+                                behandlingId = vedtakFattetHendelse.behandlingId,
+                                sakId = vedtakFattetHendelse.sak.id,
+                            )
+                        }
 
-                utsending.startUtsending(
-                    startUtsendingHendelse =
-                        StartUtsendingHendelse(
-                            // TODO: OPPGAV-ID ER IKKE I BRUK! Skal fjernes når oppgave er fjernet fra utsending
-                            oppgaveId = UUIDv7.ny(),
-                            utsendingSak = vedtakFattetHendelse.sak,
-                            behandlingId = vedtakFattetHendelse.behandlingId,
-                            ident = vedtakFattetHendelse.ident,
-                            brev = brev,
-                        ),
-                )
-                lagreOgPubliserBehov(utsending = utsending)
+                    utsending.startUtsending(
+                        startUtsendingHendelse =
+                            StartUtsendingHendelse(
+                                // TODO: OPPGAV-ID ER IKKE I BRUK! Skal fjernes når oppgave er fjernet fra utsending
+                                oppgaveId = UUIDv7.ny(),
+                                utsendingSak = vedtakFattetHendelse.sak,
+                                behandlingId = vedtakFattetHendelse.behandlingId,
+                                ident = vedtakFattetHendelse.ident,
+                                brev = brev,
+                            ),
+                    )
+                    lagreOgPubliserBehov(utsending = utsending)
+
+                // TODO: Fjern logging og if/else
+                } else {
+                    logger.warn {
+                        "Start utsending ble kalt for behandlingId=${vedtakFattetHendelse.behandlingId}, " +
+                            "sakId=${vedtakFattetHendelse.sak.id}, sakKontekst=${vedtakFattetHendelse.sak.kontekst}.  " +
+                            "Brev er allerede produsert, så gjør ingenting."
+                    }
+                }
             }
     }
 

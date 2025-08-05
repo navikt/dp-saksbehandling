@@ -201,6 +201,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             VedtakFattetMottak(rapidsConnection, oppgaveMediator)
             ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
+            // TODO: Kommenter ut denne før merge til main
             VedtakFattetMottakForUtsending(
                 rapidsConnection = rapidsConnection,
                 utsendingMediator = utsendingMediator,
