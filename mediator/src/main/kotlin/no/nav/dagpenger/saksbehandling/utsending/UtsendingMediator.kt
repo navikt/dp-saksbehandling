@@ -121,7 +121,7 @@ class UtsendingMediator(
                     )
                     lagreOgPubliserBehov(utsending = utsending)
 
-                // TODO: Fjern logging og if/else
+                    // TODO: Fjern logging og if/else
                 } else {
                     logger.warn {
                         "Start utsending ble kalt for behandlingId=${vedtakFattetHendelse.behandlingId}, " +
