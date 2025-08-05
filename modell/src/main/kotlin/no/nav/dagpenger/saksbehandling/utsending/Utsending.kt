@@ -142,16 +142,6 @@ data class Utsending(
             }
         }
 
-        override fun mottaStartUtsendingHendelse(
-            utsending: Utsending,
-            startUtsendingHendelse: StartUtsendingHendelse,
-        ) {
-            logger.warn {
-                "Mottok StartUtsendingHendelse men utsending er allerede startet for utsendingId: " +
-                    "${utsending.id}, behandlingId: ${startUtsendingHendelse.behandlingId}"
-            }
-        }
-
         override fun behov(utsending: Utsending): ArkiverbartBrevBehov {
             val brev = utsending.brev
             require(brev != null) {
