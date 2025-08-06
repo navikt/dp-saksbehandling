@@ -2,7 +2,9 @@ package no.nav.dagpenger.saksbehandling.utsending.mottak
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
@@ -20,9 +22,13 @@ class VedtakFattetMottakForUtsendingTest {
     private val sakId = UUIDv7.ny()
 
     @Test
+    @Suppress("ktlint:standard:max-line-length")
     fun `Skal starte utsending og publisere melding om vedtak fattet utenfor Arena dersom vedtaket er basert på en søknad og skal tilhøre dp-sak`() {
         val hendelse = slot<VedtakFattetHendelse>()
-        val utsendingMediatorMock = mockk<UtsendingMediator>()
+        val utsendingMediatorMock =
+            mockk<UtsendingMediator>().also {
+                every { it.startUtsendingForVedtakFattet(any()) } just Runs
+            }
 
         val sakRepositoryMock =
             mockk<SakRepository>().also {
@@ -54,10 +60,10 @@ class VedtakFattetMottakForUtsendingTest {
             utsendingMediatorMock.startUtsendingForVedtakFattet(capture(hendelse))
         }
         hendelse.captured.ident shouldBe ident
-        hendelse.captured.behandlingId shouldBe behandlingId.toString()
+        hendelse.captured.behandlingId shouldBe behandlingId
         hendelse.captured.behandletHendelseId shouldBe søknadId.toString()
         hendelse.captured.behandletHendelseType shouldBe "Søknad"
-        hendelse.captured.sak.id shouldBe sakId
+        hendelse.captured.sak.id shouldBe sakId.toString()
         hendelse.captured.sak.kontekst shouldBe "Dagpenger"
         hendelse.captured.automatiskBehandlet shouldBe false
 
