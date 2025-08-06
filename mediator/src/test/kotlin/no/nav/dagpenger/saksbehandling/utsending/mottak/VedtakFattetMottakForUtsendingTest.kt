@@ -67,8 +67,8 @@ class VedtakFattetMottakForUtsendingTest {
         hendelse.captured.sak.kontekst shouldBe "Dagpenger"
         hendelse.captured.automatiskBehandlet shouldBe false
 
-        testRapid.inspektør.size shouldBe 2
-        testRapid.inspektør.message(1).also { message ->
+        testRapid.inspektør.size shouldBe 1
+        testRapid.inspektør.message(0).also { message ->
             message["@event_name"].asText() shouldBe "vedtak_fattet_utenfor_arena"
             message["behandlingId"].asText() shouldBe behandlingId.toString()
             message["søknadId"].asText() shouldBe søknadId.toString()

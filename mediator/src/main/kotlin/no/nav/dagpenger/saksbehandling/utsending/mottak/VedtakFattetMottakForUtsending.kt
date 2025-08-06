@@ -67,31 +67,17 @@ internal class VedtakFattetMottakForUtsending(
                 ),
             )
 
-            logger.info { "VedtakFattetMottakForUtsending - publiserer behov for utsending" }
-            context.publish(
-                JsonMessage.newMessage(
-                    mapOf(
-                        "@event_name" to "behov",
-                        "@behov" to "StartUtsending",
-                        "behandlingId" to behandlingId.toString(),
-                        "ident" to ident,
-                    ),
-                ).toJson(),
-            )
-
-            val vedtakUtenforArena =
-                VedtakUtenforArena(
-                    behandlingId = behandlingId.toString(),
-                    søknadId = behandletHendelseId,
-                    ident = ident,
-                    sakId = sakId,
-                )
             // TODO publiser event om at vedtak er fattet og skal tilhøre sak i dp-sak
             context.publish(
-                JsonMessage
-                    .newMessage(
-                        map = vedtakUtenforArena.toMap(),
-                    ).toJson(),
+                JsonMessage.newMessage(
+                    map =
+                        VedtakUtenforArena(
+                            behandlingId = behandlingId.toString(),
+                            søknadId = behandletHendelseId,
+                            ident = ident,
+                            sakId = sakId,
+                        ).toMap(),
+                ).toJson(),
             )
         }
     }
