@@ -15,6 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -101,6 +102,17 @@ class SakMediator(
         sakRepository.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).also {
             it.knyttTilSak(søknadsbehandlingOpprettetHendelse)
             sakRepository.lagre(it)
+        }
+    }
+
+    fun oppdaterSakForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
+        if (vedtakFattetHendelse.sak.kontekst == "Arena") {
+            sakRepository.hentSakIdForBehandlingId(vedtakFattetHendelse.behandlingId).let { sakId ->
+                sakRepository.settArenaSakId(
+                    sakId = sakId,
+                    arenaSakId = vedtakFattetHendelse.sak.id,
+                )
+            }
         }
     }
 
