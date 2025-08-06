@@ -39,23 +39,8 @@ class VedtakFattetMottakForUtsendingTest {
             utsendingMediator = utsendingMediatorMock,
             sakRepository = sakRepositoryMock,
         )
-        testRapid.sendTestMessage(
-            """
-            {
-                "@event_name": "vedtak_fattet",
-                "ident": "$ident",
-                "behandlingId": "$behandlingId",
-                "behandletHendelse": {
-                    "id": "$søknadId",
-                    "type": "Søknad"
-                },
-                "fastsatt": {
-                    "utfall": true
-                },
-                "automatisk": false
-            }
-            """.trimIndent(),
-        )
+
+        testRapid.sendTestMessage(vedtakFattetEvent())
         verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(capture(hendelse))
         }
@@ -75,5 +60,63 @@ class VedtakFattetMottakForUtsendingTest {
             message["sakId"].asText() shouldBe sakId.toString()
             message["ident"].asText() shouldBe ident
         }
+    }
+
+    @Test
+    fun `Skal ikke håndtere avslag på søknad `() {
+        val utsendingMediatorMock = mockk<UtsendingMediator>()
+
+        VedtakFattetMottakForUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository = mockk<SakRepository>(),
+        )
+
+        testRapid.sendTestMessage(vedtakFattetEvent(utfall = false))
+
+        verify(exactly = 0) {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(any())
+        }
+    }
+
+    @Test
+    fun `Skal ikke håndtere behandlinger som ikke er type Søknad `() {
+        val utsendingMediatorMock = mockk<UtsendingMediator>()
+
+        VedtakFattetMottakForUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository = mockk<SakRepository>(),
+        )
+
+        testRapid.sendTestMessage(vedtakFattetEvent(behandletHendelseType = "Meldekort"))
+
+        verify(exactly = 0) {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(any())
+        }
+    }
+
+    private fun vedtakFattetEvent(
+        ident: String = this.ident,
+        behandlingId: String = this.behandlingId.toString(),
+        søknadId: String = this.søknadId.toString(),
+        utfall: Boolean = true,
+        behandletHendelseType: String = "Søknad",
+    ): String {
+        return """
+            {
+                "@event_name": "vedtak_fattet",
+                "ident": "$ident",
+                "behandlingId": "$behandlingId",
+                "behandletHendelse": {
+                    "id": "$søknadId",
+                    "type": "$behandletHendelseType"
+                },
+                "fastsatt": {
+                    "utfall": $utfall
+                },
+                "automatisk": false
+            }
+            """.trimIndent()
     }
 }
