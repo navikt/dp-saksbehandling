@@ -66,7 +66,33 @@ internal class VedtakFattetMottakForUtsending(
                     automatiskBehandlet = automatiskBehandlet,
                 ),
             )
+
+            logger.info { "VedtakFattetMottakForUtsending - publiserer behov for utsending" }
+            context.publish(
+                JsonMessage.newMessage(
+                    mapOf(
+                        "@event_name" to "behov",
+                        "@behov" to "StartUtsending",
+                        "behandlingId" to behandlingId.toString(),
+                        "ident" to ident,
+                    ),
+                ).toJson(),
+            )
+
+            val vedtakUtenforArena =
+                VedtakUtenforArena(
+                    behandlingId = behandlingId.toString(),
+                    søknadId = behandletHendelseId,
+                    ident = ident,
+                    sakId = sakId,
+                )
             // TODO publiser event om at vedtak er fattet og skal tilhøre sak i dp-sak
+            context.publish(
+                JsonMessage
+                    .newMessage(
+                        map = vedtakUtenforArena.toMap(),
+                    ).toJson(),
+            )
         }
     }
 
@@ -75,4 +101,20 @@ internal class VedtakFattetMottakForUtsending(
         logger.info { "VedtakFattetForUtsending med utfall: $dagpengerInnvilget" }
         return dagpengerInnvilget
     }
+}
+
+private data class VedtakUtenforArena(
+    val behandlingId: String,
+    val søknadId: String,
+    val ident: String,
+    val sakId: String,
+) {
+    fun toMap() =
+        mapOf(
+            "@event_name" to "vedtak_fattet_utenfor_arena",
+            "behandlingId" to behandlingId,
+            "søknadId" to søknadId,
+            "ident" to ident,
+            "sakId" to sakId,
+        )
 }

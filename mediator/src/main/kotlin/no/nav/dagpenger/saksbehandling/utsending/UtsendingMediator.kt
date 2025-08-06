@@ -12,6 +12,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
@@ -94,10 +95,10 @@ class UtsendingMediator(
     fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
         utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
             ?.let { utsending ->
-                // TODO: Fjern sjekk på om brev er null
+                // TODO: Fjern sjekk på tilstand
                 // Dette er en midlertidig løsning i dev, for å unngå at vi starter utsending på nytt fra
                 // ArenaSinkVedtakOpprettetMottak når vedtak fattes i Arena
-                if (utsending.brev() == null) {
+                if (utsending.tilstand().type == VenterPåVedtak) {
                     val brev =
                         runBlocking {
                             // todo håndter exception
