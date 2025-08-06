@@ -141,6 +141,18 @@ class UtsendingMediatorTest {
                 }
                 """.trimIndent()
 
+            rapid.inspektør.message(1).toString() shouldEqualSpecifiedJson
+                //language=JSON
+                """
+                {
+                   "@event_name": "vedtak_fattet_utenfor_arena",
+                    "behandlingId" : "$behandlingId",
+                    "søknadId" : "$søknadId",
+                    "ident" : "${person.ident}",
+                    "sakId" : "$sakId"
+                }
+                """.trimIndent()
+
             val pdfUrnString = "urn:pdf:123"
             rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(oppgaveId, pdfUrnString))
 
