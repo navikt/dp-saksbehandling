@@ -92,7 +92,7 @@ internal class BehandlingOpprettetMottak(
 
             "Meldekort" -> {
                 val meldekortId = packet.meldekortId()
-                withLoggingContext("meldekortId" to "$meldekortId", "behandlingId" to "$behandlingId") {
+                withLoggingContext("meldekortId" to meldekortId, "behandlingId" to "$behandlingId") {
                     logger.info { "Mottok behandling_opprettet hendelse for meldekort" }
                     if (basertPåBehandling != null) {
                         sakMediator.knyttTilSak(
@@ -137,4 +137,4 @@ private fun JsonMessage.søknadId(): UUID = this["behandletHendelse"]["id"].asUU
 
 private fun JsonMessage.manuellId(): UUID = this["behandletHendelse"]["id"].asUUID()
 
-private fun JsonMessage.meldekortId(): Long = this["behandletHendelse"]["id"].asLong()
+private fun JsonMessage.meldekortId(): String = this["behandletHendelse"]["id"].asText()

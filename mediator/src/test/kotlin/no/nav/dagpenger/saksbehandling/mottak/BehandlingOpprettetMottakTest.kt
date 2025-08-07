@@ -16,7 +16,7 @@ import java.util.UUID
 class BehandlingOpprettetMottakTest {
     val testIdent = "12345678901"
     val søknadId = UUID.randomUUID()
-    val meldekortId = 123L
+    val meldekortId = "123"
     val manuellId = UUID.randomUUID()
     val behandlingIdNyRett = UUID.randomUUID()
     val behandlingIdGjenopptak = UUID.randomUUID()
