@@ -202,11 +202,15 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
             // TODO: Kommenter ut denne før merge til main
-            VedtakFattetMottakForUtsending(
-                rapidsConnection = rapidsConnection,
-                utsendingMediator = utsendingMediator,
-                sakRepository = sakRepository,
-            )
+
+            if (Configuration.isDev) {
+                VedtakFattetMottakForUtsending(
+                    rapidsConnection = rapidsConnection,
+                    utsendingMediator = utsendingMediator,
+                    sakRepository = sakRepository,
+                )
+            }
+
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapidsConnection,
                 oppgaveRepository = oppgaveRepository,

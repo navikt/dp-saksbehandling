@@ -34,6 +34,7 @@ internal class VedtakFattetMottakForUtsending(
     }
 
     init {
+        logger.info { " Starter VedtakFattetMottakForUtsending" }
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 

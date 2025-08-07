@@ -93,6 +93,14 @@ object Configuration {
         )
     }
 
+    val isDev by lazy {
+        properties.getOrNull(Key("NAIS_CLUSTER_NAME", stringType))?.let { clusterName ->
+            clusterName == "dev-gcp"
+        } ?: false
+    }
+
+
+
     val azureAdClient: CachedOauth2Client by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)
         CachedOauth2Client(
