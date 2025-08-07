@@ -105,7 +105,7 @@ class SakMediator(
         }
     }
 
-    fun oppdaterSakForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
+    fun oppdaterSakMedArenaSakId(vedtakFattetHendelse: VedtakFattetHendelse) {
         if (vedtakFattetHendelse.sak.kontekst == "Arena") {
             sakRepository.hentSakIdForBehandlingId(vedtakFattetHendelse.behandlingId).let { sakId ->
                 sakRepository.settArenaSakId(

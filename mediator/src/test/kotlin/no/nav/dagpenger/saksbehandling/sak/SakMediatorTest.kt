@@ -211,7 +211,7 @@ class SakMediatorTest {
                 )
             val sak = sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
 
-            sakMediator.oppdaterSakForVedtakFattet(
+            sakMediator.oppdaterSakMedArenaSakId(
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdSøknadNyRett,
                     behandletHendelseId = "id",
@@ -227,7 +227,7 @@ class SakMediatorTest {
             )
             ds.finnArenaSakId(sakId = sak.sakId) shouldBe null
 
-            sakMediator.oppdaterSakForVedtakFattet(
+            sakMediator.oppdaterSakMedArenaSakId(
                 VedtakFattetHendelse(
                     behandlingId = behandlingIdSøknadNyRett,
                     behandletHendelseId = "id",

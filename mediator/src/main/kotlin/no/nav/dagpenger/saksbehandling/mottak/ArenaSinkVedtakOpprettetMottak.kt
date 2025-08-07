@@ -11,6 +11,7 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.util.UUID
 
@@ -23,6 +24,7 @@ class ArenaSinkVedtakOpprettetMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveRepository: OppgaveRepository,
     private val utsendingMediator: UtsendingMediator,
+    private val sakMediator: SakMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -77,8 +79,9 @@ class ArenaSinkVedtakOpprettetMottak(
         ) {
             logg.info("Mottok arenasink_vedtak_opprettet hendelse")
             sikkerlogg.info("Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}")
+
             if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
-                utsendingMediator.startUtsendingForVedtakFattet(
+                val vedtakFattetHendelse =
                     VedtakFattetHendelse(
                         behandlingId = behandlingId,
                         behandletHendelseId = behandletHendelseId,
@@ -89,10 +92,11 @@ class ArenaSinkVedtakOpprettetMottak(
                                 id = sakId,
                                 kontekst = "Arena",
                             ),
-                    ),
-                )
+                    )
+                sakMediator.oppdaterSakMedArenaSakId(vedtakFattetHendelse)
+                utsendingMediator.startUtsendingForVedtakFattet(vedtakFattetHendelse)
             } else {
-                logg.info("Vedtakstatus fra Arena er $vedtakstatus. Gjor ingenting.")
+                logg.info("Vedtakstatus fra Arena er $vedtakstatus. Gjør ingenting.")
             }
         }
     }

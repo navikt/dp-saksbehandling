@@ -3,7 +3,10 @@ package no.nav.dagpenger.saksbehandling.utsending
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
@@ -20,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.toUrn
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerArkiverbarVersjonAvBrev
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.AvventerDistribuering
@@ -246,10 +250,15 @@ class UtsendingMediatorTest {
                     it.setRapidsConnection(rapid)
                 }
 
+            val mockSakMediator =
+                mockk<SakMediator>().also {
+                    every { it.oppdaterSakMedArenaSakId(any()) } just Runs
+                }
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
                 oppgaveRepository = PostgresOppgaveRepository(ds),
+                sakMediator = mockSakMediator,
             )
 
             UtsendingBehovLøsningMottak(

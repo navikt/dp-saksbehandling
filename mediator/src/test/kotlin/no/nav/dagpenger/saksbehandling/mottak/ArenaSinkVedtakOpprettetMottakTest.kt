@@ -13,6 +13,7 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.lagOppgave
+import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
 
@@ -46,11 +47,16 @@ class ArenaSinkVedtakOpprettetMottakTest {
                 every { it.utsendingFinnesForOppgave(oppgaveId = testOppgave.oppgaveId) } returns true
                 every { it.startUtsendingForVedtakFattet(forventetVedtakFattetNendelse) } just Runs
             }
+        val mockSakMediator =
+            mockk<SakMediator>().also {
+                every { it.oppdaterSakMedArenaSakId(forventetVedtakFattetNendelse) } just Runs
+            }
 
         ArenaSinkVedtakOpprettetMottak(
             rapidsConnection = testRapid,
             oppgaveRepository = oppgaveRepository,
             utsendingMediator = mockUtsendingMediator,
+            sakMediator = mockSakMediator,
         )
 
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
@@ -63,9 +69,10 @@ class ArenaSinkVedtakOpprettetMottakTest {
     @Test
     fun `Skal ikke gjøre noe dersom vedtak ikke iverksetttes i Arena`() {
         ArenaSinkVedtakOpprettetMottak(
-            testRapid,
-            oppgaveRepository,
-            mockk(),
+            rapidsConnection = testRapid,
+            oppgaveRepository = oppgaveRepository,
+            utsendingMediator = mockk(),
+            sakMediator = mockk(),
         )
 
         val vedtakOpprettetMenIkkeIverksattMelding =

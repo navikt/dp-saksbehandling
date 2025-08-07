@@ -215,6 +215,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                 rapidsConnection = rapidsConnection,
                 oppgaveRepository = oppgaveRepository,
                 utsendingMediator = utsendingMediator,
+                sakMediator = sakMediator,
             )
             MeldingOmVedtakProdusentBehovløser(rapidsConnection, utsendingMediator)
             OversendtKlageinstansMottak(

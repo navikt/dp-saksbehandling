@@ -99,8 +99,6 @@ object Configuration {
         } ?: false
     }
 
-
-
     val azureAdClient: CachedOauth2Client by lazy {
         val azureAdConfig = OAuth2Config.AzureAd(properties)
         CachedOauth2Client(
