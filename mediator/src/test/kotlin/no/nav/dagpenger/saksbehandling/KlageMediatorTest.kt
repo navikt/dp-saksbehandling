@@ -197,6 +197,7 @@ class KlageMediatorTest {
             }
 
             klageMediator.registrerUtfallOpprettholdelseOpplysninger(behandlingId, saksbehandler)
+
             klageMediator.ferdigstill(
                 hendelse =
                     KlageFerdigbehandletHendelse(
@@ -213,6 +214,7 @@ class KlageMediatorTest {
                 )
             klageBehandling.tilstand().type shouldBe OVERSEND_KLAGEINSTANS
             klageBehandling.behandlendeEnhet() shouldBe behandlerDTO.enhet.enhetNr
+            klageBehandling.hjemler() shouldBe listOf("FTRL_4_5_REGISTRERING", "FTRL_4_2")
 
             OversendtKlageinstansMottak(
                 rapidsConnection = testRapid,
