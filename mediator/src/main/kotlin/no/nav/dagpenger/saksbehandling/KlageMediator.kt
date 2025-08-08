@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.OversendtKlageinstansHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
+import no.nav.dagpenger.saksbehandling.klage.Hjemler
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling.KlageTilstand.Type.BEHANDLES
 import no.nav.dagpenger.saksbehandling.klage.KlageTilstandsendring
@@ -358,5 +359,7 @@ fun KlageBehandling.hjemler(): List<String> {
     val verdi =
         this.synligeOpplysninger()
             .singleOrNull { it.type == OpplysningType.HJEMLER }?.verdi() as Verdi.Flervalg?
-    return verdi?.value?.map { it }.orEmpty()
+    return verdi?.value?.mapNotNull {
+        Hjemler.values().find { hjemmel -> hjemmel.tittel == it }?.name
+    }.orEmpty()
 }

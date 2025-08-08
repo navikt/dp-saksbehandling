@@ -29,7 +29,7 @@ import javax.sql.DataSource
 class SakMediatorTest {
     private val testIdent = "12345678901"
     private val søknadId = UUID.randomUUID()
-    private val meldekortId = 123L
+    private val meldekortId = "123L"
     private val manuellId = UUID.randomUUID()
     private val behandlingIdSøknadNyRett = UUIDv7.ny()
     private val behandlingIdSøknadGjenopptak = UUIDv7.ny()

@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     val ktorVersion = libs.versions.ktor.get()
-    val dpBibliotekerVersion = "2025.04.26-14.51.bbf9ece5f5ec"
+    val dpBibliotekerVersion = "2025.07.23-08.30.31e64aee9725"
 
     implementation(project(":modell"))
     implementation(project(":openapi"))
@@ -39,7 +39,7 @@ dependencies {
     implementation("de.slub-dresden:urnlib:2.0.1")
     implementation("dev.hsbrysk:caffeine-coroutines:2.0.2")
 
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.1.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.18.1")
     implementation("io.opentelemetry:opentelemetry-api:1.52.0")
 
     api("com.fasterxml.uuid:java-uuid-generator:5.1.0")
