@@ -73,7 +73,11 @@ internal class ForslagTilVedtakMottak(
 
 
         withLoggingContext("Id" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
-            if (behandlingId in listOf(UUID.fromString("01989e1d-c37e-705d-b84b-2dfd63f0c4cf")) ) {
+            if (behandlingId in listOf(
+                    UUID.fromString("01989e1d-c37e-705d-b84b-2dfd63f0c4cf"),
+                    UUID.fromString("0197a66c-fadf-75de-aa50-b4635ef5b070"),
+
+            ) ) {
                 logger.warn { "Skipper $behandlingId" }
                 return
             }
