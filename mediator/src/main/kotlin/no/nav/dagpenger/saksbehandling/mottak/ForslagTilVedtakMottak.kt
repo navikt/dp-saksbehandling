@@ -36,6 +36,7 @@ import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGE
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI
 import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆRE_DAGPENGER
+import java.util.UUID
 
 internal class ForslagTilVedtakMottak(
     rapidsConnection: RapidsConnection,
@@ -70,7 +71,13 @@ internal class ForslagTilVedtakMottak(
         val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
 
+
         withLoggingContext("Id" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
+            if (behandlingId in listOf(UUID.fromString("01989e1d-c37e-705d-b84b-2dfd63f0c4cf")) ) {
+                logger.warn { "Skipper $behandlingId" }
+                return
+            }
+
             logger.info { "Mottok forslag_til_vedtak hendelse" }
             val ident = packet["ident"].asText()
             val emneknagger = packet.emneknagger()
