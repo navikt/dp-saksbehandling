@@ -203,7 +203,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
             // TODO: Kommenter ut denne før merge til main
 
-            if (Configuration.isDev && false) {
+            if (Configuration.isDev) {
                 VedtakFattetMottakForUtsending(
                     rapidsConnection = rapidsConnection,
                     utsendingMediator = utsendingMediator,
