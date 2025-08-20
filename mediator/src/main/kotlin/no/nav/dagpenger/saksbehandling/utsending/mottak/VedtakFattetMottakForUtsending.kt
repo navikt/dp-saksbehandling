@@ -68,17 +68,18 @@ internal class VedtakFattetMottakForUtsending(
                 ),
             )
 
-            // TODO publiser event om at vedtak er fattet og skal tilhøre sak i dp-sak
             context.publish(
-                JsonMessage.newMessage(
-                    map =
-                        VedtakUtenforArena(
-                            behandlingId = behandlingId.toString(),
-                            søknadId = behandletHendelseId,
-                            ident = ident,
-                            sakId = sakId,
-                        ).toMap(),
-                ).toJson(),
+                key = ident,
+                message =
+                    JsonMessage.newMessage(
+                        map =
+                            VedtakUtenforArena(
+                                behandlingId = behandlingId.toString(),
+                                søknadId = behandletHendelseId,
+                                ident = ident,
+                                sakId = sakId,
+                            ).toMap(),
+                    ).toJson(),
             )
         }
     }
