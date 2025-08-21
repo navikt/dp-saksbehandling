@@ -18,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
@@ -471,6 +472,7 @@ OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
+                    meldingOmVedtakKilde = DP_SAK,
                 )
             }
 
@@ -578,6 +580,7 @@ OppgaveMediatorTest {
                 oppgaveId = oppgave.oppgaveId,
                 saksbehandler = saksbehandler,
                 saksbehandlerToken = "token",
+                meldingOmVedtakKilde = DP_SAK,
             )
 
             verify(exactly = 1) {
@@ -644,6 +647,7 @@ OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
+                    meldingOmVedtakKilde = DP_SAK,
                 )
             }
 
@@ -700,6 +704,7 @@ OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
+                    meldingOmVedtakKilde = DP_SAK,
                 )
             }
 
@@ -864,6 +869,7 @@ OppgaveMediatorTest {
                 oppgaveId = oppgave.oppgaveId,
                 saksbehandler = beslutter,
                 saksbehandlerToken = "token",
+                meldingOmVedtakKilde = DP_SAK,
             )
         }
     }

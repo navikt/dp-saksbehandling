@@ -6,6 +6,7 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -36,6 +37,7 @@ class PostgresTriggerTest {
                 behandlingId = behandlingId,
                 behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
                 person = testPerson,
+                meldingOmVedtakKilde = DP_SAK,
             )
         DBTestHelper.withBehandling(person = testPerson, behandling = lagBehandling(behandlingId = behandlingId)) { ds ->
             val repo = PostgresOppgaveRepository(ds)

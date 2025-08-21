@@ -56,7 +56,7 @@ data class Oppgave private constructor(
     val behandlingId: UUID,
     val behandlingType: BehandlingType,
     val person: Person,
-    val meldingOmVedtakKilde: MeldingOmVedtakKilde,
+    private var meldingOmVedtakKilde: MeldingOmVedtakKilde,
 ) {
     constructor(
         oppgaveId: UUID,
@@ -166,6 +166,8 @@ data class Oppgave private constructor(
     fun personIdent() = person.ident
 
     fun tilstand() = this.tilstand
+
+    fun meldingOmVedtakKilde() = this.meldingOmVedtakKilde
 
     fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
         require(
@@ -285,6 +287,14 @@ data class Oppgave private constructor(
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
+    }
+
+    private fun endreMeldingOmVedtakKilde(meldingOmVedtakKilde: MeldingOmVedtakKilde) {
+        logger.info {
+            "Endrer melding om vedtak kilde fra ${this.meldingOmVedtakKilde.name} til ${meldingOmVedtakKilde.name} " +
+                "for oppgaveId: ${this.oppgaveId}"
+        }
+        this.meldingOmVedtakKilde = meldingOmVedtakKilde
     }
 
     fun sisteSaksbehandler(): String? {
@@ -706,8 +716,12 @@ data class Oppgave private constructor(
                 beslutter = godkjentBehandlingHendelse.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
-
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
+            if (godkjentBehandlingHendelse.meldingOmVedtakKilde != oppgave.meldingOmVedtakKilde) {
+                oppgave.endreMeldingOmVedtakKilde(
+                    godkjentBehandlingHendelse.meldingOmVedtakKilde,
+                )
+            }
             return BESLUTT
         }
 
@@ -844,7 +858,7 @@ data class Oppgave private constructor(
     enum class MeldingOmVedtakKilde {
         DP_SAK,
         GOSYS,
-        IKKE_SEND,
+        INGEN,
     }
 
     sealed interface Tilstand {

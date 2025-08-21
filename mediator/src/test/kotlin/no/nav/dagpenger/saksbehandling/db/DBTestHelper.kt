@@ -3,7 +3,9 @@ package no.nav.dagpenger.saksbehandling.db
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
+import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
@@ -82,7 +84,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandling: Behandling =
                     Behandling(
                         behandlingId = UUIDv7.ny(),
-                        type = BehandlingType.RETT_TIL_DAGPENGER,
+                        type = RETT_TIL_DAGPENGER,
                         opprettet = LocalDateTime.now(),
                         hendelse = TomHendelse,
                     ),
@@ -144,7 +146,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             emneknagger: Set<String> = emptySet(),
             person: Person = testPerson,
             opprettet: LocalDateTime = LocalDateTime.now(),
-            type: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+            type: BehandlingType = RETT_TIL_DAGPENGER,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
             saksbehandlerIdent: String? = null,
         ): Oppgave {
@@ -181,13 +183,14 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandlingId = behandling.behandlingId,
                 behandlingType = type,
                 person = person,
+                meldingOmVedtakKilde = DP_SAK,
             ).also { this.lagre(it) }
         }
 
         fun leggTilOppgave(
             oppgaveId: UUID,
             behandlingId: UUID,
-            behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+            behandlingType: BehandlingType = RETT_TIL_DAGPENGER,
             person: Person = testPerson,
         ) {
             Oppgave(
@@ -198,6 +201,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandlingId = behandlingId,
                 behandlingType = behandlingType,
                 person = person,
+                meldingOmVedtakKilde = DP_SAK,
             ).also { lagre(it) }
         }
     }

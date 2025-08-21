@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
@@ -50,6 +51,7 @@ fun lagOppgave(
         behandlingId = behandlingId,
         behandlingType = behandlingType,
         person = person,
+        meldingOmVedtakKilde = DP_SAK,
     )
 }
 

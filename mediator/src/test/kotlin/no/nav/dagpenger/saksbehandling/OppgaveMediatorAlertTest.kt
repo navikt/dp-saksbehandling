@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -70,6 +71,7 @@ class OppgaveMediatorAlertTest {
                                     skjermesSomEgneAnsatte = false,
                                     adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
                                 ),
+                            meldingOmVedtakKilde = DP_SAK,
                         )
                     every { it.lagre(any()) } just runs
                 },

@@ -18,6 +18,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.BehandlesIArena
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
@@ -170,6 +171,7 @@ internal object OppgaveApiTestHelper {
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
             person = person,
+            meldingOmVedtakKilde = DP_SAK,
             tilstandslogg =
                 Tilstandslogg.rehydrer(
                     listOf(

@@ -5,8 +5,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.BehandlingType
+import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -35,8 +36,9 @@ internal class VedtakFattetMottakTest {
             oppgaveId = UUIDv7.ny(),
             opprettet = opprettet,
             behandlingId = behandlingId,
-            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+            behandlingType = RETT_TIL_DAGPENGER,
             person = person,
+            meldingOmVedtakKilde = DP_SAK,
         )
 
     private val testRapid = TestRapid()

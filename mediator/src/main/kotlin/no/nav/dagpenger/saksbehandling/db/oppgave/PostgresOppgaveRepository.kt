@@ -511,7 +511,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         oppg.utsatt_til,
                         oppg.melding_om_vedtak_kilde,
                         beha.opprettet AS behandling_opprettet,
-                        beha.behandling_type,
+                        beha.behandling_type
                 """.trimIndent()
 
             val antallSelect =
@@ -722,7 +722,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
                     "opprettet" to oppgave.opprettet,
                     "saksbehandler_ident" to oppgave.behandlerIdent,
                     "utsatt_til" to oppgave.utsattTil(),
-                    "melding_om_vedtak_kilde" to oppgave.meldingOmVedtakKilde.name,
+                    "melding_om_vedtak_kilde" to oppgave.meldingOmVedtakKilde().name,
                 ),
         ).asUpdate,
     )

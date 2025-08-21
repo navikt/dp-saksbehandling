@@ -9,6 +9,9 @@ import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Handling
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -89,6 +92,7 @@ class OppgaveMediator(
                     behandlingId = behandling.behandlingId,
                     behandlingType = behandling.type,
                     person = sakHistorikk.person,
+                    meldingOmVedtakKilde = DP_SAK,
                 )
             oppgaveRepository.lagre(oppgave)
         }
@@ -194,6 +198,7 @@ class OppgaveMediator(
                             behandlingId = behandling.behandlingId,
                             behandlingType = behandling.type,
                             person = sakHistorikk.person,
+                            meldingOmVedtakKilde = DP_SAK,
                         )
                     oppgaveRepository.lagre(oppgave)
                 }
@@ -425,52 +430,117 @@ class OppgaveMediator(
                                 oppgaveId = oppgaveId,
                                 meldingOmVedtak = null,
                                 utførtAv = saksbehandler,
+                                meldingOmVedtakKilde = meldingOmVedtakKilde,
                             ),
                     )
 
-                val utsendingId =
-                    utsendingMediator.opprettUtsending(
-                        oppgaveId = oppgave.oppgaveId,
-                        brev = null,
-                        ident = oppgave.personIdent(),
-                    )
-
-                when (ferdigstillBehandling) {
-                    FerdigstillBehandling.GODKJENN -> {
-                        behandlingKlient.godkjenn(
-                            behandlingId = oppgave.behandlingId,
-                            ident = oppgave.personIdent(),
+                when (meldingOmVedtakKilde) {
+                    DP_SAK -> {
+                        logger.info { "Oppgave ferdigstilles med melding om vedtak i DP-Sak" }
+                        ferdigstillOppgaveMedUtsending(
+                            oppgave = oppgave,
+                            ferdigstillBehandling = ferdigstillBehandling,
                             saksbehandlerToken = saksbehandlerToken,
-                        ).onSuccess {
-                            oppgaveRepository.lagre(oppgave)
-                        }.onFailure {
-                            utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
-                                when (rowsDeleted) {
-                                    1 -> logger.info { "Slettet utsending med id $utsendingId" }
-                                    else -> logger.error { "Fant ikke utsending med id $utsendingId" }
-                                }
-                            }
-                            throw it
+                        )
+                    }
+                    GOSYS -> {
+                        logger.info { "Oppgave ferdigstilles med melding om vedtak i Gosys" }
+                        ferdigstillOppgaveUtenUtsending(
+                            oppgave = oppgave,
+                            ferdigstillBehandling = ferdigstillBehandling,
+                            saksbehandlerToken = saksbehandlerToken,
+                        )
+                    }
+                    INGEN -> {
+                        logger.info { "Oppgave ferdigstilles uten melding om vedtak" }
+                        ferdigstillOppgaveUtenUtsending(
+                            oppgave = oppgave,
+                            ferdigstillBehandling = ferdigstillBehandling,
+                            saksbehandlerToken = saksbehandlerToken,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun ferdigstillOppgaveMedUtsending(
+        oppgave: Oppgave,
+        ferdigstillBehandling: FerdigstillBehandling,
+        saksbehandlerToken: String,
+    ) {
+        val utsendingId =
+            utsendingMediator.opprettUtsending(
+                oppgaveId = oppgave.oppgaveId,
+                brev = null,
+                ident = oppgave.personIdent(),
+            )
+        when (ferdigstillBehandling) {
+            FerdigstillBehandling.GODKJENN -> {
+                behandlingKlient.godkjenn(
+                    behandlingId = oppgave.behandlingId,
+                    ident = oppgave.personIdent(),
+                    saksbehandlerToken = saksbehandlerToken,
+                ).onSuccess {
+                    oppgaveRepository.lagre(oppgave)
+                }.onFailure {
+                    utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
+                        when (rowsDeleted) {
+                            1 -> logger.info { "Slettet utsending med id $utsendingId" }
+                            else -> logger.error { "Fant ikke utsending med id $utsendingId" }
                         }
                     }
+                    throw it
+                }
+            }
 
-                    FerdigstillBehandling.BESLUTT -> {
-                        behandlingKlient.beslutt(
-                            behandlingId = oppgave.behandlingId,
-                            ident = oppgave.personIdent(),
-                            saksbehandlerToken = saksbehandlerToken,
-                        ).onSuccess {
-                            oppgaveRepository.lagre(oppgave)
-                        }.onFailure {
-                            utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
-                                when (rowsDeleted) {
-                                    1 -> logger.info { "Slettet utsending med id $utsendingId" }
-                                    else -> logger.error { "Fant ikke utsending med id $utsendingId" }
-                                }
-                            }
-                            throw it
+            FerdigstillBehandling.BESLUTT -> {
+                behandlingKlient.beslutt(
+                    behandlingId = oppgave.behandlingId,
+                    ident = oppgave.personIdent(),
+                    saksbehandlerToken = saksbehandlerToken,
+                ).onSuccess {
+                    oppgaveRepository.lagre(oppgave)
+                }.onFailure {
+                    utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
+                        when (rowsDeleted) {
+                            1 -> logger.info { "Slettet utsending med id $utsendingId" }
+                            else -> logger.error { "Fant ikke utsending med id $utsendingId" }
                         }
                     }
+                    throw it
+                }
+            }
+        }
+    }
+
+    private fun ferdigstillOppgaveUtenUtsending(
+        oppgave: Oppgave,
+        ferdigstillBehandling: FerdigstillBehandling,
+        saksbehandlerToken: String,
+    ) {
+        when (ferdigstillBehandling) {
+            FerdigstillBehandling.GODKJENN -> {
+                behandlingKlient.godkjenn(
+                    behandlingId = oppgave.behandlingId,
+                    ident = oppgave.personIdent(),
+                    saksbehandlerToken = saksbehandlerToken,
+                ).onSuccess {
+                    oppgaveRepository.lagre(oppgave)
+                }.onFailure {
+                    throw it
+                }
+            }
+
+            FerdigstillBehandling.BESLUTT -> {
+                behandlingKlient.beslutt(
+                    behandlingId = oppgave.behandlingId,
+                    ident = oppgave.personIdent(),
+                    saksbehandlerToken = saksbehandlerToken,
+                ).onSuccess {
+                    oppgaveRepository.lagre(oppgave)
+                }.onFailure {
+                    throw it
                 }
             }
         }

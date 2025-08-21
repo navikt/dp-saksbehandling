@@ -20,12 +20,13 @@ import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.IKKE_SEND
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.api.models.FerdigstillRequestDTO
+import no.nav.dagpenger.saksbehandling.api.models.FerdigstillRequestDTOMeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
-import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
@@ -316,16 +317,19 @@ internal fun Route.oppgaveApi(
                         val oppgaveId = call.finnUUID("oppgaveId")
                         val meldingOmVedtakKildeDTO =
                             try {
-                                call.receive<MeldingOmVedtakKildeDTO>()
+                                call.receive<FerdigstillRequestDTO>().meldingOmVedtakKilde
                             } catch (t: Throwable) {
+                                // TODO: Kan vi sette defaultverdi her???
                                 logger.warn("Kunne ikke lese meldingOmVedtak fra request body, bruker DP_SAK som default")
-                                MeldingOmVedtakKildeDTO.DP_SAK
+                                FerdigstillRequestDTOMeldingOmVedtakKildeDTO.DP_SAK
                             }
                         val meldingOmVedtakKilde =
+                            // TODO: Kan vi sette defaultverdi her???
                             when (meldingOmVedtakKildeDTO) {
-                                MeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
-                                MeldingOmVedtakKildeDTO.GOSYS -> GOSYS
-                                MeldingOmVedtakKildeDTO.IKKE_SEND -> IKKE_SEND
+                                FerdigstillRequestDTOMeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
+                                FerdigstillRequestDTOMeldingOmVedtakKildeDTO.GOSYS -> GOSYS
+                                FerdigstillRequestDTOMeldingOmVedtakKildeDTO.INGEN -> INGEN
+                                null -> DP_SAK
                             }
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val saksbehandler = applicationCallParser.saksbehandler(call)
