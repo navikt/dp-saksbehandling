@@ -5,9 +5,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import mu.KotlinLogging
-import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -77,8 +77,8 @@ class ArenaSinkVedtakOpprettetMottak(
             "oppgaveId" to oppgave.oppgaveId.toString(),
             "sakId" to sakId,
         ) {
-            logg.info("Mottok arenasink_vedtak_opprettet hendelse")
-            sikkerlogg.info("Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}")
+            logg.info { "Mottok arenasink_vedtak_opprettet hendelse" }
+            sikkerlogg.info { "Mottok arenasink_vedtak_opprettet hendelse ${packet.toJson()}" }
 
             if (vedtakstatus == VEDTAKSTATUS_IVERKSATT) {
                 val vedtakFattetHendelse =
@@ -96,7 +96,7 @@ class ArenaSinkVedtakOpprettetMottak(
                 sakMediator.oppdaterSakMedArenaSakId(vedtakFattetHendelse)
                 utsendingMediator.startUtsendingForVedtakFattet(vedtakFattetHendelse)
             } else {
-                logg.info("Vedtakstatus fra Arena er $vedtakstatus. Gjør ingenting.")
+                logg.info { "Vedtakstatus fra Arena er $vedtakstatus. Gjør ingenting." }
             }
         }
     }

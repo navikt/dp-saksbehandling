@@ -1,7 +1,7 @@
 package no.nav.dagpenger.saksbehandling.job
 
+import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.runBlocking
-import mu.KLogger
 import no.nav.dagpenger.saksbehandling.leaderelection.LeaderElector
 import java.time.Duration
 import java.time.Instant
@@ -52,7 +52,7 @@ abstract class Job(
         startAt: Date = omFemMinutter,
         period: Long = 1.Dag,
     ): Timer {
-        logger.info("Jobb $jobName vil kjøre med intervall $period millisekunder med første kjøring $startAt")
+        logger.info { "Jobb $jobName vil kjøre med intervall $period millisekunder med første kjøring $startAt" }
         return fixedRateTimer(
             name = jobName,
             daemon = daemon,

@@ -5,9 +5,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
-import mu.KotlinLogging
-import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MANUELL
 import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG

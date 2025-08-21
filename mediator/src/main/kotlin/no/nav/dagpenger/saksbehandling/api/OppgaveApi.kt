@@ -1,6 +1,8 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import PersonMediator
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -15,8 +17,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import mu.KotlinLogging
-import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
@@ -233,7 +233,7 @@ internal fun Route.oppgaveApi(
                         val utsettOppgaveHendelse = call.utsettOppgaveHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            logger.info("Utsetter oppgave: $utsettOppgaveHendelse")
+                            logger.info { "Utsetter oppgave: $utsettOppgaveHendelse" }
                             oppgaveMediator.utsettOppgave(utsettOppgaveHendelse)
                             call.respond(HttpStatusCode.NoContent)
                         }
@@ -257,7 +257,7 @@ internal fun Route.oppgaveApi(
                         val sendTilKontrollHendelse = call.sendTilKontrollHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            logger.info("Sender oppgave til kontroll: $sendTilKontrollHendelse")
+                            logger.info { "Sender oppgave til kontroll: $sendTilKontrollHendelse" }
                             oppgaveMediator.sendTilKontroll(sendTilKontrollHendelse, saksbehandlerToken)
                             call.respond(HttpStatusCode.NoContent)
                         }
@@ -271,7 +271,7 @@ internal fun Route.oppgaveApi(
                             call.returnerTilSaksbehandlingHendelse(saksbehandler)
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-                            logger.info("Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse")
+                            logger.info { "Sender oppgave tilbake til saksbehandler: $returnerTilSaksbehandlingHendelse" }
                             oppgaveMediator.returnerTilSaksbehandling(
                                 returnerTilSaksbehandlingHendelse,
                                 saksbehandlerToken,
