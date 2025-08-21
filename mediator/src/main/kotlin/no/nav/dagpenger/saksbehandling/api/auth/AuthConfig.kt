@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.api.auth
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
@@ -8,7 +9,6 @@ import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
-import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration
 
 private val logger = KotlinLogging.logger {}

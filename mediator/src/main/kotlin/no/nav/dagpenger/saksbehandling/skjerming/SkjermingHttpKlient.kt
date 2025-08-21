@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.skjerming
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
@@ -12,7 +13,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.prometheus.metrics.model.registry.PrometheusRegistry
-import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger { }
 
