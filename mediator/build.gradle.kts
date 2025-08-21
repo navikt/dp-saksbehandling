@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     val ktorVersion = libs.versions.ktor.get()
-    val dpBibliotekerVersion = "2025.07.23-08.30.31e64aee9725"
+    val dpBibliotekerVersion = "2025.08.20-08.53.9250ac7fbd99"
 
     implementation(project(":modell"))
     implementation(project(":openapi"))
