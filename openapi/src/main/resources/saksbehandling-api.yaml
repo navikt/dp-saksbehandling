@@ -286,7 +286,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SendMeldingOmVedtak'
+              $ref: '#/components/schemas/MeldingOmVedtakKilde'
       responses:
         '204':
           description: Oppgaven er ferdig behandlet og utsending av melding om vedtak har startet
@@ -1567,14 +1567,12 @@ components:
         - verdi
         - tilgjengeligeUtfall
 
-    SendMeldingOmVedtak:
-      type: object
-      properties:
-        sendMeldingOmVedtak:
-          type: string
-          enum:
-            - DP-SAK
-            - IKKE_SEND
+    MeldingOmVedtakKilde:
+      type: string
+      enum:
+        - DP-SAK
+        - GOSYS
+        - IKKE_SEND
 
     HttpProblem:
       type: object

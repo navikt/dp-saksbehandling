@@ -16,6 +16,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.BehandlesIArena
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
@@ -508,8 +509,9 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         oppg.behandling_id, 
                         oppg.saksbehandler_ident,
                         oppg.utsatt_til,
+                        oppg.melding_om_vedtak_kilde,
                         beha.opprettet AS behandling_opprettet,
-                        beha.behandling_type
+                        beha.behandling_type,
                 """.trimIndent()
 
             val antallSelect =
@@ -703,14 +705,14 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
             statement =
                 """
                 INSERT INTO oppgave_v1
-                    (id, behandling_id, tilstand, opprettet, saksbehandler_ident, utsatt_til)
+                    (id, behandling_id, tilstand, opprettet, saksbehandler_ident, utsatt_til, melding_om_vedtak_kilde)
                 VALUES
-                    (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident, :utsatt_til) 
+                    (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident, :utsatt_til, :melding_om_vedtak_kilde) 
                 ON CONFLICT(id) DO UPDATE SET
                  tilstand = :tilstand,
                  saksbehandler_ident = :saksbehandler_ident,
-                 utsatt_til = :utsatt_til
-                
+                 utsatt_til = :utsatt_til,
+                 melding_om_vedtak_kilde = :melding_om_vedtak_kilde
                 """.trimIndent(),
             paramMap =
                 mapOf(
@@ -720,6 +722,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
                     "opprettet" to oppgave.opprettet,
                     "saksbehandler_ident" to oppgave.behandlerIdent,
                     "utsatt_til" to oppgave.utsattTil(),
+                    "melding_om_vedtak_kilde" to oppgave.meldingOmVedtakKilde.name,
                 ),
         ).asUpdate,
     )
@@ -853,23 +856,22 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
     val tilstandslogg = hentTilstandsloggForOppgave(oppgaveId, dataSource)
 
     val tilstand =
-        kotlin
-            .runCatching {
-                when (Type.valueOf(value = string("tilstand"))) {
-                    OPPRETTET -> Opprettet
-                    KLAR_TIL_BEHANDLING -> KlarTilBehandling
-                    UNDER_BEHANDLING -> UnderBehandling
-                    PAA_VENT -> PåVent
-                    AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
-                    KLAR_TIL_KONTROLL -> KlarTilKontroll
-                    UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id, dataSource))
-                    AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
-                    FERDIG_BEHANDLET -> FerdigBehandlet
-                    BEHANDLES_I_ARENA -> BehandlesIArena
-                }
-            }.getOrElse { t ->
-                throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
+        runCatching {
+            when (Type.valueOf(value = string("tilstand"))) {
+                OPPRETTET -> Opprettet
+                KLAR_TIL_BEHANDLING -> KlarTilBehandling
+                UNDER_BEHANDLING -> UnderBehandling
+                PAA_VENT -> PåVent
+                AVVENTER_LÅS_AV_BEHANDLING -> AvventerLåsAvBehandling
+                KLAR_TIL_KONTROLL -> KlarTilKontroll
+                UNDER_KONTROLL -> UnderKontroll(finnNotat(tilstandslogg.first().id, dataSource))
+                AVVENTER_OPPLÅSING_AV_BEHANDLING -> AvventerOpplåsingAvBehandling
+                FERDIG_BEHANDLET -> FerdigBehandlet
+                BEHANDLES_I_ARENA -> BehandlesIArena
             }
+        }.getOrElse { t ->
+            throw UgyldigTilstandException("Kunne ikke rehydrere oppgave til tilstand: ${string("tilstand")} ${t.message}")
+        }
 
     return Oppgave.rehydrer(
         oppgaveId = oppgaveId,
@@ -882,6 +884,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         behandlingId = this.uuid("behandling_id"),
         behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
         person = person,
+        meldingOmVedtakKilde = MeldingOmVedtakKilde.valueOf(this.string("melding_om_vedtak_kilde")),
     )
 }
 

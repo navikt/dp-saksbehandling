@@ -25,6 +25,7 @@ object OppgaveTestHelper {
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
         emneknagger: Set<String> = emptySet(),
         hendelse: Hendelse = TomHendelse,
+        meldingOmVedtakKilde: Oppgave.MeldingOmVedtakKilde = Oppgave.MeldingOmVedtakKilde.DP_SAK,
     ): Oppgave {
         val tilstand =
             when (tilstandType) {
@@ -63,6 +64,7 @@ object OppgaveTestHelper {
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
             person = person,
+            meldingOmVedtakKilde = meldingOmVedtakKilde,
         )
     }
 

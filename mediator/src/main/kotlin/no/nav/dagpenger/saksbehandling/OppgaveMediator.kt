@@ -6,6 +6,10 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.BEHANDLING_IKKE_FUNNET
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
+import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.Handling
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
@@ -96,7 +100,7 @@ class OppgaveMediator(
         )
     }
 
-    fun hentAlleOppgaverMedTilstand(tilstand: Oppgave.Tilstand.Type): List<Oppgave> {
+    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> {
         return oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
     }
 
@@ -154,7 +158,7 @@ class OppgaveMediator(
                 // TODO fjernes når alle oppgaver som kan behandles tilhører sak
                 oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let { handling ->
                     when (handling) {
-                        Oppgave.Handling.LAGRE_OPPGAVE -> {
+                        Handling.LAGRE_OPPGAVE -> {
                             oppgaveRepository.lagre(oppgave)
                             logger.info {
                                 "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
@@ -162,7 +166,7 @@ class OppgaveMediator(
                             }
                         }
 
-                        Oppgave.Handling.INGEN -> {
+                        Handling.INGEN -> {
                             logger.info {
                                 "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
                                     " ${oppgave.tilstand().type}"
@@ -197,7 +201,7 @@ class OppgaveMediator(
                 false -> {
                     oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let { handling ->
                         when (handling) {
-                            Oppgave.Handling.LAGRE_OPPGAVE -> {
+                            Handling.LAGRE_OPPGAVE -> {
                                 oppgaveRepository.lagre(oppgave)
                                 logger.info {
                                     "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
@@ -205,7 +209,7 @@ class OppgaveMediator(
                                 }
                             }
 
-                            Oppgave.Handling.INGEN -> {
+                            Handling.INGEN -> {
                                 logger.info {
                                     "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
                                         " ${oppgave.tilstand().type}"
@@ -374,8 +378,8 @@ class OppgaveMediator(
                 }
                 oppgave.ferdigstill(vedtakFattetHendelse).let { handling ->
                     when (handling) {
-                        Oppgave.Handling.LAGRE_OPPGAVE -> oppgaveRepository.lagre(oppgave)
-                        Oppgave.Handling.INGEN -> {}
+                        Handling.LAGRE_OPPGAVE -> oppgaveRepository.lagre(oppgave)
+                        Handling.INGEN -> {}
                     }
                 }
 
@@ -407,6 +411,7 @@ class OppgaveMediator(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
         saksbehandlerToken: String,
+        meldingOmVedtakKilde: MeldingOmVedtakKilde,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
             withLoggingContext(
@@ -431,7 +436,7 @@ class OppgaveMediator(
                     )
 
                 when (ferdigstillBehandling) {
-                    Oppgave.FerdigstillBehandling.GODKJENN -> {
+                    FerdigstillBehandling.GODKJENN -> {
                         behandlingKlient.godkjenn(
                             behandlingId = oppgave.behandlingId,
                             ident = oppgave.personIdent(),
@@ -449,7 +454,7 @@ class OppgaveMediator(
                         }
                     }
 
-                    Oppgave.FerdigstillBehandling.BESLUTT -> {
+                    FerdigstillBehandling.BESLUTT -> {
                         behandlingKlient.beslutt(
                             behandlingId = oppgave.behandlingId,
                             ident = oppgave.personIdent(),
@@ -487,7 +492,7 @@ class OppgaveMediator(
                 val ferdigstillBehandling = oppgave.ferdigstill(godkjentBehandlingHendelseUtenMeldingOmVedtak)
 
                 when (ferdigstillBehandling) {
-                    Oppgave.FerdigstillBehandling.GODKJENN -> {
+                    FerdigstillBehandling.GODKJENN -> {
                         behandlingKlient.godkjenn(
                             behandlingId = oppgave.behandlingId,
                             ident = oppgave.personIdent(),
@@ -505,7 +510,7 @@ class OppgaveMediator(
                         }
                     }
 
-                    Oppgave.FerdigstillBehandling.BESLUTT -> {
+                    FerdigstillBehandling.BESLUTT -> {
                         behandlingKlient.beslutt(
                             behandlingId = oppgave.behandlingId,
                             ident = oppgave.personIdent(),

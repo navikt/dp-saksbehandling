@@ -56,6 +56,7 @@ data class Oppgave private constructor(
     val behandlingId: UUID,
     val behandlingType: BehandlingType,
     val person: Person,
+    val meldingOmVedtakKilde: MeldingOmVedtakKilde,
 ) {
     constructor(
         oppgaveId: UUID,
@@ -67,6 +68,7 @@ data class Oppgave private constructor(
         behandlingId: UUID,
         behandlingType: BehandlingType,
         person: Person,
+        meldingOmVedtakKilde: MeldingOmVedtakKilde,
     ) : this(
         oppgaveId = oppgaveId,
         behandlerIdent = behandlerIdent,
@@ -77,6 +79,7 @@ data class Oppgave private constructor(
         behandlingId = behandlingId,
         behandlingType = behandlingType,
         person = person,
+        meldingOmVedtakKilde = meldingOmVedtakKilde,
     )
 
     companion object {
@@ -101,6 +104,7 @@ data class Oppgave private constructor(
             behandlingId: UUID,
             behandlingType: BehandlingType,
             person: Person,
+            meldingOmVedtakKilde: MeldingOmVedtakKilde,
         ): Oppgave =
             Oppgave(
                 oppgaveId = oppgaveId,
@@ -113,6 +117,7 @@ data class Oppgave private constructor(
                 behandlingId = behandlingId,
                 behandlingType = behandlingType,
                 person = person,
+                meldingOmVedtakKilde = meldingOmVedtakKilde,
             )
 
         private fun requireEierskapTilOppgave(
@@ -834,6 +839,12 @@ data class Oppgave private constructor(
     enum class Handling {
         LAGRE_OPPGAVE,
         INGEN,
+    }
+
+    enum class MeldingOmVedtakKilde {
+        DP_SAK,
+        GOSYS,
+        IKKE_SEND,
     }
 
     sealed interface Tilstand {

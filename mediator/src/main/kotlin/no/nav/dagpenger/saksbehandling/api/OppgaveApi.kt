@@ -18,10 +18,14 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.IKKE_SEND
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
+import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
@@ -310,6 +314,19 @@ internal fun Route.oppgaveApi(
                 route("ferdigstill") {
                     put {
                         val oppgaveId = call.finnUUID("oppgaveId")
+                        val meldingOmVedtakKildeDTO =
+                            try {
+                                call.receive<MeldingOmVedtakKildeDTO>()
+                            } catch (t: Throwable) {
+                                logger.warn("Kunne ikke lese meldingOmVedtak fra request body, bruker DP_SAK som default")
+                                MeldingOmVedtakKildeDTO.DP_SAK
+                            }
+                        val meldingOmVedtakKilde =
+                            when (meldingOmVedtakKildeDTO) {
+                                MeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
+                                MeldingOmVedtakKildeDTO.GOSYS -> GOSYS
+                                MeldingOmVedtakKildeDTO.IKKE_SEND -> IKKE_SEND
+                            }
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val saksbehandler = applicationCallParser.saksbehandler(call)
                             val saksbehandlerToken = call.request.jwt()
@@ -317,6 +334,7 @@ internal fun Route.oppgaveApi(
                                 oppgaveId = oppgaveId,
                                 saksbehandler = saksbehandler,
                                 saksbehandlerToken = saksbehandlerToken,
+                                meldingOmVedtakKilde = meldingOmVedtakKilde,
                             )
                             call.respond(HttpStatusCode.NoContent)
                         }
