@@ -1,10 +1,10 @@
 package no.nav.dagpenger.saksbehandling.klage
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import mu.KLogger
-import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.AlertManager
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.job.Job

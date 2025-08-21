@@ -1,10 +1,10 @@
 package no.nav.dagpenger.saksbehandling.metrikker
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import mu.KotlinLogging
 import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}

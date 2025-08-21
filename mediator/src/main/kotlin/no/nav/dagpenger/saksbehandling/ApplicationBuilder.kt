@@ -3,10 +3,10 @@ package no.nav.dagpenger.saksbehandling
 import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.KafkaRapid
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIOApplicationEngine
 import io.ktor.server.engine.EmbeddedServer
-import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.adressebeskyttelse.AdressebeskyttelseConsumer
 import no.nav.dagpenger.saksbehandling.api.KlageDTOMapper
 import no.nav.dagpenger.saksbehandling.api.OppgaveDTOMapper

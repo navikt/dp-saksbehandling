@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.leaderelection
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.stringType
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -11,7 +12,6 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.serialization.jackson.jackson
-import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Configuration
 import java.net.InetAddress
 

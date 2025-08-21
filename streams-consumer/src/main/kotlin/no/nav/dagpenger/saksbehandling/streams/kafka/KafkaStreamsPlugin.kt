@@ -1,13 +1,13 @@
 // shamelessly copied from navikt/hm-personhendelse
 package no.nav.dagpenger.saksbehandling.streams.kafka
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.events.EventHandler
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.hooks.MonitoringEvent
-import mu.KotlinLogging
 import org.apache.kafka.streams.KafkaStreams
 
 private val log = KotlinLogging.logger {}
