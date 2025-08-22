@@ -44,9 +44,14 @@ internal class VedtakFattetMottakForUtsending(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "VedtakFattetMottakForUtsending - behandlingId: ${packet["behandlingId"].asUUID()}" }
+        val behandlingId = packet["behandlingId"].asUUID()
+        logger.info { "VedtakFattetMottakForUtsending - behandlingId: $behandlingId" }
+        val skipSet = setOf("019503c4-08ca-785d-ae6d-ac1ef95e5ed1")
+        if (behandlingId.toString() in skipSet) {
+            logger.info { "Skipper behandlingId: $behandlingId" }
+            return
+        }
         if (vedtakSkalTilhøreDpSak(packet)) {
-            val behandlingId = packet["behandlingId"].asUUID()
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
             val automatiskBehandlet = packet["automatisk"].asBoolean()
