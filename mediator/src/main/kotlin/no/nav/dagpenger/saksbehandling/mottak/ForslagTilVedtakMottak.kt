@@ -69,7 +69,11 @@ internal class ForslagTilVedtakMottak(
     ) {
         val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
-
+        val skipSet = setOf("0198a7c4-c69b-72d6-82e0-7740b98e35a9")
+        if (behandlingId.toString() in skipSet) {
+            logger.info { "Skipper behandlingId: $behandlingId fra ForslagTilVedtakMottak" }
+            return
+        }
         withLoggingContext("Id" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok forslag_til_vedtak hendelse" }
             val ident = packet["ident"].asText()
