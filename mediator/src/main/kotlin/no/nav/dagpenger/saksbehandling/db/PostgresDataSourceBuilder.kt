@@ -39,16 +39,11 @@ internal object PostgresDataSourceBuilder {
     fun clean() = flyWayBuilder.cleanDisabled(false).dataSource(dataSource).load().clean()
 
     internal fun runMigration(initSql: String? = null): Int {
-        val flyway =
-            flyWayBuilder
-                .dataSource(dataSource)
-                .initSql(initSql)
-                .ignoreMigrationPatterns("repeatable:missing")
-                .load()
-
-        flyway.repair()
-
-        return flyway
+        return flyWayBuilder
+            .dataSource(dataSource)
+            .initSql(initSql)
+            .validateMigrationNaming(true)
+            .load()
             .migrate()
             .migrations
             .size
