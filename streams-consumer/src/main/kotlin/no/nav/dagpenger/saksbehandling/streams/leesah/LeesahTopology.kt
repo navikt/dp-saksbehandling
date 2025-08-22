@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling.streams.leesah
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.streams.kafka.specificAvroSerde
 import no.nav.dagpenger.saksbehandling.streams.kafka.stringSerde
 import no.nav.person.pdl.leesah.Personhendelse

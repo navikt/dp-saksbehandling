@@ -2,10 +2,10 @@ package no.nav.dagpenger.saksbehandling
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import mu.KLogger
-import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.job.Job
 import java.util.UUID
 import javax.sql.DataSource

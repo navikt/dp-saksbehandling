@@ -1,10 +1,10 @@
 package no.nav.dagpenger.saksbehandling.utsending
 
 import de.slub.urn.URN
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
-import mu.KotlinLogging
-import mu.withLoggingContext
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.toUrnOrNull

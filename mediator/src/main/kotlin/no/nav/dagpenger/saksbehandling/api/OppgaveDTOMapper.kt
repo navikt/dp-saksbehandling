@@ -245,7 +245,6 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
         is Oppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
         is Oppgave.BehandlesIArena -> OppgaveTilstandDTO.BEHANDLES_I_ARENA
-        else -> throw InternDataException("Ukjent tilstand: $this")
     }
 }
 

@@ -1,12 +1,12 @@
 package no.nav.dagpenger.saksbehandling.job
 
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.kotest.assertions.nondeterministic.continually
 import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import mu.KLogger
-import mu.KotlinLogging
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.now
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
