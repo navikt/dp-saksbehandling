@@ -29,7 +29,13 @@ dependencies {
     implementation(libs.bundles.ktor.server)
     implementation("io.ktor:ktor-server-html-builder:$ktorVersion")
     implementation("io.ktor:ktor-server-swagger:$ktorVersion")
-    implementation(libs.bundles.postgres)
+
+    implementation("org.flywaydb:flyway-core:11.9.2")
+    implementation("org.flywaydb:flyway-database-postgresql:11.9.2")
+    implementation(libs.hikari)
+    implementation(libs.postgresql.driver)
+    implementation(libs.kotlinquery)
+
     implementation("no.nav.dagpenger:oauth2-klient:$dpBibliotekerVersion")
     implementation("no.nav.dagpenger:pdl-klient:$dpBibliotekerVersion")
     implementation("no.nav.dagpenger:ktor-client-metrics:$dpBibliotekerVersion")
