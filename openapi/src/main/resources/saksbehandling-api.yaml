@@ -986,6 +986,8 @@ components:
         soknadId:
           type: string
           format: uuid
+        meldingOmVedtakKilde:
+          $ref: '#/components/schemas/MeldingOmVedtakKilde'
       required:
         - oppgaveId
         - behandlingId
@@ -997,6 +999,7 @@ components:
         - lovligeEndringer
         - journalpostIder
         - historikk
+        - meldingOmVedtakKilde
 
     Kjonn:
       type: string
@@ -1004,6 +1007,19 @@ components:
         - MANN
         - KVINNE
         - UKJENT
+
+    MeldingOmVedtakKildeRequest:
+      type: object
+      properties:
+        meldingOmVedtakKilde:
+          $ref: '#/components/schemas/MeldingOmVedtakKilde'
+
+    MeldingOmVedtakKilde:
+      type: string
+      enum:
+        - DP_SAK
+        - GOSYS
+        - INGEN
 
     OppgaveTilstand:
       type: string
@@ -1182,15 +1198,7 @@ components:
       required:
         - tekst
         - sistEndretTidspunkt
-    MeldingOmVedtakKildeRequest:
-      type: object
-      properties:
-        meldingOmVedtakKilde:
-          type: string
-          enum:
-            - DP_SAK
-            - GOSYS
-            - INGEN
+
     Behandler:
       type: object
       properties:

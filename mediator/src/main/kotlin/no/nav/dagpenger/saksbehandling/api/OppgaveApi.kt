@@ -25,8 +25,8 @@ import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
+import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTO
-import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
@@ -176,7 +176,7 @@ internal fun Route.oppgaveApi(
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val saksbehandler = applicationCallParser.saksbehandler(call)
 
-                            val meldingOmVedtakKildeDTO =
+                            val meldingOmVedtakKildeRequestDTO =
                                 try {
                                     call.receive<MeldingOmVedtakKildeRequestDTO>().meldingOmVedtakKilde
                                 } catch (t: Throwable) {
@@ -186,14 +186,14 @@ internal fun Route.oppgaveApi(
                                         "Kunne ikke lese kilde for melding om vedtak fra request body, " +
                                             "bruker DP_SAK som default. Feilmelding: ${t.message}"
                                     }
-                                    MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO.DP_SAK
+                                    MeldingOmVedtakKildeDTO.DP_SAK
                                 }
                             val meldingOmVedtakKilde =
                                 // TODO: Kan vi sette defaultverdi her???
-                                when (meldingOmVedtakKildeDTO) {
-                                    MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
-                                    MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO.GOSYS -> GOSYS
-                                    MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO.INGEN -> INGEN
+                                when (meldingOmVedtakKildeRequestDTO) {
+                                    MeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
+                                    MeldingOmVedtakKildeDTO.GOSYS -> GOSYS
+                                    MeldingOmVedtakKildeDTO.INGEN -> INGEN
                                     null -> DP_SAK
                                 }
                             oppgaveMediator.endreMeldingOmVedtakKilde(

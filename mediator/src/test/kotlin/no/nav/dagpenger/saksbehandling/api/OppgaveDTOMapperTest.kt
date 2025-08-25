@@ -173,7 +173,8 @@ class OppgaveDTOMapperTest {
                           }
                         }
                       ],
-                      "soknadId": "01953789-f215-744e-9f6e-a55509bae78b"
+                      "soknadId": "01953789-f215-744e-9f6e-a55509bae78b",
+                      "meldingOmVedtakKilde": "DP_SAK"
                     }
                     """.trimIndent()
             }
@@ -323,7 +324,8 @@ class OppgaveDTOMapperTest {
                           }
                         }
                       ],
-                      "soknadId": "01953789-f215-744e-9f6e-a55509bae78b"
+                      "soknadId": "01953789-f215-744e-9f6e-a55509bae78b",
+                      "meldingOmVedtakKilde": "DP_SAK"
                     }
                     """.trimIndent()
             }

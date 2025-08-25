@@ -6,6 +6,9 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
@@ -16,6 +19,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
+import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
@@ -154,6 +158,12 @@ internal class OppgaveDTOMapper(
                         },
                 ),
             soknadId = soknadId,
+            meldingOmVedtakKilde =
+                when (oppgave.meldingOmVedtakKilde()) {
+                    DP_SAK -> MeldingOmVedtakKildeDTO.DP_SAK
+                    GOSYS -> MeldingOmVedtakKildeDTO.GOSYS
+                    INGEN -> MeldingOmVedtakKildeDTO.INGEN
+                },
         )
 
     private fun mapGyldigeSikkerhetstiltak(person: PDLPersonIntern): List<SikkerhetstiltakDTO> {

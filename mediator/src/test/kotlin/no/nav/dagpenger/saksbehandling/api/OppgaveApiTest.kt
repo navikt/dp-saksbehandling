@@ -61,6 +61,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
+import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
@@ -851,6 +852,7 @@ class OppgaveApiTest {
                                         else -> emptyList()
                                     },
                             ),
+                        meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                     )
             }
 
@@ -1005,6 +1007,7 @@ class OppgaveApiTest {
                                         else -> emptyList()
                                     },
                             ),
+                        meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                     )
             }
 
