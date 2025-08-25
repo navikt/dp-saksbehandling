@@ -42,6 +42,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 
 private val logger = KotlinLogging.logger {}
 
@@ -254,6 +255,12 @@ data class Oppgave private constructor(
         tilstand.lagreNotat(this, notatHendelse)
     }
 
+    fun endreMeldingOmVedtakKilde(endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse) {
+        egneAnsatteTilgangskontroll(endreMeldingOmVedtakKildeHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(endreMeldingOmVedtakKildeHendelse.utførtAv)
+        tilstand.endreMeldingOmVedtakKilde(this, endreMeldingOmVedtakKildeHendelse)
+    }
+
     fun slettNotat(slettNotatHendelse: SlettNotatHendelse) {
         egneAnsatteTilgangskontroll(slettNotatHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(slettNotatHendelse.utførtAv)
@@ -329,6 +336,12 @@ data class Oppgave private constructor(
                 logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
             }
             .getOrThrow()
+    }
+
+    enum class MeldingOmVedtakKilde {
+        DP_SAK,
+        GOSYS,
+        INGEN,
     }
 
     object Opprettet : Tilstand {
@@ -991,6 +1004,13 @@ data class Oppgave private constructor(
             notatHendelse: NotatHendelse,
         ) {
             throw RuntimeException("Notat er ikke tillatt i tilstand $type")
+        }
+
+        fun endreMeldingOmVedtakKilde(
+            oppgave: Oppgave,
+            endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
+        ) {
+            throw RuntimeException("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
         }
 
         fun slettNotat(

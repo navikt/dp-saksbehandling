@@ -38,6 +38,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 
 private val logger = KotlinLogging.logger {}
 
@@ -523,6 +524,26 @@ class OppgaveMediator(
                         }
                     }
                 }
+            }
+        }
+    }
+
+    fun endreMeldingOmVedtakKilde(
+        oppgaveId: UUID,
+        meldingOmVedtakKilde: Oppgave.MeldingOmVedtakKilde,
+        saksbehandler: Saksbehandler,
+        ) {
+        oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
+            ) {
+                oppgave.endreMeldingOmVedtakKilde(EndreMeldingOmVedtakKildeHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    meldingOmVedtakKilde = meldingOmVedtakKilde,
+                    utførtAv = saksbehandler
+                ))
+                oppgaveRepository.endreMeldingOmVedtakKilde(oppgaveId)
             }
         }
     }

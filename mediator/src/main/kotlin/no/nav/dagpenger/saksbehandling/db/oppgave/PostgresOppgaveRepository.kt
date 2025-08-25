@@ -411,6 +411,10 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         }
     }
 
+    override fun endreMeldingOmVedtakKilde(oppgaveId: UUID) {
+        TODO("Not yet implemented")
+    }
+
     //language=PostgreSQL
     override fun hentOppgave(oppgaveId: UUID): Oppgave =
         søk(

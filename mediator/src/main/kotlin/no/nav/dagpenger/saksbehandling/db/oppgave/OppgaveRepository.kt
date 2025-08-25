@@ -46,4 +46,6 @@ interface OppgaveRepository {
         ident: String,
         søknadId: UUID,
     ): Oppgave.Tilstand.Type?
+
+    fun endreMeldingOmVedtakKilde(oppgaveId: UUID)
 }
