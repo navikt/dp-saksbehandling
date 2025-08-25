@@ -32,9 +32,6 @@ import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
@@ -91,7 +88,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
-import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -437,7 +433,7 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne ferdigstille en oppgave uten melding om vedtak`() {
+    fun `Skal kunne ferdigstille en oppgave`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
         val oppgaveMediatorMock =
@@ -447,7 +443,6 @@ class OppgaveApiTest {
                         oppgaveId = oppgave.oppgaveId,
                         saksbehandler = any(),
                         saksbehandlerToken = saksbehandlerToken,
-                        meldingOmVedtakKilde = INGEN,
                     )
                 } just Runs
             }
@@ -456,12 +451,6 @@ class OppgaveApiTest {
             client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
                 autentisert(token = saksbehandlerToken)
                 contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """
-                        {"meldingOmVedtakKilde" : "INGEN"}
-                    """.trimMargin(),
-                )
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
             }
@@ -471,117 +460,6 @@ class OppgaveApiTest {
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = any(),
                     saksbehandlerToken = saksbehandlerToken,
-                    meldingOmVedtakKilde = INGEN,
-                )
-            }
-        }
-    }
-
-    @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak i Gosys`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                coEvery {
-                    it.ferdigstillOppgave(
-                        oppgaveId = oppgave.oppgaveId,
-                        saksbehandler = any(),
-                        saksbehandlerToken = saksbehandlerToken,
-                        meldingOmVedtakKilde = GOSYS,
-                    )
-                } just Runs
-            }
-
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
-                autentisert(token = saksbehandlerToken)
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """
-                        {"meldingOmVedtakKilde" : "GOSYS"}
-                    """.trimMargin(),
-                )
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
-
-            coVerify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(
-                    oppgaveId = oppgave.oppgaveId,
-                    saksbehandler = any(),
-                    saksbehandlerToken = saksbehandlerToken,
-                    meldingOmVedtakKilde = GOSYS,
-                )
-            }
-        }
-    }
-
-    @Test
-    fun `Skal kunne ferdigstille en oppgave med melding om vedtak`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                coEvery {
-                    it.ferdigstillOppgave(
-                        oppgaveId = oppgave.oppgaveId,
-                        saksbehandler = any(),
-                        saksbehandlerToken = saksbehandlerToken,
-                        meldingOmVedtakKilde = DP_SAK,
-                    )
-                } just Runs
-            }
-
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
-                autentisert(token = saksbehandlerToken)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
-
-            coVerify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(
-                    oppgaveId = oppgave.oppgaveId,
-                    saksbehandler = any(),
-                    saksbehandlerToken = saksbehandlerToken,
-                    meldingOmVedtakKilde = DP_SAK,
-                )
-            }
-        }
-    }
-
-    @Test
-    fun `Feilhåndtering for melding om vedtak`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                coEvery {
-                    it.ferdigstillOppgave(
-                        oppgaveId = any<UUID>(),
-                        saksbehandler = any(),
-                        saksbehandlerToken = any(),
-                        meldingOmVedtakKilde = DP_SAK,
-                    )
-                } throws MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak("Testmelding")
-            }
-
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.put("/oppgave/${oppgave.oppgaveId}/ferdigstill") {
-                autentisert(token = saksbehandlerToken)
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.InternalServerError
-                response.bodyAsText() shouldContain "Feil ved laging av melding om vedtak"
-            }
-
-            coVerify(exactly = 1) {
-                oppgaveMediatorMock.ferdigstillOppgave(
-                    oppgaveId = oppgave.oppgaveId,
-                    saksbehandler = any(),
-                    saksbehandlerToken = saksbehandlerToken,
-                    meldingOmVedtakKilde = DP_SAK,
                 )
             }
         }

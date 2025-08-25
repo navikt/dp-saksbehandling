@@ -26,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTL
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
@@ -255,6 +256,12 @@ data class Oppgave private constructor(
         tilstand.behandlesIArena(this, behandlingAvbruttHendelse)
     }
 
+    fun endreMeldingOmVedtakKilde(endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse) {
+        egneAnsatteTilgangskontroll(endreMeldingOmVedtakKildeHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(endreMeldingOmVedtakKildeHendelse.utførtAv)
+        tilstand.endreMeldingOmVedtakKilde(this, endreMeldingOmVedtakKildeHendelse)
+    }
+
     fun lagreNotat(notatHendelse: NotatHendelse) {
         egneAnsatteTilgangskontroll(notatHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(notatHendelse.utførtAv)
@@ -287,14 +294,6 @@ data class Oppgave private constructor(
         }
         this.tilstand = nyTilstand
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
-    }
-
-    private fun endreMeldingOmVedtakKilde(meldingOmVedtakKilde: MeldingOmVedtakKilde) {
-        logger.info {
-            "Endrer melding om vedtak kilde fra ${this.meldingOmVedtakKilde.name} til ${meldingOmVedtakKilde.name} " +
-                "for oppgaveId: ${this.oppgaveId}"
-        }
-        this.meldingOmVedtakKilde = meldingOmVedtakKilde
     }
 
     fun sisteSaksbehandler(): String? {
@@ -482,6 +481,17 @@ data class Oppgave private constructor(
         ): Handling {
             logger.info { "Nytt forslag til vedtak mottatt for oppgaveId: ${oppgave.oppgaveId} i tilstand ${type.name}" }
             return Handling.LAGRE_OPPGAVE
+        }
+
+        override fun endreMeldingOmVedtakKilde(
+            oppgave: Oppgave,
+            endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
+        ) {
+            logger.info {
+                "Endrer kilde for melding om vedtak fra ${oppgave.meldingOmVedtakKilde.name} til " +
+                    "${endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name}"
+            }
+            oppgave.meldingOmVedtakKilde = endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde
         }
 
         override fun ferdigstill(
@@ -717,11 +727,6 @@ data class Oppgave private constructor(
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
-            if (godkjentBehandlingHendelse.meldingOmVedtakKilde != oppgave.meldingOmVedtakKilde) {
-                oppgave.endreMeldingOmVedtakKilde(
-                    godkjentBehandlingHendelse.meldingOmVedtakKilde,
-                )
-            }
             return BESLUTT
         }
 
@@ -1009,6 +1014,13 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å returnere til saksbehandling fra kontroll i tilstand $type",
             )
+        }
+
+        fun endreMeldingOmVedtakKilde(
+            oppgave: Oppgave,
+            endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
+        ) {
+            throw RuntimeException("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
         }
 
         fun lagreNotat(

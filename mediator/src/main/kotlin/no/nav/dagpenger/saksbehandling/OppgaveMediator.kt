@@ -8,7 +8,6 @@ import no.nav.dagpenger.saksbehandling.AlertManager.OppgaveAlertType.BEHANDLING_
 import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Handling
-import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
@@ -27,10 +26,10 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
-import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -324,6 +323,28 @@ class OppgaveMediator(
         }
     }
 
+    fun endreMeldingOmVedtakKilde(
+        oppgaveId: UUID,
+        meldingOmVedtakKilde: Oppgave.MeldingOmVedtakKilde,
+        saksbehandler: Saksbehandler,
+    ) {
+        oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
+            ) {
+                oppgave.endreMeldingOmVedtakKilde(
+                    EndreMeldingOmVedtakKildeHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        meldingOmVedtakKilde = meldingOmVedtakKilde,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+                oppgaveRepository.lagre(oppgave)
+            }
+        }
+    }
+
     fun lagreNotat(notatHendelse: NotatHendelse): LocalDateTime {
         return oppgaveRepository.hentOppgave(notatHendelse.oppgaveId).let { oppgave ->
             oppgave.lagreNotat(notatHendelse)
@@ -395,28 +416,10 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgaveUtenMeldingOmVedtak(
-        oppgaveId: UUID,
-        saksbehandler: Saksbehandler,
-        saksbehandlerToken: String,
-    ) {
-        oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
-            ferdigstillOppgaveUtenUtsending(
-                godkjentBehandlingHendelseUtenMeldingOmVedtak =
-                    GodkjentBehandlingHendelseUtenMeldingOmVedtak(
-                        oppgaveId = oppgaveId,
-                        utførtAv = saksbehandler,
-                    ),
-                saksbehandlerToken = saksbehandlerToken,
-            )
-        }
-    }
-
     fun ferdigstillOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
         saksbehandlerToken: String,
-        meldingOmVedtakKilde: MeldingOmVedtakKilde,
     ) {
         oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
             withLoggingContext(
@@ -430,11 +433,10 @@ class OppgaveMediator(
                                 oppgaveId = oppgaveId,
                                 meldingOmVedtak = null,
                                 utførtAv = saksbehandler,
-                                meldingOmVedtakKilde = meldingOmVedtakKilde,
                             ),
                     )
 
-                when (meldingOmVedtakKilde) {
+                when (oppgave.meldingOmVedtakKilde()) {
                     DP_SAK -> {
                         logger.info { "Oppgave ferdigstilles med melding om vedtak i DP-Sak" }
                         ferdigstillOppgaveMedUtsending(
@@ -541,62 +543,6 @@ class OppgaveMediator(
                     oppgaveRepository.lagre(oppgave)
                 }.onFailure {
                     throw it
-                }
-            }
-        }
-    }
-
-    private fun ferdigstillOppgaveUtenUtsending(
-        godkjentBehandlingHendelseUtenMeldingOmVedtak: GodkjentBehandlingHendelseUtenMeldingOmVedtak,
-        saksbehandlerToken: String,
-        oppgaveTilFerdigstilling: Oppgave? = null,
-    ) {
-        oppgaveTilFerdigstilling ?: oppgaveRepository.hentOppgave(godkjentBehandlingHendelseUtenMeldingOmVedtak.oppgaveId).let { oppgave ->
-            withLoggingContext(
-                "oppgaveId" to oppgave.oppgaveId.toString(),
-                "behandlingId" to oppgave.behandlingId.toString(),
-            ) {
-                logger.info {
-                    "Mottatt GodkjentBehandlingHendelseUtenMeldingOmVedtak for oppgave i tilstand ${oppgave.tilstand().type}"
-                }
-                val ferdigstillBehandling = oppgave.ferdigstill(godkjentBehandlingHendelseUtenMeldingOmVedtak)
-
-                when (ferdigstillBehandling) {
-                    FerdigstillBehandling.GODKJENN -> {
-                        behandlingKlient.godkjenn(
-                            behandlingId = oppgave.behandlingId,
-                            ident = oppgave.personIdent(),
-                            saksbehandlerToken = saksbehandlerToken,
-                        ).onSuccess {
-                            oppgaveRepository.lagre(oppgave)
-                            logger.info {
-                                "Behandlet GodkjentBehandlingHendelseUtenMeldingOmVedtak. " +
-                                    "Tilstand etter behandling: ${oppgave.tilstand().type}"
-                            }
-                        }.onFailure {
-                            val feil = "Feil ved godkjenning av behandling: ${it.message}"
-                            logger.error { feil }
-                            throw it
-                        }
-                    }
-
-                    FerdigstillBehandling.BESLUTT -> {
-                        behandlingKlient.beslutt(
-                            behandlingId = oppgave.behandlingId,
-                            ident = oppgave.personIdent(),
-                            saksbehandlerToken = saksbehandlerToken,
-                        ).onSuccess {
-                            oppgaveRepository.lagre(oppgave)
-                            logger.info {
-                                "Behandlet GodkjentBehandlingHendelseUtenMeldingOmVedtak. " +
-                                    "Tilstand etter behandling: ${oppgave.tilstand().type}"
-                            }
-                        }.onFailure {
-                            val feil = "Feil ved beslutting av behandling: ${it.message}"
-                            logger.error { feil }
-                            throw it
-                        }
-                    }
                 }
             }
         }

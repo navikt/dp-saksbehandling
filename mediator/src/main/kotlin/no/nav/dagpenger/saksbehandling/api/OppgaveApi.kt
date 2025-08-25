@@ -23,10 +23,10 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.api.models.FerdigstillRequestDTO
-import no.nav.dagpenger.saksbehandling.api.models.FerdigstillRequestDTOMeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
+import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTO
+import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
@@ -170,6 +170,41 @@ internal fun Route.oppgaveApi(
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
                 }
+                route("melding-om-vedtak-kilde") {
+                    put {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                            val saksbehandler = applicationCallParser.saksbehandler(call)
+
+                            val meldingOmVedtakKildeDTO =
+                                try {
+                                    call.receive<MeldingOmVedtakKildeRequestDTO>().meldingOmVedtakKilde
+                                } catch (t: Throwable) {
+                                    // TODO: Kan vi sette defaultverdi her???
+                                    logger.warn { "Kunne ikke lese kilde for melding om vedta fra request body, bruker DP_SAK som default" }
+                                    sikkerlogger.warn {
+                                        "Kunne ikke lese kilde for melding om vedtak fra request body, " +
+                                            "bruker DP_SAK som default. Feilmelding: ${t.message}"
+                                    }
+                                    MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO.DP_SAK
+                                }
+                            val meldingOmVedtakKilde =
+                                // TODO: Kan vi sette defaultverdi her???
+                                when (meldingOmVedtakKildeDTO) {
+                                    MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
+                                    MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO.GOSYS -> GOSYS
+                                    MeldingOmVedtakKildeRequestDTOMeldingOmVedtakKildeDTO.INGEN -> INGEN
+                                    null -> DP_SAK
+                                }
+                            oppgaveMediator.endreMeldingOmVedtakKilde(
+                                oppgaveId = oppgaveId,
+                                meldingOmVedtakKilde = meldingOmVedtakKilde,
+                                saksbehandler = saksbehandler,
+                            )
+                            call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
+                }
                 route("notat") {
                     put {
                         val notat = call.receive<NotatRequestDTO>()
@@ -281,56 +316,9 @@ internal fun Route.oppgaveApi(
                     }
                 }
 
-// FRA BRANCHEN TIL AURORA:
-//                route("ferdigstill") {
-//                    put {
-//                        val oppgaveId = call.finnUUID("oppgaveId")
-//                        val meldingOmVedtak =
-//                            try {
-//                                call.receive<SendMeldingOmVedtakDTO>()
-//                            } catch (t: Throwable) {
-//                                logger.warn("Kunne ikke lese meldingOmVedtak fra request body, bruker DP_SAK som default")
-//                                SendMeldingOmVedtakDTOSendMeldingOmVedtakDTO.DP_SAK
-//                            }
-//                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
-//                            val saksbehandler = applicationCallParser.saksbehandler(call)
-//                            val saksbehandlerToken = call.request.jwt()
-//                            if (meldingOmVedtak == SendMeldingOmVedtakDTOSendMeldingOmVedtakDTO.DP_SAK) {
-//                                oppgaveMediator.ferdigstillOppgave(
-//                                    oppgaveId = oppgaveId,
-//                                    saksBehandler = saksbehandler,
-//                                    saksbehandlerToken = saksbehandlerToken,
-//                                )
-//                            } else {
-//                                oppgaveMediator.ferdigstillOppgaveUtenMeldingOmVedtak(
-//                                    oppgaveId = oppgaveId,
-//                                    saksBehandler = saksbehandler,
-//                                    saksbehandlerToken = saksbehandlerToken,
-//                                )
-//                            }
-//                            call.respond(HttpStatusCode.NoContent)
-//                        }
-//                    }
-//                }
                 route("ferdigstill") {
                     put {
                         val oppgaveId = call.finnUUID("oppgaveId")
-                        val meldingOmVedtakKildeDTO =
-                            try {
-                                call.receive<FerdigstillRequestDTO>().meldingOmVedtakKilde
-                            } catch (t: Throwable) {
-                                // TODO: Kan vi sette defaultverdi her???
-                                logger.warn("Kunne ikke lese meldingOmVedtak fra request body, bruker DP_SAK som default")
-                                FerdigstillRequestDTOMeldingOmVedtakKildeDTO.DP_SAK
-                            }
-                        val meldingOmVedtakKilde =
-                            // TODO: Kan vi sette defaultverdi her???
-                            when (meldingOmVedtakKildeDTO) {
-                                FerdigstillRequestDTOMeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
-                                FerdigstillRequestDTOMeldingOmVedtakKildeDTO.GOSYS -> GOSYS
-                                FerdigstillRequestDTOMeldingOmVedtakKildeDTO.INGEN -> INGEN
-                                null -> DP_SAK
-                            }
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val saksbehandler = applicationCallParser.saksbehandler(call)
                             val saksbehandlerToken = call.request.jwt()
@@ -338,7 +326,6 @@ internal fun Route.oppgaveApi(
                                 oppgaveId = oppgaveId,
                                 saksbehandler = saksbehandler,
                                 saksbehandlerToken = saksbehandlerToken,
-                                meldingOmVedtakKilde = meldingOmVedtakKilde,
                             )
                             call.respond(HttpStatusCode.NoContent)
                         }

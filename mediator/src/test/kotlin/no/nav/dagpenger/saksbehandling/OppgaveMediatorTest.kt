@@ -19,6 +19,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
@@ -68,7 +70,6 @@ import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingKlient
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -472,7 +473,6 @@ OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
-                    meldingOmVedtakKilde = DP_SAK,
                 )
             }
 
@@ -481,17 +481,11 @@ OppgaveMediatorTest {
         }
     }
 
-    // TODO Vurder om vi skal ha egen funksjon for å ferdigstille oppgave uten vedtaksbrev
     @Test
-    @Disabled
-    fun `Livssyklus for søknadsbehandling som blir vedtatt uten vedtaksbrev`() {
+    fun `Livssyklus for søknadsbehandling som blir vedtatt med vedtaksbrev i Gosys`() {
         val behandlingId = UUIDv7.ny()
 
-        settOppOppgaveMediator(
-// TODO: Kan sannsynligvis fjerne hele testen. Skal erstattes av funksjonalitet i sak_drodling branchen?
-// FRA BRANCHEN TIL AURORA:
-//            movKlient = mockk()
-        ) { datasource, oppgaveMediator ->
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
             val oppgave =
                 datasource.lagTestoppgave(
                     tilstand = KLAR_TIL_BEHANDLING,
@@ -509,17 +503,67 @@ OppgaveMediatorTest {
             val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            tildeltOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
 
+            oppgaveMediator.endreMeldingOmVedtakKilde(
+                oppgaveId = tildeltOppgave.oppgaveId,
+                meldingOmVedtakKilde = GOSYS,
+                saksbehandler = saksbehandler,
+            )
             runBlocking {
-                oppgaveMediator.ferdigstillOppgaveUtenMeldingOmVedtak(
+                oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
                 )
             }
 
-            val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            val ferdigBehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            ferdigBehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            ferdigBehandletOppgave.meldingOmVedtakKilde() shouldBe GOSYS
+        }
+    }
+
+    @Test
+    fun `Livssyklus for søknadsbehandling som blir vedtatt uten vedtaksbrev`() {
+        val behandlingId = UUIDv7.ny()
+
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+            val oppgave =
+                datasource.lagTestoppgave(
+                    tilstand = KLAR_TIL_BEHANDLING,
+                    behandlingId = behandlingId,
+                )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
+            tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            tildeltOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
+
+            oppgaveMediator.endreMeldingOmVedtakKilde(
+                oppgaveId = tildeltOppgave.oppgaveId,
+                meldingOmVedtakKilde = INGEN,
+                saksbehandler = saksbehandler,
+            )
+            runBlocking {
+                oppgaveMediator.ferdigstillOppgave(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandler = saksbehandler,
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            val ferdigBehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            ferdigBehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            ferdigBehandletOppgave.meldingOmVedtakKilde() shouldBe INGEN
         }
     }
 
@@ -575,12 +619,12 @@ OppgaveMediatorTest {
             val tildeltOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
+            tildeltOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
 
             oppgaveMediator.ferdigstillOppgave(
                 oppgaveId = oppgave.oppgaveId,
                 saksbehandler = saksbehandler,
                 saksbehandlerToken = "token",
-                meldingOmVedtakKilde = DP_SAK,
             )
 
             verify(exactly = 1) {
@@ -589,6 +633,7 @@ OppgaveMediatorTest {
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
+            ferdigbehandletOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
 
             val utsending = utsendingMediator.hent(ferdigbehandletOppgave.oppgaveId)
             utsending.oppgaveId shouldBe ferdigbehandletOppgave.oppgaveId
@@ -647,7 +692,6 @@ OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
-                    meldingOmVedtakKilde = DP_SAK,
                 )
             }
 
@@ -704,7 +748,6 @@ OppgaveMediatorTest {
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = saksbehandler,
                     saksbehandlerToken = "token",
-                    meldingOmVedtakKilde = DP_SAK,
                 )
             }
 
@@ -869,7 +912,6 @@ OppgaveMediatorTest {
                 oppgaveId = oppgave.oppgaveId,
                 saksbehandler = beslutter,
                 saksbehandlerToken = "token",
-                meldingOmVedtakKilde = DP_SAK,
             )
         }
     }
