@@ -171,7 +171,11 @@ internal object OppgaveApiTestHelper {
             behandlingId = behandling.behandlingId,
             behandlingType = behandling.type,
             person = person,
-            meldingOmVedtakKilde = DP_SAK,
+            meldingOmVedtak =
+                Oppgave.MeldingOmVedtak(
+                    kilde = DP_SAK,
+                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                ),
             tilstandslogg =
                 Tilstandslogg.rehydrer(
                     listOf(

@@ -32,6 +32,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
+import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -57,7 +58,7 @@ data class Oppgave private constructor(
     val behandlingId: UUID,
     val behandlingType: BehandlingType,
     val person: Person,
-    private var meldingOmVedtakKilde: MeldingOmVedtakKilde,
+    private var meldingOmVedtak: MeldingOmVedtak,
 ) {
     constructor(
         oppgaveId: UUID,
@@ -69,7 +70,7 @@ data class Oppgave private constructor(
         behandlingId: UUID,
         behandlingType: BehandlingType,
         person: Person,
-        meldingOmVedtakKilde: MeldingOmVedtakKilde,
+        meldingOmVedtak: MeldingOmVedtak,
     ) : this(
         oppgaveId = oppgaveId,
         behandlerIdent = behandlerIdent,
@@ -80,7 +81,7 @@ data class Oppgave private constructor(
         behandlingId = behandlingId,
         behandlingType = behandlingType,
         person = person,
-        meldingOmVedtakKilde = meldingOmVedtakKilde,
+        meldingOmVedtak = meldingOmVedtak,
     )
 
     companion object {
@@ -105,7 +106,7 @@ data class Oppgave private constructor(
             behandlingId: UUID,
             behandlingType: BehandlingType,
             person: Person,
-            meldingOmVedtakKilde: MeldingOmVedtakKilde,
+            meldingOmVedtak: MeldingOmVedtak,
         ): Oppgave =
             Oppgave(
                 oppgaveId = oppgaveId,
@@ -118,7 +119,7 @@ data class Oppgave private constructor(
                 behandlingId = behandlingId,
                 behandlingType = behandlingType,
                 person = person,
-                meldingOmVedtakKilde = meldingOmVedtakKilde,
+                meldingOmVedtak = meldingOmVedtak,
             )
 
         private fun requireEierskapTilOppgave(
@@ -168,7 +169,9 @@ data class Oppgave private constructor(
 
     fun tilstand() = this.tilstand
 
-    fun meldingOmVedtakKilde() = this.meldingOmVedtakKilde
+    fun meldingOmVedtakKilde() = this.meldingOmVedtak.kilde
+
+    fun kontrollertBrev() = this.meldingOmVedtak.kontrollertGosysBrev
 
     fun egneAnsatteTilgangskontroll(saksbehandler: Saksbehandler) {
         require(
@@ -260,6 +263,12 @@ data class Oppgave private constructor(
         egneAnsatteTilgangskontroll(endreMeldingOmVedtakKildeHendelse.utførtAv)
         adressebeskyttelseTilgangskontroll(endreMeldingOmVedtakKildeHendelse.utførtAv)
         tilstand.endreMeldingOmVedtakKilde(this, endreMeldingOmVedtakKildeHendelse)
+    }
+
+    fun lagreBrevKvittering(lagreBrevKvitteringHendelse: LagreBrevKvitteringHendelse) {
+        egneAnsatteTilgangskontroll(lagreBrevKvitteringHendelse.utførtAv)
+        adressebeskyttelseTilgangskontroll(lagreBrevKvitteringHendelse.utførtAv)
+        tilstand.lagreBrevKvittering(this, lagreBrevKvitteringHendelse)
     }
 
     fun lagreNotat(notatHendelse: NotatHendelse) {
@@ -488,10 +497,15 @@ data class Oppgave private constructor(
             endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
         ) {
             logger.info {
-                "Endrer kilde for melding om vedtak fra ${oppgave.meldingOmVedtakKilde.name} til " +
+                "Endrer kilde for melding om vedtak fra ${oppgave.meldingOmVedtak.kilde.name} til " +
                     "${endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name}"
             }
-            oppgave.meldingOmVedtakKilde = endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde
+            oppgave.meldingOmVedtak.kilde = endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde
+            if (endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde == MeldingOmVedtakKilde.GOSYS) {
+                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.NEI
+            } else {
+                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT
+            }
         }
 
         override fun ferdigstill(
@@ -778,6 +792,23 @@ data class Oppgave private constructor(
             )
         }
 
+        override fun lagreBrevKvittering(
+            oppgave: Oppgave,
+            lagreBrevKvitteringHendelse: LagreBrevKvitteringHendelse,
+        ) {
+            requireBeslutterTilgang(
+                saksbehandler = lagreBrevKvitteringHendelse.utførtAv,
+                tilstandType = type,
+                hendelseNavn = lagreBrevKvitteringHendelse.javaClass.simpleName,
+            )
+            requireBeslutterUlikSaksbehandler(
+                oppgave = oppgave,
+                beslutter = lagreBrevKvitteringHendelse.utførtAv,
+                hendelseNavn = lagreBrevKvitteringHendelse.javaClass.simpleName,
+            )
+            oppgave.meldingOmVedtak.kontrollertGosysBrev = lagreBrevKvitteringHendelse.kontrollertBrev
+        }
+
         override fun returnerTilSaksbehandling(
             oppgave: Oppgave,
             returnerTilSaksbehandlingHendelse: ReturnerTilSaksbehandlingHendelse,
@@ -802,6 +833,9 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
             oppgave._emneknagger.add(RETUR_FRA_KONTROLL)
             oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT)
+            if (oppgave.meldingOmVedtak.kilde == MeldingOmVedtakKilde.GOSYS) {
+                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.NEI
+            }
         }
 
         override fun fjernAnsvar(
@@ -859,6 +893,17 @@ data class Oppgave private constructor(
         LAGRE_OPPGAVE,
         INGEN,
     }
+
+    enum class KontrollertBrev {
+        JA,
+        NEI,
+        IKKE_RELEVANT,
+    }
+
+    data class MeldingOmVedtak(
+        var kilde: MeldingOmVedtakKilde,
+        var kontrollertGosysBrev: KontrollertBrev,
+    )
 
     enum class MeldingOmVedtakKilde {
         DP_SAK,
@@ -1014,6 +1059,13 @@ data class Oppgave private constructor(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om å returnere til saksbehandling fra kontroll i tilstand $type",
             )
+        }
+
+        fun lagreBrevKvittering(
+            oppgave: Oppgave,
+            lagreBrevKvitteringHendelse: LagreBrevKvitteringHendelse,
+        ) {
+            throw RuntimeException("Lagring av brevkvittering er ikke tillat i tilstant $type")
         }
 
         fun endreMeldingOmVedtakKilde(

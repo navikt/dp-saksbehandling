@@ -71,7 +71,11 @@ class OppgaveMediatorAlertTest {
                                     skjermesSomEgneAnsatte = false,
                                     adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
                                 ),
-                            meldingOmVedtakKilde = DP_SAK,
+                            meldingOmVedtak =
+                                Oppgave.MeldingOmVedtak(
+                                    kilde = DP_SAK,
+                                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                                ),
                         )
                     every { it.lagre(any()) } just runs
                 },

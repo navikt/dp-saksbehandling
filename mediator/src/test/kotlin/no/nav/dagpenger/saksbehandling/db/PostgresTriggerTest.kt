@@ -37,7 +37,11 @@ class PostgresTriggerTest {
                 behandlingId = behandlingId,
                 behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
                 person = testPerson,
-                meldingOmVedtakKilde = DP_SAK,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
             )
         DBTestHelper.withBehandling(person = testPerson, behandling = lagBehandling(behandlingId = behandlingId)) { ds ->
             val repo = PostgresOppgaveRepository(ds)

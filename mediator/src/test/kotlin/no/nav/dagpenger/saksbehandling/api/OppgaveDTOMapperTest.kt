@@ -174,7 +174,8 @@ class OppgaveDTOMapperTest {
                         }
                       ],
                       "soknadId": "01953789-f215-744e-9f6e-a55509bae78b",
-                      "meldingOmVedtakKilde": "DP_SAK"
+                      "meldingOmVedtakKilde": "DP_SAK",
+                      "kontrollertBrev": "IKKE_RELEVANT"
                     }
                     """.trimIndent()
             }
@@ -325,7 +326,8 @@ class OppgaveDTOMapperTest {
                         }
                       ],
                       "soknadId": "01953789-f215-744e-9f6e-a55509bae78b",
-                      "meldingOmVedtakKilde": "DP_SAK"
+                      "meldingOmVedtakKilde": "DP_SAK",
+                      "kontrollertBrev": "IKKE_RELEVANT"
                     }
                     """.trimIndent()
             }

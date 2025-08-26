@@ -30,6 +30,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendel
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.LagreBrevKvitteringHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.PåVentFristUtgåttHendelse
@@ -91,7 +92,11 @@ class OppgaveMediator(
                     behandlingId = behandling.behandlingId,
                     behandlingType = behandling.type,
                     person = sakHistorikk.person,
-                    meldingOmVedtakKilde = DP_SAK,
+                    meldingOmVedtak =
+                        Oppgave.MeldingOmVedtak(
+                            kilde = DP_SAK,
+                            kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                        ),
                 )
             oppgaveRepository.lagre(oppgave)
         }
@@ -197,7 +202,11 @@ class OppgaveMediator(
                             behandlingId = behandling.behandlingId,
                             behandlingType = behandling.type,
                             person = sakHistorikk.person,
-                            meldingOmVedtakKilde = DP_SAK,
+                            meldingOmVedtak =
+                                Oppgave.MeldingOmVedtak(
+                                    kilde = DP_SAK,
+                                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                                ),
                         )
                     oppgaveRepository.lagre(oppgave)
                 }
@@ -319,6 +328,28 @@ class OppgaveMediator(
                 logger.info {
                     "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
+            }
+        }
+    }
+
+    fun lagreKontrollertBrev(
+        oppgaveId: UUID,
+        kontrollertBrev: Oppgave.KontrollertBrev,
+        saksbehandler: Saksbehandler,
+    ) {
+        oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
+            ) {
+                oppgave.lagreBrevKvittering(
+                    LagreBrevKvitteringHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        kontrollertBrev = kontrollertBrev,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+                oppgaveRepository.lagre(oppgave)
             }
         }
     }

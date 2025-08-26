@@ -510,6 +510,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         oppg.saksbehandler_ident,
                         oppg.utsatt_til,
                         oppg.melding_om_vedtak_kilde,
+                        oppg.kontrollert_brev,
                         beha.opprettet AS behandling_opprettet,
                         beha.behandling_type
                 """.trimIndent()
@@ -705,14 +706,33 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
             statement =
                 """
                 INSERT INTO oppgave_v1
-                    (id, behandling_id, tilstand, opprettet, saksbehandler_ident, utsatt_til, melding_om_vedtak_kilde)
+                    (
+                        id,
+                        behandling_id,
+                        tilstand,
+                        opprettet,
+                        saksbehandler_ident,
+                        utsatt_til,
+                        melding_om_vedtak_kilde,
+                        kontrollert_brev
+                    )
                 VALUES
-                    (:id, :behandling_id, :tilstand, :opprettet, :saksbehandler_ident, :utsatt_til, :melding_om_vedtak_kilde) 
+                    (
+                        :id,
+                        :behandling_id,
+                        :tilstand,
+                        :opprettet,
+                        :saksbehandler_ident,
+                        :utsatt_til,
+                        :melding_om_vedtak_kilde,
+                        :kontrollert_brev
+                    ) 
                 ON CONFLICT(id) DO UPDATE SET
                  tilstand = :tilstand,
                  saksbehandler_ident = :saksbehandler_ident,
                  utsatt_til = :utsatt_til,
-                 melding_om_vedtak_kilde = :melding_om_vedtak_kilde
+                 melding_om_vedtak_kilde = :melding_om_vedtak_kilde,
+                 kontrollert_brev = :kontrollert_brev
                 """.trimIndent(),
             paramMap =
                 mapOf(
@@ -723,6 +743,7 @@ private fun TransactionalSession.lagre(oppgave: Oppgave) {
                     "saksbehandler_ident" to oppgave.behandlerIdent,
                     "utsatt_til" to oppgave.utsattTil(),
                     "melding_om_vedtak_kilde" to oppgave.meldingOmVedtakKilde().name,
+                    "kontrollert_brev" to oppgave.kontrollertBrev().name,
                 ),
         ).asUpdate,
     )
@@ -884,7 +905,11 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         behandlingId = this.uuid("behandling_id"),
         behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
         person = person,
-        meldingOmVedtakKilde = MeldingOmVedtakKilde.valueOf(this.string("melding_om_vedtak_kilde")),
+        meldingOmVedtak =
+            Oppgave.MeldingOmVedtak(
+                kilde = MeldingOmVedtakKilde.valueOf(this.string("melding_om_vedtak_kilde")),
+                kontrollertGosysBrev = Oppgave.KontrollertBrev.valueOf(this.string("kontrollert_brev")),
+            ),
     )
 }
 

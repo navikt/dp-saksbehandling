@@ -18,12 +18,17 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
+import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
+import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.LagreNotatResponseDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeRequestDTO
@@ -170,6 +175,37 @@ internal fun Route.oppgaveApi(
                         call.respond(HttpStatusCode.OK, oppgaveDTO)
                     }
                 }
+                route("kontrollert-brev") {
+                    put {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                            val saksbehandler = applicationCallParser.saksbehandler(call)
+
+                            val kontrollert =
+                                try {
+                                    call.receive<KontrollertBrevRequestDTO>().kontrollert
+                                } catch (t: Throwable) {
+                                    logger.warn { "Kunne ikke lese om beslutter har kontrollert fra request body" }
+                                    sikkerlogger.warn {
+                                        "Kunne ikke lese om beslutter har kontrollert fra request body. Feilmelding: ${t.message}"
+                                    }
+                                    throw IllegalArgumentException(t)
+                                }
+                            val kontrollertBrev =
+                                when (kontrollert) {
+                                    KontrollertBrevDTO.JA -> JA
+                                    KontrollertBrevDTO.NEI -> NEI
+                                    KontrollertBrevDTO.IKKE_RELEVANT -> IKKE_RELEVANT
+                                }
+                            oppgaveMediator.lagreKontrollertBrev(
+                                oppgaveId = oppgaveId,
+                                kontrollertBrev = kontrollertBrev,
+                                saksbehandler = saksbehandler,
+                            )
+                            call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
+                }
                 route("melding-om-vedtak-kilde") {
                     put {
                         val oppgaveId = call.finnUUID("oppgaveId")
@@ -180,8 +216,10 @@ internal fun Route.oppgaveApi(
                                 try {
                                     call.receive<MeldingOmVedtakKildeRequestDTO>().meldingOmVedtakKilde
                                 } catch (t: Throwable) {
-                                    // TODO: Kan vi sette defaultverdi her???
-                                    logger.warn { "Kunne ikke lese kilde for melding om vedta fra request body, bruker DP_SAK som default" }
+                                    logger.warn {
+                                        "Kunne ikke lese kilde for melding om vedtak fra request body, " +
+                                            "bruker DP_SAK som default"
+                                    }
                                     sikkerlogger.warn {
                                         "Kunne ikke lese kilde for melding om vedtak fra request body, " +
                                             "bruker DP_SAK som default. Feilmelding: ${t.message}"

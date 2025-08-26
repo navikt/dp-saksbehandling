@@ -38,7 +38,11 @@ internal class VedtakFattetMottakTest {
             behandlingId = behandlingId,
             behandlingType = RETT_TIL_DAGPENGER,
             person = person,
-            meldingOmVedtakKilde = DP_SAK,
+            meldingOmVedtak =
+                Oppgave.MeldingOmVedtak(
+                    kilde = DP_SAK,
+                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                ),
         )
 
     private val testRapid = TestRapid()

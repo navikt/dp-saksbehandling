@@ -6,6 +6,9 @@ import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
@@ -18,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
+import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatDTO
@@ -163,6 +167,12 @@ internal class OppgaveDTOMapper(
                     DP_SAK -> MeldingOmVedtakKildeDTO.DP_SAK
                     GOSYS -> MeldingOmVedtakKildeDTO.GOSYS
                     INGEN -> MeldingOmVedtakKildeDTO.INGEN
+                },
+            kontrollertBrev =
+                when (oppgave.kontrollertBrev()) {
+                    JA -> KontrollertBrevDTO.JA
+                    NEI -> KontrollertBrevDTO.NEI
+                    IKKE_RELEVANT -> KontrollertBrevDTO.IKKE_RELEVANT
                 },
         )
 

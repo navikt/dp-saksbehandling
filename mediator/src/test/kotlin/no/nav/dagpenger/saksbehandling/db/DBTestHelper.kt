@@ -183,7 +183,11 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandlingId = behandling.behandlingId,
                 behandlingType = type,
                 person = person,
-                meldingOmVedtakKilde = DP_SAK,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
             ).also { this.lagre(it) }
         }
 
@@ -201,7 +205,11 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandlingId = behandlingId,
                 behandlingType = behandlingType,
                 person = person,
-                meldingOmVedtakKilde = DP_SAK,
+                meldingOmVedtak =
+                    Oppgave.MeldingOmVedtak(
+                        kilde = DP_SAK,
+                        kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
+                    ),
             ).also { lagre(it) }
         }
     }

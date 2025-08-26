@@ -60,6 +60,7 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
+import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
 import no.nav.dagpenger.saksbehandling.api.models.MeldingOmVedtakKildeDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveDTO
@@ -853,6 +854,7 @@ class OppgaveApiTest {
                                     },
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
+                        kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
                     )
             }
 
@@ -1008,6 +1010,7 @@ class OppgaveApiTest {
                                     },
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
+                        kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
                     )
             }
 
