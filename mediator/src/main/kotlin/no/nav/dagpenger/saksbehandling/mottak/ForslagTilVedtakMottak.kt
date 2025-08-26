@@ -69,7 +69,7 @@ internal class ForslagTilVedtakMottak(
     ) {
         val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
-        val skipSet = setOf("01987454-6f7d-73c7-aa06-689015f6665b")
+        val skipSet = setOf("0198a7c4-c69b-72d6-82e0-7740b98e35a9", "01987454-6f7d-73c7-aa06-689015f6665b")
         if (behandlingId.toString() in skipSet) {
             logger.info { "Skipper behandlingId: $behandlingId fra ForslagTilVedtakMottak" }
             return
