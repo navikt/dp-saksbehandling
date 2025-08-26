@@ -429,6 +429,9 @@ data class Oppgave private constructor(
                 sendTilKontrollHendelse.javaClass.simpleName,
             )
 
+            if (oppgave.meldingOmVedtak.kilde == MeldingOmVedtakKilde.GOSYS) {
+                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.NEI
+            }
             if (oppgave.sisteBeslutter() == null) {
                 oppgave.behandlerIdent = null
                 oppgave.endreTilstand(KlarTilKontroll, sendTilKontrollHendelse)
@@ -501,11 +504,7 @@ data class Oppgave private constructor(
                     "${endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name}"
             }
             oppgave.meldingOmVedtak.kilde = endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde
-            if (endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde == MeldingOmVedtakKilde.GOSYS) {
-                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.NEI
-            } else {
-                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT
-            }
+            oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT
         }
 
         override fun ferdigstill(
@@ -740,6 +739,11 @@ data class Oppgave private constructor(
                 beslutter = godkjentBehandlingHendelse.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
+            if (oppgave.meldingOmVedtak.kilde == MeldingOmVedtakKilde.GOSYS) {
+                require(oppgave.meldingOmVedtak.kontrollertGosysBrev == KontrollertBrev.JA) {
+                    "Brev må kontrolleres i Gosys"
+                }
+            }
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
             return BESLUTT
         }
@@ -806,6 +810,9 @@ data class Oppgave private constructor(
                 beslutter = lagreBrevKvitteringHendelse.utførtAv,
                 hendelseNavn = lagreBrevKvitteringHendelse.javaClass.simpleName,
             )
+            if (oppgave.meldingOmVedtak.kilde == MeldingOmVedtakKilde.GOSYS) {
+                require(lagreBrevKvitteringHendelse.kontrollertBrev != KontrollertBrev.IKKE_RELEVANT)
+            }
             oppgave.meldingOmVedtak.kontrollertGosysBrev = lagreBrevKvitteringHendelse.kontrollertBrev
         }
 

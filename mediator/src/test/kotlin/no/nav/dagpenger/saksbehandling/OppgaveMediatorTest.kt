@@ -477,12 +477,13 @@ OppgaveMediatorTest {
             }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+            ferdigbehandletOppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
 
     @Test
-    fun `Livssyklus for søknadsbehandling som blir vedtatt med vedtaksbrev i Gosys`() {
+    fun `Livssyklus for søknadsbehandling som blir vedtatt med vedtaksbrev i Gosys uten totrinnskontroll`() {
         val behandlingId = UUIDv7.ny()
 
         settOppOppgaveMediator { datasource, oppgaveMediator ->
@@ -504,6 +505,7 @@ OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
             tildeltOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
+            tildeltOppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
 
             oppgaveMediator.endreMeldingOmVedtakKilde(
                 oppgaveId = tildeltOppgave.oppgaveId,
@@ -851,7 +853,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Livssyklus for søknadsbehandling som krever totrinnskontroll`() {
+    fun `Livssyklus for søknadsbehandling med brev i dp-sak som krever totrinnskontroll`() {
         val behandlingKlientMock =
             mockk<BehandlingKlient>().also {
                 coEvery {
@@ -906,6 +908,92 @@ OppgaveMediatorTest {
                         utførtAv = saksbehandler,
                     ),
                 saksbehandlerToken = "testtoken",
+            )
+
+            oppgaveMediator.ferdigstillOppgave(
+                oppgaveId = oppgave.oppgaveId,
+                saksbehandler = beslutter,
+                saksbehandlerToken = "token",
+            )
+        }
+    }
+
+    @Test
+    fun `Livssyklus for søknadsbehandling med brev i gosys som krever totrinnskontroll`() {
+        val behandlingKlientMock =
+            mockk<BehandlingKlient>().also {
+                coEvery {
+                    it.kreverTotrinnskontroll(any(), any())
+                } returns Result.success(true)
+                every { it.godkjenn(behandlingId = any(), any(), any()) } returns Result.success(Unit)
+                every { it.beslutt(behandlingId = any(), any(), any()) } returns Result.success(Unit)
+                every { it.sendTilbake(behandlingId = any(), any(), any()) } returns Result.success(Unit)
+            }
+
+        settOppOppgaveMediator(behandlingKlient = behandlingKlientMock) { datasource, oppgaveMediator ->
+
+            val oppgave = datasource.lagTestoppgave(tilstand = KLAR_TIL_BEHANDLING)
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.endreMeldingOmVedtakKilde(
+                oppgaveId = oppgave.oppgaveId,
+                meldingOmVedtakKilde = GOSYS,
+                saksbehandler = saksbehandler,
+            )
+
+            oppgaveMediator.sendTilKontroll(
+                sendTilKontrollHendelse =
+                    SendTilKontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "testtoken",
+            )
+
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = beslutter.navIdent,
+                    utførtAv = beslutter,
+                ),
+            )
+
+            oppgaveMediator.returnerTilSaksbehandling(
+                ReturnerTilSaksbehandlingHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    utførtAv = beslutter,
+                ),
+                beslutterToken = "testtoken",
+            )
+
+            oppgaveMediator.sendTilKontroll(
+                sendTilKontrollHendelse =
+                    SendTilKontrollHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "testtoken",
+            )
+
+            shouldThrow<RuntimeException> {
+                oppgaveMediator.ferdigstillOppgave(
+                    oppgaveId = oppgave.oppgaveId,
+                    saksbehandler = beslutter,
+                    saksbehandlerToken = "token",
+                )
+            }
+
+            oppgaveMediator.lagreKontrollertBrev(
+                oppgaveId = oppgave.oppgaveId,
+                kontrollertBrev = Oppgave.KontrollertBrev.JA,
+                saksbehandler = beslutter,
             )
 
             oppgaveMediator.ferdigstillOppgave(

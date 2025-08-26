@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
@@ -50,6 +51,7 @@ class EndreMeldingOmVedtakKildeTest {
                         utførtAv = saksbehandler,
                     ),
             )
+            oppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
             oppgave.endreMeldingOmVedtakKilde(
                 endreMeldingOmVedtakKildeHendelse =
                     EndreMeldingOmVedtakKildeHendelse(
@@ -58,6 +60,7 @@ class EndreMeldingOmVedtakKildeTest {
                         utførtAv = saksbehandler,
                     ),
             )
+            oppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
             oppgave.endreMeldingOmVedtakKilde(
                 endreMeldingOmVedtakKildeHendelse =
                     EndreMeldingOmVedtakKildeHendelse(
@@ -66,6 +69,7 @@ class EndreMeldingOmVedtakKildeTest {
                         utførtAv = saksbehandler,
                     ),
             )
+            oppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
         }
     }
 }
