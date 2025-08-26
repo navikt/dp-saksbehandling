@@ -9,7 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.UtsendingSak
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
@@ -22,7 +22,7 @@ const val VEDTAKSTATUS_IVERKSATT = "IVERK"
 
 class ArenaSinkVedtakOpprettetMottak(
     rapidsConnection: RapidsConnection,
-    private val oppgaveRepository: OppgaveRepository,
+    private val personRepository: PersonRepository,
     private val utsendingMediator: UtsendingMediator,
     private val sakMediator: SakMediator,
 ) : River.PacketListener {
@@ -66,15 +66,13 @@ class ArenaSinkVedtakOpprettetMottak(
             logg.info { "Skipper behandling med id $behandlingId" }
             return
         }
-        val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
-        val ident = oppgave.personIdent()
+        val ident = personRepository.hentPersonForBehandlingId(behandlingId).ident
         val sakId = packet["sakId"].asText()
         val vedtakstatus = packet["vedtakstatus"].asText()
         val behandletHendelseId = packet["søknadId"].asText()
 
         withLoggingContext(
             "behandlingId" to "$behandlingId",
-            "oppgaveId" to oppgave.oppgaveId.toString(),
             "sakId" to sakId,
         ) {
             logg.info { "Mottok arenasink_vedtak_opprettet hendelse" }

@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
@@ -257,7 +257,7 @@ class UtsendingMediatorTest {
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                oppgaveRepository = PostgresOppgaveRepository(ds),
+                personRepository = PostgresPersonRepository(ds),
                 sakMediator = mockSakMediator,
             )
 

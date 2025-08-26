@@ -213,7 +213,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
 
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapidsConnection,
-                oppgaveRepository = oppgaveRepository,
+                personRepository = personRepository,
                 utsendingMediator = utsendingMediator,
                 sakMediator = sakMediator,
             )

@@ -12,5 +12,7 @@ interface PersonRepository {
 
     fun hentPerson(id: UUID): Person
 
+    fun hentPersonForBehandlingId(behandlingId: UUID): Person
+
     fun lagre(person: Person)
 }
