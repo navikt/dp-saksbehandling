@@ -10,7 +10,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
-import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
+import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -22,9 +22,9 @@ class ArenaSinkVedtakOpprettetMottakTest {
     private val sakId = "123"
     private val søknadId = UUIDv7.ny()
     private val testOppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet)
-    private val oppgaveRepository =
-        mockk<OppgaveRepository>(relaxed = true).apply {
-            every { hentOppgaveFor(testOppgave.behandlingId) } returns testOppgave
+    private val mockPersonRepository =
+        mockk<PersonRepository>(relaxed = true).apply {
+            every { hentPersonForBehandlingId(testOppgave.behandlingId) } returns testOppgave.person
         }
 
     @Test
@@ -54,14 +54,14 @@ class ArenaSinkVedtakOpprettetMottakTest {
 
         ArenaSinkVedtakOpprettetMottak(
             rapidsConnection = testRapid,
-            oppgaveRepository = oppgaveRepository,
+            personRepository = mockPersonRepository,
             utsendingMediator = mockUtsendingMediator,
             sakMediator = mockSakMediator,
         )
 
         testRapid.sendTestMessage(arenaSinkVedtakOpprettetHendelse)
         verify(exactly = 1) {
-            oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
+            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandlingId)
             mockUtsendingMediator.startUtsendingForVedtakFattet(forventetVedtakFattetNendelse)
         }
     }
@@ -70,7 +70,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
     fun `Skal ikke gjøre noe dersom vedtak ikke iverksetttes i Arena`() {
         ArenaSinkVedtakOpprettetMottak(
             rapidsConnection = testRapid,
-            oppgaveRepository = oppgaveRepository,
+            personRepository = mockPersonRepository,
             utsendingMediator = mockk(),
             sakMediator = mockk(),
         )
@@ -79,7 +79,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
             arenaSinkVedtakOpprettetHendelse.replace(VEDTAKSTATUS_IVERKSATT, "Muse Mikk")
         testRapid.sendTestMessage(vedtakOpprettetMenIkkeIverksattMelding)
         verify(exactly = 1) {
-            oppgaveRepository.hentOppgaveFor(testOppgave.behandlingId)
+            mockPersonRepository.hentPersonForBehandlingId(testOppgave.behandlingId)
         }
 
         testRapid.inspektør.size shouldBe 0

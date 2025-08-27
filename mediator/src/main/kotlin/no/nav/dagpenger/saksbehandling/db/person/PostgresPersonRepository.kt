@@ -65,6 +65,30 @@ class PostgresPersonRepository(private val dataSource: DataSource) :
         }
     }
 
+    fun finnPersonForBehandlingId(behandlingId: UUID): Person? {
+        sikkerlogg.info { "Søker etter person med behandlingId $behandlingId" }
+        sessionOf(dataSource).use { session ->
+            return session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT pers.* 
+                        FROM   person_v1 pers
+                        JOIN   behandling_v1 beha ON pers.id = beha.person_id
+                        WHERE  beha.id = :behandling_id
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandlingId,
+                        ),
+                ).map { row ->
+                    row.tilPerson()
+                }.asSingle,
+            )
+        }
+    }
+
     private fun Row.tilPerson(): Person {
         return Person(
             id = this.uuid("id"),
@@ -77,6 +101,9 @@ class PostgresPersonRepository(private val dataSource: DataSource) :
     override fun hentPerson(ident: String) = finnPerson(ident) ?: throw DataNotFoundException("Kan ikke finne person med ident $ident")
 
     override fun hentPerson(id: UUID) = finnPerson(id) ?: throw DataNotFoundException("Kan ikke finne person med id $id")
+
+    override fun hentPersonForBehandlingId(behandlingId: UUID) =
+        finnPersonForBehandlingId(behandlingId) ?: throw DataNotFoundException("Kan ikke finne person fra behandlingId $behandlingId")
 
     override fun lagre(person: Person) {
         sessionOf(dataSource).use { session ->
