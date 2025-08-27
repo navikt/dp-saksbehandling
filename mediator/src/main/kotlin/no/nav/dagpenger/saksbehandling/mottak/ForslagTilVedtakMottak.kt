@@ -69,14 +69,15 @@ internal class ForslagTilVedtakMottak(
     ) {
         val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
-        val skipSet = setOf(
-            "0198a7c4-c69b-72d6-82e0-7740b98e35a9",
-            "01987454-6f7d-73c7-aa06-689015f6665b",
-            "019878f2-97f6-715b-b22c-88bf17c1dda2",
-            "0198a7c4-c69b-72d6-82e0-7740b98e35a9",
-            "019897e7-b2f6-7bc8-8373-0395d91842dd",
-            "0198e625-44c6-7801-bc1b-75aa8b6c8038"
-        )
+        val skipSet =
+            setOf(
+                "0198a7c4-c69b-72d6-82e0-7740b98e35a9",
+                "01987454-6f7d-73c7-aa06-689015f6665b",
+                "019878f2-97f6-715b-b22c-88bf17c1dda2",
+                "0198a7c4-c69b-72d6-82e0-7740b98e35a9",
+                "019897e7-b2f6-7bc8-8373-0395d91842dd",
+                "0198e625-44c6-7801-bc1b-75aa8b6c8038",
+            )
         if (behandlingId.toString() in skipSet) {
             logger.info { "Skipper behandlingId: $behandlingId fra ForslagTilVedtakMottak" }
             return
@@ -156,7 +157,7 @@ internal class ForslagTilVedtakMottak(
                     RETTIGHET_DAGPENGER_ETTER_VERNEPLIKT.opplysningTypeId to RETTIGHET_VERNEPLIKT.visningsnavn,
                     RETTIGHET_DAGPEGNER_UNDER_PERMITTERING.opplysningTypeId to RETTIGHET_PERMITTERT.visningsnavn,
                     RETTIGHET_DAGPENGER_UNDER_PERMITTERING_I_FISKEFOREDLINGSINDUSTRI.opplysningTypeId to
-                            RETTIGHET_PERMITTERT_FISK.visningsnavn,
+                        RETTIGHET_PERMITTERT_FISK.visningsnavn,
                     RETTIGHET_DAGPENGER_ETTER_KONKURS.opplysningTypeId to RETTIGHET_KONKURS.visningsnavn,
                 )
 
