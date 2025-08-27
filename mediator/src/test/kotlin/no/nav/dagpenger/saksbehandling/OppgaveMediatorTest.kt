@@ -18,6 +18,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
@@ -446,7 +448,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Livssyklus for søknadsbehandling som blir vedtatt med vedtaksbrev`() {
+    fun `Livssyklus for søknadsbehandling som blir vedtatt med vedtaksbrev uten totrinnskontroll`() {
         val behandlingId = UUIDv7.ny()
 
         settOppOppgaveMediator { datasource, oppgaveMediator ->
@@ -477,7 +479,7 @@ OppgaveMediatorTest {
             }
 
             val ferdigbehandletOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
-            ferdigbehandletOppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
+            ferdigbehandletOppgave.kontrollertBrev() shouldBe IKKE_RELEVANT
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
         }
     }
@@ -505,7 +507,7 @@ OppgaveMediatorTest {
             tildeltOppgave.tilstand().type shouldBe UNDER_BEHANDLING
             tildeltOppgave.behandlerIdent shouldBe saksbehandler.navIdent
             tildeltOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
-            tildeltOppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
+            tildeltOppgave.kontrollertBrev() shouldBe IKKE_RELEVANT
 
             oppgaveMediator.endreMeldingOmVedtakKilde(
                 oppgaveId = tildeltOppgave.oppgaveId,
@@ -965,6 +967,12 @@ OppgaveMediatorTest {
                 ),
             )
 
+            oppgaveMediator.lagreKontrollertBrev(
+                oppgaveId = oppgave.oppgaveId,
+                kontrollertBrev = JA,
+                saksbehandler = beslutter,
+            )
+
             oppgaveMediator.returnerTilSaksbehandling(
                 ReturnerTilSaksbehandlingHendelse(
                     oppgaveId = oppgave.oppgaveId,
@@ -982,7 +990,7 @@ OppgaveMediatorTest {
                 saksbehandlerToken = "testtoken",
             )
 
-            shouldThrow<RuntimeException> {
+            shouldThrow<Oppgave.Tilstand.KreverKontrollAvGosysBrev> {
                 oppgaveMediator.ferdigstillOppgave(
                     oppgaveId = oppgave.oppgaveId,
                     saksbehandler = beslutter,
@@ -992,7 +1000,7 @@ OppgaveMediatorTest {
 
             oppgaveMediator.lagreKontrollertBrev(
                 oppgaveId = oppgave.oppgaveId,
-                kontrollertBrev = Oppgave.KontrollertBrev.JA,
+                kontrollertBrev = JA,
                 saksbehandler = beslutter,
             )
 

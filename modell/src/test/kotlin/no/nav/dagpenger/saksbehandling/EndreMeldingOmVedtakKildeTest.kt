@@ -3,11 +3,13 @@ package no.nav.dagpenger.saksbehandling
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.UlovligEndringAvKildeForMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import org.junit.jupiter.api.Test
@@ -25,7 +27,7 @@ class EndreMeldingOmVedtakKildeTest {
         val oppgave = lagOppgave(tilstandType = tilstandstype, saksbehandler)
 
         if (tilstandstype != UNDER_BEHANDLING) {
-            shouldThrow<RuntimeException> {
+            shouldThrow<UlovligEndringAvKildeForMeldingOmVedtak> {
                 oppgave.endreMeldingOmVedtakKilde(
                     endreMeldingOmVedtakKildeHendelse =
                         EndreMeldingOmVedtakKildeHendelse(
@@ -51,7 +53,7 @@ class EndreMeldingOmVedtakKildeTest {
                         utførtAv = saksbehandler,
                     ),
             )
-            oppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
+            oppgave.kontrollertBrev() shouldBe IKKE_RELEVANT
             oppgave.endreMeldingOmVedtakKilde(
                 endreMeldingOmVedtakKildeHendelse =
                     EndreMeldingOmVedtakKildeHendelse(
@@ -60,7 +62,7 @@ class EndreMeldingOmVedtakKildeTest {
                         utførtAv = saksbehandler,
                     ),
             )
-            oppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
+            oppgave.kontrollertBrev() shouldBe IKKE_RELEVANT
             oppgave.endreMeldingOmVedtakKilde(
                 endreMeldingOmVedtakKildeHendelse =
                     EndreMeldingOmVedtakKildeHendelse(
@@ -69,7 +71,7 @@ class EndreMeldingOmVedtakKildeTest {
                         utførtAv = saksbehandler,
                     ),
             )
-            oppgave.kontrollertBrev() shouldBe Oppgave.KontrollertBrev.IKKE_RELEVANT
+            oppgave.kontrollertBrev() shouldBe IKKE_RELEVANT
         }
     }
 }

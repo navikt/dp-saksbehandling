@@ -7,6 +7,10 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigstillBehandling.BESLUTT
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
+import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
+import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
@@ -156,6 +160,21 @@ data class Oppgave private constructor(
                         "Oppgave kan ikke behandles og kontrolleres av samme person. Saksbehandler på oppgaven er " +
                         "${oppgave.sisteSaksbehandler()} og kan derfor ikke kontrolleres av ${beslutter.navIdent}",
                 )
+            }
+        }
+
+        private fun requireKvittertGosysBrev(
+            oppgave: Oppgave,
+            hendelseNavn: String,
+        ) {
+            if (oppgave.meldingOmVedtak.kilde == GOSYS) {
+                require(oppgave.meldingOmVedtak.kontrollertGosysBrev == JA) {
+                    throw Tilstand.KreverKontrollAvGosysBrev(
+                        "Brev i Gosys må være kontrollert av beslutter for å kunne behandle $hendelseNavn i " +
+                            "tilstand ${oppgave.tilstand.type}. Brevkilde: ${oppgave.meldingOmVedtak.kilde}, " +
+                            "KontrollertGosysBrev: ${oppgave.meldingOmVedtak.kontrollertGosysBrev}",
+                    )
+                }
             }
         }
     }
@@ -347,8 +366,7 @@ data class Oppgave private constructor(
                 }
             }
         }
-            .onFailure {
-                    e ->
+            .onFailure { e ->
                 logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
             }
             .getOrThrow()
@@ -429,8 +447,8 @@ data class Oppgave private constructor(
                 sendTilKontrollHendelse.javaClass.simpleName,
             )
 
-            if (oppgave.meldingOmVedtak.kilde == MeldingOmVedtakKilde.GOSYS) {
-                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.NEI
+            if (oppgave.meldingOmVedtak.kilde == GOSYS) {
+                oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
             }
             if (oppgave.sisteBeslutter() == null) {
                 oppgave.behandlerIdent = null
@@ -504,7 +522,7 @@ data class Oppgave private constructor(
                     "${endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde.name}"
             }
             oppgave.meldingOmVedtak.kilde = endreMeldingOmVedtakKildeHendelse.meldingOmVedtakKilde
-            oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.IKKE_RELEVANT
+            oppgave.meldingOmVedtak.kontrollertGosysBrev = IKKE_RELEVANT
         }
 
         override fun ferdigstill(
@@ -739,11 +757,10 @@ data class Oppgave private constructor(
                 beslutter = godkjentBehandlingHendelse.utførtAv,
                 hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
             )
-            if (oppgave.meldingOmVedtak.kilde == MeldingOmVedtakKilde.GOSYS) {
-                require(oppgave.meldingOmVedtak.kontrollertGosysBrev == KontrollertBrev.JA) {
-                    "Brev må kontrolleres i Gosys"
-                }
-            }
+            requireKvittertGosysBrev(
+                oppgave = oppgave,
+                hendelseNavn = godkjentBehandlingHendelse.javaClass.simpleName,
+            )
             oppgave.endreTilstand(FerdigBehandlet, godkjentBehandlingHendelse)
             return BESLUTT
         }
@@ -810,8 +827,8 @@ data class Oppgave private constructor(
                 beslutter = lagreBrevKvitteringHendelse.utførtAv,
                 hendelseNavn = lagreBrevKvitteringHendelse.javaClass.simpleName,
             )
-            if (oppgave.meldingOmVedtak.kilde == MeldingOmVedtakKilde.GOSYS) {
-                require(lagreBrevKvitteringHendelse.kontrollertBrev != KontrollertBrev.IKKE_RELEVANT)
+            if (oppgave.meldingOmVedtak.kilde == GOSYS) {
+                require(lagreBrevKvitteringHendelse.kontrollertBrev != IKKE_RELEVANT)
             }
             oppgave.meldingOmVedtak.kontrollertGosysBrev = lagreBrevKvitteringHendelse.kontrollertBrev
         }
@@ -840,8 +857,8 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = oppgave.sisteSaksbehandler()
             oppgave._emneknagger.add(RETUR_FRA_KONTROLL)
             oppgave._emneknagger.remove(TIDLIGERE_KONTROLLERT)
-            if (oppgave.meldingOmVedtak.kilde == MeldingOmVedtakKilde.GOSYS) {
-                oppgave.meldingOmVedtak.kontrollertGosysBrev = KontrollertBrev.NEI
+            if (oppgave.meldingOmVedtak.kilde == GOSYS) {
+                oppgave.meldingOmVedtak.kontrollertGosysBrev = NEI
             }
         }
 
@@ -1072,14 +1089,14 @@ data class Oppgave private constructor(
             oppgave: Oppgave,
             lagreBrevKvitteringHendelse: LagreBrevKvitteringHendelse,
         ) {
-            throw RuntimeException("Lagring av brevkvittering er ikke tillat i tilstant $type")
+            throw UlovligKvitteringAvKontrollertBrev("Lagring av brevkvittering er ikke tillat i tilstand $type")
         }
 
         fun endreMeldingOmVedtakKilde(
             oppgave: Oppgave,
             endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
         ) {
-            throw RuntimeException("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
+            throw UlovligEndringAvKildeForMeldingOmVedtak("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
         }
 
         fun lagreNotat(
@@ -1141,6 +1158,18 @@ data class Oppgave private constructor(
         ) : ManglendeTilgang(message)
 
         class UlovligTilstandsendringException(
+            message: String,
+        ) : RuntimeException(message)
+
+        class KreverKontrollAvGosysBrev(
+            message: String,
+        ) : RuntimeException(message)
+
+        class UlovligEndringAvKildeForMeldingOmVedtak(
+            message: String,
+        ) : RuntimeException(message)
+
+        class UlovligKvitteringAvKontrollertBrev(
             message: String,
         ) : RuntimeException(message)
 
