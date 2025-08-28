@@ -214,7 +214,6 @@ internal fun Route.oppgaveApi(
                                     MeldingOmVedtakKildeDTO.DP_SAK
                                 }
                             val meldingOmVedtakKilde =
-                                // TODO: Kan vi sette defaultverdi her???
                                 when (meldingOmVedtakKildeRequestDTO) {
                                     MeldingOmVedtakKildeDTO.DP_SAK -> DP_SAK
                                     MeldingOmVedtakKildeDTO.GOSYS -> GOSYS
