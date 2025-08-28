@@ -630,30 +630,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
-
-  /person:
-    post:
-      summary: Hent personinformasjon basert på ident
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PersonIdent'
-      responses:
-        '200':
-          description: Vellykket respons med personinformasjon
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonOversikt'
-        default:
-          description: Feil
-          content:
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/HttpProblem'
-
   /person/personId:
     post:
       summary: Hent personId basert på personIdent
@@ -978,7 +954,6 @@ components:
         - emneknagger
         - adressebeskyttelseGradering
         - skjermesSomEgneAnsatte
-
 
     Oppgave:
       type: object

@@ -71,6 +71,7 @@ import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveOversiktResultatDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveTilstandDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonDTO
+import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
@@ -138,7 +139,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill", HttpMethod.Put),
-                Arguments.of("/person", HttpMethod.Post),
+                Arguments.of("/person/personId", HttpMethod.Post),
                 Arguments.of("/person/${UUIDv7.ny()}", HttpMethod.Get),
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
@@ -1187,25 +1188,24 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne hente ut person via personId`() {
-        val personId = UUIDv7.ny()
+    fun `Skal kunne hente person vha personId`() {
         val person =
             Person(
-                id = personId,
+                id = UUIDv7.ny(),
                 ident = testPerson.ident,
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
             )
         val personMediatorMock =
             mockk<PersonMediator>().also {
-                every { it.hentPerson(personId) } returns person
+                every { it.hentPerson(person.id) } returns person
             }
         val forventetPersonOversikt =
             PersonOversiktDTO(
                 person =
                     PersonDTO(
                         ident = person.ident,
-                        id = personId,
+                        id = person.id,
                         fornavn = "fornavn",
                         etternavn = "etternavn",
                         mellomnavn = null,
@@ -1229,7 +1229,7 @@ class OppgaveApiTest {
             personMediator = personMediatorMock,
             oppgaveDTOMapper = oppgaveDTOMapperMock,
         ) {
-            client.get("/person/$personId") { autentisert() }
+            client.get("/person/${person.id}") { autentisert() }
                 .let { response ->
                     response.status shouldBe HttpStatusCode.OK
                     "${response.contentType()}" shouldContain "application/json"
@@ -1244,11 +1244,10 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal kunne hente ut person via fnr`() {
-        val personId = UUIDv7.ny()
+    fun `Skal kunne hente personId vha fnr`() {
         val person =
             Person(
-                id = personId,
+                id = UUIDv7.ny(),
                 ident = testPerson.ident,
                 skjermesSomEgneAnsatte = false,
                 adressebeskyttelseGradering = UGRADERT,
@@ -1257,72 +1256,13 @@ class OppgaveApiTest {
             mockk<PersonMediator>().also {
                 every { it.hentPerson(testPerson.ident) } returns person
             }
-        val forventetPersonOversikt =
-            PersonOversiktDTO(
-                person =
-                    PersonDTO(
-                        ident = person.ident,
-                        id = personId,
-                        fornavn = "fornavn",
-                        etternavn = "etternavn",
-                        mellomnavn = null,
-                        fodselsdato = LocalDate.MIN,
-                        alder = 0,
-                        statsborgerskap = null,
-                        kjonn = KjonnDTO.KVINNE,
-                        skjermesSomEgneAnsatte = person.skjermesSomEgneAnsatte,
-                        adressebeskyttelseGradering = AdressebeskyttelseGraderingDTO.UGRADERT,
-                        sikkerhetstiltak = listOf(),
-                    ),
-                saker = emptyList(),
-                oppgaver = emptyList(),
+        val forventetPersonIdDTO =
+            PersonIdDTO(
+                id = person.id,
             )
-        val oppgaveDTOMapperMock =
-            mockk<OppgaveDTOMapper>().also {
-                coEvery { it.lagPersonOversiktDTO(person, emptyList()) } returns
-                    forventetPersonOversikt
-            }
         withOppgaveApi(
             personMediator = personMediator,
-            oppgaveDTOMapper = oppgaveDTOMapperMock,
-        ) {
-            client.post("/person") {
-                autentisert()
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "${testPerson.ident}"}""",
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                "${response.contentType()}" shouldContain "application/json"
-                val personOversiktDTO =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<PersonOversiktDTO>() {},
-                    )
-                personOversiktDTO shouldBe forventetPersonOversikt
-            }
-        }
-    }
-
-    @Test
-    fun `Skal kunne hente ut personId via personIdent(fnr)`() {
-        val personId = UUIDv7.ny()
-        val person =
-            Person(
-                id = personId,
-                ident = testPerson.ident,
-                skjermesSomEgneAnsatte = false,
-                adressebeskyttelseGradering = UGRADERT,
-            )
-        val personMediator =
-            mockk<PersonMediator>().also {
-                every { it.hentPerson(testPerson.ident) } returns person
-            }
-
-        withOppgaveApi(
-            personMediator = personMediator,
+            oppgaveDTOMapper = mockk<OppgaveDTOMapper>(),
         ) {
             client.post("/person/personId") {
                 autentisert()
@@ -1337,9 +1277,15 @@ class OppgaveApiTest {
                 response.bodyAsText() shouldEqualSpecifiedJson
                     """
                     {
-                        "id": "$personId"
+                        "id": "${person.id}"
                     }
                     """.trimIndent()
+                val personIdDTO =
+                    objectMapper.readValue(
+                        response.bodyAsText(),
+                        object : TypeReference<PersonIdDTO>() {},
+                    )
+                personIdDTO shouldBe forventetPersonIdDTO
             }
         }
     }
@@ -1354,7 +1300,7 @@ class OppgaveApiTest {
         withOppgaveApi(
             personMediator = personMediator,
         ) {
-            client.post("/person") {
+            client.post("/person/personId") {
                 autentisert()
                 contentType(ContentType.Application.Json)
                 setBody(
