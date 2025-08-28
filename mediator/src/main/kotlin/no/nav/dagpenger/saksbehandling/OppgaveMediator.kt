@@ -143,46 +143,18 @@ class OppgaveMediator(
     }
 
     fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
-        var oppgave: Oppgave?
-
-        // todo hva skjer dersom vi ikke finner sakHistorikk? Dette skal ikke skje,
+        var oppgave: Oppgave? = null
         val sakHistorikk = sakMediator.finnSakHistorikkk(forslagTilVedtakHendelse.ident)
-
         val behandling =
             sakHistorikk
                 ?.finnBehandling(forslagTilVedtakHendelse.behandlingId)
 
         if (behandling == null) {
-            // TODO trenger ikke hente oppgave her når alle oppgaver som kan behandles tilhører sak
-            oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
-            if (oppgave == null) {
-                val feilmelding =
-                    "Mottatt hendelse forslag_til_vedtak for behandling med id " +
-                        "${forslagTilVedtakHendelse.behandlingId}. " +
-                        "Fant verken behandling eller oppgave for hendelsen. Gjør derfor ingenting med hendelsen."
-                logger.error { feilmelding }
-                sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
-            } else {
-                // TODO fjernes når alle oppgaver som kan behandles tilhører sak
-                oppgave.oppgaveKlarTilBehandling(forslagTilVedtakHendelse).let { handling ->
-                    when (handling) {
-                        Handling.LAGRE_OPPGAVE -> {
-                            oppgaveRepository.lagre(oppgave)
-                            logger.info {
-                                "Behandlet hendelse forslag_til_vedtak. Oppgavens tilstand er" +
-                                    " ${oppgave.tilstand().type} etter behandling."
-                            }
-                        }
-
-                        Handling.INGEN -> {
-                            logger.info {
-                                "Mottatt hendelse forslag_til_vedtak. Oppgavens tilstand er uendret" +
-                                    " ${oppgave.tilstand().type}"
-                            }
-                        }
-                    }
-                }
-            }
+            val feilmelding =
+                "Mottatt hendelse forslag_til_vedtak for behandling med id ${forslagTilVedtakHendelse.behandlingId}. " +
+                    "Fant ikke behandlingen. Gjør derfor ingenting med hendelsen."
+            logger.error { feilmelding }
+            sendAlertTilRapid(BEHANDLING_IKKE_FUNNET, feilmelding)
         } else {
             oppgave = oppgaveRepository.finnOppgaveFor(forslagTilVedtakHendelse.behandlingId)
             when (oppgave == null) {
@@ -476,6 +448,7 @@ class OppgaveMediator(
                             saksbehandlerToken = saksbehandlerToken,
                         )
                     }
+
                     GOSYS -> {
                         logger.info { "Oppgave ferdigstilles med melding om vedtak i Gosys" }
                         ferdigstillOppgaveUtenUtsending(
@@ -484,6 +457,7 @@ class OppgaveMediator(
                             saksbehandlerToken = saksbehandlerToken,
                         )
                     }
+
                     INGEN -> {
                         logger.info { "Oppgave ferdigstilles uten melding om vedtak" }
                         ferdigstillOppgaveUtenUtsending(
