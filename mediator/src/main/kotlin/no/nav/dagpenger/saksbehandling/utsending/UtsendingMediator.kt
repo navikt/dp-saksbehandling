@@ -8,7 +8,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
@@ -35,14 +34,14 @@ class UtsendingMediator(
     }
 
     fun opprettUtsending(
-        oppgaveId: UUID,
+        behandlingId: UUID,
         brev: String?,
         ident: String,
         type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
     ): UUID {
         val utsending =
             Utsending(
-                oppgaveId = oppgaveId,
+                behandlingId = behandlingId,
                 ident = ident,
                 brev = brev,
                 type = type,
@@ -52,25 +51,25 @@ class UtsendingMediator(
     }
 
     fun mottaStartUtsending(startUtsendingHendelse: StartUtsendingHendelse) {
-        val utsending = utsendingRepository.hent(startUtsendingHendelse.oppgaveId)
+        val utsending = utsendingRepository.hentUtsendingForBehandlingId(startUtsendingHendelse.behandlingId)
         utsending.startUtsending(startUtsendingHendelse)
         lagreOgPubliserBehov(utsending)
     }
 
     fun mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse: ArkiverbartBrevHendelse) {
-        val utsending = utsendingRepository.hent(arkiverbartBrevHendelse.oppgaveId)
+        val utsending = utsendingRepository.hentUtsendingForBehandlingId(arkiverbartBrevHendelse.behandlingId)
         utsending.mottaUrnTilArkiverbartFormatAvBrev(arkiverbartBrevHendelse)
         lagreOgPubliserBehov(utsending)
     }
 
     fun mottaJournalførtKvittering(journalførtHendelse: JournalførtHendelse) {
-        val utsending = utsendingRepository.hent(journalførtHendelse.oppgaveId)
+        val utsending = utsendingRepository.hentUtsendingForBehandlingId(journalførtHendelse.behandlingId)
         utsending.mottaJournalførtKvittering(journalførtHendelse)
         lagreOgPubliserBehov(utsending)
     }
 
     fun mottaDistribuertKvittering(distribuertHendelse: DistribuertHendelse) {
-        val utsending = utsendingRepository.hent(distribuertHendelse.oppgaveId)
+        val utsending = utsendingRepository.hentUtsendingForBehandlingId(distribuertHendelse.behandlingId)
         utsending.mottaDistribuertKvittering(distribuertHendelse)
         lagreOgPubliserBehov(utsending)
     }
@@ -112,8 +111,6 @@ class UtsendingMediator(
                     utsending.startUtsending(
                         startUtsendingHendelse =
                             StartUtsendingHendelse(
-                                // TODO: OPPGAV-ID ER IKKE I BRUK! Skal fjernes når oppgave er fjernet fra utsending
-                                oppgaveId = UUIDv7.ny(),
                                 utsendingSak = vedtakFattetHendelse.sak,
                                 behandlingId = vedtakFattetHendelse.behandlingId,
                                 ident = vedtakFattetHendelse.ident,
@@ -147,6 +144,8 @@ class UtsendingMediator(
             return coroutineScope {
                 val oppgave = oppgaveRepository.hentOppgaveFor(behandlingId)
                 val person = async(Dispatchers.IO) { oppslag.hentPerson(ident) }
+
+                // TODO: For automatiske vedtak må SB og beslutter håndteres annerledes, når vi kommer så langt
                 val saksbehandler =
                     async(Dispatchers.IO) {
                         oppgave.sisteSaksbehandler()?.let { saksbehandlerIdent ->

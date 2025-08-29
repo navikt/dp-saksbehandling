@@ -27,10 +27,28 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         //language=PostgreSQL
                         statement =
                             """
-                            INSERT INTO utsending_v1
-                                (id, oppgave_id, tilstand, brev, pdf_urn, journalpost_id, distribusjon_id, utsending_sak_id, type) 
-                            VALUES
-                                (:id, :oppgave_id, :tilstand, :brev, :pdf_urn, :journalpost_id, :distribusjon_id, :utsending_sak_id, :type) 
+                            INSERT INTO utsending_v1(
+                                id, 
+                                behandling_id, 
+                                tilstand, 
+                                brev, 
+                                pdf_urn, 
+                                journalpost_id, 
+                                distribusjon_id, 
+                                utsending_sak_id, 
+                                type
+                            ) 
+                            VALUES(
+                                :id, 
+                                :behandling_id, 
+                                :tilstand, 
+                                :brev, 
+                                :pdf_urn, 
+                                :journalpost_id, 
+                                :distribusjon_id, 
+                                :utsending_sak_id, 
+                                :type
+                            ) 
                             ON CONFLICT (id) DO UPDATE SET 
                                 tilstand = :tilstand,
                                 brev = :brev,
@@ -43,7 +61,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                         paramMap =
                             mapOf(
                                 "id" to utsending.id,
-                                "oppgave_id" to utsending.oppgaveId,
+                                "behandling_id" to utsending.behandlingId,
                                 "tilstand" to utsending.tilstand().type.name,
                                 "brev" to utsending.brev(),
                                 "pdf_urn" to utsending.pdfUrn()?.toString(),
@@ -58,10 +76,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
-    override fun hent(oppgaveId: UUID): Utsending {
-        return finnUtsendingFor(oppgaveId) ?: throw UtsendingIkkeFunnet("Fant ikke utsending for oppgaveId: $oppgaveId")
-    }
-
     override fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean {
         return sessionOf(ds).use { session ->
             session.run(
@@ -70,9 +84,8 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                     statement =
                         """
                         SELECT 1
-                        FROM utsending_v1 uts
-                        JOIN oppgave_v1 opp ON uts.oppgave_id = opp.id
-                        WHERE opp.behandling_id = :behandling_id
+                        FROM   utsending_v1
+                        WHERE  behandling_id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
                 ).map { row -> row.intOrNull(1) }.asSingle,
@@ -96,6 +109,11 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
+    override fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending {
+        return finnUtsendingForBehandlingId(behandlingId)
+            ?: throw UtsendingIkkeFunnet("Fant ikke utsending for behandlingId: $behandlingId")
+    }
+
     override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? {
         sessionOf(ds).use { session ->
             return session.run(
@@ -104,7 +122,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                     statement =
                         """
                         SELECT  uts.id as utsending_id, 
-                                uts.oppgave_id, 
+                                uts.behandling_id,
                                 uts.tilstand, 
                                 uts.brev, 
                                 uts.pdf_urn, 
@@ -115,10 +133,9 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                                 usak.kontekst,
                                 per.ident
                         FROM utsending_v1 uts
-                        JOIN oppgave_v1 opp on uts.oppgave_id = opp.id
-                        JOIN behandling_v1 beh on opp.behandling_id = beh.id
-                        JOIN person_v1 per on beh.person_id = per.id
-                        LEFT JOIN utsending_sak_v1 usak on uts.utsending_sak_id = usak.id
+                        JOIN behandling_v1 beh          ON uts.behandling_id = beh.id
+                        JOIN person_v1 per              ON beh.person_id = per.id
+                        LEFT JOIN utsending_sak_v1 usak ON uts.utsending_sak_id = usak.id
                         WHERE beh.id = :behandling_id
                         """.trimIndent(),
                     paramMap = mapOf("behandling_id" to behandlingId),
@@ -129,72 +146,7 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
 
                     Utsending.rehydrer(
                         id = row.uuid("utsending_id"),
-                        oppgaveId = row.uuid("oppgave_id"),
-                        ident = row.string("ident"),
-                        tilstand = tilstand,
-                        brev = row.stringOrNull("brev"),
-                        pdfUrn = row.stringOrNull("pdf_urn"),
-                        journalpostId = row.stringOrNull("journalpost_id"),
-                        distribusjonId = row.stringOrNull("distribusjon_id"),
-                        type = UtsendingType.valueOf(row.string("type")),
-                        utsendingSak = utsendingSak,
-                    )
-                }.asSingle,
-            )
-        }
-    }
-
-    override fun utsendingFinnesForOppgave(oppgaveId: UUID): Boolean {
-        return sessionOf(ds).use { session ->
-            session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT 1
-                        FROM utsending_v1
-                        WHERE oppgave_id = :oppgave_id
-                        """.trimIndent(),
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row -> row.intOrNull(1) }.asSingle,
-            ) != null
-        }
-    }
-
-    override fun finnUtsendingFor(oppgaveId: UUID): Utsending? {
-        sessionOf(ds).use { session ->
-            return session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT  uts.id as utsending_id, 
-                                uts.oppgave_id, 
-                                uts.tilstand, 
-                                uts.brev, 
-                                uts.pdf_urn, 
-                                uts.journalpost_id,
-                                uts.distribusjon_id,
-                                uts.type,
-                                usak.id as sak_id, 
-                                usak.kontekst,
-                                per.ident
-                        FROM utsending_v1 uts
-                        JOIN oppgave_v1 opp on uts.oppgave_id = opp.id
-                        JOIN behandling_v1 beh on opp.behandling_id = beh.id
-                        JOIN person_v1 per on beh.person_id = per.id
-                        LEFT JOIN utsending_sak_v1 usak on uts.utsending_sak_id = usak.id
-                        WHERE uts.oppgave_id = :oppgave_id
-                        """.trimIndent(),
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row ->
-                    val tilstand = row.rehydrerUtsendingTilstand("tilstand")
-                    val utsendingSak: UtsendingSak? =
-                        row.stringOrNull("sak_id")?.let { UtsendingSak(row.string("sak_id"), row.string("kontekst")) }
-
-                    Utsending.rehydrer(
-                        id = row.uuid("utsending_id"),
-                        oppgaveId = row.uuid("oppgave_id"),
+                        behandlingId = row.uuid("behandling_id"),
                         ident = row.string("ident"),
                         tilstand = tilstand,
                         brev = row.stringOrNull("brev"),
@@ -217,25 +169,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
             AvventerDistribuering -> Utsending.AvventerDistribuering
             Distribuert -> Utsending.Distribuert
             Avbrutt -> Utsending.Avbrutt
-        }
-    }
-
-    private fun hentIdentForOppgaveId(oppgaveId: UUID): String {
-        sessionOf(ds).use { session ->
-            return session.run(
-                queryOf(
-                    //language=PostgreSQL
-                    statement =
-                        """
-                        SELECT per.ident
-                        FROM oppgave_v1 opp
-                        JOIN behandling_v1 beh on opp.behandling_id = beh.id
-                        JOIN person_v1 per on beh.person_id = per.id
-                        WHERE opp.id = :oppgave_id
-                        """.trimIndent(),
-                    paramMap = mapOf("oppgave_id" to oppgaveId),
-                ).map { row -> row.string("ident") }.asSingle,
-            ) ?: throw IdentIkkeFunnet("Fant ikke ident for oppgaveId: $oppgaveId")
         }
     }
 }

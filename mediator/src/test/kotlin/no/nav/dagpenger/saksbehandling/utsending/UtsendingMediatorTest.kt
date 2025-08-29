@@ -55,8 +55,6 @@ class UtsendingMediatorTest {
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
             val oppgave =
                 lagreOppgave(dataSource = ds, behandlingId = behandling.behandlingId, personIdent = person.ident)
-
-            val oppgaveId = oppgave.oppgaveId
             val behandlingId = oppgave.behandlingId
             val søknadId = UUIDv7.ny()
             val sakId = DBTestHelper.sakId.toString()
@@ -92,14 +90,14 @@ class UtsendingMediatorTest {
             )
 
             utsendingMediator.opprettUtsending(
-                oppgaveId = oppgaveId,
+                behandlingId = oppgave.behandlingId,
                 brev = null,
                 ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,
             )
 
-            var utsending = utsendingRepository.hent(oppgaveId)
-            utsending.oppgaveId shouldBe oppgaveId
+            var utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
+            utsending.behandlingId shouldBe behandlingId
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe null
 
@@ -118,7 +116,7 @@ class UtsendingMediatorTest {
                 utsending.brev() shouldBe htmlBrev
             }
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
 
             utsending.sak() shouldBe utsendingSak
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
@@ -135,8 +133,7 @@ class UtsendingMediatorTest {
                    ],
                    "htmlBase64": "$htmlBrevAsBase64",
                    "dokumentNavn": "vedtak.pdf",
-                   "kontekst": "oppgave/$oppgaveId",
-                   "oppgaveId": "$oppgaveId",
+                   "kontekst": "behandling/$behandlingId",
                    "ident": "${oppgave.personIdent()}",
                    "sak": {
                       "id": "${utsendingSak.id}",
@@ -158,9 +155,9 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
-            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(oppgaveId, pdfUrnString))
+            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(behandlingId = behandlingId, pdfUrnString = pdfUrnString))
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerJournalføring
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
             rapid.inspektør.size shouldBe 3
@@ -176,7 +173,6 @@ class UtsendingMediatorTest {
                   "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
                   "ident": "${oppgave.personIdent()}",
                   "pdfUrn": "$pdfUrnString",
-                  "oppgaveId": "$oppgaveId",
                   "sak": {
                     "id": "${UtsendingSak(sakId, "Dagpenger").id}",
                     "kontekst": "${UtsendingSak(sakId, "Dagpenger").kontekst}"
@@ -185,9 +181,9 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val journalpostId = "123"
-            rapid.sendTestMessage(journalføringBehovLøsning(oppgaveId, journalpostId))
+            rapid.sendTestMessage(journalføringBehovLøsning(behandlingId = behandlingId, journalpostId = journalpostId))
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerDistribuering
             utsending.journalpostId() shouldBe journalpostId
             rapid.inspektør.size shouldBe 4
@@ -199,20 +195,19 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
-                  "journalpostId": "${utsending.journalpostId()}",
-                  "oppgaveId": "$oppgaveId"
+                  "journalpostId": "${utsending.journalpostId()}"
                 }
                 """.trimIndent()
 
             val distribusjonId = "distribusjonId"
             rapid.sendTestMessage(
                 distribuertDokumentBehovLøsning(
-                    oppgaveId = oppgaveId,
+                    behandlingId = behandlingId,
                     journalpostId = journalpostId,
                     distribusjonId = distribusjonId,
                 ),
             )
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe Distribuert
             utsending.distribusjonId() shouldBe distribusjonId
         }
@@ -267,14 +262,14 @@ class UtsendingMediatorTest {
             )
 
             utsendingMediator.opprettUtsending(
-                oppgaveId = oppgaveId,
+                behandlingId = behandlingId,
                 brev = null,
                 ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,
             )
 
-            var utsending = utsendingRepository.hent(oppgaveId)
-            utsending.oppgaveId shouldBe oppgaveId
+            var utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
+            utsending.behandlingId shouldBe behandlingId
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe null
 
@@ -299,7 +294,7 @@ class UtsendingMediatorTest {
                     """.trimIndent(),
             )
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.sak() shouldBe utsendingSak
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
 
@@ -315,8 +310,7 @@ class UtsendingMediatorTest {
                    ],
                    "htmlBase64": "$htmlBrevAsBase64",
                    "dokumentNavn": "vedtak.pdf",
-                   "kontekst": "oppgave/$oppgaveId",
-                   "oppgaveId": "$oppgaveId",
+                   "kontekst": "behandling/$behandlingId",
                    "ident": "${oppgave.personIdent()}",
                    "sak": {
                       "id": "${utsendingSak.id}",
@@ -326,9 +320,9 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
-            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(oppgaveId, pdfUrnString))
+            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(behandlingId = behandlingId, pdfUrnString = pdfUrnString))
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerJournalføring
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
             rapid.inspektør.size shouldBe 2
@@ -344,7 +338,6 @@ class UtsendingMediatorTest {
                   "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
                   "ident": "${oppgave.personIdent()}",
                   "pdfUrn": "$pdfUrnString",
-                  "oppgaveId": "$oppgaveId",
                   "sak": {
                     "id": "${utsendingSak.id}",
                     "kontekst": "${utsendingSak.kontekst}"
@@ -353,9 +346,9 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val journalpostId = "123"
-            rapid.sendTestMessage(journalføringBehovLøsning(oppgaveId, journalpostId))
+            rapid.sendTestMessage(journalføringBehovLøsning(behandlingId = behandlingId, journalpostId = journalpostId))
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerDistribuering
             utsending.journalpostId() shouldBe journalpostId
             rapid.inspektør.size shouldBe 3
@@ -367,20 +360,19 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
-                  "journalpostId": "${utsending.journalpostId()}",
-                  "oppgaveId": "$oppgaveId"
+                  "journalpostId": "${utsending.journalpostId()}"
                 }
                 """.trimIndent()
 
             val distribusjonId = "distribusjonId"
             rapid.sendTestMessage(
                 distribuertDokumentBehovLøsning(
-                    oppgaveId = oppgaveId,
+                    behandlingId = behandlingId,
                     journalpostId = journalpostId,
                     distribusjonId = distribusjonId,
                 ),
             )
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe Distribuert
             utsending.distribusjonId() shouldBe distribusjonId
         }
@@ -398,13 +390,9 @@ class UtsendingMediatorTest {
         val person = lagPerson()
 
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
-
             val oppgave =
                 lagreOppgave(dataSource = ds, behandlingId = behandling.behandlingId, personIdent = person.ident)
-
-            val oppgaveId = oppgave.oppgaveId
             val behandlingId = oppgave.behandlingId
-
             val utsendingRepository = PostgresUtsendingRepository(ds)
             val utsendingMediator =
                 UtsendingMediator(
@@ -421,14 +409,14 @@ class UtsendingMediatorTest {
 
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
             utsendingMediator.opprettUtsending(
-                oppgaveId = oppgaveId,
+                behandlingId = behandlingId,
                 brev = htmlBrev,
                 ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,
             )
 
-            var utsending = utsendingRepository.hent(oppgaveId)
-            utsending.oppgaveId shouldBe oppgaveId
+            var utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
+            utsending.behandlingId shouldBe behandlingId
             utsending.tilstand().type shouldBe VenterPåVedtak
             utsending.brev() shouldBe htmlBrev
 
@@ -437,7 +425,6 @@ class UtsendingMediatorTest {
             utsendingMediator.mottaStartUtsending(
                 startUtsendingHendelse =
                     StartUtsendingHendelse(
-                        oppgaveId = oppgaveId,
                         utsendingSak = utsendingSak,
                         behandlingId = behandlingId,
                         ident = oppgave.personIdent(),
@@ -445,7 +432,7 @@ class UtsendingMediatorTest {
                     ),
             )
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.sak() shouldBe utsendingSak
             utsending.tilstand().type shouldBe AvventerArkiverbarVersjonAvBrev
 
@@ -461,8 +448,7 @@ class UtsendingMediatorTest {
                    ],
                    "htmlBase64": "$htmlBrevAsBase64",
                    "dokumentNavn": "vedtak.pdf",
-                   "kontekst": "oppgave/$oppgaveId",
-                   "oppgaveId": "$oppgaveId",
+                   "kontekst": "behandling/$behandlingId",
                    "ident": "${oppgave.personIdent()}",
                    "sak": {
                       "id": "${utsendingSak.id}",
@@ -472,9 +458,9 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
-            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(oppgaveId, pdfUrnString))
+            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(behandlingId = behandlingId, pdfUrnString = pdfUrnString))
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerJournalføring
             utsending.pdfUrn() shouldBe pdfUrnString.toUrn()
             rapid.inspektør.size shouldBe 2
@@ -490,7 +476,6 @@ class UtsendingMediatorTest {
                   "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
                   "ident": "${oppgave.personIdent()}",
                   "pdfUrn": "$pdfUrnString",
-                  "oppgaveId": "$oppgaveId",
                   "sak": {
                     "id": "${utsendingSak.id}",
                     "kontekst": "${utsendingSak.kontekst}"
@@ -499,9 +484,9 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val journalpostId = "123"
-            rapid.sendTestMessage(journalføringBehovLøsning(oppgaveId, journalpostId))
+            rapid.sendTestMessage(journalføringBehovLøsning(behandlingId = behandlingId, journalpostId = journalpostId))
 
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerDistribuering
             utsending.journalpostId() shouldBe journalpostId
             rapid.inspektør.size shouldBe 3
@@ -513,20 +498,19 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
-                  "journalpostId": "${utsending.journalpostId()}",
-                  "oppgaveId": "$oppgaveId"
+                  "journalpostId": "${utsending.journalpostId()}"
                 }
                 """.trimIndent()
 
             val distribusjonId = "distribusjonId"
             rapid.sendTestMessage(
                 distribuertDokumentBehovLøsning(
-                    oppgaveId = oppgaveId,
+                    behandlingId = behandlingId,
                     journalpostId = journalpostId,
                     distribusjonId = distribusjonId,
                 ),
             )
-            utsending = utsendingRepository.hent(oppgaveId)
+            utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe Distribuert
             utsending.distribusjonId() shouldBe distribusjonId
         }

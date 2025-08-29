@@ -48,7 +48,7 @@ class RelevanteJournalpostIdOppslagTest {
                 klageRepository = mockk(),
                 utsendingRepository =
                     mockk<UtsendingRepository>().also {
-                        coEvery { it.finnUtsendingFor(any()) } returns
+                        coEvery { it.finnUtsendingForBehandlingId(any()) } returns
                             mockk<Utsending>().also {
                                 coEvery { it.journalpostId() } returns "1"
                             }
@@ -83,7 +83,7 @@ class RelevanteJournalpostIdOppslagTest {
                     },
                 utsendingRepository =
                     mockk<UtsendingRepository>().also {
-                        coEvery { it.finnUtsendingFor(any()) } returns
+                        coEvery { it.finnUtsendingForBehandlingId(any()) } returns
                             mockk<Utsending>().also {
                                 coEvery { it.journalpostId() } returns "5"
                             }

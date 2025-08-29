@@ -96,7 +96,7 @@ class UtsendingAlarmRepositoryTest {
             lagreOppgave(dataSource = this, behandlingId = behandling.behandlingId, personIdent = person.ident)
         val utsending =
             Utsending(
-                oppgaveId = oppgave.oppgaveId,
+                behandlingId = oppgave.behandlingId,
                 brev = "brev",
                 ident = oppgave.personIdent(),
             )
@@ -106,16 +106,25 @@ class UtsendingAlarmRepositoryTest {
                     //language=PostgreSQL
                     statement =
                         """
-                        INSERT INTO utsending_v1
-                         ( id, oppgave_id, tilstand, brev, pdf_urn, 
-                           journalpost_id, distribusjon_id, utsending_sak_id,
-                           registrert_tidspunkt, endret_tidspunkt)
-                        VALUES (:id, :oppgave_id, :tilstand, null, null, null, null, null, :tidspunkt, :tidspunkt);
+                        INSERT INTO utsending_v1 ( 
+                            id, 
+                            behandling_id, 
+                            tilstand,
+                            registrert_tidspunkt, 
+                            endret_tidspunkt
+                        )
+                        VALUES (
+                            :id, 
+                            :behandling_id, 
+                            :tilstand, 
+                            :tidspunkt, 
+                            :tidspunkt
+                        )
                         """.trimIndent(),
                     paramMap =
                         mapOf(
                             "id" to utsending.id,
-                            "oppgave_id" to utsending.oppgaveId,
+                            "behandling_id" to utsending.behandlingId,
                             "tilstand" to tilstand.name,
                             "tidspunkt" to tidspunkt,
                         ),

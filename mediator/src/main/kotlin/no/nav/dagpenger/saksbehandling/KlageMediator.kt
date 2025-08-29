@@ -232,7 +232,6 @@ class KlageMediator(
 
             val startUtsendingHendelse =
                 StartUtsendingHendelse(
-                    oppgaveId = oppgave.oppgaveId,
                     utsendingSak = utsendingSak,
                     behandlingId = klageBehandling.behandlingId,
                     ident = oppgave.personIdent(),
@@ -240,7 +239,7 @@ class KlageMediator(
 
             val html = htmlDeferred.await().getOrThrow()
             utsendingMediator.opprettUtsending(
-                oppgaveId = oppgave.oppgaveId,
+                behandlingId = oppgave.behandlingId,
                 brev = html,
                 ident = oppgave.personIdent(),
                 type = UtsendingType.KLAGEMELDING,

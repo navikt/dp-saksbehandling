@@ -103,18 +103,28 @@ class MetrikkJobTest {
             val utsendingRepository = PostgresUtsendingRepository(ds)
             lagOppgave(tilstand = PåVent, behandlingId = behandling1.behandlingId).also {
                 repo.lagre(it)
-                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, it.oppgaveId))
+                utsendingRepository.lagre(
+                    lagUtsending(
+                        tilstand = Utsending.VenterPåVedtak,
+                        behandlingId = it.behandlingId,
+                    ),
+                )
             }
             lagOppgave(tilstand = PåVent, behandlingId = behandling2.behandlingId).also {
                 repo.lagre(it)
-                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, it.oppgaveId))
+                utsendingRepository.lagre(
+                    lagUtsending(
+                        tilstand = Utsending.VenterPåVedtak,
+                        behandlingId = it.behandlingId,
+                    ),
+                )
             }
             lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling3.behandlingId).also {
                 repo.lagre(it)
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.AvventerArkiverbarVersjonAvBrev,
-                        it.oppgaveId,
+                        behandlingId = it.behandlingId,
                     ),
                 )
             }
@@ -123,25 +133,45 @@ class MetrikkJobTest {
                 utsendingRepository.lagre(
                     lagUtsending(
                         tilstand = Utsending.AvventerArkiverbarVersjonAvBrev,
-                        it.oppgaveId,
+                        behandlingId = it.behandlingId,
                     ),
                 )
             }
             lagOppgave(tilstand = KlarTilBehandling, behandlingId = behandling5.behandlingId).also {
                 repo.lagre(it)
-                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.AvventerJournalføring, it.oppgaveId))
+                utsendingRepository.lagre(
+                    lagUtsending(
+                        tilstand = Utsending.AvventerJournalføring,
+                        behandlingId = it.behandlingId,
+                    ),
+                )
             }
             lagOppgave(tilstand = KlarTilKontroll, behandlingId = behandling6.behandlingId).also {
                 repo.lagre(it)
-                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, it.oppgaveId))
+                utsendingRepository.lagre(
+                    lagUtsending(
+                        tilstand = Utsending.Distribuert,
+                        behandlingId = it.behandlingId,
+                    ),
+                )
             }
             lagOppgave(tilstand = AvventerLåsAvBehandling, behandlingId = behandling7.behandlingId).also {
                 repo.lagre(it)
-                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, it.oppgaveId))
+                utsendingRepository.lagre(
+                    lagUtsending(
+                        tilstand = Utsending.Distribuert,
+                        behandlingId = it.behandlingId,
+                    ),
+                )
             }
             lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandlingId = behandling8.behandlingId).also {
                 repo.lagre(it)
-                utsendingRepository.lagre(lagUtsending(tilstand = Utsending.Distribuert, it.oppgaveId))
+                utsendingRepository.lagre(
+                    lagUtsending(
+                        tilstand = Utsending.Distribuert,
+                        behandlingId = it.behandlingId,
+                    ),
+                )
             }
 
             val utsendingTilstandDistribusjon = hentUtsendingTilstandDistribusjon(ds)

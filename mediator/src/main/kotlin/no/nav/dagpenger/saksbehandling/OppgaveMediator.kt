@@ -478,7 +478,7 @@ class OppgaveMediator(
     ) {
         val utsendingId =
             utsendingMediator.opprettUtsending(
-                oppgaveId = oppgave.oppgaveId,
+                behandlingId = oppgave.behandlingId,
                 brev = null,
                 ident = oppgave.personIdent(),
             )

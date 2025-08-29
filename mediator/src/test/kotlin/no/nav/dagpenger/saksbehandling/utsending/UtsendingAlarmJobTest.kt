@@ -21,7 +21,6 @@ class UtsendingAlarmJobTest {
             val igår = idag.minusDays(1)
             val utsendingId1 = UUIDv7.ny()
             val utsendingId2 = UUIDv7.ny()
-            val oppgaveId = UUIDv7.ny()
             val personId = UUIDv7.ny()
             val behandlingId = UUIDv7.ny()
             UtsendingAlarmJob(
@@ -34,7 +33,6 @@ class UtsendingAlarmJobTest {
                                     utsendingId = utsendingId1,
                                     tilstand = "AvventerArkiverbarVersjonAvBrev",
                                     sistEndret = igår,
-                                    oppgaveId = oppgaveId,
                                     behandlingId = behandlingId,
                                     personId = personId,
                                 ),
@@ -42,7 +40,6 @@ class UtsendingAlarmJobTest {
                                     utsendingId = utsendingId2,
                                     tilstand = "AvventerDistribuering",
                                     sistEndret = igår,
-                                    oppgaveId = oppgaveId,
                                     behandlingId = behandlingId,
                                     personId = personId,
                                 ),
@@ -56,9 +53,8 @@ class UtsendingAlarmJobTest {
                 jsonNode["@event_name"].asText() shouldBe "saksbehandling_alert"
                 jsonNode["feilMelding"].asText() shouldBe
                     """
-                    Utsending ikke fullført for $utsendingId1.
+                    Utsending ikke fullført for utsendingId: $utsendingId1.
                     Den har vært i tilstand AvventerArkiverbarVersjonAvBrev i 24 timer (sist endret: $igår)
-                    OppgaveId: $oppgaveId
                     BehandlingId: $behandlingId
                     PersonId: $personId
                     """.trimIndent()
@@ -69,9 +65,8 @@ class UtsendingAlarmJobTest {
                 jsonNode["@event_name"].asText() shouldBe "saksbehandling_alert"
                 jsonNode["feilMelding"].asText() shouldBe
                     """
-                    Utsending ikke fullført for $utsendingId2.
+                    Utsending ikke fullført for utsendingId: $utsendingId2.
                     Den har vært i tilstand AvventerDistribuering i 24 timer (sist endret: $igår)
-                    OppgaveId: $oppgaveId
                     BehandlingId: $behandlingId
                     PersonId: $personId
                     """.trimIndent()

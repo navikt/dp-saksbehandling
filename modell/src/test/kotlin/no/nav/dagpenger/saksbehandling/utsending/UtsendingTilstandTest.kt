@@ -14,19 +14,18 @@ import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendels
 import org.junit.jupiter.api.Test
 
 class UtsendingTilstandTest {
-    private val oppgaveId = UUIDv7.ny()
+    private val behandlingId = UUIDv7.ny()
     private val ident = "12345678901"
 
     @Test
     fun `Lovlige tilstandsendringer`() {
         val meldingOmVedtak = "<html><body>Dette er et vedtaksbrev</body></html>"
-        val utsending = Utsending(oppgaveId = oppgaveId, ident = ident, brev = meldingOmVedtak)
+        val utsending = Utsending(behandlingId = behandlingId, ident = ident, brev = meldingOmVedtak)
         utsending.tilstand() shouldBe Utsending.VenterPåVedtak
 
         utsending.startUtsending(
             StartUtsendingHendelse(
-                oppgaveId = oppgaveId,
-                behandlingId = UUIDv7.ny(),
+                behandlingId = behandlingId,
                 ident = ident,
                 utsendingSak = UtsendingSak(id = "sakId", kontekst = "fagsystem"),
             ),
@@ -35,18 +34,18 @@ class UtsendingTilstandTest {
         utsending.tilstand().behov(utsending).shouldBeInstanceOf<ArkiverbartBrevBehov>()
 
         val pdfUrn = URN.rfc8141().parse("urn:pdf:123456")
-        utsending.mottaUrnTilArkiverbartFormatAvBrev(ArkiverbartBrevHendelse(oppgaveId, pdfUrn = pdfUrn))
+        utsending.mottaUrnTilArkiverbartFormatAvBrev(ArkiverbartBrevHendelse(behandlingId = behandlingId, pdfUrn = pdfUrn))
         utsending.pdfUrn() shouldBe pdfUrn
         utsending.tilstand() shouldBe Utsending.AvventerJournalføring
 
-        val journalførtHendelse = JournalførtHendelse(oppgaveId, journalpostId = "123456")
+        val journalførtHendelse = JournalførtHendelse(behandlingId = behandlingId, journalpostId = "123456")
         utsending.mottaJournalførtKvittering(journalførtHendelse)
         utsending.journalpostId() shouldBe journalførtHendelse.journalpostId
         utsending.tilstand() shouldBe Utsending.AvventerDistribuering
 
         val distribuertHendelse =
             DistribuertHendelse(
-                oppgaveId = oppgaveId,
+                behandlingId = behandlingId,
                 distribusjonId = "distribueringId",
                 journalpostId = "123456",
             )
@@ -56,16 +55,16 @@ class UtsendingTilstandTest {
 
     @Test
     fun `Ugyldig tilstandsendring`() {
-        val utsending = Utsending(oppgaveId = oppgaveId, ident = ident, brev = "html")
+        val utsending = Utsending(behandlingId = behandlingId, ident = ident, brev = "html")
 
         shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
-            utsending.mottaJournalførtKvittering(JournalførtHendelse(oppgaveId, journalpostId = "123456"))
+            utsending.mottaJournalførtKvittering(JournalførtHendelse(behandlingId = behandlingId, journalpostId = "123456"))
         }
 
         shouldThrow<Utsending.Tilstand.UlovligUtsendingTilstandsendring> {
             utsending.mottaUrnTilArkiverbartFormatAvBrev(
                 ArkiverbartBrevHendelse(
-                    oppgaveId,
+                    behandlingId = behandlingId,
                     pdfUrn = "urn:pdf:123456".toUrn(),
                 ),
             )

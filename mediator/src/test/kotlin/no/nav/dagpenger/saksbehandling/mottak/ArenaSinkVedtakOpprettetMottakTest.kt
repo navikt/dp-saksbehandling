@@ -44,7 +44,6 @@ class ArenaSinkVedtakOpprettetMottakTest {
             )
         val mockUtsendingMediator =
             mockk<UtsendingMediator>().also {
-                every { it.utsendingFinnesForOppgave(oppgaveId = testOppgave.oppgaveId) } returns true
                 every { it.startUtsendingForVedtakFattet(forventetVedtakFattetNendelse) } just Runs
             }
         val mockSakMediator =

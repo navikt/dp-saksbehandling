@@ -639,8 +639,8 @@ OppgaveMediatorTest {
             ferdigbehandletOppgave.tilstand().type shouldBe FERDIG_BEHANDLET
             ferdigbehandletOppgave.meldingOmVedtakKilde() shouldBe DP_SAK
 
-            val utsending = utsendingMediator.hent(ferdigbehandletOppgave.oppgaveId)
-            utsending.oppgaveId shouldBe ferdigbehandletOppgave.oppgaveId
+            val utsending = utsendingMediator.hentUtsendingForBehandlingId(ferdigbehandletOppgave.behandlingId)
+            utsending.behandlingId shouldBe ferdigbehandletOppgave.behandlingId
             utsending.ident shouldBe ferdigbehandletOppgave.personIdent()
         }
     }
@@ -710,7 +710,7 @@ OppgaveMediatorTest {
                 utsendingRepository = PostgresUtsendingRepository(datasource),
                 brevProdusent = mockk(),
             ).also { utsendingMediator ->
-                utsendingMediator.finnUtsendingFor(ferdigbehandletOppgave.oppgaveId) shouldBe null
+                utsendingMediator.finnUtsendingForBehandlingId(ferdigbehandletOppgave.behandlingId) shouldBe null
             }
         }
     }
@@ -1029,11 +1029,17 @@ OppgaveMediatorTest {
             ).also {
                 it.setRapidsConnection(testRapid)
             }
+//        val utsendingMediator =
+//            UtsendingMediator(
+//                utsendingRepository = PostgresUtsendingRepository(dataSource),
+//                brevProdusent = mockk(),
+//            )
 
         val oppgaveMediator =
             OppgaveMediator(
                 oppgaveRepository = PostgresOppgaveRepository(this),
                 behandlingKlient = behandlingKlientMock,
+//                utsendingMediator = utsendingMediator,
                 utsendingMediator = mockk(),
                 sakMediator = sakMediator,
             ).also {

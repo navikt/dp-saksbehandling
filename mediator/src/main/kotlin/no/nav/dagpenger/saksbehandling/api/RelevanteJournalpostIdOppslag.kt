@@ -19,7 +19,7 @@ class RelevanteJournalpostIdOppslag(
                 val journalpostIderKlage: String? =
                     klageRepository.hentKlageBehandling(oppgave.behandlingId).journalpostId()
                 val journalpostMeldingOmVedtak =
-                    utsendingRepository.finnUtsendingFor(oppgave.oppgaveId)?.journalpostId()
+                    utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandlingId)?.journalpostId()
                 (setOf(journalpostIderKlage) + journalpostMeldingOmVedtak).filterNotNull().toSet()
             }
 
@@ -27,7 +27,7 @@ class RelevanteJournalpostIdOppslag(
                 return coroutineScope {
                     val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
                     val journalpostMeldingOmVedtak =
-                        utsendingRepository.finnUtsendingFor(oppgave.oppgaveId)?.journalpostId()
+                        utsendingRepository.finnUtsendingForBehandlingId(oppgave.behandlingId)?.journalpostId()
                     (journalpostIderSøknad.await() + journalpostMeldingOmVedtak).filterNotNull().toSet()
                 }
 

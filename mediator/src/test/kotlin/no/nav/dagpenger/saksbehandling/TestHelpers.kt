@@ -75,11 +75,11 @@ fun lagBehandling(
 
 fun lagUtsending(
     tilstand: Utsending.Tilstand,
-    oppgaveId: UUID,
+    behandlingId: UUID,
 ) = Utsending(
     tilstand = tilstand,
     ident = lagTilfeldigIdent(),
-    oppgaveId = oppgaveId,
+    behandlingId = behandlingId,
     brev = "brev",
     pdfUrn = null,
     journalpostId = "journalpostId",

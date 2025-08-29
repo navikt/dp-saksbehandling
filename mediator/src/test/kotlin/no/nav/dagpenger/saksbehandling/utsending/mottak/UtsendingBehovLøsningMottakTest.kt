@@ -19,7 +19,7 @@ import java.util.UUID
 
 class UtsendingBehovLøsningMottakTest {
     private val testRapid = TestRapid()
-    private val oppgaveId: UUID = UUIDv7.ny()
+    private val behandlingId: UUID = UUIDv7.ny()
 
     @Test
     fun `Tar imot de forventede løsningene på behovene`() {
@@ -32,7 +32,7 @@ class UtsendingBehovLøsningMottakTest {
         val pdfUrn = "urn:pdf:1234".toUrn()
         testRapid.sendTestMessage(
             arkiverbartDokumentBehovLøsning(
-                oppgaveUUID = oppgaveId,
+                behandlingId = behandlingId,
                 pdfUrnString = pdfUrn.toString(),
             ),
         )
@@ -40,7 +40,7 @@ class UtsendingBehovLøsningMottakTest {
         verify(exactly = 1) {
             mediator.mottaUrnTilArkiverbartFormatAvBrev(
                 ArkiverbartBrevHendelse(
-                    oppgaveId = oppgaveId,
+                    behandlingId = behandlingId,
                     pdfUrn = pdfUrn,
                 ),
             )
@@ -49,14 +49,14 @@ class UtsendingBehovLøsningMottakTest {
         val journalpostId = "jp1"
         testRapid.sendTestMessage(
             journalføringBehovLøsning(
-                oppgaveId = oppgaveId,
+                behandlingId = behandlingId,
                 journalpostId = journalpostId,
             ),
         )
         verify(exactly = 1) {
             mediator.mottaJournalførtKvittering(
                 JournalførtHendelse(
-                    oppgaveId = oppgaveId,
+                    behandlingId = behandlingId,
                     journalpostId = journalpostId,
                 ),
             )
@@ -65,7 +65,7 @@ class UtsendingBehovLøsningMottakTest {
         val distribusjonId = "distribusjonId"
         testRapid.sendTestMessage(
             distribuertDokumentBehovLøsning(
-                oppgaveId = oppgaveId,
+                behandlingId = behandlingId,
                 journalpostId = journalpostId,
                 distribusjonId = distribusjonId,
             ),
@@ -73,7 +73,7 @@ class UtsendingBehovLøsningMottakTest {
         verify(exactly = 1) {
             mediator.mottaDistribuertKvittering(
                 DistribuertHendelse(
-                    oppgaveId = oppgaveId,
+                    behandlingId = behandlingId,
                     distribusjonId = distribusjonId,
                     journalpostId = journalpostId,
                 ),
@@ -92,7 +92,7 @@ class UtsendingBehovLøsningMottakTest {
 
         val message =
             arkiverbartDokumentBehovLøsning(
-                oppgaveUUID = oppgaveId,
+                behandlingId = behandlingId,
                 pdfUrnString = "urn:pdf:1234",
                 final = true,
             )
@@ -118,7 +118,7 @@ class UtsendingBehovLøsningMottakTest {
         shouldThrow<RuntimeException> {
             testRapid.sendTestMessage(
                 arkiverbartDokumentBehovLøsning(
-                    oppgaveUUID = oppgaveId,
+                    behandlingId = behandlingId,
                     pdfUrnString = "urn:pdf:1234",
                 ),
             )

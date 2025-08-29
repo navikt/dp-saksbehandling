@@ -16,15 +16,13 @@ object AlertManager {
         val utsendingId: UUID,
         val tilstand: String,
         val sistEndret: LocalDateTime,
-        val oppgaveId: UUID,
         val behandlingId: UUID,
         val personId: UUID,
     ) : AlertType {
         override val feilMelding by lazy {
             """
-            Utsending ikke fullført for $utsendingId.
+            Utsending ikke fullført for utsendingId: $utsendingId.
             Den har vært i tilstand $tilstand i ${timerSiden()} timer (sist endret: $sistEndret)
-            OppgaveId: $oppgaveId
             BehandlingId: $behandlingId
             PersonId: $personId
             """.trimIndent()

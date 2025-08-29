@@ -40,7 +40,7 @@ internal fun vedtakFattetHendelse(
 }
 
 internal fun distribuertDokumentBehovLøsning(
-    oppgaveId: UUID,
+    behandlingId: UUID,
     journalpostId: String,
     distribusjonId: String,
 ): String {
@@ -48,7 +48,7 @@ internal fun distribuertDokumentBehovLøsning(
     return """
         {
           "@event_name": "behov",
-          "oppgaveId": "$oppgaveId",
+          "behandlingId": "$behandlingId",
           "journalpostId": "$journalpostId",
           "@behov": [
             "${DistribueringBehov.BEHOV_NAVN}"
@@ -63,14 +63,14 @@ internal fun distribuertDokumentBehovLøsning(
 }
 
 internal fun journalføringBehovLøsning(
-    oppgaveId: UUID,
+    behandlingId: UUID,
     journalpostId: String,
 ): String {
 //language=JSON
     return """
            {
           "@event_name": "behov",
-          "oppgaveId": "$oppgaveId",
+          "behandlingId": "$behandlingId",
           "@behov": ["${JournalføringBehov.BEHOV_NAVN}"],
           "@løsning": {
             "${JournalføringBehov.BEHOV_NAVN}": {
@@ -82,7 +82,7 @@ internal fun journalføringBehovLøsning(
 }
 
 internal fun arkiverbartDokumentBehovLøsning(
-    oppgaveUUID: UUID,
+    behandlingId: UUID,
     pdfUrnString: String,
     final: Boolean? = null,
 ): String {
@@ -90,7 +90,7 @@ internal fun arkiverbartDokumentBehovLøsning(
     return """
         {
           "@event_name": "behov",
-          "oppgaveId": "$oppgaveUUID",
+          "behandlingId": "$behandlingId",
           "@behov": ["${ArkiverbartBrevBehov.BEHOV_NAVN}"],
           ${final?.let { """"@final": $it,""" } ?: ""}
           "@løsning": {

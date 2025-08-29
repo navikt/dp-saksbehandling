@@ -24,7 +24,7 @@ enum class UtsendingType(val brevTittel: String, val skjemaKode: String) {
 
 data class Utsending(
     val id: UUID = UUIDv7.ny(),
-    val oppgaveId: UUID,
+    val behandlingId: UUID,
     val ident: String,
     val type: UtsendingType = UtsendingType.VEDTAK_DAGPENGER,
     private var utsendingSak: UtsendingSak? = null,
@@ -48,7 +48,7 @@ data class Utsending(
 
     override fun toString(): String {
         return """
-            Utsending(id=$id, oppgaveId=$oppgaveId, pdfUrn=$pdfUrn, journalpostId=$journalpostId, 
+            Utsending(id=$id, behandlingId=$behandlingId, pdfUrn=$pdfUrn, journalpostId=$journalpostId, 
             distribusjonId=$distribusjonId , tilstand=${tilstand.type}, type = $type, sak=$utsendingSak)
             """.trimIndent()
     }
@@ -63,7 +63,7 @@ data class Utsending(
 
         fun rehydrer(
             id: UUID,
-            oppgaveId: UUID,
+            behandlingId: UUID,
             ident: String,
             tilstand: Tilstand,
             brev: String?,
@@ -75,7 +75,7 @@ data class Utsending(
         ): Utsending {
             return Utsending(
                 id = id,
-                oppgaveId = oppgaveId,
+                behandlingId = behandlingId,
                 ident = ident,
                 tilstand = tilstand,
                 brev = brev,
@@ -118,10 +118,7 @@ data class Utsending(
             utsending: Utsending,
             startUtsendingHendelse: StartUtsendingHendelse,
         ) {
-            withLoggingContext(
-                "oppgaveId" to startUtsendingHendelse.oppgaveId.toString(),
-                "behandlingId" to startUtsendingHendelse.behandlingId.toString(),
-            ) {
+            withLoggingContext("behandlingId" to startUtsendingHendelse.behandlingId.toString()) {
                 logger.info { "Mottok StartUtsendingHendelse hendelse" }
                 startUtsendingHendelse.brev?.let {
                     logger.info { "Brev er sendt med hendelsen, setter det på utsending" }
@@ -148,7 +145,7 @@ data class Utsending(
                 "Brev må være satt før vi kan sende ut behov om arkiverbar versjon av brev"
             }
             return ArkiverbartBrevBehov(
-                oppgaveId = utsending.oppgaveId,
+                behandlingId = utsending.behandlingId,
                 html = brev,
                 ident = utsending.ident,
                 utsendingSak = utsending.utsendingSak ?: throw IllegalStateException("Sak mangler"),
@@ -159,7 +156,9 @@ data class Utsending(
             utsending: Utsending,
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
         ) {
-            withLoggingContext("oppgaveId" to arkiverbartBrevHendelse.oppgaveId.toString()) {
+            withLoggingContext(
+                "behandlingId" to arkiverbartBrevHendelse.behandlingId.toString(),
+            ) {
                 logger.info { "Mottok arkiverbart dokument med urn: ${arkiverbartBrevHendelse.pdfUrn}" }
                 utsending.nyTilstand(AvventerJournalføring)
             }
@@ -171,7 +170,7 @@ data class Utsending(
 
         override fun behov(utsending: Utsending): Behov {
             return JournalføringBehov(
-                oppgaveId = utsending.oppgaveId,
+                behandlingId = utsending.behandlingId,
                 pdfUrn = utsending.pdfUrn ?: throw IllegalStateException("pdfUrn mangler"),
                 ident = utsending.ident,
                 utsendingSak = utsending.utsendingSak ?: throw IllegalStateException("Sak mangler"),
@@ -184,7 +183,7 @@ data class Utsending(
             arkiverbartBrevHendelse: ArkiverbartBrevHendelse,
         ) {
             withLoggingContext(
-                "oppgaveId" to arkiverbartBrevHendelse.oppgaveId.toString(),
+                "behandlingId" to arkiverbartBrevHendelse.behandlingId.toString(),
             ) {
                 if (utsending.pdfUrn == arkiverbartBrevHendelse.pdfUrn) {
                     logger.warn { "Mystisk! Fikk pdfUrn på nytt. Den var lik. Se sikkerlogg." }
@@ -207,7 +206,7 @@ data class Utsending(
             journalførtHendelse: JournalførtHendelse,
         ) {
             withLoggingContext(
-                "oppgaveId" to journalførtHendelse.oppgaveId.toString(),
+                "behandlingId" to journalførtHendelse.behandlingId.toString(),
                 "journalpostId" to journalførtHendelse.journalpostId,
             ) {
                 logger.info { "Mottok journalført kvittering" }
@@ -222,7 +221,7 @@ data class Utsending(
 
         override fun behov(utsending: Utsending): Behov {
             return DistribueringBehov(
-                oppgaveId = utsending.oppgaveId,
+                behandlingId = utsending.behandlingId,
                 journalpostId = utsending.journalpostId ?: throw IllegalStateException("journalpostId mangler"),
             )
         }
@@ -232,7 +231,7 @@ data class Utsending(
             distribuertHendelse: DistribuertHendelse,
         ) {
             withLoggingContext(
-                "oppgaveId" to utsending.oppgaveId.toString(),
+                "behandlingId" to utsending.behandlingId.toString(),
                 "distribusjonId" to distribuertHendelse.distribusjonId,
             ) {
                 logger.info {

@@ -12,14 +12,14 @@ class UtsendingMetrikkTest {
     @Test
     fun `Sjekk om det telles når brev er distribuert`() {
         Utsending(
-            oppgaveId = UUIDv7.ny(),
+            behandlingId = UUIDv7.ny(),
             ident = "12345678901",
             brev = "brev",
             tilstand = Utsending.AvventerDistribuering,
         ).mottaDistribuertKvittering(
             DistribuertHendelse(
                 journalpostId = "123",
-                oppgaveId = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
                 distribusjonId = "123",
             ),
         )

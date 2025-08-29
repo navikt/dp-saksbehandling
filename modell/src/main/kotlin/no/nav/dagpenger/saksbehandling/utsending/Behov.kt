@@ -6,15 +6,15 @@ import java.util.Base64
 import java.util.UUID
 
 sealed class Behov {
-    abstract val oppgaveId: UUID
+    abstract val behandlingId: UUID
     abstract val navn: String
     protected abstract val data: Map<String, Any>
 
-    fun data() = mapOf("oppgaveId" to oppgaveId.toString()) + data
+    fun data() = mapOf("behandlingId" to behandlingId.toString()) + data
 }
 
 data class ArkiverbartBrevBehov(
-    override val oppgaveId: UUID,
+    override val behandlingId: UUID,
     private val html: String,
     private val ident: String,
     private val utsendingSak: UtsendingSak,
@@ -35,7 +35,7 @@ data class ArkiverbartBrevBehov(
             "htmlBase64" to html.toBase64(),
             "ident" to ident,
             "dokumentNavn" to "vedtak.pdf",
-            "kontekst" to "oppgave/$oppgaveId",
+            "kontekst" to "behandling/$behandlingId",
             "sak" to
                 mapOf(
                     "id" to utsendingSak.id,
@@ -47,7 +47,7 @@ data class ArkiverbartBrevBehov(
 }
 
 data class JournalføringBehov(
-    override val oppgaveId: UUID,
+    override val behandlingId: UUID,
     private val pdfUrn: URN,
     private val ident: String,
     private val utsendingSak: UtsendingSak,
@@ -73,7 +73,7 @@ data class JournalføringBehov(
 }
 
 data class DistribueringBehov(
-    override val oppgaveId: UUID,
+    override val behandlingId: UUID,
     private val journalpostId: String,
 ) : Behov() {
     companion object {
@@ -85,8 +85,9 @@ data class DistribueringBehov(
 }
 
 object IngenBehov : Behov() {
-    override val oppgaveId: UUID
-        get() = throw NotImplementedError("Ingen behov har ingen oppgaveId")
+    override val behandlingId: UUID
+        get() = throw NotImplementedError("Ingen behov har ingen behandlingId")
+
     override val navn = "IngenBehov"
     override val data = emptyMap<String, Any>()
 }

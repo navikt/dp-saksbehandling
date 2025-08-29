@@ -31,7 +31,7 @@ class PostgresUtsendingRepositoryTest {
 
     @Test
     fun `lagring og henting av utsending`() {
-        DBTestHelper.withBehandling(behandling = behandling, person = testPerson) { ds ->
+        withBehandling(behandling = behandling, person = testPerson) { ds ->
 
             val oppgave = lagreOppgave(ds, behandling.behandlingId, testPerson.ident)
             val brev = "vedtaksbrev.html"
@@ -41,7 +41,7 @@ class PostgresUtsendingRepositoryTest {
             val distribusjonId = "distribusjonId"
             val utsending =
                 Utsending(
-                    oppgaveId = oppgave.oppgaveId,
+                    behandlingId = oppgave.behandlingId,
                     brev = brev,
                     utsendingSak = utsendingSak,
                     ident = oppgave.personIdent(),
@@ -50,11 +50,11 @@ class PostgresUtsendingRepositoryTest {
                 )
             repository.lagre(utsending)
 
-            repository.hent(utsending.oppgaveId) shouldBe utsending
+            repository.hentUtsendingForBehandlingId(oppgave.behandlingId) shouldBe utsending
 
-            repository.finnUtsendingFor(UUID.randomUUID()) shouldBe null
+            repository.finnUtsendingForBehandlingId(UUID.randomUUID()) shouldBe null
             shouldThrow<UtsendingIkkeFunnet> {
-                repository.hent(UUID.randomUUID())
+                repository.hentUtsendingForBehandlingId(UUID.randomUUID())
             }
         }
     }
@@ -68,7 +68,7 @@ class PostgresUtsendingRepositoryTest {
             val oppgave = lagreOppgave(ds, behandling.behandlingId, testPerson.ident)
             val utsending =
                 Utsending(
-                    oppgaveId = oppgave.oppgaveId,
+                    behandlingId = oppgave.behandlingId,
                     brev = null,
                     ident = testPerson.ident,
                 )
@@ -84,12 +84,12 @@ class PostgresUtsendingRepositoryTest {
 
     @Test
     fun `skal kunne finne ut om en utsending finnes eller ikke for oppgaveId og behandlingId`() {
-        DBTestHelper.withBehandling(behandling = behandling, person = testPerson) { ds ->
+        withBehandling(behandling = behandling, person = testPerson) { ds ->
             val oppgave = lagreOppgave(ds, behandling.behandlingId, testPerson.ident)
             val repository = PostgresUtsendingRepository(ds)
             val utsending =
                 Utsending(
-                    oppgaveId = oppgave.oppgaveId,
+                    behandlingId = oppgave.behandlingId,
                     brev = "brev",
                     utsendingSak = UtsendingSak("id", "fagsystem"),
                     ident = oppgave.personIdent(),
@@ -97,23 +97,21 @@ class PostgresUtsendingRepositoryTest {
                 )
             repository.lagre(utsending)
 
-            repository.utsendingFinnesForOppgave(oppgave.oppgaveId) shouldBe true
             repository.utsendingFinnesForBehandling(oppgave.behandlingId) shouldBe true
 
-            repository.utsendingFinnesForOppgave(UUIDv7.ny()) shouldBe false
             repository.utsendingFinnesForBehandling(UUIDv7.ny()) shouldBe false
         }
     }
 
     @Test
-    fun `Skal ikke kunne lagre flere utsendinger for samme oppgave`() {
-        DBTestHelper.withBehandling(behandling = behandling) { ds ->
+    fun `Skal ikke kunne lagre flere utsendinger for samme behandling`() {
+        withBehandling(behandling = behandling) { ds ->
             val oppgave = lagreOppgave(ds, behandling.behandlingId)
             val repository = PostgresUtsendingRepository(ds)
-            repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, oppgaveId = oppgave.oppgaveId))
+            repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, behandlingId = oppgave.behandlingId))
             shouldThrow<PSQLException> {
-                repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, oppgaveId = oppgave.oppgaveId))
-            }.message shouldStartWith """ERROR: duplicate key value violates unique constraint "oppgave_id_unique""""
+                repository.lagre(lagUtsending(tilstand = Utsending.VenterPåVedtak, behandlingId = oppgave.behandlingId))
+            }.message shouldStartWith """ERROR: duplicate key value violates unique constraint "behandling_id_unique""""
         }
     }
 }

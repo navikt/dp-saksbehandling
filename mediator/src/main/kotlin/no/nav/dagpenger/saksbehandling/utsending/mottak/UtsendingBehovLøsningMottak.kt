@@ -41,7 +41,7 @@ class UtsendingBehovLøsningMottak(
                 it.forbid("@final")
             }
             validate { it.requireKey("@løsning") }
-            validate { it.requireKey("oppgaveId") }
+            validate { it.requireKey("behandlingId") }
             validate { it.interestedIn("journalpostId") }
             validate { it.interestedIn("urn") }
         }
@@ -57,14 +57,10 @@ class UtsendingBehovLøsningMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val oppgaveId = packet["oppgaveId"].asText()
+        val behandlingId = packet["behandlingId"].asText()
         withLoggingContext(
-            "oppgaveId" to oppgaveId,
+            "behandlingId" to behandlingId,
         ) {
-            if (oppgaveId in setOf("01987a4b-29ac-7e26-a93e-bcc2d021cef7")) {
-                return
-            }
-
             val typeLøsning =
                 packet.get("@behov").first().asText().also {
                     logger.info { "Mottok løsning for behov: $it" }
@@ -98,14 +94,14 @@ class UtsendingBehovLøsningMottak(
 
 private fun JsonMessage.journalførtLøsning(): JournalførtHendelse {
     return JournalførtHendelse(
-        oppgaveId = this["oppgaveId"].asUUID(),
+        behandlingId = this["behandlingId"].asUUID(),
         journalpostId = this["@løsning"][JournalføringBehov.BEHOV_NAVN]["journalpostId"].asText(),
     )
 }
 
 private fun JsonMessage.distribuertLøsning(): DistribuertHendelse {
     return DistribuertHendelse(
-        oppgaveId = this["oppgaveId"].asUUID(),
+        behandlingId = this["behandlingId"].asUUID(),
         distribusjonId = this["@løsning"][DistribueringBehov.BEHOV_NAVN]["distribueringId"].asText(),
         journalpostId = this["journalpostId"].asText(),
     )
@@ -113,7 +109,7 @@ private fun JsonMessage.distribuertLøsning(): DistribuertHendelse {
 
 private fun JsonMessage.arkiverbartDokumentLøsning(): ArkiverbartBrevHendelse {
     return ArkiverbartBrevHendelse(
-        oppgaveId = this["oppgaveId"].asUUID(),
+        behandlingId = this["behandlingId"].asUUID(),
         pdfUrn = this["@løsning"][ArkiverbartBrevBehov.BEHOV_NAVN]["urn"].asText().toUrn(),
     )
 }
