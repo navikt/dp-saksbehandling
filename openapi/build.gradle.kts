@@ -34,7 +34,7 @@ ktlint {
 }
 
 dependencies {
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.19.2")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.20")
 }
 
 fabrikt {
