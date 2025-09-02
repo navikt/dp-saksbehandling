@@ -75,13 +75,18 @@ data class JournalføringBehov(
 data class DistribueringBehov(
     override val behandlingId: UUID,
     private val journalpostId: String,
+    private val fagsystem: String,
 ) : Behov() {
     companion object {
         const val BEHOV_NAVN = "DistribueringBehov"
     }
 
     override val navn: String = BEHOV_NAVN
-    override val data: Map<String, Any> = mapOf("journalpostId" to journalpostId)
+    override val data: Map<String, Any> =
+        mapOf(
+            "journalpostId" to journalpostId,
+            "fagsystem" to fagsystem,
+        )
 }
 
 object IngenBehov : Behov() {

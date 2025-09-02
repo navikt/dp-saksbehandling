@@ -174,8 +174,8 @@ class UtsendingMediatorTest {
                   "ident": "${oppgave.personIdent()}",
                   "pdfUrn": "$pdfUrnString",
                   "sak": {
-                    "id": "${UtsendingSak(sakId, "Dagpenger").id}",
-                    "kontekst": "${UtsendingSak(sakId, "Dagpenger").kontekst}"
+                    "id": "${utsendingSak.id}",
+                    "kontekst": "${utsendingSak.kontekst}"
                   }
                 }
                 """.trimIndent()
@@ -186,6 +186,7 @@ class UtsendingMediatorTest {
             utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerDistribuering
             utsending.journalpostId() shouldBe journalpostId
+            utsending.sak() shouldBe utsendingSak
             rapid.inspektør.size shouldBe 4
             rapid.inspektør.message(3).toString() shouldEqualSpecifiedJson
                 //language=JSON
@@ -195,7 +196,8 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
-                  "journalpostId": "${utsending.journalpostId()}"
+                  "journalpostId": "${utsending.journalpostId()}",
+                  "fagsystem": "${utsendingSak.kontekst}"
                 }
                 """.trimIndent()
 
@@ -227,8 +229,6 @@ class UtsendingMediatorTest {
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
             val oppgave =
                 lagreOppgave(dataSource = ds, behandlingId = behandling.behandlingId, personIdent = person.ident)
-
-            val oppgaveId = oppgave.oppgaveId
             val behandlingId = oppgave.behandlingId
             val utsendingSak = UtsendingSak("123", "Arena")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
@@ -360,7 +360,8 @@ class UtsendingMediatorTest {
                   "@behov": [
                     "${DistribueringBehov.BEHOV_NAVN}"
                   ],
-                  "journalpostId": "${utsending.journalpostId()}"
+                  "journalpostId": "${utsending.journalpostId()}",
+                  "fagsystem": "${utsendingSak.kontekst}"
                 }
                 """.trimIndent()
 

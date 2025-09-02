@@ -220,9 +220,14 @@ data class Utsending(
         override val type = Tilstand.Type.AvventerDistribuering
 
         override fun behov(utsending: Utsending): Behov {
+            val fagsystem = utsending.utsendingSak?.kontekst
+            if (fagsystem == null) {
+                throw IllegalStateException("Fagsystem mangler i utsending")
+            }
             return DistribueringBehov(
                 behandlingId = utsending.behandlingId,
                 journalpostId = utsending.journalpostId ?: throw IllegalStateException("journalpostId mangler"),
+                fagsystem = fagsystem,
             )
         }
 
