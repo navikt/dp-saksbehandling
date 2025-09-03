@@ -5,6 +5,8 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.BehandlingType
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -13,7 +15,12 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class TildelNesteOppgaveFilterTest {
-    private val queryString = """emneknagg=knagg1&emneknagg=knagg2&fom=2021-01-01&tom=2023-01-01"""
+    private val queryString =
+        """emneknagg=knagg1&emneknagg=knagg2
+        &fom=2021-01-01&tom=2023-01-01
+        &tilstand=KLAR_TIL_KONTROLL&tilstand=UNDER_KONTROLL
+        &behandlingType=KLAGE
+        """.trimMargin()
 
     @Test
     fun `Skal kunne initialisere et søkefilter fra en url streng`() {
@@ -33,7 +40,9 @@ class TildelNesteOppgaveFilterTest {
                         fom = LocalDate.of(2021, 1, 1),
                         tom = LocalDate.of(2023, 1, 1),
                     ),
-                emneknagg = setOf("knagg1", "knagg2"),
+                tilstander = setOf(Type.KLAR_TIL_KONTROLL, Type.UNDER_KONTROLL),
+                behandlingTyper = setOf(BehandlingType.KLAGE),
+                emneknagger = setOf("knagg1", "knagg2"),
                 egneAnsatteTilgang = false,
                 adressebeskyttelseTilganger = setOf(UGRADERT),
                 navIdent = saksbehandler.navIdent,
@@ -83,7 +92,7 @@ class TildelNesteOppgaveFilterTest {
         ) shouldBe
             TildelNesteOppgaveFilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                emneknagg = setOf(),
+                emneknagger = setOf(),
                 egneAnsatteTilgang = false,
                 adressebeskyttelseTilganger = setOf(UGRADERT),
                 navIdent = saksbehandler.navIdent,

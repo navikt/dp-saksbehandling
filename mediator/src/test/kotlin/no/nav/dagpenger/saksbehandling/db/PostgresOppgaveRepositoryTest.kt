@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.FerdigBehandlet
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
+import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilKontroll
 import no.nav.dagpenger.saksbehandling.Oppgave.Opprettet
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
@@ -114,11 +115,89 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         adressebeskyttelseTilganger = setOf(FORTROLIG),
                         navIdent = saksbehandler.navIdent,
                     ),
             ) shouldBe null
+        }
+    }
+
+    @Test
+    fun `Tildel neste ledige kontroll-oppgave ved søk på tilstand KLAR_TIL_KONTROLL`() {
+        val oppgaveIdKlarTilKontroll = UUIDv7.ny()
+        val søknadBehandlingKlarTilBehandling =
+            lagBehandling(type = RETT_TIL_DAGPENGER, opprettet = opprettetNå.minusDays(2))
+        val søknadBehandlingKlarTilKontroll =
+            lagBehandling(type = RETT_TIL_DAGPENGER, opprettet = opprettetNå.minusDays(1))
+        DBTestHelper.withBehandlinger(
+            person = testPerson,
+            behandlinger = listOf(søknadBehandlingKlarTilBehandling, søknadBehandlingKlarTilKontroll),
+        ) { ds ->
+            val repo = PostgresOppgaveRepository(ds)
+
+            lagOppgave(
+                tilstand = KlarTilBehandling,
+                opprettet = søknadBehandlingKlarTilBehandling.opprettet,
+                behandlingId = søknadBehandlingKlarTilBehandling.behandlingId,
+                person = testPerson,
+            ).also { repo.lagre(it) }
+
+            lagOppgave(
+                oppgaveId = oppgaveIdKlarTilKontroll,
+                tilstand = KlarTilKontroll,
+                opprettet = søknadBehandlingKlarTilKontroll.opprettet,
+                behandlingId = søknadBehandlingKlarTilKontroll.behandlingId,
+                person = testPerson,
+                tilstandslogg =
+                    Tilstandslogg(
+                        tilstandsendringer =
+                            mutableListOf(
+                                Tilstandsendring(
+                                    tilstand = UNDER_BEHANDLING,
+                                    hendelse =
+                                        SettOppgaveAnsvarHendelse(
+                                            oppgaveId = oppgaveIdKlarTilKontroll,
+                                            ansvarligIdent = saksbehandler.navIdent,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                    tidspunkt = opprettetNå,
+                                ),
+                                Tilstandsendring(
+                                    tilstand = KLAR_TIL_KONTROLL,
+                                    hendelse =
+                                        SendTilKontrollHendelse(
+                                            oppgaveId = oppgaveIdKlarTilKontroll,
+                                            utførtAv = saksbehandler,
+                                        ),
+                                    tidspunkt = opprettetNå,
+                                ),
+                            ),
+                    ),
+            ).also { repo.lagre(it) }
+
+            val nesteOppgave =
+                repo.tildelOgHentNesteOppgave(
+                    nesteOppgaveHendelse =
+                        NesteOppgaveHendelse(
+                            ansvarligIdent = beslutter.navIdent,
+                            utførtAv = beslutter,
+                        ),
+                    filter =
+                        TildelNesteOppgaveFilter(
+                            periode = UBEGRENSET_PERIODE,
+                            emneknagger = emptySet(),
+                            tilstander = setOf(KLAR_TIL_KONTROLL),
+                            egneAnsatteTilgang = false,
+                            adressebeskyttelseTilganger = setOf(UGRADERT),
+                            navIdent = beslutter.navIdent,
+                            harBeslutterRolle = beslutter.tilganger.contains(BESLUTTER),
+                        ),
+                )!!
+
+            nesteOppgave.behandlingId shouldBe søknadBehandlingKlarTilKontroll.behandlingId
+            nesteOppgave.behandlerIdent shouldBe beslutter.navIdent
+            nesteOppgave.tilstand().type shouldBe UNDER_KONTROLL
         }
     }
 
@@ -158,7 +237,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
-                            emneknagg = emptySet(),
+                            emneknagger = emptySet(),
                             behandlingTyper = setOf(KLAGE),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
@@ -173,7 +252,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Finn neste ledige oppgave som ikke gjelder egne ansatte`() {
+    fun `Tildel neste ledige oppgave som ikke gjelder egne ansatte`() {
         DBTestHelper.withMigratedDb { ds ->
             val eldsteOppgaveMedSkjermingSomEgneAnsatte =
                 this.leggTilOppgave(
@@ -228,7 +307,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
-                            emneknagg = emptySet(),
+                            emneknagger = emptySet(),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             navIdent = saksbehandlerUtenTilgangTilEgneAnsatte.navIdent,
@@ -253,7 +332,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
-                            emneknagg = emptySet(),
+                            emneknagger = emptySet(),
                             egneAnsatteTilgang = true,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
@@ -267,7 +346,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Finn neste ledige oppgave som ikke gjelder adressebeskyttede personer`() {
+    fun `Tildel neste ledige oppgave som ikke gjelder adressebeskyttede personer`() {
         DBTestHelper.withMigratedDb { ds ->
 
             val eldsteOppgaveMedAdressebeskyttelse =
@@ -312,7 +391,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
-                            emneknagg = emptySet(),
+                            emneknagger = emptySet(),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             harBeslutterRolle = false,
@@ -339,7 +418,7 @@ class PostgresOppgaveRepositoryTest {
                     filter =
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
-                            emneknagg = emptySet(),
+                            emneknagger = emptySet(),
                             egneAnsatteTilgang = true,
                             adressebeskyttelseTilganger = setOf(UGRADERT, FORTROLIG),
                             navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
@@ -380,7 +459,7 @@ class PostgresOppgaveRepositoryTest {
             val filter =
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
-                    emneknagg = setOf("Testknagg"),
+                    emneknagger = setOf("Testknagg"),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = saksbehandler.navIdent,
                 )
@@ -465,7 +544,7 @@ class PostgresOppgaveRepositoryTest {
             val oppgave =
                 this.leggTilOppgave(
                     id = oppgaveId,
-                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstand = KlarTilKontroll,
                     tilstandslogg = tilstandsloggUnderBehandling,
                 )
 
@@ -480,7 +559,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang = saksbehandlerUtført.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = saksbehandlerUtført.adressebeskyttelseTilganger(),
                         harBeslutterRolle = saksbehandlerUtført.tilganger.contains(BESLUTTER),
@@ -497,7 +576,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang = annenBeslutter.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = annenBeslutter.adressebeskyttelseTilganger(),
                         harBeslutterRolle = annenBeslutter.tilganger.contains(BESLUTTER),
@@ -621,14 +700,14 @@ class PostgresOppgaveRepositoryTest {
 
             val eldsteKontrollOppgaveUtenSkjermingOgAdressegradering =
                 this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstand = KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(14),
                     tilstandslogg = tilstandsloggUnderBehandling(),
                 )
 
             val eldsteKontrollOppgaveEgneAnsatteSkjerming =
                 this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstand = KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(15),
                     person = lagPerson(skjermesSomEgneAnsatte = true),
                     tilstandslogg = tilstandsloggUnderBehandling(),
@@ -636,7 +715,7 @@ class PostgresOppgaveRepositoryTest {
 
             val eldsteKontrollOppgaveFortroligAdresse =
                 this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstand = KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(16),
                     person = lagPerson(addresseBeskyttelseGradering = FORTROLIG),
                     tilstandslogg = tilstandsloggUnderBehandling(),
@@ -644,7 +723,7 @@ class PostgresOppgaveRepositoryTest {
 
             val eldsteKontrollOppgaveStrengtFortroligAdresse =
                 this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstand = KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(17),
                     person = lagPerson(addresseBeskyttelseGradering = STRENGT_FORTROLIG),
                     tilstandslogg = tilstandsloggUnderBehandling(),
@@ -652,7 +731,7 @@ class PostgresOppgaveRepositoryTest {
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseUtland =
                 this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstand = KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(18),
                     person = lagPerson(addresseBeskyttelseGradering = STRENGT_FORTROLIG_UTLAND),
                     tilstandslogg = tilstandsloggUnderBehandling(),
@@ -660,7 +739,7 @@ class PostgresOppgaveRepositoryTest {
 
             val eldsteKontrollOppgaveStrengtFortroligAdresseOgEgneAnsatteSkjerming =
                 this.leggTilOppgave(
-                    tilstand = Oppgave.KlarTilKontroll,
+                    tilstand = KlarTilKontroll,
                     opprettet = opprettetNå.minusDays(19),
                     person =
                         lagPerson(
@@ -673,14 +752,14 @@ class PostgresOppgaveRepositoryTest {
             val emneknaggFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
                     periode = UBEGRENSET_PERIODE,
-                    emneknagg = setOf("Testknagg"),
+                    emneknagger = setOf("Testknagg"),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = testSaksbehandler.navIdent,
                 )
             val opprettetIDagFilterForTestSaksbehandler =
                 TildelNesteOppgaveFilter(
                     periode = Periode(fom = opprettetNå.toLocalDate(), tom = opprettetNå.toLocalDate()),
-                    emneknagg = emptySet(),
+                    emneknagger = emptySet(),
                     adressebeskyttelseTilganger = setOf(UGRADERT),
                     navIdent = testSaksbehandler.navIdent,
                 )
@@ -728,7 +807,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang = testSaksbehandler.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = testSaksbehandler.adressebeskyttelseTilganger(),
                         harBeslutterRolle = testSaksbehandler.tilganger.contains(BESLUTTER),
@@ -752,7 +831,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutter.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutter.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutter.tilganger.contains(BESLUTTER),
@@ -776,7 +855,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutterEgneAnsatte.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterEgneAnsatte.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutterEgneAnsatte.tilganger.contains(BESLUTTER),
@@ -800,7 +879,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutterFortroligAdresse.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterFortroligAdresse.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutterFortroligAdresse.tilganger.contains(BESLUTTER),
@@ -824,7 +903,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutterStrengtFortroligAdresse.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterStrengtFortroligAdresse.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutterStrengtFortroligAdresse.tilganger.contains(BESLUTTER),
@@ -849,7 +928,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang = beslutterStrengtFortroligAdresseUtland.tilganger.contains(EGNE_ANSATTE),
                         adressebeskyttelseTilganger = beslutterStrengtFortroligAdresseUtland.adressebeskyttelseTilganger(),
                         harBeslutterRolle = beslutterStrengtFortroligAdresseUtland.tilganger.contains(BESLUTTER),
@@ -873,7 +952,7 @@ class PostgresOppgaveRepositoryTest {
                 filter =
                     TildelNesteOppgaveFilter(
                         periode = UBEGRENSET_PERIODE,
-                        emneknagg = emptySet(),
+                        emneknagger = emptySet(),
                         egneAnsatteTilgang =
                             beslutterStrengtFortroligOgEgneAnsatte.tilganger.contains(
                                 EGNE_ANSATTE,
@@ -911,7 +990,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre og hente en oppgave med notat`() {
-        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        val testOppgave = lagOppgave(tilstand = KlarTilKontroll)
         DBTestHelper.withOppgave(testOppgave) { ds ->
             testOppgave.tildel(
                 SettOppgaveAnsvarHendelse(
@@ -937,7 +1016,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne lagre notatet til en oppgave`() {
-        val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        val oppgave = lagOppgave(tilstand = KlarTilKontroll)
         DBTestHelper.withOppgave(oppgave) { ds ->
 
             val repo = PostgresOppgaveRepository(ds)
@@ -967,7 +1046,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne finne et notat`() {
-        val oppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        val oppgave = lagOppgave(tilstand = KlarTilKontroll)
         DBTestHelper.withOppgave(oppgave) { ds ->
 
             val repo = PostgresOppgaveRepository(ds)
@@ -1010,7 +1089,7 @@ class PostgresOppgaveRepositoryTest {
 
     @Test
     fun `Skal kunne slette et notat for en oppgave`() {
-        val testOppgave = lagOppgave(tilstand = Oppgave.KlarTilKontroll)
+        val testOppgave = lagOppgave(tilstand = KlarTilKontroll)
         DBTestHelper.withOppgave(testOppgave) { ds ->
 
             testOppgave.tildel(

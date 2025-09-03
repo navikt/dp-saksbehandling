@@ -5,7 +5,7 @@ import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
@@ -15,7 +15,7 @@ import java.util.UUID
 
 data class Søkefilter(
     val periode: Periode,
-    val tilstander: Set<Oppgave.Tilstand.Type>,
+    val tilstander: Set<Tilstand.Type>,
     val saksbehandlerIdent: String? = null,
     val personIdent: String? = null,
     val oppgaveId: UUID? = null,
@@ -45,7 +45,7 @@ data class Søkefilter(
         ): Søkefilter {
             val builder = FilterBuilder(queryParameters)
 
-            val tilstander = builder.tilstand() ?: søkbareTilstander
+            val tilstander = builder.tilstander() ?: søkbareTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
             val emneknagger = builder.emneknagg() ?: emptySet()
             val behandlingTyper = builder.behandlingTyper() ?: emptySet()
@@ -69,7 +69,8 @@ data class Søkefilter(
 
 data class TildelNesteOppgaveFilter(
     val periode: Periode,
-    val emneknagg: Set<String>,
+    val emneknagger: Set<String>,
+    val tilstander: Set<Tilstand.Type> = emptySet(),
     val behandlingTyper: Set<BehandlingType> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
     val adressebeskyttelseTilganger: Set<AdressebeskyttelseGradering>,
@@ -87,9 +88,11 @@ data class TildelNesteOppgaveFilter(
             val harBeslutterRolle: Boolean = saksbehandler.tilganger.contains(TilgangType.BESLUTTER)
             val emneknagger = builder.emneknagg() ?: emptySet()
             val behandlingTyper = builder.behandlingTyper() ?: emptySet()
+            val tilstander = builder.tilstander() ?: emptySet()
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
-                emneknagg = emneknagger,
+                emneknagger = emneknagger,
+                tilstander = tilstander,
                 behandlingTyper = behandlingTyper,
                 egneAnsatteTilgang = egneAnsatteTilgang,
                 adressebeskyttelseTilganger = adressebeskyttelseTilganger,
@@ -161,8 +164,8 @@ class FilterBuilder {
         }
     }
 
-    fun tilstand(): Set<Oppgave.Tilstand.Type>? {
-        return stringValues.getAll("tilstand")?.map { Oppgave.Tilstand.Type.valueOf(it) }?.toSet()
+    fun tilstander(): Set<Tilstand.Type>? {
+        return stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
     }
 
     fun behandlingTyper(): Set<BehandlingType>? {

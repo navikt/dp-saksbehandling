@@ -84,19 +84,26 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
     ): UUID? {
         return sessionOf(dataSource).use { session ->
             session.transaction { tx ->
-                val emneknagger = filter.emneknagg.joinToString { "'$it'" }
+                val emneknagger = filter.emneknagger.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
                 val behandlingTyperAsText = filter.behandlingTyper.joinToString { "'$it'" }
+                val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
                 val behandlingTypeClause =
                     if (filter.behandlingTyper.isNotEmpty()) {
                         " AND beha.behandling_type IN ($behandlingTyperAsText) "
                     } else {
                         ""
                     }
+                val tilstandClause =
+                    if (filter.tilstander.isNotEmpty()) {
+                        " AND oppg.tilstand IN ($tilstanderAsText) "
+                    } else {
+                        ""
+                    }
 
                 // language=SQL
                 val emneknaggClause =
-                    if (filter.emneknagg.isNotEmpty()) {
+                    if (filter.emneknagger.isNotEmpty()) {
                         """
                         AND EXISTS(
                             SELECT 1
@@ -132,8 +139,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     AND      oppg.opprettet <  :tom_pluss_1_dag
                     AND    ( NOT pers.skjermes_som_egne_ansatte
                           OR :har_tilgang_til_egne_ansatte )
-                    AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
-                    """ + behandlingTypeClause + emneknaggClause
+                    AND      pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
+                    """ + behandlingTypeClause + tilstandClause + emneknaggClause
 
                 // language=SQL
                 val unionAll = """UNION ALL"""
@@ -168,7 +175,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                          OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                     AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
-                """ + behandlingTypeClause + emneknaggClause +
+                """ + behandlingTypeClause + tilstandClause + emneknaggClause +
                         """
                         )
                         """.trimIndent()
