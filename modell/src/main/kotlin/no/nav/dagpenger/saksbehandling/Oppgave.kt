@@ -954,6 +954,7 @@ data class Oppgave private constructor(
                 val values
                     get() = entries.toSet()
 
+                // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på
                 val søkbareTilstander =
                     entries.toSet()
                         .minus(OPPRETTET)

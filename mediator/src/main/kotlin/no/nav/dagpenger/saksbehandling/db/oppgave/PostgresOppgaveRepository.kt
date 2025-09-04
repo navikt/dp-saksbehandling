@@ -290,7 +290,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             søkeFilter =
                 Søkefilter(
                     periode = UBEGRENSET_PERIODE,
-                    tilstander = Type.values,
+                    tilstander = Type.søkbareTilstander,
                     behandlingId = behandlingId,
                 ),
         ).oppgaver.singleOrNull()
@@ -424,7 +424,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
         søk(
             Søkefilter(
                 periode = UBEGRENSET_PERIODE,
-                tilstander = Type.values,
+                tilstander = Type.søkbareTilstander,
                 oppgaveId = oppgaveId,
             ),
         ).oppgaver.singleOrNull() ?: throw DataNotFoundException("Fant ikke oppgave med id $oppgaveId")
@@ -452,21 +452,17 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
 
     override fun søk(søkeFilter: Søkefilter): OppgaveSøkResultat {
         return sessionOf(dataSource).use { session ->
-            val tilstander = søkeFilter.tilstander.joinToString { "'$it'" }
-            // TODO: sjekk på tilstand != OPPRETTET bør erstattes med noe logikk for ikke-søkbare tilstander
+            val tilstanderAsText = søkeFilter.tilstander.joinToString { "'$it'" }
             val tilstandClause =
-                if (søkeFilter.tilstander.isEmpty()) {
-                    " AND oppg.tilstand != 'OPPRETTET' "
-                } else {
-                    " AND oppg.tilstand IN ($tilstander) "
+                when (søkeFilter.tilstander.isNotEmpty()) {
+                    true -> " AND oppg.tilstand IN ($tilstanderAsText) "
+                    false -> ""
                 }
-
             val behandlingTyperAsText: String = søkeFilter.behandlingTyper.joinToString { "'$it'" }
             val behandlingTypeClause =
-                if (behandlingTyperAsText.isNotEmpty()) {
-                    " AND beha.behandling_type IN ($behandlingTyperAsText) "
-                } else {
-                    ""
+                when (søkeFilter.behandlingTyper.isNotEmpty()) {
+                    true -> " AND beha.behandling_type IN ($behandlingTyperAsText) "
+                    false -> ""
                 }
 
             val saksbehandlerClause =
@@ -562,9 +558,8 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 $fromJoinAndWhereClause
                 """.trimIndent()
 
-            val paramap =
+            val paramMap =
                 mapOf(
-                    "tilstander" to tilstander,
                     "fom" to søkeFilter.periode.fom,
                     "tom_pluss_1_dag" to søkeFilter.periode.tom.plusDays(1),
                     "saksbehandler_ident" to søkeFilter.saksbehandlerIdent,
@@ -579,13 +574,13 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 session.run(
                     queryOf(
                         statement = antallOppgaverQuery,
-                        paramMap = paramap,
+                        paramMap = paramMap,
                     ).map { row -> row.int("total_count") }.asSingle,
                 ) ?: throw DataNotFoundException("Query for å telle antall oppgaver feilet")
 
             val oppgaver =
                 session.run(
-                    queryOf(statement = oppgaverQuery, paramMap = paramap).map { row ->
+                    queryOf(statement = oppgaverQuery, paramMap = paramMap).map { row ->
                         row.rehydrerOppgave(dataSource)
                     }.asList,
                 )

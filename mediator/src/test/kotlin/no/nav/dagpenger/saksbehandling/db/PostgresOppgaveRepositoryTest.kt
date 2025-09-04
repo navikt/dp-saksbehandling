@@ -1535,12 +1535,14 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = enUkeSiden,
                     saksbehandlerIdent = saksbehandler.navIdent,
                 )
-            this.leggTilOppgave(tilstand = KlarTilBehandling)
+            this.leggTilOppgave(
+                tilstand = KlarTilBehandling,
+                opprettet = opprettetNå,
+            )
             this.leggTilOppgave(
                 tilstand = KlarTilBehandling,
                 opprettet = opprettetNå.minusDays(1),
             )
-            this.leggTilOppgave(tilstand = Opprettet)
 
             val repo = PostgresOppgaveRepository(ds)
             repo.søk(

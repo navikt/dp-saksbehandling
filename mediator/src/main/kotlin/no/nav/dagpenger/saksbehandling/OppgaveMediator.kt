@@ -45,6 +45,11 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_KONTROLL
 
 private val logger = KotlinLogging.logger {}
 
@@ -614,7 +619,12 @@ class OppgaveMediator(
             BEHANDLES_I_ARENA -> false
             AVVENTER_LÅS_AV_BEHANDLING -> false
             AVVENTER_OPPLÅSING_AV_BEHANDLING -> false
-            else -> true
+            UNDER_BEHANDLING -> false
+            FERDIG_BEHANDLET -> false
+            PAA_VENT -> false
+            KLAR_TIL_KONTROLL -> false
+            UNDER_KONTROLL -> false
+            null -> false
         }
     }
 
