@@ -43,6 +43,10 @@ interface SakRepository {
         sakId: UUID,
         arenaSakId: String,
     )
+    fun settErDpSakForBehandling(
+        behandlingId: UUID,
+        erDpSak: Boolean
+    )
 }
 
 private val logger = KotlinLogging.logger {}
@@ -248,6 +252,32 @@ class PostgresRepository(
                 ).asUpdate,
             )
         }
+    }
+
+    override fun settErDpSakForBehandling(behandlingId: UUID, erDpSak: Boolean){
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        UPDATE sak_v2
+                        SET    er_dp_sak  = :er_dp_sak
+                        WHERE  id = (
+                            SELECT sak_id
+                            FROM   behandling_v1
+                            WHERE  id = :behandling_id
+                            )
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandlingId,
+                            "er_dp_sak" to erDpSak,
+                        ),
+                ).asUpdate,
+            )
+        }
+
     }
 
     private fun TransactionalSession.lagreBehandling(

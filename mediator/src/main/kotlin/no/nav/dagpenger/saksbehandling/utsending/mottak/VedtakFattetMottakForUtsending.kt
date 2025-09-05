@@ -34,7 +34,7 @@ internal class VedtakFattetMottakForUtsending(
     }
 
     init {
-        logger.info { " Starter VedtakFattetMottakForUtsending" }
+        logger.info { "Starter VedtakFattetMottakForUtsending" }
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
@@ -46,9 +46,9 @@ internal class VedtakFattetMottakForUtsending(
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
         logger.info { "VedtakFattetMottakForUtsending - behandlingId: $behandlingId" }
-        val skipSet = setOf("019503c4-08ca-785d-ae6d-ac1ef95e5ed1")
+        val skipSet = emptySet<String>()
         if (behandlingId.toString() in skipSet) {
-            logger.info { "Skipper behandlingId: $behandlingId" }
+            logger.info { "Skipper behandlingId: $behandlingId fra VedtakFattetMottakForUtsending" }
             return
         }
         if (vedtakSkalTilhøreDpSak(packet)) {
