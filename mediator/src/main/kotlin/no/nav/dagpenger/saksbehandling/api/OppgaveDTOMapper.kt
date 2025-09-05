@@ -279,6 +279,6 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
     return when (this.behandlingType) {
         BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
-        BehandlingType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        BehandlingType.MELDEKORT -> BehandlingTypeDTO.MELDEKORT
     }
 }
