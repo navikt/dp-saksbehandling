@@ -43,9 +43,10 @@ interface SakRepository {
         sakId: UUID,
         arenaSakId: String,
     )
-    fun settErDpSakForBehandling(
-        behandlingId: UUID,
-        erDpSak: Boolean
+
+    fun merkSakenSomDpSak(
+        sakId: UUID,
+        erDpSak: Boolean,
     )
 }
 
@@ -254,7 +255,10 @@ class PostgresRepository(
         }
     }
 
-    override fun settErDpSakForBehandling(behandlingId: UUID, erDpSak: Boolean){
+    override fun merkSakenSomDpSak(
+        sakId: UUID,
+        erDpSak: Boolean,
+    ) {
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
@@ -263,21 +267,16 @@ class PostgresRepository(
                         """
                         UPDATE sak_v2
                         SET    er_dp_sak  = :er_dp_sak
-                        WHERE  id = (
-                            SELECT sak_id
-                            FROM   behandling_v1
-                            WHERE  id = :behandling_id
-                            )
+                        WHERE  id = :sak_id
                         """.trimIndent(),
                     paramMap =
                         mapOf(
-                            "behandling_id" to behandlingId,
+                            "sak_id" to sakId,
                             "er_dp_sak" to erDpSak,
                         ),
                 ).asUpdate,
             )
         }
-
     }
 
     private fun TransactionalSession.lagreBehandling(

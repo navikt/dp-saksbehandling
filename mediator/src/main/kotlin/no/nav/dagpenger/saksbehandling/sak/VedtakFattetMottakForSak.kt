@@ -8,7 +8,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.mottak.asUUID
 
 private val logger = KotlinLogging.logger {}
@@ -16,6 +18,7 @@ private val logger = KotlinLogging.logger {}
 internal class VedtakFattetMottakForSak(
     rapidsConnection: RapidsConnection,
     private val sakRepository: SakRepository,
+    private val sakMediator: SakMediator,
 ) : River.PacketListener {
     companion object {
         val rapidFilter: River.() -> Unit = {
@@ -51,11 +54,30 @@ internal class VedtakFattetMottakForSak(
                 return
             }
             if (vedtakSkalTilhøreDpSak(packet)) {
+                val ident = packet["ident"].asText()
+                val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
+                val automatiskBehandlet = packet["automatisk"].asBoolean()
+                val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
+                val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
                 logger.info { "Vedtak skal tilhøre dp-dak " }
-                sakRepository.settErDpSakForBehandling(
-                    behandlingId = behandlingId,
-                    erDpSak = true
+                sakMediator.merkSakenSomDpSak(
+                    VedtakFattetHendelse(
+                        behandlingId = behandlingId,
+                        behandletHendelseId = behandletHendelseId,
+                        behandletHendelseType = behandletHendelseType,
+                        ident = ident,
+                        sak =
+                            UtsendingSak(
+                                id = sakId,
+                                kontekst = "Dagpenger",
+                            ),
+                        automatiskBehandlet = automatiskBehandlet,
+                    ),
                 )
+//                sakRepository.settErDpSakForBehandling(
+//                    behandlingId = behandlingId,
+//                    erDpSak = true,
+//                )
             }
         }
     }

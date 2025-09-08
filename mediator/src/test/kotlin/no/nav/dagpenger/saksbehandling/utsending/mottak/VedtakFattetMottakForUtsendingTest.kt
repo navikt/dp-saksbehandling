@@ -63,7 +63,7 @@ class VedtakFattetMottakForUtsendingTest {
     }
 
     @Test
-    fun `Skal ikke håndtere avslag på søknad `() {
+    fun `Skal ikke håndtere avslag på søknad`() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
         VedtakFattetMottakForUtsending(
@@ -80,7 +80,7 @@ class VedtakFattetMottakForUtsendingTest {
     }
 
     @Test
-    fun `Skal ikke håndtere behandlinger som ikke er type Søknad `() {
+    fun `Skal ikke håndtere behandlinger som ikke er type Søknad`() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
         VedtakFattetMottakForUtsending(
