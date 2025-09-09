@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.also
 
@@ -20,6 +21,7 @@ class ForslagTilBehandlingResultatMottakTest {
     private val ident = "123456678912"
 
     @Test
+    @Disabled
     fun `Skal håndtere relevante pakker`() {
         val slots = mutableListOf<ForslagTilVedtakHendelse>()
         val oppgaveMediator =

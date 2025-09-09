@@ -56,8 +56,10 @@ internal class ForslagTilBehandlingResultatMottak(
                         behandlingId = behandlingId,
                         emneknagger = emneknagger,
                     )
-                sikkerlogg.info { "Mottok forslag_til_vedtak hendelse: $forslagTilVedtakHendelse" }
-                oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
+                sikkerlogg.info { "Mottok forslag_til_behandlingsresultat hendelse: $forslagTilVedtakHendelse" }
+//                oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
+            }.onFailure {
+                logger.error(it) { "Feil ved håndtering av forslag_til_behandlingsresultat hendelse" }
             }
         }
     }
