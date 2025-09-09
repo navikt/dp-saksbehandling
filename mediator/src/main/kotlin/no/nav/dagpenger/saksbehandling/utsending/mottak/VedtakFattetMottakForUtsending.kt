@@ -46,7 +46,7 @@ internal class VedtakFattetMottakForUtsending(
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
         logger.info { "VedtakFattetMottakForUtsending - behandlingId: $behandlingId" }
-        val skipSet = setOf("019503c4-08ca-785d-ae6d-ac1ef95e5ed1")
+        val skipSet = setOf("0199296a-4259-71dd-94dc-8210bd670865")
         if (behandlingId.toString() in skipSet) {
             logger.info { "Skipper behandlingId: $behandlingId" }
             return
