@@ -31,6 +31,8 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class EmneknaggBuilderTest {
+    private val behandlingId = UUID.randomUUID().toString()
+
     @Test
     fun `Feil eller mangler ved json`() {
         shouldThrow<IllegalArgumentException> {
@@ -108,6 +110,7 @@ class EmneknaggBuilderTest {
         EmneknaggBuilder(
             """
                 {
+                  "behandlingId": "$behandlingId",
                   "behandletHendelse": { "type": "Søknad" },
                   "rettighetsperioder": [{"harRett": false}, {"harRett": true}, {"harRett": false}],
                   "opplysninger": []
@@ -119,6 +122,7 @@ class EmneknaggBuilderTest {
         EmneknaggBuilder(
             """
                 {
+                  "behandlingId": "$behandlingId",
                   "behandletHendelse": { "type": "Søknad" },
                   "rettighetsperioder": [{"harRett": false}, {"harRett": false}],
                   "opplysninger": []
@@ -130,6 +134,7 @@ class EmneknaggBuilderTest {
         EmneknaggBuilder(
             """
                 {
+                  "behandlingId": "$behandlingId",
                   "behandletHendelse": { "type": "Søknad" },
                   "rettighetsperioder": [],
                   "opplysninger": []
@@ -451,9 +456,10 @@ class EmneknaggBuilderTest {
                 }
             }
         return objectMapper.createObjectNode().apply {
-            put("behandletHendelse", behandletHendelseObject)
-            put("rettighetsperioder", rettighetsPerioderArray)
-            put("opplysninger", opplysningArray)
+            put("behandlingId", UUID.randomUUID().toString())
+            set<ObjectNode>("behandletHendelse", behandletHendelseObject)
+            set<ArrayNode>("rettighetsperioder", rettighetsPerioderArray)
+            set<ArrayNode>("opplysninger", opplysningArray)
         }.toString()
     }
 }

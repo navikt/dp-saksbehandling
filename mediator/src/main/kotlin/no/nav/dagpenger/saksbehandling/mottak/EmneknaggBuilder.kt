@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
@@ -140,7 +141,14 @@ class EmneknaggBuilder(
     }
 
     private fun utfall(): Boolean {
-        return rettighetsPerioder.any { it["harRett"].asBoolean() }
+        val utfall = rettighetsPerioder.any { it["harRett"].asBoolean() }
+        sikkerLogg.info {
+            val behadlingId = jsonNode["behandlingId"].asText()
+            withLoggingContext("Id" to behadlingId) {
+                "BehandlingId: $behadlingId har utfall: $utfall med rettighetsPerioder: $rettighetsPerioder"
+            }
+        }
+        return utfall
     }
 
     private fun JsonNode.boolskVerdi(): Boolean {
