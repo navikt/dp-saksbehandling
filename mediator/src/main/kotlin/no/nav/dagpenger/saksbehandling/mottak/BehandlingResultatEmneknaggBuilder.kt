@@ -32,7 +32,11 @@ import no.nav.dagpenger.saksbehandling.mottak.OpplysningTyper.RETTIGHET_ORDINÆR
 private val logger = KotlinLogging.logger { }
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
-class EmneknaggBuilder(
+interface EmneknaggBuilder {
+    fun bygg(): Set<String>
+}
+
+class BehandlingResultatEmneknaggBuilder(
     json: String,
 ) {
     private val objectMapper =

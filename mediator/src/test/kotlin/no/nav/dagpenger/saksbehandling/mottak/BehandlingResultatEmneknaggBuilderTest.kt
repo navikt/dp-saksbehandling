@@ -30,34 +30,34 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
-class EmneknaggBuilderTest {
+class BehandlingResultatEmneknaggBuilderTest {
     @Test
     fun `Feil eller mangler ved json`() {
         shouldThrow<IllegalArgumentException> {
-            EmneknaggBuilder(json = "")
+            BehandlingResultatEmneknaggBuilder(json = "")
         }
 
         shouldThrow<IllegalArgumentException> {
-            EmneknaggBuilder(json = "{}")
+            BehandlingResultatEmneknaggBuilder(json = "{}")
         }
         shouldThrow<IllegalArgumentException> {
             //language=JSON
-            EmneknaggBuilder("""{ "opplysninger": [] }""")
-        }
-
-        shouldThrow<IllegalArgumentException> {
-            //language=JSON
-            EmneknaggBuilder("""{ "rettighetsperioder": [] }""")
+            BehandlingResultatEmneknaggBuilder("""{ "opplysninger": [] }""")
         }
 
         shouldThrow<IllegalArgumentException> {
             //language=JSON
-            EmneknaggBuilder("""{ "behandletHendelse":{} }""")
+            BehandlingResultatEmneknaggBuilder("""{ "rettighetsperioder": [] }""")
+        }
+
+        shouldThrow<IllegalArgumentException> {
+            //language=JSON
+            BehandlingResultatEmneknaggBuilder("""{ "behandletHendelse":{} }""")
         }
 
         shouldNotThrowAny {
             //language=JSON
-            EmneknaggBuilder(
+            BehandlingResultatEmneknaggBuilder(
                 """
                 {
                   "behandletHendelse": { "type": "Søknad" },
@@ -83,7 +83,7 @@ class EmneknaggBuilderTest {
                 verdi = false,
             ),
         ).also {
-            EmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn)
+            BehandlingResultatEmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn, RETTIGHET_ORDINÆR.visningsnavn)
         }
 
         lagBehandlingResultat(
@@ -98,14 +98,14 @@ class EmneknaggBuilderTest {
                 verdi = true,
             ),
         ).also {
-            EmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
+            BehandlingResultatEmneknaggBuilder(it).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
         }
     }
 
     @Test
     fun `Skal sette riktig innvigelse eller avslag emneknagg  behandlinger med flere rettighetsperioder`() {
         //language=JSON
-        EmneknaggBuilder(
+        BehandlingResultatEmneknaggBuilder(
             """
                 {
                   "behandletHendelse": { "type": "Søknad" },
@@ -116,7 +116,7 @@ class EmneknaggBuilderTest {
         ).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
 
         //language=JSON
-        EmneknaggBuilder(
+        BehandlingResultatEmneknaggBuilder(
             """
                 {
                   "behandletHendelse": { "type": "Søknad" },
@@ -127,7 +127,7 @@ class EmneknaggBuilderTest {
         ).bygg() shouldBe setOf(AVSLAG.visningsnavn)
 
         //language=JSON
-        EmneknaggBuilder(
+        BehandlingResultatEmneknaggBuilder(
             """
                 {
                   "behandletHendelse": { "type": "Søknad" },
@@ -154,7 +154,7 @@ class EmneknaggBuilderTest {
                 ),
             )
 
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
             setOf(
                 AVSLAG.visningsnavn,
                 AVSLAG_MINSTEINNTEKT.visningsnavn,
@@ -178,7 +178,7 @@ class EmneknaggBuilderTest {
                 ),
             )
 
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
             setOf(
                 AVSLAG.visningsnavn,
                 AVSLAG_ALDER.visningsnavn,
@@ -241,7 +241,7 @@ class EmneknaggBuilderTest {
                     verdi = false,
                 ),
             )
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
             setOf(
                 AVSLAG.visningsnavn,
                 AVSLAG_MINSTEINNTEKT.visningsnavn,
@@ -270,7 +270,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 RETTIGHET_VERNEPLIKT.visningsnavn,
@@ -288,7 +288,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(json = behandlingResultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 RETTIGHET_ORDINÆR.visningsnavn,
@@ -306,7 +306,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(behanldingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(behanldingResultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 RETTIGHET_PERMITTERT.visningsnavn,
@@ -324,7 +324,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(behandlingResultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 Regelknagg.RETTIGHET_PERMITTERT_FISK.visningsnavn,
@@ -342,7 +342,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(behandlingResultat).bygg() shouldBe
             setOf(
                 INNVILGELSE.visningsnavn,
                 Regelknagg.RETTIGHET_KONKURS.visningsnavn,
@@ -360,7 +360,7 @@ class EmneknaggBuilderTest {
                     verdi = true,
                 ),
             )
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
+        BehandlingResultatEmneknaggBuilder(behandlingResultat).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
     }
 
     @Test
@@ -375,7 +375,7 @@ class EmneknaggBuilderTest {
                 ),
             )
 
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(behandlingResultat).bygg() shouldBe
             setOf(
                 AVSLAG.visningsnavn, MELDEKORT.visningsnavn,
             )
@@ -393,7 +393,7 @@ class EmneknaggBuilderTest {
                 ),
             )
 
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe
+        BehandlingResultatEmneknaggBuilder(behandlingResultat).bygg() shouldBe
             setOf(
                 AVSLAG.visningsnavn, BehandletHendelseType.MANUELL.visningsnavn,
             )
