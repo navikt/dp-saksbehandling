@@ -66,7 +66,7 @@ class BehandlingsResultatMottakForUtsendingTest {
     fun `Skal ikke håndtere avslag på søknad `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
-        VedtakFattetMottakForUtsending(
+        BehandlingsResultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = mockk<SakRepository>(),
@@ -83,7 +83,7 @@ class BehandlingsResultatMottakForUtsendingTest {
     fun `Skal ikke håndtere behandlinger som ikke er type Søknad `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
-        VedtakFattetMottakForUtsending(
+        BehandlingsResultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = mockk<SakRepository>(),
@@ -100,7 +100,7 @@ class BehandlingsResultatMottakForUtsendingTest {
     fun `Skal ikke håndtere behandlinger med flere rettighetsperiioder `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
-        VedtakFattetMottakForUtsending(
+        BehandlingsResultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = mockk<SakRepository>(),
