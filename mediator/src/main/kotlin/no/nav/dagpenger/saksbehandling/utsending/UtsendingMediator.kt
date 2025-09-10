@@ -92,6 +92,11 @@ class UtsendingMediator(
     }
 
     fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
+        val skipSet = setOf("01992e62-dd11-72b9-99da-10ba398db202")
+        if (vedtakFattetHendelse.behandlingId.toString() in skipSet) {
+            logger.info { "Skipper behandlingId: ${vedtakFattetHendelse.behandlingId} fra startUtsendingForVedtakFattet" }
+            return
+        }
         utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
             ?.let { utsending ->
                 // TODO: Fjern sjekk på tilstand
