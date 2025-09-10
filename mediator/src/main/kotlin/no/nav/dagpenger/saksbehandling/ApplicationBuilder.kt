@@ -35,7 +35,7 @@ import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
-import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingResultatMottak
+import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsResultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
@@ -201,7 +201,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
             VedtakFattetMottak(rapidsConnection, oppgaveMediator)
             ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
-            ForslagTilBehandlingResultatMottak(rapidsConnection, oppgaveMediator)
+            ForslagTilBehandlingsResultatMottak(rapidsConnection, oppgaveMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
 
             if (Configuration.isDev) {
