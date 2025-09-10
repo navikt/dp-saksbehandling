@@ -35,6 +35,7 @@ import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
+import no.nav.dagpenger.saksbehandling.mottak.BehandlingsResultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsResultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
@@ -54,6 +55,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsResultatMottakForUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.utsending.mottak.VedtakFattetMottakForUtsending
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
@@ -200,11 +202,17 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             BehandlingOpprettetMottak(rapidsConnection, sakMediator)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
             VedtakFattetMottak(rapidsConnection, oppgaveMediator)
+            BehandlingsResultatMottak(rapidsConnection, oppgaveMediator)
             ForslagTilVedtakMottak(rapidsConnection, oppgaveMediator)
             ForslagTilBehandlingsResultatMottak(rapidsConnection, oppgaveMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
 
             if (Configuration.isDev) {
+                BehandlingsResultatMottakForUtsending(
+                    rapidsConnection = rapidsConnection,
+                    utsendingMediator = utsendingMediator,
+                    sakRepository = sakRepository,
+                )
                 VedtakFattetMottakForUtsending(
                     rapidsConnection = rapidsConnection,
                     utsendingMediator = utsendingMediator,
