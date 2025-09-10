@@ -63,8 +63,6 @@ import no.nav.dagpenger.saksbehandling.hendelser.SlettNotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.UtsettOppgaveHendelse
-import no.nav.dagpenger.saksbehandling.mottak.ForslagTilVedtakMottak
-import no.nav.dagpenger.saksbehandling.mottak.VedtakFattetMottak
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -336,7 +334,6 @@ OppgaveMediatorTest {
     @Test
     fun `Skal ignorere ForslagTilVedtakHendelse hvis oppgave ikke finnes for den behandlingen`() {
         settOppOppgaveMediator { _, oppgaveMediator ->
-            ForslagTilVedtakMottak(rapidsConnection = testRapid, oppgaveMediator = oppgaveMediator)
 
             val forslagTilVedtakHendelse =
                 ForslagTilVedtakHendelse(
@@ -1057,8 +1054,6 @@ OppgaveMediatorTest {
                 ),
         )
 
-        VedtakFattetMottak(testRapid, oppgaveMediator)
-
         val oppgave =
             oppgaveMediator.opprettEllerOppdaterOppgave(
                 ForslagTilVedtakHendelse(
@@ -1162,7 +1157,6 @@ OppgaveMediatorTest {
                 )
             }
 
-            VedtakFattetMottak(testRapid, oppgaveMediator)
             test(dataSource, oppgaveMediator)
         }
     }

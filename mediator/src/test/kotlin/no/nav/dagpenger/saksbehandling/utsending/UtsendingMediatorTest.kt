@@ -14,7 +14,6 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
@@ -33,7 +32,6 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterP
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
-import no.nav.dagpenger.saksbehandling.utsending.mottak.VedtakFattetMottakForUtsending
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.Base64
@@ -78,11 +76,11 @@ class UtsendingMediatorTest {
                     it.setRapidsConnection(rapid)
                 }
 
-            VedtakFattetMottakForUtsending(
-                rapidsConnection = rapid,
-                utsendingMediator = utsendingMediator,
-                sakRepository = PostgresRepository(ds),
-            )
+//            VedtakFattetMottakForUtsending(
+//                rapidsConnection = rapid,
+//                utsendingMediator = utsendingMediator,
+//                sakRepository = PostgresRepository(ds),
+//            )
 
             UtsendingBehovLøsningMottak(
                 utsendingMediator = utsendingMediator,
