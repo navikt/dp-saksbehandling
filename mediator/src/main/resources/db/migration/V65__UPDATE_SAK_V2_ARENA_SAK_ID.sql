@@ -9,8 +9,8 @@ SET    arena_sak_id = (
     AND    beha.sak_id = sak_v2.id
     )
 WHERE sak_v2.arena_sak_id IS NULL
-AND EXISTS (
-    SELECT 1
+AND 1 = (
+    SELECT count(*)
     FROM   utsending_v1 utse
     JOIN   behandling_v1 beha ON beha.id = utse.behandling_id
     WHERE  utse.utsending_sak_id IS NOT NULL
