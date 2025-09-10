@@ -1,0 +1,110 @@
+package no.nav.dagpenger.saksbehandling.utsending.mottak
+
+import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
+import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.saksbehandling.UtsendingSak
+import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.mottak.asUUID
+import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
+
+private val logger = KotlinLogging.logger {}
+
+internal class BehandlingsResultatMottakForUtsending(
+    rapidsConnection: RapidsConnection,
+    private val utsendingMediator: UtsendingMediator,
+    private val sakRepository: SakRepository,
+) : River.PacketListener {
+    companion object {
+        val rapidFilter: River.() -> Unit = {
+            precondition {
+                it.requireValue("@event_name", "behandlingsresultat")
+                it.requireValue("behandletHendelse.type", "Søknad")
+                it.requireKey("rettighetsperioder")
+            }
+            validate {
+                it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
+            }
+        }
+    }
+
+    init {
+        logger.info { " Starter BehandlingsResultatMottakForUtsending" }
+        River(rapidsConnection).apply(rapidFilter).register(this)
+    }
+
+    override fun onPacket(
+        packet: JsonMessage,
+        context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
+    ) {
+        val behandlingId = packet["behandlingId"].asUUID()
+        logger.info { "BehandlingsResultatMottakForUtsending - behandlingId: $behandlingId" }
+        if (vedtakSkalTilhøreDpSak(packet)) {
+            val ident = packet["ident"].asText()
+            val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
+            val automatiskBehandlet = packet["automatisk"].asBoolean()
+            val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
+            val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
+
+            utsendingMediator.startUtsendingForVedtakFattet(
+                VedtakFattetHendelse(
+                    behandlingId = behandlingId,
+                    behandletHendelseId = behandletHendelseId,
+                    behandletHendelseType = behandletHendelseType,
+                    ident = ident,
+                    sak =
+                        UtsendingSak(
+                            id = sakId,
+                            kontekst = "Dagpenger",
+                        ),
+                    automatiskBehandlet = automatiskBehandlet,
+                ),
+            )
+
+            context.publish(
+                key = ident,
+                message =
+                    JsonMessage.newMessage(
+                        map =
+                            VedtakUtenforArena(
+                                behandlingId = behandlingId.toString(),
+                                søknadId = behandletHendelseId,
+                                ident = ident,
+                                sakId = sakId,
+                            ).toMap(),
+                    ).toJson(),
+            )
+        }
+    }
+
+    private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
+        val rettighetsPerioderNode = packet["rettighetsperioder"]
+        val dagpengerInnvilget = rettighetsPerioderNode.size() == 1 && rettighetsPerioderNode[0]["harRett"].asBoolean()
+        return dagpengerInnvilget.also {
+            logger.info { "BehandlingsResultatMottakForUtsending med utfall: $dagpengerInnvilget. Basert på $rettighetsPerioderNode" }
+        }
+    }
+
+    private data class VedtakUtenforArena(
+        val behandlingId: String,
+        val søknadId: String,
+        val ident: String,
+        val sakId: String,
+    ) {
+        fun toMap() =
+            mapOf(
+                "@event_name" to "vedtak_fattet_utenfor_arena",
+                "behandlingId" to behandlingId,
+                "søknadId" to søknadId,
+                "ident" to ident,
+                "sakId" to sakId,
+            )
+    }
+}
