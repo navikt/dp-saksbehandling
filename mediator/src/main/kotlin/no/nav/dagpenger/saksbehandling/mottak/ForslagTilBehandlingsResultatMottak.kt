@@ -11,7 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 
-internal class ForslagTilBehandlingResultatMottak(
+internal class ForslagTilBehandlingsResultatMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {

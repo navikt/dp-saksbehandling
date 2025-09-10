@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.also
 
-class ForslagTilBehandlingResultatMottakTest {
+class ForslagTilBehandlingsResultatMottakTest {
     private val testRapid = TestRapid()
     private val behandlingId = UUIDv7.ny()
     private val søknadId = UUIDv7.ny()
@@ -28,7 +28,7 @@ class ForslagTilBehandlingResultatMottakTest {
             mockk<OppgaveMediator>().also {
                 every { it.opprettEllerOppdaterOppgave(capture(slots)) }
             }
-        ForslagTilBehandlingResultatMottak(testRapid, oppgaveMediator)
+        ForslagTilBehandlingsResultatMottak(testRapid, oppgaveMediator)
 
         listOf("Søknad", "Meldekort", "Manuell").forEachIndexed { index, behandletHendelseType ->
             testRapid.sendTestMessage(testMessage(behandletHendelseType = behandletHendelseType))
