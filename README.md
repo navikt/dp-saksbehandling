@@ -9,6 +9,7 @@ Link til swagger api dokumentasjon: https://dp-saksbehandling.intern.dev.nav.no/
 ## Komme i gang
 
 Gradle brukes som byggverktøy og er bundlet inn.
+
 `./gradlew build`
 
 # Henvendelser
