@@ -95,9 +95,10 @@ data class Oppgave private constructor(
         internal const val TIDLIGERE_KONTROLLERT = "Tidligere kontrollert"
         internal val kontrollEmneknagger: Set<String> = setOf(RETUR_FRA_KONTROLL, TIDLIGERE_KONTROLLERT)
         internal val påVentEmneknagger: Set<String> =
-            Emneknagg.PåVent.entries.map { påVentÅrsaker ->
-                påVentÅrsaker.visningsnavn
-            }.toSet()
+            Emneknagg.PåVent.entries
+                .map { påVentÅrsaker ->
+                    påVentÅrsaker.visningsnavn
+                }.toSet()
 
         fun rehydrer(
             oppgaveId: UUID,
@@ -230,9 +231,7 @@ data class Oppgave private constructor(
         return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
-    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling {
-        return tilstand.ferdigstill(this, vedtakFattetHendelse)
-    }
+    fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling = tilstand.ferdigstill(this, vedtakFattetHendelse)
 
     fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse): FerdigstillBehandling {
         adressebeskyttelseTilgangskontroll(godkjentBehandlingHendelse.utførtAv)
@@ -324,28 +323,24 @@ data class Oppgave private constructor(
         this._tilstandslogg.leggTil(nyTilstand.type, hendelse)
     }
 
-    fun sisteSaksbehandler(): String? {
-        return runCatching {
+    fun sisteSaksbehandler(): String? =
+        runCatching {
             _tilstandslogg.firstOrNull { it.tilstand == UNDER_BEHANDLING && it.hendelse is AnsvarHendelse }?.let {
                 (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
-        }
-            .onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
+        }.onFailure { e -> logger.error(e) { "Feil ved henting av siste saksbehandler for oppgave:  ${this.oppgaveId}" } }
             .getOrThrow()
-    }
 
-    fun sisteBeslutter(): String? {
-        return runCatching {
+    fun sisteBeslutter(): String? =
+        runCatching {
             _tilstandslogg.firstOrNull { it.tilstand == UNDER_KONTROLL && it.hendelse is AnsvarHendelse }?.let {
                 (it.hendelse as AnsvarHendelse).ansvarligIdent
             }
-        }
-            .onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
+        }.onFailure { e -> logger.error(e) { "Feil ved henting av siste beslutter for oppgave:  ${this.oppgaveId}" } }
             .getOrThrow()
-    }
 
-    fun soknadId(): UUID? {
-        return runCatching {
+    fun soknadId(): UUID? =
+        runCatching {
             _tilstandslogg.firstOrNull { it.hendelse is ForslagTilVedtakHendelse }?.let {
                 val hendelse = it.hendelse as ForslagTilVedtakHendelse
                 when (hendelse.behandletHendelseType) {
@@ -364,12 +359,9 @@ data class Oppgave private constructor(
                     }
                 }
             }
-        }
-            .onFailure { e ->
-                logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
-            }
-            .getOrThrow()
-    }
+        }.onFailure { e ->
+            logger.error(e) { "Feil ved henting av ForslagTilVedtakHendelse og dermed søknadId for oppgave:  ${this.oppgaveId}" }
+        }.getOrThrow()
 
     object Opprettet : Tilstand {
         override val type: Type = OPPRETTET
@@ -715,7 +707,9 @@ data class Oppgave private constructor(
         override val type: Type = AVVENTER_OPPLÅSING_AV_BEHANDLING
     }
 
-    data class UnderKontroll(private var notat: Notat? = null) : Tilstand {
+    data class UnderKontroll(
+        private var notat: Notat? = null,
+    ) : Tilstand {
         override val type: Type = UNDER_KONTROLL
 
         override fun ferdigstill(
@@ -956,7 +950,8 @@ data class Oppgave private constructor(
 
                 // Tilstander som ikke lenger er i bruk, skal ikke kunne søkes på
                 val søkbareTilstander =
-                    entries.toSet()
+                    entries
+                        .toSet()
                         .minus(OPPRETTET)
                         .minus(AVVENTER_LÅS_AV_BEHANDLING)
                         .minus(AVVENTER_OPPLÅSING_AV_BEHANDLING)
@@ -1088,30 +1083,22 @@ data class Oppgave private constructor(
         fun lagreBrevKvittering(
             oppgave: Oppgave,
             lagreBrevKvitteringHendelse: LagreBrevKvitteringHendelse,
-        ) {
-            throw UlovligKvitteringAvKontrollertBrev("Lagring av brevkvittering er ikke tillat i tilstand $type")
-        }
+        ): Unit = throw UlovligKvitteringAvKontrollertBrev("Lagring av brevkvittering er ikke tillat i tilstand $type")
 
         fun endreMeldingOmVedtakKilde(
             oppgave: Oppgave,
             endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse,
-        ) {
-            throw UlovligEndringAvKildeForMeldingOmVedtak("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
-        }
+        ): Unit = throw UlovligEndringAvKildeForMeldingOmVedtak("Endring av kilde for melding om vedtak er ikke tillatt i tilstand $type")
 
         fun lagreNotat(
             oppgave: Oppgave,
             notatHendelse: NotatHendelse,
-        ) {
-            throw RuntimeException("Notat er ikke tillatt i tilstand $type")
-        }
+        ): Unit = throw RuntimeException("Notat er ikke tillatt i tilstand $type")
 
         fun slettNotat(
             oppgave: Oppgave,
             slettNotatHendelse: SlettNotatHendelse,
-        ) {
-            throw RuntimeException("Kan ikke slette notat i tilstand $type")
-        }
+        ): Unit = throw RuntimeException("Kan ikke slette notat i tilstand $type")
 
         fun oppgavePåVentMedUtgåttFrist(
             oppgave: Oppgave,
