@@ -100,6 +100,52 @@ class BehandlingOpprettetMottakTest {
         }
     }
 
+    @Test
+    fun `fff`() {
+        testRapid.sendTestMessage(tt)
+        verify(exactly = 1) {
+            sakMediatorMock.opprettSak(
+                søknadsbehandlingOpprettetHendelse =
+                    SøknadsbehandlingOpprettetHendelse(
+                        søknadId = UUID.fromString("5343ef7e-b432-47a4-bb81-0942de7d81a6"),
+                        behandlingId = UUID.fromString("01987947-7a09-7c11-a17d-c85f01326ead"),
+                        ident = "14849598504",
+                        opprettet = LocalDateTime.parse("2025-08-05T10:09:44.225832328"),
+                    ),
+            )
+        }
+    }
+
+    @Language("JSON")
+    private val tt =
+        """
+        {
+          "@event_name": "behandling_opprettet",
+          "ident": "14849598504",
+          "behandlingId": "01987947-7a09-7c11-a17d-c85f01326ead",
+          "basertPåBehandlinger": [
+            "null"
+          ],
+          "behandletHendelse": {
+            "id": "5343ef7e-b432-47a4-bb81-0942de7d81a6",
+            "datatype": "UUID",
+            "type": "Søknad"
+          },
+          "@id": "994db6d7-097c-476a-8c47-5823a518842e",
+          "@opprettet": "2025-08-05T10:09:44.225832328",
+          "system_read_count": 0,
+          "system_participating_services": [
+            {
+              "id": "994db6d7-097c-476a-8c47-5823a518842e",
+              "time": "2025-08-05T10:09:44.225832328",
+              "service": "dp-behandling",
+              "instance": "dp-behandling-8646d76c6d-2kph4",
+              "image": "europe-north1-docker.pkg.dev/nais-management-233d/teamdagpenger/dp-behandling:2025.08.05-08.07-303c86c"
+            }
+          ]
+        }
+        """.trimIndent()
+
     @Language("JSON")
     private fun søknadsbehandlingOpprettetMeldingNyRett(ident: String = testIdent) =
         """

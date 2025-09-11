@@ -3,6 +3,7 @@ package no.nav.dagpenger.saksbehandling.api
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.statuspages.StatusPages
@@ -138,7 +139,17 @@ fun Application.statusPages() {
                                 URI.create("dagpenger.nav.no/saksbehandling:problem:behandling-feil")
                                     .toString(),
                         )
-                    logger.error { "Behandling feilet: ${behandlingException.text} med kode ${behandlingException.status}" }
+                    when (behandlingException.status) {
+                        in 400 until 499 -> {
+                            logger.warn { "Behandling feilet med klientfeil: ${behandlingException.text} med kode ${behandlingException.status}" }
+                        }
+                        in 500 until 599 -> {
+                            logger.error { "Behandling feilet med serverfeil: ${behandlingException.text} med kode ${behandlingException.status}" }
+                        }
+                        !in HttpStatusCode.allStatusCodes.map { it.value } -> {
+                            logger.error { "Behandling feilet med ukjent statuskode: ${behandlingException.text} med kode ${behandlingException.status}" }
+                        }
+                    }
                     call.respond(HttpStatusCode.fromValue(behandlingException.status), problem)
                 }
 
