@@ -113,39 +113,34 @@ class OppgaveMediator(
         )
     }
 
-    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> {
-        return oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
-    }
+    fun hentAlleOppgaverMedTilstand(tilstand: Tilstand.Type): List<Oppgave> = oppgaveRepository.hentAlleOppgaverMedTilstand(tilstand)
 
     fun hentOppgave(
         oppgaveId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave {
-        return oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
+    ): Oppgave =
+        oppgaveRepository.hentOppgave(oppgaveId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
         }
-    }
 
     fun hentOppgaveFor(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave {
-        return oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
+    ): Oppgave =
+        oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
         }
-    }
 
     fun hentOppgaveHvisTilgang(
         behandlingId: UUID,
         saksbehandler: Saksbehandler,
-    ): Oppgave {
-        return oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
+    ): Oppgave =
+        oppgaveRepository.hentOppgaveFor(behandlingId).also { oppgave ->
             oppgave.egneAnsatteTilgangskontroll(saksbehandler)
             oppgave.adressebeskyttelseTilgangskontroll(saksbehandler)
         }
-    }
 
     fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
         var oppgave: Oppgave? = null
@@ -214,19 +209,19 @@ class OppgaveMediator(
     }
 
     fun fristillOppgave(fjernOppgaveAnsvarHendelse: FjernOppgaveAnsvarHendelse) {
-        oppgaveRepository.hentOppgave(fjernOppgaveAnsvarHendelse.oppgaveId)
+        oppgaveRepository
+            .hentOppgave(fjernOppgaveAnsvarHendelse.oppgaveId)
             .let { oppgave ->
                 oppgave.fjernAnsvar(fjernOppgaveAnsvarHendelse)
                 oppgaveRepository.lagre(oppgave)
             }
     }
 
-    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave {
-        return oppgaveRepository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
+    fun tildelOppgave(settOppgaveAnsvarHendelse: SettOppgaveAnsvarHendelse): Oppgave =
+        oppgaveRepository.hentOppgave(settOppgaveAnsvarHendelse.oppgaveId).also { oppgave ->
             oppgave.tildel(settOppgaveAnsvarHendelse)
             oppgaveRepository.lagre(oppgave)
         }
-    }
 
     fun sendTilKontroll(
         sendTilKontrollHendelse: SendTilKontrollHendelse,
@@ -242,28 +237,30 @@ class OppgaveMediator(
                 }
                 runBlocking {
                     val kreverToTrinnsKontroll =
-                        behandlingKlient.kreverTotrinnskontroll(
-                            oppgave.behandlingId,
-                            saksbehandlerToken = saksbehandlerToken,
-                        ).onFailure {
-                            logger.error { "Feil ved henting av behandling med id ${oppgave.behandlingId}: ${it.message}" }
-                        }.getOrThrow()
+                        behandlingKlient
+                            .kreverTotrinnskontroll(
+                                oppgave.behandlingId,
+                                saksbehandlerToken = saksbehandlerToken,
+                            ).onFailure {
+                                logger.error { "Feil ved henting av behandling med id ${oppgave.behandlingId}: ${it.message}" }
+                            }.getOrThrow()
 
                     when (kreverToTrinnsKontroll) {
                         true -> {
                             oppgave.sendTilKontroll(sendTilKontrollHendelse)
-                            behandlingKlient.godkjenn(
-                                behandlingId = oppgave.behandlingId,
-                                ident = oppgave.personIdent(),
-                                saksbehandlerToken = saksbehandlerToken,
-                            ).onSuccess {
-                                oppgaveRepository.lagre(oppgave)
-                                logger.info {
-                                    "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
-                                }
-                            }.onFailure {
-                                logger.error { "Feil ved godkjenning av behandling: ${it.message}" }
-                            }.getOrThrow()
+                            behandlingKlient
+                                .godkjenn(
+                                    behandlingId = oppgave.behandlingId,
+                                    ident = oppgave.personIdent(),
+                                    saksbehandlerToken = saksbehandlerToken,
+                                ).onSuccess {
+                                    oppgaveRepository.lagre(oppgave)
+                                    logger.info {
+                                        "Behandlet SendTilKontrollHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                                    }
+                                }.onFailure {
+                                    logger.error { "Feil ved godkjenning av behandling: ${it.message}" }
+                                }.getOrThrow()
                         }
 
                         false -> {
@@ -288,20 +285,21 @@ class OppgaveMediator(
                     "Mottatt ReturnerTilSaksbehandlingHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.returnerTilSaksbehandling(returnerTilSaksbehandlingHendelse)
-                behandlingKlient.sendTilbake(
-                    behandlingId = oppgave.behandlingId,
-                    ident = oppgave.personIdent(),
-                    saksbehandlerToken = beslutterToken,
-                ).onSuccess {
-                    oppgaveRepository.lagre(oppgave)
-                    logger.info { "Sendt behandling med id ${oppgave.behandlingId} tilbake til saksbehandling" }
-                }.onFailure {
-                    val feil =
-                        "Feil ved sending av behandling med id ${oppgave.behandlingId} " +
-                            "tilbake til saksbehandling: ${it.message}"
-                    logger.error { feil }
-                    throw it
-                }
+                behandlingKlient
+                    .sendTilbake(
+                        behandlingId = oppgave.behandlingId,
+                        ident = oppgave.personIdent(),
+                        saksbehandlerToken = beslutterToken,
+                    ).onSuccess {
+                        oppgaveRepository.lagre(oppgave)
+                        logger.info { "Sendt behandling med id ${oppgave.behandlingId} tilbake til saksbehandling" }
+                    }.onFailure {
+                        val feil =
+                            "Feil ved sending av behandling med id ${oppgave.behandlingId} " +
+                                "tilbake til saksbehandling: ${it.message}"
+                        logger.error { feil }
+                        throw it
+                    }
                 logger.info {
                     "Behandlet ReturnerTilSaksbehandlingHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
@@ -353,12 +351,11 @@ class OppgaveMediator(
         }
     }
 
-    fun lagreNotat(notatHendelse: NotatHendelse): LocalDateTime {
-        return oppgaveRepository.hentOppgave(notatHendelse.oppgaveId).let { oppgave ->
+    fun lagreNotat(notatHendelse: NotatHendelse): LocalDateTime =
+        oppgaveRepository.hentOppgave(notatHendelse.oppgaveId).let { oppgave ->
             oppgave.lagreNotat(notatHendelse)
             oppgaveRepository.lagreNotatFor(oppgave)
         }
-    }
 
     fun slettNotat(slettNotatHendelse: SlettNotatHendelse): LocalDateTime {
         oppgaveRepository.hentOppgave(slettNotatHendelse.oppgaveId).let { oppgave ->
@@ -404,8 +401,8 @@ class OppgaveMediator(
         }
     }
 
-    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave {
-        return oppgaveRepository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
+    fun ferdigstillOppgave(vedtakFattetHendelse: VedtakFattetHendelse): Oppgave =
+        oppgaveRepository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
                     "Mottatt hendelse vedtak_fattet for oppgave i tilstand ${oppgave.tilstand().type}"
@@ -422,7 +419,6 @@ class OppgaveMediator(
                 }
             }
         }
-    }
 
     fun ferdigstillOppgave(
         oppgaveId: UUID,
@@ -489,39 +485,41 @@ class OppgaveMediator(
             )
         when (ferdigstillBehandling) {
             FerdigstillBehandling.GODKJENN -> {
-                behandlingKlient.godkjenn(
-                    behandlingId = oppgave.behandlingId,
-                    ident = oppgave.personIdent(),
-                    saksbehandlerToken = saksbehandlerToken,
-                ).onSuccess {
-                    oppgaveRepository.lagre(oppgave)
-                }.onFailure {
-                    utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
-                        when (rowsDeleted) {
-                            1 -> logger.info { "Slettet utsending med id $utsendingId" }
-                            else -> logger.error { "Fant ikke utsending med id $utsendingId" }
+                behandlingKlient
+                    .godkjenn(
+                        behandlingId = oppgave.behandlingId,
+                        ident = oppgave.personIdent(),
+                        saksbehandlerToken = saksbehandlerToken,
+                    ).onSuccess {
+                        oppgaveRepository.lagre(oppgave)
+                    }.onFailure {
+                        utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
+                            when (rowsDeleted) {
+                                1 -> logger.info { "Slettet utsending med id $utsendingId" }
+                                else -> logger.error { "Fant ikke utsending med id $utsendingId" }
+                            }
                         }
+                        throw it
                     }
-                    throw it
-                }
             }
 
             FerdigstillBehandling.BESLUTT -> {
-                behandlingKlient.beslutt(
-                    behandlingId = oppgave.behandlingId,
-                    ident = oppgave.personIdent(),
-                    saksbehandlerToken = saksbehandlerToken,
-                ).onSuccess {
-                    oppgaveRepository.lagre(oppgave)
-                }.onFailure {
-                    utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
-                        when (rowsDeleted) {
-                            1 -> logger.info { "Slettet utsending med id $utsendingId" }
-                            else -> logger.error { "Fant ikke utsending med id $utsendingId" }
+                behandlingKlient
+                    .beslutt(
+                        behandlingId = oppgave.behandlingId,
+                        ident = oppgave.personIdent(),
+                        saksbehandlerToken = saksbehandlerToken,
+                    ).onSuccess {
+                        oppgaveRepository.lagre(oppgave)
+                    }.onFailure {
+                        utsendingMediator.slettUtsending(utsendingId).also { rowsDeleted ->
+                            when (rowsDeleted) {
+                                1 -> logger.info { "Slettet utsending med id $utsendingId" }
+                                else -> logger.error { "Fant ikke utsending med id $utsendingId" }
+                            }
                         }
+                        throw it
                     }
-                    throw it
-                }
             }
         }
     }
@@ -533,27 +531,29 @@ class OppgaveMediator(
     ) {
         when (ferdigstillBehandling) {
             FerdigstillBehandling.GODKJENN -> {
-                behandlingKlient.godkjenn(
-                    behandlingId = oppgave.behandlingId,
-                    ident = oppgave.personIdent(),
-                    saksbehandlerToken = saksbehandlerToken,
-                ).onSuccess {
-                    oppgaveRepository.lagre(oppgave)
-                }.onFailure {
-                    throw it
-                }
+                behandlingKlient
+                    .godkjenn(
+                        behandlingId = oppgave.behandlingId,
+                        ident = oppgave.personIdent(),
+                        saksbehandlerToken = saksbehandlerToken,
+                    ).onSuccess {
+                        oppgaveRepository.lagre(oppgave)
+                    }.onFailure {
+                        throw it
+                    }
             }
 
             FerdigstillBehandling.BESLUTT -> {
-                behandlingKlient.beslutt(
-                    behandlingId = oppgave.behandlingId,
-                    ident = oppgave.personIdent(),
-                    saksbehandlerToken = saksbehandlerToken,
-                ).onSuccess {
-                    oppgaveRepository.lagre(oppgave)
-                }.onFailure {
-                    throw it
-                }
+                behandlingKlient
+                    .beslutt(
+                        behandlingId = oppgave.behandlingId,
+                        ident = oppgave.personIdent(),
+                        saksbehandlerToken = saksbehandlerToken,
+                    ).onSuccess {
+                        oppgaveRepository.lagre(oppgave)
+                    }.onFailure {
+                        throw it
+                    }
             }
         }
     }
@@ -578,9 +578,7 @@ class OppgaveMediator(
         }
     }
 
-    fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> {
-        return oppgaveRepository.finnOppgaverPåVentMedUtgåttFrist(frist)
-    }
+    fun finnOppgaverPåVentMedUtgåttFrist(frist: LocalDate): List<UUID> = oppgaveRepository.finnOppgaverPåVentMedUtgåttFrist(frist)
 
     fun håndterPåVentFristUtgått(påVentFristUtgåttHendelse: PåVentFristUtgåttHendelse) {
         oppgaveRepository.hentOppgave(påVentFristUtgåttHendelse.oppgaveId).let { oppgave ->

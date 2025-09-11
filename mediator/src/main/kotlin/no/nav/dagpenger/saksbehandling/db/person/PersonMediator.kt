@@ -19,8 +19,8 @@ class PersonMediator(
 
     fun lagre(person: Person) = personRepository.lagre(person)
 
-    fun finnEllerOpprettPerson(ident: String): Person {
-        return personRepository.finnPerson(ident) ?: runBlocking {
+    fun finnEllerOpprettPerson(ident: String): Person =
+        personRepository.finnPerson(ident) ?: runBlocking {
             coroutineScope {
                 val erSkjermet = async { oppslag.erSkjermetPerson(ident) }
                 val adressebeskyttelseGradering = async { oppslag.adressebeskyttelseGradering(ident) }
@@ -35,7 +35,6 @@ class PersonMediator(
                 person
             }
         }
-    }
 
     private fun validerPerson(person: Person) {
         if (person.adressebeskyttelseGradering != UGRADERT) {
@@ -47,6 +46,6 @@ class PersonMediator(
     }
 }
 
-internal class AdresseBeeskyttetPersonException() : RuntimeException("Person er adressebeskyttet")
+internal class AdresseBeeskyttetPersonException : RuntimeException("Person er adressebeskyttet")
 
-internal class SkjermetPersonException() : RuntimeException("Person er skjermet")
+internal class SkjermetPersonException : RuntimeException("Person er skjermet")

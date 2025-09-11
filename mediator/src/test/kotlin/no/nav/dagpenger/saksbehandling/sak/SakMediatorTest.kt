@@ -259,6 +259,52 @@ class SakMediatorTest {
     }
 
     @Test
+    fun `Skal merke sak som DP-sak hvis dp-sak skal eie saken`() {
+        withMigratedDb { ds ->
+            val sakMediator =
+                SakMediator(
+                    sakRepository = PostgresRepository(ds),
+                    personMediator =
+                        PersonMediator(
+                            personRepository = PostgresPersonRepository(ds),
+                            oppslag = oppslagMock,
+                        ),
+                )
+            val sak = sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
+
+            ds.finnMerkeForDpSak(sakId = sak.sakId) shouldBe false
+            sakMediator.merkSakenSomDpSak(
+                VedtakFattetHendelse(
+                    behandlingId = behandlingIdSøknadNyRett,
+                    behandletHendelseId = "id",
+                    behandletHendelseType = "Søknad",
+                    ident = testIdent,
+                    sak =
+                        UtsendingSak(
+                            id = UUIDv7.ny().toString(),
+                            kontekst = "Dagpenger",
+                        ),
+                    automatiskBehandlet = false,
+                ),
+            )
+            ds.finnMerkeForDpSak(sakId = sak.sakId) shouldBe true
+        }
+    }
+
+    private fun DataSource.finnMerkeForDpSak(sakId: UUID): Boolean {
+        return sessionOf(this).use { session ->
+            session.run(
+                queryOf(
+                    statement = """ SELECT er_dp_sak FROM sak_v2 WHERE id = :sak_id """,
+                    paramMap = mapOf("sak_id" to sakId),
+                ).map { row ->
+                    row.boolean("er_dp_sak")
+                }.asSingle,
+            ) as Boolean
+        }
+    }
+
+    @Test
     fun `Skal sende avbrytBehandling ved adressebeskyttet person`() {
         withMigratedDb { ds ->
             val sakMediator =

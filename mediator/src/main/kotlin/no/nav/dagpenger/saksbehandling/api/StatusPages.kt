@@ -26,7 +26,8 @@ import java.time.format.DateTimeParseException
 private val sikkerLogger = KotlinLogging.logger("tjenestekall")
 private val logger = KotlinLogging.logger {}
 private val apiFeilCounter: Counter =
-    Counter.builder()
+    Counter
+        .builder()
         .name("dp_saksbehandling_oppgave_api_feil")
         .help("Antall feil kastet i oppgave APIet")
         .labelNames("feiltype")
@@ -57,7 +58,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.InternalServerError.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:ugyldig-oppgavetilstand")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:ugyldig-oppgavetilstand")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.InternalServerError, problem)
@@ -71,7 +73,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.Conflict.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:oppgave-ulovlig-tilstandsendring")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:oppgave-ulovlig-tilstandsendring")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Conflict, problem)
@@ -85,7 +88,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.BadRequest.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:ugyldig-verdi")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.BadRequest, problem)
@@ -99,7 +103,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.BadRequest.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:dato-tid-feil")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:dato-tid-feil")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.BadRequest, problem)
@@ -113,7 +118,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.Conflict.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:oppgave-eies-av-annen-behandler")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:oppgave-eies-av-annen-behandler")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Conflict, problem)
@@ -135,10 +141,29 @@ fun Application.statusPages() {
                             status = behandlingException.status,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:behandling-feil")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:behandling-feil")
                                     .toString(),
                         )
-                    logger.error { "Behandling feilet: ${behandlingException.text} med kode ${behandlingException.status}" }
+                    when (behandlingException.status) {
+                        in 400 until 499 -> {
+                            logger.warn {
+                                "Behandling feilet med klientfeil: ${behandlingException.text} med kode ${behandlingException.status}"
+                            }
+                        }
+
+                        in 500 until 599 -> {
+                            logger.error {
+                                "Behandling feilet med serverfeil: ${behandlingException.text} med kode ${behandlingException.status}"
+                            }
+                        }
+
+                        !in HttpStatusCode.allStatusCodes.map { it.value } -> {
+                            logger.error {
+                                "Behandling feilet med ukjent status: ${behandlingException.text} med kode ${behandlingException.status}"
+                            }
+                        }
+                    }
                     call.respond(HttpStatusCode.fromValue(behandlingException.status), problem)
                 }
 
@@ -150,7 +175,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.Forbidden.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:manglende-tilgang")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:manglende-tilgang")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Forbidden, problem)
@@ -164,7 +190,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.Conflict.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:behandling-krever-ikke-totrinnskontroll")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:behandling-krever-ikke-totrinnskontroll")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.Conflict, problem)
@@ -178,7 +205,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.InternalServerError.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:feil-lag-melding-om-vedtak")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:feil-lag-melding-om-vedtak")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.InternalServerError, problem)
@@ -194,7 +222,8 @@ fun Application.statusPages() {
                             status = HttpStatusCode.InternalServerError.value,
                             instance = call.request.path(),
                             type =
-                                URI.create("dagpenger.nav.no/saksbehandling:problem:uhåndtert-feil")
+                                URI
+                                    .create("dagpenger.nav.no/saksbehandling:problem:uhåndtert-feil")
                                     .toString(),
                         )
                     call.respond(HttpStatusCode.InternalServerError, problem)

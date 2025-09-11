@@ -11,6 +11,7 @@ import java.time.ZoneId
 import java.util.Date
 import java.util.Timer
 import kotlin.concurrent.fixedRateTimer
+import kotlin.time.Duration.Companion.minutes
 
 abstract class Job(
     private val leaderElector: suspend () -> Result<Boolean> = LeaderElector::isLeader,
@@ -52,7 +53,7 @@ abstract class Job(
         startAt: Date = omFemMinutter,
         period: Long = 1.Dag,
     ): Timer {
-        logger.info { "Jobb $jobName vil kjøre med intervall $period millisekunder med første kjøring $startAt" }
+        logger.info { "Jobb $jobName vil kjøre med intervall ${period.minutes} minutter med første kjøring $startAt" }
         return fixedRateTimer(
             name = jobName,
             daemon = daemon,

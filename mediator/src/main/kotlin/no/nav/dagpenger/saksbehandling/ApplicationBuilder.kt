@@ -40,6 +40,7 @@ import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsResultatMotta
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import no.nav.dagpenger.saksbehandling.sak.VedtakFattetMottakForSak
 import no.nav.dagpenger.saksbehandling.saksbehandler.CachedSaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
 import no.nav.dagpenger.saksbehandling.skjerming.SkjermingConsumer
@@ -207,6 +208,11 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
                     rapidsConnection = rapidsConnection,
                     utsendingMediator = utsendingMediator,
                     sakRepository = sakRepository,
+                )
+                VedtakFattetMottakForSak(
+                    rapidsConnection = rapidsConnection,
+                    sakRepository = sakRepository,
+                    sakMediator = sakMediator,
                 )
             }
 
