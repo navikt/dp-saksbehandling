@@ -17,7 +17,9 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingType
 import java.util.UUID
 import javax.sql.DataSource
 
-class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingRepository {
+class PostgresUtsendingRepository(
+    private val ds: DataSource,
+) : UtsendingRepository {
     override fun lagre(utsending: Utsending) {
         sessionOf(ds).use { session ->
             session.transaction { tx ->
@@ -76,8 +78,8 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
-    override fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean {
-        return sessionOf(ds).use { session ->
+    override fun utsendingFinnesForBehandling(behandlingId: UUID): Boolean =
+        sessionOf(ds).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -91,10 +93,9 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                 ).map { row -> row.intOrNull(1) }.asSingle,
             ) != null
         }
-    }
 
-    override fun slettUtsending(utsendingId: UUID): Int {
-        return sessionOf(ds).use { session ->
+    override fun slettUtsending(utsendingId: UUID): Int =
+        sessionOf(ds).use { session ->
             session.run(
                 queryOf(
                     //language=PostgreSQL
@@ -107,12 +108,10 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
                 ).asUpdate,
             )
         }
-    }
 
-    override fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending {
-        return finnUtsendingForBehandlingId(behandlingId)
+    override fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending =
+        finnUtsendingForBehandlingId(behandlingId)
             ?: throw UtsendingIkkeFunnet("Fant ikke utsending for behandlingId: $behandlingId")
-    }
 
     override fun finnUtsendingForBehandlingId(behandlingId: UUID): Utsending? {
         sessionOf(ds).use { session ->
@@ -161,8 +160,8 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
         }
     }
 
-    private fun Row.rehydrerUtsendingTilstand(kolonneNavn: String): Utsending.Tilstand {
-        return when (Tilstand.Type.valueOf(this.string(kolonneNavn))) {
+    private fun Row.rehydrerUtsendingTilstand(kolonneNavn: String): Utsending.Tilstand =
+        when (Tilstand.Type.valueOf(this.string(kolonneNavn))) {
             VenterPåVedtak -> Utsending.VenterPåVedtak
             AvventerArkiverbarVersjonAvBrev -> Utsending.AvventerArkiverbarVersjonAvBrev
             AvventerJournalføring -> Utsending.AvventerJournalføring
@@ -170,7 +169,6 @@ class PostgresUtsendingRepository(private val ds: DataSource) : UtsendingReposit
             Distribuert -> Utsending.Distribuert
             Avbrutt -> Utsending.Avbrutt
         }
-    }
 }
 
 private fun Session.lagreUtsendingSak(utsendingSak: UtsendingSak) {
