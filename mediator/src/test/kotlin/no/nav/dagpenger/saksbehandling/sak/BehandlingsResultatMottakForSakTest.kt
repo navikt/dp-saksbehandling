@@ -10,10 +10,11 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 
-class VedtakFattetMottakForSakTest {
+class BehandlingsResultatMottakForSakTest {
     private val testRapid = TestRapid()
     private val søknadId = UUIDv7.ny()
     private val behandlingId = UUIDv7.ny()
@@ -21,7 +22,7 @@ class VedtakFattetMottakForSakTest {
     private val sakId = UUIDv7.ny()
 
     @Test
-    fun `skal oppdatere merket er_dp_dak hvis vedtak_fattet gjelder innvilgelse av søknad`() {
+    fun `skal oppdatere merket er_dp_sak hvis vedtak gjelder innvilgelse av søknad`() {
         val hendelse = slot<VedtakFattetHendelse>()
         val sakMediatorMock =
             mockk<SakMediator>().also {
@@ -31,12 +32,12 @@ class VedtakFattetMottakForSakTest {
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
             }
-        VedtakFattetMottakForSak(
+        BehandlingsResultatMottakForSak(
             rapidsConnection = testRapid,
             sakRepository = sakRepositoryMock,
             sakMediator = sakMediatorMock,
         )
-        testRapid.sendTestMessage(vedtakFattetEvent())
+        testRapid.sendTestMessage(behandlingResultat())
         verify(exactly = 1) {
             sakMediatorMock.merkSakenSomDpSak(capture(hendelse))
         }
@@ -53,13 +54,13 @@ class VedtakFattetMottakForSakTest {
     fun `Skal ikke markere er_dp_sak ved avslag på søknad`() {
         val sakMediatorMock = mockk<SakMediator>()
         val sakRepositoryMock = mockk<SakRepository>()
-        VedtakFattetMottakForSak(
+        BehandlingsResultatMottakForSak(
             rapidsConnection = testRapid,
             sakRepository = sakRepositoryMock,
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(vedtakFattetEvent(utfall = false))
+        testRapid.sendTestMessage(behandlingResultat(harRett = false))
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
         }
@@ -69,39 +70,31 @@ class VedtakFattetMottakForSakTest {
     fun `Skal ikke håndtere behandlinger som ikke er type Søknad`() {
         val sakMediatorMock = mockk<SakMediator>()
         val sakRepositoryMock = mockk<SakRepository>()
-        VedtakFattetMottakForSak(
+        BehandlingsResultatMottakForSak(
             rapidsConnection = testRapid,
             sakRepository = sakRepositoryMock,
             sakMediator = sakMediatorMock,
         )
 
-        testRapid.sendTestMessage(vedtakFattetEvent(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Meldekort"))
         verify(exactly = 0) {
             sakMediatorMock.merkSakenSomDpSak(any())
         }
     }
 
-    private fun vedtakFattetEvent(
+    private fun behandlingResultat(
         ident: String = this.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),
-        utfall: Boolean = true,
         behandletHendelseType: String = "Søknad",
+        harRett: Boolean = true,
     ): String {
-        return """
-            {
-                "@event_name": "vedtak_fattet",
-                "ident": "$ident",
-                "behandlingId": "$behandlingId",
-                "behandletHendelse": {
-                    "id": "$søknadId",
-                    "type": "$behandletHendelseType"
-                },
-                "fastsatt": {
-                    "utfall": $utfall
-                },
-                "automatisk": false
-            }
-            """.trimIndent()
+        return behandlingResultatEvent(
+            ident = ident,
+            behandlingId = behandlingId,
+            søknadId = søknadId,
+            behandletHendelseType = behandletHendelseType,
+            harRett = harRett,
+        )
     }
 }
