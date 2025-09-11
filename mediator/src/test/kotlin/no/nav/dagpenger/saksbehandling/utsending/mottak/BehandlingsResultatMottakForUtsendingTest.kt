@@ -10,6 +10,7 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
@@ -40,7 +41,7 @@ class BehandlingsResultatMottakForUtsendingTest {
             sakRepository = sakRepositoryMock,
         )
 
-        testRapid.sendTestMessage(behandlingResultatEvent())
+        testRapid.sendTestMessage(behandlingResultat())
         verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(capture(hendelse))
         }
@@ -72,7 +73,7 @@ class BehandlingsResultatMottakForUtsendingTest {
             sakRepository = mockk<SakRepository>(),
         )
 
-        testRapid.sendTestMessage(behandlingResultatEvent(harRett = false))
+        testRapid.sendTestMessage(behandlingResultat(harRett = false))
 
         verify(exactly = 0) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -89,7 +90,7 @@ class BehandlingsResultatMottakForUtsendingTest {
             sakRepository = mockk<SakRepository>(),
         )
 
-        testRapid.sendTestMessage(behandlingResultatEvent(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Meldekort"))
 
         verify(exactly = 0) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -137,31 +138,19 @@ class BehandlingsResultatMottakForUtsendingTest {
         }
     }
 
-    private fun behandlingResultatEvent(
+    private fun behandlingResultat(
         ident: String = this.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),
         behandletHendelseType: String = "Søknad",
         harRett: Boolean = true,
     ): String {
-        //language=JSON
-        return """
-            {
-              "@event_name": "behandlingsresultat",
-              "ident": "$ident",
-              "behandlingId": "$behandlingId",
-              "behandletHendelse": {
-                "id": "$søknadId",
-                "type": "$behandletHendelseType"
-              },
-              "automatisk": false,
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "2025-09-09",
-                  "harRett": $harRett
-                }
-              ]
-            }
-            """.trimIndent()
+        return behandlingResultatEvent(
+            ident = ident,
+            behandlingId = behandlingId,
+            søknadId = søknadId,
+            behandletHendelseType = behandletHendelseType,
+            harRett = harRett,
+        )
     }
 }

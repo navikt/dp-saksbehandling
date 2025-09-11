@@ -39,6 +39,34 @@ internal fun vedtakFattetHendelse(
     }"""
 }
 
+internal fun behandlingResultatEvent(
+    ident: String,
+    behandlingId: String,
+    søknadId: String,
+    behandletHendelseType: String = "Søknad",
+    harRett: Boolean = true,
+): String {
+    //language=JSON
+    return """
+        {
+          "@event_name": "behandlingsresultat",
+          "ident": "$ident",
+          "behandlingId": "$behandlingId",
+          "behandletHendelse": {
+            "id": "$søknadId",
+            "type": "$behandletHendelseType"
+          },
+          "automatisk": false,
+          "rettighetsperioder": [
+            {
+              "fraOgMed": "2025-09-09",
+              "harRett": $harRett
+            }
+          ]
+        }
+        """.trimIndent()
+}
+
 internal fun distribuertDokumentBehovLøsning(
     behandlingId: UUID,
     journalpostId: String,
