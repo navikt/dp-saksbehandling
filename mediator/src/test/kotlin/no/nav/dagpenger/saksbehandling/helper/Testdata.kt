@@ -12,33 +12,6 @@ import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import java.util.UUID
 import javax.sql.DataSource
 
-internal fun vedtakFattetHendelse(
-    ident: String,
-    behandletHendelseId: String,
-    behandletHendelseType: String = "Søknad",
-    behandlingId: UUID,
-    utfall: Boolean = true,
-    sakId: Int = 123,
-    automatiskBehandlet: Boolean = false,
-): String {
-    //language=JSON
-    return """{
-      "@event_name": "vedtak_fattet",
-      "behandletHendelse": {
-        "datatype": "UUID",
-        "id": "$behandletHendelseId",
-        "type": "$behandletHendelseType"
-      },
-       "fastsatt": {
-         "utfall": $utfall
-       },
-      "behandlingId": "$behandlingId",
-      "ident": "$ident",
-      "fagsakId": $sakId,
-      "automatisk": $automatiskBehandlet
-    }"""
-}
-
 internal fun behandlingResultatEvent(
     ident: String,
     behandlingId: String,
