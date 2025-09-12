@@ -139,6 +139,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+
   /oppgave/{oppgaveId}/notat:
     put:
       summary: Legg til et notat på en oppgave
@@ -327,6 +328,32 @@ paths:
                 $ref: '#/components/schemas/HttpProblem'
         '409':
           description: Oppgaven er allerede sendt tilbake til saksbehandler
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
+  /oppgave/{oppgaveId}/avbryt:
+    put:
+      summary: Avbryter en oppgave.
+      parameters:
+        - in: path
+          name: oppgaveId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Oppgaven er avbrutt
+        '404':
+          description: Oppgaven ble ikke funnet
           content:
             application/problem+json:
               schema:

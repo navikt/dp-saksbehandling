@@ -231,6 +231,12 @@ data class Oppgave private constructor(
         return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
+    fun avbryt(avbruttHendelse: AvbruttHendelse) {
+        adressebeskyttelseTilgangskontroll(avbruttHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(avbruttHendelse.utførtAv)
+        tilstand.avbryt(this, avbruttHendelse)
+    }
+
     fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling = tilstand.ferdigstill(this, vedtakFattetHendelse)
 
     fun ferdigstill(godkjentBehandlingHendelse: GodkjentBehandlingHendelse): FerdigstillBehandling {
@@ -566,11 +572,23 @@ data class Oppgave private constructor(
             avbruttHendelse: AvbruttHendelse,
         ) {
             requireEierskapTilOppgave(
-                oppgave,
-                avbruttHendelse.utførtAv,
-                avbruttHendelse.javaClass.simpleName,
+                oppgave = oppgave,
+                saksbehandler = avbruttHendelse.utførtAv,
+                hendelseNavn = avbruttHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(FerdigBehandlet, avbruttHendelse)
+        }
+
+        override fun avbryt(
+            oppgave: Oppgave,
+            avbruttHendelse: AvbruttHendelse,
+        ) {
+            requireEierskapTilOppgave(
+                oppgave = oppgave,
+                saksbehandler = avbruttHendelse.utførtAv,
+                hendelseNavn = avbruttHendelse.javaClass.simpleName,
+            )
+            oppgave.endreTilstand(BehandlesIArena, avbruttHendelse)
         }
     }
 
@@ -969,6 +987,18 @@ data class Oppgave private constructor(
             ulovligTilstandsendring(
                 oppgaveId = oppgave.oppgaveId,
                 message = "Kan ikke håndtere hendelse om forslag til vedtak i tilstand $type",
+            )
+        }
+
+        fun avbryt(
+            oppgave: Oppgave,
+            avbruttHendelse: AvbruttHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke avbryte oppgave i tilstand $type for " +
+                        "${avbruttHendelse.javaClass.simpleName}",
             )
         }
 

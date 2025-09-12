@@ -43,6 +43,12 @@ interface BehandlingKlient {
         ident: String,
         saksbehandlerToken: String,
     ): Result<Unit>
+
+    fun avbryt(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String,
+    ): Result<Unit>
 }
 
 internal class BehandlingHttpKlient(
@@ -87,6 +93,14 @@ internal class BehandlingHttpKlient(
         saksbehandlerToken: String,
     ): Result<Unit> {
         return kallBehandling("beslutt", behandlingId, saksbehandlerToken, ident)
+    }
+
+    override fun avbryt(
+        behandlingId: UUID,
+        ident: String,
+        saksbehandlerToken: String
+    ): Result<Unit> {
+        return kallBehandling("avbryt", behandlingId, saksbehandlerToken, ident)
     }
 
     override suspend fun kreverTotrinnskontroll(

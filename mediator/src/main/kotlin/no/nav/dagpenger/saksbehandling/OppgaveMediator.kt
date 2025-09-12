@@ -365,6 +365,34 @@ class OppgaveMediator(
         return LocalDateTime.now()
     }
 
+    fun avbryt(
+        oppgaveId: UUID,
+        saksbehandler: Saksbehandler,
+        saksbehandlerToken: String,
+    ) {
+        oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
+            withLoggingContext(
+                "oppgaveId" to oppgave.oppgaveId.toString(),
+                "behandlingId" to oppgave.behandlingId.toString(),
+            ) {
+                oppgave.avbryt(avbruttHendelse = AvbruttHendelse(
+                    behandlingId = oppgave.behandlingId,
+                    utførtAv = saksbehandler,
+                ))
+                behandlingKlient
+                    .avbryt(
+                        behandlingId = oppgave.behandlingId,
+                        ident = oppgave.personIdent(),
+                        saksbehandlerToken = saksbehandlerToken,
+                    ).onSuccess {
+                        oppgaveRepository.lagre(oppgave)
+                    }.onFailure {
+                        logger.error { "Feil ved avbryting av oppgave: $it" }
+                    }.getOrThrow()
+            }
+        }
+    }
+
     fun ferdigstillOppgave(avbruttHendelse: AvbruttHendelse) {
         oppgaveRepository.hentOppgaveFor(avbruttHendelse.behandlingId).let { oppgave ->
             withLoggingContext(

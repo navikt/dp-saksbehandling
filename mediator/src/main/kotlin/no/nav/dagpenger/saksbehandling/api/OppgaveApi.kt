@@ -54,6 +54,7 @@ import no.nav.dagpenger.saksbehandling.jwt.jwt
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import java.net.URI
 import java.util.UUID
+import kotlinx.coroutines.runBlocking
 
 private val logger = KotlinLogging.logger { }
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -336,6 +337,24 @@ internal fun Route.oppgaveApi(
                                 saksbehandlerToken,
                             )
                             call.respond(HttpStatusCode.NoContent)
+                        }
+                    }
+                }
+
+                route("avbryt") {
+                    put {
+                        val oppgaveId = call.finnUUID("oppgaveId")
+                        withLoggingContext("oppgaveId" to oppgaveId.toString()) {
+                            val saksbehandler = applicationCallParser.saksbehandler(call)
+                            val saksbehandlerToken = call.request.jwt()
+//                            runBlocking {
+                                oppgaveMediator.avbryt(
+                                    oppgaveId = oppgaveId,
+                                    saksbehandler = saksbehandler,
+                                    saksbehandlerToken = saksbehandlerToken,
+                                )
+                                call.respond(HttpStatusCode.NoContent)
+//                            }
                         }
                     }
                 }
