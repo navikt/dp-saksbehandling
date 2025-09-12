@@ -16,10 +16,10 @@ import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
+import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
-import no.nav.dagpenger.saksbehandling.helper.vedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
@@ -32,8 +32,8 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distrib
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
+import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsResultatMottakForUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
-import no.nav.dagpenger.saksbehandling.utsending.mottak.VedtakFattetMottakForUtsending
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.Base64
@@ -78,7 +78,7 @@ class UtsendingMediatorTest {
                     it.setRapidsConnection(rapid)
                 }
 
-            VedtakFattetMottakForUtsending(
+            BehandlingsResultatMottakForUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
                 sakRepository = PostgresRepository(ds),
@@ -102,13 +102,14 @@ class UtsendingMediatorTest {
             utsending.brev() shouldBe null
 
             val message =
-                vedtakFattetHendelse(
+                behandlingResultatEvent(
                     ident = person.ident,
-                    behandlingId = behandling.behandlingId,
-                    behandletHendelseId = søknadId.toString(),
+                    behandlingId = behandling.behandlingId.toString(),
+                    søknadId = søknadId.toString(),
                     behandletHendelseType = "Søknad",
-                    utfall = true,
+                    harRett = true,
                 )
+
             rapid.sendTestMessage(message = message)
 
             utsendingRepository.finnUtsendingForBehandlingId(behandlingId).let { utsending ->
@@ -155,7 +156,12 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
-            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(behandlingId = behandlingId, pdfUrnString = pdfUrnString))
+            rapid.sendTestMessage(
+                arkiverbartDokumentBehovLøsning(
+                    behandlingId = behandlingId,
+                    pdfUrnString = pdfUrnString,
+                ),
+            )
 
             utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerJournalføring
@@ -320,7 +326,12 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
-            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(behandlingId = behandlingId, pdfUrnString = pdfUrnString))
+            rapid.sendTestMessage(
+                arkiverbartDokumentBehovLøsning(
+                    behandlingId = behandlingId,
+                    pdfUrnString = pdfUrnString,
+                ),
+            )
 
             utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerJournalføring
@@ -459,7 +470,12 @@ class UtsendingMediatorTest {
                 """.trimIndent()
 
             val pdfUrnString = "urn:pdf:123"
-            rapid.sendTestMessage(arkiverbartDokumentBehovLøsning(behandlingId = behandlingId, pdfUrnString = pdfUrnString))
+            rapid.sendTestMessage(
+                arkiverbartDokumentBehovLøsning(
+                    behandlingId = behandlingId,
+                    pdfUrnString = pdfUrnString,
+                ),
+            )
 
             utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe AvventerJournalføring

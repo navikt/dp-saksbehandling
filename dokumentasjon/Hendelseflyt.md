@@ -18,7 +18,7 @@ graph RL
 ### 3. Oppgave ferdigstilles eller avbrytes
 ```mermaid
 graph RL
-  A["dp-behandling"] --> |"vedtak_fattet"| B["dp-saksbehandling"]
+  A["dp-behandling"] --> |"behandlingsresultat"| B["dp-saksbehandling"]
   A["dp-behandling"] --> |"behandling_avbrutt"| B["dp-saksbehandling"]
 ```
 
