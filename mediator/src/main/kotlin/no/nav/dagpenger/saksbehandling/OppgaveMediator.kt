@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository.Oppg
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
@@ -366,19 +367,15 @@ class OppgaveMediator(
     }
 
     fun avbryt(
-        oppgaveId: UUID,
-        saksbehandler: Saksbehandler,
+        avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
         saksbehandlerToken: String,
     ) {
-        oppgaveRepository.hentOppgave(oppgaveId).let { oppgave ->
+        oppgaveRepository.hentOppgave(avbrytOppgaveHendelse.oppgaveId).let { oppgave ->
             withLoggingContext(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
                 "behandlingId" to oppgave.behandlingId.toString(),
             ) {
-                oppgave.avbryt(avbruttHendelse = AvbruttHendelse(
-                    behandlingId = oppgave.behandlingId,
-                    utførtAv = saksbehandler,
-                ))
+                oppgave.avbryt(avbrytOppgaveHendelse = avbrytOppgaveHendelse)
                 behandlingKlient
                     .avbryt(
                         behandlingId = oppgave.behandlingId,

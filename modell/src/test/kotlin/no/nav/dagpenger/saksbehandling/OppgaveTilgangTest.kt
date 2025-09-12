@@ -6,6 +6,7 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -19,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.GodkjentBehandlingHendelseUtenMeldingOmVedtak
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -437,6 +439,109 @@ class OppgaveTilgangTest {
         }
     }
 
+    @ParameterizedTest
+    @MethodSource("adressebeskyttelseTester")
+    fun `Adressebeskyttelse tilganger ved avbryting av oppgave`(
+        adressebeskyttelseGradering: AdressebeskyttelseGradering,
+        saksbehandlerTilgang: TilgangType,
+        forventetTilgang: Boolean,
+    ) {
+        val saksbehandler = lagSaksbehandler(saksbehandlerTilgang)
+        val oppgave =
+            lagOppgave(
+                tilstandType = UNDER_BEHANDLING,
+                adressebeskyttelseGradering = adressebeskyttelseGradering,
+                behandler = saksbehandler,
+            )
+
+        if (forventetTilgang) {
+            shouldNotThrow<ManglendeTilgang> {
+                oppgave.avbryt(
+                    AvbrytOppgaveHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        årsak = AvbrytBehandling.AVBRUTT_ANNET,
+                        navIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        } else {
+            shouldThrow<ManglendeTilgang> {
+                oppgave.avbryt(
+                    AvbrytOppgaveHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        årsak = AvbrytBehandling.AVBRUTT_ANNET,
+                        navIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `Egne ansatte tilganger ved avbryting av oppgave`() {
+        shouldThrow<ManglendeTilgang> {
+            lagOppgave(
+                tilstandType = UNDER_BEHANDLING,
+                behandler = saksbehandlerUtenEkstraTilganger,
+                skjermesSomEgneAnsatte = true,
+            ).let { oppgave ->
+                oppgave.avbryt(
+                    AvbrytOppgaveHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        årsak = AvbrytBehandling.AVBRUTT_ANNET,
+                        navIdent = saksbehandlerUtenEkstraTilganger.navIdent,
+                        utførtAv = saksbehandlerUtenEkstraTilganger,
+                    ),
+                )
+            }
+        }
+
+        shouldNotThrow<ManglendeTilgang> {
+            lagOppgave(
+                tilstandType = UNDER_BEHANDLING,
+                behandler = saksbehandlerMedTilgangTilEgneAnsatte,
+                skjermesSomEgneAnsatte = true,
+            ).let { oppgave ->
+                oppgave.avbryt(
+                    AvbrytOppgaveHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        årsak = AvbrytBehandling.AVBRUTT_ANNET,
+                        navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
+                        utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `Avbryting av oppgave under behandling krever at utførende saksbehandler også eier oppgaven`() {
+        val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
+        shouldThrow<ManglendeTilgang> {
+            oppgave.avbryt(
+                AvbrytOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                    navIdent = saksbehandlerMedTilgangTilEgneAnsatte.navIdent,
+                    utførtAv = saksbehandlerMedTilgangTilEgneAnsatte,
+                ),
+            )
+        }
+
+        shouldNotThrow<ManglendeTilgang> {
+            oppgave.avbryt(
+                AvbrytOppgaveHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                    navIdent = saksbehandlerUtenEkstraTilganger.navIdent,
+                    utførtAv = saksbehandlerUtenEkstraTilganger,
+                ),
+            )
+        }
+    }
+
     @Test
     fun `Ferdigstilling av oppgave under behandling uten brev krever at utførende saksbehandler også eier oppgaven`() {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
@@ -460,7 +565,7 @@ class OppgaveTilgangTest {
     }
 
     @Test
-    fun `Ferdigstilling av oppgave under behandling krever at utførende saksbehandler også eier oppgaven`() {
+    fun `Ferdigstilling av oppgave under behandling med brev krever at utførende saksbehandler også eier oppgaven`() {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandlerUtenEkstraTilganger)
         shouldThrow<ManglendeTilgang> {
             oppgave.ferdigstill(

@@ -35,6 +35,11 @@ class Emneknagg(val navn: String) {
         TIDLIGERE_UTSATT("Tidligere utsatt"),
     }
 
+    enum class AvbrytBehandling(val visningsnavn: String) {
+        AVBRUTT_BEHANDLES_I_ARENA("Behandles i Arena"),
+        AVBRUTT_ANNET("Annen avbruddsårsak"),
+    }
+
     enum class BehandletHendelseType(val visningsnavn: String) {
         MELDEKORT("Meldekortsberegning"),
         MANUELL("Manuell"),

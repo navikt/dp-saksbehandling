@@ -6,6 +6,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AlleredeTildeltException
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.RETUR_FRA_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
@@ -25,6 +26,7 @@ import no.nav.dagpenger.saksbehandling.OppgaveTestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.TilgangType.BESLUTTER
 import no.nav.dagpenger.saksbehandling.TilgangType.SAKSBEHANDLER
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -215,7 +217,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `skal ferdigstille en oppgave bassert på avbrytHendelse`() {
+    fun `Skal ferdigstille en oppgave basert på AvbruttHendelse`() {
         val lovligeTilstander =
             setOf(UNDER_BEHANDLING)
 
@@ -248,7 +250,7 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal kunne avbryte en oppgave fra alle lovlige tilstander`() {
+    fun `Skal kunne avbryte en oppgave fra alle lovlige tilstander når behandling er avbrutt`() {
         val lovligeTilstander =
             setOf(
                 OPPRETTET,
@@ -284,6 +286,40 @@ class OppgaveTilstandTest {
                         behandletHendelseId = UUIDv7.ny().toString(),
                         behandletHendelseType = "Søknad",
                         ident = testIdent,
+                    ),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `Saksbehandler skal kunne avbryte en oppgave i tilstand UnderBehandling`() {
+        val lovligeTilstander = setOf(UNDER_BEHANDLING)
+
+        lovligeTilstander.forEach { tilstand ->
+            val oppgave = lagOppgave(tilstandType = tilstand, behandler = saksbehandler)
+            shouldNotThrowAny {
+                oppgave.avbryt(
+                    AvbrytOppgaveHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                        navIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                )
+            }
+            oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+        }
+
+        (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
+            val oppgave = lagOppgave(tilstand)
+            shouldThrow<UlovligTilstandsendringException> {
+                oppgave.avbryt(
+                    AvbrytOppgaveHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                        navIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
                     ),
                 )
             }

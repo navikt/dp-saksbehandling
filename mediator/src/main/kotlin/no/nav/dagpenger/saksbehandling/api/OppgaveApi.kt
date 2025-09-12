@@ -17,6 +17,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
+import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.IKKE_RELEVANT
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
@@ -26,6 +27,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
+import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
+import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevRequestDTO
@@ -41,6 +44,7 @@ import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NesteOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
@@ -54,7 +58,6 @@ import no.nav.dagpenger.saksbehandling.jwt.jwt
 import no.nav.dagpenger.saksbehandling.jwt.navIdent
 import java.net.URI
 import java.util.UUID
-import kotlinx.coroutines.runBlocking
 
 private val logger = KotlinLogging.logger { }
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
@@ -346,15 +349,13 @@ internal fun Route.oppgaveApi(
                         val oppgaveId = call.finnUUID("oppgaveId")
                         withLoggingContext("oppgaveId" to oppgaveId.toString()) {
                             val saksbehandler = applicationCallParser.saksbehandler(call)
+                            val avbrytOppgaveHendelse = call.avbrytOppgaveHendelse(saksbehandler = saksbehandler)
                             val saksbehandlerToken = call.request.jwt()
-//                            runBlocking {
-                                oppgaveMediator.avbryt(
-                                    oppgaveId = oppgaveId,
-                                    saksbehandler = saksbehandler,
-                                    saksbehandlerToken = saksbehandlerToken,
-                                )
-                                call.respond(HttpStatusCode.NoContent)
-//                            }
+                            oppgaveMediator.avbryt(
+                                avbrytOppgaveHendelse = avbrytOppgaveHendelse,
+                                saksbehandlerToken = saksbehandlerToken,
+                            )
+                            call.respond(HttpStatusCode.NoContent)
                         }
                     }
                 }
@@ -391,6 +392,20 @@ internal fun Route.oppgaveApi(
             }
         }
     }
+}
+
+private suspend fun ApplicationCall.avbrytOppgaveHendelse(saksbehandler: Saksbehandler): AvbrytOppgaveHendelse {
+    val avbrytOppgaveDTO = this.receive<AvbrytOppgaveDTO>()
+    return AvbrytOppgaveHendelse(
+        oppgaveId = this.finnUUID("oppgaveId"),
+        navIdent = saksbehandler.navIdent,
+        utførtAv = saksbehandler,
+        årsak =
+            when (avbrytOppgaveDTO.aarsak) {
+                AvbrytOppgaveAarsakDTO.AVBRYT_BEHANDLES_I_ARENA -> AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA
+                AvbrytOppgaveAarsakDTO.AVBRYT_ANNET -> AvbrytBehandling.AVBRUTT_ANNET
+            },
+    )
 }
 
 private suspend fun ApplicationCall.utsettOppgaveHendelse(saksbehandler: Saksbehandler): UtsettOppgaveHendelse {

@@ -12,6 +12,7 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
+import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_MELDEKORT
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
@@ -51,6 +52,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
@@ -158,6 +160,7 @@ OppgaveMediatorTest {
             } returns Result.success(true)
             every { it.sendTilbake(any(), any(), any()) } returns Result.success(Unit)
             every { it.beslutt(any(), any(), any()) } returns Result.success(Unit)
+            every { it.avbryt(any(), any(), any()) } returns Result.success(Unit)
         }
     private val skjermingKlientMock =
         mockk<SkjermingKlient>(relaxed = true).also {
@@ -765,7 +768,7 @@ OppgaveMediatorTest {
     }
 
     @Test
-    fun `Livssyklus for søknadsbehandling som blir avbrutt`() {
+    fun `Livssyklus for søknadsbehandling som blir avbrutt fra regelmotor`() {
         settOppOppgaveMediator { datasource, oppgaveMediator ->
 
             val oppgave = datasource.lagTestoppgave()
@@ -784,6 +787,34 @@ OppgaveMediatorTest {
                     behandletHendelseType = "Søknad",
                     ident = testIdent,
                 ),
+            )
+
+            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe BEHANDLES_I_ARENA
+        }
+    }
+
+    @Test
+    fun `Livssyklus for søknadsbehandling som blir avbrutt av saksbehandler`() {
+        settOppOppgaveMediator { datasource, oppgaveMediator ->
+
+            val oppgave = datasource.lagTestoppgave()
+            oppgaveMediator.tildelOppgave(
+                SettOppgaveAnsvarHendelse(
+                    oppgaveId = oppgave.oppgaveId,
+                    ansvarligIdent = saksbehandler.navIdent,
+                    utførtAv = saksbehandler,
+                ),
+            )
+
+            oppgaveMediator.avbryt(
+                avbrytOppgaveHendelse =
+                    AvbrytOppgaveHendelse(
+                        oppgaveId = oppgave.oppgaveId,
+                        årsak = AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA,
+                        navIdent = saksbehandler.navIdent,
+                        utførtAv = saksbehandler,
+                    ),
+                saksbehandlerToken = "token",
             )
 
             oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe BEHANDLES_I_ARENA
@@ -1029,17 +1060,11 @@ OppgaveMediatorTest {
             ).also {
                 it.setRapidsConnection(testRapid)
             }
-//        val utsendingMediator =
-//            UtsendingMediator(
-//                utsendingRepository = PostgresUtsendingRepository(dataSource),
-//                brevProdusent = mockk(),
-//            )
 
         val oppgaveMediator =
             OppgaveMediator(
                 oppgaveRepository = PostgresOppgaveRepository(this),
                 behandlingKlient = behandlingKlientMock,
-//                utsendingMediator = utsendingMediator,
                 utsendingMediator = mockk(),
                 sakMediator = sakMediator,
             ).also {

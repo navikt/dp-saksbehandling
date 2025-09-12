@@ -1203,6 +1203,21 @@ components:
       required:
         - queryParams
 
+
+    AvbrytOppgave:
+      type: object
+      properties:
+        aarsak:
+          $ref: '#/components/schemas/AvbrytOppgaveAarsak'
+      required:
+        - aarsak
+
+    AvbrytOppgaveAarsak:
+      type: string
+      enum:
+        - AVBRYT_BEHANDLES_I_ARENA
+        - AVBRYT_ANNET
+
     UtsettOppgave:
       type: object
       properties:

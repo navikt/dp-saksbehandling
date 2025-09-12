@@ -29,6 +29,7 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE
 import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTLAND
 import no.nav.dagpenger.saksbehandling.hendelser.AnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.EndreMeldingOmVedtakKildeHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
@@ -231,10 +232,11 @@ data class Oppgave private constructor(
         return tilstand.oppgaveKlarTilBehandling(this, forslagTilVedtakHendelse)
     }
 
-    fun avbryt(avbruttHendelse: AvbruttHendelse) {
-        adressebeskyttelseTilgangskontroll(avbruttHendelse.utførtAv)
-        egneAnsatteTilgangskontroll(avbruttHendelse.utførtAv)
-        tilstand.avbryt(this, avbruttHendelse)
+    fun avbryt(avbrytOppgaveHendelse: AvbrytOppgaveHendelse) {
+        adressebeskyttelseTilgangskontroll(avbrytOppgaveHendelse.utførtAv)
+        egneAnsatteTilgangskontroll(avbrytOppgaveHendelse.utførtAv)
+        this._emneknagger.add(avbrytOppgaveHendelse.årsak.visningsnavn)
+        tilstand.avbryt(this, avbrytOppgaveHendelse)
     }
 
     fun ferdigstill(vedtakFattetHendelse: VedtakFattetHendelse): Handling = tilstand.ferdigstill(this, vedtakFattetHendelse)
@@ -589,6 +591,18 @@ data class Oppgave private constructor(
                 hendelseNavn = avbruttHendelse.javaClass.simpleName,
             )
             oppgave.endreTilstand(BehandlesIArena, avbruttHendelse)
+        }
+
+        override fun avbryt(
+            oppgave: Oppgave,
+            avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
+        ) {
+            requireEierskapTilOppgave(
+                oppgave = oppgave,
+                saksbehandler = avbrytOppgaveHendelse.utførtAv,
+                hendelseNavn = avbrytOppgaveHendelse.javaClass.simpleName,
+            )
+            oppgave.endreTilstand(BehandlesIArena, avbrytOppgaveHendelse)
         }
     }
 
@@ -999,6 +1013,18 @@ data class Oppgave private constructor(
                 message =
                     "Kan ikke avbryte oppgave i tilstand $type for " +
                         "${avbruttHendelse.javaClass.simpleName}",
+            )
+        }
+
+        fun avbryt(
+            oppgave: Oppgave,
+            avbrytOppgaveHendelse: AvbrytOppgaveHendelse,
+        ) {
+            ulovligTilstandsendring(
+                oppgaveId = oppgave.oppgaveId,
+                message =
+                    "Kan ikke avbryte oppgave i tilstand $type for " +
+                        "${avbrytOppgaveHendelse.javaClass.simpleName}",
             )
         }
 

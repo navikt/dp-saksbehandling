@@ -32,7 +32,14 @@ class BehandlingHttpKlientTest {
                         MockEngine { request: HttpRequestData ->
                             requestData = request
                             when (request.url.encodedPath) {
-                                in setOf("/$behandlingId/godkjenn", "/$behandlingId/beslutt", "/$behandlingId/send-tilbake") ->
+                                in
+                                setOf(
+                                    "/$behandlingId/avbryt",
+                                    "/$behandlingId/godkjenn",
+                                    "/$behandlingId/beslutt",
+                                    "/$behandlingId/send-tilbake",
+                                ),
+                                ->
                                     respond(
                                         content = "OK",
                                         status = HttpStatusCode.OK,
@@ -52,6 +59,11 @@ class BehandlingHttpKlientTest {
     @Test
     fun `kall mot dp-behandling happy path `(): Unit =
         runBlocking {
+            behandlingKlient.avbryt(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
+            requireNotNull(requestData).let {
+                it.body.contentType.toString() shouldBe "application/json"
+                it.body.toByteArray().decodeToString() shouldEqualJson """{"ident":"$ident"}"""
+            }
             behandlingKlient.godkjenn(behandlingId, ident, saksbehandlerToken).isSuccess shouldBe true
             requireNotNull(requestData).let {
                 it.body.contentType.toString() shouldBe "application/json"
@@ -74,6 +86,7 @@ class BehandlingHttpKlientTest {
     @Test
     fun `godkjennBehandling error test`(): Unit =
         runBlocking {
+            behandlingKlient.avbryt(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.godkjenn(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.beslutt(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true
             behandlingKlient.sendTilbake(ukjentId, ident, saksbehandlerToken).isFailure shouldBe true

@@ -98,7 +98,7 @@ internal class BehandlingHttpKlient(
     override fun avbryt(
         behandlingId: UUID,
         ident: String,
-        saksbehandlerToken: String
+        saksbehandlerToken: String,
     ): Result<Unit> {
         return kallBehandling("avbryt", behandlingId, saksbehandlerToken, ident)
     }

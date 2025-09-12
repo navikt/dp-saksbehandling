@@ -30,6 +30,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
+import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
@@ -80,6 +81,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
+import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.FjernOppgaveAnsvarHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.NotatHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ReturnerTilSaksbehandlingHendelse
@@ -136,6 +138,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId/notat", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/avbryt", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/send-til-kontroll", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/returner-til-saksbehandler", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/ferdigstill", HttpMethod.Put),
@@ -612,7 +615,6 @@ class OppgaveApiTest {
     @Test
     fun `Saksbehandler skal kunne ta en oppgave som er KLAR_TIL_BEHANDLING`() {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
-//        val testOppgave = lagTestOppgaveMedTilstand(KLAR_TIL_BEHANDLING)
         val testOppgaveId = UUIDv7.ny()
         coEvery {
             oppgaveMediatorMock.tildelOppgave(
@@ -749,6 +751,58 @@ class OppgaveApiTest {
 
         verify(exactly = 1) {
             oppgaveMediatorMock.utsettOppgave(utsettOppgaveHendelse)
+        }
+    }
+
+    @Test
+    fun `Saksbehandler skal kunne avbryte en oppgave`() {
+        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every { it.hentOppgave(any(), any()) } returns oppgave
+                every {
+                    it.avbryt(
+                        avbrytOppgaveHendelse =
+                            AvbrytOppgaveHendelse(
+                                oppgaveId = oppgave.oppgaveId,
+                                årsak = any(),
+                                navIdent = any(),
+                                utførtAv = any(),
+                            ),
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } just Runs
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/avbryt") {
+                autentisert(token = saksbehandlerToken)
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """
+                        {
+                          "aarsak": "AVBRYT_ANNET"
+                        }
+                    """.trimMargin(),
+                )
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            coVerify(exactly = 1) {
+                oppgaveMediatorMock.avbryt(
+                    avbrytOppgaveHendelse =
+                        AvbrytOppgaveHendelse(
+                            oppgaveId = oppgave.oppgaveId,
+                            årsak = Emneknagg.AvbrytBehandling.AVBRUTT_ANNET,
+                            navIdent = any(),
+                            utførtAv = any(),
+                        ),
+                    saksbehandlerToken = any(),
+                )
+            }
         }
     }
 
