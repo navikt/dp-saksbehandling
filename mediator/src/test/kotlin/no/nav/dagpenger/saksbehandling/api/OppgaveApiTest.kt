@@ -758,18 +758,19 @@ class OppgaveApiTest {
     fun `Saksbehandler skal kunne avbryte en oppgave`() {
         val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val avbrytOppgaveHendelse =
+            AvbrytOppgaveHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                årsak = Emneknagg.AvbrytBehandling.AVBRUTT_ANNET,
+                navIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
+            )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
                 every { it.hentOppgave(any(), any()) } returns oppgave
                 every {
                     it.avbryt(
-                        avbrytOppgaveHendelse =
-                            AvbrytOppgaveHendelse(
-                                oppgaveId = oppgave.oppgaveId,
-                                årsak = any(),
-                                navIdent = any(),
-                                utførtAv = any(),
-                            ),
+                        avbrytOppgaveHendelse = avbrytOppgaveHendelse,
                         saksbehandlerToken = saksbehandlerToken,
                     )
                 } just Runs
@@ -793,14 +794,8 @@ class OppgaveApiTest {
 
             coVerify(exactly = 1) {
                 oppgaveMediatorMock.avbryt(
-                    avbrytOppgaveHendelse =
-                        AvbrytOppgaveHendelse(
-                            oppgaveId = oppgave.oppgaveId,
-                            årsak = Emneknagg.AvbrytBehandling.AVBRUTT_ANNET,
-                            navIdent = any(),
-                            utførtAv = any(),
-                        ),
-                    saksbehandlerToken = any(),
+                    avbrytOppgaveHendelse = avbrytOppgaveHendelse,
+                    saksbehandlerToken = saksbehandlerToken,
                 )
             }
         }
