@@ -40,7 +40,7 @@ dependencies {
     implementation("dev.hsbrysk:caffeine-coroutines:2.0.2")
 
     implementation("io.opentelemetry:opentelemetry-api:1.54.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.19.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.0")
 
     api("com.fasterxml.uuid:java-uuid-generator:5.1.0")
 
