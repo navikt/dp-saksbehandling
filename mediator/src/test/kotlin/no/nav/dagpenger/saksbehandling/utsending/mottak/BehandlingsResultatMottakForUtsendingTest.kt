@@ -10,11 +10,12 @@ import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
+import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
 
-class VedtakFattetMottakForUtsendingTest {
+class BehandlingsResultatMottakForUtsendingTest {
     private val testRapid = TestRapid()
     private val søknadId = UUIDv7.ny()
     private val behandlingId = UUIDv7.ny()
@@ -23,7 +24,7 @@ class VedtakFattetMottakForUtsendingTest {
 
     @Test
     @Suppress("ktlint:standard:max-line-length")
-    fun `Skal starte utsending og publisere melding om vedtak fattet utenfor Arena dersom vedtaket er basert på en søknad og skal tilhøre dp-sak`() {
+    fun `Skal starte utsending og publisere melding om vedtak fattet utenfor Arena dersom behandling resultat er basert på en søknad og skal tilhøre dp-sak`() {
         val hendelse = slot<VedtakFattetHendelse>()
         val utsendingMediatorMock =
             mockk<UtsendingMediator>().also {
@@ -34,13 +35,13 @@ class VedtakFattetMottakForUtsendingTest {
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
             }
-        VedtakFattetMottakForUtsending(
+        BehandlingsResultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = sakRepositoryMock,
         )
 
-        testRapid.sendTestMessage(vedtakFattetEvent())
+        testRapid.sendTestMessage(behandlingResultat())
         verify(exactly = 1) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(capture(hendelse))
         }
@@ -63,16 +64,16 @@ class VedtakFattetMottakForUtsendingTest {
     }
 
     @Test
-    fun `Skal ikke håndtere avslag på søknad `() {
+    fun `Skal ikke håndtere avslag på søknad`() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
-        VedtakFattetMottakForUtsending(
+        BehandlingsResultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = mockk<SakRepository>(),
         )
 
-        testRapid.sendTestMessage(vedtakFattetEvent(utfall = false))
+        testRapid.sendTestMessage(behandlingResultat(harRett = false))
 
         verify(exactly = 0) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
@@ -80,43 +81,76 @@ class VedtakFattetMottakForUtsendingTest {
     }
 
     @Test
-    fun `Skal ikke håndtere behandlinger som ikke er type Søknad `() {
+    fun `Skal ikke håndtere behandlinger som ikke er type Søknad`() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
-        VedtakFattetMottakForUtsending(
+        BehandlingsResultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = mockk<SakRepository>(),
         )
 
-        testRapid.sendTestMessage(vedtakFattetEvent(behandletHendelseType = "Meldekort"))
+        testRapid.sendTestMessage(behandlingResultat(behandletHendelseType = "Meldekort"))
 
         verify(exactly = 0) {
             utsendingMediatorMock.startUtsendingForVedtakFattet(any())
         }
     }
 
-    private fun vedtakFattetEvent(
+    @Test
+    fun `Skal ikke håndtere behandlinger med flere rettighetsperiioder `() {
+        val utsendingMediatorMock = mockk<UtsendingMediator>()
+
+        BehandlingsResultatMottakForUtsending(
+            rapidsConnection = testRapid,
+            utsendingMediator = utsendingMediatorMock,
+            sakRepository = mockk<SakRepository>(),
+        )
+
+        testRapid.sendTestMessage(
+            //language=JSON
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "ident": "$ident",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "id": "$søknadId",
+                "type": "Søknad"
+              },
+              "automatisk": false,
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2025-09-09",
+                  "harRett": true
+                }
+                {
+                  "fraOgMed": "2025-09-09",
+                  "harRett": true
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        verify(exactly = 0) {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(any())
+        }
+    }
+
+    private fun behandlingResultat(
         ident: String = this.ident,
         behandlingId: String = this.behandlingId.toString(),
         søknadId: String = this.søknadId.toString(),
-        utfall: Boolean = true,
         behandletHendelseType: String = "Søknad",
+        harRett: Boolean = true,
     ): String {
-        return """
-            {
-                "@event_name": "vedtak_fattet",
-                "ident": "$ident",
-                "behandlingId": "$behandlingId",
-                "behandletHendelse": {
-                    "id": "$søknadId",
-                    "type": "$behandletHendelseType"
-                },
-                "fastsatt": {
-                    "utfall": $utfall
-                },
-                "automatisk": false
-            }
-            """.trimIndent()
+        return behandlingResultatEvent(
+            ident = ident,
+            behandlingId = behandlingId,
+            søknadId = søknadId,
+            behandletHendelseType = behandletHendelseType,
+            harRett = harRett,
+        )
     }
 }

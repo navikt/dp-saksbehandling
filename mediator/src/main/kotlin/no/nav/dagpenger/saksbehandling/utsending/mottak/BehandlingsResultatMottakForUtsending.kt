@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 
 private val logger = KotlinLogging.logger {}
 
-internal class VedtakFattetMottakForUtsending(
+internal class BehandlingsResultatMottakForUtsending(
     rapidsConnection: RapidsConnection,
     private val utsendingMediator: UtsendingMediator,
     private val sakRepository: SakRepository,
@@ -23,9 +23,9 @@ internal class VedtakFattetMottakForUtsending(
     companion object {
         val rapidFilter: River.() -> Unit = {
             precondition {
-                it.requireValue("@event_name", "vedtak_fattet")
+                it.requireValue("@event_name", "behandlingsresultat")
                 it.requireValue("behandletHendelse.type", "Søknad")
-                it.requireKey("fastsatt")
+                it.requireKey("rettighetsperioder")
             }
             validate {
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk")
@@ -34,7 +34,7 @@ internal class VedtakFattetMottakForUtsending(
     }
 
     init {
-        logger.info { " Starter VedtakFattetMottakForUtsending" }
+        logger.info { " Starter BehandlingsResultatMottakForUtsending" }
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
@@ -45,12 +45,7 @@ internal class VedtakFattetMottakForUtsending(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
-        logger.info { "VedtakFattetMottakForUtsending - behandlingId: $behandlingId" }
-        val skipSet = setOf("019503c4-08ca-785d-ae6d-ac1ef95e5ed1")
-        if (behandlingId.toString() in skipSet) {
-            logger.info { "Skipper behandlingId: $behandlingId" }
-            return
-        }
+        logger.info { "BehandlingsResultatMottakForUtsending - behandlingId: $behandlingId" }
         if (vedtakSkalTilhøreDpSak(packet)) {
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
@@ -90,24 +85,26 @@ internal class VedtakFattetMottakForUtsending(
     }
 
     private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
-        val dagpengerInnvilget = packet["fastsatt"]["utfall"].asBoolean()
-        logger.info { "VedtakFattetForUtsending med utfall: $dagpengerInnvilget" }
-        return dagpengerInnvilget
+        val rettighetsPerioderNode = packet["rettighetsperioder"]
+        val dagpengerInnvilget = rettighetsPerioderNode.size() == 1 && rettighetsPerioderNode[0]["harRett"].asBoolean()
+        return dagpengerInnvilget.also {
+            logger.info { "BehandlingsResultatMottakForUtsending med utfall: $dagpengerInnvilget. Basert på $rettighetsPerioderNode" }
+        }
     }
-}
 
-private data class VedtakUtenforArena(
-    val behandlingId: String,
-    val søknadId: String,
-    val ident: String,
-    val sakId: String,
-) {
-    fun toMap() =
-        mapOf(
-            "@event_name" to "vedtak_fattet_utenfor_arena",
-            "behandlingId" to behandlingId,
-            "søknadId" to søknadId,
-            "ident" to ident,
-            "sakId" to sakId,
-        )
+    private data class VedtakUtenforArena(
+        val behandlingId: String,
+        val søknadId: String,
+        val ident: String,
+        val sakId: String,
+    ) {
+        fun toMap() =
+            mapOf(
+                "@event_name" to "vedtak_fattet_utenfor_arena",
+                "behandlingId" to behandlingId,
+                "søknadId" to søknadId,
+                "ident" to ident,
+                "sakId" to sakId,
+            )
+    }
 }

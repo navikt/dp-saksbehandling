@@ -54,7 +54,7 @@ class SakMediator(
                 )
             }
 
-        kotlin.runCatching {
+        runCatching {
             personMediator.finnEllerOpprettPerson(søknadsbehandlingOpprettetHendelse.ident)
         }.onFailure { e ->
             when (e is AdresseBeeskyttetPersonException || e is SkjermetPersonException) {
@@ -113,6 +113,15 @@ class SakMediator(
                     arenaSakId = vedtakFattetHendelse.sak.id,
                 )
             }
+        }
+    }
+
+    fun merkSakenSomDpSak(vedtakFattetHendelse: VedtakFattetHendelse) {
+        sakRepository.hentSakIdForBehandlingId(vedtakFattetHendelse.behandlingId).let { sakId ->
+            sakRepository.merkSakenSomDpSak(
+                sakId = sakId,
+                erDpSak = true,
+            )
         }
     }
 

@@ -15,4 +15,6 @@ interface UtsendingRepository {
     fun hentUtsendingForBehandlingId(behandlingId: UUID): Utsending
 }
 
-class UtsendingIkkeFunnet(message: String) : RuntimeException(message)
+class UtsendingIkkeFunnet(
+    message: String,
+) : RuntimeException(message)

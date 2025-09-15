@@ -9,25 +9,24 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.UtsendingSak
-import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 
-private val logger = KotlinLogging.logger {}
-
-internal class VedtakFattetMottak(
+internal class ForslagTilBehandlingsResultatMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+        private val logger = KotlinLogging.logger {}
+
         val rapidFilter: River.() -> Unit = {
             precondition {
-                it.requireValue("@event_name", "vedtak_fattet")
+                it.requireValue("@event_name", "forslag_til_behandlingsresultat")
                 it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
-                it.forbid("meldingOmVedtakProdusent")
-            }
-            validate {
-                it.requireKey("ident", "behandlingId", "fagsakId", "automatisk")
-                it.interestedIn("behandletHendelse")
+                it.requireKey("ident", "behandlingId")
+                it.requireKey("opplysninger")
+                it.requireKey("behandletHendelse")
+                it.requireKey("rettighetsperioder")
             }
         }
     }
@@ -44,24 +43,24 @@ internal class VedtakFattetMottak(
     ) {
         val behandletHendelseId = packet["behandletHendelse"]["id"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
-
-        withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
-            logger.info { "Mottok vedtak_fattet hendelse" }
-
-            oppgaveMediator.hentOppgaveIdFor(behandlingId)?.let {
-                oppgaveMediator.ferdigstillOppgave(
-                    VedtakFattetHendelse(
-                        behandlingId = behandlingId,
+        withLoggingContext("Id" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
+            logger.info { "Mottok forslag_til_behandlingsresultat hendelse" }
+            val ident = packet["ident"].asText()
+            runCatching {
+                val emneknagger = EmneknaggBuilder(packet.toJson()).bygg()
+                val forslagTilVedtakHendelse =
+                    ForslagTilVedtakHendelse(
+                        ident = ident,
                         behandletHendelseId = behandletHendelseId,
                         behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
-                        ident = packet["ident"].asText(),
-                        sak = packet.sak(),
-                        automatiskBehandlet = packet["automatisk"].asBoolean(),
-                    ),
-                )
+                        behandlingId = behandlingId,
+                        emneknagger = emneknagger,
+                    )
+                sikkerlogg.info { "Mottok forslag_til_behandlingsresultat hendelse: $forslagTilVedtakHendelse" }
+                oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse)
+            }.onFailure {
+                logger.error(it) { "Feil ved håndtering av forslag_til_behandlingsresultat hendelse" }
             }
         }
     }
 }
-
-private fun JsonMessage.sak(): UtsendingSak = UtsendingSak(id = this["fagsakId"].asText())
