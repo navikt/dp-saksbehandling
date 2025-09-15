@@ -29,6 +29,8 @@ internal class BehandlingsResultatMottak(
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk", "opplysninger")
             }
         }
+
+        const val FAGSAK_OPPLYSNING_TYPE_ID = "0194881f-9462-78af-8977-46092bb030eb"
     }
 
     init {
@@ -76,7 +78,7 @@ internal class BehandlingsResultatMottak(
     private fun JsonMessage.sak(): Result<UtsendingSak> {
         return runCatching {
             this["opplysninger"].single {
-                it["opplysningTypeId"].asText() == "0194881f-9462-78af-8977-46092bb030eb"
+                it["opplysningTypeId"].asText() == FAGSAK_OPPLYSNING_TYPE_ID
             }.let { opplysning ->
                 opplysning["perioder"].single {
                     it["status"].asText() == "Ny"
