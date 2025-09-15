@@ -5,7 +5,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import java.util.UUID
 
-class AvbrytOppgaveHendelse(
+data class AvbrytOppgaveHendelse(
     val oppgaveId: UUID,
     val navIdent: String,
     val årsak: Emneknagg.AvbrytBehandling = AVBRUTT_ANNET,
