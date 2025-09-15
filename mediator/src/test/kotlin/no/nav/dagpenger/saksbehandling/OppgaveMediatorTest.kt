@@ -814,7 +814,12 @@ OppgaveMediatorTest {
                 saksbehandlerToken = "token",
             )
 
-            oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør).tilstand().type shouldBe AVBRUTT
+            val avbruttOppgave = oppgaveMediator.hentOppgave(oppgave.oppgaveId, testInspektør)
+
+            avbruttOppgave.tilstand().type shouldBe AVBRUTT
+            avbruttOppgave.tilstandslogg.first().tilstand shouldBe AVBRUTT
+            avbruttOppgave.emneknagger.contains(AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA.visningsnavn)
+            avbruttOppgave.behandlerIdent shouldBe saksbehandler.navIdent
         }
     }
 

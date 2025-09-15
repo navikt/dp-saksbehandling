@@ -307,6 +307,9 @@ class KlageMediator(
         }
     }
 
+    // TODO : Vurder om man bør bruke AvbrytOppgaveHendelse og sette oppgave til Avbrutt i stedet for Ferdigbehandlet
+    // TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre behandlingstyper
+
     fun avbrytKlage(hendelse: AvbruttHendelse) {
         sjekkTilgangOgEierAvOppgave(
             behandlingId = hendelse.behandlingId,
@@ -321,6 +324,7 @@ class KlageMediator(
 
         klageRepository.lagre(klageBehandling)
         oppgaveMediator.ferdigstillOppgave(avbruttHendelse = hendelse)
+        // TODO: Fix skrivefeil i auditlogg
         auditlogg.oppdater("Avbrutte en klage", klageBehandling.personIdent(), hendelse.utførtAv.navIdent)
     }
 

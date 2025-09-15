@@ -20,7 +20,7 @@ internal class BehandlingAvbruttMottak(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "behandling_avbrutt")
-                it.requireValue("behandletHendelse.type", "Søknad")
+                it.requireAny(key = "behandletHendelse.type", values = listOf("Søknad", "Meldekort", "Manuell"))
             }
             validate { it.requireKey("ident", "behandlingId") }
             validate { it.interestedIn("behandletHendelse") }
