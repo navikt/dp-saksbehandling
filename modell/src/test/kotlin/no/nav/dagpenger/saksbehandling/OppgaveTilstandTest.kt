@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Companion.kontrollEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Companion.påVentEmneknagger
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.ManglendeTilgang
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -259,13 +259,13 @@ class OppgaveTilstandTest {
                 UNDER_BEHANDLING,
                 KLAR_TIL_KONTROLL,
                 UNDER_KONTROLL,
-                BEHANDLES_I_ARENA,
+                AVBRUTT,
             )
 
         lovligeTilstander.forEach { tilstand ->
             val oppgave = lagOppgave(tilstand, behandler = null)
             shouldNotThrowAny {
-                oppgave.behandlesIArena(
+                oppgave.avbryt(
                     BehandlingAvbruttHendelse(
                         behandlingId = oppgave.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
@@ -274,13 +274,13 @@ class OppgaveTilstandTest {
                     ),
                 )
             }
-            oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+            oppgave.tilstand().type shouldBe AVBRUTT
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
             val oppgave = lagOppgave(tilstand)
             shouldThrow<UlovligTilstandsendringException> {
-                oppgave.behandlesIArena(
+                oppgave.avbryt(
                     BehandlingAvbruttHendelse(
                         behandlingId = oppgave.behandlingId,
                         behandletHendelseId = UUIDv7.ny().toString(),
@@ -308,7 +308,7 @@ class OppgaveTilstandTest {
                     ),
                 )
             }
-            oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+            oppgave.tilstand().type shouldBe AVBRUTT
         }
 
         (Type.values.toMutableSet() - lovligeTilstander).forEach { tilstand ->
@@ -393,11 +393,11 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra UnderBehandling til BehandlesIArena når oppgaven avbrytes`() {
+    fun `Skal gå fra UnderBehandling til Avbrutt når oppgaven avbrytes`() {
         val oppgave = lagOppgave(tilstandType = UNDER_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
-            oppgave.behandlesIArena(
+            oppgave.avbryt(
                 BehandlingAvbruttHendelse(
                     behandlingId = oppgave.behandlingId,
                     behandletHendelseId = UUIDv7.ny().toString(),
@@ -406,7 +406,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+        oppgave.tilstand().type shouldBe AVBRUTT
     }
 
     @Test
@@ -745,11 +745,11 @@ class OppgaveTilstandTest {
     }
 
     @Test
-    fun `Skal gå fra KlarTilBehandling til BehandlesIArena når oppgaven avbrytes`() {
+    fun `Skal gå fra KlarTilBehandling til Avbrutt når oppgaven avbrytes`() {
         val oppgave = lagOppgave(tilstandType = KLAR_TIL_BEHANDLING, behandler = saksbehandler)
 
         shouldNotThrowAny {
-            oppgave.behandlesIArena(
+            oppgave.avbryt(
                 BehandlingAvbruttHendelse(
                     behandlingId = oppgave.behandlingId,
                     behandletHendelseId = UUIDv7.ny().toString(),
@@ -758,7 +758,7 @@ class OppgaveTilstandTest {
                 ),
             )
         }
-        oppgave.tilstand().type shouldBe BEHANDLES_I_ARENA
+        oppgave.tilstand().type shouldBe AVBRUTT
     }
 
     @Test

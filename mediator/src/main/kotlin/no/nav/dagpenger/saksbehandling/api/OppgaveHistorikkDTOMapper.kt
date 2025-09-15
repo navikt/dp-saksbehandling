@@ -2,9 +2,9 @@ package no.nav.dagpenger.saksbehandling.api
 
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -67,7 +67,7 @@ internal class OppgaveHistorikkDTOMapper(
             UNDER_KONTROLL -> "Under kontroll"
             AVVENTER_LÅS_AV_BEHANDLING -> "Sendt til kontroll"
             AVVENTER_OPPLÅSING_AV_BEHANDLING -> "Returnert til saksbehandling"
-            BEHANDLES_I_ARENA -> "Behandles i Arena"
+            AVBRUTT -> "Behandles i Arena"
         }
     }
 

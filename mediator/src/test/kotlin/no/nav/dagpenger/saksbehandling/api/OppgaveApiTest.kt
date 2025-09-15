@@ -30,7 +30,7 @@ import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Configuration
-import no.nav.dagpenger.saksbehandling.Emneknagg
+import no.nav.dagpenger.saksbehandling.Emneknagg.AvbrytBehandling.AVBRUTT_ANNET
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.AVVENT_RAPPORTERINGSFRIST
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
@@ -57,6 +57,7 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMe
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.testPerson
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.withOppgaveApi
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
+import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
@@ -756,12 +757,12 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne avbryte en oppgave`() {
-        val oppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING, SAKSBEHANDLER_IDENT)
-        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = SAKSBEHANDLER_IDENT)
+        val oppgave = lagTestOppgaveMedTilstand(tilstand = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler.navIdent)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = saksbehandler.navIdent)
         val avbrytOppgaveHendelse =
             AvbrytOppgaveHendelse(
                 oppgaveId = oppgave.oppgaveId,
-                årsak = Emneknagg.AvbrytBehandling.AVBRUTT_ANNET,
+                årsak = AVBRUTT_ANNET,
                 navIdent = saksbehandler.navIdent,
                 utførtAv = saksbehandler,
             )
@@ -784,7 +785,7 @@ class OppgaveApiTest {
                     //language=JSON
                     """
                         {
-                          "aarsak": "AVBRYT_ANNET"
+                          "aarsak": "ANNET"
                         }
                     """.trimMargin(),
                 )
@@ -822,10 +823,10 @@ class OppgaveApiTest {
                     ),
             )
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
-        val oppgaveDTOMapper =
-            mockk<OppgaveDTOMapper>().also {
+        val oppgaveDTOMapperMock =
+            mockk<OppgaveDTOMapper>().also { mapperMock ->
                 val tidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
-                coEvery { it.lagOppgaveDTO(testOppgave) } returns
+                coEvery { mapperMock.lagOppgaveDTO(testOppgave) } returns
                     OppgaveDTO(
                         oppgaveId = testOppgave.oppgaveId,
                         behandlingId = testOppgave.behandlingId,
@@ -902,6 +903,11 @@ class OppgaveApiTest {
                                         UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
                                         else -> emptyList()
                                     },
+                                avbrytAarsaker =
+                                    when (testOppgave.tilstand().type) {
+                                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries.map { it.value }
+                                        else -> emptyList()
+                                    },
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -910,7 +916,7 @@ class OppgaveApiTest {
 
         withOppgaveApi(
             oppgaveMediator = oppgaveMediatorMock,
-            oppgaveDTOMapper = oppgaveDTOMapper,
+            oppgaveDTOMapper = oppgaveDTOMapperMock,
         ) {
             client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK
@@ -984,10 +990,10 @@ class OppgaveApiTest {
                     ),
             )
         coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
-        val oppgaveDTOMapper =
-            mockk<OppgaveDTOMapper>().also {
+        val oppgaveDTOMapperMock =
+            mockk<OppgaveDTOMapper>().also { mapperMock ->
                 val tidspunkt = LocalDateTime.of(2021, 1, 1, 12, 0)
-                coEvery { it.lagOppgaveDTO(testOppgave) } returns
+                coEvery { mapperMock.lagOppgaveDTO(testOppgave) } returns
                     OppgaveDTO(
                         oppgaveId = testOppgave.oppgaveId,
                         behandlingId = testOppgave.behandlingId,
@@ -1058,6 +1064,11 @@ class OppgaveApiTest {
                                         UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
                                         else -> emptyList()
                                     },
+                                avbrytAarsaker =
+                                    when (testOppgave.tilstand().type) {
+                                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries.map { it.value }
+                                        else -> emptyList()
+                                    },
                             ),
                         meldingOmVedtakKilde = MeldingOmVedtakKildeDTO.DP_SAK,
                         kontrollertBrev = KontrollertBrevDTO.IKKE_RELEVANT,
@@ -1066,7 +1077,7 @@ class OppgaveApiTest {
 
         withOppgaveApi(
             oppgaveMediator = oppgaveMediatorMock,
-            oppgaveDTOMapper = oppgaveDTOMapper,
+            oppgaveDTOMapper = oppgaveDTOMapperMock,
         ) {
             client.get("/oppgave/${testOppgave.oppgaveId}") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.OK

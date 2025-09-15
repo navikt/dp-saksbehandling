@@ -12,9 +12,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.INGEN
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -589,7 +589,7 @@ class OppgaveMediator(
                 "oppgaveId" to oppgave.oppgaveId.toString(),
             ) {
                 logger.info { "Mottatt BehandlingAvbruttHendelse for oppgave i tilstand ${oppgave.tilstand().type}" }
-                oppgave.behandlesIArena(hendelse)
+                oppgave.avbryt(hendelse)
                 oppgaveRepository.lagre(oppgave)
                 logger.info { "Tilstand etter BehandlingAvbruttHendelse: ${oppgave.tilstand().type}" }
             }
@@ -639,7 +639,7 @@ class OppgaveMediator(
         return when (tilstand) {
             OPPRETTET -> false
             KLAR_TIL_BEHANDLING -> false
-            BEHANDLES_I_ARENA -> false
+            AVBRUTT -> false
             AVVENTER_LÅS_AV_BEHANDLING -> false
             AVVENTER_OPPLÅSING_AV_BEHANDLING -> false
             UNDER_BEHANDLING -> true

@@ -12,9 +12,9 @@ import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.JA
 import no.nav.dagpenger.saksbehandling.Oppgave.KontrollertBrev.NEI
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.GOSYS
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
+import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVBRUTT
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_LÅS_AV_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING_AV_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.BEHANDLES_I_ARENA
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.FERDIG_BEHANDLET
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
@@ -281,8 +281,8 @@ data class Oppgave private constructor(
         tilstand.sendTilKontroll(this, sendTilKontrollHendelse)
     }
 
-    fun behandlesIArena(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
-        tilstand.behandlesIArena(this, behandlingAvbruttHendelse)
+    fun avbryt(behandlingAvbruttHendelse: BehandlingAvbruttHendelse) {
+        tilstand.avbryt(this, behandlingAvbruttHendelse)
     }
 
     fun endreMeldingOmVedtakKilde(endreMeldingOmVedtakKildeHendelse: EndreMeldingOmVedtakKildeHendelse) {
@@ -382,11 +382,11 @@ data class Oppgave private constructor(
             return Handling.LAGRE_OPPGAVE
         }
 
-        override fun behandlesIArena(
+        override fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+            oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
 
         override fun ferdigstill(
@@ -425,11 +425,11 @@ data class Oppgave private constructor(
             return Handling.LAGRE_OPPGAVE
         }
 
-        override fun behandlesIArena(
+        override fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+            oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
     }
 
@@ -468,11 +468,11 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = null
         }
 
-        override fun behandlesIArena(
+        override fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+            oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
 
         override fun tildel(
@@ -590,7 +590,7 @@ data class Oppgave private constructor(
                 saksbehandler = avbruttHendelse.utførtAv,
                 hendelseNavn = avbruttHendelse.javaClass.simpleName,
             )
-            oppgave.endreTilstand(BehandlesIArena, avbruttHendelse)
+            oppgave.endreTilstand(Avbrutt, avbruttHendelse)
         }
 
         override fun avbryt(
@@ -602,7 +602,7 @@ data class Oppgave private constructor(
                 saksbehandler = avbrytOppgaveHendelse.utførtAv,
                 hendelseNavn = avbrytOppgaveHendelse.javaClass.simpleName,
             )
-            oppgave.endreTilstand(BehandlesIArena, avbrytOppgaveHendelse)
+            oppgave.endreTilstand(Avbrutt, avbrytOppgaveHendelse)
         }
     }
 
@@ -630,10 +630,10 @@ data class Oppgave private constructor(
         }
     }
 
-    object BehandlesIArena : Tilstand {
-        override val type: Type = BEHANDLES_I_ARENA
+    object Avbrutt : Tilstand {
+        override val type: Type = AVBRUTT
 
-        override fun behandlesIArena(
+        override fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
@@ -678,11 +678,11 @@ data class Oppgave private constructor(
             return Handling.LAGRE_OPPGAVE
         }
 
-        override fun behandlesIArena(
+        override fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+            oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
 
         override fun oppgavePåVentMedUtgåttFrist(
@@ -723,11 +723,11 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = settOppgaveAnsvarHendelse.ansvarligIdent
         }
 
-        override fun behandlesIArena(
+        override fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+            oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
     }
 
@@ -895,11 +895,11 @@ data class Oppgave private constructor(
             oppgave.behandlerIdent = null
         }
 
-        override fun behandlesIArena(
+        override fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {
-            oppgave.endreTilstand(BehandlesIArena, behandlingAvbruttHendelse)
+            oppgave.endreTilstand(Avbrutt, behandlingAvbruttHendelse)
         }
 
         override fun lagreNotat(
@@ -973,7 +973,7 @@ data class Oppgave private constructor(
             UNDER_KONTROLL,
             AVVENTER_LÅS_AV_BEHANDLING,
             AVVENTER_OPPLÅSING_AV_BEHANDLING,
-            BEHANDLES_I_ARENA,
+            AVBRUTT,
             ;
 
             companion object {
@@ -1116,7 +1116,7 @@ data class Oppgave private constructor(
             )
         }
 
-        fun behandlesIArena(
+        fun avbryt(
             oppgave: Oppgave,
             behandlingAvbruttHendelse: BehandlingAvbruttHendelse,
         ) {

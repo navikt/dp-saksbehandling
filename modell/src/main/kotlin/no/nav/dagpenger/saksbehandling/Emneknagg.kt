@@ -37,6 +37,8 @@ class Emneknagg(val navn: String) {
 
     enum class AvbrytBehandling(val visningsnavn: String) {
         AVBRUTT_BEHANDLES_I_ARENA("Behandles i Arena"),
+        AVBRUTT_FLERE_SØKNADER("Flere søknader"),
+        AVBRUTT_TRUKKET_SØKNAD("Trukket søknad"),
         AVBRUTT_ANNET("Annen avbruddsårsak"),
     }
 

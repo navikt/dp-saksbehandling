@@ -135,7 +135,8 @@ class OppgaveDTOMapperTest {
                       "emneknagger": [],
                       "tilstand": "UNDER_KONTROLL",
                       "lovligeEndringer": {
-                        "paaVentAarsaker": []
+                        "paaVentAarsaker": [],
+                        "avbrytAarsaker": []
                       },
                       "saksbehandler": {
                         "ident": "SaksbehandlerIdent",
@@ -286,6 +287,12 @@ class OppgaveDTOMapperTest {
                           "AVVENT_PERMITTERINGSÅRSAK",
                           "AVVENT_RAPPORTERINGSFRIST",
                           "AVVENT_SVAR_PÅ_FORESPØRSEL",
+                          "ANNET"
+                        ],
+                        "avbrytAarsaker": [
+                          "BEHANDLES_I_ARENA",
+                          "FLERE_SØKNADER",
+                          "TRUKKET_SØKNAD",
                           "ANNET"
                         ]
                       },

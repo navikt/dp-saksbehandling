@@ -402,8 +402,10 @@ private suspend fun ApplicationCall.avbrytOppgaveHendelse(saksbehandler: Saksbeh
         utførtAv = saksbehandler,
         årsak =
             when (avbrytOppgaveDTO.aarsak) {
-                AvbrytOppgaveAarsakDTO.AVBRYT_BEHANDLES_I_ARENA -> AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA
-                AvbrytOppgaveAarsakDTO.AVBRYT_ANNET -> AvbrytBehandling.AVBRUTT_ANNET
+                AvbrytOppgaveAarsakDTO.BEHANDLES_I_ARENA -> AvbrytBehandling.AVBRUTT_BEHANDLES_I_ARENA
+                AvbrytOppgaveAarsakDTO.FLERE_SØKNADER -> AvbrytBehandling.AVBRUTT_FLERE_SØKNADER
+                AvbrytOppgaveAarsakDTO.TRUKKET_SØKNAD -> AvbrytBehandling.AVBRUTT_TRUKKET_SØKNAD
+                AvbrytOppgaveAarsakDTO.ANNET -> AvbrytBehandling.AVBRUTT_ANNET
             },
     )
 }

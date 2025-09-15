@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
+import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
@@ -160,6 +161,11 @@ internal class OppgaveDTOMapper(
                             UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
                             else -> emptyList()
                         },
+                    avbrytAarsaker =
+                        when (oppgave.tilstand().type) {
+                            UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries.map { it.value }
+                            else -> emptyList()
+                        },
                 ),
             soknadId = soknadId,
             meldingOmVedtakKilde =
@@ -264,7 +270,7 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
         is Oppgave.UnderKontroll -> OppgaveTilstandDTO.UNDER_KONTROLL
         is Oppgave.AvventerLåsAvBehandling -> OppgaveTilstandDTO.AVVENTER_LÅS_AV_BEHANDLING
         is Oppgave.AvventerOpplåsingAvBehandling -> OppgaveTilstandDTO.AVVENTER_OPPLÅSING_AV_BEHANDLING
-        is Oppgave.BehandlesIArena -> OppgaveTilstandDTO.BEHANDLES_I_ARENA
+        is Oppgave.Avbrutt -> OppgaveTilstandDTO.AVBRUTT
     }
 }
 
