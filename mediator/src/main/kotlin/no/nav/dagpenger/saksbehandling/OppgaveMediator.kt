@@ -430,7 +430,7 @@ class OppgaveMediator(
         oppgaveRepository.hentOppgaveFor(vedtakFattetHendelse.behandlingId).also { oppgave ->
             withLoggingContext("oppgaveId" to oppgave.oppgaveId.toString()) {
                 logger.info {
-                    "Mottatt hendelse vedtak_fattet for oppgave i tilstand ${oppgave.tilstand().type}"
+                    "Mottatt VedtakFattetHendelse for oppgave i tilstand ${oppgave.tilstand().type}"
                 }
                 oppgave.ferdigstill(vedtakFattetHendelse).let { handling ->
                     when (handling) {
@@ -440,7 +440,7 @@ class OppgaveMediator(
                 }
 
                 logger.info {
-                    "Behandlet hendelse vedtak_fattet. Tilstand etter behandling: ${oppgave.tilstand().type}"
+                    "Behandlet VedtakFattetHendelse. Tilstand etter behandling: ${oppgave.tilstand().type}"
                 }
             }
         }
