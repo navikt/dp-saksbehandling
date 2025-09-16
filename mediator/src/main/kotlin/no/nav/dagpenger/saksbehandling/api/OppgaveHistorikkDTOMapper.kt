@@ -67,7 +67,7 @@ internal class OppgaveHistorikkDTOMapper(
             UNDER_KONTROLL -> "Under kontroll"
             AVVENTER_LÅS_AV_BEHANDLING -> "Sendt til kontroll"
             AVVENTER_OPPLÅSING_AV_BEHANDLING -> "Returnert til saksbehandling"
-            AVBRUTT -> "Behandles i Arena"
+            AVBRUTT -> "Avbrutt"
         }
     }
 
