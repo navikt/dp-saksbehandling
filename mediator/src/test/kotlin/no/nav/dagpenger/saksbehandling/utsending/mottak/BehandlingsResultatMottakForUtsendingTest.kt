@@ -49,8 +49,11 @@ class BehandlingsResultatMottakForUtsendingTest {
         hendelse.captured.behandlingId shouldBe behandlingId
         hendelse.captured.behandletHendelseId shouldBe søknadId.toString()
         hendelse.captured.behandletHendelseType shouldBe "Søknad"
-        hendelse.captured.sak.id shouldBe sakId.toString()
-        hendelse.captured.sak.kontekst shouldBe "Dagpenger"
+        hendelse.captured.sak.let {
+            require(it != null)
+            it.id shouldBe sakId.toString()
+            it.kontekst shouldBe "Dagpenger"
+        }
         hendelse.captured.automatiskBehandlet shouldBe false
 
         testRapid.inspektør.size shouldBe 1

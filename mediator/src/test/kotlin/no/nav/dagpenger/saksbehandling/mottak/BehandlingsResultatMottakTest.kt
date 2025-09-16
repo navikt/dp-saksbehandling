@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -22,7 +21,6 @@ class BehandlingsResultatMottakTest {
     private val søknadId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
     private val behandlingIdUtenOppgave = UUID.randomUUID()
-    private val utsendingSak = UtsendingSak("12342", "Arena")
     private val opprettet = LocalDateTime.parse("2024-02-27T10:41:52.800935377")
     private val person =
         Person(
@@ -68,7 +66,7 @@ class BehandlingsResultatMottakTest {
                     behandletHendelseType = "Søknad",
                     ident = testIdent,
                     automatiskBehandlet = true,
-                    sak = utsendingSak,
+                    sak = null,
                 ),
             )
         }
@@ -85,7 +83,7 @@ class BehandlingsResultatMottakTest {
                     behandletHendelseType = "Søknad",
                     ident = testIdent,
                     automatiskBehandlet = false,
-                    sak = utsendingSak,
+                    sak = null,
                 ),
             )
         }
@@ -102,7 +100,7 @@ class BehandlingsResultatMottakTest {
                     behandletHendelseType = "Meldekort",
                     ident = testIdent,
                     automatiskBehandlet = true,
-                    sak = utsendingSak,
+                    sak = null,
                 ),
             )
         }
@@ -119,7 +117,7 @@ class BehandlingsResultatMottakTest {
                     behandletHendelseType = "Manuell",
                     ident = testIdent,
                     automatiskBehandlet = true,
-                    sak = utsendingSak,
+                    sak = null,
                 ),
             )
         }
@@ -151,26 +149,7 @@ class BehandlingsResultatMottakTest {
                 "type": "$behandletHendelseType"
               },
               "automatisk": $automatisk,
-              "opplysninger": [
-                {
-                  "opplysningTypeId": "0194881f-9462-78af-8977-46092bb030eb",
-                  "navn": "fagsakId",
-                  "perioder": [
-                    {
-                      "id": "01992e40-e7ad-7d83-8733-e4fc7a0f1cd8",
-                      "opprettet": "2025-09-09T13:33:49.61359",
-                      "status": "Ny",
-                      "verdi": {
-                        "verdi": ${utsendingSak.id},
-                        "datatype": "heltall"
-                      },
-                      "kilde": {
-                        "type": "System",
-                        "registrert": "2025-09-09T13:33:49.613585",
-                        "meldingId": "eff2e3d2-d956-419c-96e1-0e3da0105ded"
-                      }
-                    }
-                  ]
+              "opplysninger": [ ]
                 }
               ]
             }

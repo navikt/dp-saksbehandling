@@ -9,11 +9,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 
 private val logger = KotlinLogging.logger {}
-private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class BehandlingsResultatMottak(
     rapidsConnection: RapidsConnection,
@@ -29,8 +27,6 @@ internal class BehandlingsResultatMottak(
                 it.requireKey("ident", "behandlingId", "behandletHendelse", "automatisk", "opplysninger")
             }
         }
-
-        const val FAGSAK_OPPLYSNING_TYPE_ID = "0194881f-9462-78af-8977-46092bb030eb"
     }
 
     init {
@@ -50,14 +46,6 @@ internal class BehandlingsResultatMottak(
         withLoggingContext("behandletHendelseId" to "$behandletHendelseId", "behandlingId" to "$behandlingId") {
             logger.info { "Mottok behandlingsresultat hendelse" }
 
-            val sak =
-                packet.sak().onFailure {
-                    logger.error(it) {
-                        "Kunne ikke finne fagsakId for behandlingId=$behandlingId. Sjekke sikkerlogg for pakke prosessert"
-                    }
-                    sikkerlogger.error(it) { "Kunne ikke finne fagsakId for behandlingsResultat:${packet.toJson()}" }
-                }.getOrThrow()
-
             oppgaveMediator.hentOppgaveIdFor(behandlingId)?.let {
                 oppgaveMediator.ferdigstillOppgave(
                     VedtakFattetHendelse(
@@ -65,28 +53,10 @@ internal class BehandlingsResultatMottak(
                         behandletHendelseId = behandletHendelseId,
                         behandletHendelseType = packet["behandletHendelse"]["type"].asText(),
                         ident = packet["ident"].asText(),
-                        sak = sak,
+                        sak = null,
                         automatiskBehandlet = packet["automatisk"].asBoolean(),
                     ),
                 )
-            }
-        }
-    }
-
-    // ugh...
-    // todo: Sjekk denne
-    private fun JsonMessage.sak(): Result<UtsendingSak> {
-        return runCatching {
-            this["opplysninger"].single {
-                it["opplysningTypeId"].asText() == FAGSAK_OPPLYSNING_TYPE_ID
-            }.let { opplysning ->
-                opplysning["perioder"].single {
-                    it["status"].asText() == "Ny"
-                }.let { periode ->
-                    UtsendingSak(
-                        id = periode["verdi"]["verdi"].asText(),
-                    )
-                }
             }
         }
     }

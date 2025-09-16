@@ -141,7 +141,7 @@ class HendelseJsonSerDerTest {
                 "behandletHendelseType": "${vedtakFattetHendelse.behandletHendelseType}",
                 "ident": "${vedtakFattetHendelse.ident}",
                 "sak": {
-                    "id": "${vedtakFattetHendelse.sak.id}",
+                    "id": "${vedtakFattetHendelse.sak!!.id}",
                     "kontekst": "Arena"
                 },
                 "automatiskBehandlet": ${vedtakFattetHendelse.automatiskBehandlet},

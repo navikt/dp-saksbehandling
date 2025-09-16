@@ -92,11 +92,8 @@ class UtsendingMediator(
     }
 
     fun startUtsendingForVedtakFattet(vedtakFattetHendelse: VedtakFattetHendelse) {
-        val skipSet = setOf("01992e62-dd11-72b9-99da-10ba398db202", "01984f7f-1f91-7dbc-8ba4-60018e8cba40")
-        if (vedtakFattetHendelse.behandlingId.toString() in skipSet) {
-            logger.info { "Skipper behandlingId: ${vedtakFattetHendelse.behandlingId} fra startUtsendingForVedtakFattet" }
-            return
-        }
+        val sak = vedtakFattetHendelse.sak
+        require(sak != null) { "VedtakFattetHendelse må ha en sak" }
         utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
             ?.let { utsending ->
                 // TODO: Fjern sjekk på tilstand
@@ -109,14 +106,14 @@ class UtsendingMediator(
                             brevProdusent.lagBrev(
                                 ident = vedtakFattetHendelse.ident,
                                 behandlingId = vedtakFattetHendelse.behandlingId,
-                                sakId = vedtakFattetHendelse.sak.id,
+                                sakId = sak.id,
                             )
                         }
 
                     utsending.startUtsending(
                         startUtsendingHendelse =
                             StartUtsendingHendelse(
-                                utsendingSak = vedtakFattetHendelse.sak,
+                                utsendingSak = sak,
                                 behandlingId = vedtakFattetHendelse.behandlingId,
                                 ident = vedtakFattetHendelse.ident,
                                 brev = brev,
@@ -128,7 +125,7 @@ class UtsendingMediator(
                 } else {
                     logger.warn {
                         "Start utsending ble kalt for behandlingId=${vedtakFattetHendelse.behandlingId}, " +
-                            "sakId=${vedtakFattetHendelse.sak.id}, sakKontekst=${vedtakFattetHendelse.sak.kontekst}.  " +
+                            "sakId=${sak.id}, sakKontekst=${sak.kontekst}.  " +
                             "Brev er allerede produsert, så gjør ingenting."
                     }
                 }

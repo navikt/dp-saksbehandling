@@ -106,11 +106,14 @@ class SakMediator(
     }
 
     fun oppdaterSakMedArenaSakId(vedtakFattetHendelse: VedtakFattetHendelse) {
-        if (vedtakFattetHendelse.sak.kontekst == "Arena") {
+        val sak = vedtakFattetHendelse.sak
+        require(sak != null) { "VedtakFattetHendelse må ha en sak" }
+
+        if (sak.kontekst == "Arena") {
             sakRepository.hentSakIdForBehandlingId(vedtakFattetHendelse.behandlingId).let { sakId ->
                 sakRepository.settArenaSakId(
                     sakId = sakId,
-                    arenaSakId = vedtakFattetHendelse.sak.id,
+                    arenaSakId = sak.id,
                 )
             }
         }
