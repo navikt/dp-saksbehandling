@@ -31,4 +31,5 @@ enum class BehandlingType {
     KLAGE,
     SØKNAD,
     MELDEKORT,
+    MANUELL,
 }

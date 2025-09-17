@@ -50,11 +50,12 @@ class MeldingOmVedtakKlient(
         behandlingType: BehandlingType = BehandlingType.SØKNAD,
         sakId: String? = null,
     ): Result<String> {
-        val behandlingsTypeString =
+        val behandlingTypeString =
             when (behandlingType) {
                 BehandlingType.KLAGE -> "KLAGE"
                 BehandlingType.SØKNAD -> "RETT_TIL_DAGPENGER"
                 BehandlingType.MELDEKORT -> "MELDEKORT"
+                BehandlingType.MANUELL -> "MANUELL"
             }
 
         val meldingOmVedtakDataDTO =
@@ -64,7 +65,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingstype = behandlingsTypeString,
+                behandlingstype = behandlingTypeString,
                 sakId = sakId,
             )
         return kotlin.runCatching {

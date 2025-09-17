@@ -1098,6 +1098,7 @@ components:
         - KLAGE
         - MELDEKORT
         - SØKNAD
+        - MANUELL
 
     LovligeEndringer:
       type: object

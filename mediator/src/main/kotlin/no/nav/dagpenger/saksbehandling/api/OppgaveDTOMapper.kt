@@ -68,6 +68,7 @@ internal class OppgaveDTOMapper(
                                             BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
                                             BehandlingType.SØKNAD -> BehandlingTypeDTO.SØKNAD
                                             BehandlingType.MELDEKORT -> BehandlingTypeDTO.MELDEKORT
+                                            BehandlingType.MANUELL -> BehandlingTypeDTO.MANUELL
                                         },
                                     opprettet = behandling.opprettet,
                                     oppgaveId = behandling.oppgaveId,
@@ -286,5 +287,6 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
         BehandlingType.SØKNAD -> BehandlingTypeDTO.SØKNAD
         BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
         BehandlingType.MELDEKORT -> BehandlingTypeDTO.MELDEKORT
+        BehandlingType.MANUELL -> BehandlingTypeDTO.MANUELL
     }
 }

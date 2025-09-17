@@ -11,6 +11,7 @@ import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
@@ -230,12 +231,14 @@ internal object OppgaveApiTestHelper {
                 skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
                 adressebeskyttelseGradering = UGRADERT,
             ),
+        behandlingType: BehandlingType = BehandlingType.SØKNAD,
     ): Oppgave {
         val behandling =
             Behandling(
                 behandlingId = behandlingId,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
+                type = behandlingType,
             )
         return lagTestOppgaveMedTilstandOgBehandling(
             tilstand = tilstand,

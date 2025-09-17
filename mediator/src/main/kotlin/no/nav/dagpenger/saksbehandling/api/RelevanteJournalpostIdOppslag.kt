@@ -32,6 +32,7 @@ class RelevanteJournalpostIdOppslag(
                 }
 
             BehandlingType.MELDEKORT -> return emptySet()
+            BehandlingType.MANUELL -> return emptySet()
         }
     }
 

@@ -57,14 +57,13 @@ data class Sak(
     }
 
     fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
-        val forrigeBehandling: Behandling? =
-            this.behandlinger.find { it.behandlingId == manuellBehandlingOpprettetHendelse.basertPåBehandling }
-
-        if (forrigeBehandling != null) {
+        if (this.behandlinger.map { it.behandlingId }
+                .contains(manuellBehandlingOpprettetHendelse.basertPåBehandling)
+        ) {
             behandlinger.add(
                 Behandling(
                     behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
-                    type = forrigeBehandling.type,
+                    type = BehandlingType.MANUELL,
                     opprettet = manuellBehandlingOpprettetHendelse.opprettet,
                     hendelse = manuellBehandlingOpprettetHendelse,
                 ),
