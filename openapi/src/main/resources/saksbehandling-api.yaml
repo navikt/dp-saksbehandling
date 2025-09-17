@@ -349,6 +349,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvbrytOppgave'
       responses:
         '204':
           description: Oppgaven er avbrutt
