@@ -34,7 +34,7 @@ fun lagOppgave(
     adressebeskyttelseGradering: AdressebeskyttelseGradering = UGRADERT,
     person: Person = lagPerson(addresseBeskyttelseGradering = adressebeskyttelseGradering, skjermesSomEgneAnsatte = skjermesSomEgneAnsatte),
     behandlingId: UUID = UUIDv7.ny(),
-    behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+    behandlingType: BehandlingType = BehandlingType.SØKNAD,
     emneknagger: Set<String> = emptySet(),
     utsattTil: LocalDate? = null,
     tilstandslogg: Tilstandslogg = Tilstandslogg(),
@@ -63,7 +63,7 @@ fun lagBehandling(
     behandlingId: UUID = UUIDv7.ny(),
     opprettet: LocalDateTime = opprettetNå,
     hendelse: Hendelse = TomHendelse,
-    type: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+    type: BehandlingType = BehandlingType.SØKNAD,
 ): Behandling {
     return Behandling(
         behandlingId = behandlingId,

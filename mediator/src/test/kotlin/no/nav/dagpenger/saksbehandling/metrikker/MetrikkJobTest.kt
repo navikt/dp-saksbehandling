@@ -2,7 +2,7 @@ package no.nav.dagpenger.saksbehandling.metrikker
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
-import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
+import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -25,14 +25,14 @@ import org.junit.jupiter.api.Test
 
 class MetrikkJobTest {
     val person = lagPerson()
-    val behandling1 = lagBehandling(type = RETT_TIL_DAGPENGER)
-    val behandling2 = lagBehandling(type = RETT_TIL_DAGPENGER)
+    val behandling1 = lagBehandling(type = SØKNAD)
+    val behandling2 = lagBehandling(type = SØKNAD)
     val behandling3 = lagBehandling(type = KLAGE)
     val behandling4 = lagBehandling(type = KLAGE)
-    val behandling5 = lagBehandling(type = RETT_TIL_DAGPENGER)
-    val behandling6 = lagBehandling(type = RETT_TIL_DAGPENGER)
-    val behandling7 = lagBehandling(type = RETT_TIL_DAGPENGER)
-    val behandling8 = lagBehandling(type = RETT_TIL_DAGPENGER)
+    val behandling5 = lagBehandling(type = SØKNAD)
+    val behandling6 = lagBehandling(type = SØKNAD)
+    val behandling7 = lagBehandling(type = SØKNAD)
+    val behandling8 = lagBehandling(type = SØKNAD)
 
     @Test
     fun `Hent riktig distribusjon av oppgavetilstand`() {

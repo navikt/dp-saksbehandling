@@ -35,7 +35,7 @@ class HendelseJsonSerDerTest {
             ident = "1234",
             sakId = uuid,
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
-            type = BehandlingType.RETT_TIL_DAGPENGER,
+            type = BehandlingType.SØKNAD,
             utførtAv = utførtAv,
         )
     }
@@ -63,7 +63,7 @@ class HendelseJsonSerDerTest {
                 "ident": "1234",
                 "sakId": "${hendelse.sakId}",
                 "opprettet": "-999999999-01-01T00:00:00",
-                "type": "RETT_TIL_DAGPENGER",
+                "type": "SØKNAD",
                 "utførtAv": { "navn": "dp-mottak" }
              }
             """
@@ -86,7 +86,7 @@ class HendelseJsonSerDerTest {
                 "behandlingId": "$aUUID",
                 "ident": "1234",
                 "opprettet": "-999999999-01-01T00:00:00",
-                "type": "RETT_TIL_DAGPENGER",
+                "type": "SØKNAD",
                 "sakId": "$aUUID",
                 "utførtAv": {
                   "navIdent": "navIdent",

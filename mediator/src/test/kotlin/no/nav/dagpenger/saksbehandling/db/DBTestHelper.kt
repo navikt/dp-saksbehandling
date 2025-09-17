@@ -3,7 +3,7 @@ package no.nav.dagpenger.saksbehandling.db
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
+import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Person
@@ -84,7 +84,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandling: Behandling =
                     Behandling(
                         behandlingId = UUIDv7.ny(),
-                        type = RETT_TIL_DAGPENGER,
+                        type = SØKNAD,
                         opprettet = LocalDateTime.now(),
                         hendelse = TomHendelse,
                     ),
@@ -146,7 +146,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             emneknagger: Set<String> = emptySet(),
             person: Person = testPerson,
             opprettet: LocalDateTime = LocalDateTime.now(),
-            type: BehandlingType = RETT_TIL_DAGPENGER,
+            type: BehandlingType = SØKNAD,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
             saksbehandlerIdent: String? = null,
         ): Oppgave {
@@ -194,7 +194,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
         fun leggTilOppgave(
             oppgaveId: UUID,
             behandlingId: UUID,
-            behandlingType: BehandlingType = RETT_TIL_DAGPENGER,
+            behandlingType: BehandlingType = SØKNAD,
             person: Person = testPerson,
         ) {
             Oppgave(

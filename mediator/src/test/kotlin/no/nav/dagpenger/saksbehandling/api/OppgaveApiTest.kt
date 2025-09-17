@@ -635,7 +635,7 @@ class OppgaveApiTest {
                     """
                     {
                       "nyTilstand" : "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
-                      "behandlingType" : "RETT_TIL_DAGPENGER"
+                      "behandlingType" : "SØKNAD"
                     }
                     """.trimIndent()
             }

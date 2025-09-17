@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
-import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
+import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
@@ -26,8 +26,8 @@ import java.time.LocalDate
 class OppgaveFristUtgåttJobTest {
     @Test
     fun `Sett utgåtte oppgaver klare igjen`() {
-        val behandling1 = lagBehandling(type = RETT_TIL_DAGPENGER)
-        val behandling2 = lagBehandling(type = RETT_TIL_DAGPENGER)
+        val behandling1 = lagBehandling(type = SØKNAD)
+        val behandling2 = lagBehandling(type = SØKNAD)
         val behandling3 = lagBehandling(type = KLAGE)
         val behandling4 = lagBehandling(type = KLAGE)
         DBTestHelper.withBehandlinger(

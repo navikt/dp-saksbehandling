@@ -47,7 +47,7 @@ class SakMediator(
                 it.leggTilBehandling(
                     Behandling(
                         behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        type = BehandlingType.RETT_TIL_DAGPENGER,
+                        type = BehandlingType.SØKNAD,
                         opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelse,
                     ),

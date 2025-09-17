@@ -5,7 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
+import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
@@ -34,7 +34,7 @@ class BehandlingsResultatMottakTest {
             oppgaveId = UUIDv7.ny(),
             opprettet = opprettet,
             behandlingId = behandlingId,
-            behandlingType = RETT_TIL_DAGPENGER,
+            behandlingType = SØKNAD,
             person = person,
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(

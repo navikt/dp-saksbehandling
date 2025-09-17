@@ -1,4 +1,5 @@
 package no.nav.dagpenger.saksbehandling.vedtaksmelding
+
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -46,9 +47,16 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         saksbehandlerToken: String,
-        behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+        behandlingType: BehandlingType = BehandlingType.SØKNAD,
         sakId: String? = null,
     ): Result<String> {
+        val behandlingsTypeString =
+            when (behandlingType) {
+                BehandlingType.KLAGE -> "KLAGE"
+                BehandlingType.SØKNAD -> "RETT_TIL_DAGPENGER"
+                BehandlingType.MELDEKORT -> "MELDEKORT"
+            }
+
         val meldingOmVedtakDataDTO =
             MeldingOmVedtakDataDTO(
                 fornavn = person.fornavn,
@@ -56,7 +64,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingstype = behandlingType.name,
+                behandlingstype = behandlingsTypeString,
                 sakId = sakId,
             )
         return kotlin.runCatching {
@@ -77,7 +85,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         maskinToken: String,
-        behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+        behandlingType: BehandlingType = BehandlingType.SØKNAD,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =

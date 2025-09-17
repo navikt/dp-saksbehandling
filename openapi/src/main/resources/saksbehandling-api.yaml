@@ -1095,9 +1095,9 @@ components:
     BehandlingType:
       type: string
       enum:
-        - RETT_TIL_DAGPENGER
         - KLAGE
         - MELDEKORT
+        - SØKNAD
 
     LovligeEndringer:
       type: object

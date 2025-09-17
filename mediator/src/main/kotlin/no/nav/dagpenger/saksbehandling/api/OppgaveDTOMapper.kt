@@ -66,7 +66,7 @@ internal class OppgaveDTOMapper(
                                     behandlingType =
                                         when (behandling.type) {
                                             BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
-                                            BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                            BehandlingType.SØKNAD -> BehandlingTypeDTO.SØKNAD
                                             BehandlingType.MELDEKORT -> BehandlingTypeDTO.MELDEKORT
                                         },
                                     opprettet = behandling.opprettet,
@@ -283,7 +283,7 @@ internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
 
 internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
     return when (this.behandlingType) {
-        BehandlingType.RETT_TIL_DAGPENGER -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        BehandlingType.SØKNAD -> BehandlingTypeDTO.SØKNAD
         BehandlingType.KLAGE -> BehandlingTypeDTO.KLAGE
         BehandlingType.MELDEKORT -> BehandlingTypeDTO.MELDEKORT
     }

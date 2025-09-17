@@ -23,7 +23,7 @@ class RelevanteJournalpostIdOppslag(
                 (setOf(journalpostIderKlage) + journalpostMeldingOmVedtak).filterNotNull().toSet()
             }
 
-            BehandlingType.RETT_TIL_DAGPENGER ->
+            BehandlingType.SØKNAD ->
                 return coroutineScope {
                     val journalpostIderSøknad = async { journalpostIdKlient.hentJournalPostIder(oppgave) }
                     val journalpostMeldingOmVedtak =

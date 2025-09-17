@@ -1182,7 +1182,7 @@ OppgaveMediatorTest {
                             ident = hendelse.ident,
                             sakId = sak.sakId,
                             opprettet = hendelse.opprettet,
-                            type = BehandlingType.RETT_TIL_DAGPENGER,
+                            type = BehandlingType.SØKNAD,
                         ),
                 )
             }
