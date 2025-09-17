@@ -17,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
 internal class BehandlingOpprettetMottak(
     rapidsConnection: RapidsConnection,
@@ -128,6 +129,11 @@ internal class BehandlingOpprettetMottak(
                         logger.warn { "Mottok behandling_opprettet av type manuell, uten 'basertPåBehandling'. Opprettes ikke!" }
                     }
                 }
+            }
+
+            else -> {
+                logger.error { "Mottok behandling opprettet for ukjent hendelsetype. Se sikker logg for detaljer." }
+                sikkerlogger.error { "Mottok behandling opprettet for ukjent hendelsetype. ${packet.toJson()}" }
             }
         }
     }
