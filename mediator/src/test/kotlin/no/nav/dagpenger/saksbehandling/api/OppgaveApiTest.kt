@@ -137,6 +137,7 @@ class OppgaveApiTest {
                 Arguments.of("/oppgave/oppgaveId", HttpMethod.Get),
                 Arguments.of("/oppgave/oppgaveId/tildel", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/notat", HttpMethod.Put),
+                Arguments.of("/oppgave/oppgaveId/notat", HttpMethod.Delete),
                 Arguments.of("/oppgave/oppgaveId/utsett", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/legg-tilbake", HttpMethod.Put),
                 Arguments.of("/oppgave/oppgaveId/avbryt", HttpMethod.Put),
@@ -685,7 +686,6 @@ class OppgaveApiTest {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave = lagTestOppgaveMedTilstand(UNDER_BEHANDLING)
 
-        coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
         coEvery {
             oppgaveMediatorMock.fristillOppgave(
                 FjernOppgaveAnsvarHendelse(
@@ -726,7 +726,6 @@ class OppgaveApiTest {
                 årsak = AVVENT_RAPPORTERINGSFRIST,
             )
 
-        coEvery { oppgaveMediatorMock.hentOppgave(any(), any()) } returns testOppgave
         coEvery {
             oppgaveMediatorMock.utsettOppgave(utsettOppgaveHendelse)
         } just runs
@@ -768,7 +767,6 @@ class OppgaveApiTest {
             )
         val oppgaveMediatorMock =
             mockk<OppgaveMediator>().also {
-                every { it.hentOppgave(any(), any()) } returns oppgave
                 every {
                     it.avbryt(
                         avbrytOppgaveHendelse = avbrytOppgaveHendelse,
@@ -791,6 +789,58 @@ class OppgaveApiTest {
                 )
             }.let { response ->
                 response.status shouldBe HttpStatusCode.NoContent
+            }
+
+            coVerify(exactly = 1) {
+                oppgaveMediatorMock.avbryt(
+                    avbrytOppgaveHendelse = avbrytOppgaveHendelse,
+                    saksbehandlerToken = saksbehandlerToken,
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `Skal får 404 hvis man forsøker å avbryte en oppgave som ikke finnes`() {
+        val oppgave = lagTestOppgaveMedTilstand(tilstand = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler.navIdent)
+        val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = saksbehandler.navIdent)
+        val avbrytOppgaveHendelse =
+            AvbrytOppgaveHendelse(
+                oppgaveId = oppgave.oppgaveId,
+                årsak = AVBRUTT_ANNET,
+                navIdent = saksbehandler.navIdent,
+                utførtAv = saksbehandler,
+            )
+        val oppgaveMediatorMock =
+            mockk<OppgaveMediator>().also {
+                every {
+                    it.avbryt(
+                        avbrytOppgaveHendelse = avbrytOppgaveHendelse,
+                        saksbehandlerToken = saksbehandlerToken,
+                    )
+                } throws DataNotFoundException("Fant ikke oppgave med id ${oppgave.oppgaveId}")
+            }
+
+        withOppgaveApi(oppgaveMediatorMock) {
+            client.put("/oppgave/${oppgave.oppgaveId}/avbryt") {
+                autentisert(token = saksbehandlerToken)
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """
+                        {
+                          "aarsak": "ANNET"
+                        }
+                    """.trimMargin(),
+                )
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NotFound
+                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder """{
+                    "type" : "dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet",
+                    "title" : "Ressurs ikke funnet",
+                    "status" : 404,
+                    "detail" : "Fant ikke oppgave med id ${oppgave.oppgaveId}"
+                }"""
             }
 
             coVerify(exactly = 1) {
