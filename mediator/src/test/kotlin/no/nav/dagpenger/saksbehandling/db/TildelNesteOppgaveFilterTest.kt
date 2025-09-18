@@ -5,10 +5,10 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTROLIG_UTLAND
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.TildelNesteOppgaveFilter
 import org.junit.jupiter.api.Test
@@ -19,7 +19,7 @@ class TildelNesteOppgaveFilterTest {
         """emneknagg=knagg1&emneknagg=knagg2
         &fom=2021-01-01&tom=2023-01-01
         &tilstand=KLAR_TIL_KONTROLL&tilstand=UNDER_KONTROLL
-        &behandlingType=KLAGE
+        &utlostAv=KLAGE
         """.trimMargin()
 
     @Test
@@ -41,7 +41,7 @@ class TildelNesteOppgaveFilterTest {
                         tom = LocalDate.of(2023, 1, 1),
                     ),
                 tilstander = setOf(Type.KLAR_TIL_KONTROLL, Type.UNDER_KONTROLL),
-                behandlingTyper = setOf(BehandlingType.KLAGE),
+                utløstAvTyper = setOf(UtløstAvType.KLAGE),
                 emneknagger = setOf("knagg1", "knagg2"),
                 egneAnsatteTilgang = false,
                 adressebeskyttelseTilganger = setOf(UGRADERT),

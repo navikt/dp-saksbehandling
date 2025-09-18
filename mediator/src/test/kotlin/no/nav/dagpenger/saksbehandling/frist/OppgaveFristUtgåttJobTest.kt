@@ -6,8 +6,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
-import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Emneknagg.PåVent.TIDLIGERE_UTSATT
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.PåVent
@@ -15,6 +13,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.lagBehandling

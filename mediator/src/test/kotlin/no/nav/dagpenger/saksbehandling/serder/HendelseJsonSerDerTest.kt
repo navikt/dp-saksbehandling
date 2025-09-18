@@ -4,10 +4,10 @@ import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandler
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -35,7 +35,7 @@ class HendelseJsonSerDerTest {
             ident = "1234",
             sakId = uuid,
             opprettet = LocalDateTime.MIN.truncatedTo(ChronoUnit.HOURS),
-            type = BehandlingType.SØKNAD,
+            type = UtløstAvType.SØKNAD,
             utførtAv = utførtAv,
         )
     }

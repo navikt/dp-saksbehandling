@@ -32,14 +32,14 @@ paths:
             items:
               $ref: '#/components/schemas/OppgaveTilstand'
         - in: query
-          name: behandlingType
+          name: utlostAv
           required: false
           style: form
           explode: true
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/BehandlingType'
+              $ref: '#/components/schemas/UtlostAvType'
         - in: query
           name: fom
           required: false
@@ -956,8 +956,8 @@ components:
         id:
           type: string
           format: uuid
-        behandlingType:
-          $ref: '#/components/schemas/BehandlingType'
+        utlostAv:
+          $ref: '#/components/schemas/UtlostAvType'
         opprettet:
           type: string
           format: date-time
@@ -966,7 +966,7 @@ components:
           format: uuid
       required:
         - id
-        - behandlingType
+        - utlostAv
         - opprettet
 
     OppgaveOversiktResultat:
@@ -998,8 +998,8 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
-        behandlingType:
-          $ref: '#/components/schemas/BehandlingType'
+        utlostAv:
+          $ref: '#/components/schemas/UtlostAvType'
         emneknagger:
           type: array
           items:
@@ -1018,7 +1018,7 @@ components:
         - behandlingId
         - personIdent
         - tidspunktOpprettet
-        - behandlingType
+        - utlostAv
         - tilstand
         - emneknagger
         - adressebeskyttelseGradering
@@ -1042,8 +1042,8 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
-        behandlingType:
-          $ref: '#/components/schemas/BehandlingType'
+        utlostAv:
+          $ref: '#/components/schemas/UtlostAvType'
         utsattTilDato:
           type: string
           format: date
@@ -1077,7 +1077,7 @@ components:
         - behandlingId
         - person
         - tidspunktOpprettet
-        - behandlingType
+        - utlostAv
         - tilstand
         - emneknagger
         - lovligeEndringer
@@ -1134,7 +1134,7 @@ components:
         - AVVENTER_OPPLÅSING_AV_BEHANDLING
         - AVBRUTT
 
-    BehandlingType:
+    UtlostAvType:
       type: string
       enum:
         - KLAGE
@@ -1401,11 +1401,11 @@ components:
       properties:
         nyTilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
-        behandlingType:
-          $ref: '#/components/schemas/BehandlingType'
+        utlostAv:
+          $ref: '#/components/schemas/UtlostAvType'
       required:
         - nyTilstand
-        - behandlingType
+        - utlostAv
 
     Klage:
       type: object

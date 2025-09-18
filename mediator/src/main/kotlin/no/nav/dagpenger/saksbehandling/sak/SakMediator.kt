@@ -7,9 +7,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
@@ -47,7 +47,7 @@ class SakMediator(
                 it.leggTilBehandling(
                     Behandling(
                         behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                        type = BehandlingType.SØKNAD,
+                        utløstAvType = UtløstAvType.SØKNAD,
                         opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                         hendelse = søknadsbehandlingOpprettetHendelse,
                     ),

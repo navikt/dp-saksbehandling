@@ -636,7 +636,7 @@ class OppgaveApiTest {
                     """
                     {
                       "nyTilstand" : "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
-                      "behandlingType" : "SØKNAD"
+                      "utlostAv" : "SØKNAD"
                     }
                     """.trimIndent()
             }
@@ -902,7 +902,7 @@ class OppgaveApiTest {
                                     ),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
-                        behandlingType = testOppgave.tilBehandlingTypeDTO(),
+                        utlostAv = testOppgave.tilUtlostAvTypeDTO(),
                         emneknagger = testOppgave.emneknagger.toList(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =
@@ -1063,7 +1063,7 @@ class OppgaveApiTest {
                                 sikkerhetstiltak = emptyList(),
                             ),
                         tidspunktOpprettet = testOppgave.opprettet,
-                        behandlingType = testOppgave.tilBehandlingTypeDTO(),
+                        utlostAv = testOppgave.tilUtlostAvTypeDTO(),
                         emneknagger = testOppgave.emneknagger.toList(),
                         tilstand = testOppgave.tilstand().tilOppgaveTilstandDTO(),
                         saksbehandler =

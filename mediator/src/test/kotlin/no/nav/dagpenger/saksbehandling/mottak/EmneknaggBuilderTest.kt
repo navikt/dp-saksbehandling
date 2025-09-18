@@ -369,7 +369,7 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun `emneknagger for behandling resultat med behandlingtype meldekort`() {
+    fun `emneknagger for behandlingsresultat utløst av meldekort`() {
         val behandlingResultat =
             lagBehandlingResultat(
                 behandletHendelseType = "Meldekort",
@@ -387,7 +387,7 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun `emneknagger for behandling resultat med behandlingtype manuell`() {
+    fun `emneknagger for behandlingsresultat utløst av manuell behandling`() {
         val behandlingResultat =
             lagBehandlingResultat(
                 behandletHendelseType = "Manuell",

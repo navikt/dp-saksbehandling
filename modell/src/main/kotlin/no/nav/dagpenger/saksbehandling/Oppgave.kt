@@ -61,7 +61,7 @@ data class Oppgave private constructor(
     private var utsattTil: LocalDate? = null,
     private val _tilstandslogg: Tilstandslogg = Tilstandslogg(),
     val behandlingId: UUID,
-    val behandlingType: BehandlingType,
+    val utløstAvType: UtløstAvType,
     val person: Person,
     private var meldingOmVedtak: MeldingOmVedtak,
 ) {
@@ -73,7 +73,7 @@ data class Oppgave private constructor(
         behandlerIdent: String? = null,
         tilstandslogg: Tilstandslogg = Tilstandslogg(),
         behandlingId: UUID,
-        behandlingType: BehandlingType,
+        utløstAvType: UtløstAvType,
         person: Person,
         meldingOmVedtak: MeldingOmVedtak,
     ) : this(
@@ -84,7 +84,7 @@ data class Oppgave private constructor(
         tilstand = tilstand,
         _tilstandslogg = tilstandslogg,
         behandlingId = behandlingId,
-        behandlingType = behandlingType,
+        utløstAvType = utløstAvType,
         person = person,
         meldingOmVedtak = meldingOmVedtak,
     )
@@ -110,7 +110,7 @@ data class Oppgave private constructor(
             utsattTil: LocalDate?,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
             behandlingId: UUID,
-            behandlingType: BehandlingType,
+            utløstAvType: UtløstAvType,
             person: Person,
             meldingOmVedtak: MeldingOmVedtak,
         ): Oppgave =
@@ -123,7 +123,7 @@ data class Oppgave private constructor(
                 utsattTil = utsattTil,
                 _tilstandslogg = tilstandslogg,
                 behandlingId = behandlingId,
-                behandlingType = behandlingType,
+                utløstAvType = utløstAvType,
                 person = person,
                 meldingOmVedtak = meldingOmVedtak,
             )

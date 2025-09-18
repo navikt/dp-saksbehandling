@@ -117,7 +117,7 @@ class KlageMediatorTest {
                     beslutter = null,
                     behandlingId = any(),
                     saksbehandlerToken = any(),
-                    behandlingType = BehandlingType.KLAGE,
+                    utløstAvType = UtløstAvType.KLAGE,
                 )
             } returns Result.success(html)
         }

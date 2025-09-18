@@ -20,11 +20,11 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.defaultSaksbehandlerADGruppe
@@ -108,7 +108,7 @@ class KlageApiTest {
     fun `Skal kunne opprette en klage med maskintoken`() {
         val token = gyldigMaskinToken()
         val sakId = UUIDv7.ny()
-        val oppgave = lagOppgave(behandlingType = KLAGE, opprettet = dato)
+        val oppgave = lagOppgave(utløstAvType = KLAGE, opprettet = dato)
         val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
@@ -151,7 +151,7 @@ class KlageApiTest {
                        "behandlingId": "${oppgave.behandlingId}",
                        "personIdent": "$ident",
                        "tidspunktOpprettet": "2025-01-01T01:01:00",
-                       "behandlingType": "KLAGE"
+                       "utlostAv": "KLAGE"
                     }
                     """.trimIndent()
             }
@@ -173,7 +173,7 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
         val token = gyldigSaksbehandlerToken()
-        val oppgave = lagOppgave(behandlingType = KLAGE, opprettet = dato)
+        val oppgave = lagOppgave(utløstAvType = KLAGE, opprettet = dato)
         val ident = oppgave.personIdent()
         val sakId = UUIDv7.ny()
         val mediator =
@@ -218,7 +218,7 @@ class KlageApiTest {
                        "behandlingId": "${oppgave.behandlingId}",
                        "personIdent": "$ident",
                        "tidspunktOpprettet": "2025-01-01T01:01:00",
-                       "behandlingType": "KLAGE"
+                       "utlostAv": "KLAGE"
                     }
                     """.trimIndent()
             }

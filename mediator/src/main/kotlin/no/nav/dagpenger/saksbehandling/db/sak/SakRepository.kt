@@ -7,10 +7,10 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
@@ -88,7 +88,7 @@ class PostgresRepository(
                             sak.soknad_id AS sak_soknad_id,
                             sak.opprettet AS sak_opprettet,
                             beh.id AS behandling_id,
-                            beh.behandling_type AS behandling_type,
+                            beh.utlost_av AS utlost_av,
                             beh.opprettet AS behandling_opprettet,
                             opp.id AS oppgave_id,
                             hen.hendelse_type AS hendelse_type,
@@ -290,16 +290,16 @@ class PostgresRepository(
                 statement =
                     """
                     INSERT INTO behandling_v1
-                        (id, person_id, behandling_type, sak_id, opprettet) 
+                        (id, person_id, utlost_av, sak_id, opprettet) 
                     VALUES
-                        (:id, :person_id, :behandling_type, :sak_id, :opprettet) 
+                        (:id, :person_id, :utlost_av, :sak_id, :opprettet) 
                     ON CONFLICT (id) DO NOTHING 
                     """.trimIndent(),
                 paramMap =
                     mapOf(
                         "id" to behandling.behandlingId,
                         "person_id" to personId,
-                        "behandling_type" to behandling.type.name,
+                        "utlost_av" to behandling.utløstAvType.name,
                         "sak_id" to sakId,
                         "opprettet" to behandling.opprettet,
                     ),
@@ -345,7 +345,7 @@ class PostgresRepository(
                 sak.leggTilBehandling(
                     Behandling(
                         behandlingId = behandlingId,
-                        type = BehandlingType.valueOf(this.string("behandling_type")),
+                        utløstAvType = UtløstAvType.valueOf(this.string("utlost_av")),
                         opprettet = this.localDateTime("behandling_opprettet"),
                         oppgaveId = this.uuidOrNull("oppgave_id"),
                         hendelse = this.rehydrerHendelse(),

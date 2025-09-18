@@ -10,8 +10,6 @@ import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.STRENGT_FORTR
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
-import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_MINSTEINNTEKT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Oppgave
@@ -40,6 +38,8 @@ import no.nav.dagpenger.saksbehandling.TilgangType.STRENGT_FORTROLIG_ADRESSE_UTL
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
@@ -92,7 +92,7 @@ class PostgresOppgaveRepositoryTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                type = SØKNAD,
+                utløstAvType = SØKNAD,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -224,7 +224,7 @@ class PostgresOppgaveRepositoryTest {
                     opprettet = opprettetNå,
                     behandlingId = klageBehandling.behandlingId,
                     person = testPerson,
-                    behandlingType = KLAGE,
+                    utløstAvType = KLAGE,
                 ).also { repo.lagre(it) }
 
             val nesteOppgave =
@@ -238,7 +238,7 @@ class PostgresOppgaveRepositoryTest {
                         TildelNesteOppgaveFilter(
                             periode = UBEGRENSET_PERIODE,
                             emneknagger = emptySet(),
-                            behandlingTyper = setOf(KLAGE),
+                            utløstAvTyper = setOf(KLAGE),
                             egneAnsatteTilgang = false,
                             adressebeskyttelseTilganger = setOf(UGRADERT),
                             navIdent = saksbehandler.navIdent,
@@ -1227,7 +1227,7 @@ class PostgresOppgaveRepositoryTest {
     }
 
     @Test
-    fun `Skal kunne søke etter oppgaver filtrert på behandlingstype`() {
+    fun `Skal kunne søke etter oppgaver filtrert på type utløsende hendelse`() {
         DBTestHelper.withMigratedDb { ds ->
             this.leggTilOppgave(tilstand = KlarTilBehandling, type = SØKNAD, opprettet = opprettetNå)
             val klageOppgave = this.leggTilOppgave(tilstand = KlarTilBehandling, type = KLAGE, opprettet = opprettetNå)
@@ -1239,7 +1239,7 @@ class PostgresOppgaveRepositoryTest {
                         tilstander = Oppgave.Tilstand.Type.entries.toSet(),
                         periode = UBEGRENSET_PERIODE,
                         emneknagger = emptySet(),
-                        behandlingTyper = setOf(KLAGE),
+                        utløstAvTyper = setOf(KLAGE),
                     ),
             ).oppgaver shouldBe listOf(klageOppgave)
         }
@@ -1296,7 +1296,7 @@ class PostgresOppgaveRepositoryTest {
                 behandlingId = hendelse.behandlingId,
                 opprettet = hendelse.opprettet,
                 hendelse = hendelse,
-                type = SØKNAD,
+                utløstAvType = SØKNAD,
             )
 
         DBTestHelper.withBehandling(
@@ -1334,7 +1334,7 @@ class PostgresOppgaveRepositoryTest {
     fun `Skal hente oppgaveId fra behandlingId`() {
         val behandlingId = UUIDv7.ny()
         val behandling = lagBehandling(behandlingId = behandlingId)
-        val oppgave = lagOppgave(behandlingId = behandlingId, behandlingType = SØKNAD)
+        val oppgave = lagOppgave(behandlingId = behandlingId, utløstAvType = SØKNAD)
 
         DBTestHelper.withBehandling(behandling = behandling) { ds ->
             val repo = PostgresOppgaveRepository(ds)

@@ -11,7 +11,6 @@ import io.mockk.mockk
 import no.nav.dagpenger.pdl.PDLPerson
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
@@ -41,6 +40,7 @@ import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -170,7 +170,7 @@ internal object OppgaveApiTestHelper {
                 },
             utsattTil = utsattTil,
             behandlingId = behandling.behandlingId,
-            behandlingType = behandling.type,
+            utløstAvType = behandling.utløstAvType,
             person = person,
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(
@@ -231,14 +231,14 @@ internal object OppgaveApiTestHelper {
                 skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
                 adressebeskyttelseGradering = UGRADERT,
             ),
-        behandlingType: BehandlingType = BehandlingType.SØKNAD,
+        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
     ): Oppgave {
         val behandling =
             Behandling(
                 behandlingId = behandlingId,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
-                type = behandlingType,
+                utløstAvType = utløstAvType,
             )
         return lagTestOppgaveMedTilstandOgBehandling(
             tilstand = tilstand,

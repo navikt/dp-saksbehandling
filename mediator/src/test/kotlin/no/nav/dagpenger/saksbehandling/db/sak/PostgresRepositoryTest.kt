@@ -3,11 +3,11 @@ package no.nav.dagpenger.saksbehandling.db.sak
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
@@ -28,7 +28,7 @@ class PostgresRepositoryTest {
     private val behandling1 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            type = BehandlingType.SØKNAD,
+            utløstAvType = UtløstAvType.SØKNAD,
             opprettet = nå,
             oppgaveId = oppgaveId,
             hendelse = TomHendelse,
@@ -36,21 +36,21 @@ class PostgresRepositoryTest {
     private val behandling2 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            type = BehandlingType.SØKNAD,
+            utløstAvType = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling3 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            type = BehandlingType.SØKNAD,
+            utløstAvType = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling4 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            type = BehandlingType.SØKNAD,
+            utløstAvType = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )

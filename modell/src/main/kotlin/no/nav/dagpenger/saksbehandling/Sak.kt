@@ -27,7 +27,7 @@ data class Sak(
             behandlinger.add(
                 Behandling(
                     behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                    type = BehandlingType.SØKNAD,
+                    utløstAvType = UtløstAvType.SØKNAD,
                     opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                     hendelse = søknadsbehandlingOpprettetHendelse,
                 ),
@@ -48,7 +48,7 @@ data class Sak(
             behandlinger.add(
                 Behandling(
                     behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
-                    type = BehandlingType.MELDEKORT,
+                    utløstAvType = UtløstAvType.MELDEKORT,
                     opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
                     hendelse = meldekortbehandlingOpprettetHendelse,
                 ),
@@ -63,7 +63,7 @@ data class Sak(
             behandlinger.add(
                 Behandling(
                     behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
-                    type = BehandlingType.MANUELL,
+                    utløstAvType = UtløstAvType.MANUELL,
                     opprettet = manuellBehandlingOpprettetHendelse.opprettet,
                     hendelse = manuellBehandlingOpprettetHendelse,
                 ),
@@ -75,7 +75,7 @@ data class Sak(
         behandlinger.add(
             Behandling(
                 behandlingId = behandlingOpprettetHendelse.behandlingId,
-                type = behandlingOpprettetHendelse.type,
+                utløstAvType = behandlingOpprettetHendelse.type,
                 opprettet = behandlingOpprettetHendelse.opprettet,
                 hendelse = behandlingOpprettetHendelse,
             ),

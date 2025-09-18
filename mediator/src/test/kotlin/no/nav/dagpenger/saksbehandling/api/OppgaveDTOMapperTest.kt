@@ -4,9 +4,9 @@ import io.kotest.assertions.json.shouldEqualJson
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
@@ -132,7 +132,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
-                      "behandlingType": "SØKNAD",
+                      "utlostAv": "SØKNAD",
                       "emneknagger": [],
                       "tilstand": "UNDER_KONTROLL",
                       "lovligeEndringer": {
@@ -277,7 +277,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
-                      "behandlingType": "SØKNAD",
+                      "utlostAv": "SØKNAD",
                       "emneknagger": [],
                       "tilstand": "UNDER_BEHANDLING",
                       "lovligeEndringer": {
@@ -351,7 +351,7 @@ class OppgaveDTOMapperTest {
                     tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
                     oprettet = etTidspunkt,
                     behandlingId = behandlingId,
-                    behandlingType = BehandlingType.MANUELL,
+                    utløstAvType = UtløstAvType.MANUELL,
                 )
             OppgaveDTOMapper(
                 oppslag =
@@ -436,7 +436,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
-                      "behandlingType": "MANUELL",
+                      "utlostAv": "MANUELL",
                       "emneknagger": [],
                       "tilstand": "UNDER_BEHANDLING",
                       "lovligeEndringer": {
@@ -510,7 +510,7 @@ class OppgaveDTOMapperTest {
                     tilstand = Oppgave.Tilstand.Type.UNDER_BEHANDLING,
                     oprettet = etTidspunkt,
                     behandlingId = behandlingId,
-                    behandlingType = BehandlingType.MELDEKORT,
+                    utløstAvType = UtløstAvType.MELDEKORT,
                 )
             OppgaveDTOMapper(
                 oppslag =
@@ -595,7 +595,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
-                      "behandlingType": "MELDEKORT",
+                      "utlostAv": "MELDEKORT",
                       "emneknagger": [],
                       "tilstand": "UNDER_BEHANDLING",
                       "lovligeEndringer": {

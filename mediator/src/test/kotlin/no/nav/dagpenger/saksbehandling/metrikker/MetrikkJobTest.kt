@@ -1,8 +1,6 @@
 package no.nav.dagpenger.saksbehandling.metrikker
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
-import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerLåsAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.AvventerOpplåsingAvBehandling
 import no.nav.dagpenger.saksbehandling.Oppgave.KlarTilBehandling
@@ -13,6 +11,8 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.lagBehandling

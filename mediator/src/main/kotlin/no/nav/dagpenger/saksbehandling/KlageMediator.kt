@@ -91,7 +91,7 @@ class KlageMediator(
                 ident = klageMottattHendelse.ident,
                 sakId = klageMottattHendelse.sakId,
                 opprettet = klageMottattHendelse.opprettet,
-                type = BehandlingType.KLAGE,
+                type = UtløstAvType.KLAGE,
                 utførtAv = klageMottattHendelse.utførtAv,
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
@@ -130,7 +130,7 @@ class KlageMediator(
                 ident = manuellKlageMottattHendelse.ident,
                 sakId = manuellKlageMottattHendelse.sakId,
                 opprettet = manuellKlageMottattHendelse.opprettet,
-                type = BehandlingType.KLAGE,
+                type = UtløstAvType.KLAGE,
                 utførtAv = utførtAv,
             )
         sakMediator.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
@@ -212,7 +212,7 @@ class KlageMediator(
                         beslutter = null,
                         behandlingId = oppgave.behandlingId,
                         saksbehandlerToken = saksbehandlerToken,
-                        behandlingType = BehandlingType.KLAGE,
+                        utløstAvType = UtløstAvType.KLAGE,
                     )
                 }
             val klageBehandling =
@@ -308,7 +308,7 @@ class KlageMediator(
     }
 
     // TODO : Vurder om man bør bruke AvbrytOppgaveHendelse og sette oppgave til Avbrutt i stedet for Ferdigbehandlet
-    // TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre behandlingstyper
+    // TODO: Alternativt bør AvbruttHendelse renames til AvbrytKlageHendelse, siden den ikke skal brukes på andre type behandlinger
 
     fun avbrytKlage(hendelse: AvbruttHendelse) {
         sjekkTilgangOgEierAvOppgave(

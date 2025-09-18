@@ -25,3 +25,6 @@ SET    behandling_type = 'SØKNAD'
 WHERE  behandling_type = 'RETT_TIL_DAGPENGER';
 
 ALTER TABLE behandling_v1 ENABLE TRIGGER oppdater_endret_tidspunkt;
+
+ALTER TABLE behandling_v1
+RENAME COLUMN behandling_type TO utlost_av;

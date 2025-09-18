@@ -5,12 +5,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -34,7 +34,7 @@ class BehandlingsResultatMottakTest {
             oppgaveId = UUIDv7.ny(),
             opprettet = opprettet,
             behandlingId = behandlingId,
-            behandlingType = SØKNAD,
+            utløstAvType = SØKNAD,
             person = person,
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(

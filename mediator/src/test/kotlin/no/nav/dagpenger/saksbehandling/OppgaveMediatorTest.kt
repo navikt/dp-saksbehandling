@@ -221,7 +221,7 @@ OppgaveMediatorTest {
                     sakId = UUIDv7.ny(),
                     ident = personUtenSakHistorikk,
                     opprettet = LocalDateTime.now(),
-                    type = BehandlingType.KLAGE,
+                    type = UtløstAvType.KLAGE,
                 ),
             )
         }
@@ -232,7 +232,7 @@ OppgaveMediatorTest {
                     sakId = UUIDv7.ny(),
                     ident = personUtenBehandling,
                     opprettet = LocalDateTime.now(),
-                    type = BehandlingType.KLAGE,
+                    type = UtløstAvType.KLAGE,
                 ),
             )
         }
@@ -431,7 +431,7 @@ OppgaveMediatorTest {
             lagOppgave(
                 tilstand = tilstand,
                 behandlingId = behandling.behandlingId,
-                behandlingType = behandling.type,
+                utløstAvType = behandling.utløstAvType,
                 person = person,
             )
 
@@ -1182,7 +1182,7 @@ OppgaveMediatorTest {
                             ident = hendelse.ident,
                             sakId = sak.sakId,
                             opprettet = hendelse.opprettet,
-                            type = BehandlingType.SØKNAD,
+                            type = UtløstAvType.SØKNAD,
                         ),
                 )
             }

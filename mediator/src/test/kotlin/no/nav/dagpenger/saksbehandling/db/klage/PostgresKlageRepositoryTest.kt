@@ -6,9 +6,9 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -75,7 +75,7 @@ class PostgresKlageRepositoryTest {
                         ident = testPerson.ident,
                         sakId = sak.sakId,
                         opprettet = LocalDateTime.now(),
-                        type = BehandlingType.KLAGE,
+                        type = UtløstAvType.KLAGE,
                     ),
             )
             val klageRepository = PostgresKlageRepository(datasource = ds)

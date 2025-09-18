@@ -4,9 +4,9 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
-import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.lagBehandling

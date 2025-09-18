@@ -47,7 +47,7 @@ internal class BehandlingOpprettetMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandlingType = packet["behandletHendelse"]["type"].asText()
+        val behandletHendelseType = packet["behandletHendelse"]["type"].asText()
         val behandlingId = packet["behandlingId"].asUUID()
         val ident = packet["ident"].asText()
         val opprettet = packet["@opprettet"].asLocalDateTime()
@@ -63,7 +63,7 @@ internal class BehandlingOpprettetMottak(
             logger.info { "Skipper behandlingId: $behandlingId" }
             return
         }
-        when (behandlingType) {
+        when (behandletHendelseType) {
             "Søknad" -> {
                 val søknadId = packet.søknadId()
                 withLoggingContext("søknadId" to "$søknadId", "behandlingId" to "$behandlingId") {

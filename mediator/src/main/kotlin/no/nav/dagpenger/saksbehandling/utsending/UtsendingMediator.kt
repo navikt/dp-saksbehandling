@@ -167,7 +167,7 @@ class UtsendingMediator(
                     beslutter = beslutter.await(),
                     behandlingId = behandlingId,
                     maskinToken = tokenProvider.invoke(),
-                    behandlingType = oppgave.behandlingType,
+                    utløstAvType = oppgave.utløstAvType,
                     sakId = sakId,
                 ).getOrThrow()
             }

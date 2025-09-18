@@ -1,6 +1,6 @@
 package no.nav.dagpenger.saksbehandling
 
-import no.nav.dagpenger.saksbehandling.BehandlingType.SØKNAD
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.hendelser.Hendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -9,7 +9,7 @@ data class Behandling(
     val behandlingId: UUID,
     val opprettet: LocalDateTime,
     val hendelse: Hendelse,
-    val type: BehandlingType = SØKNAD,
+    val utløstAvType: UtløstAvType = SØKNAD,
     val oppgaveId: UUID? = null,
 ) {
     companion object {
@@ -17,17 +17,17 @@ data class Behandling(
             behandlingId: UUID,
             opprettet: LocalDateTime,
             hendelse: Hendelse,
-            type: BehandlingType = SØKNAD,
+            utløstAvType: UtløstAvType = SØKNAD,
         ) = Behandling(
             behandlingId = behandlingId,
             opprettet = opprettet,
             hendelse = hendelse,
-            type = type,
+            utløstAvType = utløstAvType,
         )
     }
 }
 
-enum class BehandlingType {
+enum class UtløstAvType {
     KLAGE,
     SØKNAD,
     MELDEKORT,

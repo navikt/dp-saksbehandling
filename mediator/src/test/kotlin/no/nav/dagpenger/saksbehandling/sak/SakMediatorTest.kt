@@ -9,8 +9,8 @@ import io.mockk.mockk
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
@@ -106,7 +106,7 @@ class SakMediatorTest {
                     sak.søknadId shouldBe søknadId
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
-                    sak.behandlinger().single().type shouldBe BehandlingType.SØKNAD
+                    sak.behandlinger().single().utløstAvType shouldBe UtløstAvType.SØKNAD
                 }
             }
         }
@@ -170,7 +170,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdMeldekort
-                behandlinger.first().type shouldBe BehandlingType.MELDEKORT
+                behandlinger.first().utløstAvType shouldBe UtløstAvType.MELDEKORT
             }
         }
     }
@@ -195,7 +195,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdManuell
-                behandlinger.first().type shouldBe BehandlingType.MANUELL
+                behandlinger.first().utløstAvType shouldBe UtløstAvType.MANUELL
             }
         }
     }
