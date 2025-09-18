@@ -170,6 +170,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Notat kan ikke lagres på oppgaven i denne tilstanden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         default:
           description: Feil
           content:
@@ -194,6 +200,12 @@ paths:
                 $ref: '#/components/schemas/LagreNotatResponse'
         '404':
           description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Notat kan ikke slettes fra oppgaven i denne tilstanden
           content:
             application/problem+json:
               schema:
@@ -224,14 +236,20 @@ paths:
       responses:
         '204':
           description: Flagg for kontrollert brev er lagret
+        '400':
+          description: Feil ved parsing av request body
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         '404':
           description: Oppgaven ble ikke funnet
           content:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
-        '400':
-          description: Feil ved parsing av request body
+        '409':
+          description: Oppgaven kan ikke endre kontrollertBrev i denne tilstanden
           content:
             application/problem+json:
               schema:
@@ -268,6 +286,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven kan ikke endre kilde for melding om vedtak i denne tilstanden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         default:
           description: Feil
           content:
@@ -295,7 +319,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
         '409':
-          description: Oppgaven er allerede sendt til kontroll eller den krever ikke kontroll.
+          description: Oppgaven kan ikke sendes til kontroll i denne tilstanden
           content:
             application/problem+json:
               schema:
@@ -327,7 +351,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
         '409':
-          description: Oppgaven er allerede sendt tilbake til saksbehandler
+          description: Oppgaven kan ikke returneres til saksbehandler i denne tilstanden
           content:
             application/problem+json:
               schema:
@@ -364,6 +388,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven kan ikke avbrytes i denne tilstanden
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
         default:
           description: Feil
           content:
@@ -386,6 +416,12 @@ paths:
           description: Oppgaven er ferdig behandlet og utsending av melding om vedtak har startet
         '404':
           description: Oppgaven ble ikke funnet
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        '409':
+          description: Oppgaven kan ikke ferdigstilles i denne tilstanden
           content:
             application/problem+json:
               schema:
@@ -423,7 +459,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
         '409':
-          description: Oppgaven er allerede tatt til behandling
+          description: Oppgaven kan ikke utsettes i denne tilstanden
           content:
             application/problem+json:
               schema:
@@ -459,7 +495,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
         '409':
-          description: Oppgaven er allerede tatt til behandling
+          description: Oppgaven kan ikke tildeles i denne tilstanden
           content:
             application/problem+json:
               schema:
@@ -1112,12 +1148,12 @@ components:
         paaVentAarsaker:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/UtsettOppgaveAarsak'
           description: Årsaker til at oppgaven settes på vent
         avbrytAarsaker:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/AvbrytOppgaveAarsak'
           description: Årsaker til at oppgaven avbrytes
       required:
         - paaVentAarsaker
