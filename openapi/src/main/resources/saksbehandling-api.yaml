@@ -956,6 +956,8 @@ components:
         id:
           type: string
           format: uuid
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
         utlostAv:
           $ref: '#/components/schemas/UtlostAvType'
         opprettet:
@@ -966,6 +968,7 @@ components:
           format: uuid
       required:
         - id
+        - behandlingType
         - utlostAv
         - opprettet
 
@@ -998,6 +1001,8 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
         utlostAv:
           $ref: '#/components/schemas/UtlostAvType'
         emneknagger:
@@ -1018,6 +1023,7 @@ components:
         - behandlingId
         - personIdent
         - tidspunktOpprettet
+        - behandlingType
         - utlostAv
         - tilstand
         - emneknagger
@@ -1042,6 +1048,8 @@ components:
         tidspunktOpprettet:
           type: string
           format: date-time
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
         utlostAv:
           $ref: '#/components/schemas/UtlostAvType'
         utsattTilDato:
@@ -1077,6 +1085,7 @@ components:
         - behandlingId
         - person
         - tidspunktOpprettet
+        - behandlingType
         - utlostAv
         - tilstand
         - emneknagger
@@ -1141,6 +1150,12 @@ components:
         - MELDEKORT
         - SØKNAD
         - MANUELL
+
+    BehandlingType:
+      type: string
+      enum:
+        - RETT_TIL_DAGPENGER
+        - KLAGE
 
     LovligeEndringer:
       type: object
@@ -1401,10 +1416,13 @@ components:
       properties:
         nyTilstand:
           $ref: '#/components/schemas/OppgaveTilstand'
+        behandlingType:
+          $ref: '#/components/schemas/BehandlingType'
         utlostAv:
           $ref: '#/components/schemas/UtlostAvType'
       required:
         - nyTilstand
+        - behandlingType
         - utlostAv
 
     Klage:

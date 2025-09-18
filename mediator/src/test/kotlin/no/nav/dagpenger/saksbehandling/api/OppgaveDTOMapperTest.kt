@@ -34,10 +34,7 @@ class OppgaveDTOMapperTest {
         mockk<RelevanteJournalpostIdOppslag>().also {
             coEvery { it.hentJournalpostIder(any()) } returns setOf("søknadJournalpostId", "vedtakJournalpostId")
         }
-
-    private val søknadId = UUIDv7.ny()
     private val behandlingId = UUIDv7.ny()
-    private val sakId = UUIDv7.ny()
 
     @Test
     fun `Skal mappe og berike oppgaveDTO for tilstand Under kontroll`() {
@@ -132,6 +129,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
+                      "behandlingType": "RETT_TIL_DAGPENGER",
                       "utlostAv": "SØKNAD",
                       "emneknagger": [],
                       "tilstand": "UNDER_KONTROLL",
@@ -277,6 +275,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
+                      "behandlingType": "RETT_TIL_DAGPENGER",
                       "utlostAv": "SØKNAD",
                       "emneknagger": [],
                       "tilstand": "UNDER_BEHANDLING",
@@ -436,6 +435,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
+                      "behandlingType": "RETT_TIL_DAGPENGER",
                       "utlostAv": "MANUELL",
                       "emneknagger": [],
                       "tilstand": "UNDER_BEHANDLING",
@@ -595,6 +595,7 @@ class OppgaveDTOMapperTest {
                         "statsborgerskap": "NOR"
                       },
                       "tidspunktOpprettet": "2024-11-01T09:50:00",
+                      "behandlingType": "RETT_TIL_DAGPENGER",
                       "utlostAv": "MELDEKORT",
                       "emneknagger": [],
                       "tilstand": "UNDER_BEHANDLING",

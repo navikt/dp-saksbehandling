@@ -20,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.api.models.AdressebeskyttelseGraderingDTO
 import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlingDTO
+import no.nav.dagpenger.saksbehandling.api.models.BehandlingTypeDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
@@ -63,6 +64,13 @@ internal class OppgaveDTOMapper(
                             sak.behandlinger().map { behandling ->
                                 BehandlingDTO(
                                     id = behandling.behandlingId,
+                                    behandlingType =
+                                        when (behandling.utløstAvType) {
+                                            UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
+                                            UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                            UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                            UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+                                        },
                                     utlostAv =
                                         when (behandling.utløstAvType) {
                                             UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
@@ -140,6 +148,7 @@ internal class OppgaveDTOMapper(
             behandlingId = oppgave.behandlingId,
             person = lagPersonDTO(oppgave.person, person),
             tidspunktOpprettet = oppgave.opprettet,
+            behandlingType = oppgave.tilBehandlingTypeDTO(),
             utlostAv = oppgave.tilUtlostAvTypeDTO(),
             emneknagger = oppgave.emneknagger.toList(),
             tilstand = oppgave.tilstand().tilOppgaveTilstandDTO(),
@@ -234,6 +243,7 @@ internal fun Oppgave.tilOppgaveOversiktDTO() =
         behandlingId = this.behandlingId,
         personIdent = this.personIdent(),
         tidspunktOpprettet = this.opprettet,
+        behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
         emneknagger = this.emneknagger.toList(),
         skjermesSomEgneAnsatte = this.person.skjermesSomEgneAnsatte,
@@ -278,8 +288,18 @@ internal fun Oppgave.Tilstand.tilOppgaveTilstandDTO(): OppgaveTilstandDTO {
 internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
     return TildeltOppgaveDTO(
         nyTilstand = this.tilstand().tilOppgaveTilstandDTO(),
+        behandlingType = this.tilBehandlingTypeDTO(),
         utlostAv = this.tilUtlostAvTypeDTO(),
     )
+}
+
+internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
+    return when (this.utløstAvType) {
+        UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
+        UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
+    }
 }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
