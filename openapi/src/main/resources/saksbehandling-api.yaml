@@ -1111,12 +1111,12 @@ components:
         paaVentAarsaker:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/UtsettOppgaveAarsak'
           description: Årsaker til at oppgaven settes på vent
         avbrytAarsaker:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/AvbrytOppgaveAarsak'
           description: Årsaker til at oppgaven avbrytes
       required:
         - paaVentAarsaker

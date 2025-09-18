@@ -158,12 +158,12 @@ internal class OppgaveDTOMapper(
                 LovligeEndringerDTO(
                     paaVentAarsaker =
                         when (oppgave.tilstand().type) {
-                            UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                            UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
                             else -> emptyList()
                         },
                     avbrytAarsaker =
                         when (oppgave.tilstand().type) {
-                            UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries.map { it.value }
+                            UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
                             else -> emptyList()
                         },
                 ),

@@ -900,12 +900,12 @@ class OppgaveApiTest {
                             LovligeEndringerDTO(
                                 paaVentAarsaker =
                                     when (testOppgave.tilstand().type) {
-                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
                                         else -> emptyList()
                                     },
                                 avbrytAarsaker =
                                     when (testOppgave.tilstand().type) {
-                                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries.map { it.value }
+                                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
                                         else -> emptyList()
                                     },
                             ),
@@ -974,8 +974,8 @@ class OppgaveApiTest {
         val oppgaveMediatorMock = mockk<OppgaveMediator>()
         val testOppgave =
             lagTestOppgaveMedTilstandOgBehandling(
-                tilstand = UNDER_KONTROLL,
-                tildeltBehandlerIdent = beslutter.navIdent,
+                tilstand = UNDER_BEHANDLING,
+                tildeltBehandlerIdent = saksbehandler.navIdent,
                 behandling =
                     Behandling(
                         behandlingId = UUIDv7.ny(),
@@ -1028,18 +1028,6 @@ class OppgaveApiTest {
                                         postadresse = "Adresseveien 3, 0101 ADRESSA",
                                     ),
                             ),
-                        beslutter =
-                            BehandlerDTO(
-                                ident = beslutter.navIdent,
-                                fornavn = "Saksbeandler fornavn",
-                                etternavn = "Saksbehandler etternavn",
-                                enhet =
-                                    BehandlerDTOEnhetDTO(
-                                        navn = "Enhet navn",
-                                        enhetNr = "1234",
-                                        postadresse = "Adresseveien 3, 0101 ADRESSA",
-                                    ),
-                            ),
                         utsattTilDato = null,
                         journalpostIder = listOf("123456789"),
                         historikk =
@@ -1061,12 +1049,12 @@ class OppgaveApiTest {
                             LovligeEndringerDTO(
                                 paaVentAarsaker =
                                     when (testOppgave.tilstand().type) {
-                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries.map { it.value }
+                                        UNDER_BEHANDLING -> UtsettOppgaveAarsakDTO.entries
                                         else -> emptyList()
                                     },
                                 avbrytAarsaker =
                                     when (testOppgave.tilstand().type) {
-                                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries.map { it.value }
+                                        UNDER_BEHANDLING -> AvbrytOppgaveAarsakDTO.entries
                                         else -> emptyList()
                                     },
                             ),
@@ -1099,13 +1087,14 @@ class OppgaveApiTest {
                         "skjermesSomEgneAnsatte": ${testOppgave.person.skjermesSomEgneAnsatte}
                       },
                       "emneknagger": [],
-                      "tilstand": "${OppgaveTilstandDTO.UNDER_KONTROLL}",
+                      "tilstand": "${OppgaveTilstandDTO.UNDER_BEHANDLING}",
                       "journalpostIder": ["123456789"],
                       "saksbehandler": {
                         "ident": "${saksbehandler.navIdent}"
                       },
-                      "beslutter": {
-                        "ident": "${beslutter.navIdent}"
+                      "lovligeEndringer" : {
+                          "paaVentAarsaker" : [ "AVVENT_SVAR", "AVVENT_DOKUMENTASJON", "AVVENT_MELDEKORT", "AVVENT_PERMITTERINGSÅRSAK", "AVVENT_RAPPORTERINGSFRIST", "AVVENT_SVAR_PÅ_FORESPØRSEL", "ANNET" ],
+                          "avbrytAarsaker" : [ "BEHANDLES_I_ARENA", "FLERE_SØKNADER", "TRUKKET_SØKNAD", "ANNET" ]
                       },
                       "historikk": [
                         {
