@@ -129,54 +129,6 @@ class OppgaveMediatorAlertTest {
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
             rapid.inspektør.size shouldBe 0
         }
-
-//        val behandlingId = UUIDv7.ny()
-//        OppgaveMediator(
-//            oppgaveRepository =
-//                mockk<OppgaveRepository>().also {
-//                    every { it.finnOppgaveFor(behandlingId = any()) } returns
-//                        Oppgave.rehydrer(
-//                            oppgaveId = UUIDv7.ny(),
-//                            opprettet = LocalDateTime.now(),
-//                            emneknagger = emptySet(),
-//                            tilstand = Oppgave.KlarTilBehandling,
-//                            behandlingId = behandlingId,
-//                            behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
-//                            behandlerIdent = null,
-//                            utsattTil = null,
-//                            person =
-//                                Person(
-//                                    ident = "12345678910",
-//                                    skjermesSomEgneAnsatte = false,
-//                                    adressebeskyttelseGradering = AdressebeskyttelseGradering.UGRADERT,
-//                                ),
-//                            meldingOmVedtak =
-//                                Oppgave.MeldingOmVedtak(
-//                                    kilde = DP_SAK,
-//                                    kontrollertGosysBrev = Oppgave.KontrollertBrev.IKKE_RELEVANT,
-//                                ),
-//                        )
-//                    every { it.lagre(any()) } just runs
-//                },
-//            behandlingKlient = mockk(),
-//            utsendingMediator = mockk(),
-//            sakMediator =
-//                mockk<SakMediator>().also {
-//                    every { it.finnSakHistorikkk(any()) } returns null
-//                },
-//        ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
-//
-//            oppgaveMediator.opprettEllerOppdaterOppgave(
-//                ForslagTilVedtakHendelse(
-//                    ident = "12345678910",
-//                    behandletHendelseId = UUIDv7.ny().toString(),
-//                    behandletHendelseType = "Søknad",
-//                    behandlingId = behandlingId,
-//                    emneknagger = emptySet(),
-//                ),
-//            )
-//            rapid.inspektør.size shouldBe 0
-//        }
     }
 
     private fun JsonNode.forventetAlert(behandlingId: UUID): Boolean {

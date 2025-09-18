@@ -125,31 +125,31 @@ class MeldingOmVedtakKlientTest {
                 it.body.contentType.toString() shouldBe "application/json"
                 it.body.toByteArray().decodeToString() shouldEqualJson
                     """
-                                       {
-                      "fornavn": "Test",
-                      "etternavn": "Person",
-                      "fodselsnummer": "testIdent",
-                      "behandlingstype": "RETT_TIL_DAGPENGER",
-                      "saksbehandler": {
-                        "ident": "saksbehandlerIdent",
-                        "fornavn": "Saks",
-                        "etternavn": "Behandler",
-                        "enhet": {
-                          "navn": "Enhet",
-                          "enhetNr": "1234",
-                          "postadresse": "Postadresse"
+                    {
+                        "fornavn": "Test",
+                        "etternavn": "Person",
+                        "fodselsnummer": "testIdent",
+                        "behandlingstype": "RETT_TIL_DAGPENGER",
+                        "saksbehandler": {
+                            "ident": "saksbehandlerIdent",
+                            "fornavn": "Saks",
+                            "etternavn": "Behandler",
+                            "enhet": {
+                                "navn": "Enhet",
+                                "enhetNr": "1234",
+                                "postadresse": "Postadresse"
+                            }
+                        },
+                        "beslutter": {
+                            "ident": "saksbehandlerIdent",
+                            "fornavn": "Saks",
+                            "etternavn": "Behandler",
+                            "enhet": {
+                                "navn": "Enhet",
+                                "enhetNr": "1234",
+                                "postadresse": "Postadresse"
+                            }
                         }
-                      },
-                      "beslutter": {
-                        "ident": "saksbehandlerIdent",
-                        "fornavn": "Saks",
-                        "etternavn": "Behandler",
-                        "enhet": {
-                          "navn": "Enhet",
-                          "enhetNr": "1234",
-                          "postadresse": "Postadresse"
-                        }
-                      }
                     } 
                     """.trimIndent()
             }
