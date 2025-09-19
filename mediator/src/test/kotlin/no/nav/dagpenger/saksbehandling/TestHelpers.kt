@@ -49,7 +49,7 @@ fun lagOppgave(
         utsattTil = utsattTil,
         tilstandslogg = tilstandslogg,
         behandlingId = behandlingId,
-        utløstAvType = utløstAvType,
+        utløstAv = utløstAvType,
         person = person,
         meldingOmVedtak =
             Oppgave.MeldingOmVedtak(

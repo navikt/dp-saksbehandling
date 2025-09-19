@@ -907,7 +907,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
         behandlingId = this.uuid("behandling_id"),
-        utløstAvType = UtløstAvType.valueOf(this.string("utlost_av")),
+        utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
         person = person,
         meldingOmVedtak =
             Oppgave.MeldingOmVedtak(

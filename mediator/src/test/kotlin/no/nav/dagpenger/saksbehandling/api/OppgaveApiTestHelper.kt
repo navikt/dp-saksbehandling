@@ -172,7 +172,7 @@ internal object OppgaveApiTestHelper {
                 },
             utsattTil = utsattTil,
             behandlingId = behandling.behandlingId,
-            utløstAvType = behandling.utløstAv,
+            utløstAv = behandling.utløstAv,
             person = person,
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(

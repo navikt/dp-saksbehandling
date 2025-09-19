@@ -110,7 +110,7 @@ data class Oppgave private constructor(
             utsattTil: LocalDate?,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
             behandlingId: UUID,
-            utløstAvType: UtløstAvType,
+            utløstAv: UtløstAvType,
             person: Person,
             meldingOmVedtak: MeldingOmVedtak,
         ): Oppgave =
@@ -123,7 +123,7 @@ data class Oppgave private constructor(
                 utsattTil = utsattTil,
                 _tilstandslogg = tilstandslogg,
                 behandlingId = behandlingId,
-                utløstAv = utløstAvType,
+                utløstAv = utløstAv,
                 person = person,
                 meldingOmVedtak = meldingOmVedtak,
             )
