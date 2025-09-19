@@ -36,7 +36,7 @@ class SakApiTest {
     fun `Skal kunne hente ut sakId for en behandlingId`() {
         val sakMediator =
             mockk<SakMediator>().also {
-                every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+                every { it.hentDagpengerSakIdForBehandlingId(behandlingId) } returns sakId
             }
         val token = gyldigMaskinToken()
         withSakApi(sakMediator) {
@@ -50,7 +50,7 @@ class SakApiTest {
     fun `404 med http problem hvis sakId ikke finnes`() {
         val sakMediator =
             mockk<SakMediator>().also {
-                every { it.hentSakIdForBehandlingId(any()) } throws DataNotFoundException("Fant ikke sakId for behandling")
+                every { it.hentDagpengerSakIdForBehandlingId(any()) } throws DataNotFoundException("Fant ikke sakId for behandling")
             }
         val token = gyldigMaskinToken()
         withSakApi(sakMediator) {

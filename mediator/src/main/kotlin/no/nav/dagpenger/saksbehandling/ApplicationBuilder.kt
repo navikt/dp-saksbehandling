@@ -21,7 +21,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.sak.SakPostgresRepository
 import no.nav.dagpenger.saksbehandling.frist.OppgaveFristUtgåttJob
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Dag
 import no.nav.dagpenger.saksbehandling.job.Job.Companion.Minutt
@@ -64,7 +64,7 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
     private val klageRepository = PostgresKlageRepository(dataSource)
     private val oppgaveRepository = PostgresOppgaveRepository(dataSource)
     private val personRepository = PostgresPersonRepository(dataSource)
-    private val sakRepository = PostgresRepository(dataSource = dataSource)
+    private val sakRepository = SakPostgresRepository(dataSource = dataSource)
     private val utsendingRepository = PostgresUtsendingRepository(dataSource)
 
     private val skjermingKlient =

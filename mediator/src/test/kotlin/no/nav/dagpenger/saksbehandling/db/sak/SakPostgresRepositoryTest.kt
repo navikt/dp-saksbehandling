@@ -1,5 +1,6 @@
 package no.nav.dagpenger.saksbehandling.db.sak
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
@@ -9,12 +10,13 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-class PostgresRepositoryTest {
+class SakPostgresRepositoryTest {
     private val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val person =
         Person(
@@ -82,7 +84,7 @@ class PostgresRepositoryTest {
     @Test
     fun `Skal kunne lagre sakhistorikk`() {
         DBTestHelper.withPerson(person) { dataSource ->
-            val sakRepository = PostgresRepository(dataSource = dataSource)
+            val sakRepository = SakPostgresRepository(dataSource = dataSource)
             sakRepository.lagre(sakHistorikk)
             this.leggTilOppgave(oppgaveId, behandling1.behandlingId)
             val saksHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
@@ -96,6 +98,23 @@ class PostgresRepositoryTest {
                 .behandlinger()
                 .first()
                 .behandlingId shouldBe behandling4.behandlingId
+        }
+    }
+
+    @Test
+    fun `henting av sakId basert på behandlingId`() {
+        DBTestHelper.withSaker(saker = listOf(sak1)) { ds ->
+            val sakRepository = SakPostgresRepository(ds)
+
+            sakRepository.merkSakenSomDpSak(sak1.sakId, true)
+            sakRepository.hentSakIdForBehandlingId(behandling1.behandlingId) shouldBe sak1.sakId
+            sakRepository.hentDagpengerSakIdForBehandlingId(behandling1.behandlingId) shouldBe sak1.sakId
+
+            sakRepository.merkSakenSomDpSak(sak1.sakId, false)
+            sakRepository.hentSakIdForBehandlingId(behandling1.behandlingId) shouldBe sak1.sakId
+            shouldThrow<DataNotFoundException> {
+                sakRepository.hentDagpengerSakIdForBehandlingId(behandling1.behandlingId) shouldBe sak1.sakId
+            }
         }
     }
 }
