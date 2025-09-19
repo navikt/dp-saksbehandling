@@ -14,7 +14,7 @@ class RelevanteJournalpostIdOppslag(
     private val klageRepository: KlageRepository,
 ) {
     suspend fun hentJournalpostIder(oppgave: Oppgave): Set<String> {
-        when (oppgave.utløstAvType) {
+        when (oppgave.utløstAv) {
             UtløstAvType.KLAGE -> return coroutineScope {
                 val journalpostIderKlage: String? =
                     klageRepository.hentKlageBehandling(oppgave.behandlingId).journalpostId()

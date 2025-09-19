@@ -431,7 +431,7 @@ OppgaveMediatorTest {
             lagOppgave(
                 tilstand = tilstand,
                 behandlingId = behandling.behandlingId,
-                utløstAvType = behandling.utløstAvType,
+                utløstAvType = behandling.utløstAv,
                 person = person,
             )
 

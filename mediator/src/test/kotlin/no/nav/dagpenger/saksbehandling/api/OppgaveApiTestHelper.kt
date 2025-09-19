@@ -170,7 +170,7 @@ internal object OppgaveApiTestHelper {
                 },
             utsattTil = utsattTil,
             behandlingId = behandling.behandlingId,
-            utløstAvType = behandling.utløstAvType,
+            utløstAvType = behandling.utløstAv,
             person = person,
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(
@@ -238,7 +238,7 @@ internal object OppgaveApiTestHelper {
                 behandlingId = behandlingId,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
-                utløstAvType = utløstAvType,
+                utløstAv = utløstAvType,
             )
         return lagTestOppgaveMedTilstandOgBehandling(
             tilstand = tilstand,

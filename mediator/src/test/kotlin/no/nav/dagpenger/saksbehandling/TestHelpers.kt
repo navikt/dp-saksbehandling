@@ -69,7 +69,7 @@ fun lagBehandling(
         behandlingId = behandlingId,
         opprettet = opprettet,
         hendelse = hendelse,
-        utløstAvType = type,
+        utløstAv = type,
     )
 }
 

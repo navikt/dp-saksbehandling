@@ -299,7 +299,7 @@ class PostgresRepository(
                     mapOf(
                         "id" to behandling.behandlingId,
                         "person_id" to personId,
-                        "utlost_av" to behandling.utløstAvType.name,
+                        "utlost_av" to behandling.utløstAv.name,
                         "sak_id" to sakId,
                         "opprettet" to behandling.opprettet,
                     ),
@@ -345,7 +345,7 @@ class PostgresRepository(
                 sak.leggTilBehandling(
                     Behandling(
                         behandlingId = behandlingId,
-                        utløstAvType = UtløstAvType.valueOf(this.string("utlost_av")),
+                        utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
                         opprettet = this.localDateTime("behandling_opprettet"),
                         oppgaveId = this.uuidOrNull("oppgave_id"),
                         hendelse = this.rehydrerHendelse(),

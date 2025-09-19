@@ -65,14 +65,14 @@ internal class OppgaveDTOMapper(
                                 BehandlingDTO(
                                     id = behandling.behandlingId,
                                     behandlingType =
-                                        when (behandling.utløstAvType) {
+                                        when (behandling.utløstAv) {
                                             UtløstAvType.KLAGE -> BehandlingTypeDTO.KLAGE
                                             UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                             UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
                                         },
                                     utlostAv =
-                                        when (behandling.utløstAvType) {
+                                        when (behandling.utløstAv) {
                                             UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
                                             UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
                                             UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT
@@ -294,7 +294,7 @@ internal fun Oppgave.tilTildeltOppgaveDTO(): TildeltOppgaveDTO {
 }
 
 internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
-    return when (this.utløstAvType) {
+    return when (this.utløstAv) {
         UtløstAvType.SØKNAD -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MELDEKORT -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
         UtløstAvType.MANUELL -> BehandlingTypeDTO.RETT_TIL_DAGPENGER
@@ -303,7 +303,7 @@ internal fun Oppgave.tilBehandlingTypeDTO(): BehandlingTypeDTO {
 }
 
 internal fun Oppgave.tilUtlostAvTypeDTO(): UtlostAvTypeDTO {
-    return when (this.utløstAvType) {
+    return when (this.utløstAv) {
         UtløstAvType.SØKNAD -> UtlostAvTypeDTO.SØKNAD
         UtløstAvType.KLAGE -> UtlostAvTypeDTO.KLAGE
         UtløstAvType.MELDEKORT -> UtlostAvTypeDTO.MELDEKORT

@@ -106,7 +106,7 @@ class SakMediatorTest {
                     sak.søknadId shouldBe søknadId
                     sak.opprettet shouldBe opprettet
                     sak.behandlinger().single().behandlingId shouldBe behandlingIdSøknadNyRett
-                    sak.behandlinger().single().utløstAvType shouldBe UtløstAvType.SØKNAD
+                    sak.behandlinger().single().utløstAv shouldBe UtløstAvType.SØKNAD
                 }
             }
         }
@@ -170,7 +170,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdMeldekort
-                behandlinger.first().utløstAvType shouldBe UtløstAvType.MELDEKORT
+                behandlinger.first().utløstAv shouldBe UtløstAvType.MELDEKORT
             }
         }
     }
@@ -195,7 +195,7 @@ class SakMediatorTest {
             sakMediator.hentSakHistorikk(testIdent).saker().single().behandlinger().let { behandlinger ->
                 behandlinger.size shouldBe 2
                 behandlinger.first().behandlingId shouldBe behandlingIdManuell
-                behandlinger.first().utløstAvType shouldBe UtløstAvType.MANUELL
+                behandlinger.first().utløstAv shouldBe UtløstAvType.MANUELL
             }
         }
     }

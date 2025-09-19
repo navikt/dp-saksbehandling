@@ -28,7 +28,7 @@ class PostgresRepositoryTest {
     private val behandling1 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAvType = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             oppgaveId = oppgaveId,
             hendelse = TomHendelse,
@@ -36,21 +36,21 @@ class PostgresRepositoryTest {
     private val behandling2 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAvType = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling3 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAvType = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling4 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            utløstAvType = UtløstAvType.SØKNAD,
+            utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )

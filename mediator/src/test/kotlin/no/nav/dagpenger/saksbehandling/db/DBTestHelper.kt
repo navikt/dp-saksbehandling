@@ -84,7 +84,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandling: Behandling =
                     Behandling(
                         behandlingId = UUIDv7.ny(),
-                        utløstAvType = SØKNAD,
+                        utløstAv = SØKNAD,
                         opprettet = LocalDateTime.now(),
                         hendelse = TomHendelse,
                     ),
@@ -126,7 +126,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 val behandling =
                     Behandling(
                         behandlingId = oppgave.behandlingId,
-                        utløstAvType = oppgave.utløstAvType,
+                        utløstAv = oppgave.utløstAv,
                         opprettet = oppgave.opprettet,
                         hendelse = TomHendelse,
                     )
@@ -155,7 +155,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             val behandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),
-                    utløstAvType = type,
+                    utløstAv = type,
                     opprettet = opprettet,
                     hendelse = TomHendelse,
                 )
@@ -181,7 +181,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 tilstandslogg = tilstandslogg,
                 behandlerIdent = saksbehandlerIdent,
                 behandlingId = behandling.behandlingId,
-                utløstAvType = type,
+                utløstAv = type,
                 person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
@@ -203,7 +203,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 opprettet = LocalDateTime.now(),
                 tilstand = Oppgave.KlarTilBehandling,
                 behandlingId = behandlingId,
-                utløstAvType = utløstAvType,
+                utløstAv = utløstAvType,
                 person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(

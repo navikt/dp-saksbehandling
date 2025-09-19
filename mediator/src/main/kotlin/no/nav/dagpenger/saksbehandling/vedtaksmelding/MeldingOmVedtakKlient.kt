@@ -86,7 +86,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         maskinToken: String,
-        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
+        utløstAv: UtløstAvType = UtløstAvType.SØKNAD,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
@@ -96,7 +96,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingstype = utløstAvType.name,
+                behandlingstype = utløstAv.name,
                 sakId = sakId,
             )
         return kotlin.runCatching {

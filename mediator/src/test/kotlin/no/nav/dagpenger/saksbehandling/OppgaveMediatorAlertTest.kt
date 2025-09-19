@@ -106,7 +106,7 @@ class OppgaveMediatorAlertTest {
                                                 type = UtløstAvType.SØKNAD,
                                                 utførtAv = Applikasjon("test"),
                                             ),
-                                        utløstAvType = UtløstAvType.SØKNAD,
+                                        utløstAv = UtløstAvType.SØKNAD,
                                     ),
                                 ),
                         ),

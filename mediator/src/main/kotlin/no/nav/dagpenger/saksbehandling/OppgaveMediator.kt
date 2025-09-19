@@ -96,7 +96,7 @@ class OppgaveMediator(
                             ),
                         ),
                     behandlingId = behandling.behandlingId,
-                    utløstAvType = behandling.utløstAvType,
+                    utløstAv = behandling.utløstAv,
                     person = sakHistorikk.person,
                     meldingOmVedtak =
                         Oppgave.MeldingOmVedtak(
@@ -173,7 +173,7 @@ class OppgaveMediator(
                                     ),
                                 ),
                             behandlingId = behandling.behandlingId,
-                            utløstAvType = behandling.utløstAvType,
+                            utløstAv = behandling.utløstAv,
                             person = sakHistorikk.person,
                             meldingOmVedtak =
                                 Oppgave.MeldingOmVedtak(

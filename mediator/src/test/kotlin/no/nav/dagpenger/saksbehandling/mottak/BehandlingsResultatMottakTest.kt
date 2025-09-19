@@ -34,7 +34,7 @@ class BehandlingsResultatMottakTest {
             oppgaveId = UUIDv7.ny(),
             opprettet = opprettet,
             behandlingId = behandlingId,
-            utløstAvType = SØKNAD,
+            utløstAv = SØKNAD,
             person = person,
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(

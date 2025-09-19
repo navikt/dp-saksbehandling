@@ -92,7 +92,7 @@ class PostgresOppgaveRepositoryTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                utløstAvType = SØKNAD,
+                utløstAv = SØKNAD,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -1296,7 +1296,7 @@ class PostgresOppgaveRepositoryTest {
                 behandlingId = hendelse.behandlingId,
                 opprettet = hendelse.opprettet,
                 hendelse = hendelse,
-                utløstAvType = SØKNAD,
+                utløstAv = SØKNAD,
             )
 
         DBTestHelper.withBehandling(

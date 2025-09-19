@@ -35,7 +35,7 @@ class PostgresTriggerTest {
                 opprettet = opprettet,
                 tilstand = Oppgave.KlarTilBehandling,
                 behandlingId = behandlingId,
-                utløstAvType = UtløstAvType.SØKNAD,
+                utløstAv = UtløstAvType.SØKNAD,
                 person = testPerson,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(

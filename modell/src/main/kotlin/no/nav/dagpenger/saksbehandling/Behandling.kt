@@ -9,7 +9,7 @@ data class Behandling(
     val behandlingId: UUID,
     val opprettet: LocalDateTime,
     val hendelse: Hendelse,
-    val utløstAvType: UtløstAvType = SØKNAD,
+    val utløstAv: UtløstAvType = SØKNAD,
     val oppgaveId: UUID? = null,
 ) {
     companion object {
@@ -17,12 +17,12 @@ data class Behandling(
             behandlingId: UUID,
             opprettet: LocalDateTime,
             hendelse: Hendelse,
-            utløstAvType: UtløstAvType = SØKNAD,
+            utløstAv: UtløstAvType = SØKNAD,
         ) = Behandling(
             behandlingId = behandlingId,
             opprettet = opprettet,
             hendelse = hendelse,
-            utløstAvType = utløstAvType,
+            utløstAv = utløstAv,
         )
     }
 }
