@@ -128,3 +128,5 @@ spec:
             value: "true"
           - name: pgaudit.log
             value: 'write'
+  strategy:
+    type: Recreate
