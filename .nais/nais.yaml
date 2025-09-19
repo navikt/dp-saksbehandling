@@ -84,6 +84,7 @@ spec:
         - application: dp-mottak
         - application: dp-melding-om-vedtak
         - application: dp-saksbehandling-frontend
+        - application: dp-mellom-barken-og-veden
         {{#if wonderwalled}}
         - application: wonderwalled-azure
           namespace: nais
