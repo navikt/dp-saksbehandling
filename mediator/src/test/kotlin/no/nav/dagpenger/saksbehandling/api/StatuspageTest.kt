@@ -42,6 +42,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) { throw DataNotFoundException(message) }
@@ -78,6 +79,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) { throw MeldingOmVedtakKlient.KanIkkeLageMeldingOmVedtak(message) }
@@ -114,6 +116,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) { throw Tilstand.UgyldigTilstandException(message) }
@@ -150,6 +153,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) { throw UlovligTilstandsendringException(message) }
@@ -186,6 +190,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) { throw IllegalArgumentException(message) }
@@ -221,6 +226,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) {
@@ -264,6 +270,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) { throw ManglendeBeslutterTilgang(message) }
@@ -300,6 +307,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) {
@@ -338,6 +346,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) {
@@ -376,6 +385,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get(path) { throw Oppgave.AlleredeTildeltException(message) }
@@ -420,6 +430,7 @@ class StatuspageTest {
                     klageMediator = mockk(),
                     klageDTOMapper = mockk(),
                     personMediator = mockk(),
+                    sakMediator = mockk(),
                 )
                 routing {
                     get("/BehandlingException") { throw BehandlingException(httpProblem, 403) }

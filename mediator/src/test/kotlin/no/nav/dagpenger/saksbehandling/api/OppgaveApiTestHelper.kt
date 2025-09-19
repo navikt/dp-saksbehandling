@@ -77,6 +77,7 @@ internal object OppgaveApiTestHelper {
                     mockk(relaxed = true),
                     mockk(relaxed = true),
                     personMediator = personMediator,
+                    sakMediator = mockk(relaxed = true),
                 )
             }
             test()
@@ -110,6 +111,7 @@ internal object OppgaveApiTestHelper {
                     mockk(relaxed = true),
                     mockk(relaxed = true),
                     personMediator = personMediator,
+                    sakMediator = mockk(relaxed = true),
                 )
             }
             test()
