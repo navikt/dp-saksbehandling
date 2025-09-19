@@ -33,6 +33,8 @@ interface SakRepository {
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID
 
+    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID
+
     fun lagreBehandling(
         personId: UUID,
         sakId: UUID,
@@ -53,7 +55,7 @@ interface SakRepository {
 private val logger = KotlinLogging.logger {}
 private val sikkerlogger = KotlinLogging.logger("tjenestekall")
 
-class PostgresRepository(
+class SakPostgresRepository(
     private val dataSource: DataSource,
 ) : SakRepository {
     override fun lagre(sakHistorikk: SakHistorikk) {
@@ -133,6 +135,30 @@ class PostgresRepository(
                 }.asSingle,
             ) ?: throw DataNotFoundException("Kan ikke finne sak for behandlingId $behandlingId")
         }
+
+    override fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID {
+        return sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT  sak.id
+                        FROM    sak_v2 sak
+                        JOIN    behandling_v1 beh ON beh.sak_id = sak.id
+                        WHERE   beh.id = :behandling_id
+                        AND   sak.er_dp_sak = true
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "behandling_id" to behandlingId,
+                        ),
+                ).map { row ->
+                    row.uuid("id")
+                }.asSingle,
+            ) ?: throw DataNotFoundException("Kan ikke finne dagpenger sak for behandlingId $behandlingId")
+        }
+    }
 
     private fun TransactionalSession.lagreSakHistorikk(
         personId: UUID,
@@ -359,10 +385,18 @@ class PostgresRepository(
     private fun Row.rehydrerHendelse(): Hendelse {
         return when (val hendelseType = this.string("hendelse_type")) {
             "TomHendelse" -> return TomHendelse
-            "SøknadsbehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<SøknadsbehandlingOpprettetHendelse>()
+            "SøknadsbehandlingOpprettetHendelse" ->
+                this.string("hendelse_data")
+                    .tilHendelse<SøknadsbehandlingOpprettetHendelse>()
+
             "BehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<BehandlingOpprettetHendelse>()
-            "MeldekortbehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<MeldekortbehandlingOpprettetHendelse>()
-            "ManuellBehandlingOpprettetHendelse" -> this.string("hendelse_data").tilHendelse<ManuellBehandlingOpprettetHendelse>()
+            "MeldekortbehandlingOpprettetHendelse" ->
+                this.string("hendelse_data")
+                    .tilHendelse<MeldekortbehandlingOpprettetHendelse>()
+
+            "ManuellBehandlingOpprettetHendelse" ->
+                this.string("hendelse_data")
+                    .tilHendelse<ManuellBehandlingOpprettetHendelse>()
 
             else -> {
                 logger.error { "rehydrerHendelse: Ukjent hendelse med type $hendelseType" }

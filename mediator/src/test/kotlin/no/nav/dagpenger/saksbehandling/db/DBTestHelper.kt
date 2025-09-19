@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.sak.SakPostgresRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import java.time.LocalDateTime
@@ -23,7 +23,7 @@ import java.util.UUID
 import javax.sql.DataSource
 
 class DBTestHelper private constructor(private val ds: DataSource) :
-    SakRepository by PostgresRepository(ds),
+    SakRepository by SakPostgresRepository(ds),
     OppgaveRepository by PostgresOppgaveRepository(ds),
     PersonRepository by PostgresPersonRepository(ds) {
         companion object {
@@ -55,6 +55,22 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                         this.lagre(person)
                         block(ds)
                     }
+                }
+            }
+
+            fun withSaker(
+                person: Person = testPerson,
+                saker: List<Sak>,
+                block: DBTestHelper.(DataSource) -> Unit,
+            ) {
+                withPerson(person) { ds ->
+                    this.lagre(
+                        SakHistorikk(
+                            person = person,
+                            saker = saker.toMutableSet(),
+                        ),
+                    )
+                    block(ds)
                 }
             }
 

@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.sak.SakPostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -88,7 +88,7 @@ class SakMediatorTest {
 
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresRepository(ds),
+                    sakRepository = SakPostgresRepository(ds),
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -116,7 +116,7 @@ class SakMediatorTest {
 
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresRepository(ds),
+                    sakRepository = SakPostgresRepository(ds),
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -153,7 +153,7 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresRepository(ds),
+                    sakRepository = SakPostgresRepository(ds),
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -177,7 +177,7 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresRepository(ds),
+                    sakRepository = SakPostgresRepository(ds),
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -202,7 +202,7 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresRepository(ds),
+                    sakRepository = SakPostgresRepository(ds),
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -263,7 +263,7 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresRepository(ds),
+                    sakRepository = SakPostgresRepository(ds),
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -309,7 +309,7 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresRepository(ds),
+                    sakRepository = SakPostgresRepository(ds),
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),
@@ -338,7 +338,7 @@ class SakMediatorTest {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
-                    sakRepository = PostgresRepository(ds),
+                    sakRepository = SakPostgresRepository(ds),
                     personMediator =
                         PersonMediator(
                             personRepository = PostgresPersonRepository(ds),

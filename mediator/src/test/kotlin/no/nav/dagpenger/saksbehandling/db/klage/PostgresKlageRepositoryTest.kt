@@ -12,7 +12,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.sak.SakPostgresRepository
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -55,7 +55,7 @@ class PostgresKlageRepositoryTest {
                                         AdressebeskyttelseGradering.UGRADERT
                                 },
                         ),
-                    sakRepository = PostgresRepository(dataSource = ds),
+                    sakRepository = SakPostgresRepository(dataSource = ds),
                 )
 
             val sak =

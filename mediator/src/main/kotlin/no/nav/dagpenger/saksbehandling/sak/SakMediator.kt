@@ -132,6 +132,10 @@ class SakMediator(
         return sakRepository.hentSakIdForBehandlingId(behandlingId)
     }
 
+    fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID {
+        return sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
+    }
+
     private fun sendAvbrytBehandling(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         rapidsConnection.publish(
             key = søknadsbehandlingOpprettetHendelse.ident,

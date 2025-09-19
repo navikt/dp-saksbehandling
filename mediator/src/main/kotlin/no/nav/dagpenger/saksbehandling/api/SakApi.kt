@@ -17,8 +17,8 @@ fun Route.sakApi(mediator: SakMediator) {
         route("behandling/{behandlingId}/sakId") {
             get {
                 val behandlingId = call.behandlingId("behandlingId")
-                mediator.hentSakIdForBehandlingId(behandlingId)
-                call.respondText { mediator.hentSakIdForBehandlingId(behandlingId).toString() }
+                mediator.hentDagpengerSakIdForBehandlingId(behandlingId)
+                call.respondText { mediator.hentDagpengerSakIdForBehandlingId(behandlingId).toString() }
             }
         }
     }

@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.PostgresRepository
+import no.nav.dagpenger.saksbehandling.db.sak.SakPostgresRepository
 import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
@@ -81,7 +81,7 @@ class UtsendingMediatorTest {
             BehandlingsResultatMottakForUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
-                sakRepository = PostgresRepository(ds),
+                sakRepository = SakPostgresRepository(ds),
             )
 
             UtsendingBehovLøsningMottak(
