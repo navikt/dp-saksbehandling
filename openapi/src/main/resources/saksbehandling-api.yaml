@@ -768,6 +768,36 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
+  /behandling/{behandlingId}/sakId:
+    get:
+      summary: Henter sakId basert på en behandlingId
+      parameters:
+        - in: path
+          name: behandlingId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Fant sakId for behandlingId
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: uuid
+        '404':
+          description: Fant ikke sakId for behandlingId
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
 
   /statistikk:
     get:
