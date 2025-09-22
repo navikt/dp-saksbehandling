@@ -1,6 +1,5 @@
 package no.nav.dagpenger.saksbehandling
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
@@ -8,7 +7,17 @@ import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHend
 import java.time.LocalDateTime
 import java.util.UUID
 
-private val logger = KotlinLogging.logger {}
+sealed class KnyttTilSakResultat {
+    data class KnyttetTilSak(val sak: Sak) : KnyttTilSakResultat()
+
+    data class IkkeKnyttetTilSak(val sakIder: Set<UUID>) : KnyttTilSakResultat() {
+        constructor(vararg saksid: UUID) : this(saksid.toSet())
+    }
+
+    data class KnyttetTilFlereSaker(val sakIder: Set<UUID>) : KnyttTilSakResultat() {
+        constructor(vararg saksid: UUID) : this(saksid.toSet())
+    }
+}
 
 data class Sak(
     val sakId: UUID = UUIDv7.ny(),
@@ -20,46 +29,57 @@ data class Sak(
 
     fun leggTilBehandling(behandling: Behandling) = behandlinger.add(behandling)
 
-    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        if (this.behandlinger.map { it.behandlingId }
+    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat {
+        return when (
+            this.behandlinger.map { it.behandlingId }
                 .contains(søknadsbehandlingOpprettetHendelse.basertPåBehandling)
         ) {
-            behandlinger.add(
-                Behandling(
-                    behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.SØKNAD,
-                    opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
-                    hendelse = søknadsbehandlingOpprettetHendelse,
-                ),
-            )
-            logger.info { "Mottok søknadsbehandlingOpprettetHendelse og knyttet den til sakId $sakId" }
-        } else {
-            logger.info {
-                "Mottok søknadsbehandlingOpprettetHendelse, men den ble ikke knyttet til sakId $sakId. " +
-                    "Basert på behandlingId: ${søknadsbehandlingOpprettetHendelse.basertPåBehandling} var ikke i denne saken."
+            true -> {
+                behandlinger.add(
+                    Behandling(
+                        behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
+                        utløstAv = UtløstAvType.SØKNAD,
+                        opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
+                        hendelse = søknadsbehandlingOpprettetHendelse,
+                    ),
+                )
+                KnyttTilSakResultat.KnyttetTilSak(this)
+            }
+
+            else -> {
+                KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
             }
         }
     }
 
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        if (this.behandlinger.map { it.behandlingId }
+    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat {
+        return when (
+            this.behandlinger.map { it.behandlingId }
                 .contains(meldekortbehandlingOpprettetHendelse.basertPåBehandling)
         ) {
-            behandlinger.add(
-                Behandling(
-                    behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
-                    utløstAv = UtløstAvType.MELDEKORT,
-                    opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
-                    hendelse = meldekortbehandlingOpprettetHendelse,
-                ),
-            )
+            true -> {
+                behandlinger.add(
+                    Behandling(
+                        behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
+                        utløstAv = UtløstAvType.MELDEKORT,
+                        opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
+                        hendelse = meldekortbehandlingOpprettetHendelse,
+                    ),
+                )
+                KnyttTilSakResultat.KnyttetTilSak(this)
+            }
+
+            false -> {
+                KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+            }
         }
     }
 
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
-        if (this.behandlinger.map { it.behandlingId }
-                .contains(manuellBehandlingOpprettetHendelse.basertPåBehandling)
-        ) {
+    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat {
+        val forrigeBehandling: Behandling? =
+            this.behandlinger.find { it.behandlingId == manuellBehandlingOpprettetHendelse.basertPåBehandling }
+
+        return if (forrigeBehandling != null) {
             behandlinger.add(
                 Behandling(
                     behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
@@ -68,18 +88,30 @@ data class Sak(
                     hendelse = manuellBehandlingOpprettetHendelse,
                 ),
             )
+            KnyttTilSakResultat.KnyttetTilSak(this)
+        } else {
+            KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
         }
     }
 
-    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
-        behandlinger.add(
-            Behandling(
-                behandlingId = behandlingOpprettetHendelse.behandlingId,
-                utløstAv = behandlingOpprettetHendelse.type,
-                opprettet = behandlingOpprettetHendelse.opprettet,
-                hendelse = behandlingOpprettetHendelse,
-            ),
-        )
+    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat {
+        return when (this.sakId == behandlingOpprettetHendelse.sakId) {
+            true -> {
+                behandlinger.add(
+                    Behandling(
+                        behandlingId = behandlingOpprettetHendelse.behandlingId,
+                        utløstAv = behandlingOpprettetHendelse.type,
+                        opprettet = behandlingOpprettetHendelse.opprettet,
+                        hendelse = behandlingOpprettetHendelse,
+                    ),
+                )
+                KnyttTilSakResultat.KnyttetTilSak(this)
+            }
+
+            else -> {
+                KnyttTilSakResultat.IkkeKnyttetTilSak(this.sakId)
+            }
+        }
     }
 
     override fun equals(other: Any?): Boolean {
