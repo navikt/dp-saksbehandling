@@ -7,8 +7,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType
-import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
@@ -366,42 +364,6 @@ class EmneknaggBuilderTest {
                 ),
             )
         EmneknaggBuilder(behandlingResultat).bygg() shouldBe setOf(INNVILGELSE.visningsnavn)
-    }
-
-    @Test
-    fun `emneknagger for behandlingsresultat utløst av meldekort`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
-                behandletHendelseType = "Meldekort",
-                harRettighet = false,
-                ForenkletOpplysning(
-                    id = UUID.randomUUID(),
-                    verdi = true,
-                ),
-            )
-
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe
-            setOf(
-                AVSLAG.visningsnavn, MELDEKORT.visningsnavn,
-            )
-    }
-
-    @Test
-    fun `emneknagger for behandlingsresultat utløst av manuell behandling`() {
-        val behandlingResultat =
-            lagBehandlingResultat(
-                behandletHendelseType = "Manuell",
-                harRettighet = false,
-                ForenkletOpplysning(
-                    id = UUID.randomUUID(),
-                    verdi = true,
-                ),
-            )
-
-        EmneknaggBuilder(behandlingResultat).bygg() shouldBe
-            setOf(
-                AVSLAG.visningsnavn, BehandletHendelseType.MANUELL.visningsnavn,
-            )
     }
 
     private val objectMapper =

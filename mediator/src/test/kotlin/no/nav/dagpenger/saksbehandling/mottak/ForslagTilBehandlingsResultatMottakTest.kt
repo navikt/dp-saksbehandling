@@ -4,8 +4,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MANUELL
-import no.nav.dagpenger.saksbehandling.Emneknagg.BehandletHendelseType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.UUIDv7
@@ -39,17 +37,8 @@ class ForslagTilBehandlingsResultatMottakTest {
         }
 
         slots.single { it.behandletHendelseType == "Søknad" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
-
-        slots.single { it.behandletHendelseType == "Meldekort" }.emneknagger shouldBe
-            setOf(
-                AVSLAG.visningsnavn,
-                MELDEKORT.visningsnavn,
-            )
-        slots.single { it.behandletHendelseType == "Manuell" }.emneknagger shouldBe
-            setOf(
-                AVSLAG.visningsnavn,
-                MANUELL.visningsnavn,
-            )
+        slots.single { it.behandletHendelseType == "Meldekort" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
+        slots.single { it.behandletHendelseType == "Manuell" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
     }
 
     private fun testMessage(behandletHendelseType: String): String {
