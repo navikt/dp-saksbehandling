@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 
 private val logger = KotlinLogging.logger {}
 
-internal class BehandlingsResultatMottak(
+internal class BehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
     private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
@@ -30,7 +30,7 @@ internal class BehandlingsResultatMottak(
     }
 
     init {
-        logger.info { " Starter BehandlingsResultatMottak" }
+        logger.info { "Starter BehandlingsresultatMottak" }
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 

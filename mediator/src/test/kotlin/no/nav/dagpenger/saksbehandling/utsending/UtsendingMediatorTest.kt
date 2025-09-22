@@ -32,7 +32,7 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distrib
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
-import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsResultatMottakForUtsending
+import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -78,7 +78,7 @@ class UtsendingMediatorTest {
                     it.setRapidsConnection(rapid)
                 }
 
-            BehandlingsResultatMottakForUtsending(
+            BehandlingsresultatMottakForUtsending(
                 rapidsConnection = rapid,
                 utsendingMediator = utsendingMediator,
                 sakRepository = SakPostgresRepository(ds),

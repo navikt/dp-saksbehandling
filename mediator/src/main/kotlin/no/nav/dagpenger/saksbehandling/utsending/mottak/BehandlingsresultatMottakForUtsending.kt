@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 
 private val logger = KotlinLogging.logger {}
 
-internal class BehandlingsResultatMottakForUtsending(
+internal class BehandlingsresultatMottakForUtsending(
     rapidsConnection: RapidsConnection,
     private val utsendingMediator: UtsendingMediator,
     private val sakRepository: SakRepository,
@@ -34,7 +34,7 @@ internal class BehandlingsResultatMottakForUtsending(
     }
 
     init {
-        logger.info { " Starter BehandlingsResultatMottakForUtsending" }
+        logger.info { "Starter BehandlingsresultatMottakForUtsending" }
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
@@ -45,7 +45,7 @@ internal class BehandlingsResultatMottakForUtsending(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
-        logger.info { "BehandlingsResultatMottakForUtsending - behandlingId: $behandlingId" }
+        logger.info { "BehandlingsresultatMottakForUtsending - behandlingId: $behandlingId" }
         if (vedtakSkalTilhøreDpSak(packet)) {
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
@@ -85,10 +85,10 @@ internal class BehandlingsResultatMottakForUtsending(
     }
 
     private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
-        val rettighetsPerioderNode = packet["rettighetsperioder"]
-        val dagpengerInnvilget = rettighetsPerioderNode.size() == 1 && rettighetsPerioderNode[0]["harRett"].asBoolean()
+        val rettighetsperioderNode = packet["rettighetsperioder"]
+        val dagpengerInnvilget = rettighetsperioderNode.size() == 1 && rettighetsperioderNode[0]["harRett"].asBoolean()
         return dagpengerInnvilget.also {
-            logger.info { "BehandlingsResultatMottakForUtsending med utfall: $dagpengerInnvilget. Basert på $rettighetsPerioderNode" }
+            logger.info { "BehandlingsresultatMottakForUtsending med utfall: $dagpengerInnvilget. Basert på $rettighetsperioderNode" }
         }
     }
 

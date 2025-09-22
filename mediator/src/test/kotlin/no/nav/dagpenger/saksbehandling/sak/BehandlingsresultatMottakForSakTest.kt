@@ -14,7 +14,7 @@ import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import org.junit.jupiter.api.Test
 
-class BehandlingsResultatMottakForSakTest {
+class BehandlingsresultatMottakForSakTest {
     private val testRapid = TestRapid()
     private val søknadId = UUIDv7.ny()
     private val behandlingId = UUIDv7.ny()
@@ -32,7 +32,7 @@ class BehandlingsResultatMottakForSakTest {
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
             }
-        BehandlingsResultatMottakForSak(
+        BehandlingsresultatMottakForSak(
             rapidsConnection = testRapid,
             sakRepository = sakRepositoryMock,
             sakMediator = sakMediatorMock,
@@ -58,7 +58,7 @@ class BehandlingsResultatMottakForSakTest {
     fun `Skal ikke markere er_dp_sak ved avslag på søknad`() {
         val sakMediatorMock = mockk<SakMediator>()
         val sakRepositoryMock = mockk<SakRepository>()
-        BehandlingsResultatMottakForSak(
+        BehandlingsresultatMottakForSak(
             rapidsConnection = testRapid,
             sakRepository = sakRepositoryMock,
             sakMediator = sakMediatorMock,
@@ -74,7 +74,7 @@ class BehandlingsResultatMottakForSakTest {
     fun `Skal ikke håndtere behandlinger som ikke er type Søknad`() {
         val sakMediatorMock = mockk<SakMediator>()
         val sakRepositoryMock = mockk<SakRepository>()
-        BehandlingsResultatMottakForSak(
+        BehandlingsresultatMottakForSak(
             rapidsConnection = testRapid,
             sakRepository = sakRepositoryMock,
             sakMediator = sakMediatorMock,

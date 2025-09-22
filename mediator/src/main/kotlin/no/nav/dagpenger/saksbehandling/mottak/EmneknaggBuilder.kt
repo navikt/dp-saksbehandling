@@ -62,7 +62,7 @@ class EmneknaggBuilder(
             }
         }
 
-    private val rettighetsPerioder =
+    private val rettighetsperioder =
         jsonNode["rettighetsperioder"].also {
             require(it.isPresent() && it.isArray) {
                 sikkerLogg.error { "Kunne ikke parse rettighetsperioder: $it" }
@@ -136,11 +136,11 @@ class EmneknaggBuilder(
     }
 
     private fun utfall(): Boolean {
-        val utfall = rettighetsPerioder.any { it["harRett"].asBoolean() }
+        val utfall = rettighetsperioder.any { it["harRett"].asBoolean() }
         sikkerLogg.info {
             val behadlingId = jsonNode["behandlingId"].asText()
             withLoggingContext("Id" to behadlingId) {
-                "BehandlingId: $behadlingId har utfall: $utfall med rettighetsPerioder: $rettighetsPerioder"
+                "BehandlingId: $behadlingId har utfall: $utfall med rettighetsperioder: $rettighetsperioder"
             }
         }
         return utfall

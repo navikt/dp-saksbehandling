@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class BehandlingsResultatMottakTest {
+class BehandlingsresultatMottakTest {
     private val testIdent = "12345678901"
     private val søknadId = UUID.randomUUID()
     private val behandlingId = UUID.randomUUID()
@@ -52,7 +52,7 @@ class BehandlingsResultatMottakTest {
         }
 
     init {
-        BehandlingsResultatMottak(testRapid, oppgaveMediatorMock)
+        BehandlingsresultatMottak(testRapid, oppgaveMediatorMock)
     }
 
     @Test

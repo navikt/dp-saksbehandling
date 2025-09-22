@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
 
-class BehandlingsResultatMottakForUtsendingTest {
+class BehandlingsresultatMottakForUtsendingTest {
     private val testRapid = TestRapid()
     private val søknadId = UUIDv7.ny()
     private val behandlingId = UUIDv7.ny()
@@ -35,7 +35,7 @@ class BehandlingsResultatMottakForUtsendingTest {
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
             }
-        BehandlingsResultatMottakForUtsending(
+        BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = sakRepositoryMock,
@@ -70,7 +70,7 @@ class BehandlingsResultatMottakForUtsendingTest {
     fun `Skal ikke håndtere avslag på søknad`() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
-        BehandlingsResultatMottakForUtsending(
+        BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = mockk<SakRepository>(),
@@ -87,7 +87,7 @@ class BehandlingsResultatMottakForUtsendingTest {
     fun `Skal ikke håndtere behandlinger som ikke er type Søknad`() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
-        BehandlingsResultatMottakForUtsending(
+        BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = mockk<SakRepository>(),
@@ -104,7 +104,7 @@ class BehandlingsResultatMottakForUtsendingTest {
     fun `Skal ikke håndtere behandlinger med flere rettighetsperiioder `() {
         val utsendingMediatorMock = mockk<UtsendingMediator>()
 
-        BehandlingsResultatMottakForUtsending(
+        BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
             sakRepository = mockk<SakRepository>(),

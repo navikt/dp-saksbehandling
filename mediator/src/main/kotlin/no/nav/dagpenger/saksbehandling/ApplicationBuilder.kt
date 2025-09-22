@@ -35,11 +35,11 @@ import no.nav.dagpenger.saksbehandling.metrikker.MetrikkJob
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingAvbruttMottak
 import no.nav.dagpenger.saksbehandling.mottak.BehandlingOpprettetMottak
-import no.nav.dagpenger.saksbehandling.mottak.BehandlingsResultatMottak
-import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsResultatMottak
+import no.nav.dagpenger.saksbehandling.mottak.BehandlingsresultatMottak
+import no.nav.dagpenger.saksbehandling.mottak.ForslagTilBehandlingsresultatMottak
 import no.nav.dagpenger.saksbehandling.mottak.MeldingOmVedtakProdusentBehovløser
 import no.nav.dagpenger.saksbehandling.pdl.PDLHttpKlient
-import no.nav.dagpenger.saksbehandling.sak.BehandlingsResultatMottakForSak
+import no.nav.dagpenger.saksbehandling.sak.BehandlingsresultatMottakForSak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.CachedSaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslagImpl
@@ -54,7 +54,7 @@ import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmJob
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingAlarmRepository
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
-import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsResultatMottakForUtsending
+import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
 import no.nav.dagpenger.saksbehandling.vedtaksmelding.MeldingOmVedtakKlient
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -200,22 +200,20 @@ internal class ApplicationBuilder(configuration: Map<String, String>) : RapidsCo
             klageMediator.setAuditlogg(ApiAuditlogg(AktivitetsloggMediator(), rapidsConnection))
             BehandlingOpprettetMottak(rapidsConnection, sakMediator)
             BehandlingAvbruttMottak(rapidsConnection, oppgaveMediator)
-            BehandlingsResultatMottak(rapidsConnection, oppgaveMediator)
-            ForslagTilBehandlingsResultatMottak(rapidsConnection, oppgaveMediator)
+            BehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
+            ForslagTilBehandlingsresultatMottak(rapidsConnection, oppgaveMediator)
             UtsendingBehovLøsningMottak(rapidsConnection, utsendingMediator)
 
-            if (Configuration.isDev) {
-                BehandlingsResultatMottakForUtsending(
-                    rapidsConnection = rapidsConnection,
-                    utsendingMediator = utsendingMediator,
-                    sakRepository = sakRepository,
-                )
-                BehandlingsResultatMottakForSak(
-                    rapidsConnection = rapidsConnection,
-                    sakRepository = sakRepository,
-                    sakMediator = sakMediator,
-                )
-            }
+            BehandlingsresultatMottakForUtsending(
+                rapidsConnection = rapidsConnection,
+                utsendingMediator = utsendingMediator,
+                sakRepository = sakRepository,
+            )
+            BehandlingsresultatMottakForSak(
+                rapidsConnection = rapidsConnection,
+                sakRepository = sakRepository,
+                sakMediator = sakMediator,
+            )
 
             ArenaSinkVedtakOpprettetMottak(
                 rapidsConnection = rapidsConnection,

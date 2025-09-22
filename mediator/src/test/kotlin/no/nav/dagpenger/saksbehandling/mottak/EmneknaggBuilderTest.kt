@@ -388,7 +388,7 @@ class EmneknaggBuilderTest {
             objectMapper.createObjectNode().apply {
                 put("harRett", harRettighet)
             }
-        val rettighetsPerioderArray =
+        val rettighetsperioderArray =
             objectMapper.createArrayNode().apply {
                 add(rettighetPeriodeObject)
             }
@@ -420,7 +420,7 @@ class EmneknaggBuilderTest {
         return objectMapper.createObjectNode().apply {
             put("behandlingId", UUID.randomUUID().toString())
             set<ObjectNode>("behandletHendelse", behandletHendelseObject)
-            set<ArrayNode>("rettighetsperioder", rettighetsPerioderArray)
+            set<ArrayNode>("rettighetsperioder", rettighetsperioderArray)
             set<ArrayNode>("opplysninger", opplysningArray)
         }.toString()
     }

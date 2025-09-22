@@ -11,7 +11,7 @@ import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import org.junit.jupiter.api.Test
 import kotlin.also
 
-class ForslagTilBehandlingsResultatMottakTest {
+class ForslagTilBehandlingsresultatMottakTest {
     private val testRapid = TestRapid()
     private val behandlingId = UUIDv7.ny()
     private val søknadId = UUIDv7.ny()
@@ -24,7 +24,7 @@ class ForslagTilBehandlingsResultatMottakTest {
             mockk<OppgaveMediator>().also {
                 every { it.opprettEllerOppdaterOppgave(capture(slots)) }
             }
-        ForslagTilBehandlingsResultatMottak(testRapid, oppgaveMediator)
+        ForslagTilBehandlingsresultatMottak(testRapid, oppgaveMediator)
 
         listOf("Søknad", "Meldekort", "Manuell").forEachIndexed { index, behandletHendelseType ->
             testRapid.sendTestMessage(testMessage(behandletHendelseType = behandletHendelseType))

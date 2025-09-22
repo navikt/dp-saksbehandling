@@ -15,7 +15,7 @@ import no.nav.dagpenger.saksbehandling.mottak.asUUID
 
 private val logger = KotlinLogging.logger {}
 
-internal class BehandlingsResultatMottakForSak(
+internal class BehandlingsresultatMottakForSak(
     rapidsConnection: RapidsConnection,
     private val sakRepository: SakRepository,
     private val sakMediator: SakMediator,
@@ -34,7 +34,7 @@ internal class BehandlingsResultatMottakForSak(
     }
 
     init {
-        logger.info { "Starter BehandlingsResultatMottakForSak" }
+        logger.info { "Starter BehandlingsresultatMottakForSak" }
         River(rapidsConnection).apply(rapidFilter).register(this)
     }
 
@@ -46,7 +46,7 @@ internal class BehandlingsResultatMottakForSak(
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
         withLoggingContext("behandlingId" to "$behandlingId") {
-            logger.info { "Mottok behandlingresultat hendelse i BehandlingsResultatMottakForSak" }
+            logger.info { "Mottok behandlingresultat hendelse i BehandlingsresultatMottakForSak" }
 
             if (vedtakSkalTilhøreDpSak(packet)) {
                 val ident = packet["ident"].asText()
@@ -74,10 +74,10 @@ internal class BehandlingsResultatMottakForSak(
     }
 
     private fun vedtakSkalTilhøreDpSak(packet: JsonMessage): Boolean {
-        val rettighetsPerioderNode = packet["rettighetsperioder"]
-        val dagpengerInnvilget = rettighetsPerioderNode.size() == 1 && rettighetsPerioderNode[0]["harRett"].asBoolean()
+        val rettighetsperioderNode = packet["rettighetsperioder"]
+        val dagpengerInnvilget = rettighetsperioderNode.size() == 1 && rettighetsperioderNode[0]["harRett"].asBoolean()
         return dagpengerInnvilget.also {
-            logger.info { "BehandlingsResultatMottakForSak med utfall: $dagpengerInnvilget. Basert på $rettighetsPerioderNode" }
+            logger.info { "BehandlingsresultatMottakForSak med utfall: $dagpengerInnvilget. Basert på $rettighetsperioderNode" }
         }
     }
 }
