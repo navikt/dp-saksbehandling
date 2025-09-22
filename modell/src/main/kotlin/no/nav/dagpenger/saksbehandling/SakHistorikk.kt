@@ -25,22 +25,37 @@ data class SakHistorikk(
             .firstOrNull { it.behandlingId == behandlingId }
     }
 
-    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
-        saker.forEach { it.knyttTilSak(meldekortbehandlingOpprettetHendelse) }
+    fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse): KnyttTilSakResultat {
+        return saker.map { it.knyttTilSak(meldekortbehandlingOpprettetHendelse) }.knyttTilSakResultat()
     }
 
-    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
-        saker.forEach { it.knyttTilSak(manuellBehandlingOpprettetHendelse) }
+    fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse): KnyttTilSakResultat {
+        return saker.map { it.knyttTilSak(manuellBehandlingOpprettetHendelse) }.knyttTilSakResultat()
     }
 
-    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
-        saker().single { it.sakId == behandlingOpprettetHendelse.sakId }.knyttTilSak(
-            behandlingOpprettetHendelse = behandlingOpprettetHendelse,
-        )
+    fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): KnyttTilSakResultat {
+        return saker.map { it.knyttTilSak(behandlingOpprettetHendelse) }.knyttTilSakResultat()
     }
 
-    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
-        saker.forEach { it.knyttTilSak(søknadsbehandlingOpprettetHendelse) }
+    fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse): KnyttTilSakResultat {
+        return saker.map { it.knyttTilSak(søknadsbehandlingOpprettetHendelse) }.knyttTilSakResultat()
+    }
+
+    private fun List<KnyttTilSakResultat>.knyttTilSakResultat(): KnyttTilSakResultat {
+        val sakerTilKnyttet: List<KnyttTilSakResultat.KnyttetTilSak> = this.filterIsInstance<KnyttTilSakResultat.KnyttetTilSak>()
+        return when (sakerTilKnyttet.size) {
+            0 -> {
+                KnyttTilSakResultat.IkkeKnyttetTilSak(*saker.map { it.sakId }.toTypedArray())
+            }
+
+            1 -> {
+                KnyttTilSakResultat.KnyttetTilSak(sakerTilKnyttet.single().sak)
+            }
+
+            else -> {
+                KnyttTilSakResultat.KnyttetTilFlereSaker(*sakerTilKnyttet.map { it.sak.sakId }.toTypedArray())
+            }
+        }
     }
 
     fun leggTilSak(sak: Sak) = saker.add(sak)
