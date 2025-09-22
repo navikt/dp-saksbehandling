@@ -40,6 +40,7 @@ import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SettOppgaveAnsvarHendelse
@@ -171,7 +172,7 @@ internal object OppgaveApiTestHelper {
                 },
             utsattTil = utsattTil,
             behandlingId = behandling.behandlingId,
-            behandlingType = behandling.type,
+            utløstAv = behandling.utløstAv,
             person = person,
             meldingOmVedtak =
                 Oppgave.MeldingOmVedtak(
@@ -232,12 +233,14 @@ internal object OppgaveApiTestHelper {
                 skjermesSomEgneAnsatte = skjermesSomEgneAnsatte,
                 adressebeskyttelseGradering = UGRADERT,
             ),
+        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
     ): Oppgave {
         val behandling =
             Behandling(
                 behandlingId = behandlingId,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
+                utløstAv = utløstAvType,
             )
         return lagTestOppgaveMedTilstandOgBehandling(
             tilstand = tilstand,

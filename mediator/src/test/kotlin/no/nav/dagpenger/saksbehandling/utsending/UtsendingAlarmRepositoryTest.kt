@@ -4,9 +4,9 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType.KLAGE
-import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
 import no.nav.dagpenger.saksbehandling.Person
+import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.lagBehandling
@@ -27,12 +27,12 @@ class UtsendingAlarmRepositoryTest {
         val nå = LocalDateTime.now()
         val tjueFireTimerSiden = nå.minusHours(24)
         val person = lagPerson()
-        val behandling1 = lagBehandling(type = RETT_TIL_DAGPENGER)
-        val behandling2 = lagBehandling(type = RETT_TIL_DAGPENGER)
+        val behandling1 = lagBehandling(type = SØKNAD)
+        val behandling2 = lagBehandling(type = SØKNAD)
         val behandling3 = lagBehandling(type = KLAGE)
         val behandling4 = lagBehandling(type = KLAGE)
-        val behandling5 = lagBehandling(type = RETT_TIL_DAGPENGER)
-        val behandling6 = lagBehandling(type = RETT_TIL_DAGPENGER)
+        val behandling5 = lagBehandling(type = SØKNAD)
+        val behandling6 = lagBehandling(type = SØKNAD)
 
         DBTestHelper.withBehandlinger(
             person = person,
@@ -89,7 +89,7 @@ class UtsendingAlarmRepositoryTest {
     private fun DataSource.lagreUtsending(
         tilstand: Utsending.Tilstand.Type,
         tidspunkt: LocalDateTime = LocalDateTime.now(),
-        behandling: Behandling = lagBehandling(type = RETT_TIL_DAGPENGER),
+        behandling: Behandling = lagBehandling(type = SØKNAD),
         person: Person = lagPerson(),
     ): Utsending {
         val oppgave =

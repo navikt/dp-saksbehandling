@@ -4,10 +4,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.klage.KlageRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ForslagTilVedtakHendelse
 import no.nav.dagpenger.saksbehandling.journalpostid.JournalpostIdKlient
@@ -61,10 +61,10 @@ class RelevanteJournalpostIdOppslagTest {
 
     @Test
     fun `For klagebehandling skal vi først hente journalpost for klagen deretter utsending`() {
-        val klageBehandling = lagBehandling(type = BehandlingType.KLAGE)
+        val klageBehandling = lagBehandling(type = UtløstAvType.KLAGE)
         val oppgave =
             lagOppgave(
-                behandlingType = BehandlingType.KLAGE,
+                utløstAvType = UtløstAvType.KLAGE,
             )
         val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
         val journalpostIdOppslag =

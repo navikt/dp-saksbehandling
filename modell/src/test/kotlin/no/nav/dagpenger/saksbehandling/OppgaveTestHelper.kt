@@ -66,7 +66,7 @@ object OppgaveTestHelper {
             utsattTil = null,
             tilstandslogg = tilstandslogg,
             behandlingId = behandling.behandlingId,
-            behandlingType = behandling.type,
+            utløstAv = behandling.utløstAv,
             person = person,
             meldingOmVedtak = meldingOmVedtakKilde,
         )

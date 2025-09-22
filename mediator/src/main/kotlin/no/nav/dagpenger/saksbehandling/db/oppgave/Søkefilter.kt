@@ -4,11 +4,11 @@ import io.ktor.http.Parameters
 import io.ktor.http.parseQueryString
 import io.ktor.util.StringValues
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
 import no.nav.dagpenger.saksbehandling.Saksbehandler
 import no.nav.dagpenger.saksbehandling.TilgangType
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.adressebeskyttelseTilganger
 import java.time.LocalDate
 import java.util.UUID
@@ -21,7 +21,7 @@ data class Søkefilter(
     val oppgaveId: UUID? = null,
     val behandlingId: UUID? = null,
     val emneknagger: Set<String> = emptySet(),
-    val behandlingTyper: Set<BehandlingType> = emptySet(),
+    val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val paginering: Paginering? = Paginering.DEFAULT,
 ) {
     data class Paginering(
@@ -48,7 +48,7 @@ data class Søkefilter(
             val tilstander = builder.tilstander() ?: søkbareTilstander
             val mineOppgaver = builder.mineOppgaver() ?: false
             val emneknagger = builder.emneknagg() ?: emptySet()
-            val behandlingTyper = builder.behandlingTyper() ?: emptySet()
+            val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val paginering = builder.paginering()
 
             return Søkefilter(
@@ -60,7 +60,7 @@ data class Søkefilter(
                         else -> null
                     },
                 emneknagger = emneknagger,
-                behandlingTyper = behandlingTyper,
+                utløstAvTyper = utløstAvTyper,
                 paginering = paginering,
             )
         }
@@ -71,7 +71,7 @@ data class TildelNesteOppgaveFilter(
     val periode: Periode,
     val emneknagger: Set<String>,
     val tilstander: Set<Tilstand.Type> = emptySet(),
-    val behandlingTyper: Set<BehandlingType> = emptySet(),
+    val utløstAvTyper: Set<UtløstAvType> = emptySet(),
     val egneAnsatteTilgang: Boolean = false,
     val adressebeskyttelseTilganger: Set<AdressebeskyttelseGradering>,
     val harBeslutterRolle: Boolean = false,
@@ -87,13 +87,13 @@ data class TildelNesteOppgaveFilter(
             val adressebeskyttelseTilganger = saksbehandler.adressebeskyttelseTilganger()
             val harBeslutterRolle: Boolean = saksbehandler.tilganger.contains(TilgangType.BESLUTTER)
             val emneknagger = builder.emneknagg() ?: emptySet()
-            val behandlingTyper = builder.behandlingTyper() ?: emptySet()
+            val utløstAvTyper = builder.utløstAvTyper() ?: emptySet()
             val tilstander = builder.tilstander() ?: emptySet()
             return TildelNesteOppgaveFilter(
                 periode = Periode.fra(queryString),
                 emneknagger = emneknagger,
                 tilstander = tilstander,
-                behandlingTyper = behandlingTyper,
+                utløstAvTyper = utløstAvTyper,
                 egneAnsatteTilgang = egneAnsatteTilgang,
                 adressebeskyttelseTilganger = adressebeskyttelseTilganger,
                 harBeslutterRolle = harBeslutterRolle,
@@ -168,7 +168,7 @@ class FilterBuilder {
         return stringValues.getAll("tilstand")?.map { Tilstand.Type.valueOf(it) }?.toSet()
     }
 
-    fun behandlingTyper(): Set<BehandlingType>? {
-        return stringValues.getAll("behandlingType")?.map { BehandlingType.valueOf(it) }?.toSet()
+    fun utløstAvTyper(): Set<UtløstAvType>? {
+        return stringValues.getAll("utlostAv")?.map { UtløstAvType.valueOf(it) }?.toSet()
     }
 }

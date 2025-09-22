@@ -4,11 +4,11 @@ import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.lagBehandling
 import org.junit.jupiter.api.Test
@@ -35,7 +35,7 @@ class PostgresTriggerTest {
                 opprettet = opprettet,
                 tilstand = Oppgave.KlarTilBehandling,
                 behandlingId = behandlingId,
-                behandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+                utløstAv = UtløstAvType.SØKNAD,
                 person = testPerson,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(

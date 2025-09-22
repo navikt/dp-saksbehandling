@@ -4,11 +4,11 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
@@ -30,7 +30,7 @@ class SakPostgresRepositoryTest {
     private val behandling1 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            type = BehandlingType.RETT_TIL_DAGPENGER,
+            utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             oppgaveId = oppgaveId,
             hendelse = TomHendelse,
@@ -38,21 +38,21 @@ class SakPostgresRepositoryTest {
     private val behandling2 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            type = BehandlingType.RETT_TIL_DAGPENGER,
+            utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling3 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            type = BehandlingType.RETT_TIL_DAGPENGER,
+            utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )
     private val behandling4 =
         Behandling(
             behandlingId = UUIDv7.ny(),
-            type = BehandlingType.RETT_TIL_DAGPENGER,
+            utløstAv = UtløstAvType.SØKNAD,
             opprettet = nå,
             hendelse = TomHendelse,
         )

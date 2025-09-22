@@ -9,8 +9,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
@@ -46,7 +46,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                type = BehandlingType.RETT_TIL_DAGPENGER,
+                utløstAv = UtløstAvType.SØKNAD,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -226,7 +226,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                type = BehandlingType.RETT_TIL_DAGPENGER,
+                utløstAv = UtløstAvType.SØKNAD,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
@@ -395,7 +395,7 @@ class UtsendingMediatorTest {
         val behandling =
             Behandling(
                 behandlingId = UUIDv7.ny(),
-                type = BehandlingType.KLAGE,
+                utløstAv = UtløstAvType.KLAGE,
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )

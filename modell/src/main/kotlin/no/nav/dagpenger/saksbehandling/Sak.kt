@@ -27,7 +27,7 @@ data class Sak(
             behandlinger.add(
                 Behandling(
                     behandlingId = søknadsbehandlingOpprettetHendelse.behandlingId,
-                    type = BehandlingType.RETT_TIL_DAGPENGER,
+                    utløstAv = UtløstAvType.SØKNAD,
                     opprettet = søknadsbehandlingOpprettetHendelse.opprettet,
                     hendelse = søknadsbehandlingOpprettetHendelse,
                 ),
@@ -48,7 +48,7 @@ data class Sak(
             behandlinger.add(
                 Behandling(
                     behandlingId = meldekortbehandlingOpprettetHendelse.behandlingId,
-                    type = BehandlingType.MELDEKORT,
+                    utløstAv = UtløstAvType.MELDEKORT,
                     opprettet = meldekortbehandlingOpprettetHendelse.opprettet,
                     hendelse = meldekortbehandlingOpprettetHendelse,
                 ),
@@ -57,14 +57,13 @@ data class Sak(
     }
 
     fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
-        val forrigeBehandling: Behandling? =
-            this.behandlinger.find { it.behandlingId == manuellBehandlingOpprettetHendelse.basertPåBehandling }
-
-        if (forrigeBehandling != null) {
+        if (this.behandlinger.map { it.behandlingId }
+                .contains(manuellBehandlingOpprettetHendelse.basertPåBehandling)
+        ) {
             behandlinger.add(
                 Behandling(
                     behandlingId = manuellBehandlingOpprettetHendelse.behandlingId,
-                    type = forrigeBehandling.type,
+                    utløstAv = UtløstAvType.MANUELL,
                     opprettet = manuellBehandlingOpprettetHendelse.opprettet,
                     hendelse = manuellBehandlingOpprettetHendelse,
                 ),
@@ -76,7 +75,7 @@ data class Sak(
         behandlinger.add(
             Behandling(
                 behandlingId = behandlingOpprettetHendelse.behandlingId,
-                type = behandlingOpprettetHendelse.type,
+                utløstAv = behandlingOpprettetHendelse.type,
                 opprettet = behandlingOpprettetHendelse.opprettet,
                 hendelse = behandlingOpprettetHendelse,
             ),

@@ -2,8 +2,6 @@ package no.nav.dagpenger.saksbehandling.db
 
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
-import no.nav.dagpenger.saksbehandling.BehandlingType
-import no.nav.dagpenger.saksbehandling.BehandlingType.RETT_TIL_DAGPENGER
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.MeldingOmVedtakKilde.DP_SAK
 import no.nav.dagpenger.saksbehandling.Person
@@ -11,6 +9,8 @@ import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
 import no.nav.dagpenger.saksbehandling.UUIDv7
+import no.nav.dagpenger.saksbehandling.UtløstAvType
+import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
@@ -100,7 +100,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 behandling: Behandling =
                     Behandling(
                         behandlingId = UUIDv7.ny(),
-                        type = RETT_TIL_DAGPENGER,
+                        utløstAv = SØKNAD,
                         opprettet = LocalDateTime.now(),
                         hendelse = TomHendelse,
                     ),
@@ -142,7 +142,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 val behandling =
                     Behandling(
                         behandlingId = oppgave.behandlingId,
-                        type = oppgave.behandlingType,
+                        utløstAv = oppgave.utløstAv,
                         opprettet = oppgave.opprettet,
                         hendelse = TomHendelse,
                     )
@@ -162,7 +162,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             emneknagger: Set<String> = emptySet(),
             person: Person = testPerson,
             opprettet: LocalDateTime = LocalDateTime.now(),
-            type: BehandlingType = RETT_TIL_DAGPENGER,
+            type: UtløstAvType = SØKNAD,
             tilstandslogg: Tilstandslogg = Tilstandslogg(),
             saksbehandlerIdent: String? = null,
         ): Oppgave {
@@ -171,7 +171,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
             val behandling =
                 Behandling(
                     behandlingId = UUIDv7.ny(),
-                    type = type,
+                    utløstAv = type,
                     opprettet = opprettet,
                     hendelse = TomHendelse,
                 )
@@ -197,7 +197,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 tilstandslogg = tilstandslogg,
                 behandlerIdent = saksbehandlerIdent,
                 behandlingId = behandling.behandlingId,
-                behandlingType = type,
+                utløstAv = type,
                 person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(
@@ -210,7 +210,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
         fun leggTilOppgave(
             oppgaveId: UUID,
             behandlingId: UUID,
-            behandlingType: BehandlingType = RETT_TIL_DAGPENGER,
+            utløstAvType: UtløstAvType = SØKNAD,
             person: Person = testPerson,
         ) {
             Oppgave(
@@ -219,7 +219,7 @@ class DBTestHelper private constructor(private val ds: DataSource) :
                 opprettet = LocalDateTime.now(),
                 tilstand = Oppgave.KlarTilBehandling,
                 behandlingId = behandlingId,
-                behandlingType = behandlingType,
+                utløstAv = utløstAvType,
                 person = person,
                 meldingOmVedtak =
                     Oppgave.MeldingOmVedtak(

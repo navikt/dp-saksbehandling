@@ -1,4 +1,5 @@
 package no.nav.dagpenger.saksbehandling.vedtaksmelding
+
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -11,7 +12,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.ktor.client.metrics.PrometheusMetricsPlugin
-import no.nav.dagpenger.saksbehandling.BehandlingType
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
@@ -46,9 +47,17 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         saksbehandlerToken: String,
-        behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+        utløstAvType: UtløstAvType = UtløstAvType.SØKNAD,
         sakId: String? = null,
     ): Result<String> {
+        val utløstAvTypeString =
+            when (utløstAvType) {
+                UtløstAvType.KLAGE -> "KLAGE"
+                UtløstAvType.SØKNAD -> "RETT_TIL_DAGPENGER"
+                UtløstAvType.MELDEKORT -> "MELDEKORT"
+                UtløstAvType.MANUELL -> "MANUELL"
+            }
+
         val meldingOmVedtakDataDTO =
             MeldingOmVedtakDataDTO(
                 fornavn = person.fornavn,
@@ -56,7 +65,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingstype = behandlingType.name,
+                behandlingstype = utløstAvTypeString,
                 sakId = sakId,
             )
         return kotlin.runCatching {
@@ -77,7 +86,7 @@ class MeldingOmVedtakKlient(
         beslutter: BehandlerDTO?,
         behandlingId: UUID,
         maskinToken: String,
-        behandlingType: BehandlingType = BehandlingType.RETT_TIL_DAGPENGER,
+        utløstAv: UtløstAvType = UtløstAvType.SØKNAD,
         sakId: String? = null,
     ): Result<String> {
         val meldingOmVedtakDataDTO =
@@ -87,7 +96,7 @@ class MeldingOmVedtakKlient(
                 fodselsnummer = person.ident,
                 saksbehandler = saksbehandler,
                 beslutter = beslutter,
-                behandlingstype = behandlingType.name,
+                behandlingstype = utløstAv.name,
                 sakId = sakId,
             )
         return kotlin.runCatching {

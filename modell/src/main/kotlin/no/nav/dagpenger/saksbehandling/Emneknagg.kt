@@ -41,9 +41,4 @@ class Emneknagg(val navn: String) {
         AVBRUTT_TRUKKET_SØKNAD("Trukket søknad"),
         AVBRUTT_ANNET("Annen avbruddsårsak"),
     }
-
-    enum class BehandletHendelseType(val visningsnavn: String) {
-        MELDEKORT("Meldekortsberegning"),
-        MANUELL("Manuell"),
-    }
 }

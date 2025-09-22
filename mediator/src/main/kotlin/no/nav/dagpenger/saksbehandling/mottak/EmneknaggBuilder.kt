@@ -118,11 +118,6 @@ class EmneknaggBuilder(
                     addAll(avslagEmneknagger())
                 }
             }
-            val hendelseType = behandletHendelse["type"].asText()
-            when (hendelseType) {
-                "Meldekort" -> add(Emneknagg.BehandletHendelseType.MELDEKORT.visningsnavn)
-                "Manuell" -> add(Emneknagg.BehandletHendelseType.MANUELL.visningsnavn)
-            }
         }
     }
 

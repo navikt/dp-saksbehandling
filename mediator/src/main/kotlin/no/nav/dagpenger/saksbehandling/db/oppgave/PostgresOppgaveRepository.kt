@@ -7,7 +7,6 @@ import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
-import no.nav.dagpenger.saksbehandling.BehandlingType
 import no.nav.dagpenger.saksbehandling.Notat
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.Avbrutt
@@ -36,6 +35,7 @@ import no.nav.dagpenger.saksbehandling.Oppgave.UnderKontroll
 import no.nav.dagpenger.saksbehandling.Person
 import no.nav.dagpenger.saksbehandling.Tilstandsendring
 import no.nav.dagpenger.saksbehandling.Tilstandslogg
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode.Companion.UBEGRENSET_PERIODE
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
@@ -87,11 +87,11 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
             session.transaction { tx ->
                 val emneknagger = filter.emneknagger.joinToString { "'$it'" }
                 val tillatteGraderinger = filter.adressebeskyttelseTilganger.joinToString { "'$it'" }
-                val behandlingTyperAsText = filter.behandlingTyper.joinToString { "'$it'" }
+                val utløstAvTyperAsText = filter.utløstAvTyper.joinToString { "'$it'" }
                 val tilstanderAsText = filter.tilstander.joinToString { "'$it'" }
-                val behandlingTypeClause =
-                    if (filter.behandlingTyper.isNotEmpty()) {
-                        " AND beha.behandling_type IN ($behandlingTyperAsText) "
+                val utløstAvTypeClause =
+                    if (filter.utløstAvTyper.isNotEmpty()) {
+                        " AND beha.utlost_av IN ($utløstAvTyperAsText) "
                     } else {
                         ""
                     }
@@ -141,7 +141,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     AND    ( NOT pers.skjermes_som_egne_ansatte
                           OR :har_tilgang_til_egne_ansatte )
                     AND      pers.adressebeskyttelse_gradering IN ($tillatteGraderinger)
-                    """ + behandlingTypeClause + tilstandClause + emneknaggClause
+                    """ + utløstAvTypeClause + tilstandClause + emneknaggClause
 
                 // language=SQL
                 val unionAll = """UNION ALL"""
@@ -176,7 +176,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                          OR :har_tilgang_til_egne_ansatte )
                     AND     pers.adressebeskyttelse_gradering IN ($tillatteGraderinger) 
                     AND     logg.hendelse->'utførtAv'->>'navIdent'::text != :navIdent
-                """ + behandlingTypeClause + tilstandClause + emneknaggClause +
+                """ + utløstAvTypeClause + tilstandClause + emneknaggClause +
                         """
                         )
                         """.trimIndent()
@@ -459,10 +459,10 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                     true -> " AND oppg.tilstand IN ($tilstanderAsText) "
                     false -> ""
                 }
-            val behandlingTyperAsText: String = søkeFilter.behandlingTyper.joinToString { "'$it'" }
-            val behandlingTypeClause =
-                when (søkeFilter.behandlingTyper.isNotEmpty()) {
-                    true -> " AND beha.behandling_type IN ($behandlingTyperAsText) "
+            val utløstAvTyperAsText: String = søkeFilter.utløstAvTyper.joinToString { "'$it'" }
+            val utløstAvTypeClause =
+                when (søkeFilter.utløstAvTyper.isNotEmpty()) {
+                    true -> " AND beha.utlost_av IN ($utløstAvTyperAsText) "
                     false -> ""
                 }
 
@@ -516,7 +516,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                         oppg.melding_om_vedtak_kilde,
                         oppg.kontrollert_brev,
                         beha.opprettet AS behandling_opprettet,
-                        beha.behandling_type
+                        beha.utlost_av
                 """.trimIndent()
 
             val antallSelect =
@@ -535,7 +535,7 @@ class PostgresOppgaveRepository(private val dataSource: DataSource) :
                 )
                     .append(
                         tilstandClause,
-                        behandlingTypeClause,
+                        utløstAvTypeClause,
                         saksbehandlerClause,
                         personIdentClause,
                         oppgaveIdClause,
@@ -907,7 +907,7 @@ private fun Row.rehydrerOppgave(dataSource: DataSource): Oppgave {
         utsattTil = this.localDateOrNull("utsatt_til"),
         tilstandslogg = tilstandslogg,
         behandlingId = this.uuid("behandling_id"),
-        behandlingType = BehandlingType.valueOf(this.string("behandling_type")),
+        utløstAv = UtløstAvType.valueOf(this.string("utlost_av")),
         person = person,
         meldingOmVedtak =
             Oppgave.MeldingOmVedtak(
