@@ -12,6 +12,16 @@ object AlertManager {
         val type: String
     }
 
+    data class KnytningTilSakFeil(
+        val behandlingId: UUID,
+        val hendelseType: String,
+        val knyttTilSakResultat: KnyttTilSakResultat,
+    ) : AlertType {
+        override val feilMelding =
+            "Knytning til sak feilet for behandlingId: $behandlingId, hendelsesType: $hendelseType og resultat: $knyttTilSakResultat"
+        override val type: String = "KNYTNING_TIL_SAK_FEIL"
+    }
+
     data class UtsendingIkkeFullført(
         val utsendingId: UUID,
         val tilstand: String,

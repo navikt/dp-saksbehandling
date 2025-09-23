@@ -6,7 +6,10 @@ import SkjermetPersonException
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.dagpenger.saksbehandling.AlertManager
+import no.nav.dagpenger.saksbehandling.AlertManager.sendAlertTilRapid
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
 import no.nav.dagpenger.saksbehandling.Sak
 import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UtløstAvType
@@ -79,28 +82,53 @@ class SakMediator(
 
     fun knyttTilSak(meldekortbehandlingOpprettetHendelse: MeldekortbehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(meldekortbehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(meldekortbehandlingOpprettetHendelse)
+            it.knyttTilSak(meldekortbehandlingOpprettetHendelse).also { resultat ->
+                sjekkResultat(
+                    meldekortbehandlingOpprettetHendelse.behandlingId,
+                    meldekortbehandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
             sakRepository.lagre(it)
         }
     }
 
     fun knyttTilSak(manuellBehandlingOpprettetHendelse: ManuellBehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(manuellBehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(manuellBehandlingOpprettetHendelse)
+            it.knyttTilSak(manuellBehandlingOpprettetHendelse).also { resultat ->
+                sjekkResultat(
+                    manuellBehandlingOpprettetHendelse.behandlingId,
+                    manuellBehandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
             sakRepository.lagre(it)
         }
     }
 
     fun knyttTilSak(behandlingOpprettetHendelse: BehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(behandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse)
+            it.knyttTilSak(behandlingOpprettetHendelse = behandlingOpprettetHendelse).also {
+                    resultat ->
+                sjekkResultat(
+                    behandlingOpprettetHendelse.behandlingId,
+                    behandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
             sakRepository.lagre(it)
         }
     }
 
     fun knyttTilSak(søknadsbehandlingOpprettetHendelse: SøknadsbehandlingOpprettetHendelse) {
         sakRepository.hentSakHistorikk(søknadsbehandlingOpprettetHendelse.ident).also {
-            it.knyttTilSak(søknadsbehandlingOpprettetHendelse)
+            it.knyttTilSak(søknadsbehandlingOpprettetHendelse).also { resultat ->
+                sjekkResultat(
+                    søknadsbehandlingOpprettetHendelse.behandlingId,
+                    søknadsbehandlingOpprettetHendelse.javaClass.simpleName,
+                    resultat,
+                )
+            }
             sakRepository.lagre(it)
         }
     }
@@ -151,5 +179,29 @@ class SakMediator(
                 ).toJson(),
         )
         logger.info { "Publiserte avbryt_behandling hendelse" }
+    }
+
+    private fun SakMediator.sjekkResultat(
+        behandlingId: UUID,
+        hendelseType: String,
+        resultat: KnyttTilSakResultat,
+    ) {
+        when (resultat) {
+            is KnyttTilSakResultat.KnyttetTilSak -> {
+                logger.info { "Knyttet behandlingId: $behandlingId til sakId: ${resultat.sak.sakId}" }
+            }
+            else -> {
+                logger.warn { "Klarte ikke å knytte behandlingId: $behandlingId av type $hendelseType til noen sak" }
+                rapidsConnection.sendAlertTilRapid(
+                    feilType =
+                        AlertManager.KnytningTilSakFeil(
+                            behandlingId = behandlingId,
+                            hendelseType = hendelseType,
+                            knyttTilSakResultat = resultat,
+                        ),
+                    utvidetFeilMelding = null,
+                )
+            }
+        }
     }
 }

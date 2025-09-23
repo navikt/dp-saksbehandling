@@ -4,11 +4,16 @@ import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
+import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering
+import no.nav.dagpenger.saksbehandling.KnyttTilSakResultat
+import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
@@ -16,6 +21,7 @@ import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakPostgresRepository
+import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellBehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.MeldekortbehandlingOpprettetHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.SøknadsbehandlingOpprettetHendelse
@@ -334,6 +340,33 @@ class SakMediatorTest {
             packet["behandlingId"].asUUID() shouldBe behandlingIdSøknadNyRett
             packet["søknadId"].asUUID() shouldBe søknadId
             packet["ident"].asText() shouldBe testIdent
+        }
+    }
+
+    @Test
+    fun `Skal sende ut alert dersom vi ikke får knyttet til en sak`() {
+        val sakId = UUIDv7.ny()
+        val mockSakHistorikk =
+            mockk<SakHistorikk>().also {
+                every { it.knyttTilSak(any<SøknadsbehandlingOpprettetHendelse>()) } returns
+                    KnyttTilSakResultat.IkkeKnyttetTilSak(
+                        sakId,
+                    )
+            }
+        SakMediator(
+            sakRepository =
+                mockk<SakRepository>(relaxed = true).also {
+                    every { it.hentSakHistorikk(testIdent) } returns mockSakHistorikk
+                    every { it.lagre(mockSakHistorikk) } just Runs
+                },
+            personMediator = mockk(relaxed = true),
+        ).also {
+            it.setRapidsConnection(testRapid)
+            it.knyttTilSak(søknadsbehandlingOpprettetHendelseNyRett)
+            testRapid.inspektør.size shouldBe 1
+            val packet = testRapid.inspektør.message(0)
+            packet["@event_name"].asText() shouldBe "saksbehandling_alert"
+            packet["alertType"].asText() shouldBe "KNYTNING_TIL_SAK_FEIL"
         }
     }
 
