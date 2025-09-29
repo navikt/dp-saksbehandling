@@ -11,11 +11,11 @@ sealed class KnyttTilSakResultat {
     data class KnyttetTilSak(val sak: Sak) : KnyttTilSakResultat()
 
     data class IkkeKnyttetTilSak(val sakIder: Set<UUID>) : KnyttTilSakResultat() {
-        constructor(vararg saksid: UUID) : this(saksid.toSet())
+        constructor(vararg sakId: UUID) : this(sakId.toSet())
     }
 
     data class KnyttetTilFlereSaker(val sakIder: Set<UUID>) : KnyttTilSakResultat() {
-        constructor(vararg saksid: UUID) : this(saksid.toSet())
+        constructor(vararg sakId: UUID) : this(sakId.toSet())
     }
 }
 
