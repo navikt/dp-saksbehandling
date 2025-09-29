@@ -42,7 +42,7 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-api:1.54.1")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.1")
 
-    api("com.fasterxml.uuid:java-uuid-generator:5.1.0")
+    api("com.fasterxml.uuid:java-uuid-generator:5.1.1")
 
     testImplementation(libs.mockk)
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
