@@ -92,6 +92,10 @@ internal class OppgaveDTOMapper(
         return lagPersonDTO(person, pdlPerson)
     }
 
+    fun finnSisteSakId(ident: String): UUID? {
+        return sakMediator.finnSisteSakId(ident)
+    }
+
     suspend fun lagPersonOversiktDTO(
         person: Person,
         oppgaver: List<OppgaveOversiktDTO>,

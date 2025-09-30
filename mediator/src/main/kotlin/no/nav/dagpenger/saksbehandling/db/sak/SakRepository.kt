@@ -31,6 +31,10 @@ interface SakRepository {
 
     fun finnSakHistorikk(ident: String): SakHistorikk?
 
+    fun hentSisteSakId(ident: String): UUID
+
+    fun finnSisteSakId(ident: String): UUID?
+
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID
 
     fun hentDagpengerSakIdForBehandlingId(behandlingId: UUID): UUID
@@ -113,6 +117,34 @@ class SakPostgresRepository(
             )
         }
     }
+
+    override fun finnSisteSakId(ident: String): UUID? =
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT   sak.id
+                        FROM     sak_v2 sak
+                        JOIN     person_v1 per     ON sak.person_id = per.id
+                        JOIN     behandling_v1 beh ON beh.sak_id    = sak.id
+                        WHERE    per.ident = :ident
+                        AND      sak.er_dp_sak
+                        ORDER BY beh.opprettet DESC
+                        LIMIT 1
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "ident" to ident,
+                        ),
+                ).map { row ->
+                    row.uuid("id")
+                }.asSingle,
+            )
+        }
+
+    override fun hentSisteSakId(ident: String) = finnSisteSakId(ident) ?: throw DataNotFoundException("Fant ingen sak for personen")
 
     override fun hentSakIdForBehandlingId(behandlingId: UUID): UUID =
         sessionOf(dataSource).use { session ->

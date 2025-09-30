@@ -80,6 +80,17 @@ internal fun Route.oppgaveApi(
                 call.respond(status = HttpStatusCode.OK, skalVarsle)
             }
         }
+        route("person/siste-sak") {
+            post {
+                val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
+                val sisteSakId =
+                    oppgaveDTOMapper.finnSisteSakId(
+                        ident = personIdentDTO.ident,
+                    )
+                //TODO
+                call.respond(status = HttpStatusCode.OK, SisteSakIdDTO(sakId = sisteSakId))
+            }
+        }
     }
 
     authenticate("azureAd") {
