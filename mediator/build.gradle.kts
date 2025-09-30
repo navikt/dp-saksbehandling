@@ -37,7 +37,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.logging.jvm)
     implementation("de.slub-dresden:urnlib:3.0.0")
-    implementation("dev.hsbrysk:caffeine-coroutines:2.0.2")
+    implementation("dev.hsbrysk:caffeine-coroutines:2.0.3")
 
     implementation("io.opentelemetry:opentelemetry-api:1.54.1")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.20.1")
