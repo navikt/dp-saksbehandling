@@ -156,8 +156,8 @@ class SakMediator(
         }
     }
 
-    fun finnSisteSakId(ident: String): UUID? {
-        return sakRepository.finnSisteSakId(ident)
+    fun hentSisteSakId(ident: String): UUID {
+        return sakRepository.hentSisteSakId(ident)
     }
 
     fun hentSakIdForBehandlingId(behandlingId: UUID): UUID {

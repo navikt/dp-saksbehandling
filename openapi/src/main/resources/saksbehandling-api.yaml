@@ -807,6 +807,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /person/siste-sak:
+    post:
+      summary: Henter sak-id for siste sak personen har hatt en behandling i
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonIdent'
+      responses:
+        '200':
+          description: Vellykket respons med sak-id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SakId'
+        '404':
+          description: Personen har ingen sak i dp-sak
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /behandling/{behandlingId}/oppgaveId:
     get:
       summary: Henter oppgaveId basert på en behandlingId
@@ -1234,6 +1263,15 @@ components:
         - ident
 
     PersonId:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+      required:
+        - id
+
+    SakId:
       type: object
       properties:
         id:

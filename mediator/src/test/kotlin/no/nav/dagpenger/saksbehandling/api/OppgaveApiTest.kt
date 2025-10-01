@@ -78,6 +78,7 @@ import no.nav.dagpenger.saksbehandling.api.models.PersonOversiktDTO
 import no.nav.dagpenger.saksbehandling.api.models.SikkerhetstiltakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.behandling.BehandlingKreverIkkeTotrinnskontrollException
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.søknadId
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
@@ -153,9 +154,19 @@ class OppgaveApiTest {
     }
 
     @Test
-    fun `Skal avvise kall uten gyldig maskin til maskin token`() {
+    fun `Skal avvise kall uten gyldig maskin til maskin token ved kall til skal-varsle-om-ettersending`() {
         withOppgaveApi {
             client.request("/person/skal-varsle-om-ettersending") {
+                method = HttpMethod.Post
+                autentisert(token = ugyldigToken)
+            }.status shouldBe HttpStatusCode.Unauthorized
+        }
+    }
+
+    @Test
+    fun `Skal avvise kall uten gyldig maskin til maskin token ved kall til siste-sak`() {
+        withOppgaveApi {
+            client.request("/person/siste-sak") {
                 method = HttpMethod.Post
                 autentisert(token = ugyldigToken)
             }.status shouldBe HttpStatusCode.Unauthorized
@@ -757,7 +768,8 @@ class OppgaveApiTest {
 
     @Test
     fun `Saksbehandler skal kunne avbryte en oppgave`() {
-        val oppgave = lagTestOppgaveMedTilstand(tilstand = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler.navIdent)
+        val oppgave =
+            lagTestOppgaveMedTilstand(tilstand = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler.navIdent)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = saksbehandler.navIdent)
         val avbrytOppgaveHendelse =
             AvbrytOppgaveHendelse(
@@ -803,7 +815,8 @@ class OppgaveApiTest {
 
     @Test
     fun `Skal får 404 hvis man forsøker å avbryte en oppgave som ikke finnes`() {
-        val oppgave = lagTestOppgaveMedTilstand(tilstand = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler.navIdent)
+        val oppgave =
+            lagTestOppgaveMedTilstand(tilstand = UNDER_BEHANDLING, saksbehandlerIdent = saksbehandler.navIdent)
         val saksbehandlerToken = gyldigSaksbehandlerToken(navIdent = saksbehandler.navIdent)
         val avbrytOppgaveHendelse =
             AvbrytOppgaveHendelse(
@@ -1240,6 +1253,42 @@ class OppgaveApiTest {
 
             client.get("/behandling/$behandlingIdSomIkkeFinnes/oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
+            }
+        }
+    }
+
+    @Test
+    fun `Skal hente sakId for siste sak hvis bruker har noen saker`() {
+        val identMedSaker = "12345612345"
+        val identUtenSaker = "01010112345"
+        val sakId = UUIDv7.ny()
+        val oppgaveDTOMapperMock =
+            mockk<OppgaveDTOMapper>().also {
+                every { it.hentSisteSakId(ident = identMedSaker) } returns sakId
+                every { it.hentSisteSakId(ident = identUtenSaker) } throws DataNotFoundException("Fant ingen sak")
+            }
+        withOppgaveApi(
+            oppgaveMediator = mockk(),
+            oppgaveDTOMapper = oppgaveDTOMapperMock,
+            personMediator = mockk(),
+        ) {
+            client.post("/person/siste-sak") {
+                autentisert(token = gyldigMaskinToken())
+                contentType(ContentType.Application.Json)
+                setBody(
+                    //language=JSON
+                    """{"ident": "$identMedSaker"}
+                    """.trimMargin(),
+                )
+            }.also { response ->
+                response.status shouldBe HttpStatusCode.OK
+                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder
+                    //language=JSON
+                    """
+                    {
+                      "id" : "$sakId"
+                    }
+                    """.trimIndent()
             }
         }
     }
