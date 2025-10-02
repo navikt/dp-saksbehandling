@@ -46,14 +46,14 @@ class PostgresSakRepositoryTest {
         Behandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå.minusDays(3),
+            opprettet = nå.minusDays(1),
             hendelse = TomHendelse,
         )
     private val behandling4 =
         Behandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå.minusDays(1),
+            opprettet = nå.minusDays(3),
             hendelse = TomHendelse,
         )
     private val sak1 =
@@ -70,8 +70,8 @@ class PostgresSakRepositoryTest {
             opprettet = nå,
         ).also {
             // Emulerer out of order lesing
-            it.leggTilBehandling(behandling3)
             it.leggTilBehandling(behandling4)
+            it.leggTilBehandling(behandling3)
         }
     private val sakHistorikk =
         SakHistorikk(
