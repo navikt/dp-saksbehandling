@@ -1,23 +1,18 @@
-package no.nav.dagpenger.saksbehandling.db
+package no.nav.dagpenger.saksbehandling.db.oppgave
 
 import io.kotest.assertions.throwables.shouldNotThrowAnyUnit
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.ktor.http.Parameters
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.Companion.søkbareTilstander
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
-import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
-import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
-import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
-import no.nav.dagpenger.saksbehandling.db.oppgave.Periode
-import no.nav.dagpenger.saksbehandling.db.oppgave.Søkefilter
+import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.UtløstAvType
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
 class SøkefilterTest {
     @Test
     fun `Skal kunne initialisere et søkefilter fra Ktor sin QueryParameters`() {
-        Parameters.build {
+        Parameters.Companion.build {
             this.appendAll("tilstand", listOf("KLAR_TIL_BEHANDLING", "UNDER_BEHANDLING"))
             this.appendAll("utlostAv", listOf("SØKNAD", "KLAGE"))
             this.appendAll("emneknagg", listOf("Permittert", "Permittert fisk"))
@@ -34,11 +29,15 @@ class SøkefilterTest {
                             fom = LocalDate.of(2021, 1, 1),
                             tom = LocalDate.of(2023, 1, 1),
                         ),
-                    tilstander = setOf(KLAR_TIL_BEHANDLING, UNDER_BEHANDLING),
+                    tilstander =
+                        setOf(
+                            Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING,
+                            Oppgave.Tilstand.Type.UNDER_BEHANDLING,
+                        ),
                     utløstAvTyper =
                         setOf(
-                            SØKNAD,
-                            KLAGE,
+                            UtløstAvType.SØKNAD,
+                            UtløstAvType.KLAGE,
                         ),
                     emneknagger = setOf("Permittert", "Permittert fisk"),
                     saksbehandlerIdent = "testIdent",
@@ -49,10 +48,10 @@ class SøkefilterTest {
 
     @Test
     fun `Bruk default verdier dersom query parameters ikke inneholder mine, tilstand, fom, tom eller paginering`() {
-        Søkefilter.fra(Parameters.Empty, "testIdent") shouldBe
+        Søkefilter.fra(Parameters.Companion.Empty, "testIdent") shouldBe
             Søkefilter(
                 periode = Periode.UBEGRENSET_PERIODE,
-                tilstander = søkbareTilstander,
+                tilstander = Oppgave.Tilstand.Type.Companion.søkbareTilstander,
                 saksbehandlerIdent = null,
                 personIdent = null,
                 oppgaveId = null,
