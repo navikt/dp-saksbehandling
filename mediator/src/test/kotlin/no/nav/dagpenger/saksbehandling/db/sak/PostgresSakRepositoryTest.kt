@@ -84,7 +84,7 @@ class PostgresSakRepositoryTest {
     @Test
     fun `Skal kunne lagre sakhistorikk`() {
         DBTestHelper.withPerson(person) { dataSource ->
-            val sakRepository = SakPostgresRepository(dataSource = dataSource)
+            val sakRepository = PostgresSakRepository(dataSource = dataSource)
             sakRepository.lagre(sakHistorikk)
             this.leggTilOppgave(oppgaveId, behandling1.behandlingId)
             val saksHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
@@ -104,7 +104,7 @@ class PostgresSakRepositoryTest {
     @Test
     fun `henting av sakId basert på behandlingId`() {
         DBTestHelper.withSaker(saker = listOf(sak1)) { ds ->
-            val sakRepository = SakPostgresRepository(ds)
+            val sakRepository = PostgresSakRepository(ds)
 
             sakRepository.merkSakenSomDpSak(sak1.sakId, true)
             sakRepository.hentSakIdForBehandlingId(behandling1.behandlingId) shouldBe sak1.sakId

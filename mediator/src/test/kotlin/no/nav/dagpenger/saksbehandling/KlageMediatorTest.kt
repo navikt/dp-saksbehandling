@@ -21,7 +21,7 @@ import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
 import no.nav.dagpenger.saksbehandling.db.klage.PostgresKlageRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.SakPostgresRepository
+import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
@@ -813,7 +813,7 @@ class KlageMediatorTest {
             val sakMediator =
                 SakMediator(
                     personMediator = personMediator,
-                    sakRepository = SakPostgresRepository(dataSource = dataSource),
+                    sakRepository = PostgresSakRepository(dataSource = dataSource),
                 ).also {
                     it.setRapidsConnection(rapidsConnection = testRapid)
                 }

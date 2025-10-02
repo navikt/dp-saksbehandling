@@ -51,7 +51,7 @@ import no.nav.dagpenger.saksbehandling.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
-import no.nav.dagpenger.saksbehandling.db.sak.SakPostgresRepository
+import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.hendelser.AvbrytOppgaveHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingAvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.BehandlingOpprettetHendelse
@@ -1058,7 +1058,7 @@ OppgaveMediatorTest {
                         personRepository = personRepository,
                         oppslag = oppslagMock,
                     ),
-                sakRepository = SakPostgresRepository(dataSource),
+                sakRepository = PostgresSakRepository(dataSource),
             ).also {
                 it.setRapidsConnection(testRapid)
             }
@@ -1151,7 +1151,7 @@ OppgaveMediatorTest {
                             personRepository = PostgresPersonRepository(dataSource),
                             oppslag = oppslagMock,
                         ),
-                    sakRepository = SakPostgresRepository(dataSource),
+                    sakRepository = PostgresSakRepository(dataSource),
                 ).also {
                     it.setRapidsConnection(testRapid)
                 }
