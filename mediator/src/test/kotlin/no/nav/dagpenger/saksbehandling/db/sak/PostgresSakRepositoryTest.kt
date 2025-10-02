@@ -82,17 +82,17 @@ class PostgresSakRepositoryTest {
         }
 
     @Test
-    fun `Skal kunne lagre sakhistorikk`() {
+    fun `Skal kunne lagre sakHistorikk`() {
         DBTestHelper.withPerson(person) { dataSource ->
             val sakRepository = PostgresSakRepository(dataSource = dataSource)
             sakRepository.lagre(sakHistorikk)
             this.leggTilOppgave(oppgaveId, behandling1.behandlingId)
-            val saksHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
+            val sakHistorikkFraDB = sakRepository.hentSakHistorikk(person.ident)
 
-            saksHistorikkFraDB shouldBe sakHistorikk
+            sakHistorikkFraDB shouldBe sakHistorikk
 
             // Sjekker at saker og behandling blir sortert kronologisk, med nyeste først
-            saksHistorikkFraDB
+            sakHistorikkFraDB
                 .saker()
                 .first()
                 .behandlinger()
@@ -102,7 +102,7 @@ class PostgresSakRepositoryTest {
     }
 
     @Test
-    fun `henting av sakId basert på behandlingId`() {
+    fun `Hent sakId basert på behandlingId`() {
         DBTestHelper.withSaker(saker = listOf(sak1)) { ds ->
             val sakRepository = PostgresSakRepository(ds)
 
@@ -115,6 +115,22 @@ class PostgresSakRepositoryTest {
             shouldThrow<DataNotFoundException> {
                 sakRepository.hentDagpengerSakIdForBehandlingId(behandling1.behandlingId) shouldBe sak1.sakId
             }
+        }
+    }
+
+    @Test
+    fun `Henter sakId til nyeste dp-sak for en person`() {
+        DBTestHelper.withSaker(saker = listOf(sak1, sak2)) { ds ->
+            val sakRepository = PostgresSakRepository(ds)
+
+            shouldThrow<DataNotFoundException> {
+                sakRepository.hentSisteSakId(ident = person.ident)
+            }
+            sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
+            sakRepository.hentSisteSakId(ident = person.ident) shouldBe sak1.sakId
+
+            sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
+            sakRepository.hentSisteSakId(ident = person.ident) shouldBe sak2.sakId
         }
     }
 }

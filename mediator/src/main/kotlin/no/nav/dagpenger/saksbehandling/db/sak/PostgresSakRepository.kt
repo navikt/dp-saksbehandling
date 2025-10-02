@@ -100,7 +100,7 @@ class PostgresSakRepository(
                         JOIN     behandling_v1 beh ON beh.sak_id    = sak.id
                         WHERE    per.ident = :ident
                         AND      sak.er_dp_sak
-                        ORDER BY beh.opprettet DESC
+                        ORDER BY beh.id DESC
                         LIMIT 1
                         """.trimIndent(),
                     paramMap =
