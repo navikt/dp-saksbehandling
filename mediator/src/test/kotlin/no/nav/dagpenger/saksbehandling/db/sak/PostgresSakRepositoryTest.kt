@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-class SakPostgresRepositoryTest {
+class PostgresSakRepositoryTest {
     private val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
     private val person =
         Person(
@@ -31,7 +31,7 @@ class SakPostgresRepositoryTest {
         Behandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå,
+            opprettet = nå.minusDays(9),
             oppgaveId = oppgaveId,
             hendelse = TomHendelse,
         )
@@ -39,21 +39,21 @@ class SakPostgresRepositoryTest {
         Behandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå,
+            opprettet = nå.minusDays(5),
             hendelse = TomHendelse,
         )
     private val behandling3 =
         Behandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå,
+            opprettet = nå.minusDays(3),
             hendelse = TomHendelse,
         )
     private val behandling4 =
         Behandling(
             behandlingId = UUIDv7.ny(),
             utløstAv = UtløstAvType.SØKNAD,
-            opprettet = nå,
+            opprettet = nå.minusDays(1),
             hendelse = TomHendelse,
         )
     private val sak1 =
@@ -70,8 +70,8 @@ class SakPostgresRepositoryTest {
             opprettet = nå,
         ).also {
             // Emulerer out of order lesing
-            it.leggTilBehandling(behandling4)
             it.leggTilBehandling(behandling3)
+            it.leggTilBehandling(behandling4)
         }
     private val sakHistorikk =
         SakHistorikk(
