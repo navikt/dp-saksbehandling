@@ -187,8 +187,8 @@ OppgaveMediatorTest {
 
         val sakMediatorMock =
             mockk<SakMediator>().also {
-                every { it.finnSakHistorikkk(personUtenSakHistorikk) } returns null
-                every { it.finnSakHistorikkk(personUtenBehandling) } returns
+                every { it.finnSakHistorikk(personUtenSakHistorikk) } returns null
+                every { it.finnSakHistorikk(personUtenBehandling) } returns
                     SakHistorikk(
                         person =
                             Person(

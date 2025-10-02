@@ -55,7 +55,7 @@ class OppgaveMediatorAlertTest {
             utsendingMediator = mockk(),
             sakMediator =
                 mockk<SakMediator>().also {
-                    every { it.finnSakHistorikkk(any()) } returns sakHistorikk
+                    every { it.finnSakHistorikk(any()) } returns sakHistorikk
                 },
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)
@@ -123,7 +123,7 @@ class OppgaveMediatorAlertTest {
             utsendingMediator = mockk(),
             sakMediator =
                 mockk<SakMediator>().also {
-                    every { it.finnSakHistorikkk(any()) } returns sakHistorikk
+                    every { it.finnSakHistorikk(any()) } returns sakHistorikk
                 },
         ).also { it.setRapidsConnection(rapid) }.let { oppgaveMediator ->
             oppgaveMediator.opprettEllerOppdaterOppgave(forslagTilVedtakHendelse = forslagTilVedtakHendelse)

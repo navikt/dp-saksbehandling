@@ -37,7 +37,7 @@ class SakMediator(
         return sakRepository.hentSakHistorikk(ident)
     }
 
-    fun finnSakHistorikkk(ident: String): SakHistorikk? {
+    fun finnSakHistorikk(ident: String): SakHistorikk? {
         return sakRepository.finnSakHistorikk(ident)
     }
 

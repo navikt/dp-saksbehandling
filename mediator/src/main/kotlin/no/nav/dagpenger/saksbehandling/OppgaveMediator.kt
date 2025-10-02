@@ -69,7 +69,7 @@ class OppgaveMediator(
     fun opprettOppgaveForBehandling(behandlingOpprettetHendelse: BehandlingOpprettetHendelse): Oppgave {
         var oppgave: Oppgave? = null
 
-        val sakHistorikk = sakMediator.finnSakHistorikkk(behandlingOpprettetHendelse.ident)
+        val sakHistorikk = sakMediator.finnSakHistorikk(behandlingOpprettetHendelse.ident)
 
         val behandling =
             sakHistorikk
@@ -145,7 +145,7 @@ class OppgaveMediator(
 
     fun opprettEllerOppdaterOppgave(forslagTilVedtakHendelse: ForslagTilVedtakHendelse): Oppgave? {
         var oppgave: Oppgave? = null
-        val sakHistorikk = sakMediator.finnSakHistorikkk(forslagTilVedtakHendelse.ident)
+        val sakHistorikk = sakMediator.finnSakHistorikk(forslagTilVedtakHendelse.ident)
         val behandling =
             sakHistorikk
                 ?.finnBehandling(forslagTilVedtakHendelse.behandlingId)

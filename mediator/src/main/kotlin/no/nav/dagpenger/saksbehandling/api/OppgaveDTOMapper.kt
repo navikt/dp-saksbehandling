@@ -49,10 +49,6 @@ internal class OppgaveDTOMapper(
     private val oppgaveHistorikkDTOMapper: OppgaveHistorikkDTOMapper,
     private val sakMediator: SakMediator,
 ) {
-    private fun finnSakHistorikk(ident: String): SakHistorikk? {
-        return sakMediator.finnSakHistorikkk(ident)
-    }
-
     private fun SakHistorikk?.saker(): List<SakDTO> {
         return when (this) {
             null -> emptyList()
@@ -100,7 +96,7 @@ internal class OppgaveDTOMapper(
         person: Person,
         oppgaver: List<OppgaveOversiktDTO>,
     ): PersonOversiktDTO {
-        val sakHistorikk = finnSakHistorikk(ident = person.ident)
+        val sakHistorikk = sakMediator.finnSakHistorikk(ident = person.ident)
         return PersonOversiktDTO(
             person = lagPersonDTO(person = person),
             saker = sakHistorikk.saker(),
