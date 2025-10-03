@@ -2,6 +2,7 @@ package no.nav.dagpenger.saksbehandling.sak
 
 import PersonMediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
@@ -19,6 +20,7 @@ import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.Postgres.withMigratedDb
+import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.db.person.PostgresPersonRepository
 import no.nav.dagpenger.saksbehandling.db.sak.PostgresSakRepository
 import no.nav.dagpenger.saksbehandling.db.sak.SakRepository
@@ -269,7 +271,7 @@ class SakMediatorTest {
     }
 
     @Test
-    fun `Skal merke sak som DP-sak hvis dp-sak skal eie saken`() {
+    fun `Skal merke sak som DP-sak og skal kunne hente id for siste DP-sak`() {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
@@ -282,6 +284,9 @@ class SakMediatorTest {
                 )
             val sak = sakMediator.opprettSak(søknadsbehandlingOpprettetHendelseNyRett)
 
+            shouldThrow<DataNotFoundException> {
+                sakMediator.hentSisteSakId(ident = testIdent)
+            }
             ds.finnMerkeForDpSak(sakId = sak.sakId) shouldBe false
             sakMediator.merkSakenSomDpSak(
                 VedtakFattetHendelse(
@@ -291,13 +296,15 @@ class SakMediatorTest {
                     ident = testIdent,
                     sak =
                         UtsendingSak(
-                            id = UUIDv7.ny().toString(),
+                            id = sak.sakId.toString(),
                             kontekst = "Dagpenger",
                         ),
                     automatiskBehandlet = false,
                 ),
             )
             ds.finnMerkeForDpSak(sakId = sak.sakId) shouldBe true
+
+            sakMediator.hentSisteSakId(ident = testIdent) shouldBe sak.sakId
         }
     }
 
