@@ -88,10 +88,6 @@ internal class OppgaveDTOMapper(
         return lagPersonDTO(person, pdlPerson)
     }
 
-    fun hentSisteSakId(ident: String): UUID {
-        return sakMediator.hentSisteSakId(ident)
-    }
-
     suspend fun lagPersonOversiktDTO(
         person: Person,
         oppgaver: List<OppgaveOversiktDTO>,

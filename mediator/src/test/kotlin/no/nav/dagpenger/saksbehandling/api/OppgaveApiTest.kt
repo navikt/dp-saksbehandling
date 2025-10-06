@@ -61,7 +61,6 @@ import no.nav.dagpenger.saksbehandling.api.models.AvbrytOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
-import no.nav.dagpenger.saksbehandling.api.models.HttpProblemDTO
 import no.nav.dagpenger.saksbehandling.api.models.KjonnDTO
 import no.nav.dagpenger.saksbehandling.api.models.KontrollertBrevDTO
 import no.nav.dagpenger.saksbehandling.api.models.LovligeEndringerDTO
@@ -101,7 +100,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import java.net.URI
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -159,16 +157,6 @@ class OppgaveApiTest {
     fun `Skal avvise kall uten gyldig maskin til maskin token ved kall til skal-varsle-om-ettersending`() {
         withOppgaveApi {
             client.request("/person/skal-varsle-om-ettersending") {
-                method = HttpMethod.Post
-                autentisert(token = ugyldigToken)
-            }.status shouldBe HttpStatusCode.Unauthorized
-        }
-    }
-
-    @Test
-    fun `Skal avvise kall uten gyldig maskin til maskin token ved kall til siste-sak`() {
-        withOppgaveApi {
-            client.request("/person/siste-sak") {
                 method = HttpMethod.Post
                 autentisert(token = ugyldigToken)
             }.status shouldBe HttpStatusCode.Unauthorized
@@ -1255,66 +1243,6 @@ class OppgaveApiTest {
 
             client.get("/behandling/$behandlingIdSomIkkeFinnes/oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
-            }
-        }
-    }
-
-    @Test
-    fun `Skal hente sakId for siste sak hvis bruker har noen saker`() {
-        val identMedSaker = "12345612345"
-        val identUtenSaker = "01010112345"
-        val sakId = UUIDv7.ny()
-        val oppgaveDTOMapperMock =
-            mockk<OppgaveDTOMapper>().also {
-                every { it.hentSisteSakId(ident = identMedSaker) } returns sakId
-                every { it.hentSisteSakId(ident = identUtenSaker) } throws DataNotFoundException("Fant ingen sak")
-            }
-        withOppgaveApi(
-            oppgaveMediator = mockk(),
-            oppgaveDTOMapper = oppgaveDTOMapperMock,
-            personMediator = mockk(),
-        ) {
-            client.post("/person/siste-sak") {
-                autentisert(token = gyldigMaskinToken())
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "$identMedSaker"}
-                    """.trimMargin(),
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder
-                    //language=JSON
-                    """
-                    {
-                      "id" : "$sakId"
-                    }
-                    """.trimIndent()
-            }
-            client.post("/person/siste-sak") {
-                autentisert(token = gyldigMaskinToken())
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "$identUtenSaker"}
-                    """.trimMargin(),
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.NotFound
-                val httpProblem =
-                    objectMapper.readValue(
-                        response.bodyAsText(),
-                        object : TypeReference<HttpProblemDTO>() {},
-                    )
-                httpProblem shouldBe
-                    HttpProblemDTO(
-                        title = "Ressurs ikke funnet",
-                        detail = "Fant ingen sak",
-                        status = HttpStatusCode.NotFound.value,
-                        instance = "/person/siste-sak",
-                        type = URI.create("dagpenger.nav.no/saksbehandling:problem:ressurs-ikke-funnet").toString(),
-                    )
             }
         }
     }

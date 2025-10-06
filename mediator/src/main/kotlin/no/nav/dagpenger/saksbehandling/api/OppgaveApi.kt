@@ -39,7 +39,6 @@ import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
-import no.nav.dagpenger.saksbehandling.api.models.SakIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.SoknadDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
@@ -79,16 +78,6 @@ internal fun Route.oppgaveApi(
                         ident = soknad.ident,
                     )
                 call.respond(status = HttpStatusCode.OK, skalVarsle)
-            }
-        }
-        route("person/siste-sak") {
-            post {
-                val personIdentDTO: PersonIdentDTO = call.receive<PersonIdentDTO>()
-                val sisteSakId = oppgaveDTOMapper.hentSisteSakId(ident = personIdentDTO.ident)
-                call.respond(
-                    status = HttpStatusCode.OK,
-                    message = SakIdDTO(id = sisteSakId),
-                )
             }
         }
     }
