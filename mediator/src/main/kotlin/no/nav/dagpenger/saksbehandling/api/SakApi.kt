@@ -22,7 +22,7 @@ fun Route.sakApi(mediator: SakMediator) {
     authenticate("azureAd-maskin") {
         route("behandling/{behandlingId}/sakId") {
             get {
-                val behandlingId = call.behandlingId("behandlingId")
+                val behandlingId = call.behandlingId()
                 mediator.hentDagpengerSakIdForBehandlingId(behandlingId)
                 call.respondText { mediator.hentDagpengerSakIdForBehandlingId(behandlingId).toString() }
             }
@@ -38,10 +38,31 @@ fun Route.sakApi(mediator: SakMediator) {
                 }
             }
         }
+
+        route("sak/sak-id-for-soknad/{soknadId}") {
+            get {
+                val søknadId: UUID = call.søknadId()
+                mediator.finnSakIdForSøknad(søknadId).let { sakId ->
+                    when (sakId) {
+                        null -> call.respond(message = "", status = HttpStatusCode.NoContent)
+                        else -> call.respond(SakIdDTO(id = sakId))
+                    }
+                }
+            }
+        }
     }
 }
 
-private fun ApplicationCall.behandlingId(pathParam: String): UUID {
+private fun ApplicationCall.søknadId(): UUID =
+    this.parameters["soknadId"]?.let {
+        runCatching {
+            UUID.fromString(it)
+        }.onFailure { t ->
+            logger.error(t) { "Kunne ikke parse soknadId: $it" }
+        }.getOrThrow()
+    } ?: throw IllegalArgumentException("SøknadId mangler i path")
+
+private fun ApplicationCall.behandlingId(): UUID {
     return this.parameters["behandlingId"]?.let {
         runCatching {
             UUID.fromString(it)

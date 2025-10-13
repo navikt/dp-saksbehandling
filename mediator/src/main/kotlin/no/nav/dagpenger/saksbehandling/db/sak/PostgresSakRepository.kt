@@ -113,7 +113,30 @@ class PostgresSakRepository(
             )
         }
 
-    override fun hentSisteSakId(ident: String) = finnSisteSakId(ident) ?: throw DataNotFoundException("Fant ingen sak for personen")
+    override fun finnSakIdForSøknad(søknadId: UUID): UUID? =
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    //language=PostgreSQL
+                    statement =
+                        """
+                        SELECT   sak.id
+                        FROM     sak_v2 sak
+                        JOIN     behandling_v1 beh ON beh.sak_id = sak.id
+                        WHERE    sak.soknad_id = :soknad_id
+                        AND      sak.er_dp_sak
+                        ORDER BY beh.id DESC
+                        LIMIT 1
+                        """.trimIndent(),
+                    paramMap =
+                        mapOf(
+                            "soknad_id" to søknadId,
+                        ),
+                ).map { row ->
+                    row.uuid("id")
+                }.asSingle,
+            )
+        }
 
     override fun hentSakIdForBehandlingId(behandlingId: UUID): UUID =
         sessionOf(dataSource).use { session ->

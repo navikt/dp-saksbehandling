@@ -807,6 +807,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/HttpProblem'
 
+  /sak/sak-id-for-soknad/{soknadId}:
+    get:
+      summary: Henter sak-id for en gitt søknad
+      parameters:
+        - in: path
+          name: soknadId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vellykket respons med sak-id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SakId'
+        '204':
+          description: Søknaden har ikke sak i dp-sak (ennå?)
+        default:
+          description: Feil
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/HttpProblem'
+
   /sak/siste-sak-id/for-ident:
     post:
       summary: Henter sak-id for siste sak personen har hatt en behandling i

@@ -10,6 +10,7 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
+import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.søknadId
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
@@ -123,14 +124,28 @@ class PostgresSakRepositoryTest {
         DBTestHelper.withSaker(saker = listOf(sak1, sak2)) { ds ->
             val sakRepository = PostgresSakRepository(ds)
 
-            shouldThrow<DataNotFoundException> {
-                sakRepository.hentSisteSakId(ident = person.ident)
-            }
+            sakRepository.finnSisteSakId(ident = person.ident) shouldBe null
+
             sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
-            sakRepository.hentSisteSakId(ident = person.ident) shouldBe sak1.sakId
+            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak1.sakId
 
             sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
-            sakRepository.hentSisteSakId(ident = person.ident) shouldBe sak2.sakId
+            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak2.sakId
+        }
+    }
+
+    @Test
+    fun `Finner sakId for en søknad"`() {
+        DBTestHelper.withSaker(saker = listOf(sak1, sak2)) { ds ->
+            val sakRepository = PostgresSakRepository(ds)
+
+            sakRepository.finnSakIdForSøknad(søknadId = sak1.søknadId) shouldBe null
+
+            sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
+            sakRepository.finnSakIdForSøknad(søknadId = sak1.søknadId) shouldBe sak1.sakId
+
+            sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
+            sakRepository.finnSakIdForSøknad(søknadId = sak2.søknadId) shouldBe sak2.sakId
         }
     }
 }

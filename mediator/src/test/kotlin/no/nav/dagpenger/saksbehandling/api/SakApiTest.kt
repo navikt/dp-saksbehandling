@@ -14,6 +14,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.http.withCharset
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.every
@@ -32,6 +33,7 @@ class SakApiTest {
 
     private val behandlingId = UUIDv7.ny()
     private val sakId = UUIDv7.ny()
+    private val søknadId = UUIDv7.ny()
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
@@ -40,6 +42,42 @@ class SakApiTest {
             client.request("/sak/siste-sak-id/for-ident") {
                 method = HttpMethod.Post
             }.status shouldBe HttpStatusCode.Unauthorized
+            client.get("sak/sak-id-for-soknad/$søknadId").status shouldBe HttpStatusCode.Unauthorized
+        }
+    }
+
+    @Test
+    fun `Skal kunne hente ut sakId for en søknadId`() {
+        val sakMediator =
+            mockk<SakMediator>().also {
+                every { it.finnSakIdForSøknad(søknadId) } returns sakId
+            }
+        val token = gyldigMaskinToken()
+        withSakApi(sakMediator) {
+            client.get("sak/sak-id-for-soknad/$søknadId") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.OK
+                response.contentType() shouldBe ContentType.Application.Json.withCharset(Charsets.UTF_8)
+                //language=JSON
+                response.bodyAsText() shouldEqualSpecifiedJson """{ "id" : "$sakId" }"""
+            }
+        }
+    }
+
+    @Test
+    fun `Skal kunne svare med no content når man henter sak-id for søknad`() {
+        val sakMediator =
+            mockk<SakMediator>().also {
+                every { it.finnSakIdForSøknad(søknadId) } returns null
+            }
+        val token = gyldigMaskinToken()
+        withSakApi(sakMediator) {
+            client.get("sak/sak-id-for-soknad/$søknadId") {
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }.let { response ->
+                response.status shouldBe HttpStatusCode.NoContent
+            }
         }
     }
 
