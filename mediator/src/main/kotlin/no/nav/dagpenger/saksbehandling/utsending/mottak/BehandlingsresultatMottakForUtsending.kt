@@ -46,7 +46,15 @@ internal class BehandlingsresultatMottakForUtsending(
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
         logger.info { "BehandlingsresultatMottakForUtsending - behandlingId: $behandlingId" }
-        if (vedtakSkalTilhøreDpSak(packet)) {
+
+        val dagpengerSakiD =
+            try {
+                sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
+            } catch (e: Exception) {
+                null
+            }
+
+        if (dagpengerSakiD != null || vedtakSkalTilhøreDpSak(packet)) {
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
             val automatiskBehandlet = packet["automatisk"].asBoolean()

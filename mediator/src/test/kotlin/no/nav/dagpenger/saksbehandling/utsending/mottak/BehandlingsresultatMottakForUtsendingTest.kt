@@ -34,6 +34,7 @@ class BehandlingsresultatMottakForUtsendingTest {
         val sakRepositoryMock =
             mockk<SakRepository>().also {
                 every { it.hentSakIdForBehandlingId(behandlingId) } returns sakId
+                every { it.hentDagpengerSakIdForBehandlingId(any()) } throws RuntimeException()
             }
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
@@ -107,7 +108,10 @@ class BehandlingsresultatMottakForUtsendingTest {
         BehandlingsresultatMottakForUtsending(
             rapidsConnection = testRapid,
             utsendingMediator = utsendingMediatorMock,
-            sakRepository = mockk<SakRepository>(),
+            sakRepository =
+                mockk<SakRepository>().also {
+                    every { it.hentDagpengerSakIdForBehandlingId(any()) } throws RuntimeException()
+                },
         )
 
         testRapid.sendTestMessage(
