@@ -47,7 +47,7 @@ internal class BehandlingsresultatMottakForUtsending(
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
 
-        if (behandlingId.toString() == "0199e247-a328-7470-a33d-f19ad1a58395") {
+        if (behandlingId.toString() == "0199e27a-2858-7c4d-9815-882f03b5befa") {
             return
         }
 
