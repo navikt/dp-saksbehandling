@@ -24,7 +24,7 @@ internal class BehandlingsresultatMottakForUtsending(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "behandlingsresultat")
-                it.requireValue("behandletHendelse.type", "Søknad")
+                it.requireAny("behandletHendelse.type", listOf("Søknad", "Manuell"))
                 it.requireKey("rettighetsperioder")
             }
             validate {
