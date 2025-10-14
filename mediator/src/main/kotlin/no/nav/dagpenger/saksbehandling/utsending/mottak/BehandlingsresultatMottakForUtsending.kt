@@ -33,6 +33,7 @@ internal class BehandlingsresultatMottakForUtsending(
         }
     }
 
+
     init {
         logger.info { "Starter BehandlingsresultatMottakForUtsending" }
         River(rapidsConnection).apply(rapidFilter).register(this)
@@ -45,6 +46,11 @@ internal class BehandlingsresultatMottakForUtsending(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
+
+        if (behandlingId.toString() == "0199e247-a328-7470-a33d-f19ad1a58395") {
+            return
+        }
+
         logger.info { "BehandlingsresultatMottakForUtsending - behandlingId: $behandlingId" }
 
         val dagpengerSakiD =
