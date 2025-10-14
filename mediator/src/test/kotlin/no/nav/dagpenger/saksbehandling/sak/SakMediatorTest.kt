@@ -269,7 +269,7 @@ class SakMediatorTest {
     }
 
     @Test
-    fun `Skal merke sak som DP-sak og skal kunne hente id for siste DP-sak`() {
+    fun `Skal merke sak som DP-sak samt hente sakId for siste DP-sak og sakId for søknad hvis DP-sak`() {
         withMigratedDb { ds ->
             val sakMediator =
                 SakMediator(
@@ -302,6 +302,7 @@ class SakMediatorTest {
             ds.finnMerkeForDpSak(sakId = sak.sakId) shouldBe true
 
             sakMediator.finnSisteSakId(ident = testIdent) shouldBe sak.sakId
+            sakMediator.finnSakIdForSøknad(søknadId = sak.søknadId) shouldBe sak.sakId
         }
     }
 
