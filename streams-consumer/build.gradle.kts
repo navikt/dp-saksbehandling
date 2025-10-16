@@ -22,7 +22,7 @@ dependencies {
     api("org.apache.kafka:kafka-streams:$kafkaVersion")
     // api("org.apache.kafka:kafka-streams:3.8.0")
     implementation("io.confluent:kafka-streams-avro-serde:$confluentVersion")
-    implementation("org.apache.avro:avro:1.12.0")
+    implementation("org.apache.avro:avro:1.12.1")
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
     implementation(libs.ktor.server.cio)
