@@ -33,7 +33,6 @@ internal class BehandlingsresultatMottakForUtsending(
         }
     }
 
-
     init {
         logger.info { "Starter BehandlingsresultatMottakForUtsending" }
         River(rapidsConnection).apply(rapidFilter).register(this)

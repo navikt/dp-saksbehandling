@@ -647,7 +647,7 @@ class OppgaveMediator(
             PAA_VENT -> true
             KLAR_TIL_KONTROLL -> true
             UNDER_KONTROLL -> true
-            null -> true
+            null -> false
         }
     }
 
