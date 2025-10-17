@@ -11,7 +11,6 @@ import no.nav.dagpenger.saksbehandling.Configuration
 import no.nav.dagpenger.saksbehandling.api.Oppslag
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.ArkiverbartBrevHendelse
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.DistribuertHendelse
@@ -96,39 +95,27 @@ class UtsendingMediator(
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
         utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
             ?.let { utsending ->
-                // TODO: Fjern sjekk på tilstand
-                // Dette er en midlertidig løsning i dev, for å unngå at vi starter utsending på nytt fra
-                // ArenaSinkVedtakOpprettetMottak når vedtak fattes i Arena
-                if (utsending.tilstand().type == VenterPåVedtak) {
-                    val brev =
-                        runBlocking {
-                            // todo håndter exception
-                            brevProdusent.lagBrev(
-                                ident = vedtakFattetHendelse.ident,
-                                behandlingId = vedtakFattetHendelse.behandlingId,
-                                sakId = sak.id,
-                            )
-                        }
 
-                    utsending.startUtsending(
-                        startUtsendingHendelse =
-                            StartUtsendingHendelse(
-                                utsendingSak = sak,
-                                behandlingId = vedtakFattetHendelse.behandlingId,
-                                ident = vedtakFattetHendelse.ident,
-                                brev = brev,
-                            ),
-                    )
-                    lagreOgPubliserBehov(utsending = utsending)
-
-                    // TODO: Fjern logging og if/else
-                } else {
-                    logger.warn {
-                        "Start utsending ble kalt for behandlingId=${vedtakFattetHendelse.behandlingId}, " +
-                            "sakId=${sak.id}, sakKontekst=${sak.kontekst}.  " +
-                            "Brev er allerede produsert, så gjør ingenting."
+                val brev =
+                    runBlocking {
+                        // todo håndter exception
+                        brevProdusent.lagBrev(
+                            ident = vedtakFattetHendelse.ident,
+                            behandlingId = vedtakFattetHendelse.behandlingId,
+                            sakId = sak.id,
+                        )
                     }
-                }
+
+                utsending.startUtsending(
+                    startUtsendingHendelse =
+                        StartUtsendingHendelse(
+                            utsendingSak = sak,
+                            behandlingId = vedtakFattetHendelse.behandlingId,
+                            ident = vedtakFattetHendelse.ident,
+                            brev = brev,
+                        ),
+                )
+                lagreOgPubliserBehov(utsending = utsending)
             }
     }
 
