@@ -95,27 +95,27 @@ class UtsendingMediator(
         require(sak != null) { "VedtakFattetHendelse må ha en sak" }
         utsendingRepository.finnUtsendingForBehandlingId(behandlingId = vedtakFattetHendelse.behandlingId)
             ?.let { utsending ->
+                runCatching {
+                    val brev =
+                        runBlocking {
+                            brevProdusent.lagBrev(
+                                ident = vedtakFattetHendelse.ident,
+                                behandlingId = vedtakFattetHendelse.behandlingId,
+                                sakId = sak.id,
+                            )
+                        }
 
-                val brev =
-                    runBlocking {
-                        // todo håndter exception
-                        brevProdusent.lagBrev(
-                            ident = vedtakFattetHendelse.ident,
-                            behandlingId = vedtakFattetHendelse.behandlingId,
-                            sakId = sak.id,
-                        )
-                    }
-
-                utsending.startUtsending(
-                    startUtsendingHendelse =
-                        StartUtsendingHendelse(
-                            utsendingSak = sak,
-                            behandlingId = vedtakFattetHendelse.behandlingId,
-                            ident = vedtakFattetHendelse.ident,
-                            brev = brev,
-                        ),
-                )
-                lagreOgPubliserBehov(utsending = utsending)
+                    utsending.startUtsending(
+                        startUtsendingHendelse =
+                            StartUtsendingHendelse(
+                                utsendingSak = sak,
+                                behandlingId = vedtakFattetHendelse.behandlingId,
+                                ident = vedtakFattetHendelse.ident,
+                                brev = brev,
+                            ),
+                    )
+                    lagreOgPubliserBehov(utsending = utsending)
+                }.onFailure { logger.error { "Feil ved start utsending for behandlingId: ${utsending.behandlingId} $it" } }
             }
     }
 

@@ -2,9 +2,11 @@ package no.nav.dagpenger.saksbehandling.utsending
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
+import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -21,6 +23,7 @@ import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
+import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
 import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -31,6 +34,7 @@ import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Avvente
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.Distribuert
 import no.nav.dagpenger.saksbehandling.utsending.Utsending.Tilstand.Type.VenterPåVedtak
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
+import no.nav.dagpenger.saksbehandling.utsending.db.UtsendingRepository
 import no.nav.dagpenger.saksbehandling.utsending.hendelser.StartUtsendingHendelse
 import no.nav.dagpenger.saksbehandling.utsending.mottak.BehandlingsresultatMottakForUtsending
 import no.nav.dagpenger.saksbehandling.utsending.mottak.UtsendingBehovLøsningMottak
@@ -530,6 +534,53 @@ class UtsendingMediatorTest {
             utsending = utsendingRepository.hentUtsendingForBehandlingId(behandlingId)
             utsending.tilstand().type shouldBe Distribuert
             utsending.distribusjonId() shouldBe distribusjonId
+        }
+    }
+
+    @Test
+    fun `Skal ikke feile selv om lag-brev feiler`() {
+        var utsending =
+            Utsending(
+                id = UUIDv7.ny(),
+                behandlingId = UUIDv7.ny(),
+                ident = "12345123456",
+                type = UtsendingType.VEDTAK_DAGPENGER,
+                brev = null,
+            )
+        val brevProdusentMock =
+            mockk<UtsendingMediator.BrevProdusent>().also {
+                coEvery { it.lagBrev(any(), any(), any()) } throws RuntimeException("Feil ved brevproduksjon")
+            }
+        val utsendingMediatorMock =
+            UtsendingMediator(
+                utsendingRepository =
+                    mockk<UtsendingRepository>().also {
+                        every { it.finnUtsendingForBehandlingId(utsending.behandlingId) } returns utsending
+                    },
+                brevProdusent = brevProdusentMock,
+            )
+        val vedtakFattetHendelse =
+            VedtakFattetHendelse(
+                behandlingId = utsending.behandlingId,
+                behandletHendelseId = UUIDv7.ny().toString(),
+                behandletHendelseType = "Søknad",
+                ident = utsending.ident,
+                sak =
+                    UtsendingSak(
+                        id = "sakId",
+                        kontekst = "Dagpenger",
+                    ),
+                automatiskBehandlet = false,
+            )
+        shouldNotThrow<RuntimeException> {
+            utsendingMediatorMock.startUtsendingForVedtakFattet(vedtakFattetHendelse = vedtakFattetHendelse)
+        }
+        coVerify(exactly = 1) {
+            brevProdusentMock.lagBrev(
+                ident = vedtakFattetHendelse.ident,
+                behandlingId = vedtakFattetHendelse.behandlingId,
+                sakId = vedtakFattetHendelse.sak!!.id,
+            )
         }
     }
 }
