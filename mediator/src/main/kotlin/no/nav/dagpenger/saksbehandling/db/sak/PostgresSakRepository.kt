@@ -100,6 +100,12 @@ class PostgresSakRepository(
                         JOIN     behandling_v1 beh ON beh.sak_id    = sak.id
                         WHERE    per.ident = :ident
                         AND      sak.er_dp_sak
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM   oppgave_v1 opp
+                            WHERE  opp.behandling_id = beh.id
+                            AND    opp.tilstand = 'AVBRUTT'
+                        )
                         ORDER BY beh.id DESC
                         LIMIT 1
                         """.trimIndent(),

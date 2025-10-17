@@ -2,6 +2,8 @@ package no.nav.dagpenger.saksbehandling.db.sak
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import kotliquery.queryOf
+import kotliquery.sessionOf
 import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.Behandling
 import no.nav.dagpenger.saksbehandling.Person
@@ -10,12 +12,13 @@ import no.nav.dagpenger.saksbehandling.SakHistorikk
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
-import no.nav.dagpenger.saksbehandling.db.DBTestHelper.Companion.søknadId
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
+import javax.sql.DataSource
 
 class PostgresSakRepositoryTest {
     private val nå = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
@@ -124,6 +127,11 @@ class PostgresSakRepositoryTest {
         DBTestHelper.withSaker(saker = listOf(sak1, sak2)) { ds ->
             val sakRepository = PostgresSakRepository(ds)
 
+            ds.opprettOppgaveForBehandling(behandlingId = behandling1.behandlingId)
+            ds.opprettOppgaveForBehandling(behandlingId = behandling2.behandlingId)
+            ds.opprettOppgaveForBehandling(behandlingId = behandling3.behandlingId)
+            ds.opprettOppgaveForBehandling(behandlingId = behandling4.behandlingId)
+
             sakRepository.finnSisteSakId(ident = person.ident) shouldBe null
 
             sakRepository.merkSakenSomDpSak(sakId = sak1.sakId, erDpSak = true)
@@ -131,6 +139,12 @@ class PostgresSakRepositoryTest {
 
             sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
             sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak2.sakId
+
+            ds.avbrytOppgave(behandlingId = behandling4.behandlingId)
+            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak2.sakId
+
+            ds.avbrytOppgave(behandlingId = behandling3.behandlingId)
+            sakRepository.finnSisteSakId(ident = person.ident) shouldBe sak1.sakId
         }
     }
 
@@ -146,6 +160,54 @@ class PostgresSakRepositoryTest {
 
             sakRepository.merkSakenSomDpSak(sakId = sak2.sakId, erDpSak = true)
             sakRepository.finnSakIdForSøknad(søknadId = sak2.søknadId) shouldBe sak2.sakId
+        }
+    }
+
+    private fun DataSource.avbrytOppgave(behandlingId: UUID) {
+        return sessionOf(this).use { session ->
+            session.run(
+                action =
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            UPDATE oppgave_v1
+                            SET    tilstand = 'AVBRUTT'
+                            WHERE  behandling_id = :behandling_id
+                            """.trimIndent(),
+                        paramMap =
+                            mapOf(
+                                "behandling_id" to behandlingId,
+                            ),
+                    ).asUpdate,
+            )
+        }
+    }
+
+    private fun DataSource.opprettOppgaveForBehandling(
+        behandlingId: UUID,
+        tilstand: String = "KLAR_TIL_BEHANDLING",
+    ) {
+        return sessionOf(this).use { session ->
+            session.run(
+                action =
+                    queryOf(
+                        //language=PostgreSQL
+                        statement =
+                            """
+                            INSERT INTO oppgave_v1
+                            ( id, behandling_id, opprettet, tilstand, melding_om_vedtak_kilde, kontrollert_brev )
+                            VALUES
+                            ( gen_random_uuid(), :behandling_id, now(), :tilstand, 'DP_SAK', 'IKKE_RELEVANT')
+                            ON CONFLICT (id) DO NOTHING 
+                            """.trimIndent(),
+                        paramMap =
+                            mapOf(
+                                "behandling_id" to behandlingId,
+                                "tilstand" to tilstand,
+                            ),
+                    ).asUpdate,
+            )
         }
     }
 }
