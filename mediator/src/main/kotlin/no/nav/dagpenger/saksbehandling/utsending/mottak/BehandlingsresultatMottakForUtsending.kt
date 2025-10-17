@@ -24,7 +24,7 @@ internal class BehandlingsresultatMottakForUtsending(
         val rapidFilter: River.() -> Unit = {
             precondition {
                 it.requireValue("@event_name", "behandlingsresultat")
-                it.requireValue("behandletHendelse.type", "Søknad")
+                it.requireAny("behandletHendelse.type", listOf("Søknad", "Manuell"))
                 it.requireKey("rettighetsperioder")
             }
             validate {
@@ -45,8 +45,21 @@ internal class BehandlingsresultatMottakForUtsending(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asUUID()
+
+        if (behandlingId.toString() == "0199e27a-2858-7c4d-9815-882f03b5befa") {
+            return
+        }
+
         logger.info { "BehandlingsresultatMottakForUtsending - behandlingId: $behandlingId" }
-        if (vedtakSkalTilhøreDpSak(packet)) {
+
+        val dagpengerSakiD =
+            try {
+                sakRepository.hentDagpengerSakIdForBehandlingId(behandlingId)
+            } catch (e: Exception) {
+                null
+            }
+
+        if (dagpengerSakiD != null || vedtakSkalTilhøreDpSak(packet)) {
             val ident = packet["ident"].asText()
             val sakId = sakRepository.hentSakIdForBehandlingId(behandlingId).toString()
             val automatiskBehandlet = packet["automatisk"].asBoolean()
