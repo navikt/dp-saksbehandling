@@ -21,10 +21,12 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_STREIK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_PERMITTERT
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_VERNEPLIKT
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -103,14 +105,14 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun `Skal sette riktig innvigelse eller avslag emneknagg  behandlinger med flere rettighetsperioder`() {
+    fun `Skal sette riktig innvigelse eller avslag emneknagg på behandlinger med flere rettighetsperioder`() {
         //language=JSON
         EmneknaggBuilder(
             """
                 {
                   "behandlingId": "$behandlingId",
                   "behandletHendelse": { "type": "Søknad" },
-                  "rettighetsperioder": [{"harRett": false}, {"harRett": true}, {"harRett": false}],
+                  "rettighetsperioder": [{"harRett": false, "opprinnelse": "Ny"}, {"harRett": true, "opprinnelse": "Ny"}, {"harRett": false, "opprinnelse": "Ny"}],
                   "opplysninger": []
                 }
             """,
@@ -122,7 +124,7 @@ class EmneknaggBuilderTest {
                 {
                   "behandlingId": "$behandlingId",
                   "behandletHendelse": { "type": "Søknad" },
-                  "rettighetsperioder": [{"harRett": false}, {"harRett": false}],
+                  "rettighetsperioder": [{"harRett": false, "opprinnelse": "Arvet"}, {"harRett": true, "opprinnelse": "Arvet"}, {"harRett": false, "opprinnelse": "Ny"}],
                   "opplysninger": []
                 }
             """,
@@ -134,7 +136,7 @@ class EmneknaggBuilderTest {
                 {
                   "behandlingId": "$behandlingId",
                   "behandletHendelse": { "type": "Søknad" },
-                  "rettighetsperioder": [],
+                  "rettighetsperioder": [{"harRett": false, "opprinnelse": "Ny"}, {"harRett": false, "opprinnelse": "Ny"}],
                   "opplysninger": []
                 }
             """,
@@ -142,7 +144,23 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun `Emneknagger ved avslag av minsteinntekt og rettighet permittering`() {
+    fun `Skal sette Gjenopptak emneknagg på behandling av Søknad hvis behandlingen er basert på en annen behandling`() {
+        //language=JSON
+        EmneknaggBuilder(
+            """
+                {
+                  "behandlingId": "$behandlingId",
+                  "basertPå": "${UUIDv7.ny()}",
+                  "behandletHendelse": { "type": "Søknad" },
+                  "rettighetsperioder": [],
+                  "opplysninger": []
+                }
+            """,
+        ).bygg() shouldBe setOf(AVSLAG.visningsnavn, GJENOPPTAK.visningsnavn)
+    }
+
+    @Test
+    fun `Emneknagger ved avslag på minsteinntekt og rettighet permittering`() {
         val behandlingResultat =
             lagBehandlingResultat(
                 behandletHendelseType = "Søknad",
@@ -190,7 +208,7 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun `Emneknagger ved avslag og med flere avslagsgrunner`() {
+    fun `Emneknagger ved avslag når flere vilkår ikke er oppfylt`() {
         val behandlingResultat =
             lagBehandlingResultat(
                 behandletHendelseType = "Søknad",
@@ -299,7 +317,7 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun ` emneknagger ved innvilgelse av dagpenger under permittering`() {
+    fun `emneknagger ved innvilgelse av dagpenger under permittering`() {
         val behanldingResultat =
             lagBehandlingResultat(
                 behandletHendelseType = "Søknad",
@@ -353,7 +371,7 @@ class EmneknaggBuilderTest {
     }
 
     @Test
-    fun `Skal kunne motta forslag_til_vedtak hendelse med innvilget ukjent rettighet - regelmotor har laget noe vi ikke kjenner`() {
+    fun `Skal kunne motta forslag_til_behandlingsresultat med innvilget ukjent rettighet - regelmotor har laget noe vi ikke kjenner`() {
         val behandlingResultat =
             lagBehandlingResultat(
                 behandletHendelseType = "Søknad",
@@ -387,6 +405,7 @@ class EmneknaggBuilderTest {
         val rettighetPeriodeObject =
             objectMapper.createObjectNode().apply {
                 put("harRett", harRettighet)
+                put("opprinnelse", "Ny")
             }
         val rettighetsperioderArray =
             objectMapper.createArrayNode().apply {

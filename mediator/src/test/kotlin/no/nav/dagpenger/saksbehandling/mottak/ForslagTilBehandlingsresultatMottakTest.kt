@@ -37,8 +37,8 @@ class ForslagTilBehandlingsresultatMottakTest {
         }
 
         slots.single { it.behandletHendelseType == "Søknad" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
-        slots.single { it.behandletHendelseType == "Meldekort" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
-        slots.single { it.behandletHendelseType == "Manuell" }.emneknagger shouldBe setOf(AVSLAG.visningsnavn)
+        slots.single { it.behandletHendelseType == "Meldekort" }.emneknagger shouldBe emptySet()
+        slots.single { it.behandletHendelseType == "Manuell" }.emneknagger shouldBe emptySet()
     }
 
     private fun testMessage(behandletHendelseType: String): String {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.oshai.kotlinlogging.withLoggingContext
 import no.nav.dagpenger.saksbehandling.Emneknagg
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ALDER
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_ANDRE_YTELSER
@@ -18,6 +17,7 @@ import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_REELL_ARBEIDS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_STREIK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTDANNING
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.AVSLAG_UTESTENGT
+import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.GJENOPPTAK
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.INNVILGELSE
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_KONKURS
 import no.nav.dagpenger.saksbehandling.Emneknagg.Regelknagg.RETTIGHET_ORDINÆR
@@ -54,7 +54,7 @@ class EmneknaggBuilder(
             }
         }
 
-    private val opplysningNode =
+    private val opplysningerNode =
         jsonNode["opplysninger"].also {
             require(it.isPresent() && it.isArray) {
                 sikkerLogg.error { "Kunne ikke parse opplysninger: $it" }
@@ -62,7 +62,7 @@ class EmneknaggBuilder(
             }
         }
 
-    private val rettighetsperioder =
+    private val rettighetsperioderNode =
         jsonNode["rettighetsperioder"].also {
             require(it.isPresent() && it.isArray) {
                 sikkerLogg.error { "Kunne ikke parse rettighetsperioder: $it" }
@@ -70,7 +70,7 @@ class EmneknaggBuilder(
             }
         }
 
-    private val behandletHendelse =
+    private val behandletHendelseNode =
         jsonNode["behandletHendelse"].also {
             require(it.isPresent() && it.isObject) {
                 sikkerLogg.error { "Kunne ikke parse behandletHendelse: $it" }
@@ -88,7 +88,7 @@ class EmneknaggBuilder(
             RETTIGHET_DAGPENGER_ETTER_KONKURS.opplysningTypeId to RETTIGHET_KONKURS.visningsnavn,
         )
 
-    private val rettighetOpplysningId = rettighetTilEmneknagg.keys
+    private val rettighetOpplysningIder = rettighetTilEmneknagg.keys
 
     private val avslagTilEmneknagg =
         mapOf(
@@ -106,44 +106,49 @@ class EmneknaggBuilder(
             OpplysningTyper.KRAV_TIL_UTDANNING_ELLER_OPPLÆRING.opplysningTypeId to AVSLAG_UTDANNING.visningsnavn,
         )
 
-    private val avslagOpplysningId = avslagTilEmneknagg.keys
+    private val avslagOpplysningIder = avslagTilEmneknagg.keys
 
     fun bygg(): Set<String> {
         return buildSet {
             addAll(rettighetEmneknagger())
-            when (utfall()) {
-                true -> add(INNVILGELSE.visningsnavn)
-                false -> {
-                    add(Emneknagg.Regelknagg.AVSLAG.visningsnavn)
-                    addAll(avslagEmneknagger())
-                }
-            }
+            addAll(søknadEmneknagger())
         }
     }
 
     private fun avslagEmneknagger(): Set<String> {
-        return opplysningNode.filter { it["opplysningTypeId"].asUUID() in avslagOpplysningId }
+        return opplysningerNode.filter { it["opplysningTypeId"].asUUID() in avslagOpplysningIder }
             .filter { it["perioder"].any { periode -> !periode["verdi"].boolskVerdi() } }
             .mapNotNull { avslagTilEmneknagg[it["opplysningTypeId"].asUUID()] }
             .toSet()
     }
 
     private fun rettighetEmneknagger(): Set<String> {
-        return opplysningNode.filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningId }
+        return opplysningerNode.filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningIder }
             .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
             .mapNotNull { rettighetTilEmneknagg[it["opplysningTypeId"].asUUID()] }
             .toSet()
     }
 
-    private fun utfall(): Boolean {
-        val utfall = rettighetsperioder.any { it["harRett"].asBoolean() }
-        sikkerLogg.info {
-            val behadlingId = jsonNode["behandlingId"].asText()
-            withLoggingContext("Id" to behadlingId) {
-                "BehandlingId: $behadlingId har utfall: $utfall med rettighetsperioder: $rettighetsperioder"
+    private fun søknadEmneknagger(): Set<String> {
+        val emneknagger = mutableSetOf<String>()
+        if (behandletHendelseNode["type"].asText() == "Søknad") {
+            if (rettighetsperioderNode.any {
+                    it["harRett"].isPresent() &&
+                        it["opprinnelse"].isPresent() &&
+                        it["harRett"].asBoolean() &&
+                        it["opprinnelse"].asText() == "Ny"
+                }
+            ) {
+                emneknagger.add(INNVILGELSE.visningsnavn)
+            } else {
+                emneknagger.add(Emneknagg.Regelknagg.AVSLAG.visningsnavn)
+                emneknagger.addAll(avslagEmneknagger())
+            }
+            if (jsonNode["basertPå"].isPresent()) {
+                emneknagger.add(GJENOPPTAK.visningsnavn)
             }
         }
-        return utfall
+        return emneknagger.toSet()
     }
 
     private fun JsonNode.boolskVerdi(): Boolean {
