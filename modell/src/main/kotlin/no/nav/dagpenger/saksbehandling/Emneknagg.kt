@@ -4,6 +4,7 @@ class Emneknagg(val navn: String) {
     enum class Regelknagg(val visningsnavn: String) {
         AVSLAG("Avslag"),
         INNVILGELSE("Innvilgelse"),
+        GJENOPPTAK("Gjenopptak"),
         AVSLAG_MINSTEINNTEKT("Minsteinntekt"),
         AVSLAG_ARBEIDSINNTEKT("Arbeidsinntekt"),
         AVSLAG_ARBEIDSTID("Arbeidstid"),
