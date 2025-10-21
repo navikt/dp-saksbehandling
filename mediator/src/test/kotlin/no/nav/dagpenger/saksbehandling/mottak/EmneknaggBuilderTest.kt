@@ -157,6 +157,61 @@ class EmneknaggBuilderTest {
                 }
             """,
         ).bygg() shouldBe setOf(AVSLAG.visningsnavn, GJENOPPTAK.visningsnavn)
+
+        //language=JSON
+        EmneknaggBuilder(
+            """
+                {
+                  "behandlingId": "$behandlingId",
+                  "basertPå": "${UUIDv7.ny()}",
+                  "behandletHendelse": { "type": "Søknad" },
+                  "rettighetsperioder": [
+                    {"harRett": true, "opprinnelse": "Arvet", "fraOgMed": "2025-01-01", "tilOgMed": "2025-02-01"},
+                    {"harRett": false, "opprinnelse": "Arvet", "fraOgMed": "2025-02-02", "tilOgMed": "2025-03-01"},
+                    {"harRett": true, "opprinnelse": "Ny", "fraOgMed": "2025-03-02"}  
+                  ],
+                  "opplysninger": []
+                }
+            """,
+        ).bygg() shouldBe setOf(INNVILGELSE.visningsnavn, GJENOPPTAK.visningsnavn)
+
+        //language=JSON
+        EmneknaggBuilder(
+            """
+                {
+                  "behandlingId": "$behandlingId",
+                  "behandletHendelse": { "type": "Søknad" },
+                  "rettighetsperioder": [],
+                  "opplysninger": []
+                }
+            """,
+        ).bygg() shouldBe setOf(AVSLAG.visningsnavn)
+
+        //language=JSON
+        EmneknaggBuilder(
+            """
+                {
+                  "behandlingId": "$behandlingId",
+                  "basertPå": "${UUIDv7.ny()}",
+                  "behandletHendelse": { "type": "Manuell" },
+                  "rettighetsperioder": [],
+                  "opplysninger": []
+                }
+            """,
+        ).bygg() shouldBe emptySet()
+
+        //language=JSON
+        EmneknaggBuilder(
+            """
+                {
+                  "behandlingId": "$behandlingId",
+                  "basertPå": "${UUIDv7.ny()}",
+                  "behandletHendelse": { "type": "Meldekort"},
+                  "rettighetsperioder": [],
+                  "opplysninger": []
+                }
+            """,
+        ).bygg() shouldBe emptySet()
     }
 
     @Test
