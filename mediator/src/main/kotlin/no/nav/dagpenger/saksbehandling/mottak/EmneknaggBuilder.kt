@@ -36,6 +36,42 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 class EmneknaggBuilder(
     json: String,
 ) {
+    fun bygg(): Set<String> {
+        return buildSet {
+            addAll(rettighetEmneknagger())
+            addAll(søknadEmneknagger())
+        }
+    }
+
+    private fun rettighetEmneknagger(): Set<String> {
+        return opplysningerNode.filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningIder }
+            .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
+            .mapNotNull { rettighetTilEmneknagg[it["opplysningTypeId"].asUUID()] }
+            .toSet()
+    }
+
+    private fun søknadEmneknagger(): Set<String> {
+        val emneknagger = mutableSetOf<String>()
+        if (behandletHendelseNode["type"].asText() == "Søknad") {
+            if (rettighetsperioderNode.any {
+                    it["harRett"].finnesMedVerdi() &&
+                        it["opprinnelse"].finnesMedVerdi() &&
+                        it["harRett"].asBoolean() &&
+                        it["opprinnelse"].asText() == "Ny"
+                }
+            ) {
+                emneknagger.add(INNVILGELSE.visningsnavn)
+            } else {
+                emneknagger.add(Emneknagg.Regelknagg.AVSLAG.visningsnavn)
+                emneknagger.addAll(avslåtteVilkårEmneknagger())
+            }
+            if (jsonNode["basertPå"].finnesMedVerdi()) {
+                emneknagger.add(GJENOPPTAK.visningsnavn)
+            }
+        }
+        return emneknagger.toSet()
+    }
+
     private val objectMapper =
         ObjectMapper().also {
             it.registerModule(JavaTimeModule())
@@ -56,7 +92,7 @@ class EmneknaggBuilder(
 
     private val opplysningerNode =
         jsonNode["opplysninger"].also {
-            require(it.isPresent() && it.isArray) {
+            require(it.finnesMedVerdi() && it.isArray) {
                 sikkerLogg.error { "Kunne ikke parse opplysninger: $it" }
                 "Forventet at opplysninger er en liste"
             }
@@ -64,7 +100,7 @@ class EmneknaggBuilder(
 
     private val rettighetsperioderNode =
         jsonNode["rettighetsperioder"].also {
-            require(it.isPresent() && it.isArray) {
+            require(it.finnesMedVerdi() && it.isArray) {
                 sikkerLogg.error { "Kunne ikke parse rettighetsperioder: $it" }
                 "Forventet at rettighetsperioder er en liste"
             }
@@ -72,7 +108,7 @@ class EmneknaggBuilder(
 
     private val behandletHendelseNode =
         jsonNode["behandletHendelse"].also {
-            require(it.isPresent() && it.isObject) {
+            require(it.finnesMedVerdi() && it.isObject) {
                 sikkerLogg.error { "Kunne ikke parse behandletHendelse: $it" }
                 "Forventet at behandletHendelse er et objekt"
             }
@@ -90,7 +126,7 @@ class EmneknaggBuilder(
 
     private val rettighetOpplysningIder = rettighetTilEmneknagg.keys
 
-    private val avslagTilEmneknagg =
+    private val avslåtteVilkårTilEmneknagger =
         mapOf(
             OpplysningTyper.OPPFYLLER_KRAV_TIL_MINSTEINNTEKT.opplysningTypeId to AVSLAG_MINSTEINNTEKT.visningsnavn,
             OpplysningTyper.KRAV_TIL_TAP_AV_ARBEIDSINNTEKT.opplysningTypeId to AVSLAG_ARBEIDSINNTEKT.visningsnavn,
@@ -106,56 +142,20 @@ class EmneknaggBuilder(
             OpplysningTyper.KRAV_TIL_UTDANNING_ELLER_OPPLÆRING.opplysningTypeId to AVSLAG_UTDANNING.visningsnavn,
         )
 
-    private val avslagOpplysningIder = avslagTilEmneknagg.keys
+    private val avslåtteVilkårOpplysningIder = avslåtteVilkårTilEmneknagger.keys
 
-    fun bygg(): Set<String> {
-        return buildSet {
-            addAll(rettighetEmneknagger())
-            addAll(søknadEmneknagger())
-        }
-    }
-
-    private fun avslagEmneknagger(): Set<String> {
-        return opplysningerNode.filter { it["opplysningTypeId"].asUUID() in avslagOpplysningIder }
+    private fun avslåtteVilkårEmneknagger(): Set<String> {
+        return opplysningerNode.filter { it["opplysningTypeId"].asUUID() in avslåtteVilkårOpplysningIder }
             .filter { it["perioder"].any { periode -> !periode["verdi"].boolskVerdi() } }
-            .mapNotNull { avslagTilEmneknagg[it["opplysningTypeId"].asUUID()] }
+            .mapNotNull { avslåtteVilkårTilEmneknagger[it["opplysningTypeId"].asUUID()] }
             .toSet()
-    }
-
-    private fun rettighetEmneknagger(): Set<String> {
-        return opplysningerNode.filter { it["opplysningTypeId"].asUUID() in rettighetOpplysningIder }
-            .filter { it["perioder"].any { periode -> periode["verdi"].boolskVerdi() } }
-            .mapNotNull { rettighetTilEmneknagg[it["opplysningTypeId"].asUUID()] }
-            .toSet()
-    }
-
-    private fun søknadEmneknagger(): Set<String> {
-        val emneknagger = mutableSetOf<String>()
-        if (behandletHendelseNode["type"].asText() == "Søknad") {
-            if (rettighetsperioderNode.any {
-                    it["harRett"].isPresent() &&
-                        it["opprinnelse"].isPresent() &&
-                        it["harRett"].asBoolean() &&
-                        it["opprinnelse"].asText() == "Ny"
-                }
-            ) {
-                emneknagger.add(INNVILGELSE.visningsnavn)
-            } else {
-                emneknagger.add(Emneknagg.Regelknagg.AVSLAG.visningsnavn)
-                emneknagger.addAll(avslagEmneknagger())
-            }
-            if (jsonNode["basertPå"].isPresent()) {
-                emneknagger.add(GJENOPPTAK.visningsnavn)
-            }
-        }
-        return emneknagger.toSet()
     }
 
     private fun JsonNode.boolskVerdi(): Boolean {
         return this["datatype"].asText() == "boolsk" && this["verdi"].asBoolean()
     }
 
-    private fun JsonNode?.isPresent(): Boolean {
+    private fun JsonNode?.finnesMedVerdi(): Boolean {
         if (this == null) return false
         return !(this.isMissingNode || this.isNull)
     }
