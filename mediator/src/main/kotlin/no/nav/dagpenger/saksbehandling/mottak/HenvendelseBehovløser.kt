@@ -11,6 +11,7 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
+import java.util.UUID
 
 internal class HenvendelseBehovløser(
     rapidsConnection: RapidsConnection,
@@ -59,51 +60,57 @@ internal class HenvendelseBehovløser(
 
         when (kategori) {
             Kategori.KLAGE -> {
-                val finnSisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
-                when (finnSisteSakId != null) {
+                val sisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
+                when (sisteSakId != null) {
                     true -> {
                         klageMediator.opprettKlage(
                             KlageMottattHendelse(
                                 ident = ident,
                                 opprettet = registrertDato,
                                 journalpostId = journalpostId,
-                                sakId = finnSisteSakId,
+                                sakId = sisteSakId,
                                 utførtAv = Applikasjon("dp-saksbehandling"),
                             ),
                         )
-                        packet["@løsning"] =
-
-                            mapOf(
-                                "sakId" to finnSisteSakId,
-                                "håndtert" to true,
-                            )
+                        packet.lagLøsning(håndtert = true, sakId = sisteSakId)
                     }
-
-                    false -> {
-                        packet["@løsning"] =
-                            mapOf(
-                                "håndtert" to false,
-                            )
-                    }
+                    false -> packet.lagLøsning(håndtert = false)
                 }
             }
 
             Kategori.NY_SØKNAD -> {
-                val finnSisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
-                when (finnSisteSakId != null) {
-                    true -> TODO()
-                    false -> TODO()
+                val sisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
+                when (sisteSakId != null) {
+                    true -> {
+                        // TODO opprett henvendelse??
+                        // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
+                        packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                    }
+                    false -> packet.lagLøsning(håndtert = false)
                 }
             }
-
-            else -> {
-                packet["@løsning"] =
-                    mapOf(
-                        "håndtert" to false,
-                    )
-            }
+            else -> packet.lagLøsning(håndtert = false)
         }
         context.publish(key = ident, message = packet.toJson())
+    }
+
+    private fun JsonMessage.lagLøsning(
+        håndtert: Boolean,
+        sakId: UUID? = null,
+    ) {
+        when (sakId != null) {
+            true ->
+                this["@løsning"] =
+                    mapOf(
+                        "sakId" to sakId,
+                        "håndtert" to håndtert,
+                    )
+            false ->
+                this["@løsning"] =
+                    mapOf(
+                        "håndtert" to håndtert,
+                    )
+        }
     }
 
     enum class Kategori {

@@ -12,11 +12,13 @@ import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class HenvendelseBehovløserTest {
     private val testIdentMedSak = "12345612345"
     private val testIdentUtenSak = "11111155555"
     private val sakId = UUIDv7.ny()
+    private val søknadId = UUIDv7.ny()
     private val klageOppgave = lagOppgave(utløstAvType = KLAGE)
     private val testRapid = TestRapid()
     private val sakMediatorMock =
@@ -92,21 +94,102 @@ class HenvendelseBehovløserTest {
             """.trimIndent()
     }
 
+    @Test
+    fun `Skal motta og håndtere henvendelse om ny søknad når vi har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentMedSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentMedSak,
+                    kategori = "NY_SØKNAD",
+                    søknadId = søknadId,
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name" : "behov",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$testIdentMedSak",
+              "kategori" : "NY_SØKNAD",
+              "søknadsId" : "$søknadId",
+              "@løsning" : {
+                  "sakId" : "$sakId",
+                  "håndtert" : true
+              }
+            }
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Skal motta og ikke håndtere henvendelse om ny søknad når vi ikke har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentMedSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentUtenSak,
+                    kategori = "NY_SØKNAD",
+                    søknadId = søknadId,
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name" : "behov",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$testIdentUtenSak",
+              "kategori" : "NY_SØKNAD",
+              "søknadsId" : "$søknadId",
+              "@løsning" : {
+                  "håndtert" : false
+              }
+            }
+            """.trimIndent()
+    }
+
     private fun håndterHenvendelseBehov(
         journalpostId: String,
         ident: String,
         kategori: String,
-    ) = //language=JSON
-        """
-        {
-          "@event_name" : "behov",
-          "@behovId" : "${UUIDv7.ny()}",
-          "@behov" : [ "HåndterHenvendelse" ],
-          "journalpostId" : "$journalpostId",
-          "fødselsnummer" : "$ident",
-          "kategori" : "$kategori",
-          "registrertDato" : "${LocalDateTime.now()}"
-        }
-        
-        """.trimIndent()
+        søknadId: UUID? = null,
+    ) = when (søknadId == null) {
+        true ->
+            //language=JSON
+            """
+            {
+              "@event_name" : "behov",
+              "@behovId" : "${UUIDv7.ny()}",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$ident",
+              "kategori" : "$kategori",
+              "registrertDato" : "${LocalDateTime.now()}"
+            }
+            """.trimIndent()
+
+        false ->
+            //language=JSON
+            """
+            {
+              "@event_name" : "behov",
+              "@behovId" : "${UUIDv7.ny()}",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$ident",
+              "søknadsId" : "$søknadId",
+              "kategori" : "$kategori",
+              "registrertDato" : "${LocalDateTime.now()}"
+            }
+            """.trimIndent()
+    }
 }
