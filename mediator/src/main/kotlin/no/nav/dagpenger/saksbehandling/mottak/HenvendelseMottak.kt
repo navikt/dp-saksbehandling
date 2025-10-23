@@ -11,14 +11,12 @@ import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
-import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 
 internal class HenvendelseMottak(
     rapidsConnection: RapidsConnection,
     private val sakMediator: SakMediator,
     private val klageMediator: KlageMediator,
 ) : River.PacketListener {
-
     companion object {
         val behovNavn: String = "HåndterHenvendelse"
     }
@@ -41,7 +39,7 @@ internal class HenvendelseMottak(
                         "journalpostId",
                         "fødselsnummer",
                         "kategori",
-                        "registrertDato"
+                        "registrertDato",
                     )
                     it.interestedIn("søknadsId")
                 }
@@ -54,12 +52,10 @@ internal class HenvendelseMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-
         val kategori: Kategori = Kategori.valueOf(packet["kategori"].asText())
         val ident = packet["fødselsnummer"].asText()
         val registrertDato = packet["registrertDato"].asLocalDateTime()
         val journalpostId = packet["journalpostId"].asText()
-
 
         when (kategori) {
             Kategori.KLAGE -> {
@@ -73,47 +69,41 @@ internal class HenvendelseMottak(
                                 journalpostId = journalpostId,
                                 sakId = finnSisteSakId,
                                 utførtAv = Applikasjon("dp-saksbehandling"),
-                            )
-                        )
-                        packet["@løsning"] = JsonMessage.newMessage(
-                            mapOf(
-                                "sakId" to finnSisteSakId,
-                                "håndtert" to true
                             ),
                         )
+                        packet["@løsning"] =
+
+                            mapOf(
+                                "sakId" to finnSisteSakId,
+                                "håndtert" to true,
+                            )
                     }
 
                     false -> {
-                        packet["@løsning"] = JsonMessage.newMessage(
+                        packet["@løsning"] =
                             mapOf(
-                                "håndtert" to false
-                            ),
-                        )
+                                "håndtert" to false,
+                            )
                     }
                 }
             }
 
             Kategori.NY_SØKNAD -> {
                 val finnSisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
-                when(finnSisteSakId != null) {
+                when (finnSisteSakId != null) {
                     true -> TODO()
                     false -> TODO()
                 }
             }
 
-
-
-
             else -> {
-                packet["@løsning"] = JsonMessage.newMessage(
+                packet["@løsning"] =
                     mapOf(
-                        "håndtert" to false
-                    ),
-                )
+                        "håndtert" to false,
+                    )
             }
         }
-        context.publish(packet.toJson())
-
+        context.publish(key = ident, message = packet.toJson())
     }
 
     enum class Kategori {
