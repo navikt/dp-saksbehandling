@@ -12,7 +12,7 @@ import no.nav.dagpenger.saksbehandling.KlageMediator
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 
-internal class HenvendelseMottak(
+internal class HenvendelseBehovløser(
     rapidsConnection: RapidsConnection,
     private val sakMediator: SakMediator,
     private val klageMediator: KlageMediator,

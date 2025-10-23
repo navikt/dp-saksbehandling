@@ -13,7 +13,7 @@ import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class HenvendelseMottakTest {
+class HenvendelseBehovløserTest {
     private val testIdentMedSak = "12345612345"
     private val testIdentUtenSak = "11111155555"
     private val sakId = UUIDv7.ny()
@@ -30,17 +30,18 @@ class HenvendelseMottakTest {
         }
 
     init {
-        HenvendelseMottak(testRapid, sakMediatorMock, klageMediatorMock)
+        HenvendelseBehovløser(testRapid, sakMediatorMock, klageMediatorMock)
     }
 
     @Test
-    fun `Skal motta henvendelse om klage`() {
+    fun `Skal motta og håndtere henvendelse om klage når vi har en sak for personen`() {
         val journalpostId = "1234"
         testRapid.sendTestMessage(
             key = testIdentMedSak,
             message =
                 håndterHenvendelseBehov(
                     journalpostId = journalpostId,
+                    ident = testIdentMedSak,
                     kategori = "KLAGE",
                 ),
         )
@@ -62,8 +63,38 @@ class HenvendelseMottakTest {
             """.trimIndent()
     }
 
+    @Test
+    fun `Skal motta og ikke håndtere henvendelse om klage når vi ikke har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentUtenSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentUtenSak,
+                    kategori = "KLAGE",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name" : "behov",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$testIdentUtenSak",
+              "kategori" : "KLAGE",
+              "@løsning" : {
+                  "håndtert" : false
+              }
+            }
+            """.trimIndent()
+    }
+
     private fun håndterHenvendelseBehov(
         journalpostId: String,
+        ident: String,
         kategori: String,
     ) = //language=JSON
         """
@@ -72,7 +103,7 @@ class HenvendelseMottakTest {
           "@behovId" : "${UUIDv7.ny()}",
           "@behov" : [ "HåndterHenvendelse" ],
           "journalpostId" : "$journalpostId",
-          "fødselsnummer" : "$testIdentMedSak",
+          "fødselsnummer" : "$ident",
           "kategori" : "$kategori",
           "registrertDato" : "${LocalDateTime.now()}"
         }
