@@ -9,6 +9,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.saksbehandling.Applikasjon
 import no.nav.dagpenger.saksbehandling.KlageMediator
+import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import java.util.UUID
@@ -17,6 +18,7 @@ internal class HenvendelseBehovløser(
     rapidsConnection: RapidsConnection,
     private val sakMediator: SakMediator,
     private val klageMediator: KlageMediator,
+    private val oppgaveMediator: OppgaveMediator,
 ) : River.PacketListener {
     companion object {
         val behovNavn: String = "HåndterHenvendelse"
@@ -42,7 +44,7 @@ internal class HenvendelseBehovløser(
                         "kategori",
                         "registrertDato",
                     )
-                    it.interestedIn("søknadsId")
+                    it.interestedIn("søknadId")
                 }
             }.register(this)
     }
@@ -60,7 +62,7 @@ internal class HenvendelseBehovløser(
 
         when (kategori) {
             Kategori.KLAGE -> {
-                val sisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
+                val sisteSakId = sakMediator.finnSisteSakId(ident)
                 when (sisteSakId != null) {
                     true -> {
                         klageMediator.opprettKlage(
@@ -78,13 +80,43 @@ internal class HenvendelseBehovløser(
                 }
             }
 
-//            Kategori.NY_SØKNAD -> {
-//                val sisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
-//                when (sisteSakId != null) {
+            Kategori.ANKE -> {
+                val sisteSakId = sakMediator.finnSisteSakId(ident)
+                when (sisteSakId != null) {
+                    true -> {
+                        // TODO Skal denne sendes rett til KA eller opprett henvendelse og ta det derfra?
+                        packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                    }
+                    false -> packet.lagLøsning(håndtert = false)
+                }
+            }
+
+            Kategori.ETTERSENDING -> {
+                if (!packet["søknadId"].isMissingNode && !packet["søknadId"].isNull) {
+                    val søknadId = packet["søknadId"].asUUID()
+                    if (oppgaveMediator.skalEttersendingTilSøknadVarsles(ident = ident, søknadId = søknadId)) {
+                        // TODO opprett henvendelse
+                    }
+                }
+                val sisteSakId = sakMediator.finnSisteSakId(ident)
+                when (sisteSakId != null) {
+                    // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
+                    true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                    false -> packet.lagLøsning(håndtert = false)
+                }
+            }
+//                val sakId =
+//                    if (packet["søknadId"].isMissingNode || packet["søknadId"].isNull) {
+//                        sakMediator.finnSisteSakId(ident)
+//                    } else {
+//                        val søknadId = packet["søknadId"].asUUID()
+//                        sakMediator.finnSakIdForSøknad(søknadId = søknadId)
+//                    }
+//                when (sakId != null) {
 //                    true -> {
 //                        // TODO opprett henvendelse??
 //                        // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
-//                        packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+//                        packet.lagLøsning(håndtert = true, sakId = sakId)
 //                    }
 //                    false -> packet.lagLøsning(håndtert = false)
 //                }
