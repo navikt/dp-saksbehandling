@@ -94,69 +94,6 @@ class HenvendelseBehovløserTest {
             """.trimIndent()
     }
 
-    @Test
-    fun `Skal motta og håndtere henvendelse om ny søknad når vi har en sak for personen`() {
-        val journalpostId = "1234"
-        testRapid.sendTestMessage(
-            key = testIdentMedSak,
-            message =
-                håndterHenvendelseBehov(
-                    journalpostId = journalpostId,
-                    ident = testIdentMedSak,
-                    kategori = "NY_SØKNAD",
-                    søknadId = søknadId,
-                ),
-        )
-        testRapid.inspektør.size shouldBe 1
-
-        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
-            """
-            {
-              "@event_name" : "behov",
-              "@behov" : [ "HåndterHenvendelse" ],
-              "journalpostId" : "$journalpostId",
-              "fødselsnummer" : "$testIdentMedSak",
-              "kategori" : "NY_SØKNAD",
-              "søknadsId" : "$søknadId",
-              "@løsning" : {
-                  "sakId" : "$sakId",
-                  "håndtert" : true
-              }
-            }
-            """.trimIndent()
-    }
-
-    @Test
-    fun `Skal motta og ikke håndtere henvendelse om ny søknad når vi ikke har en sak for personen`() {
-        val journalpostId = "1234"
-        testRapid.sendTestMessage(
-            key = testIdentMedSak,
-            message =
-                håndterHenvendelseBehov(
-                    journalpostId = journalpostId,
-                    ident = testIdentUtenSak,
-                    kategori = "NY_SØKNAD",
-                    søknadId = søknadId,
-                ),
-        )
-        testRapid.inspektør.size shouldBe 1
-
-        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
-            """
-            {
-              "@event_name" : "behov",
-              "@behov" : [ "HåndterHenvendelse" ],
-              "journalpostId" : "$journalpostId",
-              "fødselsnummer" : "$testIdentUtenSak",
-              "kategori" : "NY_SØKNAD",
-              "søknadsId" : "$søknadId",
-              "@løsning" : {
-                  "håndtert" : false
-              }
-            }
-            """.trimIndent()
-    }
-
     private fun håndterHenvendelseBehov(
         journalpostId: String,
         ident: String,

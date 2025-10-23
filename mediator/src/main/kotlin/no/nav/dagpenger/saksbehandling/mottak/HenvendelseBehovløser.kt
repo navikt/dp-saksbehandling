@@ -78,17 +78,17 @@ internal class HenvendelseBehovløser(
                 }
             }
 
-            Kategori.NY_SØKNAD -> {
-                val sisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
-                when (sisteSakId != null) {
-                    true -> {
-                        // TODO opprett henvendelse??
-                        // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
-                        packet.lagLøsning(håndtert = true, sakId = sisteSakId)
-                    }
-                    false -> packet.lagLøsning(håndtert = false)
-                }
-            }
+//            Kategori.NY_SØKNAD -> {
+//                val sisteSakId = sakMediator.finnSisteSakId(packet["fødselsnummer"].asText())
+//                when (sisteSakId != null) {
+//                    true -> {
+//                        // TODO opprett henvendelse??
+//                        // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
+//                        packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+//                    }
+//                    false -> packet.lagLøsning(håndtert = false)
+//                }
+//            }
             else -> packet.lagLøsning(håndtert = false)
         }
         context.publish(key = ident, message = packet.toJson())
@@ -114,12 +114,16 @@ internal class HenvendelseBehovløser(
     }
 
     enum class Kategori {
+        NY_SØKNAD,
+        GJENOPPTAK,
+        GENERELL,
+        UTDANNING,
+        ETABLERING,
         KLAGE,
         ANKE,
         KLAGE_FORSKUDD,
         ETTERSENDING,
         UKJENT_SKJEMA_KODE,
         UTEN_BRUKER,
-        NY_SØKNAD,
     }
 }
