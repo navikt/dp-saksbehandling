@@ -1,26 +1,17 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualSpecifiedJson
-import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.request
-import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToken
 import no.nav.dagpenger.saksbehandling.db.oppgave.DataNotFoundException
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
@@ -33,51 +24,11 @@ class SakApiTest {
 
     private val behandlingId = UUIDv7.ny()
     private val sakId = UUIDv7.ny()
-    private val søknadId = UUIDv7.ny()
 
     @Test
     fun `Skal kaste feil når det mangler autentisering`() {
         withSakApi(mockk<SakMediator>()) {
             client.get("behandling/$behandlingId/sakId").status shouldBe HttpStatusCode.Unauthorized
-            client.request("/sak/siste-sak-id/for-ident") {
-                method = HttpMethod.Post
-            }.status shouldBe HttpStatusCode.Unauthorized
-            client.get("sak/sak-id-for-soknad/$søknadId").status shouldBe HttpStatusCode.Unauthorized
-        }
-    }
-
-    @Test
-    fun `Skal kunne hente ut sakId for en søknadId`() {
-        val sakMediator =
-            mockk<SakMediator>().also {
-                every { it.finnSakIdForSøknad(søknadId) } returns sakId
-            }
-        val token = gyldigMaskinToken()
-        withSakApi(sakMediator) {
-            client.get("sak/sak-id-for-soknad/$søknadId") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.OK
-                response.contentType() shouldBe ContentType.Application.Json.withCharset(Charsets.UTF_8)
-                //language=JSON
-                response.bodyAsText() shouldEqualSpecifiedJson """{ "id" : "$sakId" }"""
-            }
-        }
-    }
-
-    @Test
-    fun `Skal kunne svare med no content når man henter sak-id for søknad`() {
-        val sakMediator =
-            mockk<SakMediator>().also {
-                every { it.finnSakIdForSøknad(søknadId) } returns null
-            }
-        val token = gyldigMaskinToken()
-        withSakApi(sakMediator) {
-            client.get("sak/sak-id-for-soknad/$søknadId") {
-                header(HttpHeaders.Authorization, "Bearer $token")
-            }.let { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
         }
     }
 
@@ -92,51 +43,6 @@ class SakApiTest {
             client.get("behandling/$behandlingId/sakId") {
                 header(HttpHeaders.Authorization, "Bearer $token")
             }.bodyAsText() shouldBe sakId.toString()
-        }
-    }
-
-    @Test
-    fun `Skal hente sakId for siste sak hvis bruker har noen saker`() {
-        val identMedSaker = "12345612345"
-        val identUtenSaker = "01010112345"
-        val sakId = UUIDv7.ny()
-        val sakMediator =
-            mockk<SakMediator>().also {
-                every { it.finnSisteSakId(identMedSaker) } returns sakId
-                every { it.finnSisteSakId(identUtenSaker) } returns null
-            }
-        withSakApi(
-            sakMediator = sakMediator,
-        ) {
-            client.post("sak/siste-sak-id/for-ident") {
-                header(HttpHeaders.Authorization, "Bearer ${gyldigMaskinToken()}")
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "$identMedSaker"}
-                    """.trimMargin(),
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                response.bodyAsText() shouldEqualSpecifiedJsonIgnoringOrder
-                    //language=JSON
-                    """
-                    {
-                      "id" : "$sakId"
-                    }
-                    """.trimIndent()
-            }
-            client.post("sak/siste-sak-id/for-ident") {
-                autentisert(token = gyldigMaskinToken())
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "$identUtenSaker"}
-                    """.trimMargin(),
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.NoContent
-            }
         }
     }
 

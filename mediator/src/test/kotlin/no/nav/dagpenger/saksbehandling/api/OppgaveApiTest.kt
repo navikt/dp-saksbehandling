@@ -50,7 +50,6 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SAKSBEHANDLER_ID
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.SOKNAD_ID
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
-import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstand
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.lagTestOppgaveMedTilstandOgBehandling
@@ -150,16 +149,6 @@ class OppgaveApiTest {
                 Arguments.of("/person/oppgaver", HttpMethod.Post),
                 Arguments.of("/behandling/behandlingId/oppgaveId", HttpMethod.Get),
             )
-        }
-    }
-
-    @Test
-    fun `Skal avvise kall uten gyldig maskin til maskin token ved kall til skal-varsle-om-ettersending`() {
-        withOppgaveApi {
-            client.request("/person/skal-varsle-om-ettersending") {
-                method = HttpMethod.Post
-                autentisert(token = ugyldigToken)
-            }.status shouldBe HttpStatusCode.Unauthorized
         }
     }
 
@@ -1243,51 +1232,6 @@ class OppgaveApiTest {
 
             client.get("/behandling/$behandlingIdSomIkkeFinnes/oppgaveId") { autentisert() }.also { response ->
                 response.status shouldBe HttpStatusCode.NotFound
-            }
-        }
-    }
-
-    @Test
-    fun `Skal sjekke om det finnes korresponderende oppgave som saksbehandler har sett på`() {
-        val søknadId = UUIDv7.ny()
-        val søknadIdFalse = UUIDv7.ny()
-        val oppgaveMediatorMock =
-            mockk<OppgaveMediator>().also {
-                every { it.skalEttersendingTilSøknadVarsles(søknadId = søknadId, ident = TEST_IDENT) } returns true
-                every {
-                    it.skalEttersendingTilSøknadVarsles(
-                        søknadId = søknadIdFalse,
-                        ident = TEST_IDENT,
-                    )
-                } returns false
-            }
-        withOppgaveApi(oppgaveMediatorMock) {
-            client.post("/person/skal-varsle-om-ettersending") {
-                autentisert(token = gyldigMaskinToken())
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "$TEST_IDENT", 
-                        "soknadId":  "$søknadId"}
-                    """.trimMargin(),
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                response.bodyAsText() shouldBe "true"
-            }
-
-            client.post("/person/skal-varsle-om-ettersending") {
-                autentisert(token = gyldigMaskinToken())
-                contentType(ContentType.Application.Json)
-                setBody(
-                    //language=JSON
-                    """{"ident": "$TEST_IDENT", 
-                        "soknadId":  "$søknadIdFalse"}
-                    """.trimMargin(),
-                )
-            }.also { response ->
-                response.status shouldBe HttpStatusCode.OK
-                response.bodyAsText() shouldBe "false"
             }
         }
     }

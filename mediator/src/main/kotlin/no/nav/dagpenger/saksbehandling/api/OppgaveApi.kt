@@ -39,7 +39,6 @@ import no.nav.dagpenger.saksbehandling.api.models.NesteOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.NotatRequestDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdDTO
 import no.nav.dagpenger.saksbehandling.api.models.PersonIdentDTO
-import no.nav.dagpenger.saksbehandling.api.models.SoknadDTO
 import no.nav.dagpenger.saksbehandling.api.models.TildeltOppgaveDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveAarsakDTO
 import no.nav.dagpenger.saksbehandling.api.models.UtsettOppgaveDTO
@@ -68,20 +67,6 @@ internal fun Route.oppgaveApi(
     oppgaveDTOMapper: OppgaveDTOMapper,
     applicationCallParser: ApplicationCallParser,
 ) {
-    authenticate("azureAd-maskin") {
-        route("person/skal-varsle-om-ettersending") {
-            post {
-                val soknad: SoknadDTO = call.receive<SoknadDTO>()
-                val skalVarsle =
-                    oppgaveMediator.skalEttersendingTilSøknadVarsles(
-                        søknadId = soknad.soknadId,
-                        ident = soknad.ident,
-                    )
-                call.respond(status = HttpStatusCode.OK, skalVarsle)
-            }
-        }
-    }
-
     authenticate("azureAd") {
         route("person/personId") {
             post {
