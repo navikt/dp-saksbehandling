@@ -25,6 +25,7 @@ internal class HenvendelseBehovløser(
     companion object {
         val behovNavn: String = "HåndterHenvendelse"
         private val logger = KotlinLogging.logger {}
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 
     init {
@@ -63,47 +64,37 @@ internal class HenvendelseBehovløser(
         val registrertDato = packet["registrertDato"].asLocalDateTime()
         val journalpostId = packet["journalpostId"].asText()
         withLoggingContext("journalpostId" to journalpostId, "kategori" to kategori.name) {
+            logger.info { "Skal løse behov $behovNavn for journalpostId $journalpostId og kategori $kategori" }
             when (kategori) {
                 Kategori.KLAGE -> {
                     val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    val løsning =
-                        when (sisteSakId != null) {
-                            true -> {
-                                klageMediator.opprettKlage(
-                                    KlageMottattHendelse(
-                                        ident = ident,
-                                        opprettet = registrertDato,
-                                        journalpostId = journalpostId,
-                                        sakId = sisteSakId,
-                                        utførtAv = Applikasjon("dp-saksbehandling"),
-                                    ),
-                                )
-                                lagLøsning(håndtert = true, sakId = sisteSakId)
-                            }
+                    when (sisteSakId != null) {
+                        true -> {
+                            klageMediator.opprettKlage(
+                                KlageMottattHendelse(
+                                    ident = ident,
+                                    opprettet = registrertDato,
+                                    journalpostId = journalpostId,
+                                    sakId = sisteSakId,
+                                    utførtAv = Applikasjon("dp-saksbehandling"),
+                                ),
+                            )
+                            packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                        }
 
-                            false -> lagLøsning(håndtert = false)
-                        }
-                    packet["@løsning"] =
-                        løsning.also {
-                            logger.info { "Laget løsning for klage: $it" }
-                        }
+                        false -> packet.lagLøsning(håndtert = false)
+                    }
                 }
 
                 Kategori.ANKE -> {
                     val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    val løsning =
-                        when (sisteSakId != null) {
-                            true -> {
-                                // TODO Skal denne sendes rett til KA eller opprett henvendelse og ta det derfra?
-                                lagLøsning(håndtert = true, sakId = sisteSakId)
-                            }
-
-                            false -> lagLøsning(håndtert = false)
+                    when (sisteSakId != null) {
+                        true -> {
+                            // TODO Skal denne sendes rett til KA eller opprett henvendelse og ta det derfra?
+                            packet.lagLøsning(håndtert = true, sakId = sisteSakId)
                         }
-                    packet["@løsning"] =
-                        løsning.also {
-                            logger.info { "Laget løsning for anke: $it" }
-                        }
+                        false -> packet.lagLøsning(håndtert = false)
+                    }
                 }
 
                 Kategori.ETTERSENDING -> {
@@ -114,48 +105,50 @@ internal class HenvendelseBehovløser(
                         }
                     }
                     val sisteSakId = sakMediator.finnSisteSakId(ident)
-                    val løsning =
-                        when (sisteSakId != null) {
-                            // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
-                            true -> lagLøsning(håndtert = true, sakId = sisteSakId)
-                            false -> lagLøsning(håndtert = false)
-                        }
-                    packet["@løsning"] =
-                        løsning.also {
-                            logger.info { "Laget løsning for anke: $it" }
-                        }
+                    when (sisteSakId != null) {
+                        // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
+                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                        false -> packet.lagLøsning(håndtert = false)
+                    }
                 }
 
-                else -> {
-                    packet["@løsning"] =
-                        lagLøsning(false).also {
-                            logger.info { "Laget løsning for ${kategori.name}: $it" }
-                        }
-                }
+                else -> packet.lagLøsning(false)
             }
             packet["@final"] = true
-            context.publish(key = ident, message = packet.toJson())
+            context.publish(
+                key = ident,
+                message =
+                    packet.toJson().also {
+                        sikkerlogg.info { "Publiserte løsning for behov $behovNavn: $it" }
+                    },
+            ).also {
+                logger.info { "Løste behov $behovNavn for journalpostId $journalpostId og kategori $kategori" }
+            }
         }
     }
 
-    private fun lagLøsning(
+    private fun JsonMessage.lagLøsning(
         håndtert: Boolean,
         sakId: UUID? = null,
-    ): Map<String, Any> {
-        return when (sakId != null) {
-            true -> {
-                mapOf(
-                    "sakId" to sakId,
-                    "håndtert" to håndtert,
-                )
-            }
+    ) {
+        this["@løsning"] =
+            mapOf(
+                "$behovNavn" to
+                    when (sakId != null) {
+                        true -> {
+                            mapOf(
+                                "sakId" to sakId,
+                                "håndtert" to håndtert,
+                            )
+                        }
 
-            false -> {
-                mapOf(
-                    "håndtert" to håndtert,
-                )
-            }
-        }
+                        false -> {
+                            mapOf(
+                                "håndtert" to håndtert,
+                            )
+                        }
+                    },
+            )
     }
 
     enum class Kategori {

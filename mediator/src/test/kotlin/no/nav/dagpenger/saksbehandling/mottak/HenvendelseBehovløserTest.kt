@@ -79,8 +79,10 @@ class HenvendelseBehovløserTest {
               "fødselsnummer" : "$testIdentMedSak",
               "kategori" : "ETTERSENDING",
               "@løsning" : {
+                "HåndterHenvendelse": {
                   "sakId" : "$sakId",
                   "håndtert" : true
+                  }
               },
               "@final": true
             }
@@ -116,8 +118,10 @@ class HenvendelseBehovløserTest {
               "fødselsnummer" : "$testIdentMedSak",
               "kategori" : "ETTERSENDING",
               "@løsning" : {
+                "HåndterHenvendelse": {
                   "sakId" : "$sakId",
                   "håndtert" : true
+                }
               },
               "@final": true
             }
@@ -154,7 +158,9 @@ class HenvendelseBehovløserTest {
               "fødselsnummer" : "$testIdentUtenSak",
               "kategori" : "ETTERSENDING",
               "@løsning" : {
+                "HåndterHenvendelse": {
                   "håndtert" : false
+                }
               },
                 "@final": true
             }
@@ -190,7 +196,9 @@ class HenvendelseBehovløserTest {
               "fødselsnummer" : "$testIdentUtenSak",
               "kategori" : "ETTERSENDING",
               "@løsning" : {
+                "HåndterHenvendelse": {
                   "håndtert" : false
+                }
               },
                 "@final": true
             }
@@ -220,8 +228,10 @@ class HenvendelseBehovløserTest {
               "fødselsnummer" : "$testIdentMedSak",
               "kategori" : "KLAGE",
               "@løsning" : {
+                "HåndterHenvendelse": {
                   "sakId" : "$sakId",
                   "håndtert" : true
+                }
               },
                 "@final": true
               
@@ -253,8 +263,10 @@ class HenvendelseBehovløserTest {
               "journalpostId": "$journalpostId",
               "fødselsnummer": "$testIdentUtenSak",
               "kategori": "KLAGE",
-              "@løsning": {
-                "håndtert": false
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "håndtert": false
+                }
               },
               "@final": true
             }
@@ -284,8 +296,10 @@ class HenvendelseBehovløserTest {
               "fødselsnummer" : "$testIdentMedSak",
               "kategori" : "ANKE",
               "@løsning" : {
+                "HåndterHenvendelse": {
                   "sakId" : "$sakId",
                   "håndtert" : true
+                }
               },
               "@final": true
             }
@@ -315,7 +329,9 @@ class HenvendelseBehovløserTest {
               "fødselsnummer" : "$testIdentUtenSak",
               "kategori" : "ANKE",
               "@løsning" : {
+                "HåndterHenvendelse": {
                   "håndtert" : false
+                }
               },
               "@final": true
             }
