@@ -105,22 +105,6 @@ internal class HenvendelseBehovløser(
                     false -> packet.lagLøsning(håndtert = false)
                 }
             }
-//                val sakId =
-//                    if (packet["søknadId"].isMissingNode || packet["søknadId"].isNull) {
-//                        sakMediator.finnSisteSakId(ident)
-//                    } else {
-//                        val søknadId = packet["søknadId"].asUUID()
-//                        sakMediator.finnSakIdForSøknad(søknadId = søknadId)
-//                    }
-//                when (sakId != null) {
-//                    true -> {
-//                        // TODO opprett henvendelse??
-//                        // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
-//                        packet.lagLøsning(håndtert = true, sakId = sakId)
-//                    }
-//                    false -> packet.lagLøsning(håndtert = false)
-//                }
-//            }
             else -> packet.lagLøsning(håndtert = false)
         }
         context.publish(key = ident, message = packet.toJson())
