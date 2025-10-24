@@ -22,7 +22,6 @@ class HenvendelseBehovløserTest {
     private val sakId = UUIDv7.ny()
     private val søknadIdSomSkalVarsles = UUIDv7.ny()
     private val søknadIdSomIkkeSkalVarsles = UUIDv7.ny()
-    private val søknadIdUtenSak = UUIDv7.ny()
     private val klageOppgave = lagOppgave(utløstAvType = KLAGE)
     private val testRapid = TestRapid()
     private val sakMediatorMock =
@@ -82,7 +81,8 @@ class HenvendelseBehovløserTest {
               "@løsning" : {
                   "sakId" : "$sakId",
                   "håndtert" : true
-              }
+              },
+              "@final": true
             }
             """.trimIndent()
     }
@@ -118,7 +118,8 @@ class HenvendelseBehovløserTest {
               "@løsning" : {
                   "sakId" : "$sakId",
                   "håndtert" : true
-              }
+              },
+              "@final": true
             }
             """.trimIndent()
     }
@@ -154,7 +155,8 @@ class HenvendelseBehovløserTest {
               "kategori" : "ETTERSENDING",
               "@løsning" : {
                   "håndtert" : false
-              }
+              },
+                "@final": true
             }
             """.trimIndent()
     }
@@ -189,7 +191,8 @@ class HenvendelseBehovløserTest {
               "kategori" : "ETTERSENDING",
               "@løsning" : {
                   "håndtert" : false
-              }
+              },
+                "@final": true
             }
             """.trimIndent()
     }
@@ -219,7 +222,9 @@ class HenvendelseBehovløserTest {
               "@løsning" : {
                   "sakId" : "$sakId",
                   "håndtert" : true
-              }
+              },
+                "@final": true
+              
             }
             """.trimIndent()
     }
@@ -241,14 +246,17 @@ class HenvendelseBehovløserTest {
         testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
             """
             {
-              "@event_name" : "behov",
-              "@behov" : [ "HåndterHenvendelse" ],
-              "journalpostId" : "$journalpostId",
-              "fødselsnummer" : "$testIdentUtenSak",
-              "kategori" : "KLAGE",
-              "@løsning" : {
-                  "håndtert" : false
-              }
+              "@event_name": "behov",
+              "@behov": [
+                "HåndterHenvendelse"
+              ],
+              "journalpostId": "$journalpostId",
+              "fødselsnummer": "$testIdentUtenSak",
+              "kategori": "KLAGE",
+              "@løsning": {
+                "håndtert": false
+              },
+              "@final": true
             }
             """.trimIndent()
     }
@@ -278,7 +286,8 @@ class HenvendelseBehovløserTest {
               "@løsning" : {
                   "sakId" : "$sakId",
                   "håndtert" : true
-              }
+              },
+              "@final": true
             }
             """.trimIndent()
     }
@@ -307,7 +316,8 @@ class HenvendelseBehovløserTest {
               "kategori" : "ANKE",
               "@løsning" : {
                   "håndtert" : false
-              }
+              },
+              "@final": true
             }
             """.trimIndent()
     }

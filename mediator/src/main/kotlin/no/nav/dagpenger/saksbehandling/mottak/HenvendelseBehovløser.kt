@@ -133,6 +133,7 @@ internal class HenvendelseBehovløser(
                         }
                 }
             }
+            packet["@final"] = true
             context.publish(key = ident, message = packet.toJson())
         }
     }
