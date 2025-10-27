@@ -85,7 +85,6 @@ internal class HenvendelseBehovløser(
                         false -> packet.lagLøsning(håndtert = false)
                     }
                 }
-
                 Kategori.ANKE -> {
                     val sisteSakId = sakMediator.finnSisteSakId(ident)
                     when (sisteSakId != null) {
@@ -96,7 +95,6 @@ internal class HenvendelseBehovløser(
                         false -> packet.lagLøsning(håndtert = false)
                     }
                 }
-
                 Kategori.ETTERSENDING -> {
                     if (!packet["søknadId"].isMissingNode && !packet["søknadId"].isNull) {
                         val søknadId = packet["søknadId"].asUUID()
@@ -107,6 +105,27 @@ internal class HenvendelseBehovløser(
                     val sisteSakId = sakMediator.finnSisteSakId(ident)
                     when (sisteSakId != null) {
                         // TODO skal vi alltid svare med siste sak og fikse journalføring i ettertid? Høna og egget...
+                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                        false -> packet.lagLøsning(håndtert = false)
+                    }
+                }
+                Kategori.UTDANNING -> {
+                    val sisteSakId = sakMediator.finnSisteSakId(ident)
+                    when (sisteSakId != null) {
+                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                        false -> packet.lagLøsning(håndtert = false)
+                    }
+                }
+                Kategori.ETABLERING -> {
+                    val sisteSakId = sakMediator.finnSisteSakId(ident)
+                    when (sisteSakId != null) {
+                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                        false -> packet.lagLøsning(håndtert = false)
+                    }
+                }
+                Kategori.GENERELL -> {
+                    val sisteSakId = sakMediator.finnSisteSakId(ident)
+                    when (sisteSakId != null) {
                         true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
                         false -> packet.lagLøsning(håndtert = false)
                     }

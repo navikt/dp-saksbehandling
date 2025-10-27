@@ -338,6 +338,207 @@ class HenvendelseBehovløserTest {
             """.trimIndent()
     }
 
+    @Test
+    fun `Skal motta og håndtere henvendelse om utdanning når vi har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentMedSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentMedSak,
+                    kategori = "UTDANNING",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name" : "behov",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$testIdentMedSak",
+              "kategori" : "UTDANNING",
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "sakId" : "$sakId",
+                  "håndtert" : true
+                }
+              },
+              "@final": true
+            }
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Skal motta og ikke håndtere henvendelse om utdanning når vi ikke har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentUtenSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentUtenSak,
+                    kategori = "UTDANNING",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name": "behov",
+              "@behov": [
+                "HåndterHenvendelse"
+              ],
+              "journalpostId": "$journalpostId",
+              "fødselsnummer": "$testIdentUtenSak",
+              "kategori": "UTDANNING",
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "håndtert": false
+                }
+              },
+              "@final": true
+            }
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Skal motta og håndtere henvendelse om etablering når vi har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentMedSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentMedSak,
+                    kategori = "ETABLERING",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name" : "behov",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$testIdentMedSak",
+              "kategori" : "ETABLERING",
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "sakId" : "$sakId",
+                  "håndtert" : true
+                }
+              },
+              "@final": true
+            }
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Skal motta og ikke håndtere henvendelse om etablering når vi ikke har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentUtenSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentUtenSak,
+                    kategori = "ETABLERING",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name": "behov",
+              "@behov": [
+                "HåndterHenvendelse"
+              ],
+              "journalpostId": "$journalpostId",
+              "fødselsnummer": "$testIdentUtenSak",
+              "kategori": "ETABLERING",
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "håndtert": false
+                }
+              },
+              "@final": true
+            }
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Skal motta og håndtere henvendelse om generell innsending når vi har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentMedSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentMedSak,
+                    kategori = "GENERELL",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name" : "behov",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$testIdentMedSak",
+              "kategori" : "GENERELL",
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "sakId" : "$sakId",
+                  "håndtert" : true
+                }
+              },
+              "@final": true
+            }
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Skal motta og ikke håndtere henvendelse om generell innsending når vi ikke har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentUtenSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentUtenSak,
+                    kategori = "GENERELL",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name": "behov",
+              "@behov": [
+                "HåndterHenvendelse"
+              ],
+              "journalpostId": "$journalpostId",
+              "fødselsnummer": "$testIdentUtenSak",
+              "kategori": "GENERELL",
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "håndtert": false
+                }
+              },
+              "@final": true
+            }
+            """.trimIndent()
+    }
+
     private fun håndterHenvendelseBehov(
         journalpostId: String,
         ident: String,
