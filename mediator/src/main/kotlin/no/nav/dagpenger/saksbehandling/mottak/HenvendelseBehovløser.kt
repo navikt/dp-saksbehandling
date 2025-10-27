@@ -130,6 +130,13 @@ internal class HenvendelseBehovløser(
                         false -> packet.lagLøsning(håndtert = false)
                     }
                 }
+                Kategori.UKJENT_SKJEMA_KODE -> {
+                    val sisteSakId = sakMediator.finnSisteSakId(ident)
+                    when (sisteSakId != null) {
+                        true -> packet.lagLøsning(håndtert = true, sakId = sisteSakId)
+                        false -> packet.lagLøsning(håndtert = false)
+                    }
+                }
 
                 else -> packet.lagLøsning(false)
             }

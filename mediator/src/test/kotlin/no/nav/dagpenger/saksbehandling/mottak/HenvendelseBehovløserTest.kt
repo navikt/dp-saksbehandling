@@ -539,6 +539,73 @@ class HenvendelseBehovløserTest {
             """.trimIndent()
     }
 
+    @Test
+    fun `Skal motta og håndtere henvendelse med ukjent skjemakode når vi har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentMedSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentMedSak,
+                    kategori = "UKJENT_SKJEMA_KODE",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name" : "behov",
+              "@behov" : [ "HåndterHenvendelse" ],
+              "journalpostId" : "$journalpostId",
+              "fødselsnummer" : "$testIdentMedSak",
+              "kategori" : "UKJENT_SKJEMA_KODE",
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "sakId" : "$sakId",
+                  "håndtert" : true
+                }
+              },
+              "@final": true
+            }
+            """.trimIndent()
+    }
+
+    @Test
+    fun `Skal motta og ikke håndtere henvendelse med ukjent skjemakode når vi ikke har en sak for personen`() {
+        val journalpostId = "1234"
+        testRapid.sendTestMessage(
+            key = testIdentUtenSak,
+            message =
+                håndterHenvendelseBehov(
+                    journalpostId = journalpostId,
+                    ident = testIdentUtenSak,
+                    kategori = "UKJENT_SKJEMA_KODE",
+                ),
+        )
+        testRapid.inspektør.size shouldBe 1
+
+        testRapid.inspektør.message(0).toString() shouldEqualSpecifiedJsonIgnoringOrder
+            """
+            {
+              "@event_name": "behov",
+              "@behov": [
+                "HåndterHenvendelse"
+              ],
+              "journalpostId": "$journalpostId",
+              "fødselsnummer": "$testIdentUtenSak",
+              "kategori": "UKJENT_SKJEMA_KODE",
+              "@løsning" : {
+                "HåndterHenvendelse": {
+                  "håndtert": false
+                }
+              },
+              "@final": true
+            }
+            """.trimIndent()
+    }
+
     private fun håndterHenvendelseBehov(
         journalpostId: String,
         ident: String,
