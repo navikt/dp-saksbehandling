@@ -1,13 +1,13 @@
 package no.nav.dagpenger.saksbehandling.api
 
 import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.assertions.json.shouldEqualSpecifiedJsonIgnoringOrder
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.saksbehandling.BESLUTTER_IDENT
 import no.nav.dagpenger.saksbehandling.Oppgave
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
-import no.nav.dagpenger.saksbehandling.SAKSBEHANDLER_IDENT
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MANUELL
 import no.nav.dagpenger.saksbehandling.UtløstAvType.MELDEKORT
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
@@ -16,15 +16,10 @@ import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTORolleDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOBehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.OppgaveHistorikkDTOTypeDTO
-import no.nav.dagpenger.saksbehandling.lagBehandling
-import no.nav.dagpenger.saksbehandling.lagOppgave
-import no.nav.dagpenger.saksbehandling.lagPerson
-import no.nav.dagpenger.saksbehandling.lagTilstandLogg
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 import no.nav.dagpenger.saksbehandling.serder.objectMapper
-import no.nav.dagpenger.saksbehandling.testPerson
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -32,7 +27,7 @@ import java.time.LocalDateTime
 class OppgaveDTOMapperTest {
     private val pdlKlient =
         mockk<PDLKlient>().also {
-            coEvery { it.person(OppgaveApiTestHelper.pdlTestPerson.ident) } returns Result.success(OppgaveApiTestHelper.pdlTestPerson)
+            coEvery { it.person(TestHelper.personIdent) } returns Result.success(TestHelper.pdlPerson)
         }
     private val relevanteJournalpostIdOppslag =
         mockk<RelevanteJournalpostIdOppslag>().also {
@@ -45,11 +40,11 @@ class OppgaveDTOMapperTest {
 
         runBlocking {
             val oppgave =
-                lagOppgave(
+                TestHelper.lagOppgave(
                     tilstand = Oppgave.UnderKontroll(),
                     opprettet = etTidspunkt,
-                    person = lagPerson(ident = OppgaveApiTestHelper.pdlTestPerson.ident),
-                    tilstandslogg = lagTilstandLogg(),
+                    person = TestHelper.testPerson,
+                    tilstandslogg = TestHelper.lagTilstandLogg(),
                 )
 
             OppgaveDTOMapper(
@@ -58,9 +53,9 @@ class OppgaveDTOMapperTest {
                         pdlKlient,
                         relevanteJournalpostIdOppslag,
                         mockk<SaksbehandlerOppslag>().also {
-                            coEvery { it.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
+                            coEvery { it.hentSaksbehandler(TestHelper.TestSaksbehandler.navIdent) } returns
                                 BehandlerDTO(
-                                    ident = SAKSBEHANDLER_IDENT,
+                                    ident = TestHelper.TestSaksbehandler.navIdent,
                                     fornavn = "sbfornavn",
                                     etternavn = "sbetternavn",
                                     enhet =
@@ -70,9 +65,9 @@ class OppgaveDTOMapperTest {
                                             postadresse = "sbPostadresse",
                                         ),
                                 )
-                            coEvery { it.hentSaksbehandler(BESLUTTER_IDENT) } returns
+                            coEvery { it.hentSaksbehandler(TestHelper.TestBeslutter.navIdent) } returns
                                 BehandlerDTO(
-                                    ident = BESLUTTER_IDENT,
+                                    ident = TestHelper.TestBeslutter.navIdent,
                                     fornavn = "befornavn",
                                     etternavn = "beetternavn",
                                     enhet =
@@ -116,8 +111,8 @@ class OppgaveDTOMapperTest {
                       "oppgaveId": "${oppgave.oppgaveId}",
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
-                        "ident": "12345612345",
-                        "id": "${testPerson.id}",
+                        "ident": "${TestHelper.personIdent}",
+                        "id": "${TestHelper.personId}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -191,7 +186,12 @@ class OppgaveDTOMapperTest {
     fun `Skal mappe og berike oppgaveDTO for tilstand Under behandling`() {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
-            val oppgave = lagOppgave(tilstand = UnderBehandling, opprettet = etTidspunkt)
+            val oppgave =
+                TestHelper.lagOppgave(
+                    tilstand = UnderBehandling,
+                    opprettet = etTidspunkt,
+                    tilstandslogg = TestHelper.lagTilstandLogg(),
+                )
             OppgaveDTOMapper(
                 oppslag =
                     Oppslag(
@@ -199,9 +199,9 @@ class OppgaveDTOMapperTest {
                         relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
                         saksbehandlerOppslag =
                             mockk<SaksbehandlerOppslag>().also {
-                                coEvery { it.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.TestSaksbehandler.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = SAKSBEHANDLER_IDENT,
+                                        ident = TestHelper.TestSaksbehandler.navIdent,
                                         fornavn = "sbfornavn",
                                         etternavn = "sbetternavn",
                                         enhet =
@@ -211,9 +211,9 @@ class OppgaveDTOMapperTest {
                                                 postadresse = "sbPostadresse",
                                             ),
                                     )
-                                coEvery { it.hentSaksbehandler(BESLUTTER_IDENT) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.TestBeslutter.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = BESLUTTER_IDENT,
+                                        ident = TestHelper.TestBeslutter.navIdent,
                                         fornavn = "befornavn",
                                         etternavn = "beetternavn",
                                         enhet =
@@ -257,8 +257,8 @@ class OppgaveDTOMapperTest {
                       "oppgaveId": "${oppgave.oppgaveId}",
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
-                        "ident": "12345612345",
-                        "id": "${testPerson.id}",
+                        "ident": "${TestHelper.personIdent}",
+                        "id": "${TestHelper.personId}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -269,7 +269,7 @@ class OppgaveDTOMapperTest {
                         "sikkerhetstiltak": [
                           {
                             "beskrivelse": "To ansatte i samtale",
-                            "gyldigTom": "${OppgaveApiTestHelper.pdlTestPerson.sikkerhetstiltak.first().gyldigTom}"
+                            "gyldigTom": "${TestHelper.pdlPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
                         "statsborgerskap": "NOR"
@@ -346,10 +346,11 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                lagOppgave(
+                TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = lagBehandling(utløstAvType = MANUELL),
+                    behandling = TestHelper.lagBehandling(utløstAvType = MANUELL),
+                    tilstandslogg = TestHelper.lagTilstandLogg(),
                 )
             OppgaveDTOMapper(
                 oppslag =
@@ -358,9 +359,9 @@ class OppgaveDTOMapperTest {
                         relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
                         saksbehandlerOppslag =
                             mockk<SaksbehandlerOppslag>().also {
-                                coEvery { it.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.TestSaksbehandler.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = SAKSBEHANDLER_IDENT,
+                                        ident = TestHelper.TestSaksbehandler.navIdent,
                                         fornavn = "sbfornavn",
                                         etternavn = "sbetternavn",
                                         enhet =
@@ -370,9 +371,9 @@ class OppgaveDTOMapperTest {
                                                 postadresse = "sbPostadresse",
                                             ),
                                     )
-                                coEvery { it.hentSaksbehandler(BESLUTTER_IDENT) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.TestBeslutter.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = BESLUTTER_IDENT,
+                                        ident = TestHelper.TestBeslutter.navIdent,
                                         fornavn = "befornavn",
                                         etternavn = "beetternavn",
                                         enhet =
@@ -410,14 +411,14 @@ class OppgaveDTOMapperTest {
                         oppgave,
                     )
                 //language=JSON
-                objectMapper.writeValueAsString(oppgaveDTO) shouldEqualJson
+                objectMapper.writeValueAsString(oppgaveDTO) shouldEqualSpecifiedJsonIgnoringOrder
                     """
                     {
                       "oppgaveId": "${oppgave.oppgaveId}",
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
-                        "ident": "12345612345",
-                        "id": "${testPerson.id}",
+                        "ident": "${TestHelper.personIdent}",
+                        "id": "${TestHelper.personId}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -428,7 +429,7 @@ class OppgaveDTOMapperTest {
                         "sikkerhetstiltak": [
                           {
                             "beskrivelse": "To ansatte i samtale",
-                            "gyldigTom": "${OppgaveApiTestHelper.pdlTestPerson.sikkerhetstiltak.first().gyldigTom}"
+                            "gyldigTom": "${TestHelper.pdlPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
                         "statsborgerskap": "NOR"
@@ -505,10 +506,11 @@ class OppgaveDTOMapperTest {
         val etTidspunkt = LocalDateTime.of(2024, 11, 1, 9, 50)
         runBlocking {
             val oppgave =
-                lagOppgave(
+                TestHelper.lagOppgave(
                     tilstand = UnderBehandling,
                     opprettet = etTidspunkt,
-                    behandling = lagBehandling(utløstAvType = MELDEKORT),
+                    behandling = TestHelper.lagBehandling(utløstAvType = MELDEKORT),
+                    tilstandslogg = TestHelper.lagTilstandLogg(),
                 )
             OppgaveDTOMapper(
                 oppslag =
@@ -517,9 +519,9 @@ class OppgaveDTOMapperTest {
                         relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
                         saksbehandlerOppslag =
                             mockk<SaksbehandlerOppslag>().also {
-                                coEvery { it.hentSaksbehandler(SAKSBEHANDLER_IDENT) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.TestSaksbehandler.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = SAKSBEHANDLER_IDENT,
+                                        ident = TestHelper.TestSaksbehandler.navIdent,
                                         fornavn = "sbfornavn",
                                         etternavn = "sbetternavn",
                                         enhet =
@@ -529,9 +531,9 @@ class OppgaveDTOMapperTest {
                                                 postadresse = "sbPostadresse",
                                             ),
                                     )
-                                coEvery { it.hentSaksbehandler(BESLUTTER_IDENT) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.TestBeslutter.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = BESLUTTER_IDENT,
+                                        ident = TestHelper.TestBeslutter.navIdent,
                                         fornavn = "befornavn",
                                         etternavn = "beetternavn",
                                         enhet =
@@ -575,8 +577,8 @@ class OppgaveDTOMapperTest {
                       "oppgaveId": "${oppgave.oppgaveId}",
                       "behandlingId": "${oppgave.behandling.behandlingId}",
                       "person": {
-                        "ident": "12345612345",
-                        "id": "${testPerson.id}",
+                        "ident": "${TestHelper.personIdent}",
+                        "id": "${TestHelper.personId}",
                         "fornavn": "PETTER",
                         "etternavn": "SMART",
                         "fodselsdato": "2000-01-01",
@@ -587,7 +589,7 @@ class OppgaveDTOMapperTest {
                         "sikkerhetstiltak": [
                           {
                             "beskrivelse": "To ansatte i samtale",
-                            "gyldigTom": "${OppgaveApiTestHelper.pdlTestPerson.sikkerhetstiltak.first().gyldigTom}"
+                            "gyldigTom": "${TestHelper.pdlPerson.sikkerhetstiltak.first().gyldigTom}"
                           }
                         ],
                         "statsborgerskap": "NOR"

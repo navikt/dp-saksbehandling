@@ -7,19 +7,13 @@ import io.ktor.http.HttpHeaders
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
-import no.nav.dagpenger.pdl.PDLPerson
-import no.nav.dagpenger.saksbehandling.AdressebeskyttelseGradering.UGRADERT
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
 import no.nav.dagpenger.saksbehandling.SAKSBEHANDLER_IDENT
-import no.nav.dagpenger.saksbehandling.SikkerhetstiltakIntern
-import no.nav.dagpenger.saksbehandling.TEST_IDENT
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
 import no.nav.dagpenger.saksbehandling.defaultSaksbehandlerADGruppe
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
-import no.nav.dagpenger.saksbehandling.pdl.PDLPersonIntern
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
-import java.time.LocalDate
 
 internal object OppgaveApiTestHelper {
 //    const val TEST_IDENT = "12345612345"
@@ -29,7 +23,6 @@ internal object OppgaveApiTestHelper {
 // //    const val BESLUTTER_IDENT = "BeslutterIdent"
 //    val SOKNAD_ID = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
     private val mockAzure = mockAzure()
-    private val fødselsdato = LocalDate.of(2000, 1, 1)
 
     fun withOppgaveApi(
         oppgaveMediator: OppgaveMediator = mockk<OppgaveMediator>(relaxed = true),
@@ -104,26 +97,4 @@ internal object OppgaveApiTestHelper {
     }
 
     fun gyldigMaskinToken(): String = mockAzure.lagTokenMedClaims(mapOf("idtyp" to "app"))
-
-    val pdlTestPerson =
-        PDLPersonIntern(
-            ident = TEST_IDENT,
-            fornavn = "PETTER",
-            etternavn = "SMART",
-            mellomnavn = null,
-            fødselsdato = fødselsdato,
-            alder = 0,
-            statsborgerskap = "NOR",
-            kjønn = PDLPerson.Kjonn.UKJENT,
-            adresseBeskyttelseGradering = UGRADERT,
-            sikkerhetstiltak =
-                listOf(
-                    SikkerhetstiltakIntern(
-                        type = "Tiltakstype",
-                        beskrivelse = "To ansatte i samtale",
-                        gyldigFom = LocalDate.now(),
-                        gyldigTom = LocalDate.now().plusDays(1),
-                    ),
-                ),
-        )
 }
