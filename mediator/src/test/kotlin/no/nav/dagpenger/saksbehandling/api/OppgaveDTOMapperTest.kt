@@ -53,9 +53,9 @@ class OppgaveDTOMapperTest {
                         pdlKlient,
                         relevanteJournalpostIdOppslag,
                         mockk<SaksbehandlerOppslag>().also {
-                            coEvery { it.hentSaksbehandler(TestHelper.TestSaksbehandler.navIdent) } returns
+                            coEvery { it.hentSaksbehandler(TestHelper.saksbehandler.navIdent) } returns
                                 BehandlerDTO(
-                                    ident = TestHelper.TestSaksbehandler.navIdent,
+                                    ident = TestHelper.saksbehandler.navIdent,
                                     fornavn = "sbfornavn",
                                     etternavn = "sbetternavn",
                                     enhet =
@@ -65,9 +65,9 @@ class OppgaveDTOMapperTest {
                                             postadresse = "sbPostadresse",
                                         ),
                                 )
-                            coEvery { it.hentSaksbehandler(TestHelper.TestBeslutter.navIdent) } returns
+                            coEvery { it.hentSaksbehandler(TestHelper.beslutter.navIdent) } returns
                                 BehandlerDTO(
-                                    ident = TestHelper.TestBeslutter.navIdent,
+                                    ident = TestHelper.beslutter.navIdent,
                                     fornavn = "befornavn",
                                     etternavn = "beetternavn",
                                     enhet =
@@ -199,9 +199,9 @@ class OppgaveDTOMapperTest {
                         relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
                         saksbehandlerOppslag =
                             mockk<SaksbehandlerOppslag>().also {
-                                coEvery { it.hentSaksbehandler(TestHelper.TestSaksbehandler.navIdent) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.saksbehandler.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = TestHelper.TestSaksbehandler.navIdent,
+                                        ident = TestHelper.saksbehandler.navIdent,
                                         fornavn = "sbfornavn",
                                         etternavn = "sbetternavn",
                                         enhet =
@@ -211,9 +211,9 @@ class OppgaveDTOMapperTest {
                                                 postadresse = "sbPostadresse",
                                             ),
                                     )
-                                coEvery { it.hentSaksbehandler(TestHelper.TestBeslutter.navIdent) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.beslutter.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = TestHelper.TestBeslutter.navIdent,
+                                        ident = TestHelper.beslutter.navIdent,
                                         fornavn = "befornavn",
                                         etternavn = "beetternavn",
                                         enhet =
@@ -359,9 +359,9 @@ class OppgaveDTOMapperTest {
                         relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
                         saksbehandlerOppslag =
                             mockk<SaksbehandlerOppslag>().also {
-                                coEvery { it.hentSaksbehandler(TestHelper.TestSaksbehandler.navIdent) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.saksbehandler.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = TestHelper.TestSaksbehandler.navIdent,
+                                        ident = TestHelper.saksbehandler.navIdent,
                                         fornavn = "sbfornavn",
                                         etternavn = "sbetternavn",
                                         enhet =
@@ -371,9 +371,9 @@ class OppgaveDTOMapperTest {
                                                 postadresse = "sbPostadresse",
                                             ),
                                     )
-                                coEvery { it.hentSaksbehandler(TestHelper.TestBeslutter.navIdent) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.beslutter.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = TestHelper.TestBeslutter.navIdent,
+                                        ident = TestHelper.beslutter.navIdent,
                                         fornavn = "befornavn",
                                         etternavn = "beetternavn",
                                         enhet =
@@ -519,9 +519,9 @@ class OppgaveDTOMapperTest {
                         relevanteJournalpostIdOppslag = relevanteJournalpostIdOppslag,
                         saksbehandlerOppslag =
                             mockk<SaksbehandlerOppslag>().also {
-                                coEvery { it.hentSaksbehandler(TestHelper.TestSaksbehandler.navIdent) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.saksbehandler.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = TestHelper.TestSaksbehandler.navIdent,
+                                        ident = TestHelper.saksbehandler.navIdent,
                                         fornavn = "sbfornavn",
                                         etternavn = "sbetternavn",
                                         enhet =
@@ -531,9 +531,9 @@ class OppgaveDTOMapperTest {
                                                 postadresse = "sbPostadresse",
                                             ),
                                     )
-                                coEvery { it.hentSaksbehandler(TestHelper.TestBeslutter.navIdent) } returns
+                                coEvery { it.hentSaksbehandler(TestHelper.beslutter.navIdent) } returns
                                     BehandlerDTO(
-                                        ident = TestHelper.TestBeslutter.navIdent,
+                                        ident = TestHelper.beslutter.navIdent,
                                         fornavn = "befornavn",
                                         etternavn = "beetternavn",
                                         enhet =

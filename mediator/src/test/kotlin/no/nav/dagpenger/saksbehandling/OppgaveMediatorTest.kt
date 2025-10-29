@@ -429,7 +429,7 @@ OppgaveMediatorTest {
                 hendelse = hendelse,
             )
         val oppgave =
-            lagOppgave(
+            TestHelper.lagOppgave(
                 tilstand = tilstand,
                 behandling = behandling,
                 person = person,

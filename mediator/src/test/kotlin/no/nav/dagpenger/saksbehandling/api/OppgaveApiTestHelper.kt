@@ -8,20 +8,13 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
-import no.nav.dagpenger.saksbehandling.SAKSBEHANDLER_IDENT
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.OppgaveRepository
-import no.nav.dagpenger.saksbehandling.defaultSaksbehandlerADGruppe
 import no.nav.dagpenger.saksbehandling.pdl.PDLKlient
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.saksbehandler.SaksbehandlerOppslag
 
 internal object OppgaveApiTestHelper {
-//    const val TEST_IDENT = "12345612345"
-//    val TEST_UUID = UUIDv7.ny()
-// //    const val SAKSBEHANDLER_IDENT = "SaksbehandlerIdent"
-// //    val defaultSaksbehandlerADGruppe = listOf("SaksbehandlerADGruppe")
-// //    const val BESLUTTER_IDENT = "BeslutterIdent"
-//    val SOKNAD_ID = "01953789-f215-744e-9f6e-a55509bae78b".toUUID()
     private val mockAzure = mockAzure()
 
     fun withOppgaveApi(
@@ -86,11 +79,11 @@ internal object OppgaveApiTestHelper {
 
     fun gyldigSaksbehandlerToken(
         adGrupper: List<String> = emptyList(),
-        navIdent: String = SAKSBEHANDLER_IDENT,
+        navIdent: String = TestHelper.saksbehandler.navIdent,
     ): String {
         return mockAzure.lagTokenMedClaims(
             mapOf(
-                "groups" to defaultSaksbehandlerADGruppe + adGrupper,
+                "groups" to listOf("SaksbehandlerADGruppe") + adGrupper,
                 "NAVident" to navIdent,
             ),
         )

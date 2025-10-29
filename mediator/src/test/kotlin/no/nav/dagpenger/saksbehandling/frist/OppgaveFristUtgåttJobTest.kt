@@ -13,13 +13,13 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.UNDER_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.UnderBehandling
 import no.nav.dagpenger.saksbehandling.OppgaveMediator
+import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.lagBehandling
-import no.nav.dagpenger.saksbehandling.lagOppgave
-import no.nav.dagpenger.saksbehandling.lagPerson
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -31,7 +31,7 @@ class OppgaveFristUtgåttJobTest {
         val behandling3 = lagBehandling(utløstAvType = KLAGE)
         val behandling4 = lagBehandling(utløstAvType = KLAGE)
         DBTestHelper.withBehandlinger(
-            person = lagPerson(),
+            person = TestHelper.testPerson,
             behandlinger = listOf(behandling1, behandling2, behandling3, behandling4),
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)

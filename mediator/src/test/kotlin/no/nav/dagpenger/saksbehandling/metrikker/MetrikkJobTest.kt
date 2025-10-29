@@ -11,28 +11,29 @@ import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.AVVENTER_OPPLÅSING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_BEHANDLING
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.KLAR_TIL_KONTROLL
 import no.nav.dagpenger.saksbehandling.Oppgave.Tilstand.Type.PAA_VENT
+import no.nav.dagpenger.saksbehandling.TestHelper.lagBehandling
+import no.nav.dagpenger.saksbehandling.TestHelper.lagOppgave
+import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
+import no.nav.dagpenger.saksbehandling.TestHelper.lagUtsending
+import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
 import no.nav.dagpenger.saksbehandling.UtløstAvType.SØKNAD
 import no.nav.dagpenger.saksbehandling.db.DBTestHelper
 import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.lagBehandling
-import no.nav.dagpenger.saksbehandling.lagOppgave
-import no.nav.dagpenger.saksbehandling.lagPerson
-import no.nav.dagpenger.saksbehandling.lagUtsending
 import no.nav.dagpenger.saksbehandling.utsending.Utsending
 import no.nav.dagpenger.saksbehandling.utsending.db.PostgresUtsendingRepository
 import org.junit.jupiter.api.Test
 
 class MetrikkJobTest {
     val person = lagPerson()
-    val behandling1 = lagBehandling(utløstAvType = SØKNAD)
-    val behandling2 = lagBehandling(utløstAvType = SØKNAD)
-    val behandling3 = lagBehandling(utløstAvType = KLAGE)
-    val behandling4 = lagBehandling(utløstAvType = KLAGE)
-    val behandling5 = lagBehandling(utløstAvType = SØKNAD)
-    val behandling6 = lagBehandling(utløstAvType = SØKNAD)
-    val behandling7 = lagBehandling(utløstAvType = SØKNAD)
-    val behandling8 = lagBehandling(utløstAvType = SØKNAD)
+    val behandling1 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling2 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling3 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
+    val behandling4 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = KLAGE)
+    val behandling5 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling6 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling7 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
+    val behandling8 = lagBehandling(behandlingId = UUIDv7.ny(), utløstAvType = SØKNAD)
 
     @Test
     fun `Hent riktig distribusjon av oppgavetilstand`() {
@@ -51,14 +52,26 @@ class MetrikkJobTest {
                 ),
         ) { ds ->
             val repo = PostgresOppgaveRepository(ds)
-            repo.lagre(lagOppgave(tilstand = PåVent, behandling = behandling1))
-            repo.lagre(lagOppgave(tilstand = PåVent, behandling = behandling2))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandling = behandling3))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandling = behandling4))
-            repo.lagre(lagOppgave(tilstand = KlarTilBehandling, behandling = behandling5))
-            repo.lagre(lagOppgave(tilstand = KlarTilKontroll, behandling = behandling6))
-            repo.lagre(lagOppgave(tilstand = AvventerLåsAvBehandling, behandling = behandling7))
-            repo.lagre(lagOppgave(tilstand = AvventerOpplåsingAvBehandling, behandling = behandling8))
+            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling1))
+            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = PåVent, behandling = behandling2))
+            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling3))
+            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling4))
+            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilBehandling, behandling = behandling5))
+            repo.lagre(lagOppgave(oppgaveId = UUIDv7.ny(), tilstand = KlarTilKontroll, behandling = behandling6))
+            repo.lagre(
+                lagOppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    tilstand = AvventerLåsAvBehandling,
+                    behandling = behandling7,
+                ),
+            )
+            repo.lagre(
+                lagOppgave(
+                    oppgaveId = UUIDv7.ny(),
+                    tilstand = AvventerOpplåsingAvBehandling,
+                    behandling = behandling8,
+                ),
+            )
 
             val oppgaveTilstandDistribusjon = hentOppgaveTilstandDistribusjon(ds)
 

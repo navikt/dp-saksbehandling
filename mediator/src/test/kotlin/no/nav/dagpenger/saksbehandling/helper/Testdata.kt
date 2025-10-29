@@ -1,16 +1,9 @@
 package no.nav.dagpenger.saksbehandling.helper
 
-import no.nav.dagpenger.saksbehandling.Oppgave
-import no.nav.dagpenger.saksbehandling.UUIDv7
-import no.nav.dagpenger.saksbehandling.db.oppgave.PostgresOppgaveRepository
-import no.nav.dagpenger.saksbehandling.lagBehandling
-import no.nav.dagpenger.saksbehandling.lagOppgave
-import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.utsending.ArkiverbartBrevBehov
 import no.nav.dagpenger.saksbehandling.utsending.DistribueringBehov
 import no.nav.dagpenger.saksbehandling.utsending.JournalføringBehov
 import java.util.UUID
-import javax.sql.DataSource
 
 internal fun behandlingResultatEvent(
     ident: String,
@@ -105,20 +98,4 @@ internal fun arkiverbartDokumentBehovLøsning(
           }
         }
         """.trimIndent()
-}
-
-internal fun lagreOppgave(
-    dataSource: DataSource,
-    behandlingId: UUID = UUIDv7.ny(),
-    personIdent: String = "12345678910",
-): Oppgave {
-    val oppgave =
-        lagOppgave(
-            behandling = lagBehandling(behandlingId = behandlingId),
-            person = lagPerson(ident = personIdent),
-        )
-
-    val repository = PostgresOppgaveRepository(dataSource)
-    repository.lagre(oppgave)
-    return oppgave
 }

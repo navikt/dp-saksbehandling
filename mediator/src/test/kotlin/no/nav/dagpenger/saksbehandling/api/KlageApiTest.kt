@@ -21,9 +21,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.KlageMediator
-import no.nav.dagpenger.saksbehandling.SAKSBEHANDLER_IDENT
-import no.nav.dagpenger.saksbehandling.Saksbehandler
-import no.nav.dagpenger.saksbehandling.TilgangType
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType.KLAGE
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.autentisert
@@ -31,15 +29,12 @@ import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigMaskinToke
 import no.nav.dagpenger.saksbehandling.api.OppgaveApiTestHelper.gyldigSaksbehandlerToken
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTO
 import no.nav.dagpenger.saksbehandling.api.models.BehandlerDTOEnhetDTO
-import no.nav.dagpenger.saksbehandling.defaultSaksbehandlerADGruppe
 import no.nav.dagpenger.saksbehandling.hendelser.AvbruttHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageFerdigbehandletHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.KlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.ManuellKlageMottattHendelse
 import no.nav.dagpenger.saksbehandling.klage.KlageBehandling
 import no.nav.dagpenger.saksbehandling.klage.Verdi
-import no.nav.dagpenger.saksbehandling.lagBehandling
-import no.nav.dagpenger.saksbehandling.lagOppgave
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -53,12 +48,6 @@ class KlageApiTest {
     private val journalpostId = "journalpostId"
     private val opplysningId = UUIDv7.ny()
     private val opprettet = LocalDateTime.of(2025, 1, 1, 1, 1)
-    private val saksbehandler =
-        Saksbehandler(
-            navIdent = SAKSBEHANDLER_IDENT,
-            grupper = defaultSaksbehandlerADGruppe.toSet(),
-            tilganger = setOf(TilgangType.SAKSBEHANDLER),
-        )
     private val dato = LocalDateTime.of(2025, 1, 1, 1, 1)
 
     @Test
@@ -83,7 +72,7 @@ class KlageApiTest {
                 every {
                     it.hentKlageBehandling(
                         behandlingId = klageBehandlingId,
-                        saksbehandler = saksbehandler,
+                        saksbehandler = TestHelper.saksbehandler,
                     )
                 } returns
                     KlageBehandling.rehydrer(
@@ -109,7 +98,7 @@ class KlageApiTest {
     fun `Skal kunne opprette en klage med maskintoken`() {
         val token = gyldigMaskinToken()
         val sakId = UUIDv7.ny()
-        val oppgave = lagOppgave(behandling = lagBehandling(utløstAvType = KLAGE), opprettet = dato)
+        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = KLAGE), opprettet = dato)
         val ident = oppgave.personIdent()
         val mediator =
             mockk<KlageMediator>().also {
@@ -174,7 +163,7 @@ class KlageApiTest {
     @Test
     fun `Skal kunne opprette en manuell klage med saksbehandlertoken`() {
         val token = gyldigSaksbehandlerToken()
-        val oppgave = lagOppgave(behandling = lagBehandling(utløstAvType = KLAGE), opprettet = dato)
+        val oppgave = TestHelper.lagOppgave(behandling = TestHelper.lagBehandling(utløstAvType = KLAGE), opprettet = dato)
         val ident = oppgave.personIdent()
         val sakId = UUIDv7.ny()
         val mediator =
@@ -187,7 +176,7 @@ class KlageApiTest {
                                 sakId = sakId,
                                 opprettet = dato,
                                 journalpostId = "journalpostId",
-                                utførtAv = saksbehandler,
+                                utførtAv = TestHelper.saksbehandler,
                             ),
                     )
                 } returns oppgave
@@ -233,7 +222,7 @@ class KlageApiTest {
                         sakId = sakId,
                         opprettet = dato,
                         journalpostId = "journalpostId",
-                        utførtAv = saksbehandler,
+                        utførtAv = TestHelper.saksbehandler,
                     ),
             )
         }
@@ -283,7 +272,7 @@ class KlageApiTest {
         val avbruttHendelse =
             AvbruttHendelse(
                 behandlingId = klageBehandlingId,
-                utførtAv = saksbehandler,
+                utførtAv = TestHelper.saksbehandler,
             )
         val mediator =
             mockk<KlageMediator>().also {
@@ -313,7 +302,7 @@ class KlageApiTest {
                         hendelse =
                             KlageFerdigbehandletHendelse(
                                 behandlingId = klageBehandlingId,
-                                utførtAv = saksbehandler,
+                                utførtAv = TestHelper.saksbehandler,
                             ),
                         saksbehandlerToken = saksbehandlerToken,
                     )
@@ -330,7 +319,7 @@ class KlageApiTest {
                 hendelse =
                     KlageFerdigbehandletHendelse(
                         behandlingId = klageBehandlingId,
-                        utførtAv = saksbehandler,
+                        utførtAv = TestHelper.saksbehandler,
                     ),
                 saksbehandlerToken = saksbehandlerToken,
             )
@@ -343,7 +332,7 @@ class KlageApiTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, tekstListe, saksbehandler)
+                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, tekstListe, TestHelper.saksbehandler)
                 } returns Unit
             }
         withKlageApi(mediator) {
@@ -359,7 +348,7 @@ class KlageApiTest {
                         behandlingId = klageBehandlingId,
                         opplysningId = opplysningId,
                         verdi = tekstListe,
-                        saksbehandler = saksbehandler,
+                        saksbehandler = TestHelper.saksbehandler,
                     )
                 }
             }
@@ -372,7 +361,7 @@ class KlageApiTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, tekst, saksbehandler)
+                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, tekst, TestHelper.saksbehandler)
                 } returns Unit
             }
         withKlageApi(mediator) {
@@ -388,7 +377,7 @@ class KlageApiTest {
                         behandlingId = klageBehandlingId,
                         opplysningId = opplysningId,
                         verdi = tekst,
-                        saksbehandler = saksbehandler,
+                        saksbehandler = TestHelper.saksbehandler,
                     )
                 }
             }
@@ -401,7 +390,7 @@ class KlageApiTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, boolsk, saksbehandler)
+                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, boolsk, TestHelper.saksbehandler)
                 } returns Unit
             }
         withKlageApi(mediator) {
@@ -417,7 +406,7 @@ class KlageApiTest {
                         behandlingId = klageBehandlingId,
                         opplysningId = opplysningId,
                         verdi = boolsk,
-                        saksbehandler = saksbehandler,
+                        saksbehandler = TestHelper.saksbehandler,
                     )
                 }
             }
@@ -430,7 +419,7 @@ class KlageApiTest {
         val mediator =
             mockk<KlageMediator>().also {
                 every {
-                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, dato, saksbehandler)
+                    it.oppdaterKlageOpplysning(klageBehandlingId, opplysningId, dato, TestHelper.saksbehandler)
                 } returns Unit
             }
         withKlageApi(mediator) {
@@ -446,7 +435,7 @@ class KlageApiTest {
                         behandlingId = klageBehandlingId,
                         opplysningId = opplysningId,
                         verdi = dato,
-                        saksbehandler = saksbehandler,
+                        saksbehandler = TestHelper.saksbehandler,
                     )
                 }
             }
@@ -455,7 +444,7 @@ class KlageApiTest {
 
     private val oppslagMock: Oppslag =
         mockk<Oppslag>().also {
-            coEvery { it.hentBehandler(saksbehandler.navIdent) } returns
+            coEvery { it.hentBehandler(TestHelper.saksbehandler.navIdent) } returns
                 BehandlerDTO(
                     ident = "navIdent",
                     fornavn = "fornavn",

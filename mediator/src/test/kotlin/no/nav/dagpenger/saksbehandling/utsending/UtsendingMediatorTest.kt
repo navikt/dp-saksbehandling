@@ -11,6 +11,8 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import no.nav.dagpenger.saksbehandling.Behandling
+import no.nav.dagpenger.saksbehandling.TestHelper
+import no.nav.dagpenger.saksbehandling.TestHelper.lagPerson
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtløstAvType
 import no.nav.dagpenger.saksbehandling.UtsendingSak
@@ -21,10 +23,8 @@ import no.nav.dagpenger.saksbehandling.helper.arkiverbartDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.behandlingResultatEvent
 import no.nav.dagpenger.saksbehandling.helper.distribuertDokumentBehovLøsning
 import no.nav.dagpenger.saksbehandling.helper.journalføringBehovLøsning
-import no.nav.dagpenger.saksbehandling.helper.lagreOppgave
 import no.nav.dagpenger.saksbehandling.hendelser.TomHendelse
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.lagPerson
 import no.nav.dagpenger.saksbehandling.mottak.ArenaSinkVedtakOpprettetMottak
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.toUrn
@@ -54,12 +54,10 @@ class UtsendingMediatorTest {
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
-        val person = lagPerson()
+        val person = TestHelper.testPerson
 
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
-            val oppgave =
-                lagreOppgave(dataSource = ds, behandlingId = behandling.behandlingId, personIdent = person.ident)
-            val behandlingId = oppgave.behandling.behandlingId
+            val behandlingId = behandling.behandlingId
             val søknadId = UUIDv7.ny()
             val sakId = DBTestHelper.sakId.toString()
             val utsendingSak = UtsendingSak(sakId, "Dagpenger")
@@ -94,9 +92,9 @@ class UtsendingMediatorTest {
             )
 
             utsendingMediator.opprettUtsending(
-                behandlingId = oppgave.behandling.behandlingId,
+                behandlingId = behandlingId,
                 brev = null,
-                ident = oppgave.personIdent(),
+                ident = person.ident,
                 type = UtsendingType.KLAGEMELDING,
             )
 
@@ -139,7 +137,7 @@ class UtsendingMediatorTest {
                    "htmlBase64": "$htmlBrevAsBase64",
                    "dokumentNavn": "vedtak.pdf",
                    "kontekst": "behandling/$behandlingId",
-                   "ident": "${oppgave.personIdent()}",
+                   "ident": "${person.ident}",
                    "sak": {
                       "id": "${utsendingSak.id}",
                       "kontekst": "${utsendingSak.kontekst}"
@@ -181,7 +179,7 @@ class UtsendingMediatorTest {
                   ],
                   "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
                   "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
-                  "ident": "${oppgave.personIdent()}",
+                  "ident": "${person.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "sak": {
                     "id": "${utsendingSak.id}",
@@ -234,12 +232,10 @@ class UtsendingMediatorTest {
                 opprettet = LocalDateTime.now(),
                 hendelse = TomHendelse,
             )
-        val person = lagPerson()
+        val person = TestHelper.testPerson
 
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
-            val oppgave =
-                lagreOppgave(dataSource = ds, behandlingId = behandling.behandlingId, personIdent = person.ident)
-            val behandlingId = oppgave.behandling.behandlingId
+            val behandlingId = behandling.behandlingId
             val utsendingSak = UtsendingSak("123", "Arena")
             val htmlBrev = "<H1>Hei</H1><p>Her er et brev</p>"
 
@@ -274,7 +270,7 @@ class UtsendingMediatorTest {
             utsendingMediator.opprettUtsending(
                 behandlingId = behandlingId,
                 brev = null,
-                ident = oppgave.personIdent(),
+                ident = person.ident,
                 type = UtsendingType.KLAGEMELDING,
             )
 
@@ -321,7 +317,7 @@ class UtsendingMediatorTest {
                    "htmlBase64": "$htmlBrevAsBase64",
                    "dokumentNavn": "vedtak.pdf",
                    "kontekst": "behandling/$behandlingId",
-                   "ident": "${oppgave.personIdent()}",
+                   "ident": "${person.ident}",
                    "sak": {
                       "id": "${utsendingSak.id}",
                       "kontekst": "${utsendingSak.kontekst}"
@@ -351,7 +347,7 @@ class UtsendingMediatorTest {
                   ],
                   "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
                   "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
-                  "ident": "${oppgave.personIdent()}",
+                  "ident": "${person.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "sak": {
                     "id": "${utsendingSak.id}",
@@ -406,9 +402,7 @@ class UtsendingMediatorTest {
         val person = lagPerson()
 
         DBTestHelper.withBehandling(behandling = behandling, person = person) { ds ->
-            val oppgave =
-                lagreOppgave(dataSource = ds, behandlingId = behandling.behandlingId, personIdent = person.ident)
-            val behandlingId = oppgave.behandling.behandlingId
+            val behandlingId = behandling.behandlingId
             val utsendingRepository = PostgresUtsendingRepository(ds)
             val utsendingMediator =
                 UtsendingMediator(
@@ -427,7 +421,7 @@ class UtsendingMediatorTest {
             utsendingMediator.opprettUtsending(
                 behandlingId = behandlingId,
                 brev = htmlBrev,
-                ident = oppgave.personIdent(),
+                ident = person.ident,
                 type = UtsendingType.KLAGEMELDING,
             )
 
@@ -443,7 +437,7 @@ class UtsendingMediatorTest {
                     StartUtsendingHendelse(
                         utsendingSak = utsendingSak,
                         behandlingId = behandlingId,
-                        ident = oppgave.personIdent(),
+                        ident = person.ident,
                         brev = null,
                     ),
             )
@@ -465,7 +459,7 @@ class UtsendingMediatorTest {
                    "htmlBase64": "$htmlBrevAsBase64",
                    "dokumentNavn": "vedtak.pdf",
                    "kontekst": "behandling/$behandlingId",
-                   "ident": "${oppgave.personIdent()}",
+                   "ident": "${person.ident}",
                    "sak": {
                       "id": "${utsendingSak.id}",
                       "kontekst": "${utsendingSak.kontekst}"
@@ -495,7 +489,7 @@ class UtsendingMediatorTest {
                   ],
                   "tittel" : "${UtsendingType.KLAGEMELDING.brevTittel}",
                   "skjemaKode" : "${UtsendingType.KLAGEMELDING.skjemaKode}",
-                  "ident": "${oppgave.personIdent()}",
+                  "ident": "${person.ident}",
                   "pdfUrn": "$pdfUrnString",
                   "sak": {
                     "id": "${utsendingSak.id}",

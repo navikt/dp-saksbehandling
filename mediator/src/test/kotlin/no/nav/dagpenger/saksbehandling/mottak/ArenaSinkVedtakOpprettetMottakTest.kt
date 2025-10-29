@@ -8,11 +8,11 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.saksbehandling.Oppgave
+import no.nav.dagpenger.saksbehandling.TestHelper
 import no.nav.dagpenger.saksbehandling.UUIDv7
 import no.nav.dagpenger.saksbehandling.UtsendingSak
 import no.nav.dagpenger.saksbehandling.db.person.PersonRepository
 import no.nav.dagpenger.saksbehandling.hendelser.VedtakFattetHendelse
-import no.nav.dagpenger.saksbehandling.lagOppgave
 import no.nav.dagpenger.saksbehandling.sak.SakMediator
 import no.nav.dagpenger.saksbehandling.utsending.UtsendingMediator
 import org.junit.jupiter.api.Test
@@ -21,7 +21,7 @@ class ArenaSinkVedtakOpprettetMottakTest {
     private val testRapid = TestRapid()
     private val sakId = "123"
     private val søknadId = UUIDv7.ny()
-    private val testOppgave = lagOppgave(tilstand = Oppgave.FerdigBehandlet)
+    private val testOppgave = TestHelper.lagOppgave(tilstand = Oppgave.FerdigBehandlet)
     private val mockPersonRepository =
         mockk<PersonRepository>(relaxed = true).apply {
             every { hentPersonForBehandlingId(testOppgave.behandling.behandlingId) } returns testOppgave.person
